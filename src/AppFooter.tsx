@@ -6,7 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { Link } from "@material-ui/core";
+import { Link } from "@mui/material";
 
 function AppFooter() {
   return (

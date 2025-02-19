@@ -6,9 +6,9 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { useStoreState } from "react-flow-renderer";
+import { useStore } from "@xyflow/react";
 
-import { ComponentSpec } from "../componentSpec";
+import type { ComponentSpec } from "../componentSpec";
 import { componentSpecToYaml } from "../componentStore";
 import { augmentComponentSpec } from "./GraphComponentSpecFlow";
 
@@ -27,7 +27,7 @@ const GraphComponentLink = ({
   linkRef,
   style,
 }: GraphComponentLinkProps) => {
-  const nodes = useStoreState((store) => store.nodes);
+  const nodes = useStore((store) => store.nodes);
 
   try {
     componentSpec = augmentComponentSpec(componentSpec, nodes, false, true);

@@ -12,10 +12,10 @@ import {
   Controls,
   Background,
   MiniMap,
-} from 'react-flow-renderer';
+} from '@xyflow/react';
 
 import { downloadDataWithCache } from '../cacheUtils';
-import { ComponentSpec } from '../componentSpec';
+import type { ComponentSpec } from '../componentSpec';
 import GraphComponentSpecFlow, {
   EMPTY_GRAPH_COMPONENT_SPEC,
 } from "./GraphComponentSpecFlow";
@@ -65,10 +65,11 @@ const DnDFlow = () => {
     return <></>;
   }
 
+
   return (
     <div className="dndflow">
       <ReactFlowProvider>
-        <div className="reactflow-wrapper">
+        <div className="h-[100vh] w-full">
           <GraphComponentSpecFlow
             componentSpec={componentSpec}
             setComponentSpec={setComponentSpec}

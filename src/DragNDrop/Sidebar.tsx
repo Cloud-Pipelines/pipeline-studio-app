@@ -6,19 +6,19 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { DragEvent, useState } from 'react';
+import { type DragEvent, useState } from 'react';
 
 import ComponentLibrary from './ComponentLibrary'
 import ComponentSearch from './ComponentSearch'
 import GraphComponentExporter from './GraphComponentExporter'
 import VertexAiExporter from './VertexAiExporter'
-import { ComponentSpec } from '../componentSpec';
+import { type ComponentSpec } from '../componentSpec';
 import UserComponentLibrary from "./UserComponentLibrary";
 import PipelineLibrary from "./PipelineLibrary";
-import { AppSettings } from '../appSettings';
+import type { AppSettings } from '../appSettings';
 import PipelineSubmitter from "./PipelineSubmitter";
 import AppSettingsDialog from './AppSettingsDialog';
-import { DownloadDataType, downloadDataWithCache } from '../cacheUtils';
+import { type DownloadDataType, downloadDataWithCache } from '../cacheUtils';
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -47,19 +47,19 @@ const Sidebar = ({
 }: SidebarProps) => {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
-  // Do not include the DebugScratch in the production build
-  let DebugScratchElement = () => null;
-  if (process?.env?.NODE_ENV === "development") {
-    try {
-      const DebugScratch = require("./DebugScratch").default;
-      DebugScratchElement = () =>
-        DebugScratch({
-          componentSpec: componentSpec,
-          setComponentSpec: setComponentSpec,
-          downloadData: downloadData,
-        });
-    } catch (e) {}
-  }
+  // // Do not include the DebugScratch in the production build
+  // let DebugScratchElement = () => null;
+  // if (process?.env?.NODE_ENV === "development") {
+  //   try {
+  //     const DebugScratch = require("./DebugScratch").default;
+  //     DebugScratchElement = () =>
+  //       DebugScratch({
+  //         componentSpec: componentSpec,
+  //         setComponentSpec: setComponentSpec,
+  //         downloadData: downloadData,
+  //       });
+  //   } catch (e) {}
+  // }
 
   return (
     <aside className="nodeList">
@@ -132,7 +132,7 @@ const Sidebar = ({
         </button>
         {componentSpec && <GraphComponentExporter componentSpec={componentSpec}/>}
         {componentSpec && <VertexAiExporter componentSpec={componentSpec}/>}
-        <DebugScratchElement/>
+        {/* <DebugScratchElement/> */}
       </details>
     </aside>
   );

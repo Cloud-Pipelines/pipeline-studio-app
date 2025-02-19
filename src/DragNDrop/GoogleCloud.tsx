@@ -10,9 +10,9 @@
 
 import { useEffect, useState } from 'react';
 
-import { ComponentSpec } from '../componentSpec';
+import type { ComponentSpec } from '../componentSpec';
 import { buildVertexPipelineJobFromGraphComponent } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
-import { PipelineJob } from '../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec';
+import type { PipelineJob } from '../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec';
 
 const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY = "GoogleCloudSubmitter/gcsOutputDirectory";
 const LOCAL_STORAGE_PROJECT_ID_KEY = "GoogleCloudSubmitter/projectId";

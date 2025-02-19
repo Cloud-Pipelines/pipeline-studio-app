@@ -6,10 +6,10 @@
  * @copyright 2022 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { Node, useStoreState } from "react-flow-renderer";
+import { type Node, useStore } from "@xyflow/react";
 import yaml from "js-yaml";
 
-import { ComponentSpec } from "../componentSpec";
+import type { ComponentSpec } from "../componentSpec";
 import { componentSpecToYaml } from "../componentStore";
 import { augmentComponentSpec } from "./GraphComponentSpecFlow";
 
@@ -63,7 +63,7 @@ export const PipelineAutoSaver = ({
 }: {
   componentSpec: ComponentSpec;
 }) => {
-  const nodes = useStoreState((store) => store.nodes);
+  const nodes = useStore((store) => store.nodes);
   // Fixing issue where a React error would cause all node positions to be recorded as undefined (`!<tag:yaml.org,2002:js/undefined>`)
   // nodes should never be undefined in normal situation.
   if (nodes !== undefined && nodes.length > 0) {

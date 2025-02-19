@@ -8,10 +8,11 @@
 
 import yaml from "js-yaml";
 import localForage from "localforage";
-import { DownloadDataType, downloadData as defaultDownloadData, downloadDataWithCache, loadObjectFromYamlData, loadObjectFromJsonData } from "./cacheUtils";
+import type { DownloadDataType } from "./cacheUtils";
+import { downloadData as defaultDownloadData, downloadDataWithCache, loadObjectFromYamlData, loadObjectFromJsonData } from "./cacheUtils";
 import {
-  ComponentSpec,
-  ComponentReference,
+  type ComponentSpec,
+  type ComponentReference,
   isValidComponentSpec,
 } from "./componentSpec";
 import {

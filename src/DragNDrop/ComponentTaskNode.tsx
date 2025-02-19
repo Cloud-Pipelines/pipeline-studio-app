@@ -6,15 +6,15 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { CSSProperties, memo, useState } from 'react';
-import {
+import React, { type CSSProperties, memo, useState } from 'react';
+import type {
   ArgumentType,
   InputSpec,
   OutputSpec,
   TaskSpec,
 } from '../componentSpec';
 
-import { Handle, Position, Node, NodeProps, HandleType } from 'react-flow-renderer';
+import { Handle, Position, type Node as FlowNode} from '@xyflow/react';
 
 import ArgumentsEditorDialog from './ArgumentsEditorDialog';
 
@@ -27,16 +27,22 @@ const MISSING_ARGUMENT_CLASS_NAME = "missing-argument";
 
 const NODE_WIDTH_IN_PX = 180;
 
-export const isComponentTaskNode = (node: Node): node is Node<ComponentTaskNodeProps> =>
+export interface ComponentTaskNodeProps extends Record<string, unknown> {
+  taskSpec: TaskSpec;
+  taskId?: string;
+  setArguments?: (args: Record<string, ArgumentType>) => void;
+}
+
+export const isComponentTaskNode = (node: FlowNode): node is FlowNode<ComponentTaskNodeProps> =>
   node.type === "task" && node.data !== undefined && "taskSpec" in node.data;
 
 function generateHandles(
   ioSpecs: InputOrOutputSpec[],
-  handleType: HandleType,
+  handleType: 'source' | 'target',
   position: Position,
   idPrefix: string,
   inputsWithMissingArguments?: string[],
-): JSX.Element[] {
+): React.ReactElement[] {
   let handleComponents = [];
   const numHandles = ioSpecs.length;
   for (let i = 0; i < numHandles; i++) {
@@ -109,21 +115,16 @@ function generateLabelStyle(
   return [labelClasses, labelStyle];
 }
 
-function generateInputHandles(inputSpecs: InputSpec[], inputsWithInvalidArguments?: string[]): JSX.Element[] {
+function generateInputHandles(inputSpecs: InputSpec[], inputsWithInvalidArguments?: string[]): React.ReactElement[] {
   return generateHandles(inputSpecs, "target", inputHandlePosition, "input_", inputsWithInvalidArguments);
 }
 
-function generateOutputHandles(outputSpecs: OutputSpec[]): JSX.Element[] {
+function generateOutputHandles(outputSpecs: OutputSpec[]): React.ReactElement[] {
   return generateHandles(outputSpecs, "source", outputHandlePosition, "output_");
 }
 
-export interface ComponentTaskNodeProps {
-  taskSpec: TaskSpec,
-  taskId?: string,
-  setArguments?: (args: Record<string, ArgumentType>) => void;
-};
-
-const ComponentTaskNode = ({ data }: NodeProps<ComponentTaskNodeProps>) => {
+const ComponentTaskNode = (props: { data: ComponentTaskNodeProps }) => {
+  const { data } = props;
   const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
 
   const taskSpec = data.taskSpec;

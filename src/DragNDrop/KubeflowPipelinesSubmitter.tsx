@@ -6,13 +6,13 @@
  * @copyright 2022 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import yaml from "js-yaml";
+import yaml from 'js-yaml';
 import { useEffect, useState } from "react";
 import {
   buildArgoWorkflowFromGraphComponent,
-  Workflow,
+  type Workflow,
 } from "../compilers/Argo/argoCompiler";
-import { ComponentSpec } from "../componentSpec";
+import type { ComponentSpec } from "../componentSpec";
 import { ensureGoogleCloudAuthorizesScopes } from "./GoogleCloud";
 
 const LOCAL_STORAGE_ENDPOINT_KEY = "KubeflowPipelinesSubmitter/endpoint";

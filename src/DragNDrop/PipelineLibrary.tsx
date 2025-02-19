@@ -15,15 +15,17 @@ import {
   Menu,
   MenuItem,
   TextField,
-} from "@material-ui/core";
+} from "@mui/material";
 import { useCallback, useState, useEffect, useRef } from "react";
-import { useStoreState } from "react-flow-renderer";
-import { DownloadDataType, downloadDataWithCache } from "../cacheUtils";
-import { ComponentSpec, isGraphImplementation } from "../componentSpec";
+import { useStore } from "@xyflow/react";
+import type { DownloadDataType } from "../cacheUtils";
+import { downloadDataWithCache } from "../cacheUtils";
+import type { ComponentSpec } from "../componentSpec";
+import { isGraphImplementation } from "../componentSpec";
 import {
   loadComponentAsRefFromText,
   getAllComponentFilesFromList,
-  ComponentFileEntry,
+  type ComponentFileEntry,
   addComponentToListByText,
   componentSpecToYaml,
   writeComponentToFileListFromText,
@@ -156,7 +158,7 @@ const SaveAsDialog = ({
   initialValue,
   inputLabel = "Pipeline name",
 }: SaveAsDialogProps) => {
-  const nameInputRef = useRef<HTMLInputElement>();
+  const nameInputRef = useRef<HTMLInputElement>(null);
   return (
     <Dialog open={isOpen} aria-labelledby="alert-dialog-title">
       <DialogTitle id="alert-dialog-title">{"Save pipeline"}</DialogTitle>
@@ -204,7 +206,7 @@ const PipelineLibrary = ({
   );
   const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
-  const nodes = useStoreState((store) => store.nodes);
+  const nodes = useStore((store) => store.nodes);
 
   const [contextMenuFileName, setContextMenuFileName] = useState<string>();
   const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement>();
@@ -366,7 +368,7 @@ const PipelineLibrary = ({
   };
 
   const openSamplePipeline = useCallback(
-    (pipelineSpec) => {
+    (pipelineSpec: ComponentSpec) => {
       //Reset current file
       setPipelineFile(undefined);
       setComponentSpec?.(pipelineSpec);

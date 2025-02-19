@@ -7,13 +7,13 @@
  */
 
 import {
-  ArgumentType,
-  ComponentSpec,
-  StringOrPlaceholder,
-  TypeSpecType,
+  type ArgumentType,
+  type ComponentSpec,
+  type StringOrPlaceholder,
+  type TypeSpecType,
   isContainerImplementation,
   isGraphImplementation,
-  InputSpec,
+  type InputSpec,
 } from "../../componentSpec";
 
 import * as vertex from "./vertexPipelineSpec";

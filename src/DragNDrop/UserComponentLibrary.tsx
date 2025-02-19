@@ -15,13 +15,13 @@ import {
   Menu,
   MenuItem,
   TextField,
-} from "@material-ui/core";
+} from "@mui/material";
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import {
   addComponentToListByText,
   deleteComponentFileFromList,
-  ComponentFileEntry,
+  type ComponentFileEntry,
   getAllComponentFilesFromList,
   addComponentToListByUrl,
 } from "../componentStore";
@@ -131,13 +131,15 @@ const UserComponentLibrary = () => {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: ".yaml",
+    accept: {
+      "text/yaml": [".yaml"],
+    },
   });
 
   return (
     <div>
       <button
-        onClick={(e) => setIsImportComponentDialogOpen(true)}
+        onClick={() => setIsImportComponentDialogOpen(true)}
         style={{ marginBottom: "4px" }}
       >
         Import from URL
@@ -204,7 +206,7 @@ const ImportComponentFromUrlDialog = ({
   onCancel,
   initialValue,
 }: SaveAsDialogProps) => {
-  const urlInputRef = useRef<HTMLInputElement>();
+  const urlInputRef = useRef<HTMLInputElement>(null);
   return (
     <Dialog open={isOpen} fullWidth>
       <DialogTitle>{"Import component"}</DialogTitle>

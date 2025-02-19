@@ -9,7 +9,7 @@
 import fs from "fs";
 import yaml from "js-yaml";
 import path from "path";
-import { ComponentSpec } from "../../componentSpec";
+import type { ComponentSpec } from "../../componentSpec";
 import { buildArgoWorkflowFromGraphComponent } from "./argoCompiler";
 
 test("buildArgoWorkflowFromGraphComponent compiles Data_passing_pipeline", () => {

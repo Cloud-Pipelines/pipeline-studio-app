@@ -19,7 +19,8 @@ const httpGetDataWithCache = async <T>(
   let needToUpdateCache = false;
   if (response === undefined || updateIfInCache) {
     try {
-      const newResponse = await fetch(url);
+      const newUrl = url.replace(/\/\//g, "/");
+      const newResponse = await fetch(newUrl);
       if (!newResponse.ok) {
         throw new Error(
           `Network response was not OK: ${newResponse.status}: ${newResponse.statusText}`

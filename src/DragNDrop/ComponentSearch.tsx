@@ -7,8 +7,9 @@
  */
 
 import { useState } from "react";
-import { DownloadDataType, downloadDataWithCache } from "../cacheUtils";
-import { ComponentReference } from "../componentSpec";
+import type { DownloadDataType } from "../cacheUtils";
+import { downloadDataWithCache } from "../cacheUtils";
+import type { ComponentReference } from "../componentSpec";
 import {
   isComponentDbEmpty,
   refreshComponentDb,

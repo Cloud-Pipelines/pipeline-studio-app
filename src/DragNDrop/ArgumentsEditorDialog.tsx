@@ -7,7 +7,7 @@
  */
 
 import { useState } from "react";
-import { ArgumentType, TaskSpec } from "../componentSpec";
+import type { ArgumentType, TaskSpec } from "../componentSpec";
 import ArgumentsEditor from "./ArgumentsEditor";
 
 interface ArgumentsEditorDialogProps {

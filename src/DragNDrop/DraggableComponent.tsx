@@ -6,9 +6,9 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { DragEvent } from "react";
+import type { DragEvent } from "react";
 
-import { ComponentReference, TaskSpec } from "../componentSpec";
+import type { ComponentReference, TaskSpec } from "../componentSpec";
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData("application/reactflow", JSON.stringify(nodeData));

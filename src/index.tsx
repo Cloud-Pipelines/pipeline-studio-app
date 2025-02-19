@@ -7,11 +7,11 @@
  */
 
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
-import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 //import { migrateUserData } from "./userDataMigration"
 
 // Migration is now disabled.
@@ -24,19 +24,35 @@ import reportWebVitals from './reportWebVitals';
 //   console.error(err);
 // }
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+})
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://cra.link/PWA
-serviceWorkerRegistration.register();
+const root = createRoot(document.getElementById('root')!);
+root.render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </React.StrictMode>
+);
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
+
+// Example query hook
+export function useImages(url: string) {
+  return useQuery({
+    queryKey: ['images', url],
+    queryFn: async () => {
+      const response = await fetch(url)
+      return response.blob()
+    }
+  })
+}
