@@ -25,6 +25,8 @@ const ArgumentsEditorDialog = ({
     Record<string, ArgumentType>
   >({ ...taskSpec.arguments });
 
+  console.log("ArgumentsEditorDialog", taskSpec, currentArguments);
+
   const componentSpec = taskSpec.componentRef.spec;
   if (componentSpec === undefined) {
     console.error(
