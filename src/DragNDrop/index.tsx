@@ -13,13 +13,14 @@ import {
 import './dnd.css';
 
 import SideBar from '../components/SideBar/SideBar';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { useDnD } from '../contex/DNDContext';
 import '@xyflow/react/dist/style.css';
 
 import { useLoadPipeline } from '../hooks/useLoadPipeline';
 import TaskNode from '../components/TaskNode/TaskNode';
 import TaskEdge from '../components/TaskEdge/TaskEdge';
+import { PipelineAutoSaver, savePipelineSpecToSessionStorage } from './PipelineAutoSaver';
 
 const nodeTypes = {
   task: TaskNode,
@@ -38,6 +39,10 @@ const DnDFlow = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(pipeline?.edges || []);
   const { screenToFlowPosition } = useReactFlow();
   const [type] = useDnD();
+
+  useEffect(() => {
+    savePipelineSpecToSessionStorage(pipeline, nodes);
+  }, [nodes, edges]);
 
   const onConnect = useCallback(
     (connection: Connection) => {

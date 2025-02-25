@@ -32,7 +32,7 @@ import type {
 import { isGraphImplementation } from "../componentSpec";
 import ComponentTaskNode from "./ComponentTaskNode";
 import { isComponentTaskNode } from "./ComponentTaskNode";
-import TestFlowComp from "./test_flow_comp";
+
 
 
 const NODE_LAYOUT_ANNOTATION_KEY = "editor.position";
@@ -348,7 +348,7 @@ const GraphComponentSpecFlow = ({
   };
 
   const nodes = Object.entries(graphSpec.tasks).map<Node>(([taskId, taskSpec]) => ({
-    id: taskIdToNodeId(taskId),
+    id: taskIdToNodeId(taskId), // looks like
     data: {
       taskSpec,
       taskId,

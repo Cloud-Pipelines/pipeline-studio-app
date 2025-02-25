@@ -19,6 +19,8 @@ export const savePipelineSpecToSessionStorage = (
   componentSpec: ComponentSpec,
   nodes?: Node[]
 ) => {
+
+  console.log("savePipelineSpecToSessionStorage", componentSpec, nodes);
   try {
     if (nodes !== undefined) {
       if (nodes.length === 0) {

@@ -1,6 +1,6 @@
 import type { ComponentSpec } from "../../componentSpec";
 import type { Node } from "@xyflow/react";
-import { getPositionFromAnnotations } from "./utils";
+import { getPositionFromAnnotations } from ".";
 
 export const getTaskNodes = (pipeline: ComponentSpec): Node[] => {
   if (!("graph" in pipeline.implementation)) return [];

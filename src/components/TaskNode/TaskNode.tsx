@@ -21,7 +21,7 @@ function TaskNode({ data, isConnectable }: TaskNodeProps) {
 
   const inputHandles = data.taskSpec.componentRef.spec.inputs.map((input: InputSpec) => {
     return (
-      <div key={input.name} className="flex w-full justify-start">
+      <div key={input.name} className="flex w-full justify-start bg-gray-50 odd:bg-gray-200">
         <div className="relative translate-x-[-11px]">
           <Handle
             type="target"
@@ -30,7 +30,7 @@ function TaskNode({ data, isConnectable }: TaskNodeProps) {
             id={input.name}
           />
         </div>
-        <span className="text-xs">{input.name.replace(/_/g, ' ')}</span>
+        <span className="text-xs text-left">{input.name.replace(/_/g, ' ')}</span>
 
       </div>
     )
@@ -39,8 +39,8 @@ function TaskNode({ data, isConnectable }: TaskNodeProps) {
 
   const outputHandles = data.taskSpec.componentRef.spec.outputs.map((output: OutputSpec) => {
     return (
-      <div key={output.name} className="flex w-full justify-end">
-        <span className="text-xs">{output.name.replace(/_/g, ' ')} - outbut</span>
+      <div key={output.name} className="flex w-full justify-end bg-gray-50 odd:bg-gray-200">
+        <span className="text-xs text-left">{output.name.replace(/_/g, ' ')} - outbut</span>
         <div className="relative translate-x-[11px]">
           <Handle
             type="source"

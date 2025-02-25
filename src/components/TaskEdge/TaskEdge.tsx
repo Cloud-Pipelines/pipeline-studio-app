@@ -1,4 +1,4 @@
-import { BaseEdge, getSmoothStepPath, getStraightPath, MarkerType, type EdgeProps } from '@xyflow/react';
+import { BaseEdge, getStraightPath, MarkerType, type EdgeProps } from '@xyflow/react';
 
 const TaskEdge = ({ id, sourceX, sourceY, targetX, targetY, markerEnd = MarkerType.ArrowClosed }: EdgeProps) => {
   const BUFFER_DISTANCE = 7; // pixels to move from source/target
