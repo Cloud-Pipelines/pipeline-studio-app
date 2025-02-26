@@ -1,6 +1,7 @@
 import { Drawer } from '@mui/material';
 import { useState } from 'react';
 import { useDnD } from '../../contex/DNDContext';
+import ComponentLibrary from '../ComponentLibrary/ComponentLibrary';
 
 
 const SideBar = () => {
@@ -48,6 +49,7 @@ const SideBar = () => {
         }}
       >
         <div className="h-full bg-white p-4 space-y-4">
+          <ComponentLibrary />
           <div
             className="dndnode rounded-lg border-2 border-blue-400 bg-blue-50 p-3 cursor-move hover:shadow-md hover:bg-blue-100 transition-all"
             onDragStart={(event) => onDragStart(event, 'input')}

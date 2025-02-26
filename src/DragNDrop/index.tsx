@@ -20,7 +20,7 @@ import '@xyflow/react/dist/style.css';
 import { useLoadPipeline } from '../hooks/useLoadPipeline';
 import TaskNode from '../components/TaskNode/TaskNode';
 import TaskEdge from '../components/TaskEdge/TaskEdge';
-import { PipelineAutoSaver, savePipelineSpecToSessionStorage } from './PipelineAutoSaver';
+import { ExportButton } from '../components/ExportButton';
 
 const nodeTypes = {
   task: TaskNode,
@@ -28,9 +28,6 @@ const nodeTypes = {
 const edgeTypes = {
   "task-edge": TaskEdge,
 };
-
-let id = 0;
-const getId = () => `dndnode_${id++}`;
 
 const DnDFlow = () => {
   const pipeline = useLoadPipeline();
@@ -41,7 +38,8 @@ const DnDFlow = () => {
   const [type] = useDnD();
 
   useEffect(() => {
-    savePipelineSpecToSessionStorage(pipeline, nodes);
+    const componentSpec = { nodes, edges };
+    localStorage.setItem("autosaved.component.yaml", JSON.stringify(componentSpec));
   }, [nodes, edges]);
 
   const onConnect = useCallback(
@@ -64,19 +62,23 @@ const DnDFlow = () => {
       event.preventDefault();
       if (!event.dataTransfer) return;
 
-      if (!type) {
-        return;
-      }
+      if (!type) return;
 
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
+
+      const taskSpecName = (type.taskSpec.componentRef.spec as { name: string }).name;
       const newNode = {
-        id: getId(),
-        type,
+        id: `${taskSpecName}_${Date.now()}`,
+        type: 'task',
         position,
-        data: { label: `${type} node` },
+        data: {
+          taskSpec: type.taskSpec,
+          taskId: `${taskSpecName}_${Date.now()}`
+        },
+        isConnectable: true,
       };
 
       setNodes((nds) => nds.concat(newNode));
@@ -86,6 +88,7 @@ const DnDFlow = () => {
 
   return (
     <div className="flex h-full" ref={reactFlowWrapper}>
+      <ExportButton />
       <ReactFlow
         nodes={nodes}
         edges={edges}

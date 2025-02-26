@@ -1,9 +1,21 @@
 import { createContext, useContext, useState } from 'react';
 
-const DnDContext = createContext([null, (_: any) => {}]);
+interface TaskSpec {
+  componentRef: {
+    url: string;
+    spec: unknown;
+  };
+}
+
+type DnDContextType = [
+  { taskSpec: TaskSpec } | null,
+  ((type: { taskSpec: TaskSpec } | null) => void) | null
+];
+
+const DnDContext = createContext<DnDContextType>([null, null]);
 
 export const DnDProvider = ({ children }: { children: React.ReactNode }) => {
-  const [type, setType] = useState(null);
+  const [type, setType] = useState<{ taskSpec: TaskSpec } | null>(null);
 
   return (
     <DnDContext.Provider value={[type, setType]}>
@@ -12,10 +24,10 @@ export const DnDProvider = ({ children }: { children: React.ReactNode }) => {
   );
 }
 
-export default DnDContext;
-
-export const useDnD = (): [string | null, (type: string) => void] => {
+export const useDnD = () => {
   const context = useContext(DnDContext);
   if (!context) throw new Error('useDnD must be used within a DNDProvider');
   return context;
 };
+
+export default DnDContext;
