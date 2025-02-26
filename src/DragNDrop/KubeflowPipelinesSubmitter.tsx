@@ -6,7 +6,7 @@
  * @copyright 2022 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import yaml from 'js-yaml';
+import yaml from "js-yaml";
 import { useEffect, useState } from "react";
 import {
   buildArgoWorkflowFromGraphComponent,

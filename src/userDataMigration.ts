@@ -8,7 +8,7 @@
 
 import localForage from "localforage";
 import {
-  ComponentFileEntry,
+  type ComponentFileEntry,
   getAllComponentFilesFromList,
   unsafeWriteFilesToList,
 } from "./componentStore";

@@ -81,7 +81,7 @@ details > * {
 .dndflow .reactflow-wrapper {
   flex-grow: 1;
   height: 100%;
-  min-height: 100%;
+  min-height: 50%;
 }
 
 .dndflow .react-flow__handle .label {

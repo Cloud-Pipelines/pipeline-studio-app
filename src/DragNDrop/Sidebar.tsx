@@ -47,19 +47,19 @@ const Sidebar = ({
 }: SidebarProps) => {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
-  // // Do not include the DebugScratch in the production build
-  // let DebugScratchElement = () => null;
-  // if (process?.env?.NODE_ENV === "development") {
-  //   try {
-  //     const DebugScratch = require("./DebugScratch").default;
-  //     DebugScratchElement = () =>
-  //       DebugScratch({
-  //         componentSpec: componentSpec,
-  //         setComponentSpec: setComponentSpec,
-  //         downloadData: downloadData,
-  //       });
-  //   } catch (e) {}
-  // }
+  // Do not include the DebugScratch in the production build
+  let DebugScratchElement = () => null;
+  if (import.meta.env.NODE_ENV === "development") {
+    try {
+      const DebugScratch = require("./DebugScratch").default;
+      DebugScratchElement = () =>
+        DebugScratch({
+          componentSpec: componentSpec,
+          setComponentSpec: setComponentSpec,
+          downloadData: downloadData,
+        });
+    } catch (e) {}
+  }
 
   return (
     <aside className="nodeList">
@@ -124,7 +124,7 @@ const Sidebar = ({
       <details>
         <summary>Debug and developer tools</summary>
         <button
-          onClick={(e) => {
+          onClick={() => {
             setIsSettingsDialogOpen(true);
           }}
         >
@@ -132,7 +132,7 @@ const Sidebar = ({
         </button>
         {componentSpec && <GraphComponentExporter componentSpec={componentSpec}/>}
         {componentSpec && <VertexAiExporter componentSpec={componentSpec}/>}
-        {/* <DebugScratchElement/> */}
+        <DebugScratchElement/>
       </details>
     </aside>
   );

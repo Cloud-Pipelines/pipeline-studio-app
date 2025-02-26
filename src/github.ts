@@ -485,7 +485,7 @@ export const getAllComponentsAsRefs = async (
   await hashToContentDb.iterate<string, void>(
     // !!! async processor causes only 1 item to be processed since it returns Promise instead of undefined.
     //async (componentData, hash, iterationNumber) => {
-    (componentText, hash, iterationNumber) => {
+    (componentText, hash) => {
       //const componentText = await componentData.text();
       try {
         const componentSpec = yaml.load(componentText) as ComponentSpec;
@@ -501,7 +501,7 @@ export const getAllComponentsAsRefs = async (
       }
     }
   );
-  await hashToUrlDb.iterate<string, void>((url, hash, iterationNumber) => {
+  await hashToUrlDb.iterate<string, void>((url, hash) => {
     let componentRef = hashToComponentRef.get(hash);
     if (componentRef === undefined) {
       console.error(

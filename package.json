@@ -30,7 +30,8 @@
     "test": "vitest run",
     "lint": "eslint src",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "gh-pages": "gh-pages -d dist"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -41,12 +42,15 @@
     "@tanstack/react-query-devtools": "^5.66.9",
     "@tanstack/react-router": "^1.104.1",
     "@tanstack/router-devtools": "^1.104.3",
+    "@types/gapi": "^0.0.39",
     "@xyflow/react": "^12.4.3",
+    "gh-pages": "^6.3.0",
     "js-yaml": "^4.1.0",
     "localforage": "^1.10.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
+    "react-scan": "^0.2.4",
     "tailwindcss": "^4.0.6"
   },
   "devDependencies": {

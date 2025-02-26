@@ -6,6 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+/// <reference types="gapi" />
 /* global gapi */
 
 import { useEffect, useState } from 'react';
@@ -296,7 +297,7 @@ const GoogleCloudSubmitter = ({
         </datalist>
         <button
           type="button" // The default button type is "submit", not "button". WTF!?
-          onClick={async (e) => {
+          onClick={async () => {
             try {
               const result = await cloudresourcemanagerListProjects(
                 googleCloudOAuthClientId

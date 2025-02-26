@@ -173,7 +173,7 @@ const typeSpecToVertexParameterSpec = (
 };
 
 const typeSpecToVertexArtifactTypeSchema = (
-  typeSpec: TypeSpecType | undefined
+  _typeSpec: TypeSpecType | undefined
 ): vertex.ArtifactTypeSchema => {
   // TODO: Implement better mapping
   const artifactTypeSchema = {
@@ -504,7 +504,7 @@ function buildVertexComponentSpecFromContainerComponentSpec(
 
 function buildVertexComponentSpecFromGraphComponentSpec(
   componentSpec: ComponentSpec,
-  taskArguments: Record<string, ArgumentType>,
+  _taskArguments: Record<string, ArgumentType>,
   inputsThatHaveParameterArguments: Set<string>,
   addExecutorAndGetId: (
     executor: vertex.ExecutorSpec,

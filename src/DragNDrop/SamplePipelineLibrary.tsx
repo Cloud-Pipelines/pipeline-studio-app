@@ -100,7 +100,7 @@ const SamplePipelineLibrary = ({
             ⋮ {/* ⋮ ≡ ⋅ */}
             <button
               className="link-button"
-              onClick={(e) => {
+              onClick={() => {
                 setComponentSpec?.(componentRef.spec);
               }}
             >

@@ -6,6 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import { test, expect } from "vitest";
 import fs from "fs";
 import yaml from "js-yaml";
 import path from "path";

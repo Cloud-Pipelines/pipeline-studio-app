@@ -25,8 +25,6 @@ const ArgumentsEditorDialog = ({
     Record<string, ArgumentType>
   >({ ...taskSpec.arguments });
 
-  console.log("ArgumentsEditorDialog", taskSpec, currentArguments);
-
   const componentSpec = taskSpec.componentRef.spec;
   if (componentSpec === undefined) {
     console.error(
@@ -64,7 +62,7 @@ const ArgumentsEditorDialog = ({
       </button>
       <button
         type="button"
-        onClick={(e) => {
+        onClick={() => {
           setArguments?.(currentArguments);
           closeEditor?.();
         }}

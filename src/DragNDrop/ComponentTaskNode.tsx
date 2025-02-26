@@ -6,15 +6,17 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import React, { type CSSProperties, memo, useState } from 'react';
-import type {
+import { type CSSProperties, memo, useState } from 'react';
+
+import type{
   ArgumentType,
   InputSpec,
   OutputSpec,
   TaskSpec,
 } from '../componentSpec';
 
-import { Handle, Position, type Node as FlowNode} from '@xyflow/react';
+import { Handle, Position } from "@xyflow/react";
+import type { Node, NodeProps, HandleType } from "@xyflow/react";
 
 import ArgumentsEditorDialog from './ArgumentsEditorDialog';
 
@@ -27,18 +29,12 @@ const MISSING_ARGUMENT_CLASS_NAME = "missing-argument";
 
 const NODE_WIDTH_IN_PX = 180;
 
-export interface ComponentTaskNodeProps extends Record<string, unknown> {
-  taskSpec: TaskSpec;
-  taskId?: string;
-  setArguments?: (args: Record<string, ArgumentType>) => void;
-}
-
-export const isComponentTaskNode = (node: FlowNode): node is FlowNode<ComponentTaskNodeProps> =>
-  node.type === "task" && node.data !== undefined && "taskSpec" in node.data;
+export const isComponentTaskNode = (node: Node): node is Node<ComponentTaskNodeProps> =>
+  node.type === "task" && node.data !== undefined && "taskSpec" in node.data && "taskId" in node.data;
 
 function generateHandles(
   ioSpecs: InputOrOutputSpec[],
-  handleType: 'source' | 'target',
+  handleType: HandleType,
   position: Position,
   idPrefix: string,
   inputsWithMissingArguments?: string[],
@@ -123,18 +119,25 @@ function generateOutputHandles(outputSpecs: OutputSpec[]): React.ReactElement[] 
   return generateHandles(outputSpecs, "source", outputHandlePosition, "output_");
 }
 
-const ComponentTaskNode = (props: { data: ComponentTaskNodeProps }) => {
-  const { data } = props;
+export interface ComponentTaskNodeProps extends Record<string, unknown> {
+  taskSpec: TaskSpec;
+  taskId: string;
+  setArguments?: (args: Record<string, ArgumentType>) => void;
+}
+
+const ComponentTaskNode = ({ data }: NodeProps) => {
   const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
 
-  const taskSpec = data.taskSpec;
+  const typedData = data as ComponentTaskNodeProps;
+
+  const taskSpec = typedData.taskSpec;
   const componentSpec = taskSpec.componentRef.spec;
   if (componentSpec === undefined) {
     return (<></>);
   }
 
   const label = componentSpec.name ?? "<component>";
-  let title = "Task ID: " + data.taskId;
+  let title = "Task ID: " + typedData.taskId;
   if (componentSpec.name) {
     title += "\nComponent: " + componentSpec.name;
   }
@@ -176,7 +179,7 @@ const ComponentTaskNode = (props: { data: ComponentTaskNodeProps }) => {
         <ArgumentsEditorDialog
           taskSpec={taskSpec}
           closeEditor={closeArgumentsEditor}
-          setArguments={data.setArguments}
+          setArguments={typedData.setArguments}
         />
       )}
     </div>

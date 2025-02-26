@@ -1,10 +1,15 @@
 {
-  "short_name": "TanStack App",
-  "name": "Create TanStack App Sample",
+  "short_name": "Pipeline editor",
+  "name": "Cloud Pipelines - Pipeline editor",
   "icons": [
     {
+      "src": "logo48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
       "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "sizes": "48x48",
       "type": "image/x-icon"
     },
     {

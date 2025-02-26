@@ -388,8 +388,11 @@ const PipelineLibrary = ({
       }}
     >
       <div style={{ margin: "5px" }}>
-        <button
-          onClick={(e) => {
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => {
             if (pipelineFile) {
               handlePipelineSave(pipelineFile?.name, true);
             } else {
@@ -398,8 +401,16 @@ const PipelineLibrary = ({
           }}
         >
           Save
-        </button>
-        <button onClick={openSaveAsDialog}>Save as</button>
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={openSaveAsDialog}
+        >
+          Save as
+        </Button>
+        <br />
         {componentSpec && saveAsDialogIsOpen && (
           <SavePipelineAsDialog
             initialName={componentSpec.name}
@@ -415,14 +426,24 @@ const PipelineLibrary = ({
           onChange={(e) => onDrop(Array.from(e.target.files ?? []))}
           style={{ display: "none" }}
         />
-        <button onClick={(e) => fileInput.current?.click()}>+ Import</button>
-        <button
-          onClick={(e) => {
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => fileInput.current?.click()}
+        >
+          + Import
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => {
             componentLink.current?.click();
           }}
         >
           Export
-        </button>
+        </Button>
         {componentSpec && (
           <GraphComponentLink
             linkRef={componentLink}
@@ -440,9 +461,11 @@ const PipelineLibrary = ({
         {Array.from(componentFiles.entries()).map(([fileName, fileEntry]) => (
           <div key={fileName}>
             ⋮ {/* ⋮ ≡ ⋅ */}
-            <button
-              className="link-button"
-              onClick={(e) => openPipelineFile(fileEntry)}
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => openPipelineFile(fileEntry)}
               style={
                 fileName === pipelineFile?.name
                   ? { fontWeight: "bold" }
@@ -455,7 +478,7 @@ const PipelineLibrary = ({
               }}
             >
               {fileName}
-            </button>
+            </Button>
           </div>
         ))}
         <Menu
