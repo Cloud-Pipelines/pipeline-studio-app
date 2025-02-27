@@ -19,14 +19,14 @@ import App from "./App.tsx";
 const queryClient = new QueryClient();
 
 scan({
-  enabled: true,
+  enabled: import.meta.env.VITE_ENABLE_SCAN === "true",
 });
 
 const rootRoute = createRootRoute({
   component: () => (
     <>
       <Outlet />
-      <TanStackRouterDevtools />
+      {import.meta.env.VITE_ENABLE_ROUTER_DEVTOOLS === "true" && <TanStackRouterDevtools />}
     </>
   ),
 });
