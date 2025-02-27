@@ -6,13 +6,13 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import './App.css';
-import DnDFlow from './DragNDrop/index';
-import AppFooter from "./AppFooter"
+import AppFooter from "./AppFooter";
+import DnDFlow from "./DragNDrop";
+import '@xyflow/react/dist/style.css';
 
 function App() {
   return (
-    <div className="App" style={{ width: "100%", height: "calc(100% - 30px)" }}>
+    <div className="App" style={{ width: "100%", height: "calc(100vh - 30px)" }}>
       <DnDFlow />
       <AppFooter />
     </div>
@@ -20,3 +20,4 @@ function App() {
 }
 
 export default App;
+

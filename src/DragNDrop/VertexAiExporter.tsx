@@ -7,10 +7,10 @@
  */
 
 import {
-  useStoreState,
-} from "react-flow-renderer";
+  useStore,
+} from "@xyflow/react";
 
-import { ComponentSpec } from "../componentSpec";
+import type { ComponentSpec } from "../componentSpec";
 import { augmentComponentSpec } from "./GraphComponentSpecFlow";
 import { buildVertexPipelineSpecFromGraphComponentSpec } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
 
@@ -19,7 +19,7 @@ interface VertexAiExporterProps {
 }
 
 const VertexAiExporter = ({componentSpec}: VertexAiExporterProps) => {
-  const nodes = useStoreState((store) => store.nodes);
+  const nodes = useStore((store) => store.nodes);
 
   let vertexPipelineSpecText = "";
   try {

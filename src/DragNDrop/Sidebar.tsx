@@ -6,19 +6,19 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { DragEvent, useState } from 'react';
+import { type DragEvent, useState } from 'react';
 
 import ComponentLibrary from './ComponentLibrary'
 import ComponentSearch from './ComponentSearch'
 import GraphComponentExporter from './GraphComponentExporter'
 import VertexAiExporter from './VertexAiExporter'
-import { ComponentSpec } from '../componentSpec';
+import { type ComponentSpec } from '../componentSpec';
 import UserComponentLibrary from "./UserComponentLibrary";
 import PipelineLibrary from "./PipelineLibrary";
-import { AppSettings } from '../appSettings';
+import type { AppSettings } from '../appSettings';
 import PipelineSubmitter from "./PipelineSubmitter";
 import AppSettingsDialog from './AppSettingsDialog';
-import { DownloadDataType, downloadDataWithCache } from '../cacheUtils';
+import { type DownloadDataType, downloadDataWithCache } from '../cacheUtils';
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -49,7 +49,7 @@ const Sidebar = ({
 
   // Do not include the DebugScratch in the production build
   let DebugScratchElement = () => null;
-  if (process?.env?.NODE_ENV === "development") {
+  if (import.meta.env.NODE_ENV === "development") {
     try {
       const DebugScratch = require("./DebugScratch").default;
       DebugScratchElement = () =>
@@ -124,7 +124,7 @@ const Sidebar = ({
       <details>
         <summary>Debug and developer tools</summary>
         <button
-          onClick={(e) => {
+          onClick={() => {
             setIsSettingsDialogOpen(true);
           }}
         >

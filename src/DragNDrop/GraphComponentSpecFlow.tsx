@@ -6,22 +6,22 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import React, { DragEvent, useState } from "react";
-import ReactFlow, {
-  ArrowHeadType,
+import { useEffect, useState } from "react";
+import type { DragEvent, ReactNode } from "react";
+
+import { ReactFlow, MarkerType, useNodesState, useEdgesState } from '@xyflow/react';
+
+import type {
+  ReactFlowInstance,
   Connection,
   Edge,
-  ElementId,
-  Elements,
-  isEdge,
-  isNode,
   Node,
-  OnLoadParams,
   ReactFlowProps,
   XYPosition,
-} from "react-flow-renderer";
+  OnConnect,
+} from "@xyflow/react";
 
-import {
+import type {
   ArgumentType,
   ComponentSpec,
   GraphInputArgument,
@@ -30,9 +30,13 @@ import {
   OutputSpec,
   TaskOutputArgument,
   TaskSpec,
+} from "../componentSpec";
+
+import {
   isGraphImplementation,
 } from "../componentSpec";
-import ComponentTaskNode, { ComponentTaskNodeProps, isComponentTaskNode } from "./ComponentTaskNode";
+
+import ComponentTaskNode, { isComponentTaskNode } from "./ComponentTaskNode";
 
 
 const NODE_LAYOUT_ANNOTATION_KEY = "editor.position";
@@ -66,20 +70,20 @@ export const augmentComponentSpec = (
   const getNodePositionAnnotation = (node: Node) =>
     JSON.stringify({
       // node.position cannot be used since set at 1st drop and never updated
-      x: node.__rf.position.x,
-      y: node.__rf.position.y,
-      width: node.__rf.width,
-      height: node.__rf.height,
+      x: node.position.x,
+      y: node.position.y,
+      width: node.width,
+      height: node.height,
     });
 
   const nodeXPositionComparer = (n1: Node, n2: Node) => {
-    const deltaX = n1.__rf.position.x - n2.__rf.position.x;
-    const deltaY = n1.__rf.position.y - n2.__rf.position.y;
+    const deltaX = n1.position.x - n2.position.x;
+    const deltaY = n1.position.y - n2.position.y;
     return deltaX !== 0 ? deltaX : deltaY;
   };
   const nodeYPositionComparer = (n1: Node, n2: Node) => {
-    const deltaX = n1.__rf.position.x - n2.__rf.position.x;
-    const deltaY = n1.__rf.position.y - n2.__rf.position.y;
+    const deltaX = n1.position.x - n2.position.x;
+    const deltaY = n1.position.y - n2.position.y;
     return deltaY !== 0 ? deltaY : deltaX;
   };
 
@@ -271,7 +275,7 @@ export const augmentComponentSpec = (
   return componentSpec;
 };
 
-const makeNameUniqueByAddingIndex = (name: string, existingNames: Set<string>): ElementId => {
+const makeNameUniqueByAddingIndex = (name: string, existingNames: Set<string>): string => {
   let finalName = name;
   let index = 1;
   while (existingNames.has(finalName)) {
@@ -317,7 +321,7 @@ export interface GraphComponentSpecFlowProps
   setComponentSpec: (componentSpec: ComponentSpec) => void,
 }
 
-const nodeTypes = {
+const nodeTypes: Record<string, React.ComponentType<any>> = {
   task: ComponentTaskNode,
 };
 
@@ -327,15 +331,15 @@ const GraphComponentSpecFlow = ({
   setComponentSpec,
   ...rest
 }: GraphComponentSpecFlowProps) => {
-  const [reactFlowInstance, setReactFlowInstance] = useState<OnLoadParams>();
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance>();
 
-  if (! ('graph' in componentSpec.implementation)) {
+  if (!('graph' in componentSpec.implementation)) {
     // Only graph components are supported
     return <></>;
   }
   let graphSpec = componentSpec.implementation.graph;
 
-  const nodes = Object.entries(graphSpec.tasks).map<Node<ComponentTaskNodeProps>>(
+  const nodes = Object.entries(graphSpec.tasks).map<Node<any>>(
     ([taskId, taskSpec]) => {
       let position: XYPosition = { x: 0, y: 0 };
       if (taskSpec.annotations !== undefined) {
@@ -345,7 +349,7 @@ const GraphComponentSpecFlow = ({
           ] as string;
           const decodedPosition = JSON.parse(layoutAnnotation);
           position = { x: decodedPosition["x"], y: decodedPosition["y"] };
-        } catch (err) {}
+        } catch (err) { }
       }
 
       return {
@@ -353,7 +357,7 @@ const GraphComponentSpecFlow = ({
         data: {
           taskSpec: taskSpec,
           taskId: taskId,
-          setArguments: (args) => setTaskArguments(taskId, args),
+          setArguments: (args: Record<string, ArgumentType>) => setTaskArguments(taskId, args),
         },
         position: position,
         type: "task",
@@ -371,7 +375,7 @@ const GraphComponentSpecFlow = ({
           ] as string;
           const decodedPosition = JSON.parse(layoutAnnotation);
           position = { x: decodedPosition["x"], y: decodedPosition["y"] };
-        } catch (err) {}
+        } catch (err) { }
       }
       return {
         id: inputNameToNodeId(inputSpec.name),
@@ -392,7 +396,7 @@ const GraphComponentSpecFlow = ({
           ] as string;
           const decodedPosition = JSON.parse(layoutAnnotation);
           position = { x: decodedPosition["x"], y: decodedPosition["y"] };
-        } catch (err) {}
+        } catch (err) { }
       }
       return {
         id: outputNameToNodeId(outputSpec.name),
@@ -418,7 +422,7 @@ const GraphComponentSpecFlow = ({
               sourceHandle: `output_${taskOutput.outputName}`,
               target: taskIdToNodeId(taskId),
               targetHandle: `input_${inputName}`,
-              arrowHeadType: ArrowHeadType.ArrowClosed,
+              markerEnd: { type: MarkerType.Arrow },
             };
             return [edge];
           } else if ("graphInput" in argument) {
@@ -431,7 +435,7 @@ const GraphComponentSpecFlow = ({
               sourceHandle: null,
               target: taskIdToNodeId(taskId),
               targetHandle: `input_${inputName}`,
-              arrowHeadType: ArrowHeadType.ArrowClosed,
+              markerEnd: { type: MarkerType.Arrow },
             };
             return [edge];
           } else {
@@ -454,13 +458,12 @@ const GraphComponentSpecFlow = ({
         //targetHandle: undefined,
         //targetHandle: "Output",
         targetHandle: null,
-        arrowHeadType: ArrowHeadType.ArrowClosed,
+        markerEnd: { type: MarkerType.Arrow },
       };
       return edge;
     }
   );
 
-  const elements = (nodes as Elements).concat(inputNodes).concat(outputNodes).concat(edges).concat(outputEdges);
 
   const replaceComponentSpec = (newComponentSpec: ComponentSpec) => {
     componentSpec = newComponentSpec;
@@ -684,25 +687,7 @@ const GraphComponentSpecFlow = ({
     }
   };
 
-  const onElementsRemove = (elementsToRemove: Elements) => {
-    for (const element of elementsToRemove) {
-      if (isEdge(element)) {
-        removeEdge(element);
-      }
-    }
-    for (const element of elementsToRemove) {
-      if (isNode(element)) {
-        removeNode(element);
-      }
-    }
-  };
-
-  const onEdgeUpdate = (oldEdge: Edge, newConnection: Connection) => {
-    removeEdge(oldEdge);
-    addConnection(newConnection);
-  };
-
-  const onLoad = (_reactFlowInstance: OnLoadParams) =>
+  const onLoad = (_reactFlowInstance: ReactFlowInstance) =>
     setReactFlowInstance(_reactFlowInstance);
 
   const onDragOver = (event: DragEvent) => {
@@ -734,7 +719,7 @@ const GraphComponentSpecFlow = ({
 
       // Node position. Offsets should be included in projection, so that they snap to the grid.
       // Otherwise the dropped nodes will be out of phase with the rest of the nodes even when snapping.
-      let position = reactFlowInstance.project({
+      let position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX - dragOffsetX,
         y: event.clientY - dragOffsetY,
       });
@@ -783,27 +768,89 @@ const GraphComponentSpecFlow = ({
     }
   };
 
+  const onElementsRemove = (params: { nodes: Node[]; edges: Edge[] }) => {
+    for (const edge of params.edges) {
+      removeEdge(edge);
+    }
+    for (const node of params.nodes) {
+      removeNode(node);
+    }
+  };
   return (
-    <ReactFlow
+    <Flow
       {...rest}
-      elements={elements}
-      nodeTypes={nodeTypes}
+      initialNodes={[...nodes, ...inputNodes, ...outputNodes]}
+      initialEdges={[...edges, ...outputEdges]}
       onConnect={onConnect}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      onEdgeUpdate={onEdgeUpdate}
-      onElementsRemove={onElementsRemove}
       onLoad={onLoad}
-      deleteKeyCode={
-        rest.deleteKeyCode ?? (isAppleOS() ? "Backspace" : "Delete")
-      }
-      multiSelectionKeyCode={
-        rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
-      }
+      onElementsRemove={onElementsRemove}
     >
       {children}
-    </ReactFlow>
+    </Flow>
   );
+};
+
+interface FlowProps {
+  initialNodes: Node[];
+  initialEdges: Edge[];
+  onConnect: OnConnect;
+  onDragOver: (event: DragEvent) => void;
+  onDrop: (event: DragEvent) => void;
+  onLoad: (reactFlowInstance: ReactFlowInstance) => void;
+  onElementsRemove: (params: { nodes: Node[]; edges: Edge[] }) => void;
+  children: ReactNode;
+  [key: string]: any; // For rest props
+}
+
+const Flow = ({
+  initialNodes,
+  initialEdges,
+  onConnect,
+  onDragOver,
+  onDrop,
+  onLoad,
+  onElementsRemove,
+  children,
+  ...rest
+}: FlowProps) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  const handleOnDrop = (event: DragEvent) => {
+    onDrop(event);
+  };
+
+  useEffect(() => {
+    setNodes(initialNodes);
+  }, [initialNodes]);
+
+  useEffect(() => {
+    setEdges(initialEdges);
+  }, [initialEdges]);
+
+  return <ReactFlow
+    {...rest}
+    nodes={nodes}
+    edges={edges}
+    onNodesChange={onNodesChange}
+    onEdgesChange={onEdgesChange}
+    nodeTypes={nodeTypes}
+    onConnect={onConnect}
+    onDragOver={onDragOver}
+    onDrop={handleOnDrop}
+    onDelete={onElementsRemove}
+    onInit={onLoad}
+    deleteKeyCode={
+      rest.deleteKeyCode ?? (isAppleOS() ? "Backspace" : "Delete")
+    }
+    multiSelectionKeyCode={
+      rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
+    }
+  >
+    {children}
+  </ReactFlow>
 };
 
 export default GraphComponentSpecFlow;

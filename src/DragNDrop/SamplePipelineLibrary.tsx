@@ -7,10 +7,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { DownloadDataType, downloadDataWithCache, loadObjectFromYamlData } from "../cacheUtils";
-import { ComponentReference, ComponentSpec } from "../componentSpec";
+import { type DownloadDataType, downloadDataWithCache, loadObjectFromYamlData } from "../cacheUtils";
+import { type ComponentReference, type ComponentSpec } from "../componentSpec";
 import {
-  ComponentReferenceWithSpec,
+  type ComponentReferenceWithSpec,
   fullyLoadComponentRefFromUrl,
 } from "../componentStore";
 
@@ -100,7 +100,7 @@ const SamplePipelineLibrary = ({
             ⋮ {/* ⋮ ≡ ⋅ */}
             <button
               className="link-button"
-              onClick={(e) => {
+              onClick={() => {
                 setComponentSpec?.(componentRef.spec);
               }}
             >

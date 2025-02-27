@@ -6,13 +6,14 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+/// <reference types="gapi" />
 /* global gapi */
 
 import { useEffect, useState } from 'react';
 
-import { ComponentSpec } from '../componentSpec';
+import type { ComponentSpec } from '../componentSpec';
 import { buildVertexPipelineJobFromGraphComponent } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
-import { PipelineJob } from '../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec';
+import type { PipelineJob } from '../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec';
 
 const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY = "GoogleCloudSubmitter/gcsOutputDirectory";
 const LOCAL_STORAGE_PROJECT_ID_KEY = "GoogleCloudSubmitter/projectId";
@@ -296,7 +297,7 @@ const GoogleCloudSubmitter = ({
         </datalist>
         <button
           type="button" // The default button type is "submit", not "button". WTF!?
-          onClick={async (e) => {
+          onClick={async () => {
             try {
               const result = await cloudresourcemanagerListProjects(
                 googleCloudOAuthClientId

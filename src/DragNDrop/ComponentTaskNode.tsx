@@ -6,15 +6,17 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { CSSProperties, memo, useState } from 'react';
-import {
+import { type CSSProperties, memo, useState } from 'react';
+
+import type{
   ArgumentType,
   InputSpec,
   OutputSpec,
   TaskSpec,
 } from '../componentSpec';
 
-import { Handle, Position, Node, NodeProps, HandleType } from 'react-flow-renderer';
+import { Handle, Position } from "@xyflow/react";
+import type { Node, NodeProps, HandleType } from "@xyflow/react";
 
 import ArgumentsEditorDialog from './ArgumentsEditorDialog';
 
@@ -28,7 +30,7 @@ const MISSING_ARGUMENT_CLASS_NAME = "missing-argument";
 const NODE_WIDTH_IN_PX = 180;
 
 export const isComponentTaskNode = (node: Node): node is Node<ComponentTaskNodeProps> =>
-  node.type === "task" && node.data !== undefined && "taskSpec" in node.data;
+  node.type === "task" && node.data !== undefined && "taskSpec" in node.data && "taskId" in node.data;
 
 function generateHandles(
   ioSpecs: InputOrOutputSpec[],
@@ -36,7 +38,7 @@ function generateHandles(
   position: Position,
   idPrefix: string,
   inputsWithMissingArguments?: string[],
-): JSX.Element[] {
+): React.ReactElement[] {
   let handleComponents = [];
   const numHandles = ioSpecs.length;
   for (let i = 0; i < numHandles; i++) {
@@ -109,31 +111,33 @@ function generateLabelStyle(
   return [labelClasses, labelStyle];
 }
 
-function generateInputHandles(inputSpecs: InputSpec[], inputsWithInvalidArguments?: string[]): JSX.Element[] {
+function generateInputHandles(inputSpecs: InputSpec[], inputsWithInvalidArguments?: string[]): React.ReactElement[] {
   return generateHandles(inputSpecs, "target", inputHandlePosition, "input_", inputsWithInvalidArguments);
 }
 
-function generateOutputHandles(outputSpecs: OutputSpec[]): JSX.Element[] {
+function generateOutputHandles(outputSpecs: OutputSpec[]): React.ReactElement[] {
   return generateHandles(outputSpecs, "source", outputHandlePosition, "output_");
 }
 
-export interface ComponentTaskNodeProps {
-  taskSpec: TaskSpec,
-  taskId?: string,
+export interface ComponentTaskNodeProps extends Record<string, unknown> {
+  taskSpec: TaskSpec;
+  taskId: string;
   setArguments?: (args: Record<string, ArgumentType>) => void;
-};
+}
 
-const ComponentTaskNode = ({ data }: NodeProps<ComponentTaskNodeProps>) => {
+const ComponentTaskNode = ({ data }: NodeProps) => {
   const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
 
-  const taskSpec = data.taskSpec;
+  const typedData = data as ComponentTaskNodeProps;
+
+  const taskSpec = typedData.taskSpec;
   const componentSpec = taskSpec.componentRef.spec;
   if (componentSpec === undefined) {
     return (<></>);
   }
 
   const label = componentSpec.name ?? "<component>";
-  let title = "Task ID: " + data.taskId;
+  let title = "Task ID: " + typedData.taskId;
   if (componentSpec.name) {
     title += "\nComponent: " + componentSpec.name;
   }
@@ -175,7 +179,7 @@ const ComponentTaskNode = ({ data }: NodeProps<ComponentTaskNodeProps>) => {
         <ArgumentsEditorDialog
           taskSpec={taskSpec}
           closeEditor={closeArgumentsEditor}
-          setArguments={data.setArguments}
+          setArguments={typedData.setArguments}
         />
       )}
     </div>

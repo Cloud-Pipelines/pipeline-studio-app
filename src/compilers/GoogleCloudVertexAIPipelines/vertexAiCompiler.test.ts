@@ -9,7 +9,8 @@
 import fs from "fs";
 import yaml from "js-yaml";
 import path from "path";
-import { ComponentSpec } from "../../componentSpec";
+import { test, expect } from 'vitest';
+import type { ComponentSpec } from "../../componentSpec";
 import { buildVertexPipelineJobFromGraphComponent } from "./vertexAiCompiler";
 
 test("buildVertexPipelineJobFromGraphComponent compiles Data_passing_pipeline", () => {
@@ -40,7 +41,7 @@ test("buildVertexPipelineJobFromGraphComponent compiles Data_passing_pipeline", 
     expect(actualResult).toEqual(expectedResult);
   } else {
     fs.writeFileSync(expectedPath, JSON.stringify(actualResult, undefined, 2));
-    fail();
+    expect.fail("Expected result file doesn't exist. A new file has been created.");
   }
 });
 
@@ -66,7 +67,7 @@ test("buildVertexPipelineJobFromGraphComponent compiles XGBoost_pipeline", () =>
     expect(actualResult).toEqual(expectedResult);
   } else {
     fs.writeFileSync(expectedPath, JSON.stringify(actualResult, undefined, 2));
-    fail();
+    expect.fail("Expected result file doesn't exist. A new file has been created.");
   }
 });
 
@@ -92,6 +93,6 @@ test("buildVertexPipelineJobFromGraphComponent compiles Name_collision_pipeline"
     expect(actualResult).toEqual(expectedResult);
   } else {
     fs.writeFileSync(expectedPath, JSON.stringify(actualResult, undefined, 2));
-    fail();
+    expect.fail("Expected result file doesn't exist. A new file has been created.");
   }
 });

@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { ArgumentType, ComponentSpec } from "../componentSpec";
+import type { ArgumentType, ComponentSpec } from "../componentSpec";
 import ArgumentsEditor from "./ArgumentsEditor";
 import GoogleCloudSubmitter from "./GoogleCloud";
 import KubeflowPipelinesSubmitter from "./KubeflowPipelinesSubmitter";

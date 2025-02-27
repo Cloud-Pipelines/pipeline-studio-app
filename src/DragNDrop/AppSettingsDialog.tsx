@@ -13,7 +13,7 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
-} from "@material-ui/core";
+} from "@mui/material";
 import { useState } from "react";
 import { getMutableAppSettings } from "../appSettings";
 
@@ -130,7 +130,7 @@ const AppSettingsDialog = ({ isOpen, handleClose }: AppSettingsDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="default">
+        <Button onClick={handleClose} color="primary">
           Cancel
         </Button>
         <Button onClick={handleSave} color="primary">

@@ -15,15 +15,17 @@ import {
   Menu,
   MenuItem,
   TextField,
-} from "@material-ui/core";
+} from "@mui/material";
 import { useCallback, useState, useEffect, useRef } from "react";
-import { useStoreState } from "react-flow-renderer";
-import { DownloadDataType, downloadDataWithCache } from "../cacheUtils";
-import { ComponentSpec, isGraphImplementation } from "../componentSpec";
+import { useStore } from "@xyflow/react";
+import type { DownloadDataType } from "../cacheUtils";
+import { downloadDataWithCache } from "../cacheUtils";
+import type { ComponentSpec } from "../componentSpec";
+import { isGraphImplementation } from "../componentSpec";
 import {
   loadComponentAsRefFromText,
   getAllComponentFilesFromList,
-  ComponentFileEntry,
+  type ComponentFileEntry,
   addComponentToListByText,
   componentSpecToYaml,
   writeComponentToFileListFromText,
@@ -156,7 +158,7 @@ const SaveAsDialog = ({
   initialValue,
   inputLabel = "Pipeline name",
 }: SaveAsDialogProps) => {
-  const nameInputRef = useRef<HTMLInputElement>();
+  const nameInputRef = useRef<HTMLInputElement>(null);
   return (
     <Dialog open={isOpen} aria-labelledby="alert-dialog-title">
       <DialogTitle id="alert-dialog-title">{"Save pipeline"}</DialogTitle>
@@ -204,7 +206,7 @@ const PipelineLibrary = ({
   );
   const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
-  const nodes = useStoreState((store) => store.nodes);
+  const nodes = useStore((store) => store.nodes);
 
   const [contextMenuFileName, setContextMenuFileName] = useState<string>();
   const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement>();
@@ -366,7 +368,7 @@ const PipelineLibrary = ({
   };
 
   const openSamplePipeline = useCallback(
-    (pipelineSpec) => {
+    (pipelineSpec: ComponentSpec) => {
       //Reset current file
       setPipelineFile(undefined);
       setComponentSpec?.(pipelineSpec);
@@ -386,8 +388,11 @@ const PipelineLibrary = ({
       }}
     >
       <div style={{ margin: "5px" }}>
-        <button
-          onClick={(e) => {
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => {
             if (pipelineFile) {
               handlePipelineSave(pipelineFile?.name, true);
             } else {
@@ -396,8 +401,16 @@ const PipelineLibrary = ({
           }}
         >
           Save
-        </button>
-        <button onClick={openSaveAsDialog}>Save as</button>
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={openSaveAsDialog}
+        >
+          Save as
+        </Button>
+        <br />
         {componentSpec && saveAsDialogIsOpen && (
           <SavePipelineAsDialog
             initialName={componentSpec.name}
@@ -413,14 +426,24 @@ const PipelineLibrary = ({
           onChange={(e) => onDrop(Array.from(e.target.files ?? []))}
           style={{ display: "none" }}
         />
-        <button onClick={(e) => fileInput.current?.click()}>+ Import</button>
-        <button
-          onClick={(e) => {
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => fileInput.current?.click()}
+        >
+          + Import
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => {
             componentLink.current?.click();
           }}
         >
           Export
-        </button>
+        </Button>
         {componentSpec && (
           <GraphComponentLink
             linkRef={componentLink}
@@ -438,9 +461,11 @@ const PipelineLibrary = ({
         {Array.from(componentFiles.entries()).map(([fileName, fileEntry]) => (
           <div key={fileName}>
             ⋮ {/* ⋮ ≡ ⋅ */}
-            <button
-              className="link-button"
-              onClick={(e) => openPipelineFile(fileEntry)}
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => openPipelineFile(fileEntry)}
               style={
                 fileName === pipelineFile?.name
                   ? { fontWeight: "bold" }
@@ -453,7 +478,7 @@ const PipelineLibrary = ({
               }}
             >
               {fileName}
-            </button>
+            </Button>
           </div>
         ))}
         <Menu

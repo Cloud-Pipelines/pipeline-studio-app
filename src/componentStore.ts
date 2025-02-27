@@ -8,13 +8,14 @@
 
 import yaml from "js-yaml";
 import localForage from "localforage";
-import { DownloadDataType, downloadDataWithCache } from "./cacheUtils";
+import type { DownloadDataType } from "./cacheUtils";
+import { downloadDataWithCache } from "./cacheUtils";
 
-import {
+import type {
   ComponentSpec,
   ComponentReference,
-  isValidComponentSpec,
 } from "./componentSpec";
+import { isValidComponentSpec } from "./componentSpec";
 
 // IndexedDB: DB and table names
 const DB_NAME = "components";
@@ -262,7 +263,7 @@ export const getAllComponentsAsRefs = async () => {
   // TODO: Rewrite as async generator
   const digestToComponentData = new Map<string, ArrayBuffer>();
   await digestToDataDb.iterate<ArrayBuffer, void>(
-    (data, digest, iterationNumber) => {
+    (data, digest) => {
       digestToComponentData.set(digest, data);
     }
   );
@@ -290,7 +291,7 @@ const addCanonicalUrlsToComponentReferences = async (
     storeName: DIGEST_TO_CANONICAL_URL_DB_TABLE_NAME,
   });
   await digestToCanonicalUrlDb.iterate<string, void>(
-    (url, digest, iterationNumber) => {
+    (url, digest) => {
       let componentRef = digestToComponentRef.get(digest);
       if (componentRef === undefined) {
         console.error(
@@ -530,7 +531,7 @@ export const getAllComponentsFromList = async (listName: string) => {
   });
   let componentRefs: ComponentReferenceWithSpec[] = [];
   await componentListDb.iterate<ComponentFileEntry, void>(
-    (fileEntry, fileName, iterationNumber) => {
+    (fileEntry) => {
       componentRefs.push(fileEntry.componentRef);
     }
   );
@@ -546,7 +547,7 @@ export const getAllComponentFilesFromList = async (listName: string) => {
   });
   let componentFiles = new Map<string, ComponentFileEntry>();
   await componentListDb.iterate<ComponentFileEntry, void>(
-    (fileEntry, fileName, iterationNumber) => {
+    (fileEntry, fileName) => {
       componentFiles.set(fileName, fileEntry);
     }
   );

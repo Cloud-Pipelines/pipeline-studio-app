@@ -12,10 +12,10 @@ import {
   Controls,
   Background,
   MiniMap,
-} from 'react-flow-renderer';
+} from '@xyflow/react';
 
 import { downloadDataWithCache } from '../cacheUtils';
-import { ComponentSpec } from '../componentSpec';
+import type { ComponentSpec } from '../componentSpec';
 import GraphComponentSpecFlow, {
   EMPTY_GRAPH_COMPONENT_SPEC,
 } from "./GraphComponentSpecFlow";

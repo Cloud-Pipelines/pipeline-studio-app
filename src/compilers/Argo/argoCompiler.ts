@@ -7,12 +7,12 @@
  */
 
 import {
-  ArgumentType,
-  ComponentSpec,
-  StringOrPlaceholder,
+  type ArgumentType,
+  type ComponentSpec,
+  type StringOrPlaceholder,
   isContainerImplementation,
   isGraphImplementation,
-  InputSpec,
+  type InputSpec,
 } from "../../componentSpec";
 
 import { assertDefined, notUndefined } from "../../utils";

@@ -6,7 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { ArgumentType, ComponentSpec, TypeSpecType } from "../componentSpec";
+import type { ArgumentType, ComponentSpec, TypeSpecType } from "../componentSpec";
 
 interface ArgumentsEditorProps {
   componentSpec: ComponentSpec;
@@ -15,7 +15,7 @@ interface ArgumentsEditorProps {
   shrinkToWidth?: boolean;
 }
 
-const getPatternForTypeSpec = (typeSpec?: TypeSpecType) => {
+const getPatternForTypeSpec = (_typeSpec?: TypeSpecType) => {
   // TODO: Implement
   return undefined;
 };
@@ -143,7 +143,7 @@ const ArgumentsEditor = ({
               <button
                 type="button"
                 title="Reset to default"
-                onClick={(e) => {
+                onClick={() => {
                   delete componentArguments[inputName];
                   setComponentArguments({ ...componentArguments });
                 }}
