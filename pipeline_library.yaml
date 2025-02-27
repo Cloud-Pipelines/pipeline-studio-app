@@ -2,8 +2,5 @@ annotations: {}
 components:
   - url: "https://raw.githubusercontent.com/Ark-kun/pipelines/2edfd25b5ee3a4aa149c24a225a50041fbd3662d/components/XGBoost/_samples/sample_pipeline.pipeline.component.yaml"
   - url: "https://raw.githubusercontent.com/Ark-kun/pipelines/237cd6bc0b6db26f615c22897be20aad77270b50/components/PyTorch/_samples/Train_fully-connected_network.pipeline.component.yaml"
-  - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/5ab1df31c4560497f0aa6af3556ce456848fc120/samples/Basic_ML_training/Train_tabular_regression_model_using_TensorFlow/pipeline.component.yaml"
-  - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/25d733b9e3853184bc3843a74f3b8c350900d436/samples/Basic_ML_training/Train_tabular_regression_model_using_PyTorch/pipeline.component.yaml"
-  - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/969db79c21cf419903428d6fa3ce15bc1152b7a6/samples/Basic_ML_training/Train_tabular_regression_model_using_XGBoost/pipeline.component.yaml"
   - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/44b0543525ab6149ce995a411f88997e7131a53d/components/google-cloud/Vertex_AI/AutoML/Tables/_samples/VertexAI.AutoML.Tables.pipeline.component.yaml"
   - url: "https://raw.githubusercontent.com/Ark-kun/pipelines/2765b13699ac28de523f499eeaa9eb2ed9b8798a/components/deprecated/tfx/_samples/TFX.pipeline.component.yaml"

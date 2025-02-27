@@ -3,11 +3,6 @@
   "name": "Cloud Pipelines - Pipeline editor",
   "icons": [
     {
-      "src": "logo48.png",
-      "sizes": "48x48",
-      "type": "image/png"
-    },
-    {
       "src": "favicon.ico",
       "sizes": "48x48",
       "type": "image/x-icon"
