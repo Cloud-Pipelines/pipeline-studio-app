@@ -44,7 +44,7 @@ function generateHandles(
   idPrefix: string,
   inputsWithMissingArguments?: string[],
 ): React.ReactElement[] {
-  let handleComponents = [];
+  const handleComponents = [];
   const numHandles = ioSpecs.length;
   for (let i = 0; i < numHandles; i++) {
     const ioSpec = ioSpecs[i];

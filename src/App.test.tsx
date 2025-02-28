@@ -5,6 +5,6 @@ import App from "./App.tsx";
 describe("App", () => {
   test("renders", () => {
     render(<App />);
-    expect(screen.getByText("SideBar")).toBeDefined();
+    expect(screen.getByText("About")).toBeDefined();
   });
 });

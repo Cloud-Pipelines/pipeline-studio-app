@@ -527,7 +527,7 @@ function buildVertexComponentSpecFromGraphComponentSpec(
   const inputsConsumedAsParameter = new Set<string>();
   const inputsConsumedAsArtifact = new Set<string>();
 
-  let vertexTasks: Record<string, vertex.PipelineTaskSpec> = {};
+  const vertexTasks: Record<string, vertex.PipelineTaskSpec> = {};
   const taskStringToTaskId = new Map<string, string>();
 
   const addTaskAndGetId = (
@@ -872,9 +872,9 @@ export const buildVertexPipelineSpecFromGraphComponentSpec = (
   componentSpec: ComponentSpec,
   pipelineContextName = "pipeline",
 ) => {
-  let vertexExecutors: Record<string, vertex.ExecutorSpec> = {};
+  const vertexExecutors: Record<string, vertex.ExecutorSpec> = {};
   const executorStringToExecutorId = new Map<string, string>();
-  let vertexComponents: Record<string, vertex.ComponentSpec> = {};
+  const vertexComponents: Record<string, vertex.ComponentSpec> = {};
   const componentStringToComponentId = new Map<string, string>();
 
   const addExecutorAndGetId = (
@@ -973,7 +973,7 @@ export const buildVertexPipelineJobFromGraphComponent = (
   );
 
   // Converting the pipeline arguments
-  let convertedPipelineArguments: Record<string, any> = {};
+  const convertedPipelineArguments: Record<string, any> = {};
   for (const [key, value] of Array.from(allPipelineArguments.entries())) {
     if (!(key in inputParameterDefinitions)) {
       console.error(

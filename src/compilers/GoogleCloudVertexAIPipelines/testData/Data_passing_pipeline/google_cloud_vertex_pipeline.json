@@ -31,10 +31,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def _make_parent_dirs_and_return_path(file_path: str):\n    import os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return file_path\n\ndef produce_anything(data_path):\n    with open(data_path, \"w\") as f:\n        f.write(\"produce_anything\")\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Produce anything', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = produce_anything(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.outputs.artifacts['data'].path}}"
-            ]
+            "args": ["--data", "{{$.outputs.artifacts['data'].path}}"]
           }
         },
         "Produce something": {
@@ -46,10 +43,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def _make_parent_dirs_and_return_path(file_path: str):\n    import os\n    os.makedirs(os.path.dirname(file_path), exist_ok=True)\n    return file_path\n\ndef produce_something(data_path):\n    with open(data_path, \"w\") as f:\n        f.write(\"produce_something\")\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Produce something', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = produce_something(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.outputs.artifacts['data'].path}}"
-            ]
+            "args": ["--data", "{{$.outputs.artifacts['data'].path}}"]
           }
         },
         "Produce string": {
@@ -76,10 +70,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def consume_anything_as_value(data):\n    print(\"consume_anything_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_value(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].value}}"
-            ]
+            "args": ["--data", "{{$.inputs.artifacts['data'].value}}"]
           }
         },
         "Consume anything as file": {
@@ -91,10 +82,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def consume_anything_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_anything_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_file(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
+            "args": ["--data", "{{$.inputs.artifacts['data'].path}}"]
           }
         },
         "Consume something as value": {
@@ -106,10 +94,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def consume_something_as_value(data):\n    print(\"consume_something_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume something as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_something_as_value(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].value}}"
-            ]
+            "args": ["--data", "{{$.inputs.artifacts['data'].value}}"]
           }
         },
         "Consume something as file": {
@@ -121,10 +106,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def consume_something_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_something_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume something as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_something_as_file(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
+            "args": ["--data", "{{$.inputs.artifacts['data'].path}}"]
           }
         },
         "Consume string as value": {
@@ -136,10 +118,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def consume_string_as_value(data):\n    print(\"consume_string_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume string as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_string_as_value(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].value}}"
-            ]
+            "args": ["--data", "{{$.inputs.artifacts['data'].value}}"]
           }
         },
         "Consume string as file": {
@@ -151,10 +130,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def consume_string_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_string_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume string as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_string_as_file(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
+            "args": ["--data", "{{$.inputs.artifacts['data'].path}}"]
           }
         },
         "Consume anything as value 2": {
@@ -166,10 +142,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def consume_anything_as_value(data):\n    print(\"consume_anything_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_value(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.inputs.parameters['data']}}"
-            ]
+            "args": ["--data", "{{$.inputs.parameters['data']}}"]
           }
         },
         "_make_artifact": {
@@ -193,10 +166,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def consume_something_as_value(data):\n    print(\"consume_something_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume something as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_something_as_value(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.inputs.parameters['data']}}"
-            ]
+            "args": ["--data", "{{$.inputs.parameters['data']}}"]
           }
         },
         "Consume string as value 2": {
@@ -208,10 +178,7 @@
               "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
               "def consume_string_as_value(data):\n    print(\"consume_string_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume string as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_string_as_value(**_parsed_args)\n"
             ],
-            "args": [
-              "--data",
-              "{{$.inputs.parameters['data']}}"
-            ]
+            "args": ["--data", "{{$.inputs.parameters['data']}}"]
           }
         }
       }

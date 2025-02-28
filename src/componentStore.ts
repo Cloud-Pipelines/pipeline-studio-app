@@ -281,7 +281,7 @@ const addCanonicalUrlsToComponentReferences = async (
     storeName: DIGEST_TO_CANONICAL_URL_DB_TABLE_NAME,
   });
   await digestToCanonicalUrlDb.iterate<string, void>((url, digest) => {
-    let componentRef = digestToComponentRef.get(digest);
+    const componentRef = digestToComponentRef.get(digest);
     if (componentRef === undefined) {
       console.error(
         `Component db corrupted: Component with url ${url} and digest ${digest} has no content in the DB.`,
@@ -505,7 +505,7 @@ export const getAllComponentsFromList = async (listName: string) => {
     name: DB_NAME,
     storeName: tableName,
   });
-  let componentRefs: ComponentReferenceWithSpec[] = [];
+  const componentRefs: ComponentReferenceWithSpec[] = [];
   await componentListDb.iterate<ComponentFileEntry, void>((fileEntry) => {
     componentRefs.push(fileEntry.componentRef);
   });
@@ -519,7 +519,7 @@ export const getAllComponentFilesFromList = async (listName: string) => {
     name: DB_NAME,
     storeName: tableName,
   });
-  let componentFiles = new Map<string, ComponentFileEntry>();
+  const componentFiles = new Map<string, ComponentFileEntry>();
   await componentListDb.iterate<ComponentFileEntry, void>(
     (fileEntry, fileName) => {
       componentFiles.set(fileName, fileEntry);
@@ -602,7 +602,7 @@ const upgradeSingleComponentListDb = async (listName: string) => {
     const componentRefList: ComponentReferenceWithSpec[] =
       (await componentRefListsDb.getItem(listName)) ?? [];
 
-    let existingNames = new Set<string>();
+    const existingNames = new Set<string>();
     const emptyNameReplacement =
       listName === "user_pipelines" ? "Pipeline" : "Component";
     for (const componentRef of componentRefList) {
@@ -635,7 +635,7 @@ const upgradeSingleComponentListDb = async (listName: string) => {
       if (fileEntry === null) {
         throw Error(`File "${fileName}" has disappeared during upgrade`);
       }
-      let componentRef = fileEntry.componentRef;
+      const componentRef = fileEntry.componentRef;
       let data = await digestToDataDb.getItem<ArrayBuffer>(
         fileEntry.componentRef.digest,
       );

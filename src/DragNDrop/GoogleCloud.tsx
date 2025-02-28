@@ -96,8 +96,7 @@ export const ensureGoogleCloudAuthorizesScopes = async (
       immediate: "true",
     });
     return oauthToken;
-  } catch (err) {
-    // console.error('ensureGoogleCloudAuthorizesScopes(immediate=true)', err);
+  } catch {
     try {
       const oauthToken = await authorizeGoogleCloudClient(
         googleCloudOAuthClientId,
@@ -109,7 +108,7 @@ export const ensureGoogleCloudAuthorizesScopes = async (
         immediate: "false",
       });
       return oauthToken;
-    } catch (err) {
+    } catch {
       // console.error('ensureGoogleCloudAuthorizesScopes(immediate=false)', err);
       (window as any).gtag?.("event", "GoogleCloud_auth", {
         result: "failed",

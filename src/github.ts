@@ -84,7 +84,7 @@ type UrlAndHash = {
 async function* searchComponentsOnGitHubToGetUrlsAndHashes(
   searchLocations: string[],
 ) {
-  let urlsAndHashes: UrlAndHash[] = [];
+  const urlsAndHashes: UrlAndHash[] = [];
   // TODO: If the number of components exceeds 1000 we should issue separate query for each location.
   // TODO: Perhaps try to filter by component contents (inputValue, inputPath, outputPath, graph, implementation)
   const queryParts = ["filename:component.yaml"].concat(searchLocations);
@@ -98,7 +98,7 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
     if (items.length === 0) {
       break;
     }
-    for (let item of items) {
+    for (const item of items) {
       yield {
         url: githubHtmlUrlToDownloadUrl(item.html_url),
         hash: item.sha as string,
@@ -478,7 +478,7 @@ export const getAllComponentsAsRefs = async (
     name: DB_NAME,
     storeName: HASH_TO_CONTENT_DB_TABLE_NAME,
   });
-  let hashToComponentRef = new Map<string, ComponentReference>();
+  const hashToComponentRef = new Map<string, ComponentReference>();
 
   // !!! Iterating using hashToContentDb.iterate<string, void> causes all values to be `[object Blob]`
   //await hashToContentDb.iterate<Blob, void>(
@@ -502,7 +502,7 @@ export const getAllComponentsAsRefs = async (
     },
   );
   await hashToUrlDb.iterate<string, void>((url, hash) => {
-    let componentRef = hashToComponentRef.get(hash);
+    const componentRef = hashToComponentRef.get(hash);
     if (componentRef === undefined) {
       console.error(
         `Component db corrupted: Component with url ${url} and hash ${hash} has no content in the DB.`,
@@ -511,7 +511,7 @@ export const getAllComponentsAsRefs = async (
       componentRef.url = url;
     }
   });
-  let componentRefs: ComponentReference[] = [];
+  const componentRefs: ComponentReference[] = [];
   // TODO: Improve the iteration once TypeScript property supports it
   hashToComponentRef.forEach((componentRef, hash) => {
     if (componentRef.url === undefined) {

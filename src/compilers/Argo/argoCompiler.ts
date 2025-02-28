@@ -258,7 +258,7 @@ function buildArgoParameterArgument(
     }
   }
   const argoInputName = sanitizeParameterOrArtifactName(inputSpec.name);
-  let result: argo.Parameter = {
+  const result: argo.Parameter = {
     name: argoInputName,
   };
   if (typeof taskArgument === "string") {
@@ -333,7 +333,7 @@ function buildArgoArtifactArgument(
     }
   }
   const inputArgoName = sanitizeParameterOrArtifactName(inputSpec.name);
-  let result: argo.Artifact = {
+  const result: argo.Artifact = {
     name: inputArgoName,
   };
   if (typeof taskArgument === "string") {
@@ -449,7 +449,7 @@ function buildArgoDagTemplateFromGraphComponentSpec(
 
   const graphSpec = componentSpec.implementation.graph;
 
-  let argoTasks: Record<string, argo.DAGTask> = {};
+  const argoTasks: Record<string, argo.DAGTask> = {};
   const taskStringToTaskId = new Map<string, string>();
 
   // Only used in addMakeParameterTaskAndGetParameterArgument
@@ -812,7 +812,7 @@ const makeNameUniqueByAddingIndex = (
 export const buildArgoWorkflowSpecFromGraphComponentSpec = (
   componentSpec: ComponentSpec,
 ) => {
-  let argoTemplates: Record<string, argo.Template> = {};
+  const argoTemplates: Record<string, argo.Template> = {};
 
   const templateStringToTemplateId = new Map<string, string>();
 

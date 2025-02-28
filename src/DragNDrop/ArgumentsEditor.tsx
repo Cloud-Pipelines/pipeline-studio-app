@@ -20,7 +20,6 @@ interface ArgumentsEditorProps {
 }
 
 const getPatternForTypeSpec = (_typeSpec?: TypeSpecType) => {
-  // TODO: Implement
   return undefined;
 };
 

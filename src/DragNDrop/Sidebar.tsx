@@ -51,6 +51,7 @@ const Sidebar = ({
   let DebugScratchElement = () => null;
   if (import.meta.env.NODE_ENV === "development") {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const DebugScratch = require("./DebugScratch").default;
       DebugScratchElement = () =>
         DebugScratch({
@@ -58,7 +59,9 @@ const Sidebar = ({
           setComponentSpec: setComponentSpec,
           downloadData: downloadData,
         });
-    } catch (e) {}
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   return (
