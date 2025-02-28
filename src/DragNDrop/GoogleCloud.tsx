@@ -9,78 +9,79 @@
 /// <reference types="gapi" />
 /* global gapi */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-import type { ComponentSpec } from '../componentSpec';
-import { buildVertexPipelineJobFromGraphComponent } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
-import type { PipelineJob } from '../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec';
+import type { ComponentSpec } from "../componentSpec";
+import { buildVertexPipelineJobFromGraphComponent } from "../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler";
+import type { PipelineJob } from "../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec";
 
-const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY = "GoogleCloudSubmitter/gcsOutputDirectory";
+const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY =
+  "GoogleCloudSubmitter/gcsOutputDirectory";
 const LOCAL_STORAGE_PROJECT_ID_KEY = "GoogleCloudSubmitter/projectId";
 const LOCAL_STORAGE_REGION_KEY = "GoogleCloudSubmitter/region";
 const LOCAL_STORAGE_PROJECT_IDS_KEY = "GoogleCloudSubmitter/projectIds";
 
 const VERTEX_AI_PIPELINES_REGIONS = [
-  'us-central1',
-  'us-east1',
-  'us-west1',
-  'europe-west1',
-  'europe-west2',
-  'europe-west4',
-  'asia-east1',
-  'asia-southeast1',
-  'northamerica-northeast1',
+  "us-central1",
+  "us-east1",
+  "us-west1",
+  "europe-west1",
+  "europe-west2",
+  "europe-west4",
+  "asia-east1",
+  "asia-southeast1",
+  "northamerica-northeast1",
 ];
 
-const VERTEX_AI_PIPELINES_DEFAULT_REGION = 'us-central1';
+const VERTEX_AI_PIPELINES_DEFAULT_REGION = "us-central1";
 
 const authorizeGoogleCloudClient = async (
   clientId: string,
   scopes: string[],
   immediate = false, // Setting immediate to true prevents auth window showing every time. But it needs to be false the first time (when cookies are not set).
 ) => {
-  return new Promise<GoogleApiOAuth2TokenObject>(
-    (resolve, reject) => {
-      gapi.auth.authorize(
-        {
-          client_id: clientId,
-          scope: scopes,
-          immediate: immediate,
-        },
-        (authResult) => {
-          // console.debug("authorizeGoogleCloudClient: called back");
-          if (authResult === undefined) {
-            console.error("authorizeGoogleCloudClient failed");
-            reject("gapi.auth.authorize result is undefined");
-          } else if (authResult.error) {
-            console.error(
-              "authorizeGoogleCloudClient failed",
-              authResult.error
-            );
-            reject(authResult.error);
+  return new Promise<GoogleApiOAuth2TokenObject>((resolve, reject) => {
+    gapi.auth.authorize(
+      {
+        client_id: clientId,
+        scope: scopes,
+        immediate: immediate,
+      },
+      (authResult) => {
+        // console.debug("authorizeGoogleCloudClient: called back");
+        if (authResult === undefined) {
+          console.error("authorizeGoogleCloudClient failed");
+          reject("gapi.auth.authorize result is undefined");
+        } else if (authResult.error) {
+          console.error("authorizeGoogleCloudClient failed", authResult.error);
+          reject(authResult.error);
+        } else {
+          // console.debug("authorizeGoogleCloudClient: Success");
+          // Working around the Google Auth bug: The request succeeds, but the returned token does not have the requested scopes.
+          // See https://github.com/google/google-api-javascript-client/issues/743
+          const receivedScopesString = (authResult as any).scope as
+            | string
+            | undefined;
+          const receivedScopes = receivedScopesString?.split(" ");
+          if (
+            receivedScopes === undefined ||
+            !scopes.every((scope) => receivedScopes.includes(scope))
+          ) {
+            const errorMessage = `Authorization call succeeded, but the returned scopes are ${receivedScopesString}`;
+            console.error(errorMessage);
+            reject(errorMessage);
           } else {
-            // console.debug("authorizeGoogleCloudClient: Success");
-            // Working around the Google Auth bug: The request succeeds, but the returned token does not have the requested scopes.
-            // See https://github.com/google/google-api-javascript-client/issues/743
-            const receivedScopesString = (authResult as any).scope as string | undefined;
-            const receivedScopes = receivedScopesString?.split(" ");
-            if (receivedScopes === undefined || !scopes.every((scope) => receivedScopes.includes(scope))) {
-              const errorMessage = `Authorization call succeeded, but the returned scopes are ${receivedScopesString}`;
-              console.error(errorMessage);
-              reject(errorMessage);
-            } else {
-              resolve(authResult);
-            }
+            resolve(authResult);
           }
         }
-      );
-    }
-  );
+      },
+    );
+  });
 };
 
 export const ensureGoogleCloudAuthorizesScopes = async (
   googleCloudOAuthClientId: string,
-  scopes: string[]
+  scopes: string[],
 ) => {
   try {
     // console.debug('Before ensureGoogleCloudAuthorizesScopes(immediate=true)');
@@ -92,7 +93,7 @@ export const ensureGoogleCloudAuthorizesScopes = async (
     // console.debug('After ensureGoogleCloudAuthorizesScopes(immediate=true)');
     (window as any).gtag?.("event", "GoogleCloud_auth", {
       result: "succeeded",
-      immediate: "true"
+      immediate: "true",
     });
     return oauthToken;
   } catch (err) {
@@ -101,35 +102,34 @@ export const ensureGoogleCloudAuthorizesScopes = async (
       const oauthToken = await authorizeGoogleCloudClient(
         googleCloudOAuthClientId,
         scopes,
-        false
+        false,
       );
       (window as any).gtag?.("event", "GoogleCloud_auth", {
         result: "succeeded",
-        immediate: "false"
+        immediate: "false",
       });
       return oauthToken;
     } catch (err) {
       // console.error('ensureGoogleCloudAuthorizesScopes(immediate=false)', err);
       (window as any).gtag?.("event", "GoogleCloud_auth", {
         result: "failed",
-        immediate: "false"
+        immediate: "false",
       });
     }
   }
 };
 
 const cloudresourcemanagerListProjects = async (
-  googleCloudOAuthClientId: string
+  googleCloudOAuthClientId: string,
 ) => {
-  await ensureGoogleCloudAuthorizesScopes(
-    googleCloudOAuthClientId,
-    ["https://www.googleapis.com/auth/cloud-platform"]
-  );
+  await ensureGoogleCloudAuthorizesScopes(googleCloudOAuthClientId, [
+    "https://www.googleapis.com/auth/cloud-platform",
+  ]);
   const response = await gapi.client.request({
     path: "https://cloudresourcemanager.googleapis.com/v1/projects/",
   });
   return response.result;
-}
+};
 
 const aiplatformCreatePipelineJob = async (
   projectId: string,
@@ -138,50 +138,55 @@ const aiplatformCreatePipelineJob = async (
   googleCloudOAuthClientId: string,
   pipelineJobId?: string,
 ) => {
-  await ensureGoogleCloudAuthorizesScopes(
-    googleCloudOAuthClientId,
-    ["https://www.googleapis.com/auth/cloud-platform"]
-  );
+  await ensureGoogleCloudAuthorizesScopes(googleCloudOAuthClientId, [
+    "https://www.googleapis.com/auth/cloud-platform",
+  ]);
   const response = await gapi.client.request({
     path: `https://${region}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${region}/pipelineJobs?pipelineJobId=${pipelineJobId}`,
     method: "POST",
     body: JSON.stringify(pipelineJob),
   });
   (window as any).gtag?.("event", "GoogleCloud_submit_pipeline_job", {
-    result: "succeeded"
+    result: "succeeded",
   });
   return response.result;
-}
+};
 
 interface GoogleCloudSubmitterProps {
-  componentSpec?: ComponentSpec,
-  pipelineArguments?: Map<string, string>,
+  componentSpec?: ComponentSpec;
+  pipelineArguments?: Map<string, string>;
   googleCloudOAuthClientId: string;
-};
+}
 
 const GoogleCloudSubmitter = ({
   componentSpec,
   pipelineArguments,
-  googleCloudOAuthClientId
+  googleCloudOAuthClientId,
 }: GoogleCloudSubmitterProps) => {
-  const [projects, setProjects] = useState<string[]>(
-    () => JSON.parse(window.localStorage?.getItem(LOCAL_STORAGE_PROJECT_IDS_KEY) ?? "[]")
+  const [projects, setProjects] = useState<string[]>(() =>
+    JSON.parse(
+      window.localStorage?.getItem(LOCAL_STORAGE_PROJECT_IDS_KEY) ?? "[]",
+    ),
   );
   const [project, setProject] = useState<string>(
-    () => window.localStorage?.getItem(LOCAL_STORAGE_PROJECT_ID_KEY) ?? ""
+    () => window.localStorage?.getItem(LOCAL_STORAGE_PROJECT_ID_KEY) ?? "",
   ); // undefined causes error: https://reactjs.org/docs/forms.html#controlled-components https://stackoverflow.com/a/47012342
   const [region, setRegion] = useState(
-    () => window.localStorage?.getItem(LOCAL_STORAGE_REGION_KEY) ?? VERTEX_AI_PIPELINES_DEFAULT_REGION
+    () =>
+      window.localStorage?.getItem(LOCAL_STORAGE_REGION_KEY) ??
+      VERTEX_AI_PIPELINES_DEFAULT_REGION,
   );
   const [error, setError] = useState("");
   const [gcsOutputDirectory, setGcsOutputDirectory] = useState(
-    () => window.localStorage?.getItem(LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY) ?? ""
+    () =>
+      window.localStorage?.getItem(LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY) ??
+      "",
   );
   const [pipelineJobWebUrl, setPipelineJobWebUrl] = useState<
     string | undefined
   >(undefined);
   const [compilationError, setCompilationError] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [vertexPipelineJob, setVertexPipelineJob] = useState<
     PipelineJob | undefined
@@ -196,7 +201,7 @@ const GoogleCloudSubmitter = ({
         const vertexPipelineJob = buildVertexPipelineJobFromGraphComponent(
           componentSpec,
           gcsOutputDirectory,
-          pipelineArguments
+          pipelineArguments,
         );
         setCompilationError(undefined);
         vertexPipelineJob.labels = {
@@ -207,10 +212,10 @@ const GoogleCloudSubmitter = ({
         const vertexPipelineJobJson = JSON.stringify(
           vertexPipelineJob,
           undefined,
-          2
+          2,
         );
         const vertexPipelineJsonBlobUrl = URL.createObjectURL(
-          new Blob([vertexPipelineJobJson], { type: "application/json" })
+          new Blob([vertexPipelineJobJson], { type: "application/json" }),
         );
         setVertexPipelineJsonBlobUrl(vertexPipelineJsonBlobUrl);
       } catch (err) {
@@ -239,11 +244,17 @@ const GoogleCloudSubmitter = ({
         try {
           // setItem might throw exception on iOS in incognito mode
           try {
-            window.localStorage?.setItem(LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY, gcsOutputDirectory);
+            window.localStorage?.setItem(
+              LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY,
+              gcsOutputDirectory,
+            );
             window.localStorage?.setItem(LOCAL_STORAGE_PROJECT_ID_KEY, project);
             window.localStorage?.setItem(LOCAL_STORAGE_REGION_KEY, region);
-          } catch(err) {
-            console.error("GoogleCloudSubmitter: Error writing properties to the localStorage", err);
+          } catch (err) {
+            console.error(
+              "GoogleCloudSubmitter: Error writing properties to the localStorage",
+              err,
+            );
           }
           const displayName = (
             (componentSpec?.name ?? "Pipeline") +
@@ -260,10 +271,10 @@ const GoogleCloudSubmitter = ({
             region,
             vertexPipelineJob,
             googleCloudOAuthClientId,
-            desiredPipelineJobId
+            desiredPipelineJobId,
           );
           const pipelineJobName: string = result.name;
-          const pipelineJobId = pipelineJobName.split('/').slice(-1)[0];
+          const pipelineJobId = pipelineJobName.split("/").slice(-1)[0];
           const pipelineJobWebUrl = `https://console.cloud.google.com/vertex-ai/locations/${region}/pipelines/runs/${pipelineJobId}?project=${project}`;
           setPipelineJobWebUrl(pipelineJobWebUrl);
           setError("");
@@ -271,15 +282,17 @@ const GoogleCloudSubmitter = ({
           console.error(err);
           setError(err?.result?.error?.message ?? "Error");
           (window as any).gtag?.("event", "GoogleCloud_submit_pipeline_job", {
-            result: "failed"
+            result: "failed",
           });
         }
       }}
     >
-      <div style={{
-        whiteSpace: "nowrap",
-        margin: "5px",
-      }}>
+      <div
+        style={{
+          whiteSpace: "nowrap",
+          margin: "5px",
+        }}
+      >
         <label htmlFor="project">Project: </label>
         <input
           id="project"
@@ -300,33 +313,45 @@ const GoogleCloudSubmitter = ({
           onClick={async () => {
             try {
               const result = await cloudresourcemanagerListProjects(
-                googleCloudOAuthClientId
+                googleCloudOAuthClientId,
               );
               const projectIds = (result.projects as any[]).map<string>(
-                (projectInfo) => projectInfo.projectId
+                (projectInfo) => projectInfo.projectId,
               );
               setProjects(projectIds);
               setError("");
               try {
-                window.localStorage?.setItem(LOCAL_STORAGE_PROJECT_IDS_KEY, JSON.stringify(projectIds));
-              } catch(err) {
-                console.error("GoogleCloudSubmitter: Error writing properties to the localStorage", err);
+                window.localStorage?.setItem(
+                  LOCAL_STORAGE_PROJECT_IDS_KEY,
+                  JSON.stringify(projectIds),
+                );
+              } catch (err) {
+                console.error(
+                  "GoogleCloudSubmitter: Error writing properties to the localStorage",
+                  err,
+                );
               }
-              (window as any).gtag?.("event", "GoogleCloud_list_projects", { result: "succeeded" });
+              (window as any).gtag?.("event", "GoogleCloud_list_projects", {
+                result: "succeeded",
+              });
             } catch (err: any) {
               console.error(err);
               setError(err?.result?.error?.message ?? "Error");
-              (window as any).gtag?.("event", "GoogleCloud_list_projects", { result: "failed" });
+              (window as any).gtag?.("event", "GoogleCloud_list_projects", {
+                result: "failed",
+              });
             }
           }}
         >
           ⟳{/* 🗘⭯ ⭮ ↺ ↻ ⟲ ⟳ 🔃🔄 */}
         </button>
       </div>
-      <div style={{
-        whiteSpace: "nowrap",
-        margin: "5px",
-      }}>
+      <div
+        style={{
+          whiteSpace: "nowrap",
+          margin: "5px",
+        }}
+      >
         <label htmlFor="region">Region: </label>
         <input
           id="region"
@@ -342,10 +367,12 @@ const GoogleCloudSubmitter = ({
           ))}
         </datalist>
       </div>
-      <div style={{
-        whiteSpace: "nowrap",
-        margin: "5px",
-      }}>
+      <div
+        style={{
+          whiteSpace: "nowrap",
+          margin: "5px",
+        }}
+      >
         <label htmlFor="region">GCS dir: </label>
         <input
           id="gcsOutputDirectory"
@@ -355,16 +382,27 @@ const GoogleCloudSubmitter = ({
           onChange={(e) => setGcsOutputDirectory(e.target.value)}
         />
       </div>
-      <div style={{
-        whiteSpace: "nowrap",
-        margin: "5px",
-      }}>
+      <div
+        style={{
+          whiteSpace: "nowrap",
+          margin: "5px",
+        }}
+      >
         <input
           type="submit"
           disabled={!readyToSubmit}
           value="Submit pipeline job"
         />
-        {pipelineJobWebUrl && <a href={pipelineJobWebUrl} target="_blank" rel="noreferrer" style={{ margin: "5px" }}>Job</a>}
+        {pipelineJobWebUrl && (
+          <a
+            href={pipelineJobWebUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{ margin: "5px" }}
+          >
+            Job
+          </a>
+        )}
       </div>
       {vertexPipelineJsonBlobUrl !== undefined && (
         <div
@@ -373,7 +411,10 @@ const GoogleCloudSubmitter = ({
           }}
         >
           Or download the{" "}
-          <a href={vertexPipelineJsonBlobUrl} download={"vertex_pipeline_job.json"}>
+          <a
+            href={vertexPipelineJsonBlobUrl}
+            download={"vertex_pipeline_job.json"}
+          >
             pipeline_job.json
           </a>{" "}
           file, then go to{" "}

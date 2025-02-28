@@ -6,35 +6,35 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { type DragEvent, useState } from 'react';
+import { type DragEvent, useState } from "react";
 
-import ComponentLibrary from './ComponentLibrary'
-import ComponentSearch from './ComponentSearch'
-import GraphComponentExporter from './GraphComponentExporter'
-import VertexAiExporter from './VertexAiExporter'
-import { type ComponentSpec } from '../componentSpec';
+import ComponentLibrary from "./ComponentLibrary";
+import ComponentSearch from "./ComponentSearch";
+import GraphComponentExporter from "./GraphComponentExporter";
+import VertexAiExporter from "./VertexAiExporter";
+import { type ComponentSpec } from "../componentSpec";
 import UserComponentLibrary from "./UserComponentLibrary";
 import PipelineLibrary from "./PipelineLibrary";
-import type { AppSettings } from '../appSettings';
+import type { AppSettings } from "../appSettings";
 import PipelineSubmitter from "./PipelineSubmitter";
-import AppSettingsDialog from './AppSettingsDialog';
-import { type DownloadDataType, downloadDataWithCache } from '../cacheUtils';
+import AppSettingsDialog from "./AppSettingsDialog";
+import { type DownloadDataType, downloadDataWithCache } from "../cacheUtils";
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
-  event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
+  event.dataTransfer.setData("application/reactflow", JSON.stringify(nodeData));
   event.dataTransfer.setData(
     "DragStart.offset",
     JSON.stringify({
       offsetX: event.nativeEvent.offsetX,
       offsetY: event.nativeEvent.offsetY,
-    })
+    }),
   );
-  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.effectAllowed = "move";
 };
 
 interface SidebarProps {
-  componentSpec?: ComponentSpec,
-  setComponentSpec?: (componentSpec: ComponentSpec) => void,
+  componentSpec?: ComponentSpec;
+  setComponentSpec?: (componentSpec: ComponentSpec) => void;
   appSettings: AppSettings;
   downloadData: DownloadDataType;
 }
@@ -43,7 +43,7 @@ const Sidebar = ({
   componentSpec,
   setComponentSpec,
   appSettings,
-  downloadData = downloadDataWithCache
+  downloadData = downloadDataWithCache,
 }: SidebarProps) => {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
@@ -63,8 +63,18 @@ const Sidebar = ({
 
   return (
     <aside className="nodeList">
-      <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
-        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Save/Load pipeline</summary>
+      <details
+        style={{
+          border: "1px solid #aaa",
+          borderRadius: "4px",
+          padding: "4px",
+        }}
+      >
+        <summary
+          style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}
+        >
+          Save/Load pipeline
+        </summary>
         <PipelineLibrary
           componentSpec={componentSpec}
           setComponentSpec={setComponentSpec}
@@ -72,25 +82,61 @@ const Sidebar = ({
           downloadData={downloadData}
         />
       </details>
-      <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
-        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Run pipeline</summary>
+      <details
+        style={{
+          border: "1px solid #aaa",
+          borderRadius: "4px",
+          padding: "4px",
+        }}
+      >
+        <summary
+          style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}
+        >
+          Run pipeline
+        </summary>
         <PipelineSubmitter
           componentSpec={componentSpec}
           googleCloudOAuthClientId={appSettings.googleCloudOAuthClientId}
         />
       </details>
       <h3>Drag components to the canvas:</h3>
-      <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
-        <summary><strong>Special</strong></summary>
-        <div className="react-flow__node react-flow__node-input sidebar-node" onDragStart={(event: DragEvent) => onDragStart(event, { input: { label: "Input" } })} draggable>
+      <details
+        style={{
+          border: "1px solid #aaa",
+          borderRadius: "4px",
+          padding: "4px",
+        }}
+      >
+        <summary>
+          <strong>Special</strong>
+        </summary>
+        <div
+          className="react-flow__node react-flow__node-input sidebar-node"
+          onDragStart={(event: DragEvent) =>
+            onDragStart(event, { input: { label: "Input" } })
+          }
+          draggable
+        >
           Input
         </div>
-        <div className="react-flow__node react-flow__node-output sidebar-node" onDragStart={(event: DragEvent) => onDragStart(event, { output: { label: "Output" } })} draggable>
+        <div
+          className="react-flow__node react-flow__node-output sidebar-node"
+          onDragStart={(event: DragEvent) =>
+            onDragStart(event, { output: { label: "Output" } })
+          }
+          draggable
+        >
           Output
         </div>
       </details>
       <details open>
-        <summary style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
+        <summary
+          style={{
+            border: "1px solid #aaa",
+            borderRadius: "4px",
+            padding: "4px",
+          }}
+        >
           <strong>Component library</strong>
         </summary>
         <div style={{ paddingLeft: "10px" }}>
@@ -100,12 +146,33 @@ const Sidebar = ({
           />
         </div>
       </details>
-      <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
-        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>User components</summary>
-        <UserComponentLibrary/>
+      <details
+        style={{
+          border: "1px solid #aaa",
+          borderRadius: "4px",
+          padding: "4px",
+        }}
+      >
+        <summary
+          style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}
+        >
+          User components
+        </summary>
+        <UserComponentLibrary />
       </details>
-      <details open style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
-        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Component search</summary>
+      <details
+        open
+        style={{
+          border: "1px solid #aaa",
+          borderRadius: "4px",
+          padding: "4px",
+        }}
+      >
+        <summary
+          style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}
+        >
+          Component search
+        </summary>
         <ComponentSearch
           componentFeedUrls={appSettings.componentFeedUrls}
           gitHubSearchLocations={appSettings.gitHubSearchLocations}
@@ -130,9 +197,11 @@ const Sidebar = ({
         >
           Settings
         </button>
-        {componentSpec && <GraphComponentExporter componentSpec={componentSpec}/>}
-        {componentSpec && <VertexAiExporter componentSpec={componentSpec}/>}
-        <DebugScratchElement/>
+        {componentSpec && (
+          <GraphComponentExporter componentSpec={componentSpec} />
+        )}
+        {componentSpec && <VertexAiExporter componentSpec={componentSpec} />}
+        <DebugScratchElement />
       </details>
     </aside>
   );

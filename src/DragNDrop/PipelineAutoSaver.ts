@@ -17,9 +17,8 @@ const SAVED_COMPONENT_SPEC_KEY = "autosaved.component.yaml";
 
 export const savePipelineSpecToSessionStorage = (
   componentSpec: ComponentSpec,
-  nodes?: Node[]
+  nodes?: Node[],
 ) => {
-
   try {
     if (nodes !== undefined) {
       if (nodes.length === 0) {
@@ -40,7 +39,7 @@ export const savePipelineSpecToSessionStorage = (
 export const loadPipelineSpecFromSessionStorage = () => {
   try {
     const componentText = window.sessionStorage.getItem(
-      SAVED_COMPONENT_SPEC_KEY
+      SAVED_COMPONENT_SPEC_KEY,
     );
     if (componentText !== null) {
       const loadedYaml = yaml.load(componentText);

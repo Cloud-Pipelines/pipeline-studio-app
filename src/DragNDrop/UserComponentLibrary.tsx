@@ -32,7 +32,7 @@ const USER_COMPONENTS_LIST_NAME = "user_components";
 const UserComponentLibrary = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [componentFiles, setComponentFiles] = useState(
-    new Map<string, ComponentFileEntry>()
+    new Map<string, ComponentFileEntry>(),
   );
   const [contextMenuFileName, setContextMenuFileName] = useState<string>();
   const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement>();
@@ -41,63 +41,66 @@ const UserComponentLibrary = () => {
 
   const refreshComponents = useCallback(() => {
     getAllComponentFilesFromList(USER_COMPONENTS_LIST_NAME).then(
-      setComponentFiles
+      setComponentFiles,
     );
   }, [setComponentFiles]);
 
   useEffect(refreshComponents, [refreshComponents]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    acceptedFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onabort = () => console.log("file reading was aborted");
-      reader.onerror = () => console.log("file reading has failed");
-      reader.onload = async () => {
-        const binaryStr = reader.result;
-        if (binaryStr === null || binaryStr === undefined) {
-          console.error(`Dropped file reader result was ${binaryStr}`);
-          return;
-        }
-        try {
-          const componentRefPlusData = await addComponentToListByText(
-            USER_COMPONENTS_LIST_NAME,
-            binaryStr,
-          );
-          const componentRef = componentRefPlusData.componentRef;
-          console.debug("storeComponentText succeeded", componentRef);
-          (window as any).gtag?.("event", "UserComponents_component_import", {
-            result: "succeeded",
-          });
-          setErrorMessage("");
-          refreshComponents();
-        } catch (err) {
-          const errorMessage =
-            typeof err === "object" && err ? err.toString() : String(err);
-          setErrorMessage(
-            `Error parsing the dropped file as component: ${errorMessage}.`
-          );
-          console.error("Error parsing the dropped file as component", err);
-          (window as any).gtag?.("event", "UserComponents_component_import", {
-            result: "failed",
-          });
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    });
-  }, [refreshComponents]);
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      acceptedFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onabort = () => console.log("file reading was aborted");
+        reader.onerror = () => console.log("file reading has failed");
+        reader.onload = async () => {
+          const binaryStr = reader.result;
+          if (binaryStr === null || binaryStr === undefined) {
+            console.error(`Dropped file reader result was ${binaryStr}`);
+            return;
+          }
+          try {
+            const componentRefPlusData = await addComponentToListByText(
+              USER_COMPONENTS_LIST_NAME,
+              binaryStr,
+            );
+            const componentRef = componentRefPlusData.componentRef;
+            console.debug("storeComponentText succeeded", componentRef);
+            (window as any).gtag?.("event", "UserComponents_component_import", {
+              result: "succeeded",
+            });
+            setErrorMessage("");
+            refreshComponents();
+          } catch (err) {
+            const errorMessage =
+              typeof err === "object" && err ? err.toString() : String(err);
+            setErrorMessage(
+              `Error parsing the dropped file as component: ${errorMessage}.`,
+            );
+            console.error("Error parsing the dropped file as component", err);
+            (window as any).gtag?.("event", "UserComponents_component_import", {
+              result: "failed",
+            });
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    },
+    [refreshComponents],
+  );
 
   const onImportFromUrl = useCallback(
     async (url: string) => {
       try {
         const componentFileEntry = await addComponentToListByUrl(
           USER_COMPONENTS_LIST_NAME,
-          url
+          url,
         );
         const componentRef = componentFileEntry.componentRef;
         console.debug("addComponentToListByUrl succeeded", componentRef);
         (window as any).gtag?.(
           "event",
-          "UserComponents_component_import_from_url_succeeded"
+          "UserComponents_component_import_from_url_succeeded",
         );
         setErrorMessage("");
         refreshComponents();
@@ -106,16 +109,16 @@ const UserComponentLibrary = () => {
         const errorMessage =
           typeof err === "object" && err ? err.toString() : String(err);
         setErrorMessage(
-          `Error parsing the file as component: ${errorMessage}.`
+          `Error parsing the file as component: ${errorMessage}.`,
         );
         console.error("Error importing component from the URL", err);
         (window as any).gtag?.(
           "event",
-          "UserComponents_component_import_from_url_failed"
+          "UserComponents_component_import_from_url_failed",
         );
       }
     },
-    [refreshComponents]
+    [refreshComponents],
   );
 
   const handleContextMenuDelete = async () => {
@@ -123,7 +126,7 @@ const UserComponentLibrary = () => {
       setContextMenuFileName(undefined);
       await deleteComponentFileFromList(
         USER_COMPONENTS_LIST_NAME,
-        contextMenuFileName
+        contextMenuFileName,
       );
       refreshComponents();
     }

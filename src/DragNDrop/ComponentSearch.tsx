@@ -18,8 +18,8 @@ import {
 import DraggableComponent from "./DraggableComponent";
 
 interface ComponentSearchProps {
-  componentFeedUrls?: string[],
-  gitHubSearchLocations?: string[],
+  componentFeedUrls?: string[];
+  gitHubSearchLocations?: string[];
   downloadData: DownloadDataType;
 }
 
@@ -38,9 +38,7 @@ const SearchPanel = ({
     setQuery(e.target.value);
   };
 
-  async function fetchData(
-    query: string,
-  ) {
+  async function fetchData(query: string) {
     // If the DB is populated, return results immediately, then refresh the DB and update the results.
     try {
       if (!(await isComponentDbEmpty())) {
@@ -55,7 +53,7 @@ const SearchPanel = ({
           ComponentFeedUrls: componentFeedUrls,
           GitHubSearchLocations: gitHubSearchLocations,
         },
-        downloadData
+        downloadData,
       );
       setIsLoaded(true);
       const componentRefs = await searchComponentsByName(query);

@@ -23,7 +23,7 @@ const kfpSubmitPipelineRun = async (
   endpoint: string,
   authToken?: string,
   googleCloudOAuthClientId?: string,
-  runName?: string
+  runName?: string,
 ) => {
   // https://www.kubeflow.org/docs/components/pipelines/reference/api/kubeflow-pipeline-api-spec/#/definitions/apiRun
   const kfpRun = {
@@ -45,7 +45,7 @@ const kfpSubmitPipelineRun = async (
     if (googleCloudOAuthClientId) {
       const oauthToken = await ensureGoogleCloudAuthorizesScopes(
         googleCloudOAuthClientId,
-        ["https://www.googleapis.com/auth/cloud-platform"]
+        ["https://www.googleapis.com/auth/cloud-platform"],
       );
       authToken = oauthToken?.access_token;
     }
@@ -60,7 +60,7 @@ const kfpSubmitPipelineRun = async (
   (window as any).gtag?.(
     "event",
     "KubeflowPipelinesSubmitter_submit_pipeline_run_succeeded",
-    {}
+    {},
   );
   return response.json();
 };
@@ -88,22 +88,22 @@ const KubeflowPipelinesSubmitter = ({
   googleCloudOAuthClientId,
 }: KubeflowPipelinesSubmitterProps) => {
   const [argoWorkflow, setArgoWorkflow] = useState<Workflow | undefined>(
-    undefined
+    undefined,
   );
   const [argoWorkflowYamlBlobUrl, setArgoWorkflowYamlBlobUrl] = useState<
     string | undefined
   >(undefined);
   const [compilationError, setCompilationError] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [submissionError, setSubmissionError] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [endpoint, setEndpoint] = useState<string>(
-    () => window.localStorage?.getItem(LOCAL_STORAGE_ENDPOINT_KEY) ?? ""
+    () => window.localStorage?.getItem(LOCAL_STORAGE_ENDPOINT_KEY) ?? "",
   );
   const [authToken, setAuthToken] = useState<string>(
-    () => window.localStorage?.getItem(LOCAL_STORAGE_AUTH_TOKEN_KEY) ?? ""
+    () => window.localStorage?.getItem(LOCAL_STORAGE_AUTH_TOKEN_KEY) ?? "",
   );
   const [, setPipelineRunId] = useState<string | undefined>(undefined);
   const [, setWorkflowResourceName] = useState<string | undefined>(undefined);
@@ -116,7 +116,7 @@ const KubeflowPipelinesSubmitter = ({
       try {
         const argoWorkflow = buildArgoWorkflowFromGraphComponent(
           componentSpec,
-          pipelineArguments ?? new Map()
+          pipelineArguments ?? new Map(),
         );
         argoWorkflow.metadata.labels = {
           sdk: "cloud-pipelines-editor",
@@ -129,7 +129,7 @@ const KubeflowPipelinesSubmitter = ({
           quotingType: '"',
         });
         const newArgoWorkflowYamlBlobUrl = URL.createObjectURL(
-          new Blob([argoWorkflowYaml], { type: "application/yaml" })
+          new Blob([argoWorkflowYaml], { type: "application/yaml" }),
         );
         // Updating the workflow blob URL (revoking the old workflow blob URL first).
         setArgoWorkflowYamlBlobUrl((currentArgoWorkflowYamlBlobUrl) => {
@@ -165,12 +165,12 @@ const KubeflowPipelinesSubmitter = ({
             window.localStorage?.setItem(LOCAL_STORAGE_ENDPOINT_KEY, endpoint);
             window.localStorage?.setItem(
               LOCAL_STORAGE_AUTH_TOKEN_KEY,
-              authToken
+              authToken,
             );
           } catch (err) {
             console.error(
               "KubeflowPipelinesSubmitter: Error writing properties to the localStorage",
-              err
+              err,
             );
           }
           const runName =
@@ -182,7 +182,7 @@ const KubeflowPipelinesSubmitter = ({
             endpoint,
             authToken,
             googleCloudOAuthClientId,
-            runName
+            runName,
           );
           console.debug(result);
           const runId = result?.run?.id;
@@ -195,7 +195,7 @@ const KubeflowPipelinesSubmitter = ({
             result?.pipeline_runtime?.workflow_manifest;
           if (typeof runtimeWorkflowManifestString === "string") {
             const runtimeWorkflowManifest = JSON.parse(
-              runtimeWorkflowManifestString
+              runtimeWorkflowManifestString,
             );
             const resourceName = runtimeWorkflowManifest?.metadata?.name;
             if (resourceName) {
@@ -213,7 +213,7 @@ const KubeflowPipelinesSubmitter = ({
           (window as any).gtag?.(
             "event",
             "KubeflowPipelinesSubmitter_submit_pipeline_run_failed",
-            {}
+            {},
           );
         }
       }}

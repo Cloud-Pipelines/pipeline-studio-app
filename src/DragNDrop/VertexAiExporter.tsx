@@ -6,19 +6,17 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import {
-  useStore,
-} from "@xyflow/react";
+import { useStore } from "@xyflow/react";
 
 import type { ComponentSpec } from "../componentSpec";
 import { augmentComponentSpec } from "./GraphComponentSpecFlow";
-import { buildVertexPipelineSpecFromGraphComponentSpec } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
+import { buildVertexPipelineSpecFromGraphComponentSpec } from "../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler";
 
 interface VertexAiExporterProps {
   componentSpec: ComponentSpec;
 }
 
-const VertexAiExporter = ({componentSpec}: VertexAiExporterProps) => {
+const VertexAiExporter = ({ componentSpec }: VertexAiExporterProps) => {
   const nodes = useStore((store) => store.nodes);
 
   let vertexPipelineSpecText = "";
@@ -26,20 +24,26 @@ const VertexAiExporter = ({componentSpec}: VertexAiExporterProps) => {
     // Augmenting the componentSpec might be useless right now, but it can stabilize the output (e.g. ordering).
     // Also, in the future, the original spec might be included in the vertexPipelineSpec
     componentSpec = augmentComponentSpec(componentSpec, nodes, true, true);
-    const vertexPipelineSpec = buildVertexPipelineSpecFromGraphComponentSpec(componentSpec);
+    const vertexPipelineSpec =
+      buildVertexPipelineSpecFromGraphComponentSpec(componentSpec);
     vertexPipelineSpecText = JSON.stringify(vertexPipelineSpec, undefined, 2);
-  } catch(err) {
+  } catch (err) {
     vertexPipelineSpecText = String(err);
   }
 
-  const vertexPipelineSpecTextBlob = new Blob([vertexPipelineSpecText], { type: "application/json" }); // Or application/x-yaml (which leads to downloading)
+  const vertexPipelineSpecTextBlob = new Blob([vertexPipelineSpecText], {
+    type: "application/json",
+  }); // Or application/x-yaml (which leads to downloading)
   // TODO: Call vertexPipelineSpecTextBlobUrl.revokeObjectURL in the future
-  const vertexPipelineSpecTextBlobUrl = URL.createObjectURL(vertexPipelineSpecTextBlob);
+  const vertexPipelineSpecTextBlobUrl = URL.createObjectURL(
+    vertexPipelineSpecTextBlob,
+  );
 
   return (
     <details>
       <summary>
-        Cloud IR <a
+        Cloud IR{" "}
+        <a
           href={vertexPipelineSpecTextBlobUrl}
           download={"vertex_pipeline_spec.json"}
         >

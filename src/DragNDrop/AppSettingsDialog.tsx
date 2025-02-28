@@ -26,22 +26,22 @@ const AppSettingsDialog = ({ isOpen, handleClose }: AppSettingsDialogProps) => {
   const appSettings = getMutableAppSettings();
 
   const [componentLibraryUrl, setComponentLibraryUrl] = useState(
-    appSettings.componentLibraryUrl.value
+    appSettings.componentLibraryUrl.value,
   );
   const [pipelineLibraryUrl, setPipelineLibraryUrl] = useState(
-    appSettings.pipelineLibraryUrl.value
+    appSettings.pipelineLibraryUrl.value,
   );
   const [defaultPipelineUrl, setDefaultPipelineUrl] = useState(
-    appSettings.defaultPipelineUrl.value
+    appSettings.defaultPipelineUrl.value,
   );
   const [componentFeedUrls, setComponentFeedUrls] = useState(
-    appSettings.componentFeedUrls.value
+    appSettings.componentFeedUrls.value,
   );
   const [gitHubSearchLocations, setGitHubSearchLocations] = useState(
-    appSettings.gitHubSearchLocations.value
+    appSettings.gitHubSearchLocations.value,
   );
   const [googleCloudOAuthClientId, setGoogleCloudOAuthClientId] = useState(
-    appSettings.googleCloudOAuthClientId.value
+    appSettings.googleCloudOAuthClientId.value,
   );
 
   const handleSave = () => {
@@ -60,10 +60,10 @@ const AppSettingsDialog = ({ isOpen, handleClose }: AppSettingsDialogProps) => {
     setDefaultPipelineUrl(appSettings.defaultPipelineUrl.resetToDefault());
     setComponentFeedUrls(appSettings.componentFeedUrls.resetToDefault());
     setGitHubSearchLocations(
-      appSettings.gitHubSearchLocations.resetToDefault()
+      appSettings.gitHubSearchLocations.resetToDefault(),
     );
     setGoogleCloudOAuthClientId(
-      appSettings.googleCloudOAuthClientId.resetToDefault()
+      appSettings.googleCloudOAuthClientId.resetToDefault(),
     );
   };
 

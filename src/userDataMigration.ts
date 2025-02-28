@@ -60,19 +60,19 @@ export const migrateUserData = async () => {
     if (!VALID_MIGRATION_TARGET_ORIGINS.includes(migrationTargetOrigin)) {
       console.error(
         "migrateUserData: Invalid migration request origin:",
-        migrationTargetOrigin
+        migrationTargetOrigin,
       );
       throw Error(
         `Invalid migration origin: ${migrationTargetOrigin}.` +
-          `Supported origins: ${VALID_MIGRATION_TARGET_ORIGINS}`
+          `Supported origins: ${VALID_MIGRATION_TARGET_ORIGINS}`,
       );
     }
 
     const componentFiles = Array.from(
-      (await getAllComponentFilesFromList("user_components")).values()
+      (await getAllComponentFilesFromList("user_components")).values(),
     );
     const pipelineFiles = Array.from(
-      (await getAllComponentFilesFromList("user_pipelines")).values()
+      (await getAllComponentFilesFromList("user_pipelines")).values(),
     );
     const migrationDataMessage: UserFilesMessage = {
       messageType: "FileMigrationMessage",
@@ -81,7 +81,7 @@ export const migrateUserData = async () => {
     };
     console.debug(
       "migrateUserData: migrationDataMessage",
-      migrationDataMessage
+      migrationDataMessage,
     );
     // It's safe to send messages to the origins that are in the valid origin list.
     window.parent.postMessage(migrationDataMessage, migrationTargetOrigin);
@@ -100,7 +100,7 @@ export const migrateUserData = async () => {
     storeName: COMPONENT_STORE_SETTINGS_DB_TABLE_NAME,
   });
   const migratedDataMark = await componentStoreSettingsDb.getItem<Date>(
-    MIGRATED_DATA_FROM_OLD_DOMAIN_SETTING_KEY
+    MIGRATED_DATA_FROM_OLD_DOMAIN_SETTING_KEY,
   );
 
   if (
@@ -109,56 +109,56 @@ export const migrateUserData = async () => {
     VALID_MIGRATION_TARGET_ORIGINS.includes(window.location.origin)
   ) {
     console.debug(
-      `migrateUserData: Need to migrate data from ${MIGRATION_SOURCE_ORIGIN}.`
+      `migrateUserData: Need to migrate data from ${MIGRATION_SOURCE_ORIGIN}.`,
     );
 
     window.addEventListener("message", async (event) => {
       if (event.origin !== MIGRATION_SOURCE_ORIGIN) {
         console.error(
           "migrateUserData: Received message from unrecognized origin:",
-          event
+          event,
         );
         return;
       }
       if (!isFileMigrationMessage(event.data)) {
         console.error(
           "migrateUserData: Unexpected message data type: ",
-          event.data
+          event.data,
         );
         return;
       }
       const migrationDataMessage = event.data;
       console.log(
         "migrateUserData: Received files form old site: ",
-        migrationDataMessage
+        migrationDataMessage,
       );
 
       await unsafeWriteFilesToList(
         "user_components",
-        migrationDataMessage.componentFiles
+        migrationDataMessage.componentFiles,
       );
       await unsafeWriteFilesToList(
         "user_pipelines",
-        migrationDataMessage.pipelineFiles
+        migrationDataMessage.pipelineFiles,
       );
       await componentStoreSettingsDb.setItem(
         MIGRATED_DATA_FROM_OLD_DOMAIN_SETTING_KEY,
-        new Date()
+        new Date(),
       );
 
       console.log(
-        "migrateUserData: Pipelines and components were successfully imported. The files will appear after page refresh."
+        "migrateUserData: Pipelines and components were successfully imported. The files will appear after page refresh.",
       );
     });
 
     const migrationSourceIFrame = document.createElement("iframe");
     const migrationSourceUrl = new URL(
       "pipeline-editor",
-      MIGRATION_SOURCE_ORIGIN
+      MIGRATION_SOURCE_ORIGIN,
     );
     migrationSourceUrl.searchParams.append(
       SEND_MIGRATION_DATA_URL_PARAM,
-      window.location.origin
+      window.location.origin,
     );
     migrationSourceIFrame.src = migrationSourceUrl.toString();
     migrationSourceIFrame.name = "migration_iframe";

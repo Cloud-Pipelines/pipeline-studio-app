@@ -9,7 +9,12 @@
 import { useEffect, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
 
-import { ReactFlow, MarkerType, useNodesState, useEdgesState } from '@xyflow/react';
+import {
+  ReactFlow,
+  MarkerType,
+  useNodesState,
+  useEdgesState,
+} from "@xyflow/react";
 
 import type {
   ReactFlowInstance,
@@ -32,12 +37,9 @@ import type {
   TaskSpec,
 } from "../componentSpec";
 
-import {
-  isGraphImplementation,
-} from "../componentSpec";
+import { isGraphImplementation } from "../componentSpec";
 
 import ComponentTaskNode, { isComponentTaskNode } from "./ComponentTaskNode";
-
 
 const NODE_LAYOUT_ANNOTATION_KEY = "editor.position";
 const SDK_ANNOTATION_KEY = "sdk";
@@ -63,7 +65,7 @@ export const augmentComponentSpec = (
   componentSpec: ComponentSpec,
   nodes: Node[],
   includeSpecs = false,
-  includePositions = true
+  includePositions = true,
 ) => {
   componentSpec = { ...componentSpec };
 
@@ -103,10 +105,10 @@ export const augmentComponentSpec = (
     inputNodes.map((node) => [
       nodeIdToInputName(node.id),
       getNodePositionAnnotation(node),
-    ])
+    ]),
   );
   const inputOrderMap = new Map<string, number>(
-    inputNodes.map((node, index) => [nodeIdToInputName(node.id), index])
+    inputNodes.map((node, index) => [nodeIdToInputName(node.id), index]),
   );
   const inputOrderComparer = (a: InputSpec, b: InputSpec) =>
     (inputOrderMap.get(a.name) ?? Infinity) -
@@ -115,10 +117,10 @@ export const augmentComponentSpec = (
     outputNodes.map((node) => [
       nodeIdToOutputName(node.id),
       getNodePositionAnnotation(node),
-    ])
+    ]),
   );
   const outputOrderMap = new Map<string, number>(
-    outputNodes.map((node, index) => [nodeIdToOutputName(node.id), index])
+    outputNodes.map((node, index) => [nodeIdToOutputName(node.id), index]),
   );
   const outputOrderComparer = (a: OutputSpec, b: OutputSpec) =>
     (outputOrderMap.get(a.name) ?? Infinity) -
@@ -127,27 +129,32 @@ export const augmentComponentSpec = (
     taskNodes.map((node) => [
       nodeIdToTaskId(node.id),
       getNodePositionAnnotation(node),
-    ])
+    ]),
   );
   const taskOrderMap = new Map<string, number>(
-    taskNodes.map((node, index) => [nodeIdToTaskId(node.id), index])
+    taskNodes.map((node, index) => [nodeIdToTaskId(node.id), index]),
   );
   const taskOrderComparer = (
     pairA: [string, TaskSpec],
-    pairB: [string, TaskSpec]
+    pairB: [string, TaskSpec],
   ) =>
     (taskOrderMap.get(pairA[0]) ?? Infinity) -
     (taskOrderMap.get(pairB[0]) ?? Infinity);
 
   componentSpec.inputs = componentSpec.inputs
     ?.map((inputSpec) => {
-      if (!inputPositionMap.has(inputSpec.name) || !inputOrderMap.has(inputSpec.name)) {
-        throw Error(`The nodes array does not have input node ${inputSpec.name}`);
+      if (
+        !inputPositionMap.has(inputSpec.name) ||
+        !inputOrderMap.has(inputSpec.name)
+      ) {
+        throw Error(
+          `The nodes array does not have input node ${inputSpec.name}`,
+        );
       }
       let newAnnotations = { ...inputSpec.annotations };
       if (includePositions) {
         newAnnotations[NODE_LAYOUT_ANNOTATION_KEY] = inputPositionMap.get(
-          inputSpec.name
+          inputSpec.name,
         );
       } else {
         delete newAnnotations[NODE_LAYOUT_ANNOTATION_KEY];
@@ -165,13 +172,18 @@ export const augmentComponentSpec = (
 
   componentSpec.outputs = componentSpec.outputs
     ?.map((outputSpec) => {
-      if (!outputPositionMap.has(outputSpec.name) || !outputOrderMap.has(outputSpec.name)) {
-        throw Error(`The nodes array does not have output node ${outputSpec.name}`);
+      if (
+        !outputPositionMap.has(outputSpec.name) ||
+        !outputOrderMap.has(outputSpec.name)
+      ) {
+        throw Error(
+          `The nodes array does not have output node ${outputSpec.name}`,
+        );
       }
       let newAnnotations = { ...outputSpec.annotations };
       if (includePositions) {
         newAnnotations[NODE_LAYOUT_ANNOTATION_KEY] = outputPositionMap.get(
-          outputSpec.name
+          outputSpec.name,
         );
       } else {
         delete newAnnotations[NODE_LAYOUT_ANNOTATION_KEY];
@@ -231,7 +243,7 @@ export const augmentComponentSpec = (
         delete newTaskSpec.componentRef.text;
         return [taskId, newTaskSpec] as [string, TaskSpec];
       })
-      .sort(taskOrderComparer)
+      .sort(taskOrderComparer),
   );
   if (newTasks !== undefined) {
     graphSpec.tasks = newTasks;
@@ -247,10 +259,10 @@ export const augmentComponentSpec = (
       ...componentSpec.metadata,
       annotations: {
         ...componentSpec.metadata?.annotations,
-        [SDK_ANNOTATION_KEY]: SDK_ANNOTATION_VALUE
-      }
-    }
-  }
+        [SDK_ANNOTATION_KEY]: SDK_ANNOTATION_VALUE,
+      },
+    },
+  };
 
   // Reordering the attributes and removing the undefined ones
   const rebuildComponentSpec = ({
@@ -275,7 +287,10 @@ export const augmentComponentSpec = (
   return componentSpec;
 };
 
-const makeNameUniqueByAddingIndex = (name: string, existingNames: Set<string>): string => {
+const makeNameUniqueByAddingIndex = (
+  name: string,
+  existingNames: Set<string>,
+): string => {
   let finalName = name;
   let index = 1;
   while (existingNames.has(finalName)) {
@@ -291,7 +306,7 @@ const getUniqueInputName = (
 ) => {
   return makeNameUniqueByAddingIndex(
     name,
-    new Set(componentSpec.inputs?.map((inputSpec) => inputSpec.name))
+    new Set(componentSpec.inputs?.map((inputSpec) => inputSpec.name)),
   );
 };
 
@@ -301,24 +316,21 @@ const getUniqueOutputName = (
 ) => {
   return makeNameUniqueByAddingIndex(
     name,
-    new Set(componentSpec.outputs?.map((outputSpec) => outputSpec.name))
+    new Set(componentSpec.outputs?.map((outputSpec) => outputSpec.name)),
   );
 };
 
-const getUniqueTaskName = (
-  graphSpec: GraphSpec,
-  name: string = "Task",
-) => {
+const getUniqueTaskName = (graphSpec: GraphSpec, name: string = "Task") => {
   return makeNameUniqueByAddingIndex(
     name,
-    new Set(Object.keys(graphSpec.tasks))
+    new Set(Object.keys(graphSpec.tasks)),
   );
 };
 
 export interface GraphComponentSpecFlowProps
   extends Omit<ReactFlowProps, "elements"> {
-  componentSpec: ComponentSpec,
-  setComponentSpec: (componentSpec: ComponentSpec) => void,
+  componentSpec: ComponentSpec;
+  setComponentSpec: (componentSpec: ComponentSpec) => void;
 }
 
 const nodeTypes: Record<string, React.ComponentType<any>> = {
@@ -331,9 +343,10 @@ const GraphComponentSpecFlow = ({
   setComponentSpec,
   ...rest
 }: GraphComponentSpecFlowProps) => {
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance>();
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance>();
 
-  if (!('graph' in componentSpec.implementation)) {
+  if (!("graph" in componentSpec.implementation)) {
     // Only graph components are supported
     return <></>;
   }
@@ -349,7 +362,7 @@ const GraphComponentSpecFlow = ({
           ] as string;
           const decodedPosition = JSON.parse(layoutAnnotation);
           position = { x: decodedPosition["x"], y: decodedPosition["y"] };
-        } catch (err) { }
+        } catch (err) {}
       }
 
       return {
@@ -357,55 +370,52 @@ const GraphComponentSpecFlow = ({
         data: {
           taskSpec: taskSpec,
           taskId: taskId,
-          setArguments: (args: Record<string, ArgumentType>) => setTaskArguments(taskId, args),
+          setArguments: (args: Record<string, ArgumentType>) =>
+            setTaskArguments(taskId, args),
         },
         position: position,
         type: "task",
       };
-    }
+    },
   );
 
-  const inputNodes = (componentSpec.inputs ?? []).map<Node>(
-    (inputSpec) => {
-      let position: XYPosition = { x: 0, y: 0 };
-      if (inputSpec.annotations !== undefined) {
-        try {
-          const layoutAnnotation = inputSpec.annotations[
-            "editor.position"
-          ] as string;
-          const decodedPosition = JSON.parse(layoutAnnotation);
-          position = { x: decodedPosition["x"], y: decodedPosition["y"] };
-        } catch (err) { }
-      }
-      return {
-        id: inputNameToNodeId(inputSpec.name),
-        data: { label: inputSpec.name },
-        position: position,
-        type: "input",
-      };
+  const inputNodes = (componentSpec.inputs ?? []).map<Node>((inputSpec) => {
+    let position: XYPosition = { x: 0, y: 0 };
+    if (inputSpec.annotations !== undefined) {
+      try {
+        const layoutAnnotation = inputSpec.annotations[
+          "editor.position"
+        ] as string;
+        const decodedPosition = JSON.parse(layoutAnnotation);
+        position = { x: decodedPosition["x"], y: decodedPosition["y"] };
+      } catch (err) {}
     }
-  );
+    return {
+      id: inputNameToNodeId(inputSpec.name),
+      data: { label: inputSpec.name },
+      position: position,
+      type: "input",
+    };
+  });
 
-  const outputNodes = (componentSpec.outputs ?? []).map<Node>(
-    (outputSpec) => {
-      let position: XYPosition = { x: 0, y: 0 };
-      if (outputSpec.annotations !== undefined) {
-        try {
-          const layoutAnnotation = outputSpec.annotations[
-            "editor.position"
-          ] as string;
-          const decodedPosition = JSON.parse(layoutAnnotation);
-          position = { x: decodedPosition["x"], y: decodedPosition["y"] };
-        } catch (err) { }
-      }
-      return {
-        id: outputNameToNodeId(outputSpec.name),
-        data: { label: outputSpec.name },
-        position: position,
-        type: "output",
-      };
+  const outputNodes = (componentSpec.outputs ?? []).map<Node>((outputSpec) => {
+    let position: XYPosition = { x: 0, y: 0 };
+    if (outputSpec.annotations !== undefined) {
+      try {
+        const layoutAnnotation = outputSpec.annotations[
+          "editor.position"
+        ] as string;
+        const decodedPosition = JSON.parse(layoutAnnotation);
+        position = { x: decodedPosition["x"], y: decodedPosition["y"] };
+      } catch (err) {}
     }
-  );
+    return {
+      id: outputNameToNodeId(outputSpec.name),
+      data: { label: outputSpec.name },
+      position: position,
+      type: "output",
+    };
+  });
 
   const edges: Edge[] = Object.entries(graphSpec.tasks).flatMap(
     ([taskId, taskSpec]) => {
@@ -442,9 +452,9 @@ const GraphComponentSpecFlow = ({
             console.error("Impossible task input argument kind: ", argument);
             return [];
           }
-        }
+        },
       );
-    }
+    },
   );
 
   const outputEdges: Edge[] = Object.entries(graphSpec.outputValues ?? {}).map(
@@ -461,9 +471,8 @@ const GraphComponentSpecFlow = ({
         markerEnd: { type: MarkerType.Arrow },
       };
       return edge;
-    }
+    },
   );
-
 
   const replaceComponentSpec = (newComponentSpec: ComponentSpec) => {
     componentSpec = newComponentSpec;
@@ -472,7 +481,10 @@ const GraphComponentSpecFlow = ({
 
   const replaceGraphSpec = (newGraphSpec: GraphSpec) => {
     graphSpec = newGraphSpec;
-    replaceComponentSpec({ ...componentSpec, implementation: { graph: graphSpec } });
+    replaceComponentSpec({
+      ...componentSpec,
+      implementation: { graph: graphSpec },
+    });
   };
 
   const setTaskArguments = (
@@ -493,7 +505,7 @@ const GraphComponentSpecFlow = ({
   const setTaskArgument = (
     taskId: string,
     inputName: string,
-    argument?: ArgumentType
+    argument?: ArgumentType,
   ) => {
     const oldTaskSpec = graphSpec.tasks[taskId];
     const oldTaskSpecArguments = oldTaskSpec.arguments;
@@ -513,7 +525,7 @@ const GraphComponentSpecFlow = ({
 
   const setGraphOutputValue = (
     outputName: string,
-    outputValue?: TaskOutputArgument
+    outputValue?: TaskOutputArgument,
   ) => {
     let newGraphOutputValues = { ...graphSpec.outputValues };
     if (outputValue === undefined) {
@@ -532,13 +544,16 @@ const GraphComponentSpecFlow = ({
     if (connection.source === null || connection.target === null) {
       console.error(
         "addConnection called with missing source or target: ",
-        connection
+        connection,
       );
       return;
     }
 
     const targetTaskInputName = connection.targetHandle?.replace(/^input_/, "");
-    const sourceTaskOutputName = connection.sourceHandle?.replace(/^output_/, "");
+    const sourceTaskOutputName = connection.sourceHandle?.replace(
+      /^output_/,
+      "",
+    );
 
     if (sourceTaskOutputName !== undefined) {
       // Source is task output
@@ -554,13 +569,13 @@ const GraphComponentSpecFlow = ({
         setTaskArgument(
           nodeIdToTaskId(connection.target),
           targetTaskInputName,
-          taskOutputArgument
+          taskOutputArgument,
         );
       } else {
         // Target is graph output
         setGraphOutputValue(
           nodeIdToOutputName(connection.target),
-          taskOutputArgument
+          taskOutputArgument,
         );
         // TODO: Perhaps propagate type information
       }
@@ -577,14 +592,14 @@ const GraphComponentSpecFlow = ({
         setTaskArgument(
           nodeIdToTaskId(connection.target),
           targetTaskInputName,
-          graphInputArgument
+          graphInputArgument,
         );
         // TODO: Perhaps propagate type information
       } else {
         // Target is graph output
         console.error(
           "addConnection: Cannot directly connect graph input to graph output: ",
-          connection
+          connection,
         );
       }
     }
@@ -609,7 +624,7 @@ const GraphComponentSpecFlow = ({
     // Not really needed since react-flow sends the node's incoming and outcoming edges for deletion when a node is deleted
     for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
       for (const [inputName, argument] of Object.entries(
-        taskSpec.arguments ?? {}
+        taskSpec.arguments ?? {},
       )) {
         if (typeof argument !== "string" && "graphInput" in argument) {
           if (argument.graphInput.inputName === inputNameToRemove) {
@@ -622,7 +637,7 @@ const GraphComponentSpecFlow = ({
 
     // Removing the input itself
     const newInputs = (componentSpec.inputs ?? []).filter(
-      (inputSpec) => inputSpec.name !== inputNameToRemove
+      (inputSpec) => inputSpec.name !== inputNameToRemove,
     );
     componentSpec = { ...componentSpec, inputs: newInputs };
     replaceComponentSpec(componentSpec);
@@ -632,7 +647,7 @@ const GraphComponentSpecFlow = ({
     removeGraphOutputValue(outputNameToRemove);
     // Removing the output itself
     const newOutputs = (componentSpec.outputs ?? []).filter(
-      (outputSpec) => outputSpec.name !== outputNameToRemove
+      (outputSpec) => outputSpec.name !== outputNameToRemove,
     );
     componentSpec = { ...componentSpec, outputs: newOutputs };
     replaceComponentSpec(componentSpec);
@@ -643,7 +658,7 @@ const GraphComponentSpecFlow = ({
     // Not really needed since react-flow sends the node's incoming and outcoming edges for deletion when a node is deleted
     for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
       for (const [inputName, argument] of Object.entries(
-        taskSpec.arguments ?? {}
+        taskSpec.arguments ?? {},
       )) {
         if (typeof argument !== "string" && "taskOutput" in argument) {
           if (argument.taskOutput.taskId === taskIdToRemove) {
@@ -657,8 +672,8 @@ const GraphComponentSpecFlow = ({
     // ? Should we delete the outputs themselves
     const newGraphOutputValues = Object.fromEntries(
       Object.entries(graphSpec.outputValues ?? {}).filter(
-        ([_, argument]) => argument.taskOutput.taskId !== taskIdToRemove
-      )
+        ([_, argument]) => argument.taskOutput.taskId !== taskIdToRemove,
+      ),
     );
     graphSpec = { ...graphSpec, outputValues: newGraphOutputValues };
 
@@ -710,7 +725,8 @@ const GraphComponentSpecFlow = ({
       // Correcting the position using the drag point location information
       let dragOffsetX = 0;
       let dragOffsetY = 0;
-      const dragStartOffsetData = event.dataTransfer.getData("DragStart.offset");
+      const dragStartOffsetData =
+        event.dataTransfer.getData("DragStart.offset");
       if (dragStartOffsetData !== "") {
         const dragStartOffset = JSON.parse(dragStartOffsetData);
         dragOffsetX = dragStartOffset.offsetX ?? 0;
@@ -727,7 +743,7 @@ const GraphComponentSpecFlow = ({
       const nodePosition = { x: position.x, y: position.y };
       const positionAnnotations = {
         "editor.position": JSON.stringify(nodePosition),
-      }
+      };
       if (nodeType === "task") {
         const taskSpec = nodeData as TaskSpec;
         const mergedAnnotations = {
@@ -741,7 +757,7 @@ const GraphComponentSpecFlow = ({
         };
         const taskId = getUniqueTaskName(
           graphSpec,
-          taskSpec.componentRef.spec?.name ?? "Task"
+          taskSpec.componentRef.spec?.name ?? "Task",
         );
         graphSpec = { ...graphSpec, tasks: { ...graphSpec.tasks } };
         graphSpec.tasks[taskId] = taskSpecWithAnnotation;
@@ -830,27 +846,29 @@ const Flow = ({
     setEdges(initialEdges);
   }, [initialEdges]);
 
-  return <ReactFlow
-    {...rest}
-    nodes={nodes}
-    edges={edges}
-    onNodesChange={onNodesChange}
-    onEdgesChange={onEdgesChange}
-    nodeTypes={nodeTypes}
-    onConnect={onConnect}
-    onDragOver={onDragOver}
-    onDrop={handleOnDrop}
-    onDelete={onElementsRemove}
-    onInit={onLoad}
-    deleteKeyCode={
-      rest.deleteKeyCode ?? (isAppleOS() ? "Backspace" : "Delete")
-    }
-    multiSelectionKeyCode={
-      rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
-    }
-  >
-    {children}
-  </ReactFlow>
+  return (
+    <ReactFlow
+      {...rest}
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      nodeTypes={nodeTypes}
+      onConnect={onConnect}
+      onDragOver={onDragOver}
+      onDrop={handleOnDrop}
+      onDelete={onElementsRemove}
+      onInit={onLoad}
+      deleteKeyCode={
+        rest.deleteKeyCode ?? (isAppleOS() ? "Backspace" : "Delete")
+      }
+      multiSelectionKeyCode={
+        rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
+      }
+    >
+      {children}
+    </ReactFlow>
+  );
 };
 
 export default GraphComponentSpecFlow;

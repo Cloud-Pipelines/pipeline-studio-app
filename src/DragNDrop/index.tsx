@@ -6,33 +6,35 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   ReactFlowProvider,
   Controls,
   Background,
   MiniMap,
-} from '@xyflow/react';
+} from "@xyflow/react";
 
-import { downloadDataWithCache } from '../cacheUtils';
-import type { ComponentSpec } from '../componentSpec';
+import { downloadDataWithCache } from "../cacheUtils";
+import type { ComponentSpec } from "../componentSpec";
 import GraphComponentSpecFlow, {
   EMPTY_GRAPH_COMPONENT_SPEC,
 } from "./GraphComponentSpecFlow";
-import Sidebar from './Sidebar';
-import { getAppSettings } from '../appSettings';
+import Sidebar from "./Sidebar";
+import { getAppSettings } from "../appSettings";
 import { fullyLoadComponentRefFromUrl } from "../componentStore";
 import {
   loadPipelineSpecFromSessionStorage,
   PipelineAutoSaver,
 } from "./PipelineAutoSaver";
 
-import './dnd.css';
+import "./dnd.css";
 
 const GRID_SIZE = 10;
 
 const DnDFlow = () => {
-  const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>();
+  const [componentSpec, setComponentSpec] = useState<
+    ComponentSpec | undefined
+  >();
   const [appSettings] = useState(getAppSettings());
 
   const downloadData = downloadDataWithCache;
@@ -48,12 +50,12 @@ const DnDFlow = () => {
       try {
         const defaultPipelineRef = await fullyLoadComponentRefFromUrl(
           defaultPipelineUrl,
-          downloadData
+          downloadData,
         );
         setComponentSpec(defaultPipelineRef.spec);
       } catch (err) {
         console.error(
-          `Failed to load the default pipeline from ${defaultPipelineUrl}`
+          `Failed to load the default pipeline from ${defaultPipelineUrl}`,
         );
         console.error(err);
         setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
@@ -75,9 +77,9 @@ const DnDFlow = () => {
             snapToGrid={true}
             snapGrid={[GRID_SIZE, GRID_SIZE]}
           >
-            <MiniMap/>
+            <MiniMap />
             <Controls />
-            <Background gap={GRID_SIZE}/>
+            <Background gap={GRID_SIZE} />
           </GraphComponentSpecFlow>
         </div>
         <Sidebar
@@ -86,7 +88,7 @@ const DnDFlow = () => {
           appSettings={appSettings}
           downloadData={downloadData}
         />
-        <PipelineAutoSaver componentSpec={componentSpec}/>
+        <PipelineAutoSaver componentSpec={componentSpec} />
       </ReactFlowProvider>
     </div>
   );

@@ -2,7 +2,9 @@
 html {
   box-sizing: border-box;
 }
-*, *:before, *:after {
+*,
+*:before,
+*:after {
   box-sizing: inherit;
 }
 details > * {
@@ -55,12 +57,11 @@ details > * {
 }
 
 .react-flow__node.selectable:hover {
-    box-shadow: 0 2px 4px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px 2px rgba(0, 0, 0, 0.08);
 }
 
 .react-flow__node.selected,
-.react-flow__node.selected:hover
-{
+.react-flow__node.selected:hover {
   box-shadow: 0 0 0 0.5px var(--border-color);
 }
 
@@ -113,12 +114,14 @@ details > * {
 
 .dndflow .react-flow__handle.react-flow__handle-bottom .label-angled {
   --angle: -45deg;
-  transform: translate(-50%, -50%) rotate(var(--angle)) translateX(calc(-50% - 4px));
+  transform: translate(-50%, -50%) rotate(var(--angle))
+    translateX(calc(-50% - 4px));
 }
 
 .dndflow .react-flow__handle.react-flow__handle-top .label-angled {
   --angle: -45deg;
-  transform: translate(-50%, -50%) rotate(var(--angle)) translateX(calc(50% + 4px));
+  transform: translate(-50%, -50%) rotate(var(--angle))
+    translateX(calc(50% + 4px));
 }
 
 @media (max-width: 640px) {

@@ -9,7 +9,12 @@
 import yaml from "js-yaml";
 import localForage from "localforage";
 import type { DownloadDataType } from "./cacheUtils";
-import { downloadData as defaultDownloadData, downloadDataWithCache, loadObjectFromYamlData, loadObjectFromJsonData } from "./cacheUtils";
+import {
+  downloadData as defaultDownloadData,
+  downloadDataWithCache,
+  loadObjectFromYamlData,
+  loadObjectFromJsonData,
+} from "./cacheUtils";
 import {
   type ComponentSpec,
   type ComponentReference,
@@ -38,7 +43,7 @@ type GitHubCodeSearchResultsStruct = {
 };
 
 const isValidGitHubCodeSearchResultsStruct = (
-  obj: any
+  obj: any,
 ): obj is GitHubCodeSearchResultsStruct =>
   "items" in obj && Array.isArray(obj.items);
 
@@ -47,7 +52,7 @@ const getSingleGitHubCodeSearchPage = async (
   page = 1,
   sort = "indexed",
   order = "desc",
-  downloadData: DownloadDataType = defaultDownloadData
+  downloadData: DownloadDataType = defaultDownloadData,
 ): Promise<GitHubCodeSearchResultsStruct> => {
   // TODO: Paging
   const encodedQuery = encodeURIComponent(query);
@@ -57,7 +62,7 @@ const getSingleGitHubCodeSearchPage = async (
   const responseObject = await downloadData(searchUrl, loadObjectFromJsonData);
   if (!isValidGitHubCodeSearchResultsStruct(responseObject)) {
     throw Error(
-      "The downloaded data is not a valid GitHub code search results page"
+      "The downloaded data is not a valid GitHub code search results page",
     );
   }
   return responseObject;
@@ -77,7 +82,7 @@ type UrlAndHash = {
 };
 
 async function* searchComponentsOnGitHubToGetUrlsAndHashes(
-  searchLocations: string[]
+  searchLocations: string[],
 ) {
   let urlsAndHashes: UrlAndHash[] = [];
   // TODO: If the number of components exceeds 1000 we should issue separate query for each location.
@@ -85,10 +90,7 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
   const queryParts = ["filename:component.yaml"].concat(searchLocations);
   const query = queryParts.join(" ");
   for (let page = 1; page < 100; page++) {
-    const searchResults = await getSingleGitHubCodeSearchPage(
-      query,
-      page
-    );
+    const searchResults = await getSingleGitHubCodeSearchPage(query, page);
     // "total_count": 512,
     // "incomplete_results": false,
     // "items": [
@@ -103,7 +105,7 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
       };
     }
     await new Promise((resolve) =>
-      setTimeout(resolve, ((60 * 1000) / 10) * (1 + 0.1))
+      setTimeout(resolve, ((60 * 1000) / 10) * (1 + 0.1)),
     );
   }
   return urlsAndHashes;
@@ -111,7 +113,7 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
 
 const importComponentsFromGitHubSearch = async (
   searchLocations: string[],
-  downloadData: DownloadDataType = downloadDataWithCache
+  downloadData: DownloadDataType = downloadDataWithCache,
 ) => {
   console.debug("Starting importComponentsFromGitHubSearch");
   const urlsAndHashesIterator =
@@ -148,7 +150,7 @@ const importComponentsFromGitHubSearch = async (
     const badHashReason = await badHashesDb.getItem<string>(hash);
     if (badHashReason !== null) {
       console.debug(
-        `Skipping url ${htmlUrl} with hash ${hash} due to error: "${badHashReason}"`
+        `Skipping url ${htmlUrl} with hash ${hash} due to error: "${badHashReason}"`,
       );
       continue;
     }
@@ -156,7 +158,7 @@ const importComponentsFromGitHubSearch = async (
       const downloadUrl: string = githubHtmlUrlToDownloadUrl(htmlUrl);
       if (!downloadUrl.endsWith("component.yaml")) {
         console.debug(
-          `Skipping url ${downloadUrl} since it does not end with "component.yaml"`
+          `Skipping url ${downloadUrl} since it does not end with "component.yaml"`,
         );
         continue;
       }
@@ -164,13 +166,12 @@ const importComponentsFromGitHubSearch = async (
       const cachedHash = await urlToHashDb.getItem<string>(downloadUrl);
       if (cachedHash !== null && cachedHash !== hash) {
         console.error(
-          `Component cache is broken. Stored hash for ${downloadUrl}: ${cachedHash} != ${hash}.`
+          `Component cache is broken. Stored hash for ${downloadUrl}: ${cachedHash} != ${hash}.`,
         );
       }
       // Check whether the processing is complete
-      const urlVersion = await urlProcessingVersionDb.getItem<string>(
-        downloadUrl
-      );
+      const urlVersion =
+        await urlProcessingVersionDb.getItem<string>(downloadUrl);
 
       if (
         cachedHash !== null && // Not sure we should check this, but it improves the sanity
@@ -187,7 +188,7 @@ const importComponentsFromGitHubSearch = async (
         // TODO: Consider fully preloading graph component children here.
         const componentRef = await loadComponentFromUrlAsRef(
           downloadUrl,
-          downloadData
+          downloadData,
         );
         componentText = componentRef.text;
         componentSpec = componentRef.spec;
@@ -218,11 +219,11 @@ const importComponentsFromGitHubSearch = async (
       // Marking the processing as completed
       await urlProcessingVersionDb.setItem(
         downloadUrl,
-        CURRENT_URL_PROCESSING_VERSION
+        CURRENT_URL_PROCESSING_VERSION,
       );
     } catch (err) {
       console.error(
-        `Error when processing component candidate ${htmlUrl} Error: ${err}.`
+        `Error when processing component candidate ${htmlUrl} Error: ${err}.`,
       );
     }
   }
@@ -277,17 +278,17 @@ const calculateGitBlobSha1HashHex = async (data: string | ArrayBuffer) => {
 
 const importComponentsFromFeed = async (
   componentFeedUrl: string,
-  downloadData: DownloadDataType = downloadDataWithCache
+  downloadData: DownloadDataType = downloadDataWithCache,
 ) => {
   console.debug("Starting importComponentsFromFeed");
   console.debug(`Downloading component feed: ${componentFeedUrl}.`);
   const componentFeedCandidateObject = await downloadData(
     componentFeedUrl,
-    loadObjectFromYamlData
+    loadObjectFromYamlData,
   );
   if (!isComponentFeed(componentFeedCandidateObject)) {
     throw new Error(
-      `Component feed loaded from "${componentFeedUrl}" had invalid content inside.`
+      `Component feed loaded from "${componentFeedUrl}" had invalid content inside.`,
     );
   }
   const componentFeed = componentFeedCandidateObject;
@@ -305,7 +306,7 @@ const importComponentsFromFeed = async (
           hash: await calculateGitBlobSha1HashHex(entry.data),
           data: entry.data,
         };
-      })
+      }),
     )
   ).filter(notUndefined);
 
@@ -340,7 +341,7 @@ const importComponentsFromFeed = async (
     const badHashReason = await badHashesDb.getItem<string>(hash);
     if (badHashReason !== null) {
       console.debug(
-        `Skipping url ${htmlUrl} with hash ${hash} due to error: "${badHashReason}"`
+        `Skipping url ${htmlUrl} with hash ${hash} due to error: "${badHashReason}"`,
       );
       continue;
     }
@@ -350,13 +351,12 @@ const importComponentsFromFeed = async (
       const cachedHash = await urlToHashDb.getItem<string>(downloadUrl);
       if (cachedHash !== null && cachedHash !== hash) {
         console.error(
-          `Component cache is broken. Stored hash for ${downloadUrl}: ${cachedHash} != ${hash}.`
+          `Component cache is broken. Stored hash for ${downloadUrl}: ${cachedHash} != ${hash}.`,
         );
       }
       // Check whether the processing is complete
-      const urlVersion = await urlProcessingVersionDb.getItem<string>(
-        downloadUrl
-      );
+      const urlVersion =
+        await urlProcessingVersionDb.getItem<string>(downloadUrl);
 
       if (
         cachedHash !== null && // Not sure we should check this, but it improves the sanity
@@ -373,7 +373,7 @@ const importComponentsFromFeed = async (
           // TODO: Consider fully preloading graph component children here.
           const componentRef = await loadComponentFromUrlAsRef(
             downloadUrl,
-            downloadData
+            downloadData,
           );
           componentText = componentRef.text;
           //componentSpec = componentRef.spec;
@@ -388,19 +388,19 @@ const importComponentsFromFeed = async (
       const componentSpecObj = yaml.load(componentText);
       if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
         throw Error(
-          `componentText is not a YAML-encoded object: ${componentSpecObj}`
+          `componentText is not a YAML-encoded object: ${componentSpecObj}`,
         );
       }
       if (!isValidComponentSpec(componentSpecObj)) {
         throw Error(
-          `componentText does not encode a valid pipeline component: ${componentSpecObj}`
+          `componentText does not encode a valid pipeline component: ${componentSpecObj}`,
         );
       }
       const componentSpec = componentSpecObj;
       if (componentSpec.implementation === undefined) {
         badHashesDb.setItem(
           hash,
-          'Component lacks the "implementation" section.'
+          'Component lacks the "implementation" section.',
         );
         continue;
       }
@@ -427,11 +427,11 @@ const importComponentsFromFeed = async (
       // Marking the processing as completed
       await urlProcessingVersionDb.setItem(
         downloadUrl,
-        CURRENT_URL_PROCESSING_VERSION
+        CURRENT_URL_PROCESSING_VERSION,
       );
     } catch (err) {
       console.error(
-        `Error when processing component candidate ${htmlUrl} Error: ${err}.`
+        `Error when processing component candidate ${htmlUrl} Error: ${err}.`,
       );
     }
   }
@@ -445,7 +445,7 @@ export interface ComponentSearchConfig {
 
 export const refreshComponentDb = async (
   componentSearchConfig: ComponentSearchConfig,
-  downloadData: DownloadDataType = downloadDataWithCache
+  downloadData: DownloadDataType = downloadDataWithCache,
 ) => {
   if (componentSearchConfig.ComponentFeedUrls) {
     for (const componentFeedUrl of componentSearchConfig.ComponentFeedUrls) {
@@ -453,7 +453,7 @@ export const refreshComponentDb = async (
         await importComponentsFromFeed(componentFeedUrl, downloadData);
       } catch (error) {
         console.error(
-          `Error importing component feed "${componentFeedUrl}": ${error}`
+          `Error importing component feed "${componentFeedUrl}": ${error}`,
         );
       }
     }
@@ -461,13 +461,13 @@ export const refreshComponentDb = async (
   if (componentSearchConfig.GitHubSearchLocations !== undefined) {
     await importComponentsFromGitHubSearch(
       componentSearchConfig.GitHubSearchLocations,
-      downloadData
+      downloadData,
     );
   }
 };
 
 export const getAllComponentsAsRefs = async (
-  downloadData: DownloadDataType = downloadDataWithCache
+  downloadData: DownloadDataType = downloadDataWithCache,
 ) => {
   // Perhaps use urlProcessingVersionDb as source of truth. Hmm. It is URL-based
   const hashToUrlDb = localForage.createInstance({
@@ -496,16 +496,16 @@ export const getAllComponentsAsRefs = async (
         });
       } catch (err) {
         console.error(
-          `Error when parsing cached component. Hash: ${hash}. Error: ${err}. Component text: ${componentText}`
+          `Error when parsing cached component. Hash: ${hash}. Error: ${err}. Component text: ${componentText}`,
         );
       }
-    }
+    },
   );
   await hashToUrlDb.iterate<string, void>((url, hash) => {
     let componentRef = hashToComponentRef.get(hash);
     if (componentRef === undefined) {
       console.error(
-        `Component db corrupted: Component with url ${url} and hash ${hash} has no content in the DB.`
+        `Component db corrupted: Component with url ${url} and hash ${hash} has no content in the DB.`,
       );
     } else {
       componentRef.url = url;
@@ -516,7 +516,7 @@ export const getAllComponentsAsRefs = async (
   hashToComponentRef.forEach((componentRef, hash) => {
     if (componentRef.url === undefined) {
       console.error(
-        `Component db corrupted: Component with hash ${hash} has content, but no URL in the DB.`
+        `Component db corrupted: Component with hash ${hash} has content, but no URL in the DB.`,
       );
     } else {
       componentRefs.push(componentRef);
@@ -535,10 +535,11 @@ export const isComponentDbEmpty = async () => {
 
 export const searchComponentsByName = async (
   name: string,
-  downloadData: DownloadDataType = downloadDataWithCache
+  downloadData: DownloadDataType = downloadDataWithCache,
 ) => {
   const componentRefs = await getAllComponentsAsRefs(downloadData);
   return componentRefs.filter(
-    (ref) => ref.spec?.name?.toLowerCase().includes(name.toLowerCase()) ?? false
+    (ref) =>
+      ref.spec?.name?.toLowerCase().includes(name.toLowerCase()) ?? false,
   );
 };
