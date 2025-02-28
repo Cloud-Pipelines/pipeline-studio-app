@@ -10,7 +10,7 @@ import { useStore } from "@xyflow/react";
 
 import type { ComponentSpec } from "../componentSpec";
 import { componentSpecToYaml } from "../componentStore";
-import { augmentComponentSpec } from "./GraphComponentSpecFlow";
+import { getComponentSpec } from "../utils/getComponentSpec";
 
 interface GraphComponentLinkProps {
   componentSpec: ComponentSpec;
@@ -30,7 +30,7 @@ const GraphComponentLink = ({
   const nodes = useStore((store) => store.nodes);
 
   try {
-    componentSpec = augmentComponentSpec(componentSpec, nodes, false, true);
+    componentSpec = getComponentSpec(componentSpec, nodes, false, true);
   } catch (err: any) {
     if (err?.message?.startsWith("The nodes array does not") !== true) {
       console.error(err);

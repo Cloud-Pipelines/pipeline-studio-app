@@ -9,7 +9,7 @@
 import { useStore } from "@xyflow/react";
 
 import type { ComponentSpec } from "../componentSpec";
-import { augmentComponentSpec } from "./GraphComponentSpecFlow";
+import { getComponentSpec } from "../utils/getComponentSpec";
 import { buildVertexPipelineSpecFromGraphComponentSpec } from "../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler";
 
 interface VertexAiExporterProps {
@@ -23,7 +23,7 @@ const VertexAiExporter = ({ componentSpec }: VertexAiExporterProps) => {
   try {
     // Augmenting the componentSpec might be useless right now, but it can stabilize the output (e.g. ordering).
     // Also, in the future, the original spec might be included in the vertexPipelineSpec
-    componentSpec = augmentComponentSpec(componentSpec, nodes, true, true);
+    componentSpec = getComponentSpec(componentSpec, nodes, true, true);
     const vertexPipelineSpec =
       buildVertexPipelineSpecFromGraphComponentSpec(componentSpec);
     vertexPipelineSpecText = JSON.stringify(vertexPipelineSpec, undefined, 2);

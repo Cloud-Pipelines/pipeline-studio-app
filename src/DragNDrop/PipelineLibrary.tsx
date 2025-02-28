@@ -33,7 +33,7 @@ import {
   deleteComponentFileFromList,
 } from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
-import { augmentComponentSpec } from "./GraphComponentSpecFlow";
+import { getComponentSpec } from "../utils/getComponentSpec";
 import SamplePipelineLibrary from "./SamplePipelineLibrary";
 import { preloadComponentReferences } from "../componentStore";
 
@@ -311,7 +311,7 @@ const PipelineLibrary = ({
       if (!componentSpec) {
         return;
       }
-      const graphComponent = augmentComponentSpec(
+      const graphComponent = getComponentSpec(
         componentSpec,
         nodes,
         false,
