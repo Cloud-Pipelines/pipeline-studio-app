@@ -11,7 +11,7 @@ import {
 } from "@xyflow/react";
 
 import type { ComponentSpec } from "../componentSpec";
-import { augmentComponentSpec } from "./GraphComponentSpecFlow";
+import { augmentComponentSpec } from '../utils/argumentComponentSpec'
 import { buildVertexPipelineSpecFromGraphComponentSpec } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
 
 interface VertexAiExporterProps {
