@@ -6,7 +6,11 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import type { ArgumentType, ComponentSpec, TypeSpecType } from "../componentSpec";
+import type {
+  ArgumentType,
+  ComponentSpec,
+  TypeSpecType,
+} from "../componentSpec";
 
 interface ArgumentsEditorProps {
   componentSpec: ComponentSpec;

@@ -85,7 +85,7 @@ type ResolvedCommandLineAndArgs = {
 
 const resolveCommandLine = (
   componentSpec: ComponentSpec,
-  taskArguments: Record<string, ArgumentType>
+  taskArguments: Record<string, ArgumentType>,
 ): ResolvedCommandLineAndArgs => {
   if (!isContainerImplementation(componentSpec.implementation)) {
     throw Error("resolveCommandLine only supports container components");
@@ -136,7 +136,7 @@ const resolveCommandLine = (
             condEvaluatesToTrue = taskArgument.toLowerCase() === "true";
           } else {
             throw Error(
-              "Using runtime conditions in component command line placeholders is not supported yet."
+              "Using runtime conditions in component command line placeholders is not supported yet.",
             );
           }
         }
@@ -170,7 +170,7 @@ const MAKE_PARAMETER_INPUT_NAME = "artifact";
 const MAKE_PARAMETER_OUTPUT_NAME = "parameter";
 
 const buildMakeParameterTaskSpec = (
-  artifactArgument: argo.Artifact
+  artifactArgument: argo.Artifact,
 ): argo.DAGTask => {
   const taskId = artifactArgument.from?.match(/{{tasks.([^.]+)./)?.[1];
   const taskSpec: argo.DAGTask = {
@@ -236,8 +236,8 @@ function buildArgoParameterArgument(
   upstreamCannotBeParameter: boolean,
   addMakeParameterTaskAndGetParameterArgument: (
     artifactArgument: argo.Artifact,
-    namePrefix?: string
-  ) => argo.Parameter
+    namePrefix?: string,
+  ) => argo.Parameter,
 ): argo.Parameter {
   if (taskArgument === undefined) {
     if (inputSpec.default !== undefined) {
@@ -247,12 +247,12 @@ function buildArgoParameterArgument(
         // TODO: Decide what the behavior should be
         // throw Error(`Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`);
         console.error(
-          `Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`
+          `Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`,
         );
         taskArgument = "";
       } else {
         throw Error(
-          `Argument was not provided for required input "${inputSpec.name}"`
+          `Argument was not provided for required input "${inputSpec.name}"`,
         );
       }
     }
@@ -266,7 +266,7 @@ function buildArgoParameterArgument(
     return result;
   } else if ("graphInput" in taskArgument) {
     const argoGraphInputName = sanitizeParameterOrArtifactName(
-      taskArgument.graphInput.inputName
+      taskArgument.graphInput.inputName,
     );
     if (upstreamCannotBeParameter) {
       const artifactArgument: argo.Artifact = {
@@ -276,7 +276,7 @@ function buildArgoParameterArgument(
       const convertedParameterArgument =
         addMakeParameterTaskAndGetParameterArgument(
           artifactArgument,
-          "Make parameter for " + taskArgument.graphInput.inputName
+          "Make parameter for " + taskArgument.graphInput.inputName,
         );
       result.value = convertedParameterArgument.value;
     } else {
@@ -286,7 +286,7 @@ function buildArgoParameterArgument(
     return result;
   } else if ("taskOutput" in taskArgument) {
     const taskOutputArgoOutputName = sanitizeParameterOrArtifactName(
-      taskArgument.taskOutput.outputName
+      taskArgument.taskOutput.outputName,
     );
     // FIX: !! Sanitizing the ID here is not enough. There needs to be proper ID mapping.
     // FIX: Task IDs might conflict after sanitization
@@ -299,7 +299,7 @@ function buildArgoParameterArgument(
     const convertedParameterArgument =
       addMakeParameterTaskAndGetParameterArgument(
         artifactArgument,
-        `Make parameter for ${taskArgument.taskOutput.taskId} output ${taskArgument.taskOutput.outputName}`
+        `Make parameter for ${taskArgument.taskOutput.taskId} output ${taskArgument.taskOutput.outputName}`,
       );
     result.value = convertedParameterArgument.value;
     return result;
@@ -310,7 +310,7 @@ function buildArgoParameterArgument(
 
 function buildArgoArtifactArgument(
   taskArgument: ArgumentType | undefined,
-  inputSpec: InputSpec
+  inputSpec: InputSpec,
 ) {
   //if (! (inputName in taskArguments)) {
   if (taskArgument === undefined) {
@@ -322,12 +322,12 @@ function buildArgoArtifactArgument(
         // TODO: Decide what the behavior should be
         // throw Error(`Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`);
         console.error(
-          `Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`
+          `Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`,
         );
         taskArgument = "";
       } else {
         throw Error(
-          `Argument was not provided for required input "${inputSpec.name}"`
+          `Argument was not provided for required input "${inputSpec.name}"`,
         );
       }
     }
@@ -343,7 +343,7 @@ function buildArgoArtifactArgument(
     return result;
   } else if ("graphInput" in taskArgument) {
     const graphInputArgoName = sanitizeParameterOrArtifactName(
-      taskArgument.graphInput.inputName
+      taskArgument.graphInput.inputName,
     );
     result.from = `{{inputs.artifacts.${graphInputArgoName}}}`;
     return result;
@@ -351,7 +351,7 @@ function buildArgoArtifactArgument(
     // FIX: Task IDs might conflict after sanitization
     // FIX: !! Need proper task ID mapping
     const upstreamTaskOutputArgoName = sanitizeParameterOrArtifactName(
-      taskArgument.taskOutput.outputName
+      taskArgument.taskOutput.outputName,
     );
     const upstreamTaskArgoId = sanitizeID(taskArgument.taskOutput.taskId);
     result.from = `{{tasks.${upstreamTaskArgoId}.outputs.artifacts.${upstreamTaskOutputArgoName}}}`;
@@ -363,7 +363,7 @@ function buildArgoArtifactArgument(
 
 function buildArgoContainerTemplateFromContainerComponentSpec(
   componentSpec: ComponentSpec,
-  taskArguments: Record<string, ArgumentType>
+  taskArguments: Record<string, ArgumentType>,
 ) {
   if (!isContainerImplementation(componentSpec.implementation)) {
     throw Error("Only container components are supported by this function");
@@ -375,7 +375,7 @@ function buildArgoContainerTemplateFromContainerComponentSpec(
 
   const argoTemplateInputs: argo.Inputs = {
     parameters: Array.from(
-      resolvedCommandLine.inputsConsumedAsParameter.values()
+      resolvedCommandLine.inputsConsumedAsParameter.values(),
     ).map(
       (inputName): argo.Parameter => ({
         // TODO: Replace with proper name mapping to prevent collisions after sanitization.
@@ -384,10 +384,10 @@ function buildArgoContainerTemplateFromContainerComponentSpec(
         // default: inputMap.get(inputName)?.default,
         // TODO: Enable after verifying the required Argo version.
         // description: inputMap.get(inputName)?.description,
-      })
+      }),
     ),
     artifacts: Array.from(
-      resolvedCommandLine.inputsConsumedAsArtifact.values()
+      resolvedCommandLine.inputsConsumedAsArtifact.values(),
     ).map(
       (inputName): argo.Artifact => ({
         // TODO: Replace with proper name mapping to prevent collisions after sanitization.
@@ -401,7 +401,7 @@ function buildArgoContainerTemplateFromContainerComponentSpec(
           IO_FILE_NAME,
         // TODO: Enable this default value feature if needed (after verifying that it works).
         //raw: { data: inputMap.get(inputName)?.default },
-      })
+      }),
     ),
   };
 
@@ -419,7 +419,7 @@ function buildArgoContainerTemplateFromContainerComponentSpec(
           outputSpec.name.replaceAll(/[/. ]/g, "_") +
           "/" +
           IO_FILE_NAME,
-      })
+      }),
     ),
   };
 
@@ -441,7 +441,7 @@ function buildArgoContainerTemplateFromContainerComponentSpec(
 function buildArgoDagTemplateFromGraphComponentSpec(
   componentSpec: ComponentSpec,
   inputsThatHaveParameterArguments: Set<string>,
-  addTemplateAndGetId: (template: argo.Template, namePrefix?: string) => string
+  addTemplateAndGetId: (template: argo.Template, namePrefix?: string) => string,
 ) {
   if (!isGraphImplementation(componentSpec.implementation)) {
     throw Error("Only graph components are supported by this function");
@@ -475,12 +475,12 @@ function buildArgoDagTemplateFromGraphComponentSpec(
 
   const addMakeParameterTaskAndGetParameterArgument = (
     artifactArgument: argo.Artifact,
-    namePrefix: string = "Make artifact"
+    namePrefix: string = "Make artifact",
   ) => {
     // These system names are expected to not conflict with user task names
     const makeArtifactTemplateId = addTemplateAndGetId(
       makeParameterTemplate,
-      MAKE_PARAMETER_TEMPLATE_ID
+      MAKE_PARAMETER_TEMPLATE_ID,
     );
     const makeArtifactTaskSpec = buildMakeParameterTaskSpec(artifactArgument);
     makeArtifactTaskSpec.template = makeArtifactTemplateId;
@@ -502,11 +502,11 @@ function buildArgoDagTemplateFromGraphComponentSpec(
         taskSpec.arguments ?? {},
         inputsThatHaveParameterArguments,
         addTemplateAndGetId,
-        addMakeParameterTaskAndGetParameterArgument
+        addMakeParameterTaskAndGetParameterArgument,
       );
       if (taskId in argoTasks) {
         throw Error(
-          `Task ID "${taskId}" is not unique. This cannot happen (unless user task ID clashes with special task ID).`
+          `Task ID "${taskId}" is not unique. This cannot happen (unless user task ID clashes with special task ID).`,
         );
       }
       // FIX: Need to establish task id->name mappings
@@ -528,10 +528,10 @@ function buildArgoDagTemplateFromGraphComponentSpec(
   const argoInputsConsumedAsArtifact = new Set<string>();
   for (const argoTask of Object.values(argoTasks)) {
     for (const argument of Object.values(
-      argoTask.arguments?.parameters ?? {}
+      argoTask.arguments?.parameters ?? {},
     )) {
       const argoInputName = argument.value?.match(
-        /\{\{inputs\.parameters\.([^}]+)}}/
+        /\{\{inputs\.parameters\.([^}]+)}}/,
       )?.[1];
       if (argoInputName !== undefined) {
         // TODO: Input name mapping
@@ -540,7 +540,7 @@ function buildArgoDagTemplateFromGraphComponentSpec(
     }
     for (const argument of Object.values(argoTask.arguments?.artifacts ?? {})) {
       const argoInputName = argument.from?.match(
-        /\{\{inputs\.artifacts\.([^}]+)}}/
+        /\{\{inputs\.artifacts\.([^}]+)}}/,
       )?.[1];
       if (argoInputName !== undefined) {
         argoInputsConsumedAsArtifact.add(argoInputName);
@@ -571,11 +571,11 @@ function buildArgoDagTemplateFromGraphComponentSpec(
   // We assume that the graphSpec.outputValues has same set of keys as component outputs.
   // However even if there is discrepancy, the graphSpec.outputValues is the "practical" source of truth.
   const dagOutputArtifactSources = Object.entries(
-    graphSpec.outputValues ?? {}
+    graphSpec.outputValues ?? {},
   ).map(([outputName, taskOutputArgument]) => {
     const outputArgoName = sanitizeParameterOrArtifactName(outputName);
     const upstreamTaskOutputArgoName = sanitizeParameterOrArtifactName(
-      taskOutputArgument.taskOutput.outputName
+      taskOutputArgument.taskOutput.outputName,
     );
     // FIX: !! Need proper id mapping
     const upstreamTaskArgoId = sanitizeID(taskOutputArgument.taskOutput.taskId);
@@ -590,10 +590,10 @@ function buildArgoDagTemplateFromGraphComponentSpec(
     parameters: Array.from(argoInputsConsumedAsParameter.values()).map(
       (argoInputName): argo.Parameter => ({
         name: argoInputName,
-      })
+      }),
     ),
     artifacts: Array.from(argoInputsConsumedAsArtifact.values()).map(
-      (argoInputName): argo.Artifact => ({ name: argoInputName })
+      (argoInputName): argo.Artifact => ({ name: argoInputName }),
     ),
   };
 
@@ -619,22 +619,22 @@ function buildArgoTemplateFromComponentSpec(
   componentSpec: ComponentSpec,
   taskArguments: Record<string, ArgumentType>,
   inputsThatHaveParameterArguments: Set<string>,
-  addTemplateAndGetId: (template: argo.Template, namePrefix?: string) => string
+  addTemplateAndGetId: (template: argo.Template, namePrefix?: string) => string,
 ) {
   if (isContainerImplementation(componentSpec.implementation)) {
     return buildArgoContainerTemplateFromContainerComponentSpec(
       componentSpec,
-      taskArguments
+      taskArguments,
     );
   } else if (isGraphImplementation(componentSpec.implementation)) {
     return buildArgoDagTemplateFromGraphComponentSpec(
       componentSpec,
       inputsThatHaveParameterArguments,
-      addTemplateAndGetId
+      addTemplateAndGetId,
     );
   } else {
     throw Error(
-      `Unsupported component implementation kind: ${componentSpec.implementation}`
+      `Unsupported component implementation kind: ${componentSpec.implementation}`,
     );
   }
 }
@@ -647,8 +647,8 @@ const buildArgoDagTaskFromTaskSpec = (
   addTemplateAndGetId: (template: argo.Template, namePrefix?: string) => string,
   addMakeParameterTaskAndGetParameterArgument: (
     artifactArgument: argo.Artifact,
-    namePrefix?: string
-  ) => argo.Parameter
+    namePrefix?: string,
+  ) => argo.Parameter,
 ) => {
   // FIX: !! This part is likely broken or not needed.
   // So-called "parameter" arguments can either be constant arguments
@@ -669,44 +669,47 @@ const buildArgoDagTaskFromTaskSpec = (
         if ("graphInput" in taskArgument) {
           if (
             graphInputsWithParameterArguments.has(
-              taskArgument.graphInput.inputName
+              taskArgument.graphInput.inputName,
             )
           ) {
             return true;
           }
         }
         return false;
-      })
+      }),
   );
 
   const inputMap = new Map(
-    (componentSpec.inputs ?? []).map((inputSpec) => [inputSpec.name, inputSpec])
+    (componentSpec.inputs ?? []).map((inputSpec) => [
+      inputSpec.name,
+      inputSpec,
+    ]),
   );
 
   const inputNameToArgoInputName = new Map(
     Array.from(inputMap.keys()).map((name) => [
       name,
       sanitizeParameterOrArtifactName(name),
-    ])
+    ]),
   );
 
   const argoInputNameToInputName = new Map(
     Array.from(inputNameToArgoInputName.entries()).map(([name, argoName]) => [
       argoName,
       name,
-    ])
+    ]),
   );
 
   const argoTemplate: argo.Template = buildArgoTemplateFromComponentSpec(
     componentSpec,
     taskArguments,
     inputsThatHaveParameterArguments,
-    addTemplateAndGetId
+    addTemplateAndGetId,
   );
 
   const argoTemplateId = addTemplateAndGetId(
     argoTemplate,
-    componentSpec.name ?? "Component"
+    componentSpec.name ?? "Component",
   );
 
   const argoTaskParameterArguments: argo.Parameter[] = (
@@ -714,7 +717,7 @@ const buildArgoDagTaskFromTaskSpec = (
   ).map((parameter) => {
     const argoInputName = parameter.name;
     const inputName = assertDefined(
-      argoInputNameToInputName.get(argoInputName)
+      argoInputNameToInputName.get(argoInputName),
     );
     const inputSpec = assertDefined(inputMap.get(inputName));
     return {
@@ -722,7 +725,7 @@ const buildArgoDagTaskFromTaskSpec = (
         taskArguments[inputName],
         inputSpec,
         inputsThatHaveParameterArguments.has(inputName),
-        addMakeParameterTaskAndGetParameterArgument
+        addMakeParameterTaskAndGetParameterArgument,
       ),
       // buildArgoParameterArgument does not set parameter name, so we set it here.
       name: argoInputName,
@@ -734,7 +737,7 @@ const buildArgoDagTaskFromTaskSpec = (
   ).map((artifact) => {
     const argoInputName = artifact.name;
     const inputName = assertDefined(
-      argoInputNameToInputName.get(argoInputName)
+      argoInputNameToInputName.get(argoInputName),
     );
     const inputSpec = assertDefined(inputMap.get(inputName));
     return {
@@ -768,7 +771,7 @@ const buildArgoDagTaskFromTaskSpec = (
   const upstreamArgoTaskIds = new Set(
     argoArgumentValues
       .map((arg) => arg.match(/{{tasks.([^.]+).outputs./)?.[1])
-      .filter(notUndefined)
+      .filter(notUndefined),
   );
 
   const argoDagTask: argo.DAGTask = {
@@ -789,7 +792,7 @@ const makeNameUniqueByAddingIndex = (
   name: string,
   existingNames: Set<string>,
   sanitizer: (name: string) => string = (x) => x,
-  delimiter: string = "-"
+  delimiter: string = "-",
 ): string => {
   let finalName = sanitizer(name);
   let index = 1;
@@ -798,7 +801,7 @@ const makeNameUniqueByAddingIndex = (
     const newFinalName = sanitizer(name + delimiter + index.toString());
     if (newFinalName === finalName) {
       throw Error(
-        `The name sanitizer seems to truncate the name which makes it impossible to make the name unique. ${newFinalName}`
+        `The name sanitizer seems to truncate the name which makes it impossible to make the name unique. ${newFinalName}`,
       );
     }
     finalName = newFinalName;
@@ -807,7 +810,7 @@ const makeNameUniqueByAddingIndex = (
 };
 
 export const buildArgoWorkflowSpecFromGraphComponentSpec = (
-  componentSpec: ComponentSpec
+  componentSpec: ComponentSpec,
 ) => {
   let argoTemplates: Record<string, argo.Template> = {};
 
@@ -815,7 +818,7 @@ export const buildArgoWorkflowSpecFromGraphComponentSpec = (
 
   const addTemplateAndGetId = (
     template: argo.Template,
-    namePrefix: string = "Component"
+    namePrefix: string = "Component",
   ) => {
     // Erasing the name, so that the structure can be used for lookup.
     // We will generate the ID in this function and set name to it.
@@ -828,11 +831,7 @@ export const buildArgoWorkflowSpecFromGraphComponentSpec = (
     const usedIds = new Set(Object.keys(argoTemplates));
     // Note: The generated ID should be used without changes (e.g. sanitization).
     // Otherwise the result of de-duplication will be incorrect.
-    const id = makeNameUniqueByAddingIndex(
-      namePrefix,
-      usedIds,
-      sanitizeID,
-    );
+    const id = makeNameUniqueByAddingIndex(namePrefix, usedIds, sanitizeID);
     templateStringToTemplateId.set(serializedSpec, id);
     argoTemplates[id] = template;
     // Setting the template name to the generated ID
@@ -849,18 +848,18 @@ export const buildArgoWorkflowSpecFromGraphComponentSpec = (
         graphInput: { inputName: inputSpec.name },
       };
       return [inputSpec.name, argument];
-    })
+    }),
   );
   const rootArgoTemplate = buildArgoTemplateFromComponentSpec(
     componentSpec,
     pipelineArguments,
     graphInputsWithParameterArguments,
-    addTemplateAndGetId
+    addTemplateAndGetId,
   );
 
   const rootArgoTemplateId = addTemplateAndGetId(
     rootArgoTemplate,
-    componentSpec.name ?? "Root"
+    componentSpec.name ?? "Root",
   );
 
   const workflowSpec: argo.WorkflowSpec = {
@@ -878,7 +877,7 @@ export const buildArgoWorkflowSpecFromGraphComponentSpec = (
 
 export const buildArgoWorkflowFromGraphComponent = (
   componentSpec: ComponentSpec,
-  pipelineArguments: Map<string, string>
+  pipelineArguments: Map<string, string>,
 ) => {
   const workflowSpec =
     buildArgoWorkflowSpecFromGraphComponentSpec(componentSpec);
@@ -892,15 +891,15 @@ export const buildArgoWorkflowFromGraphComponent = (
     ]);
   // TODO: Throw exception when non-default arguments are missing.
   const allPipelineArguments = new Map(
-    defaultInputValuePairs.concat(Array.from(pipelineArguments.entries()))
+    defaultInputValuePairs.concat(Array.from(pipelineArguments.entries())),
   );
 
   // Converting the pipeline arguments
   const templateMap = new Map(
-    workflowSpec.templates?.map((template) => [template.name, template])
+    workflowSpec.templates?.map((template) => [template.name, template]),
   );
   const rootTemplate = assertDefined(
-    templateMap.get(assertDefined(workflowSpec.entrypoint))
+    templateMap.get(assertDefined(workflowSpec.entrypoint)),
   );
   const inputParameterNames =
     rootTemplate?.inputs?.parameters?.map((parameter) => parameter.name) ?? [];
@@ -911,7 +910,7 @@ export const buildArgoWorkflowFromGraphComponent = (
     Array.from(allPipelineArguments.entries()).map(([key, value]) => [
       sanitizeParameterOrArtifactName(key),
       value,
-    ])
+    ]),
   );
   const convertedPipelineArguments: argo.Arguments = {
     parameters: inputParameterNames
@@ -920,7 +919,7 @@ export const buildArgoWorkflowFromGraphComponent = (
         (argoInputName): argo.Parameter => ({
           name: argoInputName,
           value: pipelineArgumentsWithArgoNames.get(argoInputName),
-        })
+        }),
       ),
     artifacts: inputArtifactsNames
       .filter((name) => pipelineArgumentsWithArgoNames.has(name))
@@ -929,10 +928,10 @@ export const buildArgoWorkflowFromGraphComponent = (
           name: argoInputName,
           raw: {
             data: assertDefined(
-              pipelineArgumentsWithArgoNames.get(argoInputName)
+              pipelineArgumentsWithArgoNames.get(argoInputName),
             ),
           },
-        })
+        }),
       ),
   };
 

@@ -6,19 +6,19 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { type CSSProperties, memo, useState } from 'react';
+import { type CSSProperties, memo, useState } from "react";
 
-import type{
+import type {
   ArgumentType,
   InputSpec,
   OutputSpec,
   TaskSpec,
-} from '../componentSpec';
+} from "../componentSpec";
 
 import { Handle, Position } from "@xyflow/react";
 import type { Node, NodeProps, HandleType } from "@xyflow/react";
 
-import ArgumentsEditorDialog from './ArgumentsEditorDialog';
+import ArgumentsEditorDialog from "./ArgumentsEditorDialog";
 
 const inputHandlePosition = Position.Top;
 const outputHandlePosition = Position.Bottom;
@@ -29,8 +29,13 @@ const MISSING_ARGUMENT_CLASS_NAME = "missing-argument";
 
 const NODE_WIDTH_IN_PX = 180;
 
-export const isComponentTaskNode = (node: Node): node is Node<ComponentTaskNodeProps> =>
-  node.type === "task" && node.data !== undefined && "taskSpec" in node.data && "taskId" in node.data;
+export const isComponentTaskNode = (
+  node: Node,
+): node is Node<ComponentTaskNodeProps> =>
+  node.type === "task" &&
+  node.data !== undefined &&
+  "taskSpec" in node.data &&
+  "taskId" in node.data;
 
 function generateHandles(
   ioSpecs: InputOrOutputSpec[],
@@ -76,16 +81,15 @@ function generateHandles(
         <div className={labelClasses} style={labelStyle}>
           {ioSpec.name}
         </div>
-      </Handle>
+      </Handle>,
     );
   }
   return handleComponents;
 }
 
-
 function generateLabelStyle(
   position: Position,
-  numHandles: number
+  numHandles: number,
 ): [string, CSSProperties] {
   let maxLabelWidthPx = NODE_WIDTH_IN_PX;
   // By default, we want to place the label on the same side of the handle as the handle is on the side of the node.
@@ -111,12 +115,28 @@ function generateLabelStyle(
   return [labelClasses, labelStyle];
 }
 
-function generateInputHandles(inputSpecs: InputSpec[], inputsWithInvalidArguments?: string[]): React.ReactElement[] {
-  return generateHandles(inputSpecs, "target", inputHandlePosition, "input_", inputsWithInvalidArguments);
+function generateInputHandles(
+  inputSpecs: InputSpec[],
+  inputsWithInvalidArguments?: string[],
+): React.ReactElement[] {
+  return generateHandles(
+    inputSpecs,
+    "target",
+    inputHandlePosition,
+    "input_",
+    inputsWithInvalidArguments,
+  );
 }
 
-function generateOutputHandles(outputSpecs: OutputSpec[]): React.ReactElement[] {
-  return generateHandles(outputSpecs, "source", outputHandlePosition, "output_");
+function generateOutputHandles(
+  outputSpecs: OutputSpec[],
+): React.ReactElement[] {
+  return generateHandles(
+    outputSpecs,
+    "source",
+    outputHandlePosition,
+    "output_",
+  );
 }
 
 export interface ComponentTaskNodeProps extends Record<string, unknown> {
@@ -133,7 +153,7 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
   const taskSpec = typedData.taskSpec;
   const componentSpec = taskSpec.componentRef.spec;
   if (componentSpec === undefined) {
-    return (<></>);
+    return <></>;
   }
 
   const label = componentSpec.name ?? "<component>";
@@ -155,16 +175,19 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
       (inputSpec) =>
         inputSpec.optional !== true &&
         inputSpec.default === undefined &&
-        !(inputSpec.name in (taskSpec.arguments ?? {}))
+        !(inputSpec.name in (taskSpec.arguments ?? {})),
     )
     .map((inputSpec) => inputSpec.name);
-  const inputHandles = generateInputHandles(componentSpec.inputs ?? [], inputsWithInvalidArguments);
+  const inputHandles = generateInputHandles(
+    componentSpec.inputs ?? [],
+    inputsWithInvalidArguments,
+  );
   const outputHandles = generateOutputHandles(componentSpec.outputs ?? []);
   const handleComponents = inputHandles.concat(outputHandles);
 
   const closeArgumentsEditor = () => {
     setIsArgumentsEditorOpen(false);
-  }
+  };
 
   return (
     <div

@@ -198,11 +198,11 @@ const PipelineLibrary = ({
   componentSpec,
   setComponentSpec,
   samplePipelineLibraryUrl,
-  downloadData = downloadDataWithCache
+  downloadData = downloadDataWithCache,
 }: PipelineLibraryProps) => {
   // const [errorMessage, setErrorMessage] = useState("");
   const [componentFiles, setComponentFiles] = useState(
-    new Map<string, ComponentFileEntry>()
+    new Map<string, ComponentFileEntry>(),
   );
   const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
@@ -213,7 +213,7 @@ const PipelineLibrary = ({
 
   const refreshPipelines = useCallback(() => {
     getAllComponentFilesFromList(USER_PIPELINES_LIST_NAME).then(
-      setComponentFiles
+      setComponentFiles,
     );
   }, [setComponentFiles]);
 
@@ -225,12 +225,12 @@ const PipelineLibrary = ({
       // TODO: Move this functionality to the setComponentSpec function
       await preloadComponentReferences(
         fileEntry.componentRef.spec,
-        downloadData
+        downloadData,
       );
       setComponentSpec?.(fileEntry.componentRef.spec);
       setPipelineFile(fileEntry);
     },
-    [setComponentSpec, setPipelineFile, downloadData]
+    [setComponentSpec, setPipelineFile, downloadData],
   );
 
   const onDrop = useCallback(
@@ -253,9 +253,7 @@ const PipelineLibrary = ({
               ".yaml",
             ]) || "Pipeline";
           try {
-            const componentRef1 = await loadComponentAsRefFromText(
-              binaryStr
-            );
+            const componentRef1 = await loadComponentAsRefFromText(binaryStr);
             if (!isGraphImplementation(componentRef1.spec.implementation)) {
               console.error("Dropped component is not a graph component");
               return;
@@ -266,7 +264,7 @@ const PipelineLibrary = ({
             const componentRefPlusData = await addComponentToListByText(
               USER_PIPELINES_LIST_NAME,
               binaryStr,
-              fileName
+              fileName,
             );
             const componentRef = componentRefPlusData.componentRef;
             console.debug("storeComponentText succeeded", componentRef);
@@ -288,7 +286,7 @@ const PipelineLibrary = ({
         reader.readAsArrayBuffer(file);
       });
     },
-    [refreshPipelines, downloadData]
+    [refreshPipelines, downloadData],
   );
 
   const openSaveAsDialog = useCallback(() => {
@@ -304,7 +302,7 @@ const PipelineLibrary = ({
       if (!overwrite) {
         const existingFileEntry = await getComponentFileFromList(
           USER_PIPELINES_LIST_NAME,
-          name
+          name,
         );
         if (existingFileEntry !== null) {
           throw Error(`File "${name}" already exists.`);
@@ -317,14 +315,14 @@ const PipelineLibrary = ({
         componentSpec,
         nodes,
         false,
-        true
+        true,
       );
       graphComponent.name = name;
       const componentText = componentSpecToYaml(graphComponent);
       const fileEntry = await writeComponentToFileListFromText(
         USER_PIPELINES_LIST_NAME,
         name,
-        componentText
+        componentText,
       );
       await openPipelineFile(fileEntry);
       closeSaveAsDialog();
@@ -336,7 +334,7 @@ const PipelineLibrary = ({
       nodes,
       openPipelineFile,
       refreshPipelines,
-    ]
+    ],
   );
 
   const handleContextMenuDelete = async () => {
@@ -344,7 +342,7 @@ const PipelineLibrary = ({
       setContextMenuFileName(undefined);
       await deleteComponentFileFromList(
         USER_PIPELINES_LIST_NAME,
-        contextMenuFileName
+        contextMenuFileName,
       );
       refreshPipelines();
     }
@@ -355,11 +353,11 @@ const PipelineLibrary = ({
       setContextMenuFileName(undefined);
       const fileEntry = await getComponentFileFromList(
         USER_PIPELINES_LIST_NAME,
-        contextMenuFileName
+        contextMenuFileName,
       );
       if (!fileEntry) {
         console.error(
-          `handleContextMenuOpen: File ${contextMenuFileName} does not exist.`
+          `handleContextMenuOpen: File ${contextMenuFileName} does not exist.`,
         );
         return;
       }
@@ -373,7 +371,7 @@ const PipelineLibrary = ({
       setPipelineFile(undefined);
       setComponentSpec?.(pipelineSpec);
     },
-    [setComponentSpec]
+    [setComponentSpec],
   );
 
   const fileInput = useRef<HTMLInputElement>(null);

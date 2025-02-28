@@ -69,7 +69,7 @@ abstract class SettingBackedByLocalStorage<T> implements Setting<T> {
       }
     } catch (err) {
       console.error(
-        "window.localStorage.getItem was unavailable or threw an exception. This should not happen."
+        "window.localStorage.getItem was unavailable or threw an exception. This should not happen.",
       );
       console.error(err);
     }
@@ -132,27 +132,27 @@ export interface MutableAppSettings {
 class AppSettingsBackedByLocalStorage implements MutableAppSettings {
   componentLibraryUrl = new StringSettingBackedByLocalStorage(
     COMPONENT_LIBRARY_URL_LOCAL_STORAGE_KEY,
-    COMPONENT_LIBRARY_URL_DEFAULT_VALUE
+    COMPONENT_LIBRARY_URL_DEFAULT_VALUE,
   );
   pipelineLibraryUrl = new StringSettingBackedByLocalStorage(
     PIPELINE_LIBRARY_URL_LOCAL_STORAGE_KEY,
-    PIPELINE_LIBRARY_URL_DEFAULT_VALUE
+    PIPELINE_LIBRARY_URL_DEFAULT_VALUE,
   );
   defaultPipelineUrl = new StringSettingBackedByLocalStorage(
     DEFAULT_PIPELINE_URL_LOCAL_STORAGE_KEY,
-    DEFAULT_PIPELINE_URL_DEFAULT_VALUE
+    DEFAULT_PIPELINE_URL_DEFAULT_VALUE,
   );
   componentFeedUrls = new StringArraySettingBackedByLocalStorage(
     COMPONENT_FEED_URLS_LOCAL_STORAGE_KEY,
-    COMPONENT_FEED_URLS_DEFAULT_VALUE
+    COMPONENT_FEED_URLS_DEFAULT_VALUE,
   );
   gitHubSearchLocations = new StringArraySettingBackedByLocalStorage(
     GITHUB_SEARCH_LOCATIONS_LOCAL_STORAGE_KEY,
-    GITHUB_SEARCH_LOCATIONS_DEFAULT_VALUE
+    GITHUB_SEARCH_LOCATIONS_DEFAULT_VALUE,
   );
   googleCloudOAuthClientId = new StringSettingBackedByLocalStorage(
     GOOGLE_CLOUD_OAUTH_CLIENT_ID_LOCAL_STORAGE_KEY,
-    GOOGLE_CLOUD_OAUTH_CLIENT_ID_DEFAULT_VALUE
+    GOOGLE_CLOUD_OAUTH_CLIENT_ID_DEFAULT_VALUE,
   );
 }
 

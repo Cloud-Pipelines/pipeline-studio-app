@@ -12,7 +12,7 @@ const httpGetDataWithCache = async <T>(
   url: string,
   transformer: (buffer: ArrayBuffer) => T,
   cacheName: string = "cache",
-  updateIfInCache: boolean = false
+  updateIfInCache: boolean = false,
 ): Promise<T> => {
   const cache = await caches.open(cacheName);
   let response = await cache.match(url);
@@ -23,7 +23,7 @@ const httpGetDataWithCache = async <T>(
       const newResponse = await fetch(newUrl);
       if (!newResponse.ok) {
         throw new Error(
-          `Network response was not OK: ${newResponse.status}: ${newResponse.statusText}`
+          `Network response was not OK: ${newResponse.status}: ${newResponse.statusText}`,
         );
       }
       response = newResponse;
@@ -46,17 +46,17 @@ const httpGetDataWithCache = async <T>(
 
 export type DownloadDataType = <T>(
   url: string,
-  transformer: (buffer: ArrayBuffer) => T
+  transformer: (buffer: ArrayBuffer) => T,
 ) => Promise<T>;
 
 export async function downloadData<T>(
   url: string,
-  transformer: (buffer: ArrayBuffer) => T
+  transformer: (buffer: ArrayBuffer) => T,
 ): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(
-      `Network response was not OK: ${response.status}: ${response.statusText}`
+      `Network response was not OK: ${response.status}: ${response.statusText}`,
     );
   }
   const result = transformer(await response.arrayBuffer());
@@ -70,7 +70,7 @@ const IMMUTABLE_URL_REGEXPS = [
 
 export async function downloadDataWithCache<T>(
   url: string,
-  transformer: (buffer: ArrayBuffer) => T
+  transformer: (buffer: ArrayBuffer) => T,
 ): Promise<T> {
   const isImmutable = IMMUTABLE_URL_REGEXPS.some((regexp) => url.match(regexp));
   return httpGetDataWithCache(url, transformer, "cache", !isImmutable);

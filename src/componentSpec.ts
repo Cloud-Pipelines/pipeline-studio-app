@@ -299,9 +299,9 @@ export const isValidComponentSpec = (obj: any): obj is ComponentSpec =>
   typeof obj === "object" && "implementation" in obj;
 
 export const isContainerImplementation = (
-  implementation: ImplementationType
+  implementation: ImplementationType,
 ): implementation is ContainerImplementation => "container" in implementation;
 
 export const isGraphImplementation = (
-  implementation: ImplementationType
+  implementation: ImplementationType,
 ): implementation is GraphImplementation => "graph" in implementation;

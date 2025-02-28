@@ -28,7 +28,7 @@ export type ComponentLibraryStruct = {
 };
 
 export const isValidComponentLibraryStruct = (
-  obj: object
+  obj: object,
 ): obj is ComponentLibraryStruct => "folders" in obj;
 
 interface DraggableComponentRowProps {
@@ -47,7 +47,7 @@ export const DraggableComponentRow = ({
     // TODO: Validate the component
     // Loading the component (preloading the graph component children as well).
     fullyLoadComponentRef(componentRef, downloadData).then(
-      setComponentRefWithSpec
+      setComponentRefWithSpec,
     );
   }, [componentRef, downloadData]);
 
@@ -156,7 +156,7 @@ export const ComponentLibraryVisFromStruct = ({
             isOpen={index === 0}
             downloadData={downloadData}
           />
-        )
+        ),
       )}
     </>
   );
@@ -166,7 +166,7 @@ const loadComponentLibraryStructFromData = async (data: ArrayBuffer) => {
   const componentLibrary = loadObjectFromYamlData(data);
   if (!isValidComponentLibraryStruct(componentLibrary)) {
     throw Error(
-      `Invalid Component library data structure: ${componentLibrary}`
+      `Invalid Component library data structure: ${componentLibrary}`,
     );
   }
   return componentLibrary;
@@ -174,11 +174,11 @@ const loadComponentLibraryStructFromData = async (data: ArrayBuffer) => {
 
 const loadComponentLibraryStructFromUrl = async (
   url: string,
-  downloadData: DownloadDataType = downloadDataWithCache
+  downloadData: DownloadDataType = downloadDataWithCache,
 ) => {
   const componentLibrary = await downloadData(
     url,
-    loadComponentLibraryStructFromData
+    loadComponentLibraryStructFromData,
   );
   return componentLibrary;
 };

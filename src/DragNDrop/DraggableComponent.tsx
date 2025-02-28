@@ -17,7 +17,7 @@ const onDragStart = (event: DragEvent, nodeData: object) => {
     JSON.stringify({
       offsetX: event.nativeEvent.offsetX,
       offsetY: event.nativeEvent.offsetY,
-    })
+    }),
   );
   event.dataTransfer.effectAllowed = "move";
 };
