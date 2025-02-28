@@ -11,7 +11,7 @@ import yaml from "js-yaml";
 
 import type { ComponentSpec } from "../componentSpec";
 import { componentSpecToYaml } from "../componentStore";
-import { augmentComponentSpec } from "./GraphComponentSpecFlow";
+import { augmentComponentSpec } from '../utils/argumentComponentSpec'
 
 const SAVED_COMPONENT_SPEC_KEY = "autosaved.component.yaml";
 
