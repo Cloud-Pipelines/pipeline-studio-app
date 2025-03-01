@@ -10,7 +10,7 @@ import { useStore } from "@xyflow/react";
 
 import type { ComponentSpec } from "../componentSpec";
 import { componentSpecToYaml } from "../componentStore";
-import { augmentComponentSpec } from "./GraphComponentSpecFlow";
+import { augmentComponentSpec } from '../utils/argumentComponentSpec'
 
 interface GraphComponentLinkProps {
   componentSpec: ComponentSpec;
