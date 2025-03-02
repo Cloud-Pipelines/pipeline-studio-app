@@ -33,7 +33,7 @@ import {
   deleteComponentFileFromList,
 } from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
-import { augmentComponentSpec } from "./GraphComponentSpecFlow";
+import { augmentComponentSpec } from '../utils/argumentComponentSpec'
 import SamplePipelineLibrary from "./SamplePipelineLibrary";
 import { preloadComponentReferences } from "../componentStore";
 
