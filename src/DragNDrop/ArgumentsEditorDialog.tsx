@@ -29,7 +29,7 @@ const ArgumentsEditorDialog = ({
   if (componentSpec === undefined) {
     console.error(
       "ArgumentsEditor called with missing taskSpec.componentRef.spec",
-      taskSpec
+      taskSpec,
     );
     return <></>;
   }

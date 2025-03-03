@@ -50,7 +50,7 @@ type ResolvedCommandLineAndArgs = {
 const resolveCommandLine = (
   componentSpec: ComponentSpec,
   taskArguments: Record<string, ArgumentType>,
-  inputsThatHaveParameterArguments: Set<string>
+  inputsThatHaveParameterArguments: Set<string>,
 ): ResolvedCommandLineAndArgs => {
   if (!isContainerImplementation(componentSpec.implementation)) {
     throw Error("resolveCommandLine only supports container components");
@@ -105,7 +105,7 @@ const resolveCommandLine = (
             condEvaluatesToTrue = taskArgument.toLowerCase() === "true";
           } else {
             throw Error(
-              "Using runtime conditions in component command line placeholders is not supported yet."
+              "Using runtime conditions in component command line placeholders is not supported yet.",
             );
           }
         }
@@ -132,12 +132,12 @@ const resolveCommandLine = (
         const resolvedArgArray = convertArg(value);
         if (resolvedArgArray.length !== 1) {
           throw Error(
-            `Environment variable value must resolve to a single value, but got ${resolvedArgArray}`
+            `Environment variable value must resolve to a single value, but got ${resolvedArgArray}`,
           );
         }
         const resolvedValue = resolvedArgArray[0];
         return [key, resolvedValue];
-      })
+      }),
     );
 
   const result: ResolvedCommandLineAndArgs = {
@@ -151,7 +151,7 @@ const resolveCommandLine = (
 };
 
 const typeSpecToVertexPrimitiveTypeEnum = (
-  typeSpec: TypeSpecType | undefined
+  typeSpec: TypeSpecType | undefined,
 ): vertex.PrimitiveTypeEnum => {
   if (typeof typeSpec === "string") {
     if (["integer"].includes(typeSpec.toLowerCase())) {
@@ -165,7 +165,7 @@ const typeSpecToVertexPrimitiveTypeEnum = (
 };
 
 const typeSpecToVertexParameterSpec = (
-  typeSpec: TypeSpecType | undefined
+  typeSpec: TypeSpecType | undefined,
 ): vertex.InputParameterSpec => {
   return {
     type: typeSpecToVertexPrimitiveTypeEnum(typeSpec),
@@ -173,7 +173,7 @@ const typeSpecToVertexParameterSpec = (
 };
 
 const typeSpecToVertexArtifactTypeSchema = (
-  _typeSpec: TypeSpecType | undefined
+  _typeSpec: TypeSpecType | undefined,
 ): vertex.ArtifactTypeSchema => {
   // TODO: Implement better mapping
   const artifactTypeSchema = {
@@ -183,7 +183,7 @@ const typeSpecToVertexArtifactTypeSchema = (
 };
 
 const typeSpecToVertexArtifactSpec = (
-  typeSpec: TypeSpecType | undefined
+  typeSpec: TypeSpecType | undefined,
 ): vertex.InputArtifactSpec => {
   return {
     artifactType: typeSpecToVertexArtifactTypeSchema(typeSpec),
@@ -195,7 +195,7 @@ const typeSpecToVertexArtifactSpec = (
 
 const stringToMlmdValue = (
   constantString: string,
-  primitiveType: vertex.PrimitiveTypeEnum
+  primitiveType: vertex.PrimitiveTypeEnum,
 ): vertex.MlmdValue => {
   switch (primitiveType) {
     case vertex.PrimitiveTypeEnum.STRING:
@@ -221,7 +221,7 @@ const MAKE_ARTIFACT_INPUT_NAME = "parameter";
 const MAKE_ARTIFACT_OUTPUT_NAME = "artifact";
 
 const buildMakeArtifactTaskSpec = (
-  parameterArgumentSpec: vertex.ParameterArgumentSpec
+  parameterArgumentSpec: vertex.ParameterArgumentSpec,
 ): vertex.PipelineTaskSpec => {
   const taskSpec: vertex.PipelineTaskSpec = {
     componentRef: {
@@ -277,7 +277,7 @@ const makeArtifactExecutorSpec: vertex.ExecutorSpec = {
 
 function buildVertexParameterArgumentSpec(
   taskArgument: ArgumentType | undefined,
-  inputSpec: InputSpec
+  inputSpec: InputSpec,
 ) {
   if (taskArgument === undefined) {
     if (inputSpec.default !== undefined) {
@@ -287,12 +287,12 @@ function buildVertexParameterArgumentSpec(
         // TODO: Decide what the behavior should be
         // throw Error(`Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`);
         console.error(
-          `Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`
+          `Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`,
         );
         taskArgument = "";
       } else {
         throw Error(
-          `Argument was not provided for required input "${inputSpec.name}"`
+          `Argument was not provided for required input "${inputSpec.name}"`,
         );
       }
     }
@@ -303,7 +303,7 @@ function buildVertexParameterArgumentSpec(
       runtimeValue: {
         constantValue: stringToMlmdValue(
           taskArgument,
-          typeSpecToVertexPrimitiveTypeEnum(inputSpec.type)
+          typeSpecToVertexPrimitiveTypeEnum(inputSpec.type),
         ),
       },
     };
@@ -332,8 +332,8 @@ function buildVertexArtifactArgumentSpec(
   upstreamCannotBeArtifact: boolean,
   addMakeArtifactTaskAndGetArtifactArgumentSpec: (
     parameterArgumentSpec: vertex.ParameterArgumentSpec,
-    namePrefix?: string
-  ) => vertex.ArtifactArgumentSpec
+    namePrefix?: string,
+  ) => vertex.ArtifactArgumentSpec,
 ) {
   //if (! (inputName in taskArguments)) {
   if (taskArgument === undefined) {
@@ -345,12 +345,12 @@ function buildVertexArtifactArgumentSpec(
         // TODO: Decide what the behavior should be
         // throw Error(`Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`);
         console.error(
-          `Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`
+          `Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`,
         );
         taskArgument = "";
       } else {
         throw Error(
-          `Argument was not provided for required input "${inputSpec.name}"`
+          `Argument was not provided for required input "${inputSpec.name}"`,
         );
       }
     }
@@ -369,7 +369,7 @@ function buildVertexArtifactArgumentSpec(
     const convertedArtifactArgumentSpec =
       addMakeArtifactTaskAndGetArtifactArgumentSpec(
         parameterArgumentSpec,
-        "Make artifact"
+        "Make artifact",
       );
     result = convertedArtifactArgumentSpec;
     return result;
@@ -383,7 +383,7 @@ function buildVertexArtifactArgumentSpec(
       const convertedArtifactArgumentSpec =
         addMakeArtifactTaskAndGetArtifactArgumentSpec(
           parameterArgumentSpec,
-          "Make artifact for " + taskArgument.graphInput.inputName
+          "Make artifact for " + taskArgument.graphInput.inputName,
         );
       result = convertedArtifactArgumentSpec;
     } else {
@@ -414,10 +414,10 @@ const assertDefined = <T>(obj: T | undefined) => {
 
 const transformRecordValues = <T1, T2>(
   record: Record<string, T1>,
-  transform: (value: T1) => T2
+  transform: (value: T1) => T2,
 ) =>
   Object.fromEntries(
-    Object.entries(record).map(([key, value]) => [key, transform(value)])
+    Object.entries(record).map(([key, value]) => [key, transform(value)]),
   );
 
 function buildVertexComponentSpecFromContainerComponentSpec(
@@ -426,8 +426,8 @@ function buildVertexComponentSpecFromContainerComponentSpec(
   inputsThatHaveParameterArguments: Set<string>,
   addExecutorAndGetId: (
     executor: vertex.ExecutorSpec,
-    namePrefix?: string | undefined
-  ) => string
+    namePrefix?: string | undefined,
+  ) => string,
 ) {
   if (!isContainerImplementation(componentSpec.implementation)) {
     throw Error("Only container components are supported by this function");
@@ -438,7 +438,7 @@ function buildVertexComponentSpecFromContainerComponentSpec(
   const resolvedCommandLine = resolveCommandLine(
     componentSpec,
     taskArguments,
-    inputsThatHaveParameterArguments
+    inputsThatHaveParameterArguments,
   );
 
   const vertexExecutorSpec: vertex.ExecutorSpec = {
@@ -457,11 +457,14 @@ function buildVertexComponentSpecFromContainerComponentSpec(
 
   const vertexExecutorId = addExecutorAndGetId(
     vertexExecutorSpec,
-    componentSpec.name ?? "Component"
+    componentSpec.name ?? "Component",
   );
 
   const inputMap = new Map(
-    (componentSpec.inputs ?? []).map((inputSpec) => [inputSpec.name, inputSpec])
+    (componentSpec.inputs ?? []).map((inputSpec) => [
+      inputSpec.name,
+      inputSpec,
+    ]),
   );
 
   const vertexComponentInputsSpec: vertex.ComponentInputsSpec = {
@@ -470,16 +473,16 @@ function buildVertexComponentSpecFromContainerComponentSpec(
         (inputName) => [
           inputName,
           typeSpecToVertexParameterSpec(inputMap.get(inputName)?.type),
-        ]
-      )
+        ],
+      ),
     ),
     artifacts: Object.fromEntries(
       Array.from(resolvedCommandLine.inputsConsumedAsArtifact.values()).map(
         (inputName) => [
           inputName,
           typeSpecToVertexArtifactSpec(inputMap.get(inputName)?.type),
-        ]
-      )
+        ],
+      ),
     ),
   };
 
@@ -489,7 +492,7 @@ function buildVertexComponentSpecFromContainerComponentSpec(
       (componentSpec.outputs ?? []).map((outputSpec) => [
         outputSpec.name,
         typeSpecToVertexArtifactSpec(outputSpec.type),
-      ])
+      ]),
     ),
   };
 
@@ -508,12 +511,12 @@ function buildVertexComponentSpecFromGraphComponentSpec(
   inputsThatHaveParameterArguments: Set<string>,
   addExecutorAndGetId: (
     executor: vertex.ExecutorSpec,
-    namePrefix?: string
+    namePrefix?: string,
   ) => string,
   addComponentAndGetId: (
     component: vertex.ComponentSpec,
-    namePrefix?: string
-  ) => string
+    namePrefix?: string,
+  ) => string,
 ) {
   if (!isGraphImplementation(componentSpec.implementation)) {
     throw Error("Only graph components are supported by this function");
@@ -529,7 +532,7 @@ function buildVertexComponentSpecFromGraphComponentSpec(
 
   const addTaskAndGetId = (
     task: vertex.PipelineTaskSpec,
-    namePrefix: string = "Task"
+    namePrefix: string = "Task",
   ) => {
     const serializedSpec = JSON.stringify(task);
     const existingId = taskStringToTaskId.get(serializedSpec);
@@ -545,12 +548,12 @@ function buildVertexComponentSpecFromGraphComponentSpec(
 
   const addMakeArtifactTaskAndGetArtifactArgumentSpec = (
     parameterArgumentSpec: vertex.ParameterArgumentSpec,
-    namePrefix: string = "Make artifact"
+    namePrefix: string = "Make artifact",
   ) => {
     // These system names are expected to not conflict with user task names
     const makeArtifactExecutorId = addExecutorAndGetId(
       makeArtifactExecutorSpec,
-      MAKE_ARTIFACT_EXECUTOR_ID
+      MAKE_ARTIFACT_EXECUTOR_ID,
     );
     const makeArtifactComponentSpecCopy = {
       ...makeArtifactComponentSpec,
@@ -558,10 +561,10 @@ function buildVertexComponentSpecFromGraphComponentSpec(
     };
     const makeArtifactComponentsId = addComponentAndGetId(
       makeArtifactComponentSpecCopy,
-      MAKE_ARTIFACT_COMPONENT_ID
+      MAKE_ARTIFACT_COMPONENT_ID,
     );
     const makeArtifactTaskSpec = buildMakeArtifactTaskSpec(
-      parameterArgumentSpec
+      parameterArgumentSpec,
     );
     makeArtifactTaskSpec.componentRef.name = makeArtifactComponentsId;
     const taskId = addTaskAndGetId(makeArtifactTaskSpec, namePrefix);
@@ -585,24 +588,24 @@ function buildVertexComponentSpecFromGraphComponentSpec(
         inputsThatHaveParameterArguments,
         addExecutorAndGetId,
         addComponentAndGetId,
-        addMakeArtifactTaskAndGetArtifactArgumentSpec
+        addMakeArtifactTaskAndGetArtifactArgumentSpec,
       );
       if (taskId in vertexTasks) {
         throw Error(
-          `Task ID "${taskId}" is not unique. This cannot happen (unless user task ID clashes with special task ID).`
+          `Task ID "${taskId}" is not unique. This cannot happen (unless user task ID clashes with special task ID).`,
         );
       }
       vertexTasks[taskId] = vertexTaskSpec;
 
       for (const argument of Object.values(
-        vertexTaskSpec.inputs?.parameters ?? {}
+        vertexTaskSpec.inputs?.parameters ?? {},
       )) {
         if (argument.componentInputParameter !== undefined) {
           inputsConsumedAsParameter.add(argument.componentInputParameter);
         }
       }
       for (const argument of Object.values(
-        vertexTaskSpec.inputs?.artifacts ?? {}
+        vertexTaskSpec.inputs?.artifacts ?? {},
       )) {
         if ("componentInputArtifact" in argument) {
           inputsConsumedAsArtifact.add(argument.componentInputArtifact);
@@ -618,19 +621,19 @@ function buildVertexComponentSpecFromGraphComponentSpec(
 
   // Sanity checks
   const inputNamesThatAreUsedBothAsParameterAndArtifact = Array.from(
-    inputsConsumedAsParameter
+    inputsConsumedAsParameter,
   ).filter((x) => inputsConsumedAsArtifact.has(x));
   if (inputNamesThatAreUsedBothAsParameterAndArtifact.length > 0) {
     throw Error(
-      `Compiler error: When compiling component "${componentSpec.name}" some inputs are used both as parameter and artifact: "${inputNamesThatAreUsedBothAsParameterAndArtifact}". Please file a bug report.`
+      `Compiler error: When compiling component "${componentSpec.name}" some inputs are used both as parameter and artifact: "${inputNamesThatAreUsedBothAsParameterAndArtifact}". Please file a bug report.`,
     );
   }
   const inputNamesThatAreParametersButAreConsumedAsArtifacts = Array.from(
-    inputsThatHaveParameterArguments
+    inputsThatHaveParameterArguments,
   ).filter((x) => inputsConsumedAsArtifact.has(x));
   if (inputNamesThatAreParametersButAreConsumedAsArtifacts.length > 0) {
     throw Error(
-      `Compiler error: When compiling component "${componentSpec.name}" some parameter arguments are consumed as artifact: "${inputNamesThatAreParametersButAreConsumedAsArtifacts}". Please file a bug report.`
+      `Compiler error: When compiling component "${componentSpec.name}" some parameter arguments are consumed as artifact: "${inputNamesThatAreParametersButAreConsumedAsArtifacts}". Please file a bug report.`,
     );
   }
 
@@ -646,11 +649,14 @@ function buildVertexComponentSpecFromGraphComponentSpec(
         ],
       };
       return result;
-    }
+    },
   );
 
   const inputMap = new Map(
-    (componentSpec.inputs ?? []).map((inputSpec) => [inputSpec.name, inputSpec])
+    (componentSpec.inputs ?? []).map((inputSpec) => [
+      inputSpec.name,
+      inputSpec,
+    ]),
   );
 
   const vertexComponentInputsSpec: vertex.ComponentInputsSpec = {
@@ -658,13 +664,13 @@ function buildVertexComponentSpecFromGraphComponentSpec(
       Array.from(inputsConsumedAsParameter.values()).map((inputName) => [
         inputName,
         typeSpecToVertexParameterSpec(inputMap.get(inputName)?.type),
-      ])
+      ]),
     ),
     artifacts: Object.fromEntries(
       Array.from(inputsConsumedAsArtifact.values()).map((inputName) => [
         inputName,
         typeSpecToVertexArtifactSpec(inputMap.get(inputName)?.type),
-      ])
+      ]),
     ),
   };
 
@@ -674,7 +680,7 @@ function buildVertexComponentSpecFromGraphComponentSpec(
       (componentSpec.outputs ?? []).map((outputSpec) => [
         outputSpec.name,
         typeSpecToVertexArtifactSpec(outputSpec.type),
-      ])
+      ]),
     ),
   };
 
@@ -698,19 +704,19 @@ function buildVertexComponentSpecFromComponentSpec(
   inputsThatHaveParameterArguments: Set<string>,
   addExecutorAndGetId: (
     executor: vertex.ExecutorSpec,
-    namePrefix?: string
+    namePrefix?: string,
   ) => string,
   addComponentAndGetId: (
     component: vertex.ComponentSpec,
-    namePrefix?: string
-  ) => string
+    namePrefix?: string,
+  ) => string,
 ) {
   if (isContainerImplementation(componentSpec.implementation)) {
     return buildVertexComponentSpecFromContainerComponentSpec(
       componentSpec,
       taskArguments,
       inputsThatHaveParameterArguments,
-      addExecutorAndGetId
+      addExecutorAndGetId,
     );
   } else if (isGraphImplementation(componentSpec.implementation)) {
     return buildVertexComponentSpecFromGraphComponentSpec(
@@ -718,11 +724,11 @@ function buildVertexComponentSpecFromComponentSpec(
       taskArguments,
       inputsThatHaveParameterArguments,
       addExecutorAndGetId,
-      addComponentAndGetId
+      addComponentAndGetId,
     );
   } else {
     throw Error(
-      `Unsupported component implementation kind: ${componentSpec.implementation}`
+      `Unsupported component implementation kind: ${componentSpec.implementation}`,
     );
   }
 }
@@ -734,16 +740,16 @@ const buildVertexTaskSpecFromTaskSpec = (
   graphInputsWithParameterArguments: Set<string>,
   addExecutorAndGetId: (
     executor: vertex.ExecutorSpec,
-    namePrefix?: string
+    namePrefix?: string,
   ) => string,
   addComponentAndGetId: (
     component: vertex.ComponentSpec,
-    namePrefix?: string
+    namePrefix?: string,
   ) => string,
   addMakeArtifactTaskAndGetArtifactArgumentSpec: (
     parameterArgumentSpec: vertex.ParameterArgumentSpec,
-    namePrefix?: string
-  ) => vertex.ArtifactArgumentSpec
+    namePrefix?: string,
+  ) => vertex.ArtifactArgumentSpec,
 ) => {
   // So-called "parameter" arguments can either be constant arguments
   // or come from the arguments to the graph component of the current task.
@@ -763,18 +769,21 @@ const buildVertexTaskSpecFromTaskSpec = (
         if ("graphInput" in taskArgument) {
           if (
             graphInputsWithParameterArguments.has(
-              taskArgument.graphInput.inputName
+              taskArgument.graphInput.inputName,
             )
           ) {
             return true;
           }
         }
         return false;
-      })
+      }),
   );
 
   const inputMap = new Map(
-    (componentSpec.inputs ?? []).map((inputSpec) => [inputSpec.name, inputSpec])
+    (componentSpec.inputs ?? []).map((inputSpec) => [
+      inputSpec.name,
+      inputSpec,
+    ]),
   );
 
   const vertexComponentSpec: vertex.ComponentSpec =
@@ -783,12 +792,12 @@ const buildVertexTaskSpecFromTaskSpec = (
       taskArguments,
       inputsThatHaveParameterArguments,
       addExecutorAndGetId,
-      addComponentAndGetId
+      addComponentAndGetId,
     );
 
   const vertexComponentId = addComponentAndGetId(
     vertexComponentSpec,
-    componentSpec.name ?? "Component"
+    componentSpec.name ?? "Component",
   );
 
   const vertexTaskParameterArguments = Object.fromEntries(
@@ -797,10 +806,10 @@ const buildVertexTaskSpecFromTaskSpec = (
         inputName,
         buildVertexParameterArgumentSpec(
           taskArguments[inputName],
-          assertDefined(inputMap.get(inputName))
+          assertDefined(inputMap.get(inputName)),
         ),
-      ]
-    )
+      ],
+    ),
   );
 
   const vertexTaskArtifactArguments = Object.fromEntries(
@@ -811,10 +820,10 @@ const buildVertexTaskSpecFromTaskSpec = (
           taskArguments[inputName],
           assertDefined(inputMap.get(inputName)),
           inputsThatHaveParameterArguments.has(inputName),
-          addMakeArtifactTaskAndGetArtifactArgumentSpec
+          addMakeArtifactTaskAndGetArtifactArgumentSpec,
         ),
-      ]
-    )
+      ],
+    ),
   );
 
   const vertexTaskSpec: vertex.PipelineTaskSpec = {
@@ -848,7 +857,7 @@ const buildVertexTaskSpecFromTaskSpec = (
 
 const makeNameUniqueByAddingIndex = (
   name: string,
-  existingNames: Set<string>
+  existingNames: Set<string>,
 ): string => {
   let finalName = name;
   let index = 1;
@@ -861,7 +870,7 @@ const makeNameUniqueByAddingIndex = (
 
 export const buildVertexPipelineSpecFromGraphComponentSpec = (
   componentSpec: ComponentSpec,
-  pipelineContextName = "pipeline"
+  pipelineContextName = "pipeline",
 ) => {
   let vertexExecutors: Record<string, vertex.ExecutorSpec> = {};
   const executorStringToExecutorId = new Map<string, string>();
@@ -870,7 +879,7 @@ export const buildVertexPipelineSpecFromGraphComponentSpec = (
 
   const addExecutorAndGetId = (
     executor: vertex.ExecutorSpec,
-    namePrefix: string = "Executor"
+    namePrefix: string = "Executor",
   ) => {
     const serializedSpec = JSON.stringify(executor);
     const existingId = executorStringToExecutorId.get(serializedSpec);
@@ -886,7 +895,7 @@ export const buildVertexPipelineSpecFromGraphComponentSpec = (
 
   const addComponentAndGetId = (
     component: vertex.ComponentSpec,
-    namePrefix: string = "Component"
+    namePrefix: string = "Component",
   ) => {
     const serializedSpec = JSON.stringify(component);
     const existingId = componentStringToComponentId.get(serializedSpec);
@@ -902,7 +911,7 @@ export const buildVertexPipelineSpecFromGraphComponentSpec = (
 
   // All root graph inputs are parameters
   const graphInputsWithParameterArguments = new Set(
-    (componentSpec.inputs ?? []).map((inputSpec) => inputSpec.name)
+    (componentSpec.inputs ?? []).map((inputSpec) => inputSpec.name),
   );
 
   const pipelineArguments: Record<string, ArgumentType> = Object.fromEntries(
@@ -911,14 +920,14 @@ export const buildVertexPipelineSpecFromGraphComponentSpec = (
         graphInput: { inputName: inputSpec.name },
       };
       return [inputSpec.name, argument];
-    })
+    }),
   );
   const pipelineComponentSpec = buildVertexComponentSpecFromComponentSpec(
     componentSpec,
     pipelineArguments,
     graphInputsWithParameterArguments,
     addExecutorAndGetId,
-    addComponentAndGetId
+    addComponentAndGetId,
   );
 
   const vertexPipelineSpec: vertex.PipelineSpec = {
@@ -940,13 +949,13 @@ export const buildVertexPipelineJobFromGraphComponent = (
   componentSpec: ComponentSpec,
   gcsOutputDirectory: string,
   pipelineArguments?: Map<string, string>,
-  pipelineContextName = "pipeline"
+  pipelineContextName = "pipeline",
 ) => {
   // The pipelineContextName affects caching
 
   const pipelineSpec = buildVertexPipelineSpecFromGraphComponentSpec(
     componentSpec,
-    pipelineContextName
+    pipelineContextName,
   );
   const inputParameterDefinitions =
     (pipelineSpec.root.inputDefinitions ?? {}).parameters ?? {};
@@ -960,7 +969,7 @@ export const buildVertexPipelineJobFromGraphComponent = (
       String(inputSpec.default),
     ]);
   const allPipelineArguments = new Map(
-    defaultInputValuePairs.concat(Array.from(pipelineArguments.entries()))
+    defaultInputValuePairs.concat(Array.from(pipelineArguments.entries())),
   );
 
   // Converting the pipeline arguments
@@ -968,13 +977,13 @@ export const buildVertexPipelineJobFromGraphComponent = (
   for (const [key, value] of Array.from(allPipelineArguments.entries())) {
     if (!(key in inputParameterDefinitions)) {
       console.error(
-        `A pipeline argument was provided for the input "${key}" that does not exist in the pipeline spec.`
+        `A pipeline argument was provided for the input "${key}" that does not exist in the pipeline spec.`,
       );
       continue;
     }
     convertedPipelineArguments[key] = stringToMlmdValue(
       value,
-      inputParameterDefinitions[key].type
+      inputParameterDefinitions[key].type,
     );
   }
 

@@ -25,18 +25,19 @@ const PipelineSubmitter = ({
     Record<string, ArgumentType>
   >({});
 
-  const [stringPipelineArguments, setStringPipelineArguments] =
-    useState<Map<string, string>>(new Map());
+  const [stringPipelineArguments, setStringPipelineArguments] = useState<
+    Map<string, string>
+  >(new Map());
 
   useEffect(() => {
     // This filtering is just for typing as the pipeline arguments can only be strings here.
     const newStringPipelineArguments = new Map(
       Object.entries(pipelineArguments).filter(
         // Type guard predicate
-        (pair): pair is [string, string] => typeof pair[1] === "string"
-      )
+        (pair): pair is [string, string] => typeof pair[1] === "string",
+      ),
     );
-    setStringPipelineArguments(newStringPipelineArguments)
+    setStringPipelineArguments(newStringPipelineArguments);
   }, [pipelineArguments]);
 
   return (

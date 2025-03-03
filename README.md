@@ -21,13 +21,13 @@ The app is under active development, so expect some breakages as I work on the a
 
 App features:
 
-* Build pipeline using drag and drop
-* Edit component arguments
-* Submit the pipeline to [Google Cloud Vertex Pipelines](https://cloud.google.com/vertex-ai/docs/pipelines/) for execution.
-* Fully compatible with the Kubeflow Pipelines' components (`component.yaml` files) You can find some components here: [Ark-kun/pipeline_components](https://github.com/Ark-kun/pipeline_components/tree/master/components) or [kubeflow/pipelines/components](https://github.com/kubeflow/pipelines/tree/master/components#index-of-components)
-* Preloaded component library
-* User component library (add private components)
-* Component search
-* Import and export pipelines
+- Build pipeline using drag and drop
+- Edit component arguments
+- Submit the pipeline to [Google Cloud Vertex Pipelines](https://cloud.google.com/vertex-ai/docs/pipelines/) for execution.
+- Fully compatible with the Kubeflow Pipelines' components (`component.yaml` files) You can find some components here: [Ark-kun/pipeline_components](https://github.com/Ark-kun/pipeline_components/tree/master/components) or [kubeflow/pipelines/components](https://github.com/kubeflow/pipelines/tree/master/components#index-of-components)
+- Preloaded component library
+- User component library (add private components)
+- Component search
+- Import and export pipelines
 
 There are many features that I want to add, but I want to prioritize them based on your feedback.

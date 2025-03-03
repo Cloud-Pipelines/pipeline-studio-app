@@ -7,7 +7,11 @@
  */
 
 import { useState, useEffect } from "react";
-import { type DownloadDataType, downloadDataWithCache, loadObjectFromYamlData } from "../cacheUtils";
+import {
+  type DownloadDataType,
+  downloadDataWithCache,
+  loadObjectFromYamlData,
+} from "../cacheUtils";
 import { type ComponentReference, type ComponentSpec } from "../componentSpec";
 import {
   type ComponentReferenceWithSpec,
@@ -22,12 +26,10 @@ type PipelineLibraryStruct = {
 };
 
 const isValidPipelineLibraryStruct = (
-  obj: object
+  obj: object,
 ): obj is PipelineLibraryStruct => "components" in obj;
 
-const loadPipelineLibraryStructFromData = async (
-  data: ArrayBuffer,
-) => {
+const loadPipelineLibraryStructFromData = async (data: ArrayBuffer) => {
   const pipelineLibrary = loadObjectFromYamlData(data);
   if (!isValidPipelineLibraryStruct(pipelineLibrary)) {
     throw Error(`Invalid Component library data structure: ${pipelineLibrary}`);
@@ -39,7 +41,10 @@ const loadPipelineLibraryStructFromUrl = async (
   url: string,
   downloadData: DownloadDataType = downloadDataWithCache,
 ) => {
-  const pipelineLibrary = await downloadData(url, loadPipelineLibraryStructFromData);
+  const pipelineLibrary = await downloadData(
+    url,
+    loadPipelineLibraryStructFromData,
+  );
   return pipelineLibrary;
 };
 
@@ -56,7 +61,7 @@ interface PipelineLibraryProps {
 const SamplePipelineLibrary = ({
   pipelineLibraryUrl,
   setComponentSpec,
-  downloadData = downloadDataWithCache
+  downloadData = downloadDataWithCache,
 }: PipelineLibraryProps) => {
   const [componentRefs, setComponentRefs] = useState<
     ComponentReferenceWithSpec[]
@@ -68,15 +73,15 @@ const SamplePipelineLibrary = ({
         try {
           const loadedComponentLibrary = await loadPipelineLibraryStructFromUrl(
             pipelineLibraryUrl,
-            downloadData
+            downloadData,
           );
           const pipelineUrls = loadedComponentLibrary.components
             .map((componentRef) => componentRef.url)
             .filter(notUndefined);
           const loadedComponentRefs = await Promise.all(
             pipelineUrls.map((url) =>
-              fullyLoadComponentRefFromUrl(url, downloadData)
-            )
+              fullyLoadComponentRefFromUrl(url, downloadData),
+            ),
           );
           setComponentRefs(loadedComponentRefs);
         } catch (err) {

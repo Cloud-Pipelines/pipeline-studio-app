@@ -11,10 +11,7 @@ import localForage from "localforage";
 import type { DownloadDataType } from "./cacheUtils";
 import { downloadDataWithCache } from "./cacheUtils";
 
-import type {
-  ComponentSpec,
-  ComponentReference,
-} from "./componentSpec";
+import type { ComponentSpec, ComponentReference } from "./componentSpec";
 import { isValidComponentSpec } from "./componentSpec";
 
 // IndexedDB: DB and table names
@@ -53,7 +50,7 @@ const calculateHashDigestHex = async (data: string | ArrayBuffer) => {
 
 const storeComponentSpec = async (
   digest: string,
-  componentSpec: ComponentSpec
+  componentSpec: ComponentSpec,
 ) => {
   const digestToComponentSpecDb = localForage.createInstance({
     name: DB_NAME,
@@ -70,7 +67,7 @@ const storeComponentSpec = async (
 };
 
 export const loadComponentAsRefFromText = async (
-  componentText: string | ArrayBuffer
+  componentText: string | ArrayBuffer,
 ): Promise<ComponentReferenceWithSpec> => {
   const componentString =
     typeof componentText === "string"
@@ -87,7 +84,7 @@ export const loadComponentAsRefFromText = async (
   }
   if (!isValidComponentSpec(loadedObj)) {
     throw Error(
-      `componentText does not encode a valid pipeline component: ${loadedObj}`
+      `componentText does not encode a valid pipeline component: ${loadedObj}`,
     );
   }
   const componentSpec: ComponentSpec = loadedObj;
@@ -103,7 +100,7 @@ export const loadComponentAsRefFromText = async (
 
 export const loadComponentFromUrlAsRef = async (
   url: string,
-  downloadData: DownloadDataType = downloadDataWithCache
+  downloadData: DownloadDataType = downloadDataWithCache,
 ): Promise<ComponentReferenceWithSpec> => {
   const componentRef = await downloadData(url, loadComponentAsRefFromText);
   componentRef.url = url;
@@ -113,7 +110,7 @@ export const loadComponentFromUrlAsRef = async (
 export const preloadComponentReferences = async (
   componentSpec: ComponentSpec,
   downloadData: DownloadDataType = downloadDataWithCache,
-  componentMap?: Map<string, ComponentSpec>
+  componentMap?: Map<string, ComponentSpec>,
 ) => {
   // This map is needed to improve efficiency and handle recursive components.
   if (componentMap === undefined) {
@@ -121,7 +118,7 @@ export const preloadComponentReferences = async (
   }
   if ("graph" in componentSpec.implementation) {
     for (const taskSpec of Object.values(
-      componentSpec.implementation.graph.tasks
+      componentSpec.implementation.graph.tasks,
     )) {
       const componentUrl = taskSpec.componentRef.url;
       let taskComponentSpec = taskSpec.componentRef.spec;
@@ -129,7 +126,7 @@ export const preloadComponentReferences = async (
         if (taskSpec.componentRef.text !== undefined) {
           const taskComponentRef = await loadComponentFromUrlAsRef(
             taskSpec.componentRef.text,
-            downloadData
+            downloadData,
           );
           taskComponentSpec = taskComponentRef.spec;
         } else if (componentUrl !== undefined) {
@@ -137,7 +134,7 @@ export const preloadComponentReferences = async (
           if (taskComponentSpec === undefined) {
             const taskComponentRef = await loadComponentFromUrlAsRef(
               componentUrl,
-              downloadData
+              downloadData,
             );
             taskComponentSpec = taskComponentRef.spec;
             componentMap.set(componentUrl, taskComponentSpec);
@@ -147,14 +144,14 @@ export const preloadComponentReferences = async (
           // TODO: Print task name here
           console.error(
             "Could not get component spec for task: ",
-            taskSpec.componentRef
+            taskSpec.componentRef,
           );
         } else {
           taskSpec.componentRef.spec = taskComponentSpec;
           await preloadComponentReferences(
             taskSpec.componentRef.spec,
             downloadData,
-            componentMap
+            componentMap,
           );
         }
       }
@@ -165,12 +162,12 @@ export const preloadComponentReferences = async (
 
 export const fullyLoadComponentRefFromUrl = async (
   url: string,
-  downloadData: DownloadDataType = downloadDataWithCache
+  downloadData: DownloadDataType = downloadDataWithCache,
 ): Promise<ComponentReferenceWithSpec> => {
   const componentRef = await loadComponentFromUrlAsRef(url, downloadData);
   const componentSpec = await preloadComponentReferences(
     componentRef.spec,
-    downloadData
+    downloadData,
   );
   const newComponentRef: ComponentReferenceWithSpec = {
     ...componentRef,
@@ -182,13 +179,13 @@ export const fullyLoadComponentRefFromUrl = async (
 export const fullyLoadComponentRef = async (
   componentRef: ComponentReference,
   downloadData: DownloadDataType = downloadDataWithCache,
-  recursive: boolean = true
+  recursive: boolean = true,
 ): Promise<ComponentReferenceWithSpec> => {
   let newComponentRef: ComponentReferenceWithSpec;
   if (componentRef.spec === undefined) {
     if (componentRef.text !== undefined) {
       const loadedComponentRef = await loadComponentAsRefFromText(
-        componentRef.text
+        componentRef.text,
       );
       newComponentRef = {
         ...componentRef,
@@ -200,7 +197,7 @@ export const fullyLoadComponentRef = async (
       if (componentRef.url !== undefined) {
         const loadedComponentRef = await loadComponentFromUrlAsRef(
           componentRef.url,
-          downloadData
+          downloadData,
         );
         newComponentRef = {
           ...componentRef,
@@ -210,7 +207,7 @@ export const fullyLoadComponentRef = async (
         };
       } else {
         throw Error(
-          `The component reference cannot be materialized since it has no information: ${componentRef}`
+          `The component reference cannot be materialized since it has no information: ${componentRef}`,
         );
       }
     }
@@ -232,23 +229,18 @@ export const fullyLoadComponentRef = async (
 };
 
 export const storeComponentText = async (
-  componentText: string | ArrayBuffer
+  componentText: string | ArrayBuffer,
 ) => {
   const componentBytes =
     typeof componentText === "string"
       ? new TextEncoder().encode(componentText)
       : componentText;
-  const componentRef = await loadComponentAsRefFromText(
-    componentText
-  );
+  const componentRef = await loadComponentAsRefFromText(componentText);
   const digestToComponentTextDb = localForage.createInstance({
     name: DB_NAME,
     storeName: DIGEST_TO_DATA_DB_TABLE_NAME,
   });
-  await digestToComponentTextDb.setItem(
-    componentRef.digest,
-    componentBytes
-  );
+  await digestToComponentTextDb.setItem(componentRef.digest, componentBytes);
   await storeComponentSpec(componentRef.digest, componentRef.spec);
 
   return componentRef;
@@ -262,19 +254,17 @@ export const getAllComponentsAsRefs = async () => {
 
   // TODO: Rewrite as async generator
   const digestToComponentData = new Map<string, ArrayBuffer>();
-  await digestToDataDb.iterate<ArrayBuffer, void>(
-    (data, digest) => {
-      digestToComponentData.set(digest, data);
-    }
-  );
+  await digestToDataDb.iterate<ArrayBuffer, void>((data, digest) => {
+    digestToComponentData.set(digest, data);
+  });
 
   const digestToComponentRef = new Map<string, ComponentReferenceWithSpec>(
     await Promise.all(
       Array.from(digestToComponentData.entries()).map(
         async ([digest, data]) =>
-          [digest, await loadComponentAsRefFromText(data)] as const
-      )
-    )
+          [digest, await loadComponentAsRefFromText(data)] as const,
+      ),
+    ),
   );
 
   await addCanonicalUrlsToComponentReferences(digestToComponentRef);
@@ -284,36 +274,34 @@ export const getAllComponentsAsRefs = async () => {
 };
 
 const addCanonicalUrlsToComponentReferences = async (
-  digestToComponentRef: Map<string, ComponentReference>
+  digestToComponentRef: Map<string, ComponentReference>,
 ) => {
   const digestToCanonicalUrlDb = localForage.createInstance({
     name: DB_NAME,
     storeName: DIGEST_TO_CANONICAL_URL_DB_TABLE_NAME,
   });
-  await digestToCanonicalUrlDb.iterate<string, void>(
-    (url, digest) => {
-      let componentRef = digestToComponentRef.get(digest);
-      if (componentRef === undefined) {
-        console.error(
-          `Component db corrupted: Component with url ${url} and digest ${digest} has no content in the DB.`
-        );
-      } else {
-        componentRef.url = url;
-      }
+  await digestToCanonicalUrlDb.iterate<string, void>((url, digest) => {
+    let componentRef = digestToComponentRef.get(digest);
+    if (componentRef === undefined) {
+      console.error(
+        `Component db corrupted: Component with url ${url} and digest ${digest} has no content in the DB.`,
+      );
+    } else {
+      componentRef.url = url;
     }
-  );
+  });
 };
 
 export const searchComponentsByName = async (name: string) => {
   const componentRefs = await getAllComponentsAsRefs();
   return componentRefs.filter(
-    (ref) => ref.spec.name?.toLowerCase().includes(name.toLowerCase()) ?? false
+    (ref) => ref.spec.name?.toLowerCase().includes(name.toLowerCase()) ?? false,
   );
 };
 
 export const storeComponentFromUrl = async (
   url: string,
-  setUrlAsCanonical = false
+  setUrlAsCanonical = false,
 ): Promise<ComponentReferenceWithSpec> => {
   const urlToDigestDb = localForage.createInstance({
     name: DB_NAME,
@@ -330,12 +318,10 @@ export const storeComponentFromUrl = async (
 
   const existingDigest = await urlToDigestDb.getItem<string>(url);
   if (existingDigest !== null) {
-    const componentSpec = await digestToComponentSpecDb.getItem<ComponentSpec>(
-      existingDigest
-    );
-    const componentData = await digestToDataDb.getItem<ArrayBuffer>(
-      existingDigest
-    );
+    const componentSpec =
+      await digestToComponentSpecDb.getItem<ComponentSpec>(existingDigest);
+    const componentData =
+      await digestToDataDb.getItem<ArrayBuffer>(existingDigest);
     if (componentSpec !== null && componentData !== null) {
       const componentRef: ComponentReferenceWithSpec = {
         url: url,
@@ -346,7 +332,7 @@ export const storeComponentFromUrl = async (
       return componentRef;
     } else {
       console.error(
-        `Component db is corrupted: Component with url ${url} was added before with digest ${existingDigest} but now has no content in the DB.`
+        `Component db is corrupted: Component with url ${url} was added before with digest ${existingDigest} but now has no content in the DB.`,
       );
     }
   }
@@ -359,29 +345,28 @@ export const storeComponentFromUrl = async (
   const digest = componentRef.digest;
   if (digest === undefined) {
     console.error(
-      `Cannot happen: storeComponentText has returned componentReference with digest === undefined.`
+      `Cannot happen: storeComponentText has returned componentReference with digest === undefined.`,
     );
     return componentRef;
   }
   if (existingDigest !== null && digest !== existingDigest) {
     console.error(
-      `Component db is corrupted: Component with url ${url} previously had digest ${existingDigest} but now has digest ${digest}.`
+      `Component db is corrupted: Component with url ${url} previously had digest ${existingDigest} but now has digest ${digest}.`,
     );
   }
   const digestToCanonicalUrlDb = localForage.createInstance({
     name: DB_NAME,
     storeName: DIGEST_TO_CANONICAL_URL_DB_TABLE_NAME,
   });
-  const existingCanonicalUrl = await digestToCanonicalUrlDb.getItem<string>(
-    digest
-  );
+  const existingCanonicalUrl =
+    await digestToCanonicalUrlDb.getItem<string>(digest);
   if (existingCanonicalUrl === null) {
     await digestToCanonicalUrlDb.setItem(digest, url);
   } else {
     if (url !== existingCanonicalUrl) {
       console.debug(
         `The component with digest "${digest}" is being loaded from "${url}", but was previously loaded from "${existingCanonicalUrl}".` +
-          (setUrlAsCanonical ? " Changing the canonical url." : "")
+          (setUrlAsCanonical ? " Changing the canonical url." : ""),
       );
       if (setUrlAsCanonical) {
         await digestToCanonicalUrlDb.setItem(digest, url);
@@ -413,7 +398,7 @@ export type ComponentFileEntry = ComponentFileEntryV3;
 
 const makeNameUniqueByAddingIndex = (
   name: string,
-  existingNames: Set<string>
+  existingNames: Set<string>,
 ): string => {
   let finalName = name;
   let index = 1;
@@ -427,7 +412,7 @@ const makeNameUniqueByAddingIndex = (
 const writeComponentRefToFile = async (
   listName: string,
   fileName: string,
-  componentRef: ComponentReferenceWithSpec
+  componentRef: ComponentReferenceWithSpec,
 ) => {
   await upgradeSingleComponentListDb(listName);
   const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
@@ -435,9 +420,8 @@ const writeComponentRefToFile = async (
     name: DB_NAME,
     storeName: tableName,
   });
-  const existingFile = await componentListDb.getItem<ComponentFileEntry>(
-    fileName
-  );
+  const existingFile =
+    await componentListDb.getItem<ComponentFileEntry>(fileName);
   const currentTime = new Date();
   const componentData = new TextEncoder().encode(componentRef.text);
   let fileEntry: ComponentFileEntry;
@@ -465,7 +449,7 @@ const writeComponentRefToFile = async (
 const addComponentRefToList = async (
   listName: string,
   componentRef: ComponentReferenceWithSpec,
-  fileName: string = "Component"
+  fileName: string = "Component",
 ) => {
   await upgradeSingleComponentListDb(listName);
   const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
@@ -475,23 +459,19 @@ const addComponentRefToList = async (
   });
   const existingNames = new Set<string>(await componentListDb.keys());
   const uniqueFileName = makeNameUniqueByAddingIndex(fileName, existingNames);
-  return writeComponentRefToFile(
-    listName,
-    uniqueFileName,
-    componentRef
-  );
+  return writeComponentRefToFile(listName, uniqueFileName, componentRef);
 };
 
 export const addComponentToListByUrl = async (
   listName: string,
   url: string,
-  defaultFileName: string = "Component"
+  defaultFileName: string = "Component",
 ) => {
   const componentRef = await storeComponentFromUrl(url);
   return addComponentRefToList(
     listName,
     componentRef,
-    componentRef.spec.name ?? defaultFileName
+    componentRef.spec.name ?? defaultFileName,
   );
 };
 
@@ -499,27 +479,23 @@ export const addComponentToListByText = async (
   listName: string,
   componentText: string | ArrayBuffer,
   fileName?: string,
-  defaultFileName: string = "Component"
+  defaultFileName: string = "Component",
 ) => {
   const componentRef = await storeComponentText(componentText);
   return addComponentRefToList(
     listName,
     componentRef,
-    fileName ?? componentRef.spec.name ?? defaultFileName
+    fileName ?? componentRef.spec.name ?? defaultFileName,
   );
 };
 
 export const writeComponentToFileListFromText = async (
   listName: string,
   fileName: string,
-  componentText: string | ArrayBuffer
+  componentText: string | ArrayBuffer,
 ) => {
   const componentRef = await storeComponentText(componentText);
-  return writeComponentRefToFile(
-    listName,
-    fileName,
-    componentRef
-  );
+  return writeComponentRefToFile(listName, fileName, componentRef);
 };
 
 export const getAllComponentsFromList = async (listName: string) => {
@@ -530,11 +506,9 @@ export const getAllComponentsFromList = async (listName: string) => {
     storeName: tableName,
   });
   let componentRefs: ComponentReferenceWithSpec[] = [];
-  await componentListDb.iterate<ComponentFileEntry, void>(
-    (fileEntry) => {
-      componentRefs.push(fileEntry.componentRef);
-    }
-  );
+  await componentListDb.iterate<ComponentFileEntry, void>((fileEntry) => {
+    componentRefs.push(fileEntry.componentRef);
+  });
   return componentRefs;
 };
 
@@ -549,14 +523,14 @@ export const getAllComponentFilesFromList = async (listName: string) => {
   await componentListDb.iterate<ComponentFileEntry, void>(
     (fileEntry, fileName) => {
       componentFiles.set(fileName, fileEntry);
-    }
+    },
   );
   return componentFiles;
 };
 
 export const getComponentFileFromList = async (
   listName: string,
-  fileName: string
+  fileName: string,
 ) => {
   await upgradeSingleComponentListDb(listName);
   const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
@@ -569,7 +543,7 @@ export const getComponentFileFromList = async (
 
 export const deleteComponentFileFromList = async (
   listName: string,
-  fileName: string
+  fileName: string,
 ) => {
   await upgradeSingleComponentListDb(listName);
   const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
@@ -580,7 +554,10 @@ export const deleteComponentFileFromList = async (
   return componentListDb.removeItem(fileName);
 };
 
-export const unsafeWriteFilesToList = async (listName: string, files: ComponentFileEntry[]) => {
+export const unsafeWriteFilesToList = async (
+  listName: string,
+  files: ComponentFileEntry[],
+) => {
   await upgradeSingleComponentListDb(listName);
   const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
   const componentListDb = localForage.createInstance({
@@ -613,7 +590,7 @@ const upgradeSingleComponentListDb = async (listName: string) => {
     1;
   if (![1, 2, 3, 4].includes(listFormatVersion)) {
     throw Error(
-      `upgradeComponentListDb: Unknown component list version "${listFormatVersion}" for the list ${listName}`
+      `upgradeComponentListDb: Unknown component list version "${listFormatVersion}" for the list ${listName}`,
     );
   }
   if (listFormatVersion === 1) {
@@ -632,7 +609,7 @@ const upgradeSingleComponentListDb = async (listName: string) => {
       const fileName = componentRef.spec.name ?? emptyNameReplacement;
       const uniqueFileName = makeNameUniqueByAddingIndex(
         fileName,
-        existingNames
+        existingNames,
       );
       const fileEntry: ComponentFileEntryV2 = {
         componentRef: componentRef,
@@ -643,7 +620,7 @@ const upgradeSingleComponentListDb = async (listName: string) => {
     await componentStoreSettingsDb.setItem(componentListVersionKey, 2);
     listFormatVersion = 2;
     console.log(
-      `componentStore: Upgraded the component list DB ${listName} to version ${listFormatVersion}`
+      `componentStore: Upgraded the component list DB ${listName} to version ${listFormatVersion}`,
     );
   }
   if (listFormatVersion === 2) {
@@ -653,30 +630,29 @@ const upgradeSingleComponentListDb = async (listName: string) => {
     });
     const fileNames = await componentListDb.keys();
     for (const fileName of fileNames) {
-      const fileEntry = await componentListDb.getItem<ComponentFileEntryV2>(
-        fileName
-      );
+      const fileEntry =
+        await componentListDb.getItem<ComponentFileEntryV2>(fileName);
       if (fileEntry === null) {
         throw Error(`File "${fileName}" has disappeared during upgrade`);
       }
       let componentRef = fileEntry.componentRef;
       let data = await digestToDataDb.getItem<ArrayBuffer>(
-        fileEntry.componentRef.digest
+        fileEntry.componentRef.digest,
       );
       if (data === null) {
         console.error(
-          `Db is corrupted: Could not find data for file "${fileName}" with digest ${fileEntry.componentRef.digest}.`
+          `Db is corrupted: Could not find data for file "${fileName}" with digest ${fileEntry.componentRef.digest}.`,
         );
         const componentText = componentSpecToYaml(fileEntry.componentRef.spec);
         data = new TextEncoder().encode(componentText);
         const newDigest = await calculateHashDigestHex(data);
         componentRef.digest = newDigest;
         console.warn(
-          `The component "${fileName}" was re-serialized. Old digest: ${fileEntry.componentRef.digest}. New digest ${newDigest}.`
+          `The component "${fileName}" was re-serialized. Old digest: ${fileEntry.componentRef.digest}. New digest ${newDigest}.`,
         );
         // This case should not happen. Let's throw error for now.
         throw Error(
-          `Db is corrupted: Could not find data for file "${fileName}" with digest ${fileEntry.componentRef.digest}.`
+          `Db is corrupted: Could not find data for file "${fileName}" with digest ${fileEntry.componentRef.digest}.`,
         );
       }
       const currentTime = new Date();
@@ -692,34 +668,33 @@ const upgradeSingleComponentListDb = async (listName: string) => {
     listFormatVersion = 3;
     await componentStoreSettingsDb.setItem(
       componentListVersionKey,
-      listFormatVersion
+      listFormatVersion,
     );
     console.log(
-      `componentStore: Upgraded the component list DB ${listName} to version ${listFormatVersion}`
+      `componentStore: Upgraded the component list DB ${listName} to version ${listFormatVersion}`,
     );
   }
   if (listFormatVersion === 3) {
     // Upgrading the DB to backfill entry.componentRef.text from entry.data
     const fileNames = await componentListDb.keys();
     for (const fileName of fileNames) {
-      const fileEntry = await componentListDb.getItem<ComponentFileEntryV3>(
-        fileName
-      );
+      const fileEntry =
+        await componentListDb.getItem<ComponentFileEntryV3>(fileName);
       if (fileEntry === null) {
         throw Error(`File "${fileName}" has disappeared during upgrade`);
       }
       if (!fileEntry.componentRef.text) {
-        fileEntry.componentRef.text = new TextDecoder().decode(fileEntry.data)
+        fileEntry.componentRef.text = new TextDecoder().decode(fileEntry.data);
       }
       await componentListDb.setItem(fileName, fileEntry);
     }
     listFormatVersion = 4;
     await componentStoreSettingsDb.setItem(
       componentListVersionKey,
-      listFormatVersion
+      listFormatVersion,
     );
     console.log(
-      `componentStore: Upgraded the component list DB ${listName} to version ${listFormatVersion}`
+      `componentStore: Upgraded the component list DB ${listName} to version ${listFormatVersion}`,
     );
   }
 };
