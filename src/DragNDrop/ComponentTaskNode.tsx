@@ -189,15 +189,18 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
     setIsArgumentsEditorOpen(false);
   };
 
+  const handleDoubleClick = () => {
+    if (!isArgumentsEditorOpen) {
+      setIsArgumentsEditorOpen(true);
+    }
+  };
+
   return (
-    <div
-      onDoubleClick={() => {
-        setIsArgumentsEditorOpen(!isArgumentsEditorOpen);
-      }}
-      title={title}
-    >
-      {label}
-      {handleComponents}
+    <>
+      <div onDoubleClick={handleDoubleClick} title={title}>
+        {label}
+        {handleComponents}
+      </div>
       {isArgumentsEditorOpen && (
         <ArgumentsEditorDialog
           taskSpec={taskSpec}
@@ -205,7 +208,7 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
           setArguments={typedData.setArguments}
         />
       )}
-    </div>
+    </>
   );
 };
 

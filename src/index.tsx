@@ -26,7 +26,9 @@ const rootRoute = createRootRoute({
   component: () => (
     <>
       <Outlet />
-      {import.meta.env.VITE_ENABLE_ROUTER_DEVTOOLS === "true" && <TanStackRouterDevtools />}
+      {import.meta.env.VITE_ENABLE_ROUTER_DEVTOOLS === "true" && (
+        <TanStackRouterDevtools />
+      )}
     </>
   ),
 });

@@ -49,6 +49,7 @@
     "localforage": "^1.10.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-draggable": "^4.4.6",
     "react-dropzone": "^14.3.5",
     "react-scan": "^0.2.4",
     "tailwindcss": "^4.0.6"
