@@ -6,9 +6,32 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ArgumentType, TaskSpec } from "../componentSpec";
 import ArgumentsEditor from "./ArgumentsEditor";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Paper,
+  type PaperProps,
+} from "@mui/material";
+import Draggable from "react-draggable";
+
+function PaperComponent(props: PaperProps) {
+  const nodeRef = useRef<HTMLDivElement>(null);
+  return (
+    <Draggable
+      nodeRef={nodeRef as React.RefObject<HTMLDivElement>}
+      handle="#draggable-dialog-title"
+      cancel={'[class*="MuiDialogContent-root"]'}
+    >
+      <Paper {...props} ref={nodeRef} />
+    </Draggable>
+  );
+}
 
 interface ArgumentsEditorDialogProps {
   taskSpec: TaskSpec;
@@ -34,42 +57,43 @@ const ArgumentsEditorDialog = ({
     return <></>;
   }
 
+  const handleApply = () => {
+    setArguments?.(currentArguments);
+    closeEditor?.();
+  };
+
   return (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-      }}
-      // Does not work
-      // draggable={false}
-      style={{
-        position: "fixed",
-        background: "white",
-        border: "1px solid black",
-        borderRadius: "4px",
-        padding: "15px",
-        // Does not work
-        // zIndex: 11,
+    <Dialog
+      open
+      onClose={closeEditor}
+      PaperComponent={PaperComponent}
+      aria-labelledby="draggable-dialog-title"
+      hideBackdrop={true}
+      disableEnforceFocus={true}
+      disableAutoFocus={true}
+      disableScrollLock={true}
+      className="absolute pointer-events-none"
+      slotProps={{
+        paper: {
+          className: "pointer-events-auto shadow-md m-0",
+        }
       }}
     >
-      <legend>Input arguments for {componentSpec.name}</legend>
-      <ArgumentsEditor
-        componentSpec={componentSpec}
-        componentArguments={currentArguments}
-        setComponentArguments={setCurrentArguments}
-      />
-      <button type="button" onClick={closeEditor}>
-        Close
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          setArguments?.(currentArguments);
-          closeEditor?.();
-        }}
-      >
-        Apply
-      </button>
-    </form>
+      <DialogTitle className="cursor-move" id="draggable-dialog-title">
+        Input arguments for {componentSpec.name}
+      </DialogTitle>
+      <DialogContent>
+        <ArgumentsEditor
+          componentSpec={componentSpec}
+          componentArguments={currentArguments}
+          setComponentArguments={setCurrentArguments}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={closeEditor}>Close</Button>
+        <Button onClick={handleApply}>Apply</Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 
