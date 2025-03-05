@@ -9,8 +9,9 @@
 import { useStore } from "@xyflow/react";
 
 import type { ComponentSpec } from "../componentSpec";
-import { augmentComponentSpec } from "./GraphComponentSpecFlow";
+
 import { componentSpecToYaml } from "../componentStore";
+import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
 
 interface GraphComponentExporterProps {
   componentSpec: ComponentSpec;
@@ -23,7 +24,7 @@ const GraphComponentExporter = ({
 
   let componentText = "";
   try {
-    const graphComponent = augmentComponentSpec(
+    const graphComponent = updateComponentSpecFromNodes(
       componentSpec,
       nodes,
       false,

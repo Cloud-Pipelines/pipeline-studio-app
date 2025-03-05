@@ -76,7 +76,7 @@ const ArgumentsEditorDialog = ({
       slotProps={{
         paper: {
           className: "pointer-events-auto shadow-md m-0",
-        }
+        },
       }}
     >
       <DialogTitle className="cursor-move" id="draggable-dialog-title">

@@ -11,7 +11,7 @@ import yaml from "js-yaml";
 
 import type { ComponentSpec } from "../componentSpec";
 import { componentSpecToYaml } from "../componentStore";
-import { augmentComponentSpec } from "./GraphComponentSpecFlow";
+import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
 
 const SAVED_COMPONENT_SPEC_KEY = "autosaved.component.yaml";
 
@@ -24,7 +24,12 @@ export const savePipelineSpecToSessionStorage = (
       if (nodes.length === 0) {
         console.warn("saveComponentSpec: nodes.length === 0");
       }
-      componentSpec = augmentComponentSpec(componentSpec, nodes, true, true);
+      componentSpec = updateComponentSpecFromNodes(
+        componentSpec,
+        nodes,
+        true,
+        true,
+      );
     }
     const componentText = componentSpecToYaml(componentSpec);
     window.sessionStorage.setItem(SAVED_COMPONENT_SPEC_KEY, componentText);
