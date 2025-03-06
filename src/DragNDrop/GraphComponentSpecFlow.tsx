@@ -9,10 +9,7 @@
 import { useState } from "react";
 import type { DragEvent } from "react";
 
-import {
-  ReactFlow,
-  type OnInit,
-} from "@xyflow/react";
+import { ReactFlow, type OnInit } from "@xyflow/react";
 
 import type {
   ReactFlowInstance,
@@ -68,8 +65,11 @@ const GraphComponentSpecFlow = ({
 }: GraphComponentSpecFlowProps) => {
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
-  const {nodes, onNodesChange} = useComponentSpecToNodes(componentSpec, setComponentSpec);
-  const {edges, onEdgesChange} = useComponentSpecToEdges(componentSpec);
+  const { nodes, onNodesChange } = useComponentSpecToNodes(
+    componentSpec,
+    setComponentSpec,
+  );
+  const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
   if (!("graph" in componentSpec.implementation)) {
     return null;

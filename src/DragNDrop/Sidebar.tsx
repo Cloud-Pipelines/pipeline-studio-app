@@ -19,6 +19,7 @@ import type { AppSettings } from "../appSettings";
 import PipelineSubmitter from "./PipelineSubmitter";
 import AppSettingsDialog from "./AppSettingsDialog";
 import { type DownloadDataType, downloadDataWithCache } from "../cacheUtils";
+import { Button } from "@/components/ui/button";
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData("application/reactflow", JSON.stringify(nodeData));
@@ -193,13 +194,13 @@ const Sidebar = ({
       )}
       <details>
         <summary>Debug and developer tools</summary>
-        <button
+        <Button
           onClick={() => {
             setIsSettingsDialogOpen(true);
           }}
         >
           Settings
-        </button>
+        </Button>
         {componentSpec && (
           <GraphComponentExporter componentSpec={componentSpec} />
         )}

@@ -13,6 +13,7 @@ import {
   Background,
   MiniMap,
 } from "@xyflow/react";
+import { DndContext } from "@dnd-kit/core";
 
 import { downloadDataWithCache } from "../cacheUtils";
 import type { ComponentSpec } from "../componentSpec";
@@ -69,27 +70,29 @@ const DnDFlow = () => {
 
   return (
     <div className="dndflow">
-      <ReactFlowProvider>
-        <div className="reactflow-wrapper">
-          <GraphComponentSpecFlow
+      <DndContext>
+        <ReactFlowProvider>
+          <div className="reactflow-wrapper">
+            <GraphComponentSpecFlow
+              componentSpec={componentSpec}
+              setComponentSpec={setComponentSpec}
+              snapToGrid={true}
+              snapGrid={[GRID_SIZE, GRID_SIZE]}
+            >
+              <MiniMap />
+              <Controls />
+              <Background gap={GRID_SIZE} />
+            </GraphComponentSpecFlow>
+          </div>
+          <Sidebar
             componentSpec={componentSpec}
             setComponentSpec={setComponentSpec}
-            snapToGrid={true}
-            snapGrid={[GRID_SIZE, GRID_SIZE]}
-          >
-            <MiniMap />
-            <Controls />
-            <Background gap={GRID_SIZE} />
-          </GraphComponentSpecFlow>
-        </div>
-        <Sidebar
-          componentSpec={componentSpec}
-          setComponentSpec={setComponentSpec}
-          appSettings={appSettings}
-          downloadData={downloadData}
-        />
-        <PipelineAutoSaver componentSpec={componentSpec} />
-      </ReactFlowProvider>
+            appSettings={appSettings}
+            downloadData={downloadData}
+          />
+          <PipelineAutoSaver componentSpec={componentSpec} />
+        </ReactFlowProvider>
+      </DndContext>
     </div>
   );
 };

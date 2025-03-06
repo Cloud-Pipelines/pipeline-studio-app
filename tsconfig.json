@@ -1,6 +1,10 @@
 {
   "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "target": "ES2022",
     "jsx": "react-jsx",
     "module": "ESNext",

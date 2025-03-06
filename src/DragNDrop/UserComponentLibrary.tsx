@@ -6,17 +6,18 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import { Input } from "@/components/ui/input";
+
 import {
-  Button,
   Dialog,
-  DialogActions,
   DialogContent,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
-  Menu,
-  MenuItem,
-  TextField,
-} from "@mui/material";
-import { useCallback, useState, useEffect, useRef } from "react";
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import {
   addComponentToListByText,
@@ -34,8 +35,7 @@ const UserComponentLibrary = () => {
   const [componentFiles, setComponentFiles] = useState(
     new Map<string, ComponentFileEntry>(),
   );
-  const [contextMenuFileName, setContextMenuFileName] = useState<string>();
-  const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement>();
+
   const [isImportComponentDialogOpen, setIsImportComponentDialogOpen] =
     useState(false);
 
@@ -121,16 +121,18 @@ const UserComponentLibrary = () => {
     [refreshComponents],
   );
 
-  const handleContextMenuDelete = async () => {
-    if (contextMenuFileName) {
-      setContextMenuFileName(undefined);
-      await deleteComponentFileFromList(
-        USER_COMPONENTS_LIST_NAME,
-        contextMenuFileName,
-      );
-      refreshComponents();
-    }
-  };
+  const handleDelete = useCallback(
+    (fileName: string) => (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (fileName) {
+        deleteComponentFileFromList(USER_COMPONENTS_LIST_NAME, fileName)
+          .then(() => refreshComponents())
+          .catch((err) => console.error("Error deleting component:", err));
+      }
+    },
+    [refreshComponents],
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -141,49 +143,27 @@ const UserComponentLibrary = () => {
 
   return (
     <div>
-      <button
-        onClick={() => setIsImportComponentDialogOpen(true)}
-        style={{ marginBottom: "4px" }}
-      >
+      <Button onClick={() => setIsImportComponentDialogOpen(true)}>
         Import from URL
-      </button>
+      </Button>
       <div {...getRootProps()}>
-        <input {...getInputProps()} />
-        <div
-          style={{
-            border: "1px solid black",
-            padding: "4px",
-            minHeight: "3em",
-          }}
-        >
+        <Input {...getInputProps()} />
+        <div className="border border-black p-4 min-h-12">
           {isDragActive
             ? "Drop the files here ..."
             : errorMessage ||
               "Drag and drop component.yaml files or click to select files"}
           {Array.from(componentFiles.entries()).map(([fileName, fileEntry]) => (
-            <DraggableComponent
-              key={fileName}
-              componentReference={fileEntry.componentRef}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                setContextMenuAnchor(e.currentTarget);
-                setContextMenuFileName(fileName);
-              }}
-            />
+            <>
+              <DraggableComponent
+                key={fileName}
+                componentReference={fileEntry.componentRef}
+              />
+              <Button onClick={handleDelete(fileName)}>Delete</Button>
+            </>
           ))}
         </div>
       </div>
-      <Menu
-        open={contextMenuFileName !== undefined}
-        anchorEl={contextMenuAnchor}
-        onClose={() => {
-          setContextMenuFileName(undefined);
-        }}
-      >
-        <MenuItem dense={true} onClick={handleContextMenuDelete}>
-          Delete
-        </MenuItem>
-      </Menu>
       <ImportComponentFromUrlDialog
         isOpen={isImportComponentDialogOpen}
         onCancel={() => setIsImportComponentDialogOpen(false)}
@@ -209,37 +189,39 @@ const ImportComponentFromUrlDialog = ({
   onCancel,
   initialValue,
 }: SaveAsDialogProps) => {
-  const urlInputRef = useRef<HTMLInputElement>(null);
+  const [url, setUrl] = useState(initialValue);
+
+  const handleSubmit = () => {
+    if (url) {
+      onImport(url);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} fullWidth>
-      <DialogTitle>{"Import component"}</DialogTitle>
-      <form
-        onSubmit={(e) => {
-          if (urlInputRef.current) {
-            onImport(urlInputRef.current.value);
-          }
-          e.preventDefault();
-        }}
-      >
-        <DialogContent>
-          <TextField
-            id="name"
-            type="text"
-            placeholder={initialValue}
-            label="Component URL"
-            inputRef={urlInputRef}
-            required
-            autoFocus
-            fullWidth
-          />
-        </DialogContent>
-        <DialogActions>
+    <Dialog open={isOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{"Import component"}</DialogTitle>
+        </DialogHeader>
+
+        <Label htmlFor="name">Component URL</Label>
+        <Input
+          id="name"
+          type="text"
+          placeholder={initialValue}
+          required
+          autoFocus
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+
+        <DialogFooter>
           <Button onClick={onCancel}>Cancel</Button>
-          <Button color="primary" type="submit" autoFocus>
+          <Button onClick={handleSubmit} autoFocus>
             Import
           </Button>
-        </DialogActions>
-      </form>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 };

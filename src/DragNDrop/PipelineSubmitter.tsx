@@ -53,10 +53,9 @@ const PipelineSubmitter = ({
         >
           <legend>Arguments</legend>
           <ArgumentsEditor
-            componentSpec={componentSpec}
+            inputs={componentSpec.inputs ?? []}
             componentArguments={pipelineArguments}
             setComponentArguments={setPipelineArguments}
-            shrinkToWidth={true}
           />
         </fieldset>
       )}

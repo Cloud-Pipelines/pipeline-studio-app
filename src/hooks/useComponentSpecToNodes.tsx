@@ -1,4 +1,9 @@
-import { useNodesState, type Node, type NodeChange, type XYPosition } from "@xyflow/react";
+import {
+  useNodesState,
+  type Node,
+  type NodeChange,
+  type XYPosition,
+} from "@xyflow/react";
 
 import type { ArgumentType, ComponentSpec, GraphSpec } from "../componentSpec";
 import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
@@ -13,7 +18,9 @@ const useComponentSpecToNodes = (
   nodes: Node<any>[];
   onNodesChange: (changes: NodeChange[]) => void;
 } => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(getNodes(componentSpec, setComponentSpec));
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    getNodes(componentSpec, setComponentSpec),
+  );
 
   useEffect(() => {
     const newNodes = getNodes(componentSpec, setComponentSpec);
@@ -26,7 +33,10 @@ const useComponentSpecToNodes = (
   };
 };
 
-const getNodes = (componentSpec: ComponentSpec, setComponentSpec: SetComponentSpec): Node<any>[] => {
+const getNodes = (
+  componentSpec: ComponentSpec,
+  setComponentSpec: SetComponentSpec,
+): Node<any>[] => {
   if (!("graph" in componentSpec.implementation)) {
     return [];
   }

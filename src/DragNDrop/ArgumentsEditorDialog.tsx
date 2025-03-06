@@ -6,47 +6,44 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { useRef, useState } from "react";
-import type { ArgumentType, TaskSpec } from "../componentSpec";
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import type { ArgumentType, ComponentSpec, TaskSpec } from "../componentSpec";
 import ArgumentsEditor from "./ArgumentsEditor";
+import { Button } from "@/components/ui/button";
 import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Paper,
-  type PaperProps,
-} from "@mui/material";
-import Draggable from "react-draggable";
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { DndContext, useDraggable, type DragEndEvent } from "@dnd-kit/core";
 
-function PaperComponent(props: PaperProps) {
-  const nodeRef = useRef<HTMLDivElement>(null);
-  return (
-    <Draggable
-      nodeRef={nodeRef as React.RefObject<HTMLDivElement>}
-      handle="#draggable-dialog-title"
-      cancel={'[class*="MuiDialogContent-root"]'}
-    >
-      <Paper {...props} ref={nodeRef} />
-    </Draggable>
-  );
-}
+// Global counter for z-index management
+let globalZIndexCounter = 1000;
 
 interface ArgumentsEditorDialogProps {
   taskSpec: TaskSpec;
   closeEditor?: () => void;
   setArguments?: (args: Record<string, ArgumentType>) => void;
+  position?: { x: number; y: number };
 }
 
 const ArgumentsEditorDialog = ({
   taskSpec,
   closeEditor,
   setArguments,
+  position = { x: 100, y: 100 },
 }: ArgumentsEditorDialogProps) => {
   const [currentArguments, setCurrentArguments] = useState<
     Record<string, ArgumentType>
   >({ ...taskSpec.arguments });
+
+  const [dialogPosition, setDialogPosition] = useState(position);
+  // Initialize with a unique z-index
+  const [currentZIndex, setCurrentZIndex] = useState(globalZIndexCounter);
 
   const componentSpec = taskSpec.componentRef.spec;
   if (componentSpec === undefined) {
@@ -62,38 +59,94 @@ const ArgumentsEditorDialog = ({
     closeEditor?.();
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { delta } = event;
+    setDialogPosition({
+      x: dialogPosition.x + delta.x,
+      y: dialogPosition.y + delta.y,
+    });
+  };
+
+  const bringToFront = () => {
+    // Increment the global counter and use the new value
+    globalZIndexCounter += 1;
+    setCurrentZIndex(globalZIndexCounter);
+  };
+
+  const dialogContent = (
+    <DndContext onDragEnd={handleDragEnd}>
+      <DraggableDialogContent
+        dialogPosition={dialogPosition}
+        componentSpec={componentSpec}
+        currentArguments={currentArguments}
+        setCurrentArguments={setCurrentArguments}
+        closeEditor={closeEditor ?? (() => {})}
+        handleApply={handleApply}
+        zIndex={currentZIndex}
+        bringToFront={bringToFront}
+      />
+    </DndContext>
+  );
+
+  return createPortal(dialogContent, document.body);
+};
+
+const DraggableDialogContent = ({
+  dialogPosition,
+  componentSpec,
+  currentArguments,
+  setCurrentArguments,
+  closeEditor,
+  handleApply,
+  zIndex,
+  bringToFront,
+}: {
+  dialogPosition: { x: number; y: number };
+  componentSpec: ComponentSpec;
+  currentArguments: Record<string, ArgumentType>;
+  setCurrentArguments: (args: Record<string, ArgumentType>) => void;
+  closeEditor: () => void;
+  handleApply: () => void;
+  zIndex: number;
+  bringToFront: () => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: "arguments-dialog",
+  });
+
+  const translateX = dialogPosition.x + (transform?.x || 0);
+  const translateY = dialogPosition.y + (transform?.y || 0);
+
   return (
-    <Dialog
-      open
-      onClose={closeEditor}
-      PaperComponent={PaperComponent}
-      aria-labelledby="draggable-dialog-title"
-      hideBackdrop={true}
-      disableEnforceFocus={true}
-      disableAutoFocus={true}
-      disableScrollLock={true}
-      className="absolute pointer-events-none"
-      slotProps={{
-        paper: {
-          className: "pointer-events-auto shadow-md m-0",
-        },
+    <div
+      ref={setNodeRef}
+      className="fixed top-0 left-0"
+      style={{
+        transform: `translate(${translateX}px, ${translateY}px)`,
+        zIndex: zIndex,
       }}
+      onMouseDown={bringToFront}
     >
-      <DialogTitle className="cursor-move" id="draggable-dialog-title">
-        Input arguments for {componentSpec.name}
-      </DialogTitle>
-      <DialogContent>
-        <ArgumentsEditor
-          componentSpec={componentSpec}
-          componentArguments={currentArguments}
-          setComponentArguments={setCurrentArguments}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={closeEditor}>Close</Button>
-        <Button onClick={handleApply}>Apply</Button>
-      </DialogActions>
-    </Dialog>
+      <Card>
+        <CardHeader {...attributes} {...listeners} className="cursor-grab">
+          <CardTitle>{componentSpec.name}</CardTitle>
+          <CardDescription>
+            Configure the component&apos;s input parameters.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ArgumentsEditor
+            inputs={componentSpec.inputs ?? []}
+            componentArguments={currentArguments}
+            setComponentArguments={setCurrentArguments}
+          />
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button onClick={closeEditor}>Close</Button>
+          <Button onClick={handleApply}>Apply</Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 
