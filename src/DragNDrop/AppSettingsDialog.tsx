@@ -6,16 +6,20 @@
  * @copyright 2022 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import { Input } from "@/components/ui/input";
+
 import {
-  Button,
   Dialog,
-  DialogActions,
   DialogContent,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
-  TextField,
-} from "@mui/material";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { getMutableAppSettings } from "../appSettings";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type AppSettingsDialogProps = {
   isOpen: boolean;
@@ -68,78 +72,80 @@ const AppSettingsDialog = ({ isOpen, handleClose }: AppSettingsDialogProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onClose={handleClose}>
-      <DialogTitle>Settings</DialogTitle>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent>
-        {/* <DialogContentText>Application settings</DialogContentText> */}
-        <TextField
+        <DialogHeader>
+          <DialogTitle>Settings</DialogTitle>
+        </DialogHeader>
+
+        <Label htmlFor="component_library_url">Component library URL</Label>
+        <Input
           id="component_library_url"
-          label="Component library URL"
-          variant="outlined"
-          margin="normal"
-          fullWidth
           value={componentLibraryUrl}
           onChange={(e) => setComponentLibraryUrl(e.target.value)}
+          className="w-full"
         />
-        <TextField
+
+        <Label htmlFor="pipeline_library_url">Pipeline library URL</Label>
+        <Input
           id="pipeline_library_url"
-          label="Pipeline library URL"
-          variant="outlined"
-          margin="normal"
-          fullWidth
           value={pipelineLibraryUrl}
           onChange={(e) => setPipelineLibraryUrl(e.target.value)}
+          className="w-full"
         />
-        <TextField
+
+        <Label htmlFor="default_pipeline_url">Default pipeline URL</Label>
+        <Input
           id="default_pipeline_url"
-          label="Default pipeline URL"
-          variant="outlined"
-          margin="normal"
-          fullWidth
           value={defaultPipelineUrl}
           onChange={(e) => setDefaultPipelineUrl(e.target.value)}
+          className="w-full"
         />
-        <TextField
+
+        <Label htmlFor="component_search_feed_urls">
+          Component search feed URLs
+        </Label>
+
+        <Textarea
           id="component_search_feed_urls"
-          label="Component search feed URLs"
-          variant="outlined"
-          margin="normal"
-          fullWidth
-          multiline
           value={componentFeedUrls.join("\n")}
           onChange={(e) => setComponentFeedUrls(e.target.value.split("\n"))}
+          className="w-full resize-none h-24"
         />
-        <TextField
+
+        <Label htmlFor="component_search_locations_github">
+          Component search locations - GitHub
+        </Label>
+
+        <Textarea
           id="component_search_locations_github"
-          label="Component search locations - GitHub"
-          variant="outlined"
-          margin="normal"
-          fullWidth
-          multiline
           value={gitHubSearchLocations.join("\n")}
           onChange={(e) => setGitHubSearchLocations(e.target.value.split("\n"))}
+          className="w-full resize-none h-24"
         />
-        <TextField
+
+        <Label htmlFor="google_cloud_client_id">
+          Google Cloud OAuth client ID
+        </Label>
+        <Input
           id="google_cloud_client_id"
-          label="Google Cloud OAuth client ID"
-          variant="outlined"
-          margin="normal"
-          fullWidth
           value={googleCloudOAuthClientId}
           onChange={(e) => setGoogleCloudOAuthClientId(e.target.value)}
+          className="w-full"
         />
+
+        <DialogFooter>
+          <Button onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} color="primary">
+            Save
+          </Button>
+          <Button onClick={handleReset} variant="outline" color="error">
+            Reset
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">
-          Cancel
-        </Button>
-        <Button onClick={handleSave} color="primary">
-          Save
-        </Button>
-        <Button onClick={handleReset} color="secondary">
-          Reset
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

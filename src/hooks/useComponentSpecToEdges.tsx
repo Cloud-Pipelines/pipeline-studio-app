@@ -1,4 +1,9 @@
-import { MarkerType, useEdgesState, type Edge, type EdgeChange } from "@xyflow/react";
+import {
+  MarkerType,
+  useEdgesState,
+  type Edge,
+  type EdgeChange,
+} from "@xyflow/react";
 
 import type {
   ArgumentType,
@@ -15,11 +20,15 @@ import {
 } from "../utils/nodeIdUtils";
 import { useEffect } from "react";
 
-const useComponentSpecToEdges = (componentSpec: ComponentSpec): {
+const useComponentSpecToEdges = (
+  componentSpec: ComponentSpec,
+): {
   edges: Edge<any>[];
   onEdgesChange: (changes: EdgeChange[]) => void;
 } => {
-  const [flowEdges, setFlowEdges, onFlowEdgesChange] = useEdgesState(getEdges(componentSpec));
+  const [flowEdges, setFlowEdges, onFlowEdgesChange] = useEdgesState(
+    getEdges(componentSpec),
+  );
 
   useEffect(() => {
     const newEdges = getEdges(componentSpec);

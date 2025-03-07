@@ -17,9 +17,7 @@ describe("useComponentSpecToEdges", () => {
       container: { image: "test" },
     });
 
-    const { result } = renderHook(() =>
-      useComponentSpecToEdges(componentSpec)
-    );
+    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
 
     expect(result.current.edges).toEqual([]);
   });
@@ -41,9 +39,7 @@ describe("useComponentSpecToEdges", () => {
       },
     });
 
-    const { result } = renderHook(() =>
-      useComponentSpecToEdges(componentSpec)
-    );
+    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
 
     expect(result.current.edges).toContainEqual({
       id: "task2_output1-task1_input1",
@@ -70,9 +66,7 @@ describe("useComponentSpecToEdges", () => {
       },
     });
 
-    const { result } = renderHook(() =>
-      useComponentSpecToEdges(componentSpec)
-    );
+    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
 
     expect(result.current.edges).toContainEqual({
       id: "Input_graphInput1-task1_input1",
@@ -101,9 +95,7 @@ describe("useComponentSpecToEdges", () => {
       outputs: [],
     };
 
-    const { result } = renderHook(() =>
-      useComponentSpecToEdges(componentSpec)
-    );
+    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
 
     expect(result.current.edges).toContainEqual({
       id: "task1_output1-Output_graphOutput1",
@@ -135,9 +127,7 @@ describe("useComponentSpecToEdges", () => {
       outputs: [],
     };
 
-    const { result } = renderHook(() =>
-      useComponentSpecToEdges(componentSpec)
-    );
+    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
     expect(result.current.edges).toEqual([]);
   });
 
@@ -174,9 +164,7 @@ describe("useComponentSpecToEdges", () => {
       outputs: [],
     };
 
-    const { result } = renderHook(() =>
-      useComponentSpecToEdges(componentSpec)
-    );
+    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
 
     expect(result.current.edges).toHaveLength(3);
 

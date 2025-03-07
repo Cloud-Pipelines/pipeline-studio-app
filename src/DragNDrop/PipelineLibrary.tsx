@@ -7,15 +7,12 @@
  */
 
 import {
-  Button,
   Dialog,
-  DialogActions,
   DialogContent,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
-  Menu,
-  MenuItem,
-  TextField,
-} from "@mui/material";
+} from "@/components/ui/dialog";
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useStore } from "@xyflow/react";
 import type { DownloadDataType } from "../cacheUtils";
@@ -36,6 +33,9 @@ import GraphComponentLink from "./GraphComponentLink";
 import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
 import SamplePipelineLibrary from "./SamplePipelineLibrary";
 import { preloadComponentReferences } from "../componentStore";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const USER_PIPELINES_LIST_NAME = "user_pipelines";
 
@@ -130,15 +130,19 @@ const OkCancelDialog = ({
 }: OkCancelDialogProps) => {
   return (
     <Dialog open={isOpen} aria-labelledby="alert-dialog-title">
-      <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
-      <DialogActions>
-        <Button color="primary" onClick={onCancel}>
-          {cancelButtonText}
-        </Button>
-        <Button color="secondary" onClick={onOk}>
-          {okButtonText}
-        </Button>
-      </DialogActions>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
+        </DialogHeader>
+        <DialogFooter>
+          <Button color="primary" onClick={onCancel}>
+            {cancelButtonText}
+          </Button>
+          <Button color="secondary" onClick={onOk}>
+            {okButtonText}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 };
@@ -158,38 +162,37 @@ const SaveAsDialog = ({
   initialValue,
   inputLabel = "Pipeline name",
 }: SaveAsDialogProps) => {
-  const nameInputRef = useRef<HTMLInputElement>(null);
+  const [name, setName] = useState(initialValue);
+
+  const handleSave = () => {
+    if (name) {
+      onSave(name);
+    }
+  };
+
   return (
     <Dialog open={isOpen} aria-labelledby="alert-dialog-title">
-      <DialogTitle id="alert-dialog-title">{"Save pipeline"}</DialogTitle>
-      <form
-        onSubmit={(e) => {
-          if (nameInputRef.current) {
-            onSave(nameInputRef.current.value);
-          }
-          e.preventDefault();
-        }}
-      >
-        <DialogContent>
-          <TextField
-            id="name"
-            type="text"
-            defaultValue={initialValue}
-            label={inputLabel}
-            inputRef={nameInputRef}
-            required
-            autoFocus
-            fullWidth
-            margin="dense"
-          />
-        </DialogContent>
-        <DialogActions>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle id="alert-dialog-title">{"Save pipeline"}</DialogTitle>
+        </DialogHeader>
+        <Label htmlFor="name">{inputLabel}</Label>
+        <Input
+          id="name"
+          type="text"
+          defaultValue={initialValue}
+          onChange={(e) => setName(e.target.value)}
+          required
+          autoFocus
+          className="w-full"
+        />
+        <DialogFooter>
           <Button onClick={onCancel}>Cancel</Button>
-          <Button color="primary" type="submit" autoFocus>
+          <Button color="primary" onClick={handleSave}>
             Save
           </Button>
-        </DialogActions>
-      </form>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 };
@@ -207,9 +210,6 @@ const PipelineLibrary = ({
   const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
   const nodes = useStore((store) => store.nodes);
-
-  const [contextMenuFileName, setContextMenuFileName] = useState<string>();
-  const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement>();
 
   const refreshPipelines = useCallback(() => {
     getAllComponentFilesFromList(USER_PIPELINES_LIST_NAME).then(
@@ -337,31 +337,10 @@ const PipelineLibrary = ({
     ],
   );
 
-  const handleContextMenuDelete = async () => {
-    if (contextMenuFileName) {
-      setContextMenuFileName(undefined);
-      await deleteComponentFileFromList(
-        USER_PIPELINES_LIST_NAME,
-        contextMenuFileName,
-      );
+  const handleDelete = async (fileName: string) => {
+    if (fileName) {
+      await deleteComponentFileFromList(USER_PIPELINES_LIST_NAME, fileName);
       refreshPipelines();
-    }
-  };
-
-  const handleContextMenuOpen = async () => {
-    if (contextMenuFileName) {
-      setContextMenuFileName(undefined);
-      const fileEntry = await getComponentFileFromList(
-        USER_PIPELINES_LIST_NAME,
-        contextMenuFileName,
-      );
-      if (!fileEntry) {
-        console.error(
-          `handleContextMenuOpen: File ${contextMenuFileName} does not exist.`,
-        );
-        return;
-      }
-      await openPipelineFile(fileEntry);
     }
   };
 
@@ -387,9 +366,7 @@ const PipelineLibrary = ({
     >
       <div style={{ margin: "5px" }}>
         <Button
-          variant="contained"
           color="primary"
-          size="small"
           onClick={() => {
             if (pipelineFile) {
               handlePipelineSave(pipelineFile?.name, true);
@@ -400,12 +377,7 @@ const PipelineLibrary = ({
         >
           Save
         </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          size="small"
-          onClick={openSaveAsDialog}
-        >
+        <Button color="primary" onClick={openSaveAsDialog}>
           Save as
         </Button>
         <br />
@@ -417,25 +389,18 @@ const PipelineLibrary = ({
             onPipelineSave={handlePipelineSave}
           />
         )}
-        <input
+        <Input
           ref={fileInput}
           type="file"
           accept=".yaml"
           onChange={(e) => onDrop(Array.from(e.target.files ?? []))}
           style={{ display: "none" }}
         />
-        <Button
-          variant="contained"
-          color="primary"
-          size="small"
-          onClick={() => fileInput.current?.click()}
-        >
+        <Button color="primary" onClick={() => fileInput.current?.click()}>
           + Import
         </Button>
         <Button
-          variant="contained"
           color="primary"
-          size="small"
           onClick={() => {
             componentLink.current?.click();
           }}
@@ -455,44 +420,21 @@ const PipelineLibrary = ({
           />
         )}
       </div>
-      <div style={{ overflow: "auto", marginLeft: "10px" }}>
+      <div>
         {Array.from(componentFiles.entries()).map(([fileName, fileEntry]) => (
           <div key={fileName}>
-            ⋮ {/* ⋮ ≡ ⋅ */}
             <Button
-              variant="contained"
-              color="primary"
-              size="small"
+              variant="link"
               onClick={() => openPipelineFile(fileEntry)}
-              style={
-                fileName === pipelineFile?.name
-                  ? { fontWeight: "bold" }
-                  : undefined
+              className={
+                fileName === pipelineFile?.name ? "font-bold" : undefined
               }
-              onContextMenu={(e) => {
-                e.preventDefault();
-                setContextMenuAnchor(e.currentTarget);
-                setContextMenuFileName(fileName);
-              }}
             >
               {fileName}
             </Button>
+            <Button onClick={() => handleDelete(fileName)}>Delete</Button>
           </div>
         ))}
-        <Menu
-          open={contextMenuFileName !== undefined}
-          anchorEl={contextMenuAnchor}
-          onClose={() => {
-            setContextMenuFileName(undefined);
-          }}
-        >
-          <MenuItem dense={true} onClick={handleContextMenuOpen}>
-            Open
-          </MenuItem>
-          <MenuItem dense={true} onClick={handleContextMenuDelete}>
-            Delete
-          </MenuItem>
-        </Menu>
       </div>
       <details
         open

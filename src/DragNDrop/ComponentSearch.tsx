@@ -7,6 +7,8 @@
  */
 
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import type { DownloadDataType } from "../cacheUtils";
 import { downloadDataWithCache } from "../cacheUtils";
 import type { ComponentReference } from "../componentSpec";
@@ -63,8 +65,7 @@ const SearchPanel = ({
     }
   }
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = () => {
     if (query !== "") {
       setFirstTime(false);
       fetchData(query);
@@ -90,10 +91,13 @@ const SearchPanel = ({
   }
   return (
     <div className="nodeList">
-      <form onSubmit={onSubmit}>
-        <input type="search" placeholder="XGBoost" onChange={onQueryChange} />
-        <input type="submit" />
-      </form>
+      <div className="flex flex-row gap-2">
+        <Input type="search" placeholder="XGBoost" onChange={onQueryChange} />
+        <Button type="submit" onClick={onSubmit}>
+          Search
+        </Button>
+      </div>
+
       <div>{results}</div>
     </div>
   );

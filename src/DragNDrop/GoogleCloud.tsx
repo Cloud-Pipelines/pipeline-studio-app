@@ -10,7 +10,9 @@
 /* global gapi */
 
 import { useEffect, useState } from "react";
-
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { ComponentSpec } from "../componentSpec";
 import { buildVertexPipelineJobFromGraphComponent } from "../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler";
 import type { PipelineJob } from "../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec";
@@ -292,8 +294,8 @@ const GoogleCloudSubmitter = ({
           margin: "5px",
         }}
       >
-        <label htmlFor="project">Project: </label>
-        <input
+        <Label htmlFor="project">Project: </Label>
+        <Input
           id="project"
           required
           type="text"
@@ -307,7 +309,7 @@ const GoogleCloudSubmitter = ({
             <option key={projectId} value={projectId} />
           ))}
         </datalist>
-        <button
+        <Button
           type="button" // The default button type is "submit", not "button". WTF!?
           onClick={async () => {
             try {
@@ -343,7 +345,7 @@ const GoogleCloudSubmitter = ({
           }}
         >
           ⟳{/* 🗘⭯ ⭮ ↺ ↻ ⟲ ⟳ 🔃🔄 */}
-        </button>
+        </Button>
       </div>
       <div
         style={{
@@ -351,8 +353,8 @@ const GoogleCloudSubmitter = ({
           margin: "5px",
         }}
       >
-        <label htmlFor="region">Region: </label>
-        <input
+        <Label htmlFor="region">Region: </Label>
+        <Input
           id="region"
           required
           type="text"
@@ -372,8 +374,8 @@ const GoogleCloudSubmitter = ({
           margin: "5px",
         }}
       >
-        <label htmlFor="region">GCS dir: </label>
-        <input
+        <Label htmlFor="region">GCS dir: </Label>
+        <Input
           id="gcsOutputDirectory"
           required
           type="text"
@@ -387,11 +389,9 @@ const GoogleCloudSubmitter = ({
           margin: "5px",
         }}
       >
-        <input
-          type="submit"
-          disabled={!readyToSubmit}
-          value="Submit pipeline job"
-        />
+        <Button type="submit" disabled={!readyToSubmit}>
+          Submit pipeline job
+        </Button>
         {pipelineJobWebUrl && (
           <a
             href={pipelineJobWebUrl}

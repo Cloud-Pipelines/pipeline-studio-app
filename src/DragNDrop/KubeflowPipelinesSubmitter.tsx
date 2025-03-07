@@ -7,6 +7,9 @@
  */
 
 import yaml from "js-yaml";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import {
   buildArgoWorkflowFromGraphComponent,
@@ -218,14 +221,9 @@ const KubeflowPipelinesSubmitter = ({
         }
       }}
     >
-      <div
-        style={{
-          whiteSpace: "nowrap",
-          margin: "5px",
-        }}
-      >
-        <label htmlFor="Endpoint">Endpoint: </label>
-        <input
+      <div className="flex flex-row gap-2">
+        <Label htmlFor="Endpoint">Endpoint: </Label>
+        <Input
           id="Endpoint"
           required
           type="text"
@@ -235,14 +233,9 @@ const KubeflowPipelinesSubmitter = ({
           onChange={(e) => setEndpoint(e.target.value)}
         />
       </div>
-      <div
-        style={{
-          whiteSpace: "nowrap",
-          margin: "5px",
-        }}
-      >
-        <label htmlFor="Token">Token: </label>
-        <input
+      <div className="flex flex-row gap-2">
+        <Label htmlFor="Token">Token: </Label>
+        <Input
           id="Token"
           type="text"
           placeholder="ya29..."
@@ -257,11 +250,9 @@ const KubeflowPipelinesSubmitter = ({
           margin: "5px",
         }}
       >
-        <input
-          type="submit"
-          disabled={!readyToSubmit}
-          value="Submit pipeline"
-        />
+        <Button type="submit" disabled={!readyToSubmit}>
+          Submit pipeline
+        </Button>
         {pipelineRunWebUrl && (
           <a
             href={pipelineRunWebUrl}

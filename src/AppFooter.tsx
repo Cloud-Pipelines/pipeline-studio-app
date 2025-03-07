@@ -6,48 +6,34 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { Link } from "@mui/material";
-
 function AppFooter() {
   return (
-    <footer
-      className="footer"
-      style={{
-        width: "100%",
-        height: "30px",
-        padding: "4px",
-        textAlign: "center",
-        backgroundColor: "ghostwhite",
-      }}
-    >
-      <div style={{ display: "inline-block" }}>
-        <Link
+    <footer className="footer w-full h-[30px] p-1 text-center bg-gray-50">
+      <div className="inline-block">
+        <a
           href="https://cloud-pipelines.net/"
-          underline="hover"
+          className="mx-1.5 text-blue-600 hover:text-blue-800 hover:underline"
           target="_blank"
-          rel="noopener"
-          style={{ margin: "6px" }}
+          rel="noopener noreferrer"
         >
           About
-        </Link>
-        <Link
+        </a>
+        <a
           href="https://github.com/Cloud-Pipelines/pipeline-editor/issues"
-          underline="hover"
+          className="mx-1.5 text-blue-600 hover:text-blue-800 hover:underline"
           target="_blank"
-          rel="noopener"
-          style={{ margin: "6px" }}
+          rel="noopener noreferrer"
         >
           Give feedback
-        </Link>
-        <Link
+        </a>
+        <a
           href="https://cloud-pipelines.net/privacy_policy"
-          underline="hover"
+          className="mx-1.5 text-blue-600 hover:text-blue-800 hover:underline"
           target="_blank"
-          rel="noopener"
-          style={{ margin: "6px" }}
+          rel="noopener noreferrer"
         >
           Privacy policy
-        </Link>
+        </a>
       </div>
     </footer>
   );

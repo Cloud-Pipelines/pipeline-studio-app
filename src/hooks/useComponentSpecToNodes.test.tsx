@@ -4,7 +4,6 @@ import useComponentSpecToNodes from "./useComponentSpecToNodes";
 import type { ComponentSpec } from "../componentSpec";
 import { isGraphImplementation } from "../componentSpec";
 
-
 describe("useComponentSpecToNodes", () => {
   const createBasicComponentSpec = (implementation: any): ComponentSpec => ({
     name: "Test Component",
@@ -25,7 +24,7 @@ describe("useComponentSpecToNodes", () => {
     });
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec)
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
     );
 
     expect(result.current.nodes).toEqual([]);
@@ -51,7 +50,7 @@ describe("useComponentSpecToNodes", () => {
     }
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec)
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
     );
 
     expect(result.current.nodes).toContainEqual(
@@ -81,7 +80,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec)
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
     );
 
     expect(result.current.nodes).toContainEqual({
@@ -108,7 +107,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec)
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
     );
 
     expect(result.current.nodes).toContainEqual({
@@ -137,7 +136,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec)
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
     );
     const defaultPosition = { x: 0, y: 0 };
 
@@ -175,9 +174,11 @@ describe("useComponentSpecToNodes", () => {
     });
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec)
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
     );
-    const taskNode = result.current.nodes.find((node) => node.id === "task_task1");
+    const taskNode = result.current.nodes.find(
+      (node) => node.id === "task_task1",
+    );
 
     const newArgs = { newArg: "newValue" };
     taskNode?.data.setArguments(newArgs);

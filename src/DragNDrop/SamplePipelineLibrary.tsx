@@ -17,6 +17,7 @@ import {
   type ComponentReferenceWithSpec,
   fullyLoadComponentRefFromUrl,
 } from "../componentStore";
+import { Button } from "@/components/ui/button";
 
 type PipelineLibraryStruct = {
   annotations?: {
@@ -92,28 +93,19 @@ const SamplePipelineLibrary = ({
   }, [pipelineLibraryUrl, downloadData, componentRefs.length]);
 
   return (
-    <div
-      style={{
-        //border: "1px solid black",
-        overflow: "auto",
-        whiteSpace: "nowrap",
-      }}
-    >
-      <div style={{ overflow: "auto", marginLeft: "10px" }}>
-        {componentRefs.map((componentRef) => (
-          <div key={componentRef.digest}>
-            ⋮ {/* ⋮ ≡ ⋅ */}
-            <button
-              className="link-button"
-              onClick={() => {
-                setComponentSpec?.(componentRef.spec);
-              }}
-            >
-              {componentRef.spec.name ?? "<Pipeline>"}
-            </button>
-          </div>
-        ))}
-      </div>
+    <div>
+      {componentRefs.map((componentRef) => (
+        <div key={componentRef.digest}>
+          <Button
+            variant="link"
+            onClick={() => {
+              setComponentSpec?.(componentRef.spec);
+            }}
+          >
+            {componentRef.spec.name ?? "<Pipeline>"}
+          </Button>
+        </div>
+      ))}
     </div>
   );
 };

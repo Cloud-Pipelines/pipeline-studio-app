@@ -11,7 +11,6 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./styles.css";
-import "./index.css";
 import reportWebVitals from "./reportWebVitals.ts";
 
 import App from "./App.tsx";
