@@ -13,31 +13,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState, useRef } from "react";
 import { useStore } from "@xyflow/react";
 import type { DownloadDataType } from "../cacheUtils";
 import { downloadDataWithCache } from "../cacheUtils";
 import type { ComponentSpec } from "../componentSpec";
-import { isGraphImplementation } from "../componentSpec";
 import {
-  loadComponentAsRefFromText,
-  getAllComponentFilesFromList,
   type ComponentFileEntry,
-  addComponentToListByText,
   componentSpecToYaml,
   writeComponentToFileListFromText,
   getComponentFileFromList,
-  deleteComponentFileFromList,
 } from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
 import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
-import SamplePipelineLibrary from "./SamplePipelineLibrary";
 import { preloadComponentReferences } from "../componentStore";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-const USER_PIPELINES_LIST_NAME = "user_pipelines";
+import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import { useNavigate } from "@tanstack/react-router";
 
 interface PipelineLibraryProps {
   componentSpec?: ComponentSpec;
@@ -45,15 +39,6 @@ interface PipelineLibraryProps {
   samplePipelineLibraryUrl?: string;
   downloadData: DownloadDataType;
 }
-
-const removeSuffixes = (s: string, suffixes: string[]) => {
-  for (const suffix of suffixes) {
-    if (s.endsWith(suffix)) {
-      s = s.substring(0, s.length - suffix.length);
-    }
-  }
-  return s;
-};
 
 interface SavePipelineAsDialogProps {
   isOpen: boolean;
@@ -68,6 +53,7 @@ const SavePipelineAsDialog = ({
   onCancel,
   initialName,
 }: SavePipelineAsDialogProps) => {
+  const navigate = useNavigate();
   const [fileName, setFileName] = useState<string | undefined>(initialName);
   const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false);
 
@@ -78,6 +64,7 @@ const SavePipelineAsDialog = ({
     } catch {
       setIsOverwriteDialogOpen(true);
     }
+    navigate({ to: `${EDITOR_PATH}/${name.replace(" ", "_")}` });
   };
 
   const handleOverwriteOk = () => {
@@ -85,6 +72,7 @@ const SavePipelineAsDialog = ({
       setIsOverwriteDialogOpen(false);
       onPipelineSave(fileName, true);
     }
+    onCancel();
   };
 
   const handleOverwriteCancel = () => {
@@ -200,24 +188,11 @@ const SaveAsDialog = ({
 const PipelineLibrary = ({
   componentSpec,
   setComponentSpec,
-  samplePipelineLibraryUrl,
   downloadData = downloadDataWithCache,
 }: PipelineLibraryProps) => {
-  // const [errorMessage, setErrorMessage] = useState("");
-  const [componentFiles, setComponentFiles] = useState(
-    new Map<string, ComponentFileEntry>(),
-  );
   const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
   const nodes = useStore((store) => store.nodes);
-
-  const refreshPipelines = useCallback(() => {
-    getAllComponentFilesFromList(USER_PIPELINES_LIST_NAME).then(
-      setComponentFiles,
-    );
-  }, [setComponentFiles]);
-
-  useEffect(refreshPipelines, [refreshPipelines]);
 
   const openPipelineFile = useCallback(
     async (fileEntry: ComponentFileEntry) => {
@@ -231,62 +206,6 @@ const PipelineLibrary = ({
       setPipelineFile(fileEntry);
     },
     [setComponentSpec, setPipelineFile, downloadData],
-  );
-
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      acceptedFiles.forEach((file) => {
-        const reader = new FileReader();
-        reader.onabort = () => console.log("file reading was aborted");
-        reader.onerror = () => console.log("file reading has failed");
-        reader.onload = async () => {
-          const binaryStr = reader.result;
-          if (binaryStr === null || binaryStr === undefined) {
-            console.error(`Dropped file reader result was ${binaryStr}`);
-            return;
-          }
-          const fileName =
-            removeSuffixes(file.name, [
-              ".pipeline.component.yaml",
-              ".component.yaml",
-              ".pipeline.yaml",
-              ".yaml",
-            ]) || "Pipeline";
-          try {
-            const componentRef1 = await loadComponentAsRefFromText(binaryStr);
-            if (!isGraphImplementation(componentRef1.spec.implementation)) {
-              console.error("Dropped component is not a graph component");
-              return;
-            }
-            // Caching the child components
-            await preloadComponentReferences(componentRef1.spec, downloadData);
-            // TODO: Do not load the component twice
-            const componentRefPlusData = await addComponentToListByText(
-              USER_PIPELINES_LIST_NAME,
-              binaryStr,
-              fileName,
-            );
-            const componentRef = componentRefPlusData.componentRef;
-            console.debug("storeComponentText succeeded", componentRef);
-            (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {
-              result: "succeeded",
-            });
-            // setErrorMessage("");
-            refreshPipelines();
-          } catch (err) {
-            // setErrorMessage(
-            //   `Error parsing the dropped file as component: ${err.toString()}.`
-            // );
-            console.error("Error parsing the dropped file as component", err);
-            (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {
-              result: "failed",
-            });
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      });
-    },
-    [refreshPipelines, downloadData],
   );
 
   const openSaveAsDialog = useCallback(() => {
@@ -326,34 +245,11 @@ const PipelineLibrary = ({
       );
       await openPipelineFile(fileEntry);
       closeSaveAsDialog();
-      refreshPipelines();
     },
-    [
-      componentSpec,
-      closeSaveAsDialog,
-      nodes,
-      openPipelineFile,
-      refreshPipelines,
-    ],
+    [componentSpec, closeSaveAsDialog, nodes, openPipelineFile],
   );
 
-  const handleDelete = async (fileName: string) => {
-    if (fileName) {
-      await deleteComponentFileFromList(USER_PIPELINES_LIST_NAME, fileName);
-      refreshPipelines();
-    }
-  };
-
-  const openSamplePipeline = useCallback(
-    (pipelineSpec: ComponentSpec) => {
-      //Reset current file
-      setPipelineFile(undefined);
-      setComponentSpec?.(pipelineSpec);
-    },
-    [setComponentSpec],
-  );
-
-  const fileInput = useRef<HTMLInputElement>(null);
+  // const fileInput = useRef<HTMLInputElement>(null);
   const componentLink = useRef<HTMLAnchorElement>(null);
 
   return (
@@ -389,16 +285,6 @@ const PipelineLibrary = ({
             onPipelineSave={handlePipelineSave}
           />
         )}
-        <Input
-          ref={fileInput}
-          type="file"
-          accept=".yaml"
-          onChange={(e) => onDrop(Array.from(e.target.files ?? []))}
-          style={{ display: "none" }}
-        />
-        <Button color="primary" onClick={() => fileInput.current?.click()}>
-          + Import
-        </Button>
         <Button
           color="primary"
           onClick={() => {
@@ -420,43 +306,6 @@ const PipelineLibrary = ({
           />
         )}
       </div>
-      <div>
-        {Array.from(componentFiles.entries()).map(([fileName, fileEntry]) => (
-          <div key={fileName}>
-            <Button
-              variant="link"
-              onClick={() => openPipelineFile(fileEntry)}
-              className={
-                fileName === pipelineFile?.name ? "font-bold" : undefined
-              }
-            >
-              {fileName}
-            </Button>
-            <Button onClick={() => handleDelete(fileName)}>Delete</Button>
-          </div>
-        ))}
-      </div>
-      <details
-        open
-        style={{
-          border: "1px solid #aaa",
-          borderRadius: "4px",
-          padding: "4px",
-        }}
-      >
-        <summary>
-          <strong>Sample pipelines</strong>
-        </summary>
-        {samplePipelineLibraryUrl === undefined ? (
-          "Sample pipeline library URL is undefined"
-        ) : (
-          <SamplePipelineLibrary
-            setComponentSpec={openSamplePipeline}
-            pipelineLibraryUrl={samplePipelineLibraryUrl}
-            downloadData={downloadData}
-          />
-        )}
-      </details>
     </div>
   );
 };
