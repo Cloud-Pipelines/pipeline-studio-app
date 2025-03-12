@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import PipelineCard from "@/components/PipelineCard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
-
-const USER_PIPELINES_LIST_NAME = "user_pipelines";
+import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 const Home = () => {
   const [appSettings] = useState(getAppSettings());
@@ -65,7 +64,7 @@ const Home = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 flex flex-col gap-4">
+    <div className="container mx-auto w-3/4 p-4 flex flex-col gap-4">
       <Alert variant="destructive">
         <Terminal className="h-4 w-4" />
         <AlertTitle>Heads up!</AlertTitle>
@@ -90,6 +89,7 @@ const Home = () => {
                 key={fileEntry.componentRef.digest}
                 componentRef={fileEntry.componentRef}
                 name={name}
+                canDelete
               />
             ))}
           </div>
@@ -102,7 +102,11 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pipelineLibrary.components?.map(
               (component: any, index: number) => (
-                <PipelineCard key={index} url={component.url} />
+                <PipelineCard
+                  key={index}
+                  url={component.url}
+                  name={component.name.replace(" ", "_")}
+                />
               ),
             )}
           </div>

@@ -16,6 +16,7 @@ import {
   type ComponentReferenceWithSpec,
   preloadComponentReferences,
   loadComponentAsRefFromText,
+  deleteComponentFileFromList,
 } from "@/componentStore";
 import { isGraphImplementation } from "@/componentSpec";
 import {
@@ -29,16 +30,27 @@ import {
   ChevronRight,
   CircleAlert,
   CircleCheck,
+  PencilLine,
   RefreshCcw,
+  Trash2,
 } from "lucide-react";
+import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 interface PipelineCardProps {
   url?: string;
   componentRef?: ComponentReferenceWithSpec;
   name?: string;
+  canDelete?: boolean;
 }
 
-const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
+const PipelineCard = ({
+  url,
+  componentRef,
+  name,
+  canDelete = false,
+}: PipelineCardProps) => {
+  const [isDeleted, setIsDeleted] = useState(false);
+  const [selectedRun, setSelectedRun] = useState<string | null>(null);
   const [cardData, setCardData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,8 +101,7 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
         );
         savePipelineSpecToSessionStorage(loadedComponentRef.spec);
       }
-
-      navigate({ to: "/pipeline-editor" });
+      navigate({ to: `${EDITOR_PATH}/${name?.replace(" ", "_")}` });
     } catch (error) {
       console.error("Error preparing pipeline for editor:", error);
       setError(
@@ -100,6 +111,10 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
       setIsLoading(false);
     }
   };
+
+  if (isDeleted) {
+    return null;
+  }
 
   const prepareComponentRefForEditor = async (
     ref: ComponentReferenceWithSpec,
@@ -186,6 +201,17 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
     ? Object.keys(pipelineSpec.implementation.graph.tasks).length
     : 0;
 
+  const handleRunSelection = (value: string) => {
+    setSelectedRun(value);
+  };
+
+  const handleDelete = async () => {
+    if (name) {
+      await deleteComponentFileFromList(USER_PIPELINES_LIST_NAME, name);
+      setIsDeleted(true);
+    }
+  };
+
   return (
     <Card className="min-h-[150px]">
       <CardHeader>
@@ -200,10 +226,12 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
         </p>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button onClick={handleOpenInEditor}>Edit Pipeline</Button>
-        <div className="flex items-center gap-0">
-          <Select>
-            <SelectTrigger className="w-[180px] rounded-r-none border-r-0">
+        <Button onClick={handleOpenInEditor}>
+          <PencilLine className="w-4 h-4" />
+        </Button>
+        <div className="flex items-center gap-0 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0 focus-within:ring-offset-background rounded-md">
+          <Select onValueChange={handleRunSelection}>
+            <SelectTrigger className="w-[180px] max-w-[180px] rounded-r-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none">
               <SelectValue placeholder="Runs" />
             </SelectTrigger>
             <SelectContent>
@@ -222,10 +250,20 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
               </SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" className="rounded-l-none">
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-l-none border-l-0 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+            disabled={!selectedRun}
+          >
             <ChevronRight />
           </Button>
         </div>
+        {canDelete && (
+          <Button variant="outline" size="icon" onClick={handleDelete}>
+            <Trash2 />
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

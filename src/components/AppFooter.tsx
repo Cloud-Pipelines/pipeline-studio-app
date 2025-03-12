@@ -6,12 +6,18 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import {
+  ABOUT_URL,
+  GIVE_FEEDBACK_URL,
+  PRIVACY_POLICY_URL,
+} from "@/utils/constants";
+
 function AppFooter() {
   return (
     <footer className="footer w-full h-[30px] p-1 text-center bg-gray-50">
       <div className="inline-block">
         <a
-          href="https://cloud-pipelines.net/"
+          href={ABOUT_URL}
           className="mx-1.5 text-blue-600 hover:text-blue-800 hover:underline"
           target="_blank"
           rel="noopener noreferrer"
@@ -19,7 +25,7 @@ function AppFooter() {
           About
         </a>
         <a
-          href="https://github.com/Cloud-Pipelines/pipeline-editor/issues"
+          href={GIVE_FEEDBACK_URL}
           className="mx-1.5 text-blue-600 hover:text-blue-800 hover:underline"
           target="_blank"
           rel="noopener noreferrer"
@@ -27,7 +33,7 @@ function AppFooter() {
           Give feedback
         </a>
         <a
-          href="https://cloud-pipelines.net/privacy_policy"
+          href={PRIVACY_POLICY_URL}
           className="mx-1.5 text-blue-600 hover:text-blue-800 hover:underline"
           target="_blank"
           rel="noopener noreferrer"

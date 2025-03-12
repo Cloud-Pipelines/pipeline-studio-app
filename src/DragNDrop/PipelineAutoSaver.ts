@@ -76,3 +76,9 @@ export const PipelineAutoSaver = ({
   }
   return null;
 };
+
+export const replaceLocalStorageWithExperimentYaml = (
+  experimentYaml: string,
+) => {
+  window.sessionStorage.setItem(SAVED_COMPONENT_SPEC_KEY, experimentYaml);
+};

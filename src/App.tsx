@@ -1,4 +1,4 @@
-import AppFooter from "./AppFooter";
+import AppFooter from "./components/AppFooter";
 
 function App({ children }: { children: React.ReactNode }) {
   return (
