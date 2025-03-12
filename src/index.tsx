@@ -13,7 +13,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./styles.css";
 import reportWebVitals from "./reportWebVitals.ts";
 
-import App from "./App.tsx";
+import AppFooter from "./AppFooter.tsx";
+import Editor from "./routes/Editor.tsx";
+
+import "@xyflow/react/dist/style.css";
+import Home from "./routes/Home.tsx";
 
 const queryClient = new QueryClient();
 
@@ -23,22 +27,31 @@ scan({
 
 const rootRoute = createRootRoute({
   component: () => (
-    <>
-      <Outlet />
+    <div className="App grid grid-rows-[1fr_auto] min-h-screen w-full">
+      <div>
+        <Outlet />
+      </div>
+      <AppFooter />
       {import.meta.env.VITE_ENABLE_ROUTER_DEVTOOLS === "true" && (
         <TanStackRouterDevtools />
       )}
-    </>
+    </div>
   ),
 });
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/pipeline-editor",
-  component: App,
+  path: "/",
+  component: Home,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute]);
+const editorRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/pipeline-editor",
+  component: Editor,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, editorRoute]);
 
 const router = createRouter({
   routeTree,
