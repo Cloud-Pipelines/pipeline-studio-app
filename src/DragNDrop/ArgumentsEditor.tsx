@@ -116,7 +116,6 @@ const ArgumentsEditor = ({
   componentArguments,
   setComponentArguments,
 }: ArgumentsEditorProps) => {
-
   const handleInputChange = (input: InputSpec, value: string) => {
     setComponentArguments({
       ...componentArguments,
