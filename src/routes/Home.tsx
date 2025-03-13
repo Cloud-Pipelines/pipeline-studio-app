@@ -88,7 +88,7 @@ const Home = () => {
               <PipelineCard
                 key={fileEntry.componentRef.digest}
                 componentRef={fileEntry.componentRef}
-                name={name}
+                name={name.replace(/_/g, " ")}
                 canDelete
               />
             ))}
@@ -105,7 +105,7 @@ const Home = () => {
                 <PipelineCard
                   key={index}
                   url={component.url}
-                  name={component.name.replace(" ", "_")}
+                  name={component.name.replace(/_/g, " ")}
                 />
               ),
             )}

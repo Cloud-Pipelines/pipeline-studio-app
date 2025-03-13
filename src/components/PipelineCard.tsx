@@ -10,15 +10,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
-import { savePipelineSpecToSessionStorage } from "@/DragNDrop/PipelineAutoSaver";
 import {
-  fullyLoadComponentRefFromUrl,
   type ComponentReferenceWithSpec,
-  preloadComponentReferences,
-  loadComponentAsRefFromText,
   deleteComponentFileFromList,
 } from "@/componentStore";
-import { isGraphImplementation } from "@/componentSpec";
 import {
   Select,
   SelectContent,
@@ -34,7 +29,7 @@ import {
   RefreshCcw,
   Trash2,
 } from "lucide-react";
-import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import { APP_ROUTES, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 interface PipelineCardProps {
   url?: string;
@@ -89,79 +84,15 @@ const PipelineCard = ({
   }, [url, componentRef, name]);
 
   const handleOpenInEditor = async () => {
-    try {
-      setIsLoading(true);
-
-      if (componentRef) {
-        await prepareComponentRefForEditor(componentRef);
-      } else if (url) {
-        const loadedComponentRef = await fullyLoadComponentRefFromUrl(
-          url,
-          downloadDataWithCache,
-        );
-        savePipelineSpecToSessionStorage(loadedComponentRef.spec);
-      }
-      navigate({ to: `${EDITOR_PATH}/${name?.replace(" ", "_")}` });
-    } catch (error) {
-      console.error("Error preparing pipeline for editor:", error);
-      setError(
-        `Failed to open pipeline in editor: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    navigate({
+      to: APP_ROUTES.PIPELINE_EDITOR,
+      params: { name },
+    });
   };
 
   if (isDeleted) {
     return null;
   }
-
-  const prepareComponentRefForEditor = async (
-    ref: ComponentReferenceWithSpec,
-  ) => {
-    const safeSpec = structuredClone(ref.spec);
-
-    if (
-      safeSpec.implementation &&
-      isGraphImplementation(safeSpec.implementation)
-    ) {
-      const graphImpl = structuredClone(safeSpec.implementation.graph);
-
-      if (graphImpl.tasks) {
-        await loadInlineComponentRefs(graphImpl.tasks);
-      }
-
-      safeSpec.implementation.graph = graphImpl;
-    }
-
-    await preloadComponentReferences(safeSpec, downloadDataWithCache);
-    savePipelineSpecToSessionStorage(safeSpec);
-  };
-
-  const loadInlineComponentRefs = async (tasks: Record<string, any>) => {
-    for (const taskId in tasks) {
-      const task = tasks[taskId];
-
-      if (
-        task.componentRef &&
-        task.componentRef.text &&
-        !task.componentRef.text.startsWith("http") &&
-        !task.componentRef.spec
-      ) {
-        try {
-          const loadedRef = await loadComponentAsRefFromText(
-            task.componentRef.text,
-          );
-          task.componentRef.spec = loadedRef.spec;
-        } catch (err) {
-          console.warn(
-            `Could not parse component text for task ${taskId}`,
-            err,
-          );
-        }
-      }
-    }
-  };
 
   if (isLoading) {
     return (
@@ -197,6 +128,7 @@ const PipelineCard = ({
 
   const pipelineSpec = componentRef?.spec || cardData;
   const displayName = name || pipelineSpec?.name || "Unnamed Pipeline";
+
   const taskCount = pipelineSpec?.implementation?.graph?.tasks
     ? Object.keys(pipelineSpec.implementation.graph.tasks).length
     : 0;

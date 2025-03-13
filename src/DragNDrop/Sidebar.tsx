@@ -38,6 +38,8 @@ interface SidebarProps {
   setComponentSpec?: (componentSpec: ComponentSpec) => void;
   appSettings: AppSettings;
   downloadData: DownloadDataType;
+  isDirty: boolean;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 const Sidebar = ({
@@ -45,6 +47,8 @@ const Sidebar = ({
   setComponentSpec,
   appSettings,
   downloadData = downloadDataWithCache,
+  isDirty,
+  setIsDirty,
 }: SidebarProps) => {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
@@ -67,25 +71,15 @@ const Sidebar = ({
 
   return (
     <aside className="nodeList">
-      <details
-        style={{
-          border: "1px solid #aaa",
-          borderRadius: "4px",
-          padding: "4px",
-        }}
-      >
-        <summary
-          style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}
-        >
-          Save/Load pipeline
-        </summary>
-        <PipelineLibrary
-          componentSpec={componentSpec}
-          setComponentSpec={setComponentSpec}
-          samplePipelineLibraryUrl={appSettings.pipelineLibraryUrl}
-          downloadData={downloadData}
-        />
-      </details>
+      Save/Load pipeline
+      <PipelineLibrary
+        componentSpec={componentSpec}
+        setComponentSpec={setComponentSpec}
+        samplePipelineLibraryUrl={appSettings.pipelineLibraryUrl}
+        downloadData={downloadData}
+        isDirty={isDirty}
+        setIsDirty={setIsDirty}
+      />
       <details
         style={{
           border: "1px solid #aaa",

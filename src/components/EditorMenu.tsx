@@ -4,7 +4,7 @@ import { useLocation } from "@tanstack/react-router";
 const EditorMenu = () => {
   const location = useLocation();
   const pathname = location.pathname;
-  const experimentName = pathname.split("/").pop();
+  const experimentName = decodeURIComponent(pathname.split("/").pop() || "");
 
   if (!pathname.includes(EDITOR_PATH)) {
     return null;

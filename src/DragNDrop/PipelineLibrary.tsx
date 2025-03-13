@@ -30,7 +30,7 @@ import { preloadComponentReferences } from "../componentStore";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import { APP_ROUTES, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { useNavigate } from "@tanstack/react-router";
 
 interface PipelineLibraryProps {
@@ -38,6 +38,8 @@ interface PipelineLibraryProps {
   setComponentSpec?: (componentSpec: ComponentSpec) => void;
   samplePipelineLibraryUrl?: string;
   downloadData: DownloadDataType;
+  isDirty: boolean;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 interface SavePipelineAsDialogProps {
@@ -64,7 +66,11 @@ const SavePipelineAsDialog = ({
     } catch {
       setIsOverwriteDialogOpen(true);
     }
-    navigate({ to: `${EDITOR_PATH}/${name.replace(" ", "_")}` });
+
+    navigate({
+      to: APP_ROUTES.PIPELINE_EDITOR,
+      params: { name },
+    });
   };
 
   const handleOverwriteOk = () => {
@@ -189,6 +195,8 @@ const PipelineLibrary = ({
   componentSpec,
   setComponentSpec,
   downloadData = downloadDataWithCache,
+  isDirty,
+  setIsDirty,
 }: PipelineLibraryProps) => {
   const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
@@ -214,7 +222,8 @@ const PipelineLibrary = ({
 
   const closeSaveAsDialog = useCallback(() => {
     setSaveAsDialogIsOpen(false);
-  }, [setSaveAsDialogIsOpen]);
+    setIsDirty(false);
+  }, [setSaveAsDialogIsOpen, setIsDirty]);
 
   const handlePipelineSave = useCallback(
     async (name: string, overwrite: boolean = false) => {
@@ -244,55 +253,47 @@ const PipelineLibrary = ({
         componentText,
       );
       await openPipelineFile(fileEntry);
+
       closeSaveAsDialog();
     },
     [componentSpec, closeSaveAsDialog, nodes, openPipelineFile],
   );
 
-  // const fileInput = useRef<HTMLInputElement>(null);
   const componentLink = useRef<HTMLAnchorElement>(null);
 
   return (
-    <div
-      style={{
-        //border: "1px solid black",
-        overflow: "auto",
-        whiteSpace: "nowrap",
-      }}
-    >
-      <div style={{ margin: "5px" }}>
-        <Button
-          color="primary"
-          onClick={() => {
-            if (pipelineFile) {
-              handlePipelineSave(pipelineFile?.name, true);
-            } else {
-              openSaveAsDialog();
-            }
-          }}
-        >
-          Save
-        </Button>
-        <Button color="primary" onClick={openSaveAsDialog}>
-          Save as
-        </Button>
-        <br />
-        {componentSpec && saveAsDialogIsOpen && (
-          <SavePipelineAsDialog
-            initialName={componentSpec.name}
-            isOpen={saveAsDialogIsOpen}
-            onCancel={closeSaveAsDialog}
-            onPipelineSave={handlePipelineSave}
-          />
-        )}
-        <Button
-          color="primary"
-          onClick={() => {
-            componentLink.current?.click();
-          }}
-        >
-          Export
-        </Button>
+    <div className="flex flex-row gap-2">
+      <Button
+        color="primary"
+        disabled={!isDirty}
+        onClick={() => {
+          if (pipelineFile) {
+            handlePipelineSave(pipelineFile?.name, true);
+          } else {
+            openSaveAsDialog();
+          }
+        }}
+      >
+        Save
+      </Button>
+      <Button color="primary" onClick={openSaveAsDialog}>
+        Save as
+      </Button>
+      {componentSpec && saveAsDialogIsOpen && (
+        <SavePipelineAsDialog
+          initialName={componentSpec.name}
+          isOpen={saveAsDialogIsOpen}
+          onCancel={closeSaveAsDialog}
+          onPipelineSave={handlePipelineSave}
+        />
+      )}
+      <Button
+        color="primary"
+        onClick={() => {
+          componentLink.current?.click();
+        }}
+      >
+        Export
         {componentSpec && (
           <GraphComponentLink
             linkRef={componentLink}
@@ -305,7 +306,7 @@ const PipelineLibrary = ({
             style={{ textDecoration: "none" }}
           />
         )}
-      </div>
+      </Button>
     </div>
   );
 };

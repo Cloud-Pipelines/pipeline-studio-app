@@ -17,22 +17,22 @@ import { DndContext } from "@dnd-kit/core";
 
 import { downloadDataWithCache } from "../cacheUtils";
 import type { ComponentSpec } from "../componentSpec";
-import GraphComponentSpecFlow, {
-  EMPTY_GRAPH_COMPONENT_SPEC,
-} from "./GraphComponentSpecFlow";
+import GraphComponentSpecFlow from "./GraphComponentSpecFlow";
 import Sidebar from "./Sidebar";
 import { getAppSettings } from "../appSettings";
-import { fullyLoadComponentRefFromUrl } from "../componentStore";
-import {
-  loadPipelineSpecFromSessionStorage,
-  PipelineAutoSaver,
-} from "./PipelineAutoSaver";
+import { type ComponentReferenceWithSpec } from "../componentStore";
+import { PipelineAutoSaver } from "./PipelineAutoSaver";
 
 import "./dnd.css";
+import loadPipelineByName from "@/utils/loadPipelineByName";
+import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
+import { useLocation } from "@tanstack/react-router";
 
 const GRID_SIZE = 10;
 
 const DnDFlow = () => {
+  const location = useLocation();
+  const [isDirty, setIsDirty] = useState(false);
   const [componentSpec, setComponentSpec] = useState<
     ComponentSpec | undefined
   >();
@@ -41,32 +41,32 @@ const DnDFlow = () => {
   const downloadData = downloadDataWithCache;
 
   useEffect(() => {
-    (async () => {
-      const restoredComponentSpec = loadPipelineSpecFromSessionStorage();
-      if (restoredComponentSpec !== undefined) {
-        setComponentSpec(restoredComponentSpec);
+    const loadPipeline = async () => {
+      const experimentName = location.pathname.split("/").pop();
+      if (!experimentName) {
         return;
       }
-      const defaultPipelineUrl = appSettings.defaultPipelineUrl;
-      try {
-        const defaultPipelineRef = await fullyLoadComponentRefFromUrl(
-          defaultPipelineUrl,
-          downloadData,
-        );
-        setComponentSpec(defaultPipelineRef.spec);
-      } catch (err) {
-        console.error(
-          `Failed to load the default pipeline from ${defaultPipelineUrl}`,
-        );
-        console.error(err);
-        setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
-      }
-    })();
-  }, [appSettings.defaultPipelineUrl, downloadData]);
+
+      const result = await loadPipelineByName(experimentName);
+
+      const preparedComponentRef = await prepareComponentRefForEditor(
+        result.experiment?.componentRef as ComponentReferenceWithSpec,
+      );
+
+      setComponentSpec(preparedComponentRef);
+    };
+    loadPipeline();
+  }, []);
 
   if (componentSpec === undefined) {
     return <></>;
   }
+
+  const handleSetComponentSpec = (componentSpec: ComponentSpec) => {
+    console.log("componentSpec", componentSpec);
+    setComponentSpec(componentSpec);
+    setIsDirty(true);
+  };
 
   return (
     <div className="dndflow">
@@ -75,7 +75,7 @@ const DnDFlow = () => {
           <div className="reactflow-wrapper">
             <GraphComponentSpecFlow
               componentSpec={componentSpec}
-              setComponentSpec={setComponentSpec}
+              setComponentSpec={handleSetComponentSpec}
               snapToGrid={true}
               snapGrid={[GRID_SIZE, GRID_SIZE]}
             >
@@ -86,7 +86,9 @@ const DnDFlow = () => {
           </div>
           <Sidebar
             componentSpec={componentSpec}
-            setComponentSpec={setComponentSpec}
+            setComponentSpec={handleSetComponentSpec}
+            isDirty={isDirty}
+            setIsDirty={setIsDirty}
             appSettings={appSettings}
             downloadData={downloadData}
           />
