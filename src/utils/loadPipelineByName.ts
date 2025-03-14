@@ -17,7 +17,6 @@ interface PipelineLibrary {
 
 const loadPipelineByName = async (name: string) => {
   const decodedName = decodeURIComponent(name);
-  console.log("decodedName", decodedName);
   const appSettings = getAppSettings();
 
   try {

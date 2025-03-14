@@ -142,6 +142,7 @@ const RunDetails = () => {
   }
 
   const newComponentSpec = componentSpecWithStatus();
+
   if (!newComponentSpec) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -151,18 +152,10 @@ const RunDetails = () => {
   }
 
   return (
-    <div className="h-full w-full">
-      <div className="p-4 bg-white border-b">
-        <h1 className="text-2xl font-bold">
-          {detailsData?.task_spec?.componentRef?.spec?.name || "Run Details"}
-        </h1>
-        <p className="text-gray-500">Run ID: {id}</p>
-      </div>
-
-      <div className="h-[calc(100%-80px)]">
+    <div className="dndflow">
         <DndContext>
           <ReactFlowProvider>
-            <div className="h-full w-full">
+            <div className="reactflow-wrapper h-full w-full">
               <GraphComponentSpecFlow
                 componentSpec={newComponentSpec}
                 setComponentSpec={() => {}}
@@ -177,7 +170,6 @@ const RunDetails = () => {
           </ReactFlowProvider>
         </DndContext>
       </div>
-    </div>
   );
 };
 

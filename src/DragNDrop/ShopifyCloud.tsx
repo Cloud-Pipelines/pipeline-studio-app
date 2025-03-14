@@ -43,17 +43,14 @@ const ShopifyCloudSubmitter = ({
     setErrorMessage(null);
 
     try {
-      // Create the payload from the component spec
       const payload = {
         name: componentSpec.name || "Untitled Pipeline",
         pipeline_spec: {
           component_spec: componentSpec,
         },
       };
-
-      // Make the POST request to create a new pipeline run
       const response = await mockFetch(
-        "https://oasis.shopify.io/api/pipeline_runs/",
+        `${import.meta.env.VITE_BACKEND_API_URL}/pipeline_runs/`,
         {
           method: "POST",
           headers: {
@@ -91,7 +88,9 @@ const ShopifyCloudSubmitter = ({
 
       // Navigate to the runs page after a short delay
       setTimeout(() => {
-        navigate({ to: APP_ROUTES.RUNS });
+        navigate({
+          to: `${APP_ROUTES.RUNS}/${data.id}`,
+        });
       }, 1500);
     } catch (error) {
       console.error("Error submitting pipeline:", error);
