@@ -29,7 +29,17 @@ import {
   RefreshCcw,
   Trash2,
 } from "lucide-react";
-import { APP_ROUTES, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import localForage from "localforage";
+
+interface PipelineRun {
+  id: number;
+  root_execution_id: number;
+  created_at: string;
+  pipeline_name: string;
+  pipeline_digest?: string;
+  status?: string;
+}
 
 interface PipelineCardProps {
   url?: string;
@@ -49,6 +59,8 @@ const PipelineCard = ({
   const [cardData, setCardData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pipelineRuns, setPipelineRuns] = useState<PipelineRun[]>([]);
+  const [isLoadingRuns, setIsLoadingRuns] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -83,11 +95,84 @@ const PipelineCard = ({
     }
   }, [url, componentRef, name]);
 
+  useEffect(() => {
+    const fetchPipelineRuns = async () => {
+      if (!name) return;
+
+      setIsLoadingRuns(true);
+      try {
+        const pipelineRunsDb = localForage.createInstance({
+          name: "components",
+          storeName: "pipeline_runs",
+        });
+
+        const runs: PipelineRun[] = [];
+
+        await pipelineRunsDb.iterate<PipelineRun, void>((run) => {
+          if (run.pipeline_name === name) {
+            runs.push(run);
+          }
+        });
+        runs.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+
+        setPipelineRuns(runs);
+      } catch (error) {
+        console.error("Error fetching pipeline runs:", error);
+      } finally {
+        setIsLoadingRuns(false);
+      }
+    };
+
+    fetchPipelineRuns();
+  }, [name]);
+
   const handleOpenInEditor = async () => {
     navigate({
-      to: APP_ROUTES.PIPELINE_EDITOR,
-      params: { name },
+      to: `${EDITOR_PATH}/${name}`,
     });
+  };
+
+  const handleRunSelection = (value: string) => {
+    setSelectedRun(value);
+  };
+
+  const handleDelete = async () => {
+    if (name) {
+      await deleteComponentFileFromList(USER_PIPELINES_LIST_NAME, name);
+      setIsDeleted(true);
+    }
+  };
+
+  const getRunStatusIcon = (run: PipelineRun) => {
+    const statuses = ["SUCCEEDED", "FAILED", "RUNNING"];
+    const status = run.status || statuses[run.id % 3]; // Mock status based on ID
+
+    switch (status) {
+      case "SUCCEEDED":
+        return <CircleCheck className="w-4 h-4" color="green" />;
+      case "FAILED":
+        return <CircleAlert className="w-4 h-4" color="red" />;
+      case "RUNNING":
+        return (
+          <RefreshCcw
+            className="w-4 h-4 animate-spin [animation-duration:3s]"
+            color="blue"
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  const handleViewRun = () => {
+    if (selectedRun) {
+      navigate({
+        to: `/runs/${selectedRun}`,
+      });
+    }
   };
 
   if (isDeleted) {
@@ -133,17 +218,6 @@ const PipelineCard = ({
     ? Object.keys(pipelineSpec.implementation.graph.tasks).length
     : 0;
 
-  const handleRunSelection = (value: string) => {
-    setSelectedRun(value);
-  };
-
-  const handleDelete = async () => {
-    if (name) {
-      await deleteComponentFileFromList(USER_PIPELINES_LIST_NAME, name);
-      setIsDeleted(true);
-    }
-  };
-
   return (
     <Card className="min-h-[150px]">
       <CardHeader>
@@ -164,22 +238,22 @@ const PipelineCard = ({
         <div className="flex items-center gap-0 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0 focus-within:ring-offset-background rounded-md">
           <Select onValueChange={handleRunSelection}>
             <SelectTrigger className="w-[180px] max-w-[180px] rounded-r-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none">
-              <SelectValue placeholder="Runs" />
+              <SelectValue
+                placeholder={isLoadingRuns ? "Loading..." : "Runs"}
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1234567890">
-                ID: 1234567890 <CircleAlert className="w-4 h-4" color="red" />
-              </SelectItem>
-              <SelectItem value="0987654321">
-                ID: 0987654321 <CircleCheck className="w-4 h-4" color="green" />
-              </SelectItem>
-              <SelectItem value="5647382910">
-                ID: 5647382910{" "}
-                <RefreshCcw
-                  className="w-4 h-4 animate-spin [animation-duration:3s]"
-                  color="blue"
-                />
-              </SelectItem>
+              {pipelineRuns.length === 0 ? (
+                <SelectItem value="no-runs" disabled>
+                  No runs available
+                </SelectItem>
+              ) : (
+                pipelineRuns.map((run) => (
+                  <SelectItem key={run.id} value={run.id.toString()}>
+                    ID: {run.id} {getRunStatusIcon(run)}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
           <Button
@@ -187,6 +261,7 @@ const PipelineCard = ({
             size="icon"
             className="rounded-l-none border-l-0 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
             disabled={!selectedRun}
+            onClick={handleViewRun}
           >
             <ChevronRight />
           </Button>

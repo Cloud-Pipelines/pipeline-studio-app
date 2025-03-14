@@ -49,6 +49,8 @@ const DnDFlow = () => {
 
       const result = await loadPipelineByName(experimentName);
 
+      console.log("result", result);
+
       const preparedComponentRef = await prepareComponentRefForEditor(
         result.experiment?.componentRef as ComponentReferenceWithSpec,
       );
@@ -68,6 +70,7 @@ const DnDFlow = () => {
     setIsDirty(true);
   };
 
+  console.log(componentSpec);
   return (
     <div className="dndflow">
       <DndContext>

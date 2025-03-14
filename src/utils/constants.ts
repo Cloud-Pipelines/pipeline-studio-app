@@ -7,7 +7,8 @@ export const EDITOR_PATH = "/editor";
 export const APP_ROUTES = {
   HOME: "/",
   PIPELINE_EDITOR: `${EDITOR_PATH}/$name`,
-  PIPELINE_RUN_DETAIL: "/run/:id",
+  RUN_DETAIL: "/runs/$id",
+  RUNS: "/runs",
 };
 
 export const USER_PIPELINES_LIST_NAME = "user_pipelines";
