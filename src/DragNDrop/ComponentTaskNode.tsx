@@ -17,6 +17,7 @@ import type {
 
 import { Handle, Position } from "@xyflow/react";
 import type { Node, NodeProps, HandleType } from "@xyflow/react";
+import { CircleCheck, CircleAlert, RefreshCcw, EyeIcon } from "lucide-react";
 
 import ArgumentsEditorDialog from "./ArgumentsEditorDialog";
 
@@ -145,13 +146,37 @@ export interface ComponentTaskNodeProps extends Record<string, unknown> {
   setArguments?: (args: Record<string, ArgumentType>) => void;
 }
 
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "SUCCEEDED":
+      return <CircleCheck className="w-4 h-4 text-green-500" />;
+    case "FAILED":
+    case "SYSTEM_ERROR":
+    case "INVALID":
+    case "UPSTREAM_FAILED":
+    case "UPSTREAM_FAILED_OR_SKIPPED":
+      return <CircleAlert className="w-4 h-4 text-red-500" />;
+    case "RUNNING":
+    case "STARTING":
+    case "CANCELLING":
+      return <RefreshCcw className="w-4 h-4 text-blue-500 animate-spin" />;
+    case "CONDITIONALLY_SKIPPED":
+    case "CANCELLED":
+      return <EyeIcon className="w-4 h-4 text-gray-500" />;
+    default:
+      return null;
+  }
+};
+
 const ComponentTaskNode = ({ data }: NodeProps) => {
   const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
 
   const typedData = data as ComponentTaskNodeProps;
-
   const taskSpec = typedData.taskSpec;
   const componentSpec = taskSpec.componentRef.spec;
+
+  const runStatus = taskSpec.annotations?.["status"] as string | undefined;
+
   if (componentSpec === undefined) {
     return <></>;
   }
@@ -200,8 +225,14 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
       <div onDoubleClick={handleDoubleClick} title={title}>
         {label}
         {handleComponents}
+        {runStatus && (
+          <div className="text-xs mt-1 font-medium flex items-center gap-1 justify-center">
+            {getStatusIcon(runStatus)}
+            <span>Status: {runStatus}</span>
+          </div>
+        )}
       </div>
-      {isArgumentsEditorOpen && (
+      {isArgumentsEditorOpen && !runStatus && (
         <ArgumentsEditorDialog
           taskSpec={taskSpec}
           closeEditor={closeArgumentsEditor}

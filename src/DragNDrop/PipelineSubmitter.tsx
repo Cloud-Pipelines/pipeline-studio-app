@@ -11,6 +11,7 @@ import type { ArgumentType, ComponentSpec } from "../componentSpec";
 import ArgumentsEditor from "./ArgumentsEditor";
 import GoogleCloudSubmitter from "./GoogleCloud";
 import KubeflowPipelinesSubmitter from "./KubeflowPipelinesSubmitter";
+import ShopifyCloudSubmitter from "./ShopifyCloud";
 
 interface PipelineSubmitterProps {
   componentSpec?: ComponentSpec;
@@ -59,6 +60,7 @@ const PipelineSubmitter = ({
           />
         </fieldset>
       )}
+      <ShopifyCloudSubmitter componentSpec={componentSpec} />
       <details
         style={{
           border: "1px solid #aaa",

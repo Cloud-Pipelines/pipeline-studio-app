@@ -18,8 +18,8 @@ import {
 import { replaceLocalStorageWithExperimentYaml } from "@/DragNDrop/PipelineAutoSaver";
 import { useNavigate } from "@tanstack/react-router";
 import {
-  APP_ROUTES,
   defaultPipelineYamlWithName,
+  EDITOR_PATH,
   USER_PIPELINES_LIST_NAME,
 } from "@/utils/constants";
 import { generate } from "random-words";
@@ -91,8 +91,7 @@ const NewExperimentDialog = () => {
     replaceLocalStorageWithExperimentYaml(componentText);
 
     navigate({
-      to: APP_ROUTES.PIPELINE_EDITOR,
-      params: { name },
+      to: `${EDITOR_PATH}/${name}`,
       reloadDocument: true,
     });
   };

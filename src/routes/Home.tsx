@@ -82,7 +82,7 @@ const Home = () => {
 
       {userPipelines.size > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Your Pipelines</h2>
+          <h2 className="text-xl font-semibold mb-4">Your Experiments</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from(userPipelines.entries()).map(([name, fileEntry]) => (
               <PipelineCard
@@ -98,7 +98,7 @@ const Home = () => {
 
       {pipelineLibrary && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Sample Pipelines</h2>
+          <h2 className="text-xl font-semibold mb-4">Sample Experiments</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pipelineLibrary.components?.map(
               (component: any, index: number) => (

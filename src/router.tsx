@@ -10,6 +10,8 @@ import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import AppFooter from "./components/AppFooter";
 import AppMenu from "./components/AppMenu";
 import { APP_ROUTES } from "./utils/constants";
+import Runs from "./routes/Runs";
+import RunDetails from "./routes/RunDetails";
 
 declare module "@tanstack/react-router" {
   interface Register {
@@ -34,19 +36,44 @@ const rootRoute = createRootRoute({
   ),
 });
 
-const indexRoute = createRoute({
+export const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: APP_ROUTES.HOME,
   component: Home,
 });
 
-const editorRoute = createRoute({
+export const editorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: APP_ROUTES.PIPELINE_EDITOR,
   component: Editor,
+  beforeLoad: ({ params, search }) => {
+    const name = params._splat || (search as { name?: string }).name || "";
+    return { name };
+  },
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, editorRoute]);
+export const runsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: APP_ROUTES.RUNS,
+  component: Runs,
+});
+
+export interface RunDetailParams {
+  id: string;
+}
+
+export const runDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: APP_ROUTES.RUN_DETAIL,
+  component: RunDetails,
+});
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  editorRoute,
+  runsRoute,
+  runDetailRoute,
+]);
 
 export const router = createRouter({
   routeTree,

@@ -30,7 +30,7 @@ import { preloadComponentReferences } from "../componentStore";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { APP_ROUTES, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { useNavigate } from "@tanstack/react-router";
 
 interface PipelineLibraryProps {
@@ -68,8 +68,7 @@ const SavePipelineAsDialog = ({
     }
 
     navigate({
-      to: APP_ROUTES.PIPELINE_EDITOR,
-      params: { name },
+      to: `${EDITOR_PATH}/${name}`,
     });
   };
 
