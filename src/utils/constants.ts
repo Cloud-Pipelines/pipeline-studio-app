@@ -3,13 +3,12 @@ export const GIVE_FEEDBACK_URL =
   "https://github.com/Cloud-Pipelines/pipeline-editor/issues";
 export const PRIVACY_POLICY_URL = "https://cloud-pipelines.net/privacy_policy";
 
-const basePath = import.meta.env.VITE_BASE_PATH;
-export const EDITOR_PATH = `${basePath}/editor`;
+export const EDITOR_PATH = "/editor";
 export const APP_ROUTES = {
-  HOME: `${basePath}`,
+  HOME: "/",
   PIPELINE_EDITOR: `${EDITOR_PATH}/$name`,
-  RUN_DETAIL: `${basePath}/runs/$id`,
-  RUNS: `${basePath}/runs`,
+  RUN_DETAIL: "/runs/$id",
+  RUNS: "/runs",
 };
 
 export const USER_PIPELINES_LIST_NAME = "user_pipelines";

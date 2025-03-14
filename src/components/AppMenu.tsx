@@ -16,7 +16,7 @@ const AppMenu = () => {
       <div className="flex justify-between items-center w-3/4 mx-auto">
         <div className="flex flex-row gap-2 items-center">
           <img
-            src={import.meta.env.VITE_BASE_PATH + "/beach.png"}
+            src="/beach.png"
             alt="logo"
             className="w-10 h-10 filter invert cursor-pointer"
             onClick={handleLogoClick}
