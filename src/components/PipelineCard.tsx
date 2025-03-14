@@ -29,7 +29,11 @@ import {
   RefreshCcw,
   Trash2,
 } from "lucide-react";
-import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import {
+  APP_ROUTES,
+  EDITOR_PATH,
+  USER_PIPELINES_LIST_NAME,
+} from "@/utils/constants";
 import localForage from "localforage";
 
 interface PipelineRun {
@@ -170,7 +174,7 @@ const PipelineCard = ({
   const handleViewRun = () => {
     if (selectedRun) {
       navigate({
-        to: `/runs/${selectedRun}`,
+        to: `${APP_ROUTES.RUNS}/${selectedRun}`,
       });
     }
   };
