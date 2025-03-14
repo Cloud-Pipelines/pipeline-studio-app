@@ -42,7 +42,6 @@ details > * {
 /* Node styles */
 
 .react-flow__node {
-  padding: 10px;
   border-radius: 3px;
   width: 180px;
   min-height: 40px;

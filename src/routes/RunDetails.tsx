@@ -153,23 +153,23 @@ const RunDetails = () => {
 
   return (
     <div className="dndflow">
-        <DndContext>
-          <ReactFlowProvider>
-            <div className="reactflow-wrapper h-full w-full">
-              <GraphComponentSpecFlow
-                componentSpec={newComponentSpec}
-                setComponentSpec={() => {}}
-                snapToGrid={true}
-                snapGrid={[GRID_SIZE, GRID_SIZE]}
-              >
-                <MiniMap />
-                <Controls />
-                <Background gap={GRID_SIZE} />
-              </GraphComponentSpecFlow>
-            </div>
-          </ReactFlowProvider>
-        </DndContext>
-      </div>
+      <DndContext>
+        <ReactFlowProvider>
+          <div className="reactflow-wrapper h-full w-full">
+            <GraphComponentSpecFlow
+              componentSpec={newComponentSpec}
+              setComponentSpec={() => {}}
+              snapToGrid={true}
+              snapGrid={[GRID_SIZE, GRID_SIZE]}
+            >
+              <MiniMap />
+              <Controls />
+              <Background gap={GRID_SIZE} />
+            </GraphComponentSpecFlow>
+          </div>
+        </ReactFlowProvider>
+      </DndContext>
+    </div>
   );
 };
 
