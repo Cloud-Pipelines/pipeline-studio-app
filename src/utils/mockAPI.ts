@@ -1,6 +1,6 @@
 // Mock API response data
 const mockResponses = {
-  "https://oasis.shopify.io/api/pipeline_runs/": {
+  "http://localhost:8000/api/pipeline_runs/": {
     GET: {
       pipeline_runs: [
         {
@@ -39,14 +39,14 @@ const mockResponses = {
       created_at: "2025-03-13T13:38:49.969Z",
     },
   },
-  "https://oasis.shopify.io/api/pipeline_runs/1": {
+  "http/pipeline_runs/1": {
     GET: {
       id: 1,
       root_execution_id: 1,
       created_at: "2025-03-13T10:00:53",
     },
   },
-  "https://oasis.shopify.io/api/executions/1/details": {
+  "http/executions/1/details": {
     GET: {
       id: 1,
       task_spec: {
@@ -569,7 +569,7 @@ const mockResponses = {
       },
     },
   },
-  "https://oasis.shopify.io/api/executions/2/details": {
+  "http/executions/2/details": {
     GET: {
       id: 2,
       task_spec: {
@@ -609,7 +609,7 @@ const mockResponses = {
       },
     },
   },
-  "https://oasis.shopify.io/api/executions/3/details": {
+  "http/executions/3/details": {
     GET: {
       id: 3,
       task_spec: {
@@ -629,7 +629,7 @@ const mockResponses = {
       },
     },
   },
-  "https://oasis.shopify.io/api/executions/4/details": {
+  "http/executions/4/details": {
     GET: {
       id: 4,
       task_spec: {
@@ -651,7 +651,7 @@ const mockResponses = {
       },
     },
   },
-  "https://oasis.shopify.io/api/executions/5/details": {
+  "http/executions/5/details": {
     GET: {
       id: 5,
       task_spec: {
@@ -685,7 +685,7 @@ const mockResponses = {
       },
     },
   },
-  "https://oasis.shopify.io/api/executions/1/state": {
+  "http/executions/1/state": {
     GET: {
       child_execution_status_stats: {
         "2": {
@@ -703,7 +703,7 @@ const mockResponses = {
       },
     },
   },
-  "https://oasis.shopify.io/api/executions/2/state": {
+  "http/executions/2/state": {
     GET: {
       child_execution_status_stats: {
         "8": {
@@ -712,7 +712,7 @@ const mockResponses = {
       },
     },
   },
-  "https://oasis.shopify.io/api/executions/3/state": {
+  "http/executions/3/state": {
     GET: {
       child_execution_status_stats: {
         "6": {
@@ -721,7 +721,7 @@ const mockResponses = {
       },
     },
   },
-  "https://oasis.shopify.io/api/executions/4/state": {
+  "http/executions/4/state": {
     GET: {
       child_execution_status_stats: {
         "7": {
@@ -736,7 +736,7 @@ const mockResponses = {
       },
     },
   },
-  "https://oasis.shopify.io/api/executions/5/state": {
+  "http/executions/5/state": {
     GET: {
       child_execution_status_stats: {
         "1": {

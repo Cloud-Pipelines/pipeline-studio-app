@@ -1,11 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Card, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { SelectContent } from "./ui/select";
 import {
@@ -16,7 +10,6 @@ import {
   RefreshCcw,
   CopyIcon,
 } from "lucide-react";
-import mockFetch from "@/utils/mockAPI";
 import { Button } from "./ui/button";
 import { Select } from "./ui/select";
 import {
@@ -25,17 +18,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useNavigate } from "@tanstack/react-router";
+import { APP_ROUTES } from "@/utils/constants";
 
 interface RunCardProps {
   rootExecutionId: number;
 }
 
 const RunCard = ({ rootExecutionId }: RunCardProps) => {
+  const navigate = useNavigate();
   const { data: detailsData, isLoading: detailsLoading } = useQuery({
     queryKey: ["run_details", rootExecutionId],
     queryFn: () =>
-      mockFetch(
-        `https://oasis.shopify.io/api/executions/${rootExecutionId}/details`,
+      fetch(
+        `${import.meta.env.VITE_BACKEND_API_URL}executions/${rootExecutionId}/details`,
       ).then((response) => response.json()),
   });
 
@@ -43,8 +39,8 @@ const RunCard = ({ rootExecutionId }: RunCardProps) => {
   const { data: stateData, isLoading: stateLoading } = useQuery({
     queryKey: ["run_state", rootExecutionId],
     queryFn: () =>
-      mockFetch(
-        `https://oasis.shopify.io/api/executions/${rootExecutionId}/state`,
+      fetch(
+        `${import.meta.env.VITE_BACKEND_API_URL}executions/${rootExecutionId}/state`,
       ).then((response) => response.json()),
   });
 
@@ -56,47 +52,47 @@ const RunCard = ({ rootExecutionId }: RunCardProps) => {
   const childExecutionStatusStats =
     stateData?.child_execution_status_stats || {};
 
-  const getStatusIcon = (status: string) => {
+  // Consolidated status utility function
+  const getStatusInfo = (status: string) => {
     switch (status) {
       case "SUCCEEDED":
-        return <CircleCheck className="w-4 h-4 text-green-500" />;
+        return {
+          icon: <CircleCheck className="w-4 h-4 text-green-500" />,
+          textColor: "text-green-600",
+          bgClass:
+            "bg-green-50 hover:bg-green-100 border-green-200 text-green-700",
+        };
       case "FAILED":
       case "UPSTREAM_FAILED":
       case "SYSTEM_ERROR":
       case "INVALID":
       case "UPSTREAM_FAILED_OR_SKIPPED":
-        return <CircleAlert className="w-4 h-4 text-red-500" />;
+        return {
+          icon: <CircleAlert className="w-4 h-4 text-red-500" />,
+          textColor: "text-red-600",
+          bgClass: "bg-red-50 hover:bg-red-100 border-red-200 text-red-700",
+        };
       case "RUNNING":
       case "STARTING":
       case "CANCELLING":
-        return <RefreshCcw className="w-4 h-4 text-blue-500 animate-spin" />;
+        return {
+          icon: <RefreshCcw className="w-4 h-4 text-blue-500 animate-spin" />,
+          textColor: "text-blue-600",
+          bgClass: "bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700",
+        };
       case "CONDITIONALLY_SKIPPED":
       case "CANCELLED":
-        return <EyeIcon className="w-4 h-4 text-gray-500" />;
+        return {
+          icon: <EyeIcon className="w-4 h-4 text-gray-500" />,
+          textColor: "text-gray-600",
+          bgClass: "",
+        };
       default:
-        return <div className="w-4 h-4 rounded-full bg-gray-300"></div>;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "SUCCEEDED":
-        return "text-green-600";
-      case "FAILED":
-      case "UPSTREAM_FAILED":
-      case "SYSTEM_ERROR":
-      case "INVALID":
-      case "UPSTREAM_FAILED_OR_SKIPPED":
-        return "text-red-600";
-      case "RUNNING":
-      case "STARTING":
-      case "CANCELLING":
-        return "text-blue-600";
-      case "CONDITIONALLY_SKIPPED":
-      case "CANCELLED":
-        return "text-gray-600";
-      default:
-        return "text-gray-500";
+        return {
+          icon: <div className="w-4 h-4 rounded-full bg-gray-300"></div>,
+          textColor: "text-gray-500",
+          bgClass: "",
+        };
     }
   };
 
@@ -114,7 +110,6 @@ const RunCard = ({ rootExecutionId }: RunCardProps) => {
     },
   );
 
-  // Determine overall run status
   const hasErrors = taskStatuses.some((task) =>
     [
       "FAILED",
@@ -131,32 +126,30 @@ const RunCard = ({ rootExecutionId }: RunCardProps) => {
     taskStatuses.length > 0 &&
     taskStatuses.every((task) => task.status === "SUCCEEDED");
 
-  const getRunStatusIcon = () => {
+  const getRunStatusInfo = () => {
     if (hasErrors) {
-      return <CircleAlert className="w-4 h-4 text-red-500" />;
+      return getStatusInfo("FAILED");
     } else if (isRunning) {
-      return <RefreshCcw className="w-4 h-4 text-blue-500 animate-spin" />;
+      return getStatusInfo("RUNNING");
     } else if (allSucceeded) {
-      return <CircleCheck className="w-4 h-4 text-green-500" />;
+      return getStatusInfo("SUCCEEDED");
     } else {
-      return <ChevronRight className="w-4 h-4" />;
+      return {
+        icon: <ChevronRight className="w-4 h-4" />,
+        textColor: "",
+        bgClass: "",
+      };
     }
   };
 
-  const getRunStatusClass = () => {
-    if (hasErrors) {
-      return "bg-red-50 hover:bg-red-100 border-red-200 text-red-700";
-    } else if (allSucceeded) {
-      return "bg-green-50 hover:bg-green-100 border-green-200 text-green-700";
-    } else if (isRunning) {
-      return "bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700";
-    } else {
-      return "";
-    }
+  const handleViewRun = async () => {
+    navigate({
+      to: `${APP_ROUTES.RUNS}/${rootExecutionId}`,
+    });
   };
 
-  const handleOpenInEditor = async () => {
-    console.log("handleOpenInEditor");
+  const handleCloneAndEdit = async () => {
+    console.log("handleCloneAndEdit");
   };
 
   const handleRunSelection = (value: string) => {
@@ -164,36 +157,37 @@ const RunCard = ({ rootExecutionId }: RunCardProps) => {
   };
 
   return (
-    <Card>
+    <Card className="flex flex-col justify-between">
       <CardHeader>
         <CardTitle>
           {detailsData?.task_spec.componentRef.spec.name || "Run Details"}
         </CardTitle>
       </CardHeader>
-      <CardContent></CardContent>
-      <CardFooter className="flex justify-between">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button onClick={handleOpenInEditor} className="cursor-pointer">
-                <EyeIcon className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>View run details</p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button onClick={handleOpenInEditor} className="cursor-pointer">
-                <CopyIcon className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Clone and edit run</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      <CardFooter className="flex justify-between items-end">
+        <div className="flex gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button onClick={handleViewRun} className="cursor-pointer">
+                  <EyeIcon className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>View run details</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button onClick={handleCloneAndEdit} className="cursor-pointer">
+                  <CopyIcon className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Clone and edit run</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
 
         <div className="flex items-center gap-0 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0 focus-within:ring-offset-background rounded-md">
           <Select onValueChange={handleRunSelection}>
@@ -204,10 +198,10 @@ const RunCard = ({ rootExecutionId }: RunCardProps) => {
               {taskStatuses.map((task, index) => (
                 <SelectItem key={index} value={task.executionId as string}>
                   <div className="flex items-center gap-2">
-                    {getStatusIcon(task.status)}
+                    {getStatusInfo(task.status).icon}
                     <span>{task.taskName}</span>
                     <span
-                      className={`ml-2 font-medium ${getStatusColor(task.status)}`}
+                      className={`ml-2 font-medium ${getStatusInfo(task.status).textColor}`}
                     >
                       {task.status}
                     </span>
@@ -219,9 +213,9 @@ const RunCard = ({ rootExecutionId }: RunCardProps) => {
           <Button
             variant="outline"
             size="icon"
-            className={`rounded-l-none border-l-0 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none ${getRunStatusClass()}`}
+            className={`rounded-l-none border-l-0 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none ${getRunStatusInfo().bgClass}`}
           >
-            {getRunStatusIcon()}
+            {getRunStatusInfo().icon}
           </Button>
         </div>
       </CardFooter>

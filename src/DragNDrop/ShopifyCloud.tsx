@@ -1,11 +1,11 @@
 import { useState } from "react";
-import mockFetch from "@/utils/mockAPI";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { APP_ROUTES } from "@/utils/constants";
 import type { ComponentSpec } from "../componentSpec";
 import localForage from "localforage";
+import { useMutation } from "@tanstack/react-query";
 
 interface ShopifyCloudSubmitterProps {
   componentSpec?: ComponentSpec;
@@ -23,13 +23,71 @@ interface PipelineRun {
   pipeline_digest?: string;
 }
 
+const createPipelineRun = async (payload: any) => {
+  console.log("createPipelineRun", payload);
+  const response = await fetch(
+    `${import.meta.env.VITE_BACKEND_API_URL}pipeline_runs/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to create pipeline run");
+  }
+
+  return response.json();
+};
+
 const ShopifyCloudSubmitter = ({
   componentSpec,
 }: ShopifyCloudSubmitterProps) => {
+  console.log("componentSpec", componentSpec);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Inside your component
+  const { mutate: createPipeline } = useMutation({
+    mutationFn: createPipelineRun,
+    onSuccess: async (responseData) => {
+      // Store the run in IndexedDB
+      if (responseData.id) {
+        // Initialize the pipeline runs store
+        const pipelineRunsDb = localForage.createInstance({
+          name: DB_NAME,
+          storeName: PIPELINE_RUNS_STORE_NAME,
+        });
+
+        // Create a run entry
+        const pipelineRun: PipelineRun = {
+          id: responseData.id,
+          root_execution_id: responseData.root_execution_id,
+          created_at: responseData.created_at,
+          pipeline_name: componentSpec?.name || "Untitled Pipeline",
+          pipeline_digest: componentSpec?.metadata?.annotations?.digest as
+            | string
+            | undefined,
+        };
+
+        await pipelineRunsDb.setItem(responseData.id, pipelineRun);
+      }
+
+      setSubmitSuccess(true);
+
+      // Navigate to the runs page after a short delay
+      setTimeout(() => {
+        navigate({
+          to: `${APP_ROUTES.RUNS}/${responseData.id}`,
+        });
+      }, 1500);
+    },
+  });
 
   const handleSubmit = async () => {
     if (!componentSpec) {
@@ -43,55 +101,17 @@ const ShopifyCloudSubmitter = ({
     setErrorMessage(null);
 
     try {
+      // Transform the componentSpec into the format expected by the API
       const payload = {
-        name: componentSpec.name || "Untitled Pipeline",
-        pipeline_spec: {
-          component_spec: componentSpec,
+        root_task: {
+          componentRef: {
+            spec: componentSpec,
+          },
         },
       };
-      const response = await mockFetch(
-        `${import.meta.env.VITE_BACKEND_API_URL}/pipeline_runs/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        },
-      );
 
-      const data = await response.json();
-
-      // Store the run in IndexedDB
-      if (data.id) {
-        // Initialize the pipeline runs store
-        const pipelineRunsDb = localForage.createInstance({
-          name: DB_NAME,
-          storeName: PIPELINE_RUNS_STORE_NAME,
-        });
-
-        // Create a run entry
-        const pipelineRun: PipelineRun = {
-          id: data.id,
-          root_execution_id: data.root_execution_id,
-          created_at: data.created_at,
-          pipeline_name: componentSpec.name || "Untitled Pipeline",
-          pipeline_digest: componentSpec.metadata?.annotations?.digest as
-            | string
-            | undefined,
-        };
-
-        await pipelineRunsDb.setItem(data.id, pipelineRun);
-      }
-
-      setSubmitSuccess(true);
-
-      // Navigate to the runs page after a short delay
-      setTimeout(() => {
-        navigate({
-          to: `${APP_ROUTES.RUNS}/${data.id}`,
-        });
-      }, 1500);
+      console.log("payload", payload);
+      createPipeline(payload);
     } catch (error) {
       console.error("Error submitting pipeline:", error);
       setErrorMessage("Failed to submit pipeline");
