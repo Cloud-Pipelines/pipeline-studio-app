@@ -111,13 +111,13 @@ const NewExperimentDialog = () => {
           className="cursor-pointer"
           disabled={isLoadingUserPipelines}
         >
-          New Experiment
+          New Pipeline
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>New Experiment</DialogTitle>
-          <DialogDescription>Please, name your experiment.</DialogDescription>
+          <DialogTitle>New Pipeline</DialogTitle>
+          <DialogDescription>Please, name your pipeline.</DialogDescription>
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <div className="grid flex-1 gap-2 flex-col">

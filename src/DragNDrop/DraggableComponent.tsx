@@ -46,7 +46,7 @@ const DraggableComponent = ({
   }
   return (
     <div
-      className="react-flow__node react-flow__node-task sidebar-node"
+      className="react-flow__node react-flow__node-task sidebar-node flex items-center justify-center"
       draggable
       onDragStart={(event: DragEvent) => {
         const taskSpec: TaskSpec = {

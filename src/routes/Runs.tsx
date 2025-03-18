@@ -1,13 +1,12 @@
 import RunCard from "@/components/RunCard";
-import mockFetch from "@/utils/mockAPI";
 import { useQuery } from "@tanstack/react-query";
 
 const Runs = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["runs"],
     queryFn: () =>
-      mockFetch("https://oasis.shopify.io/api/pipeline_runs/").then(
-        (response) => response.json(),
+      fetch("http://localhost:8000/api/pipeline_runs/").then((response) =>
+        response.json(),
       ),
   });
 

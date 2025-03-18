@@ -5,7 +5,6 @@ import {
   Background,
   MiniMap,
 } from "@xyflow/react";
-import mockFetch from "@/utils/mockAPI";
 import { useQuery } from "@tanstack/react-query";
 import type { ComponentSpec } from "../componentSpec";
 import GraphComponentSpecFlow from "../DragNDrop/GraphComponentSpecFlow";
@@ -26,38 +25,18 @@ const RunDetails = () => {
   const { data: detailsData, isLoading: detailsLoading } = useQuery({
     queryKey: ["run_details", id],
     queryFn: () =>
-      mockFetch(`https://oasis.shopify.io/api/executions/${id}/details`).then(
-        (response) => response.json(),
-      ),
+      fetch(
+        `${import.meta.env.VITE_BACKEND_API_URL}executions/${id}/details`,
+      ).then((response) => response.json()),
   });
 
   const { data: stateData, isLoading: stateLoading } = useQuery({
     queryKey: ["run_state", id],
     queryFn: () =>
-      mockFetch(`https://oasis.shopify.io/api/executions/${id}/state`).then(
-        (response) => response.json(),
-      ),
+      fetch(
+        `${import.meta.env.VITE_BACKEND_API_URL}executions/${id}/state`,
+      ).then((response) => response.json()),
   });
-
-  const taskStatusMap = new Map();
-
-  if (
-    detailsData?.child_task_execution_ids &&
-    stateData?.child_execution_status_stats
-  ) {
-    Object.entries(detailsData.child_task_execution_ids).forEach(
-      ([taskId, executionId]) => {
-        const executionIdStr = String(executionId);
-        const statusStats =
-          stateData.child_execution_status_stats[executionIdStr];
-
-        if (statusStats) {
-          const status = Object.keys(statusStats)[0];
-          taskStatusMap.set(taskId, status);
-        }
-      },
-    );
-  }
 
   useEffect(() => {
     const loadPipeline = async () => {
@@ -86,6 +65,26 @@ const RunDetails = () => {
 
     loadPipeline();
   }, [detailsData, detailsLoading]);
+
+  const taskStatusMap = new Map();
+
+  if (
+    detailsData?.child_task_execution_ids &&
+    stateData?.child_execution_status_stats
+  ) {
+    Object.entries(detailsData.child_task_execution_ids).forEach(
+      ([taskId, executionId]) => {
+        const executionIdStr = String(executionId);
+        const statusStats =
+          stateData.child_execution_status_stats[executionIdStr];
+
+        if (statusStats) {
+          const status = Object.keys(statusStats)[0];
+          taskStatusMap.set(taskId, status);
+        }
+      },
+    );
+  }
 
   const componentSpecWithStatus = (): ComponentSpec | undefined => {
     if (
@@ -150,6 +149,8 @@ const RunDetails = () => {
       </div>
     );
   }
+
+  console.log("newComponentSpec", newComponentSpec);
 
   return (
     <div className="dndflow">
