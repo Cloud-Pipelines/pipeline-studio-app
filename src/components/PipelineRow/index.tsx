@@ -7,22 +7,21 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
-import { APP_ROUTES, EDITOR_PATH } from "@/utils/constants";
+import { EDITOR_PATH } from "@/utils/constants";
 import localForage from "localforage";
 
 import {
-  type PipelineCardProps,
+  type PipelineRowProps,
   type PipelineRun,
   type TaskStatusCounts,
 } from "./types";
-import { USE_MOCK_DATA, generateMockData } from "./mockData";
 import { countTaskStatuses } from "./utils";
 import StatusIcon from "./StatusIcon";
 import RunListItem from "./RunListItem";
 import TaskStatusBar from "./TaskStatusBar";
 
-const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
-  const [cardData, setCardData] = useState<any>(null);
+const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
+  const [rowData, setRowData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [latestRun, setLatestRun] = useState<PipelineRun | null>(null);
@@ -39,17 +38,17 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
         setError("Invalid component reference");
         return;
       }
-      setCardData(componentRef.spec);
+      setRowData(componentRef.spec);
       return;
     }
 
     if (url) {
-      const fetchCardData = async () => {
+      const fetchRowData = async () => {
         setIsLoading(true);
         setError(null);
         try {
           const data = await downloadDataWithCache(url, loadObjectFromYamlData);
-          setCardData(data);
+          setRowData(data);
         } catch (error) {
           console.error(`Error fetching data from ${url}:`, error);
           setError("Failed to load pipeline data");
@@ -57,20 +56,13 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
           setIsLoading(false);
         }
       };
-      fetchCardData();
+      fetchRowData();
     }
   }, [url, componentRef, name]);
 
   useEffect(() => {
     const fetchPipelineRuns = async () => {
       if (!name) return;
-
-      if (USE_MOCK_DATA) {
-        const { mockRuns } = generateMockData(name);
-        setPipelineRuns(mockRuns);
-        setLatestRun(mockRuns[0]);
-        return;
-      }
 
       try {
         const pipelineRunsDb = localForage.createInstance({
@@ -112,12 +104,6 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
     const fetchTaskStatuses = async () => {
       if (pipelineRuns.length === 0) return;
 
-      if (USE_MOCK_DATA) {
-        const { mockTaskStatuses } = generateMockData(name || "");
-        setRunTaskStatuses(mockTaskStatuses);
-        return;
-      }
-
       const statuses: Record<number, TaskStatusCounts> = {};
 
       for (const run of pipelineRuns) {
@@ -155,14 +141,10 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
     }
   };
 
-  const handleViewRun = (runId: number) => {
-    navigate({ to: `${APP_ROUTES.RUNS}/${runId}` });
-  };
-
   if (isLoading) return <div className="py-2">Loading...</div>;
   if (error) return <div className="py-2 text-red-500">{error}</div>;
 
-  const pipelineSpec = componentRef?.spec || cardData;
+  const pipelineSpec = componentRef?.spec || rowData;
   const displayName = name || pipelineSpec?.name || "Unnamed Pipeline";
   const taskCount = pipelineSpec?.implementation?.graph?.tasks
     ? Object.keys(pipelineSpec.implementation.graph.tasks).length
@@ -207,12 +189,7 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
           ) : (
             <div className="space-y-1">
               {pipelineRuns.map((run) => (
-                <RunListItem
-                  key={run.id}
-                  run={run}
-                  statusCounts={runTaskStatuses[run.id]}
-                  onClick={handleViewRun}
-                />
+                <RunListItem key={run.id} runId={run.id} />
               ))}
             </div>
           )}
@@ -222,4 +199,4 @@ const PipelineCard = ({ url, componentRef, name }: PipelineCardProps) => {
   );
 };
 
-export default PipelineCard;
+export default PipelineRow;

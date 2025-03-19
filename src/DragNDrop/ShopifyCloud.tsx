@@ -24,7 +24,6 @@ interface PipelineRun {
 }
 
 const createPipelineRun = async (payload: any) => {
-  console.log("createPipelineRun", payload);
   const response = await fetch(
     `${import.meta.env.VITE_BACKEND_API_URL}pipeline_runs/`,
     {
@@ -46,7 +45,6 @@ const createPipelineRun = async (payload: any) => {
 const ShopifyCloudSubmitter = ({
   componentSpec,
 }: ShopifyCloudSubmitterProps) => {
-  console.log("componentSpec", componentSpec);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -110,7 +108,6 @@ const ShopifyCloudSubmitter = ({
         },
       };
 
-      console.log("payload", payload);
       createPipeline(payload);
     } catch (error) {
       console.error("Error submitting pipeline:", error);

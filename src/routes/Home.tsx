@@ -3,19 +3,33 @@ import {
   getAllComponentFilesFromList,
   type ComponentFileEntry,
 } from "@/componentStore";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { Accordion } from "@/components/ui/accordion";
-import PipelineCard from "@/components/PipelineCard";
+import PipelineRow from "@/components/PipelineRow";
+import { useQuery } from "@tanstack/react-query";
+import RunListItem from "@/components/PipelineRow/RunListItem";
 
 const Home = () => {
   const [userPipelines, setUserPipelines] = useState<
     Map<string, ComponentFileEntry>
   >(new Map());
   const [isLoadingUserPipelines, setIsLoadingUserPipelines] = useState(false);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["runs"],
+    queryFn: () =>
+      fetch(`${import.meta.env.VITE_BACKEND_API_URL}pipeline_runs/`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }).then((response) => response.json()),
+  });
 
   useEffect(() => {
     fetchUserPipelines();
@@ -39,7 +53,7 @@ const Home = () => {
     fetchUserPipelines();
   };
 
-  if (isLoadingUserPipelines) {
+  if (isLoadingUserPipelines || isLoading) {
     return <div>Loading pipelines...</div>;
   }
 
@@ -55,26 +69,41 @@ const Home = () => {
         </AlertDescription>
       </Alert>
       <h1 className="text-2xl font-bold">Pipelines</h1>
-      {userPipelines.size > 0 && (
-        <div className="flex flex-col">
-          <div className="grid grid-cols-3 items-center p-2 w-full">
-            <div>Title</div>
-            <div className="text-center">Tasks</div>
-            <div className="text-right">Last run</div>
-          </div>
-          <div>
-            <Accordion type="single" collapsible className="w-full">
-              {Array.from(userPipelines.entries()).map(([name, fileEntry]) => (
-                <PipelineCard
-                  key={fileEntry.componentRef.digest}
-                  componentRef={fileEntry.componentRef}
-                  name={name.replace(/_/g, " ")}
-                />
-              ))}
-            </Accordion>
-          </div>
-        </div>
-      )}
+      <Tabs defaultValue="pipelines" className="w-full">
+        <TabsList>
+          <TabsTrigger value="pipelines">My pipelines</TabsTrigger>
+          <TabsTrigger value="runs">All Runs</TabsTrigger>
+        </TabsList>
+        <TabsContent value="pipelines">
+          {userPipelines.size > 0 && (
+            <div className="flex flex-col">
+              <div className="grid grid-cols-3 items-center p-2 w-full">
+                <div>Title</div>
+                <div className="text-center">Tasks</div>
+                <div className="text-right">Last run</div>
+              </div>
+              <div>
+                <Accordion type="single" collapsible className="w-full">
+                  {Array.from(userPipelines.entries()).map(
+                    ([name, fileEntry]) => (
+                      <PipelineRow
+                        key={fileEntry.componentRef.digest}
+                        componentRef={fileEntry.componentRef}
+                        name={name.replace(/_/g, " ")}
+                      />
+                    ),
+                  )}
+                </Accordion>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+        <TabsContent value="runs" className="flex flex-col gap-1">
+          {data?.pipeline_runs.map((run: { id: number }) => (
+            <RunListItem key={run.id} runId={run.id} />
+          ))}
+        </TabsContent>
+      </Tabs>
 
       <Button onClick={refreshAll} className="mt-6">
         Refresh
