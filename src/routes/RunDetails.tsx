@@ -150,8 +150,6 @@ const RunDetails = () => {
     );
   }
 
-  console.log("newComponentSpec", newComponentSpec);
-
   return (
     <div className="dndflow">
       <DndContext>

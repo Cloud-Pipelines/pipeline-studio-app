@@ -15,7 +15,7 @@ export interface TaskStatusCounts {
   pending: number;
 }
 
-export interface PipelineCardProps {
+export interface PipelineRowProps {
   url?: string;
   componentRef?: import("@/componentStore").ComponentReferenceWithSpec;
   name?: string;

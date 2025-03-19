@@ -32,7 +32,7 @@
     "lint": "eslint src --config eslint.config.js",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "gh-pages": "gh-pages -d dist",
+    "gh-pages": "vite build && tsc && gh-pages -d dist",
     "lint:fix": "eslint src --config eslint.config.js --fix",
     "validate": "npm run format && npm run lint:fix && npm run typecheck",
     "validate:test": "npm run validate && npm run test"
@@ -47,6 +47,7 @@
     "@radix-ui/react-scroll-area": "^1.2.3",
     "@radix-ui/react-select": "^2.1.6",
     "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-tabs": "^1.1.3",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-query": "^5.66.9",

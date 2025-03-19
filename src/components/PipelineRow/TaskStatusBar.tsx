@@ -6,7 +6,9 @@ const TaskStatusBar = ({
   statusCounts?: TaskStatusCounts;
 }) => {
   if (!statusCounts || statusCounts.total === 0) {
-    return <div className="h-1 w-full bg-gray-100 rounded"></div>;
+    return (
+      <div className="flex h-2 w-full rounded overflow-hidden bg-gray-200"></div>
+    );
   }
 
   const { total, succeeded, failed, running, pending } = statusCounts;
