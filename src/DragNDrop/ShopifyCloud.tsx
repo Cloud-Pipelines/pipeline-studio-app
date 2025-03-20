@@ -48,6 +48,7 @@ const ShopifyCloudSubmitter = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [runId, setRunId] = useState<number | null>(null);
   const navigate = useNavigate();
 
   // Inside your component
@@ -78,14 +79,16 @@ const ShopifyCloudSubmitter = ({
 
       setSubmitSuccess(true);
 
-      // Navigate to the runs page after a short delay
-      setTimeout(() => {
-        navigate({
-          to: `${APP_ROUTES.RUNS}/${responseData.root_execution_id}`,
-        });
-      }, 1500);
+      setRunId(responseData.root_execution_id);
+
     },
   });
+
+  const handleViewRun = () => {
+    if (runId) {
+      navigate({ to: `${APP_ROUTES.RUNS}/${runId}` });
+    }
+  };
 
   const handleSubmit = async () => {
     if (!componentSpec) {
@@ -136,9 +139,18 @@ const ShopifyCloudSubmitter = ({
       </Button>
 
       {submitSuccess === true && (
-        <div className="flex items-center text-green-600 text-sm mt-1">
-          <CheckCircle className="h-4 w-4 mr-1" />
-          Pipeline submitted successfully!
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center text-green-600 text-sm mt-1">
+            <CheckCircle className="h-4 w-4 mr-1" />
+            Pipeline submitted successfully!
+          </div>
+          <Button
+            onClick={handleViewRun}
+            variant="outline"
+            className="cursor-pointer"
+          >
+            View Run
+          </Button>
         </div>
       )}
 

@@ -51,15 +51,13 @@ const RunListItem = ({ runId }: { runId: number }) => {
         e.stopPropagation();
         handleOnClick(runId);
       }}
-      className="flex flex-col p-2 text-sm border rounded-md hover:bg-gray-50 cursor-pointer"
+      className="flex flex-col p-2 text-sm hover:bg-gray-50 cursor-pointer"
     >
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <StatusIcon status={currentStatus()} />
           <span>Run #{runId}</span>
         </div>
-        {/* TODO: ADD CREATED_AT when we have it */}
-        {/* <div className="text-gray-500">{formatDate(state.created_at)}</div> */}
         {statusCounts && (
           <div className="text-xs text-gray-500 mt-1">
             <span className="text-green-500">

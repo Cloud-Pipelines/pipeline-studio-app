@@ -4,12 +4,18 @@ import {
   type ComponentFileEntry,
 } from "@/componentStore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
-import { Accordion } from "@/components/ui/accordion";
 import PipelineRow from "@/components/PipelineRow";
 import { useQuery } from "@tanstack/react-query";
 import RunListItem from "@/components/PipelineRow/RunListItem";
@@ -76,26 +82,28 @@ const Home = () => {
         </TabsList>
         <TabsContent value="pipelines">
           {userPipelines.size > 0 && (
-            <div className="flex flex-col">
-              <div className="grid grid-cols-3 items-center p-2 w-full">
-                <div>Title</div>
-                <div className="text-center">Tasks</div>
-                <div className="text-right">Last run</div>
-              </div>
-              <div>
-                <Accordion type="single" collapsible className="w-full">
-                  {Array.from(userPipelines.entries()).map(
-                    ([name, fileEntry]) => (
-                      <PipelineRow
-                        key={fileEntry.componentRef.digest}
-                        componentRef={fileEntry.componentRef}
-                        name={name.replace(/_/g, " ")}
-                      />
-                    ),
-                  )}
-                </Accordion>
-              </div>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="text-xs">
+                  <TableHead>Title</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Last run</TableHead>
+                  <TableHead>Runs</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from(userPipelines.entries()).map(
+                  ([name, fileEntry]) => (
+                    <PipelineRow
+                      key={fileEntry.componentRef.digest}
+                      componentRef={fileEntry.componentRef}
+                      name={name.replace(/_/g, " ")}
+                    />
+                  ),
+                )}
+              </TableBody>
+            </Table>
           )}
         </TabsContent>
         <TabsContent value="runs" className="flex flex-col gap-1">
