@@ -5,7 +5,7 @@ const Runs = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["runs"],
     queryFn: () =>
-      fetch("http://localhost:8000/api/pipeline_runs/").then((response) =>
+      fetch(`${import.meta.env.VITE_BACKEND_API_URL}pipeline_runs/`).then((response) =>
         response.json(),
       ),
   });
