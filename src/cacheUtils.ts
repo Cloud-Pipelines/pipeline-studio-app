@@ -19,7 +19,7 @@ const httpGetDataWithCache = async <T>(
   let needToUpdateCache = false;
   if (response === undefined || updateIfInCache) {
     try {
-      const newUrl = url.replace(/\/\//g, "/");
+      const newUrl = url.replace(/^\/\//g, "/");
       const newResponse = await fetch(newUrl);
       if (!newResponse.ok) {
         throw new Error(
