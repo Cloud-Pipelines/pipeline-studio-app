@@ -189,7 +189,7 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
           ) : (
             <div className="space-y-1">
               {pipelineRuns.map((run) => (
-                <RunListItem key={run.id} runId={run.id} />
+                <RunListItem key={run.root_execution_id} runId={run.root_execution_id} />
               ))}
             </div>
           )}
