@@ -8,12 +8,12 @@
 
 // Settings: Default values and local storage configuration keys
 const COMPONENT_LIBRARY_URL_DEFAULT_VALUE =
-  import.meta.env.BASE_URL + "/component_library.yaml";
+  import.meta.env.BASE_URL + "component_library.yaml";
 const COMPONENT_LIBRARY_URL_LOCAL_STORAGE_KEY =
   "ComponentLibrary/component_library_url";
 
 const PIPELINE_LIBRARY_URL_DEFAULT_VALUE =
-  import.meta.env.BASE_URL + "/pipeline_library.yaml";
+  import.meta.env.BASE_URL + "pipeline_library.yaml";
 const PIPELINE_LIBRARY_URL_LOCAL_STORAGE_KEY =
   "PipelineLibrary/pipeline_library_url";
 
