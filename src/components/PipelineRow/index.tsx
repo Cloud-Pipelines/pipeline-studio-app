@@ -108,12 +108,12 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
       for (const run of pipelineRuns) {
         try {
           const response = await fetch(
-            `${import.meta.env.VITE_BACKEND_API_URL}/api/executions/${run.id}/details`,
+            `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${run.id}/details`,
           );
           const details = await response.json();
 
           const stateResponse = await fetch(
-            `${import.meta.env.VITE_BACKEND_API_URL}/api/executions/${run.id}/state`,
+            `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${run.id}/state`,
           );
           const stateData = await stateResponse.json();
 

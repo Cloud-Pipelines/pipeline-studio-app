@@ -31,7 +31,7 @@ const RunCard = ({ rootExecutionId }: RunCardProps) => {
     queryKey: ["run_details", rootExecutionId],
     queryFn: () =>
       fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL}/api/executions/${rootExecutionId}/details`,
+        `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${rootExecutionId}/details`,
       ).then((response) => response.json()),
   });
 
@@ -40,7 +40,7 @@ const RunCard = ({ rootExecutionId }: RunCardProps) => {
     queryKey: ["run_state", rootExecutionId],
     queryFn: () =>
       fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL}/api/executions/${rootExecutionId}/state`,
+        `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${rootExecutionId}/state`,
       ).then((response) => response.json()),
   });
 

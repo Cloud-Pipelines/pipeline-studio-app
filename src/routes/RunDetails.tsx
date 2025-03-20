@@ -26,7 +26,7 @@ const RunDetails = () => {
     queryKey: ["run_details", id],
     queryFn: () =>
       fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL}/api/executions/${id}/details`,
+        `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${id}/details`,
       ).then((response) => response.json()),
   });
 
@@ -34,7 +34,7 @@ const RunDetails = () => {
     queryKey: ["run_state", id],
     queryFn: () =>
       fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL}/api/executions/${id}/state`,
+        `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${id}/state`,
       ).then((response) => response.json()),
   });
 
