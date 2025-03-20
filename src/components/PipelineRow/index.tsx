@@ -167,7 +167,7 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
             >
               <List className="w-4 h-4" />
             </PopoverTrigger>
-            <PopoverContent>
+            <PopoverContent className="w-[500px]">
               <div className="text-sm mb-2">Runs - {pipelineRuns.length}</div>
               <ScrollArea className="h-[300px]">
                 {pipelineRuns.map((run) => (
