@@ -1,11 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import {
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "../ui/accordion";
+
 import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
 import { EDITOR_PATH } from "@/utils/constants";
 import localForage from "localforage";
@@ -18,7 +13,11 @@ import {
 import { countTaskStatuses } from "./utils";
 import StatusIcon from "./StatusIcon";
 import RunListItem from "./RunListItem";
-import TaskStatusBar from "./TaskStatusBar";
+
+import { TableCell, TableRow } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { ScrollArea } from "../ui/scroll-area";
+import { List } from "lucide-react";
 
 const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
   const [rowData, setRowData] = useState<any>(null);
@@ -135,7 +134,7 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
 
   const handleOpenInEditor = (e: React.MouseEvent) => {
     const isAccordionClick =
-      (e.target as HTMLElement).closest("[data-accordion-trigger]") !== null;
+      (e.target as HTMLElement).closest("[data-popover-trigger]") !== null;
     if (!isAccordionClick) {
       navigate({ to: `${EDITOR_PATH}/${name}` });
     }
@@ -146,59 +145,43 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
 
   const pipelineSpec = componentRef?.spec || rowData;
   const displayName = name || pipelineSpec?.name || "Unnamed Pipeline";
-  const taskCount = pipelineSpec?.implementation?.graph?.tasks
-    ? Object.keys(pipelineSpec.implementation.graph.tasks).length
-    : 0;
 
   return (
-    <AccordionItem value={name || ""}>
-      <div
-        onClick={handleOpenInEditor}
-        className="grid grid-cols-3 items-center p-1 hover:bg-gray-50 cursor-pointer"
-      >
-        <div className="text-sm font-medium truncate">{displayName}</div>
-
-        <div className="text-sm text-gray-500 justify-self-center">
-          {taskCount > 0 ? `${taskCount} tasks` : "No tasks"}
-        </div>
-        <div className="justify-self-end items-center flex flex-row gap-1">
-          {latestRun && runTaskStatuses[latestRun.id] && (
-            <div className="w-32 mr-1 flex flex-row items-center gap-1">
-              <StatusIcon status={latestRun.status} />
-              <TaskStatusBar statusCounts={runTaskStatuses[latestRun.id]} />
-            </div>
-          )}
-          <div className="flex flex-row items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              data-accordion-trigger
-              className="flex items-center gap-1 cursor-pointer"
+    <TableRow onClick={handleOpenInEditor} className="cursor-pointer">
+      <TableCell className="text-sm">{displayName}</TableCell>
+      <TableCell>
+        {latestRun && runTaskStatuses[latestRun.id] && (
+          <StatusIcon status={latestRun.status} />
+        )}
+      </TableCell>
+      <TableCell className="text-gray-500 text-xs">0:12:38</TableCell>
+      <TableCell className="text-gray-500 text-xs">
+        3/20/2025 12:00:00
+      </TableCell>
+      <TableCell>
+        {pipelineRuns.length > 0 && (
+          <Popover>
+            <PopoverTrigger
+              data-popover-trigger
+              className="cursor-pointer text-gray-500 border border-gray-200 rounded-md p-1 hover:bg-gray-200"
             >
-              <AccordionTrigger className="cursor-pointer" />
-            </Button>
-          </div>
-        </div>
-      </div>
-      <AccordionContent>
-        <div className="py-2 space-y-2">
-          <h3 className="font-medium text-sm">Pipeline Runs</h3>
-
-          {pipelineRuns.length === 0 ? (
-            <p className="text-sm text-gray-500">No runs available</p>
-          ) : (
-            <div className="space-y-1">
-              {pipelineRuns.map((run) => (
-                <RunListItem
-                  key={run.root_execution_id}
-                  runId={run.root_execution_id}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </AccordionContent>
-    </AccordionItem>
+              <List className="w-4 h-4" />
+            </PopoverTrigger>
+            <PopoverContent>
+              <div className="text-sm mb-2">Runs - {pipelineRuns.length}</div>
+              <ScrollArea className="h-[300px]">
+                {pipelineRuns.map((run) => (
+                  <RunListItem
+                    key={run.root_execution_id}
+                    runId={run.root_execution_id}
+                  />
+                ))}
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
+        )}
+      </TableCell>
+    </TableRow>
   );
 };
 
