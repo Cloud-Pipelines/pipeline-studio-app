@@ -10,7 +10,6 @@ import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import AppFooter from "./components/AppFooter";
 import AppMenu from "./components/AppMenu";
 import { APP_ROUTES } from "./utils/constants";
-import Runs from "./routes/Runs";
 import RunDetails from "./routes/RunDetails";
 
 declare module "@tanstack/react-router" {
@@ -52,12 +51,6 @@ export const editorRoute = createRoute({
   },
 });
 
-export const runsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: APP_ROUTES.RUNS,
-  component: Runs,
-});
-
 export interface RunDetailParams {
   id: string;
 }
@@ -71,7 +64,6 @@ export const runDetailRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   editorRoute,
-  runsRoute,
   runDetailRoute,
 ]);
 

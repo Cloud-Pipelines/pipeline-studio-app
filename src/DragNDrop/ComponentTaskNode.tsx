@@ -17,7 +17,13 @@ import type {
 
 import { Handle, Position } from "@xyflow/react";
 import type { Node, NodeProps, HandleType } from "@xyflow/react";
-import { CircleCheck, CircleAlert, RefreshCcw, EyeIcon } from "lucide-react";
+import {
+  CircleCheck,
+  CircleAlert,
+  RefreshCcw,
+  EyeIcon,
+  CircleDashed,
+} from "lucide-react";
 
 import ArgumentsEditorDialog from "./ArgumentsEditorDialog";
 
@@ -25,8 +31,6 @@ const inputHandlePosition = Position.Top;
 const outputHandlePosition = Position.Bottom;
 
 type InputOrOutputSpec = InputSpec | OutputSpec;
-
-const MISSING_ARGUMENT_CLASS_NAME = "missing-argument";
 
 const NODE_WIDTH_IN_PX = 180;
 
@@ -56,12 +60,16 @@ function generateHandles(
       position === Position.Top || position === Position.Bottom
         ? { left: positionPercentString }
         : { top: positionPercentString };
-    // TODO: Handle complex type specs
     const ioTypeName = ioSpec.type?.toString() ?? "Any";
     let classNames = [`handle_${idPrefix}${ioTypeName}`.replace(/ /g, "_")];
+
+    let tailwindClasses = "w-2! h-2! border-2! rounded-full! ";
+
     const isInvalid = (inputsWithMissingArguments ?? []).includes(ioSpec.name);
     if (isInvalid) {
-      classNames.push(MISSING_ARGUMENT_CLASS_NAME);
+      tailwindClasses += "border-rose-500! bg-rose-50! ";
+    } else {
+      tailwindClasses += "bg-white! border-slate-300! hover:border-slate-600! ";
     }
     classNames = classNames.map((className) => className.replace(/ /g, "_"));
 
@@ -77,7 +85,7 @@ function generateHandles(
         style={style}
         isConnectable={true}
         title={handleTitle}
-        className={classNames.join(" ")}
+        className={`${classNames.join(" ")} ${tailwindClasses}`}
       >
         <div className={labelClasses} style={labelStyle}>
           {ioSpec.name}
@@ -93,17 +101,12 @@ function generateLabelStyle(
   numHandles: number,
 ): [string, CSSProperties] {
   let maxLabelWidthPx = NODE_WIDTH_IN_PX;
-  // By default, we want to place the label on the same side of the handle as the handle is on the side of the node.
   let labelClasses = "label";
-  // When there are too many inputs/outputs, we need to move the label so it starts from the handle.
-  // Based on my tests, we always want this for >4 handles (top/bottom), so the rotated default placement is never used at all.
 
   if (position === Position.Top || position === Position.Bottom) {
     if (numHandles > 1) {
-      // For single handle max width is the node width, while the formula would give half of that
       maxLabelWidthPx = NODE_WIDTH_IN_PX / (numHandles + 1);
     }
-    //if (numHandles > 4) {
     if (maxLabelWidthPx < 35) {
       maxLabelWidthPx = 50;
       labelClasses += " label-angled";
@@ -111,6 +114,8 @@ function generateLabelStyle(
   } else {
     maxLabelWidthPx = 60;
   }
+
+  labelClasses += " truncate text-xs";
 
   const labelStyle: CSSProperties = { maxWidth: `${maxLabelWidthPx}px` };
   return [labelClasses, labelStyle];
@@ -149,33 +154,36 @@ export interface ComponentTaskNodeProps extends Record<string, unknown> {
 const getStatusIcon = (status: string) => {
   switch (status) {
     case "SUCCEEDED":
-      return <CircleCheck className="w-4 h-4 text-green-500" />;
+      return <CircleCheck className="w-3.5 h-3.5 text-emerald-500" />;
     case "FAILED":
     case "SYSTEM_ERROR":
     case "INVALID":
     case "UPSTREAM_FAILED":
     case "UPSTREAM_FAILED_OR_SKIPPED":
-      return <CircleAlert className="w-4 h-4 text-red-500" />;
+      return <CircleAlert className="w-3.5 h-3.5 text-rose-500" />;
     case "RUNNING":
     case "STARTING":
     case "CANCELLING":
-      return <RefreshCcw className="w-4 h-4 text-blue-500 animate-spin" />;
+      return <RefreshCcw className="w-3.5 h-3.5 text-sky-500 animate-spin" />;
     case "CONDITIONALLY_SKIPPED":
     case "CANCELLED":
-      return <EyeIcon className="w-4 h-4 text-gray-500" />;
+      return <EyeIcon className="w-3.5 h-3.5 text-slate-500" />;
     default:
-      return null;
+      return <CircleDashed className="w-3.5 h-3.5 text-slate-400" />;
   }
 };
 
 const ComponentTaskNode = ({ data }: NodeProps) => {
   const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const typedData = data as ComponentTaskNodeProps;
   const taskSpec = typedData.taskSpec;
   const componentSpec = taskSpec.componentRef.spec;
 
   const runStatus = taskSpec.annotations?.["status"] as string | undefined;
+  // for testing can we assign a status to the node randomly
+  // const runStatus = ["SUCCEEDED", "FAILED", "RUNNING", "STARTING", "CANCELLING", "CONDITIONALLY_SKIPPED", "CANCELLED", "SYSTEM_ERROR", "INVALID", "UPSTREAM_FAILED", "UPSTREAM_FAILED_OR_SKIPPED"][Math.floor(Math.random() * 10)];
 
   if (componentSpec === undefined) {
     return <></>;
@@ -220,39 +228,60 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getBorderColor = () => {
+    switch (runStatus) {
       case "SUCCEEDED":
-        return "bg-green-100 text-green-800 border-green-300";
+        return "border-emerald-500";
       case "FAILED":
       case "SYSTEM_ERROR":
       case "INVALID":
       case "UPSTREAM_FAILED":
       case "UPSTREAM_FAILED_OR_SKIPPED":
-        return "bg-red-100 text-red-800 border-red-300";
+        return "border-rose-500";
       case "RUNNING":
       case "STARTING":
       case "CANCELLING":
-        return "bg-blue-100 text-blue-800 border-blue-300";
-      case "CONDITIONALLY_SKIPPED":
-      case "CANCELLED":
-        return "bg-gray-100 text-gray-800 border-gray-300";
+        return "border-sky-500";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
+        return isHovered ? "border-slate-400" : "border-slate-300";
+    }
+  };
+
+  const getBgColor = () => {
+    switch (runStatus) {
+      case "SUCCEEDED":
+        return "bg-emerald-50";
+      case "FAILED":
+      case "SYSTEM_ERROR":
+      case "INVALID":
+      case "UPSTREAM_FAILED":
+      case "UPSTREAM_FAILED_OR_SKIPPED":
+        return "bg-rose-50";
+      case "RUNNING":
+      case "STARTING":
+      case "CANCELLING":
+        return "bg-sky-50";
+      default:
+        return "bg-white";
     }
   };
 
   return (
     <>
-      <div onDoubleClick={handleDoubleClick}>
-        <div className="p-4 flex flex-row items-center justify-between gap-2">
-          <div className="font-medium truncate flex-grow" title={title}>
+      <div
+        onDoubleClick={handleDoubleClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`border rounded-md shadow-sm transition-all duration-200 ${getBorderColor()} ${getBgColor()}`}
+        style={{ width: `${NODE_WIDTH_IN_PX}px` }}
+      >
+        <div className="p-3 flex items-center justify-between">
+          <div className="font-medium text-gray-800 truncate " title={title}>
             {label}
           </div>
+
           {runStatus && (
-            <div
-              className={`text-xs  p-2 rounded-md border flex items-center justify-center ${getStatusColor(runStatus)}`}
-            >
+            <div className="flex items-center ml-2 flex-shrink-0">
               {getStatusIcon(runStatus)}
             </div>
           )}

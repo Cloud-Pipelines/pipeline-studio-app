@@ -19,8 +19,7 @@ const httpGetDataWithCache = async <T>(
   let needToUpdateCache = false;
   if (response === undefined || updateIfInCache) {
     try {
-      const newUrl = url.replace(/^\/\//g, "/");
-      const newResponse = await fetch(newUrl);
+      const newResponse = await fetch(url);
       if (!newResponse.ok) {
         throw new Error(
           `Network response was not OK: ${newResponse.status}: ${newResponse.statusText}`,
@@ -73,6 +72,7 @@ export async function downloadDataWithCache<T>(
   transformer: (buffer: ArrayBuffer) => T,
 ): Promise<T> {
   const isImmutable = IMMUTABLE_URL_REGEXPS.some((regexp) => url.match(regexp));
+  console.log("isImmutable", isImmutable);
   return httpGetDataWithCache(url, transformer, "cache", !isImmutable);
 }
 

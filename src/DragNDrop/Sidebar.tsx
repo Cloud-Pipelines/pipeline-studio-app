@@ -109,7 +109,7 @@ const Sidebar = ({
           <strong>Special</strong>
         </summary>
         <div
-          className="react-flow__node react-flow__node-input sidebar-node"
+          className="react-flow__node react-flow__node-task sidebar-node flex items-center justify-center border-2 border-slate-300 rounded-md min-h-10"
           onDragStart={(event: DragEvent) =>
             onDragStart(event, { input: { label: "Input" } })
           }
@@ -118,7 +118,7 @@ const Sidebar = ({
           Input
         </div>
         <div
-          className="react-flow__node react-flow__node-output sidebar-node"
+          className="react-flow__node react-flow__node-task sidebar-node flex items-center justify-center border-2 border-slate-300 rounded-md min-h-10"
           onDragStart={(event: DragEvent) =>
             onDragStart(event, { output: { label: "Output" } })
           }
