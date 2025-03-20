@@ -72,7 +72,6 @@ export async function downloadDataWithCache<T>(
   transformer: (buffer: ArrayBuffer) => T,
 ): Promise<T> {
   const isImmutable = IMMUTABLE_URL_REGEXPS.some((regexp) => url.match(regexp));
-  console.log("isImmutable", isImmutable);
   return httpGetDataWithCache(url, transformer, "cache", !isImmutable);
 }
 

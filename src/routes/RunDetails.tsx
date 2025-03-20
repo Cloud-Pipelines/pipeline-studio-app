@@ -28,6 +28,8 @@ const RunDetails = () => {
       fetch(
         `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${id}/details`,
       ).then((response) => response.json()),
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
   });
 
   const { data: stateData, isLoading: stateLoading } = useQuery({
@@ -36,6 +38,8 @@ const RunDetails = () => {
       fetch(
         `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${id}/state`,
       ).then((response) => response.json()),
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
   });
 
   useEffect(() => {
