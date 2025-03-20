@@ -81,7 +81,7 @@ const ShopifyCloudSubmitter = ({
       // Navigate to the runs page after a short delay
       setTimeout(() => {
         navigate({
-          to: `${APP_ROUTES.RUNS}/${responseData.id}`,
+          to: `${APP_ROUTES.RUNS}/${responseData.root_execution_id}`,
         });
       }, 1500);
     },

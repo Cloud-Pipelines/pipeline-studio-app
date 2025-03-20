@@ -99,8 +99,8 @@ const Home = () => {
           )}
         </TabsContent>
         <TabsContent value="runs" className="flex flex-col gap-1">
-          {data?.pipeline_runs.map((run: { id: number }) => (
-            <RunListItem key={run.id} runId={run.id} />
+          {data?.pipeline_runs.map((run: { root_execution_id: number }) => (
+            <RunListItem key={run.root_execution_id} runId={run.root_execution_id} />
           ))}
         </TabsContent>
       </Tabs>
