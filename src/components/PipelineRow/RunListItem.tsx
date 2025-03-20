@@ -11,14 +11,14 @@ const RunListItem = ({ runId }: { runId: number }) => {
     queryKey: ["pipeline-run-details", runId],
     queryFn: () =>
       fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL || ""}/api/executions/${runId}/details`,
+        `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${runId}/details`,
       ).then((res) => res.json()),
   });
   const { data: state, isLoading: isStateLoading } = useQuery({
     queryKey: ["pipeline-run-state", runId],
     queryFn: () =>
       fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL || ""}/api/executions/${runId}/state`,
+        `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${runId}/state`,
       ).then((res) => res.json()),
   });
 
