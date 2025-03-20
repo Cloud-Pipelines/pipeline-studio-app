@@ -25,7 +25,7 @@ interface PipelineRun {
 
 const createPipelineRun = async (payload: any) => {
   const response = await fetch(
-    `${import.meta.env.VITE_BACKEND_API_URL}/api/pipeline_runs/`,
+    `${import.meta.env.VITE_BACKEND_API_URL || ""}/api/pipeline_runs/`,
     {
       method: "POST",
       headers: {
