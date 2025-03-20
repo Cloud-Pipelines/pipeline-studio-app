@@ -13,6 +13,7 @@ import {
 } from "@/utils/constants";
 
 function AppFooter() {
+  const version = import.meta.env.VITE_GIT_COMMIT ?? "master"
   return (
     <footer className="footer w-full h-[30px] p-1 text-center bg-gray-50">
       <div className="inline-block">
@@ -39,6 +40,15 @@ function AppFooter() {
           rel="noopener noreferrer"
         >
           Privacy policy
+        </a>
+        Version:
+        <a
+          href={`https://github.com/Cloud-Pipelines/pipeline-studio-app/commit/${version}`}
+          className="mx-1.5 text-blue-600 hover:text-blue-800 hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {version.substring(0, 6)}
         </a>
       </div>
     </footer>
