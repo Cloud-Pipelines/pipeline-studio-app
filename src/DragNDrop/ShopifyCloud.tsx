@@ -25,7 +25,7 @@ interface PipelineRun {
 
 const createPipelineRun = async (payload: any) => {
   const response = await fetch(
-    `${import.meta.env.VITE_BACKEND_API_URL}pipeline_runs/`,
+    `${import.meta.env.VITE_BACKEND_API_URL}/api/pipeline_runs/`,
     {
       method: "POST",
       headers: {
@@ -117,11 +117,6 @@ const ShopifyCloudSubmitter = ({
       setIsSubmitting(false);
     }
   };
-
-  // If there's no backend API URL configured, don't render anything
-  if (!import.meta.env.VITE_BACKEND_API_URL) {
-    return null;
-  }
 
   return (
     <div className="flex flex-col gap-2 p-2">
