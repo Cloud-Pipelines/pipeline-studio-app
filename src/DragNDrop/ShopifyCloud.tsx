@@ -80,7 +80,6 @@ const ShopifyCloudSubmitter = ({
       setSubmitSuccess(true);
 
       setRunId(responseData.root_execution_id);
-
     },
   });
 
