@@ -13,7 +13,7 @@ import {
 } from "@/utils/constants";
 
 function AppFooter() {
-  const version = import.meta.env.VITE_GIT_COMMIT ?? "master"
+  const version = import.meta.env.VITE_GIT_COMMIT ?? "master";
   return (
     <footer className="footer w-full h-[30px] p-1 text-center bg-gray-50">
       <div className="inline-block">
