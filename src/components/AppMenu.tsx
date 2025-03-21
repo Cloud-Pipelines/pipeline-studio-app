@@ -3,6 +3,7 @@ import { APP_ROUTES } from "@/utils/constants";
 import { useNavigate } from "@tanstack/react-router";
 
 import EditorMenu from "./EditorMenu";
+import ImportPipeline from "./ImportPipeline";
 
 const AppMenu = () => {
   const navigate = useNavigate();
@@ -23,7 +24,10 @@ const AppMenu = () => {
           />
           <EditorMenu />
         </div>
-        <NewExperimentDialog />
+        <div className="flex flex-row gap-2 items-center">
+          <ImportPipeline />
+          <NewExperimentDialog />
+        </div>
       </div>
     </div>
   );
