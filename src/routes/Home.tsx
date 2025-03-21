@@ -28,18 +28,22 @@ const Home = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: ["runs"],
-    queryFn: () =>
-      fetch(
+    queryFn: async () => {
+      const response = await fetch(
         `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/pipeline_runs/`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-        },
-      ).then((response) => response.json()),
+        }
+      );
+      if (!response.ok) {
+        throw response;
+      }
+      return await response.json();
+    },
   });
-
   useEffect(() => {
     fetchUserPipelines();
   }, []);
@@ -110,7 +114,7 @@ const Home = () => {
           )}
         </TabsContent>
         <TabsContent value="runs" className="flex flex-col gap-1">
-          {data?.pipeline_runs.map((run: { root_execution_id: number }) => (
+          {data?.pipeline_runs?.map((run: { root_execution_id: number }) => (
             <RunListItem
               key={run.root_execution_id}
               runId={run.root_execution_id}
