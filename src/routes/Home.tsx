@@ -29,12 +29,15 @@ const Home = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["runs"],
     queryFn: () =>
-      fetch(`${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/pipeline_runs/`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
+      fetch(
+        `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/pipeline_runs/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      }).then((response) => response.json()),
+      ).then((response) => response.json()),
   });
 
   useEffect(() => {

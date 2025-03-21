@@ -56,7 +56,8 @@ const RunListItem = ({ runId }: { runId: number }) => {
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <StatusIcon status={currentStatus()} />
-          <span>Run #{runId}</span>
+          <span>{details.task_spec.componentRef.spec.name}</span>
+          <span className="text-gray-500 text-xs">#{runId}</span>
         </div>
         {statusCounts && (
           <div className="text-xs text-gray-500 mt-1">
