@@ -1,3 +1,6 @@
+import { useCallback } from "react";
+import { useRef } from "react";
+
 import { downloadData } from "@/cacheUtils";
 import { isGraphImplementation } from "@/componentSpec";
 import {
@@ -6,11 +9,9 @@ import {
   preloadComponentReferences,
 } from "@/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
-import { useCallback } from "react";
 
-import { useRef } from "react";
-import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 const removeSuffixes = (s: string, suffixes: string[]) => {
   for (const suffix of suffixes) {

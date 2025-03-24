@@ -1,9 +1,9 @@
 import { downloadDataWithCache } from "@/cacheUtils";
 import { isGraphImplementation } from "@/componentSpec";
 import {
+  type ComponentReferenceWithSpec,
   loadComponentAsRefFromText,
   preloadComponentReferences,
-  type ComponentReferenceWithSpec,
 } from "@/componentStore";
 
 const loadInlineComponentRefs = async (tasks: Record<string, any>) => {

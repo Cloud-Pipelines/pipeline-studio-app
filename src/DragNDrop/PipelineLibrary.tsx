@@ -6,6 +6,11 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import { useNavigate } from "@tanstack/react-router";
+import { useStore } from "@xyflow/react";
+import { useCallback, useRef,useState } from "react";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,25 +18,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useCallback, useState, useRef } from "react";
-import { useStore } from "@xyflow/react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+
 import type { DownloadDataType } from "../cacheUtils";
 import { downloadDataWithCache } from "../cacheUtils";
 import type { ComponentSpec } from "../componentSpec";
 import {
   type ComponentFileEntry,
   componentSpecToYaml,
-  writeComponentToFileListFromText,
   getComponentFileFromList,
+  writeComponentToFileListFromText,
 } from "../componentStore";
-import GraphComponentLink from "./GraphComponentLink";
-import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
 import { preloadComponentReferences } from "../componentStore";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
-import { useNavigate } from "@tanstack/react-router";
+import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
+import GraphComponentLink from "./GraphComponentLink";
 
 interface PipelineLibraryProps {
   componentSpec?: ComponentSpec;

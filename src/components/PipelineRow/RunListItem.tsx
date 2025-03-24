@@ -1,9 +1,11 @@
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+
+import { APP_ROUTES } from "@/utils/constants";
+
 import StatusIcon from "./StatusIcon";
 import TaskStatusBar from "./TaskStatusBar";
 import { countTaskStatuses } from "./utils";
-import { useQuery } from "@tanstack/react-query";
-import { APP_ROUTES } from "@/utils/constants";
 
 const RunListItem = ({ runId }: { runId: number }) => {
   const navigate = useNavigate();

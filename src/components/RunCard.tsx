@@ -1,25 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { SelectContent } from "./ui/select";
+import { useNavigate } from "@tanstack/react-router";
 import {
   ChevronRight,
   CircleAlert,
   CircleCheck,
+  CopyIcon,
   EyeIcon,
   RefreshCcw,
-  CopyIcon,
 } from "lucide-react";
-import { Button } from "./ui/button";
-import { Select } from "./ui/select";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useNavigate } from "@tanstack/react-router";
 import { APP_ROUTES } from "@/utils/constants";
+
+import { Button } from "./ui/button";
+import { Card, CardFooter, CardHeader, CardTitle } from "./ui/card";
+import { SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { SelectContent } from "./ui/select";
+import { Select } from "./ui/select";
 
 interface RunCardProps {
   rootExecutionId: number;

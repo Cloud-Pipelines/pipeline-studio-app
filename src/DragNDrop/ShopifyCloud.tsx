@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
-import { APP_ROUTES } from "@/utils/constants";
-import type { ComponentSpec } from "../componentSpec";
-import localForage from "localforage";
 import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import localForage from "localforage";
+import { AlertCircle,CheckCircle, Loader2 } from "lucide-react";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { APP_ROUTES } from "@/utils/constants";
+
+import type { ComponentSpec } from "../componentSpec";
 
 interface ShopifyCloudSubmitterProps {
   componentSpec?: ComponentSpec;

@@ -9,13 +9,12 @@
 import {
   type ArgumentType,
   type ComponentSpec,
-  type StringOrPlaceholder,
-  type TypeSpecType,
+  type InputSpec,
   isContainerImplementation,
   isGraphImplementation,
-  type InputSpec,
+  type StringOrPlaceholder,
+  type TypeSpecType,
 } from "../../componentSpec";
-
 import * as vertex from "./vertexPipelineSpec";
 
 // # How to handle I/O:

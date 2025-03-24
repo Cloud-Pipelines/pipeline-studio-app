@@ -9,7 +9,8 @@
 import fs from "fs";
 import yaml from "js-yaml";
 import path from "path";
-import { test, expect } from "vitest";
+import { expect,test } from "vitest";
+
 import type { ComponentSpec } from "../../componentSpec";
 import { buildVertexPipelineJobFromGraphComponent } from "./vertexAiCompiler";
 

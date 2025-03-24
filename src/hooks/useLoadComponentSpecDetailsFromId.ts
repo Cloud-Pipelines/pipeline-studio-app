@@ -1,8 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+
 import type { ComponentSpec } from "@/componentSpec";
 import type { ComponentReferenceWithSpec } from "@/componentStore";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 
 export const useLoadComponentSpecAndDetailsFromId = (id: string) => {
   if (!id) {

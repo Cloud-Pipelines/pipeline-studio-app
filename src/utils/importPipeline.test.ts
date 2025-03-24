@@ -1,8 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { importPipelineFromYaml } from "./importPipeline";
-import * as componentStore from "@/componentStore";
-import { USER_PIPELINES_LIST_NAME } from "./constants";
+import { afterEach,beforeEach, describe, expect, it, vi } from "vitest";
+
 import * as componentSpecModule from "@/componentSpec";
+import * as componentStore from "@/componentStore";
+
+import { USER_PIPELINES_LIST_NAME } from "./constants";
+import { importPipelineFromYaml } from "./importPipeline";
 
 vi.mock("@/componentStore", () => ({
   componentSpecToYaml: vi.fn(),

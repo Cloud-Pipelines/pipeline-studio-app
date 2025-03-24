@@ -6,8 +6,10 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { Input } from "@/components/ui/input";
+import { useCallback, useEffect,useState } from "react";
+import { useDropzone } from "react-dropzone";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,16 +17,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { useCallback, useState, useEffect } from "react";
-import { useDropzone } from "react-dropzone";
+
 import {
   addComponentToListByText,
-  deleteComponentFileFromList,
-  type ComponentFileEntry,
-  getAllComponentFilesFromList,
   addComponentToListByUrl,
+  type ComponentFileEntry,
+  deleteComponentFileFromList,
+  getAllComponentFilesFromList,
 } from "../componentStore";
 import DraggableComponent from "./DraggableComponent";
 

@@ -6,6 +6,15 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import type { HandleType,Node, NodeProps } from "@xyflow/react";
+import { Handle, Position } from "@xyflow/react";
+import {
+  CircleAlert,
+  CircleCheck,
+  CircleDashed,
+  EyeIcon,
+  RefreshCcw,
+} from "lucide-react";
 import { type CSSProperties, memo, useState } from "react";
 
 import type {
@@ -14,17 +23,6 @@ import type {
   OutputSpec,
   TaskSpec,
 } from "../componentSpec";
-
-import { Handle, Position } from "@xyflow/react";
-import type { Node, NodeProps, HandleType } from "@xyflow/react";
-import {
-  CircleCheck,
-  CircleAlert,
-  RefreshCcw,
-  EyeIcon,
-  CircleDashed,
-} from "lucide-react";
-
 import ArgumentsEditorDialog from "./ArgumentsEditorDialog";
 
 const inputHandlePosition = Position.Top;

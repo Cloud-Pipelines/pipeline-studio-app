@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
-import replaceTaskArgumentsInGraphSpec from "./replaceTaskArgumentsInGraphSpec";
+import { describe, expect,it } from "vitest";
+
 import type { ArgumentType, GraphSpec } from "../componentSpec";
+import replaceTaskArgumentsInGraphSpec from "./replaceTaskArgumentsInGraphSpec";
 
 describe("replaceTaskArgumentsInGraphSpec", () => {
   it("should update task arguments for an existing task", () => {

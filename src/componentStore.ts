@@ -8,10 +8,10 @@
 
 import yaml from "js-yaml";
 import localForage from "localforage";
+
 import type { DownloadDataType } from "./cacheUtils";
 import { downloadDataWithCache } from "./cacheUtils";
-
-import type { ComponentSpec, ComponentReference } from "./componentSpec";
+import type { ComponentReference,ComponentSpec } from "./componentSpec";
 import { isValidComponentSpec } from "./componentSpec";
 
 // IndexedDB: DB and table names

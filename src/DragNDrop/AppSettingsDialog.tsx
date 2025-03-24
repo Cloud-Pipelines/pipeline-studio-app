@@ -6,8 +6,9 @@
  * @copyright 2022 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,11 +16,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { getMutableAppSettings } from "../appSettings";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
+import { getMutableAppSettings } from "../appSettings";
 
 type AppSettingsDialogProps = {
   isOpen: boolean;

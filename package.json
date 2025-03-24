@@ -59,6 +59,7 @@
     "@xyflow/react": "^12.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "gh-pages": "^6.3.0",
     "js-yaml": "^4.1.0",
     "localforage": "^1.10.0",

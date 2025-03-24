@@ -1,10 +1,11 @@
-import NewExperimentDialog from "@/components/NewExperiment";
-import { APP_ROUTES } from "@/utils/constants";
 import { useNavigate } from "@tanstack/react-router";
 
+import NewExperimentDialog from "@/components/NewExperiment";
+import { APP_ROUTES } from "@/utils/constants";
+
+import CloneRunButton from "./CloneRunButton";
 import EditorMenu from "./EditorMenu";
 import ImportPipeline from "./ImportPipeline";
-import CloneRunButton from "./CloneRunButton";
 const AppMenu = () => {
   const navigate = useNavigate();
 

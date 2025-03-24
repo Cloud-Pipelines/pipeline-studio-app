@@ -1,11 +1,12 @@
 import { type Node } from "@xyflow/react";
-import { describe, test, expect, vi, beforeEach, type Mock } from "vitest";
-import { updateComponentSpecFromNodes } from "./updateComponentSpecFromNodes";
+import { beforeEach, describe, expect, type Mock,test, vi } from "vitest";
+
 import {
-  isGraphImplementation,
   type ComponentSpec,
   type GraphImplementation,
+  isGraphImplementation,
 } from "../componentSpec";
+import { updateComponentSpecFromNodes } from "./updateComponentSpecFromNodes";
 
 vi.mock("../componentSpec", () => ({
   isGraphImplementation: vi.fn(),

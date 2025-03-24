@@ -1,23 +1,22 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import localForage from "localforage";
+import { List } from "lucide-react";
+import { useEffect,useState } from "react";
 
 import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { EDITOR_PATH } from "@/utils/constants";
-import localForage from "localforage";
 
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { ScrollArea } from "../ui/scroll-area";
+import RunListItem from "./RunListItem";
+import StatusIcon from "./StatusIcon";
 import {
   type PipelineRowProps,
   type PipelineRun,
   type TaskStatusCounts,
 } from "./types";
 import { countTaskStatuses } from "./utils";
-import StatusIcon from "./StatusIcon";
-import RunListItem from "./RunListItem";
-
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { ScrollArea } from "../ui/scroll-area";
-import { List } from "lucide-react";
 
 const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
   const [rowData, setRowData] = useState<any>(null);

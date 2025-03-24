@@ -1,8 +1,9 @@
-import { describe, it, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
-import useComponentSpecToEdges from "./useComponentSpecToEdges";
 import { MarkerType } from "@xyflow/react";
+import { describe, expect,it } from "vitest";
+
 import type { ComponentSpec } from "../componentSpec";
+import useComponentSpecToEdges from "./useComponentSpecToEdges";
 
 describe("useComponentSpecToEdges", () => {
   const createBasicComponentSpec = (implementation: any): ComponentSpec => ({

@@ -1,7 +1,8 @@
-import { describe, test, expect, beforeEach, vi } from "vitest";
-import { updateNodePositions } from "./updateNodePosition";
 import type { Node } from "@xyflow/react";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
 import type { ComponentSpec } from "../componentSpec";
+import { updateNodePositions } from "./updateNodePosition";
 
 describe("updateNodePositions", () => {
   let mockSetComponentSpec: ReturnType<typeof vi.fn>;

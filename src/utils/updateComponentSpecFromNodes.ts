@@ -1,12 +1,13 @@
+import type { Node } from "@xyflow/react";
+
 import {
-  isGraphImplementation,
   type ComponentSpec,
   type GraphSpec,
   type InputSpec,
+  isGraphImplementation,
   type OutputSpec,
   type TaskSpec,
 } from "../componentSpec";
-import type { Node } from "@xyflow/react";
 import { isComponentTaskNode } from "../DragNDrop/ComponentTaskNode";
 import {
   nodeIdToInputName,

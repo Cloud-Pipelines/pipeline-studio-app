@@ -6,7 +6,10 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { useState, useEffect } from "react";
+import { useEffect,useState } from "react";
+
+import { Button } from "@/components/ui/button";
+
 import {
   type DownloadDataType,
   downloadDataWithCache,
@@ -17,7 +20,6 @@ import {
   type ComponentReferenceWithSpec,
   fullyLoadComponentRefFromUrl,
 } from "../componentStore";
-import { Button } from "@/components/ui/button";
 
 type PipelineLibraryStruct = {
   annotations?: {

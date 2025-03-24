@@ -1,5 +1,6 @@
-import type { DragEvent } from "react";
 import type { ReactFlowInstance } from "@xyflow/react";
+import type { DragEvent } from "react";
+
 import type {
   ComponentSpec,
   GraphSpec,
