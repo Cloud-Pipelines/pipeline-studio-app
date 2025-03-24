@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
 import { EDITOR_PATH } from "@/utils/constants";
@@ -136,7 +136,16 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
     const isAccordionClick =
       (e.target as HTMLElement).closest("[data-popover-trigger]") !== null;
     if (!isAccordionClick) {
-      navigate({ to: `${EDITOR_PATH}/${name}` });
+      if (e.metaKey || e.ctrlKey) {
+        // Open in new tab using window.open instead of navigate with target
+        const safeName = name || "unnamed";
+        window.open(
+          `${window.location.origin}${EDITOR_PATH}/${encodeURIComponent(safeName)}`,
+          "_blank",
+        );
+      } else {
+        navigate({ to: `${EDITOR_PATH}/${name}` });
+      }
     }
   };
 
@@ -146,9 +155,20 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
   const pipelineSpec = componentRef?.spec || rowData;
   const displayName = name || pipelineSpec?.name || "Unnamed Pipeline";
 
+  const LinkProps = {
+    to: `${EDITOR_PATH}/${encodeURIComponent(name || "")}`,
+    className: "underline hover:text-blue-500",
+    onClick: (e: React.MouseEvent) => {
+      e.stopPropagation(); // Prevent triggering the row click handler
+    },
+  };
+
   return (
     <TableRow onClick={handleOpenInEditor} className="cursor-pointer">
-      <TableCell className="text-sm">{displayName}</TableCell>
+      <TableCell className="text-sm">
+        <Link {...LinkProps}>{displayName}</Link>
+      </TableCell>
+
       <TableCell>
         {latestRun && runTaskStatuses[latestRun.id] && (
           <StatusIcon status={latestRun.status} />
