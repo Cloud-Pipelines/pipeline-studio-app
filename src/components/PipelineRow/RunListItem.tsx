@@ -1,13 +1,15 @@
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+
+import type {
+  GetExecutionInfoResponse,
+  GetGraphExecutionStateResponse,
+} from "@/api/types.gen";
+import { APP_ROUTES } from "@/utils/constants";
+
 import StatusIcon from "./StatusIcon";
 import TaskStatusBar from "./TaskStatusBar";
 import { countTaskStatuses } from "./utils";
-import { useQuery } from "@tanstack/react-query";
-import { APP_ROUTES } from "@/utils/constants";
-import type {
-  GetGraphExecutionStateResponse,
-  GetExecutionInfoResponse,
-} from "@/api/types.gen";
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 

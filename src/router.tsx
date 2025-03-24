@@ -4,13 +4,14 @@ import {
   createRouter,
   Outlet,
 } from "@tanstack/react-router";
-import Editor from "./routes/Editor";
-import Home from "./routes/Home";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+
 import AppFooter from "./components/AppFooter";
 import AppMenu from "./components/AppMenu";
-import { APP_ROUTES } from "./utils/constants";
+import Editor from "./routes/Editor";
+import Home from "./routes/Home";
 import RunDetails from "./routes/RunDetails";
+import { APP_ROUTES } from "./utils/constants";
 
 declare module "@tanstack/react-router" {
   interface Register {

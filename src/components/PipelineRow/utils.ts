@@ -1,8 +1,9 @@
-import { type TaskStatusCounts } from "./types";
 import type {
-  GetGraphExecutionStateResponse,
   GetExecutionInfoResponse,
+  GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
+
+import { type TaskStatusCounts } from "./types";
 
 /**
  * Count task statuses from API response

@@ -1,9 +1,10 @@
-import { InfoIcon, Terminal, ArrowDownToLine } from "lucide-react";
+import { ArrowDownToLine, InfoIcon, Terminal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { TaskSpec } from "@/componentSpec";
+
 import {
   Sheet,
   SheetContent,
@@ -35,8 +36,7 @@ const ExecutionDetailsSheet = ({
           <InfoIcon className="w-3 h-3" />
         </Button>
       </SheetTrigger>
-      <SheetContent
-        className="!max-w-none !w-[33.333333%] overflow-y-auto">
+      <SheetContent className="!max-w-none !w-[33.333333%] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Execution Details - {taskId}</SheetTitle>
         </SheetHeader>
@@ -171,7 +171,6 @@ const ExecutionDetailsSheet = ({
             <TabsContent value="logs">
               <ScrollArea className="h-[500px]">
                 <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
-
                   Fetching logs... TBD IN ANOTHER PR
                 </div>
               </ScrollArea>

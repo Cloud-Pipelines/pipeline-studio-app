@@ -1,9 +1,10 @@
 import {
-  MarkerType,
-  useEdgesState,
   type Edge,
   type EdgeChange,
+  MarkerType,
+  useEdgesState,
 } from "@xyflow/react";
+import { useEffect } from "react";
 
 import type {
   ArgumentType,
@@ -18,7 +19,6 @@ import {
   outputNameToNodeId,
   taskIdToNodeId,
 } from "../utils/nodeIdUtils";
-import { useEffect } from "react";
 
 const useComponentSpecToEdges = (
   componentSpec: ComponentSpec,

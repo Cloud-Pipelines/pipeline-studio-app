@@ -1,9 +1,11 @@
+import { Link } from "@tanstack/react-router";
+
 import NewExperimentDialog from "@/components/NewExperiment";
 
+import CloneRunButton from "./CloneRunButton";
 import EditorMenu from "./EditorMenu";
 import ImportPipeline from "./ImportPipeline";
-import CloneRunButton from "./CloneRunButton";
-import { Link } from "@tanstack/react-router";
+
 const AppMenu = () => {
   return (
     <div className="w-full bg-stone-900 p-2">

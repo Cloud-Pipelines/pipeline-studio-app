@@ -1,3 +1,8 @@
+import { useNavigate } from "@tanstack/react-router";
+import { AlertCircle, InfoIcon } from "lucide-react";
+import { generate } from "random-words";
+import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,21 +16,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
+  type ComponentFileEntry,
   getAllComponentFilesFromList,
   writeComponentToFileListFromText,
-  type ComponentFileEntry,
 } from "@/componentStore";
 import { replaceLocalStorageWithExperimentYaml } from "@/DragNDrop/PipelineAutoSaver";
-import { useNavigate } from "@tanstack/react-router";
 import {
   defaultPipelineYamlWithName,
   EDITOR_PATH,
   USER_PIPELINES_LIST_NAME,
 } from "@/utils/constants";
-import { generate } from "random-words";
-import { useEffect, useState } from "react";
+
 import { Alert, AlertDescription } from "./ui/alert";
-import { AlertCircle, InfoIcon } from "lucide-react";
 
 const VALID_NAME_REGEX = /^[a-zA-Z0-9\s]+$/;
 const VALID_NAME_MESSAGE =

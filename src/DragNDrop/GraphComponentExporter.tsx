@@ -9,7 +9,6 @@
 import { useStore } from "@xyflow/react";
 
 import type { ComponentSpec } from "../componentSpec";
-
 import { componentSpecToYaml } from "../componentStore";
 import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
 

@@ -1,13 +1,13 @@
 import {
-  useNodesState,
   type Node,
   type NodeChange,
+  useNodesState,
   type XYPosition,
 } from "@xyflow/react";
+import { useEffect } from "react";
 
 import type { ArgumentType, ComponentSpec, GraphSpec } from "../componentSpec";
 import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
-import { useEffect } from "react";
 
 type SetComponentSpec = (componentSpec: ComponentSpec) => void;
 
