@@ -20,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DndContext, useDraggable, type DragEndEvent } from "@dnd-kit/core";
+import { GripVertical } from "lucide-react";
 
 // Global counter for z-index management
 let globalZIndexCounter = 1000;
@@ -128,8 +129,15 @@ const DraggableDialogContent = ({
       onMouseDown={bringToFront}
     >
       <Card>
-        <CardHeader {...attributes} {...listeners} className="cursor-grab">
-          <CardTitle>{componentSpec.name}</CardTitle>
+        <CardHeader>
+          <CardTitle
+            {...attributes}
+            {...listeners}
+            className="cursor-move flex items-center"
+          >
+            <GripVertical className="w-4 h-4 mr-2" />
+            {componentSpec.name}
+          </CardTitle>
           <CardDescription>
             Configure the component&apos;s input parameters.
           </CardDescription>
