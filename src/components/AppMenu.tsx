@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 import EditorMenu from "./EditorMenu";
 import ImportPipeline from "./ImportPipeline";
-
+import CloneRunButton from "./CloneRunButton";
 const AppMenu = () => {
   const navigate = useNavigate();
 
@@ -25,6 +25,7 @@ const AppMenu = () => {
           <EditorMenu />
         </div>
         <div className="flex flex-row gap-2 items-center">
+          <CloneRunButton />
           <ImportPipeline />
           <NewExperimentDialog />
         </div>
