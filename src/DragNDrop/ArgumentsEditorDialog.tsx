@@ -30,6 +30,7 @@ interface ArgumentsEditorDialogProps {
   closeEditor?: () => void;
   setArguments?: (args: Record<string, ArgumentType>) => void;
   position?: { x: number; y: number };
+  disabled?: boolean;
 }
 
 const ArgumentsEditorDialog = ({
@@ -37,6 +38,7 @@ const ArgumentsEditorDialog = ({
   closeEditor,
   setArguments,
   position = { x: 100, y: 100 },
+  disabled = false,
 }: ArgumentsEditorDialogProps) => {
   const [currentArguments, setCurrentArguments] = useState<
     Record<string, ArgumentType>
@@ -85,6 +87,7 @@ const ArgumentsEditorDialog = ({
         handleApply={handleApply}
         zIndex={currentZIndex}
         bringToFront={bringToFront}
+        disabled={disabled}
       />
     </DndContext>
   );
@@ -101,6 +104,7 @@ const DraggableDialogContent = ({
   handleApply,
   zIndex,
   bringToFront,
+  disabled,
 }: {
   dialogPosition: { x: number; y: number };
   componentSpec: ComponentSpec;
@@ -110,6 +114,7 @@ const DraggableDialogContent = ({
   handleApply: () => void;
   zIndex: number;
   bringToFront: () => void;
+  disabled: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: "arguments-dialog",
@@ -147,11 +152,20 @@ const DraggableDialogContent = ({
             inputs={componentSpec.inputs ?? []}
             componentArguments={currentArguments}
             setComponentArguments={setCurrentArguments}
+            disabled={disabled}
           />
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button onClick={closeEditor}>Close</Button>
-          <Button onClick={handleApply}>Apply</Button>
+          <Button onClick={closeEditor} className="cursor-pointer">
+            Close
+          </Button>
+          <Button
+            onClick={handleApply}
+            disabled={disabled}
+            className="cursor-pointer"
+          >
+            Apply
+          </Button>
         </CardFooter>
       </Card>
     </div>

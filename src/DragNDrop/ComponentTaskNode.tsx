@@ -23,16 +23,18 @@ import {
   RefreshCcw,
   EyeIcon,
   CircleDashed,
+  SettingsIcon,
 } from "lucide-react";
 
 import ArgumentsEditorDialog from "./ArgumentsEditorDialog";
-
+import { Button } from "@/components/ui/button";
+import ExecutionDetailsSheet from "@/components/ExecutionDetailsSheet";
 const inputHandlePosition = Position.Top;
 const outputHandlePosition = Position.Bottom;
 
 type InputOrOutputSpec = InputSpec | OutputSpec;
 
-const NODE_WIDTH_IN_PX = 180;
+const NODE_WIDTH_IN_PX = 200;
 
 export const isComponentTaskNode = (
   node: Node,
@@ -183,7 +185,19 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
 
   const runStatus = taskSpec.annotations?.["status"] as string | undefined;
   // for testing can we assign a status to the node randomly
-  // const runStatus = ["SUCCEEDED", "FAILED", "RUNNING", "STARTING", "CANCELLING", "CONDITIONALLY_SKIPPED", "CANCELLED", "SYSTEM_ERROR", "INVALID", "UPSTREAM_FAILED", "UPSTREAM_FAILED_OR_SKIPPED"][Math.floor(Math.random() * 10)];
+  // const runStatus = [
+  //   "SUCCEEDED",
+  //   "FAILED",
+  //   "RUNNING",
+  //   "STARTING",
+  //   "CANCELLING",
+  //   "CONDITIONALLY_SKIPPED",
+  //   "CANCELLED",
+  //   "SYSTEM_ERROR",
+  //   "INVALID",
+  //   "UPSTREAM_FAILED",
+  //   "UPSTREAM_FAILED_OR_SKIPPED",
+  // ][Math.floor(Math.random() * 10)];
 
   if (componentSpec === undefined) {
     return <></>;
@@ -220,12 +234,6 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
 
   const closeArgumentsEditor = () => {
     setIsArgumentsEditorOpen(false);
-  };
-
-  const handleDoubleClick = () => {
-    if (!isArgumentsEditorOpen) {
-      setIsArgumentsEditorOpen(true);
-    }
   };
 
   const getBorderColor = () => {
@@ -266,33 +274,65 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
     }
   };
 
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
+
+  const handleDoubleClick = () => {
+    if (!isArgumentsEditorOpen) {
+      setIsArgumentsEditorOpen(true);
+    }
+  };
+
   return (
     <>
       <div
-        onDoubleClick={handleDoubleClick}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className={`border rounded-md shadow-sm transition-all duration-200 ${getBorderColor()} ${getBgColor()}`}
         style={{ width: `${NODE_WIDTH_IN_PX}px` }}
       >
         <div className="p-3 flex items-center justify-between">
-          <div className="font-medium text-gray-800 truncate " title={title}>
+          <div className="font-medium text-gray-800 truncate" title={title}>
             {label}
           </div>
-
-          {runStatus && (
-            <div className="flex items-center ml-2 flex-shrink-0">
-              {getStatusIcon(runStatus)}
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {!runStatus && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="cursor-pointer"
+                onClick={handleDoubleClick}
+              >
+                <SettingsIcon className="w-3 h-3" />
+              </Button>
+            )}
+            {runStatus && (
+              <ExecutionDetailsSheet
+                taskSpec={taskSpec}
+                taskId={typedData.taskId}
+              runStatus={runStatus}
+              />
+            )}
+            {runStatus && (
+              <div className="flex items-center ml-2 flex-shrink-0">
+                {getStatusIcon(runStatus)}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {handleComponents}
-      {isArgumentsEditorOpen && !runStatus && (
+      {isArgumentsEditorOpen && (
         <ArgumentsEditorDialog
           taskSpec={taskSpec}
           closeEditor={closeArgumentsEditor}
           setArguments={typedData.setArguments}
+          disabled={!!runStatus}
         />
       )}
     </>
