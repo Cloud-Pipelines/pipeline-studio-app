@@ -1,39 +1,26 @@
-import { useEffect, useState } from "react";
 import {
   ReactFlowProvider,
   Controls,
   Background,
   MiniMap,
-  ControlButton,
 } from "@xyflow/react";
 import { useQuery } from "@tanstack/react-query";
 import type { ComponentSpec } from "../componentSpec";
 import GraphComponentSpecFlow from "../DragNDrop/GraphComponentSpecFlow";
-import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
-import { type ComponentReferenceWithSpec } from "../componentStore";
 import { DndContext } from "@dnd-kit/core";
-import { useNavigate } from "@tanstack/react-router";
 
 import { runDetailRoute, type RunDetailParams } from "@/router";
-import { CopyIcon } from "lucide-react";
-import { copyRunToPipeline } from "@/utils/copyRunToPipeline";
+import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 
 const GRID_SIZE = 10;
 
 const RunDetails = () => {
   const { id } = runDetailRoute.useParams() as RunDetailParams;
-  const navigate = useNavigate();
-  const [componentSpec, setComponentSpec] = useState<
-    ComponentSpec | undefined
-  >();
-
-  const { data: detailsData, isLoading: detailsLoading } = useQuery({
-    queryKey: ["run_details", id],
-    queryFn: () =>
-      fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${id}/details`,
-      ).then((response) => response.json()),
-  });
+  const {
+    componentSpec,
+    detailsData,
+    isLoading: detailsLoading,
+  } = useLoadComponentSpecAndDetailsFromId(id);
 
   const { data: stateData, isLoading: stateLoading } = useQuery({
     queryKey: ["run_state", id],
@@ -44,34 +31,6 @@ const RunDetails = () => {
     refetchInterval: 5000,
     refetchIntervalInBackground: false,
   });
-
-  useEffect(() => {
-    const loadPipeline = async () => {
-      if (detailsLoading || !detailsData?.task_spec?.componentRef) {
-        return;
-      }
-
-      try {
-        // Create a component reference from the run details
-        const componentRef: ComponentReferenceWithSpec = {
-          ...detailsData.task_spec.componentRef,
-          digest:
-            detailsData.task_spec.componentRef.spec?.metadata?.annotations
-              ?.digest || "unknown",
-        };
-
-        // Prepare the component for the editor
-        const preparedComponentRef =
-          await prepareComponentRefForEditor(componentRef);
-
-        setComponentSpec(preparedComponentRef);
-      } catch (error) {
-        console.error("Error preparing component for editor:", error);
-      }
-    };
-
-    loadPipeline();
-  }, [detailsData, detailsLoading]);
 
   const taskStatusMap = new Map();
 
@@ -157,15 +116,6 @@ const RunDetails = () => {
     );
   }
 
-  const handleCopy = async () => {
-    const result = await copyRunToPipeline(componentSpec);
-    if (result?.url) {
-      navigate({ to: result.url });
-    } else {
-      console.error("Failed to copy run to pipeline");
-    }
-  };
-
   return (
     <div className="dndflow">
       <DndContext>
@@ -180,11 +130,7 @@ const RunDetails = () => {
               fitView
             >
               <MiniMap />
-              <Controls className="transform scale-150 translate-y-[-40px]">
-                <ControlButton onClick={handleCopy}>
-                  <CopyIcon />
-                </ControlButton>
-              </Controls>
+              <Controls />
               <Background gap={GRID_SIZE} />
             </GraphComponentSpecFlow>
           </div>
