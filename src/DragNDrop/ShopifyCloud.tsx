@@ -81,6 +81,11 @@ const ShopifyCloudSubmitter = ({
 
       setRunId(responseData.root_execution_id);
     },
+    onError: (error) => {
+      console.error("Error submitting pipeline:", error);
+      setErrorMessage("Failed to submit pipeline");
+      setSubmitSuccess(false);
+    },
   });
 
   const handleViewRun = () => {
