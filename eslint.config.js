@@ -27,4 +27,7 @@ export default [
       ],
     },
   },
+  {
+    ignores: ["src/api/**/*"],
+  },
 ];

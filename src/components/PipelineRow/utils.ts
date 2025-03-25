@@ -1,11 +1,13 @@
 import { type TaskStatusCounts } from "./types";
+import type { GetExecutionInfoResponse } from "@/api/models/GetExecutionInfoResponse";
+import type { GetGraphExecutionStateResponse } from "@/api/models/GetGraphExecutionStateResponse";
 
 /**
  * Count task statuses from API response
  */
 export const countTaskStatuses = (
-  details: any,
-  stateData: any,
+  details: GetExecutionInfoResponse,
+  stateData: GetGraphExecutionStateResponse,
 ): TaskStatusCounts => {
   let succeeded = 0,
     failed = 0,

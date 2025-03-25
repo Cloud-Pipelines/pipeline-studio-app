@@ -19,6 +19,9 @@ import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import PipelineRow from "@/components/PipelineRow";
 import { useQuery } from "@tanstack/react-query";
 import RunListItem from "@/components/PipelineRow/RunListItem";
+import type { ListPipelineJobsResponse } from "@/api/models/ListPipelineJobsResponse";
+
+const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 
 const Home = () => {
   const [userPipelines, setUserPipelines] = useState<
@@ -26,24 +29,24 @@ const Home = () => {
   >(new Map());
   const [isLoadingUserPipelines, setIsLoadingUserPipelines] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<ListPipelineJobsResponse>({
     queryKey: ["runs"],
     queryFn: async () => {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/pipeline_runs/`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`${API_URL}/api/pipeline_runs/`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
       if (!response.ok) {
-        throw response;
+        throw new Error(
+          `Failed to fetch pipeline runs: ${response.statusText}`,
+        );
       }
-      return await response.json();
+      return response.json();
     },
   });
+
   useEffect(() => {
     fetchUserPipelines();
   }, []);
@@ -114,7 +117,7 @@ const Home = () => {
           )}
         </TabsContent>
         <TabsContent value="runs" className="flex flex-col gap-1">
-          {data?.pipeline_runs?.map((run: { root_execution_id: number }) => (
+          {data?.pipeline_runs?.map((run) => (
             <RunListItem
               key={run.root_execution_id}
               runId={run.root_execution_id}

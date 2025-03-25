@@ -18,6 +18,10 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
 import { List } from "lucide-react";
+import type { GetExecutionInfoResponse } from "@/api/models/GetExecutionInfoResponse";
+import type { GetGraphExecutionStateResponse } from "@/api/models/GetGraphExecutionStateResponse";
+
+const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 
 const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
   const [rowData, setRowData] = useState<any>(null);
@@ -108,14 +112,25 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
       for (const run of pipelineRuns) {
         try {
           const response = await fetch(
-            `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${run.id}/details`,
+            `${API_URL}/api/executions/${run.id}/details`,
           );
-          const details = await response.json();
+          if (!response.ok) {
+            throw new Error(
+              `Failed to fetch execution details: ${response.statusText}`,
+            );
+          }
+          const details: GetExecutionInfoResponse = await response.json();
 
           const stateResponse = await fetch(
-            `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${run.id}/state`,
+            `${API_URL}/api/executions/${run.id}/state`,
           );
-          const stateData = await stateResponse.json();
+          if (!stateResponse.ok) {
+            throw new Error(
+              `Failed to fetch execution state: ${stateResponse.statusText}`,
+            );
+          }
+          const stateData: GetGraphExecutionStateResponse =
+            await stateResponse.json();
 
           statuses[run.id] = countTaskStatuses(details, stateData);
         } catch (error) {

@@ -11,8 +11,10 @@ import { DndContext } from "@dnd-kit/core";
 
 import { runDetailRoute, type RunDetailParams } from "@/router";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
+import type { GetGraphExecutionStateResponse } from "@/api/models/GetGraphExecutionStateResponse";
 
 const GRID_SIZE = 10;
+const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 
 const RunDetails = () => {
   const { id } = runDetailRoute.useParams() as RunDetailParams;
@@ -22,15 +24,21 @@ const RunDetails = () => {
     isLoading: detailsLoading,
   } = useLoadComponentSpecAndDetailsFromId(id);
 
-  const { data: stateData, isLoading: stateLoading } = useQuery({
-    queryKey: ["run_state", id],
-    queryFn: () =>
-      fetch(
-        `${import.meta.env.VITE_BACKEND_API_URL ?? ""}/api/executions/${id}/state`,
-      ).then((response) => response.json()),
-    refetchInterval: 5000,
-    refetchIntervalInBackground: false,
-  });
+  const { data: stateData, isLoading: stateLoading } =
+    useQuery<GetGraphExecutionStateResponse>({
+      queryKey: ["run_state", id],
+      queryFn: async () => {
+        const response = await fetch(`${API_URL}/api/executions/${id}/state`);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch execution state: ${response.statusText}`,
+          );
+        }
+        return response.json();
+      },
+      refetchInterval: 5000,
+      refetchIntervalInBackground: false,
+    });
 
   const taskStatusMap = new Map();
 
