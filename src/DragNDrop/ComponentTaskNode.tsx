@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { type CSSProperties, memo, useState } from "react";
 
-import ExecutionDetailsSheet from "@/components/ExecutionDetailsSheet";
+import TaskDetailsSheet from "@/components/TaskDetailsSheet";
 import { Button } from "@/components/ui/button";
 
 import type {
@@ -312,7 +312,7 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
               </Button>
             )}
             {runStatus && (
-              <ExecutionDetailsSheet
+              <TaskDetailsSheet
                 taskSpec={taskSpec}
                 taskId={typedData.taskId}
                 runStatus={runStatus}

@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import type { GetExecutionInfoResponse } from "@/api/types.gen";
 import type { ComponentSpec } from "@/componentSpec";
 import type { ComponentReferenceWithSpec } from "@/componentStore";
+import { API_URL } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
-
-const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 
 export const useLoadComponentSpecAndDetailsFromId = (id: string) => {
   if (!id) {

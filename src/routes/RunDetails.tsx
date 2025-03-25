@@ -10,12 +10,12 @@ import {
 import type { GetGraphExecutionStateResponse } from "@/api/types.gen";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 import { type RunDetailParams, runDetailRoute } from "@/router";
+import { API_URL } from "@/utils/constants";
 
 import type { ComponentSpec } from "../componentSpec";
 import GraphComponentSpecFlow from "../DragNDrop/GraphComponentSpecFlow";
 
 const GRID_SIZE = 10;
-const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 
 const RunDetails = () => {
   const { id } = runDetailRoute.useParams() as RunDetailParams;

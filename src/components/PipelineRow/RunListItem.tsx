@@ -5,13 +5,11 @@ import type {
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
-import { APP_ROUTES } from "@/utils/constants";
+import { API_URL, APP_ROUTES } from "@/utils/constants";
 
 import StatusIcon from "./StatusIcon";
 import TaskStatusBar from "./TaskStatusBar";
 import { countTaskStatuses } from "./utils";
-
-const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 
 const STATUS = {
   FAILED: "FAILED",

@@ -4,6 +4,7 @@ import NewExperimentDialog from "@/components/NewExperiment";
 
 import CloneRunButton from "./CloneRunButton";
 import EditorMenu from "./EditorMenu";
+import ExecutionDetailsSheet from "./ExecutionDetailsSheet";
 import ImportPipeline from "./ImportPipeline";
 
 const AppMenu = () => {
@@ -21,6 +22,7 @@ const AppMenu = () => {
           <EditorMenu />
         </div>
         <div className="flex flex-row gap-2 items-center">
+          <ExecutionDetailsSheet />
           <CloneRunButton />
           <ImportPipeline />
           <NewExperimentDialog />
