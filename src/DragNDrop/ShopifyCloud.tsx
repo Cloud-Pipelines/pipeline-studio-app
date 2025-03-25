@@ -6,7 +6,7 @@ import { APP_ROUTES } from "@/utils/constants";
 import type { ComponentSpec } from "../componentSpec";
 import localForage from "localforage";
 import { useMutation } from "@tanstack/react-query";
-import type { Body_create_api_pipeline_runs__post } from "@/api/models/Body_create_api_pipeline_runs__post";
+import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
 
 interface ShopifyCloudSubmitterProps {
   componentSpec?: ComponentSpec;
@@ -26,9 +26,7 @@ interface PipelineRun {
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 
-const createPipelineRun = async (
-  payload: Body_create_api_pipeline_runs__post,
-) => {
+const createPipelineRun = async (payload: BodyCreateApiPipelineRunsPost) => {
   const response = await fetch(`${API_URL}/api/pipeline_runs/`, {
     method: "POST",
     headers: {
@@ -117,7 +115,7 @@ const ShopifyCloudSubmitter = ({
         },
       };
 
-      createPipeline(payload as Body_create_api_pipeline_runs__post);
+      createPipeline(payload as BodyCreateApiPipelineRunsPost);
     } catch (error) {
       console.error("Error submitting pipeline:", error);
       setErrorMessage("Failed to submit pipeline");

@@ -19,7 +19,7 @@ import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import PipelineRow from "@/components/PipelineRow";
 import { useQuery } from "@tanstack/react-query";
 import RunListItem from "@/components/PipelineRow/RunListItem";
-import type { ListPipelineJobsResponse } from "@/api/models/ListPipelineJobsResponse";
+import type { ListPipelineJobsResponse } from "@/api/types.gen";
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 
