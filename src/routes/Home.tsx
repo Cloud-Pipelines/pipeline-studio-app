@@ -20,6 +20,10 @@ import {
 } from "@/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
+const TestComponent = ({ name }: { name: string }) => {
+  return <div>Test {name}</div>;
+};
+
 const Home = () => {
   const [userPipelines, setUserPipelines] = useState<
     Map<string, ComponentFileEntry>
@@ -126,6 +130,7 @@ const Home = () => {
       <Button onClick={refreshAll} className="mt-6">
         Refresh
       </Button>
+      <TestComponent />
     </div>
   );
 };
