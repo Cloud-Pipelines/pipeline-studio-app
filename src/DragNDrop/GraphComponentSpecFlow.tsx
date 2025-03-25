@@ -20,7 +20,6 @@ import { useState } from "react";
 import type {
   ArgumentType,
   ComponentSpec,
-  GraphSpec,
   TaskOutputArgument,
 } from "../componentSpec";
 import useComponentSpecToEdges from "../hooks/useComponentSpecToEdges";
@@ -194,17 +193,9 @@ const GraphComponentSpecFlow = ({
       ),
     );
 
-    // Step 4: Update the component spec with our changes
-    const newGraphSpec: GraphSpec = {
-      ...graphSpec,
-      tasks: newTasks,
-      outputValues: newGraphOutputValues,
-    };
-
-    setComponentSpec({
-      ...componentSpec,
-      implementation: { graph: newGraphSpec },
-    });
+    // Step 4: Update the graph spec with our changes
+    graphSpec.tasks = newTasks;
+    graphSpec.outputValues = newGraphOutputValues;
   };
 
   const removeNode = (node: Node) => {
@@ -253,6 +244,12 @@ const GraphComponentSpecFlow = ({
     for (const node of params.nodes) {
       removeNode(node);
     }
+
+    // Save the updated graph spec to the component spec
+    setComponentSpec({
+      ...componentSpec,
+      implementation: { graph: graphSpec },
+    });
   };
 
   const handleOnNodesChange = (changes: NodeChange[]) => {

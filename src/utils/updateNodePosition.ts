@@ -16,13 +16,18 @@ export const updateNodePositions = (
   if (!("graph" in componentSpec.implementation)) {
     throw new Error("Component spec is not a graph");
   }
-  const graphSpec = componentSpec.implementation.graph;
 
   for (const node of updatedNodes) {
     const positionAnnotation = JSON.stringify({
       x: node.position.x,
       y: node.position.y,
     });
+
+    if (!("graph" in newComponentSpec.implementation)) {
+      throw new Error("Implementation does not contain a graph");
+    }
+
+    const graphSpec = newComponentSpec.implementation.graph;
 
     if (node.type === "task") {
       const taskId = nodeIdToTaskId(node.id);
