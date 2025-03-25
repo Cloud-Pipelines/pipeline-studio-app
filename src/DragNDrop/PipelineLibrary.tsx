@@ -9,6 +9,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -122,11 +123,14 @@ const OkCancelDialog = ({
   onCancel,
 }: OkCancelDialogProps) => {
   return (
-    <Dialog open={isOpen} aria-labelledby="alert-dialog-title">
+    <Dialog open={isOpen} onOpenChange={onCancel}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
+        <DialogDescription className="hidden">
+          Confirm action.
+        </DialogDescription>
         <DialogFooter>
           <Button color="primary" onClick={onCancel}>
             {cancelButtonText}
@@ -164,11 +168,14 @@ const SaveAsDialog = ({
   };
 
   return (
-    <Dialog open={isOpen} aria-labelledby="alert-dialog-title">
+    <Dialog open={isOpen} onOpenChange={onCancel}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle id="alert-dialog-title">{"Save pipeline"}</DialogTitle>
+          <DialogTitle>{"Save pipeline"}</DialogTitle>
         </DialogHeader>
+        <DialogDescription className="hidden">
+          Enter pipeline name.
+        </DialogDescription>
         <Label htmlFor="name">{inputLabel}</Label>
         <Input
           id="name"
