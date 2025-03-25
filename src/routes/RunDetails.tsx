@@ -11,7 +11,7 @@ import { DndContext } from "@dnd-kit/core";
 
 import { runDetailRoute, type RunDetailParams } from "@/router";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
-import type { GetGraphExecutionStateResponse } from "@/api/models/GetGraphExecutionStateResponse";
+import type { GetGraphExecutionStateResponse } from "@/api/types.gen";
 
 const GRID_SIZE = 10;
 const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";

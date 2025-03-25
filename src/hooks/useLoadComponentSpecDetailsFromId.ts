@@ -3,7 +3,7 @@ import type { ComponentReferenceWithSpec } from "@/componentStore";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import type { GetExecutionInfoResponse } from "@/api/models/GetExecutionInfoResponse";
+import type { GetExecutionInfoResponse } from "@/api/types.gen";
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 

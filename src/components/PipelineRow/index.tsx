@@ -18,8 +18,10 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
 import { List } from "lucide-react";
-import type { GetExecutionInfoResponse } from "@/api/models/GetExecutionInfoResponse";
-import type { GetGraphExecutionStateResponse } from "@/api/models/GetGraphExecutionStateResponse";
+import type {
+  GetExecutionInfoResponse,
+  GetGraphExecutionStateResponse,
+} from "@/api/types.gen";
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 

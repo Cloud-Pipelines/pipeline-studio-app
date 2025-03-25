@@ -4,11 +4,19 @@ import TaskStatusBar from "./TaskStatusBar";
 import { countTaskStatuses } from "./utils";
 import { useQuery } from "@tanstack/react-query";
 import { APP_ROUTES } from "@/utils/constants";
-import type { GetExecutionInfoResponse } from "@/api/models/GetExecutionInfoResponse";
-import type { GetGraphExecutionStateResponse } from "@/api/models/GetGraphExecutionStateResponse";
-import { ContainerExecutionStatus } from "@/api/models/ContainerExecutionStatus";
+import type {
+  GetGraphExecutionStateResponse,
+  GetExecutionInfoResponse,
+} from "@/api/types.gen";
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
+
+const STATUS = {
+  FAILED: "FAILED",
+  RUNNING: "RUNNING",
+  SUCCEEDED: "SUCCEEDED",
+  PENDING: "PENDING",
+} as const;
 
 const RunListItem = ({ runId }: { runId: number }) => {
   const navigate = useNavigate();
@@ -72,16 +80,16 @@ const RunListItem = ({ runId }: { runId: number }) => {
 
   const currentStatus = () => {
     if (statusCounts.failed > 0) {
-      return ContainerExecutionStatus.FAILED;
+      return STATUS.FAILED;
     }
     if (statusCounts.running > 0) {
-      return ContainerExecutionStatus.RUNNING;
+      return STATUS.RUNNING;
     }
     if (statusCounts.succeeded > 0) {
-      return ContainerExecutionStatus.SUCCEEDED;
+      return STATUS.SUCCEEDED;
     }
 
-    return ContainerExecutionStatus.PENDING;
+    return STATUS.PENDING;
   };
 
   return (
