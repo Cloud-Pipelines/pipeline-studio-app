@@ -6,3 +6,7 @@ node_modules
 dist
 build
 coverage
+
+# Generated API files
+src/api/**/*
+

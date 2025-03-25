@@ -24,5 +24,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true
-  }
+  },
+  "exclude": ["node_modules", "src/api"]
 }

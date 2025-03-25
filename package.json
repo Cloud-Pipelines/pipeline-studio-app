@@ -35,7 +35,8 @@
     "gh-pages": "vite build && tsc && gh-pages -d dist",
     "lint:fix": "eslint src --config eslint.config.js --fix",
     "validate": "npm run format && npm run lint:fix && npm run typecheck",
-    "validate:test": "npm run validate && npm run test"
+    "validate:test": "npm run validate && npm run test",
+    "generate-api": "openapi --input http://localhost:8000/openapi.json --output ./src/api --client none --exportServices false"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -87,6 +88,7 @@
     "eslint-plugin-react": "^7.37.4",
     "globals": "^16.0.0",
     "jsdom": "^26.0.0",
+    "openapi-typescript-codegen": "^0.29.0",
     "prettier": "^3.5.2",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.26.0",
