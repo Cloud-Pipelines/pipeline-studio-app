@@ -17,6 +17,7 @@ interface ArgumentsEditorProps {
   componentArguments: Record<string, ArgumentType>;
   setComponentArguments: (args: Record<string, ArgumentType>) => void;
   shrinkToWidth?: boolean;
+  disabled?: boolean;
 }
 
 const typeSpecToString = (typeSpec?: TypeSpecType): string => {
@@ -58,10 +59,12 @@ const ArgumentInput = ({
   input,
   componentArguments,
   setComponentArguments,
+  disabled = false,
 }: {
   input: InputSpec;
   componentArguments: Record<string, ArgumentType>;
   setComponentArguments: (input: InputSpec, value: string) => void;
+  disabled?: boolean;
 }) => {
   const [inputValue, setInputValue] = useState(
     getInputValue(componentArguments[input.name], input),
@@ -99,11 +102,13 @@ const ArgumentInput = ({
         placeholder={getPlaceholder(componentArguments[input.name])}
         required={!input.optional}
         className="flex-1"
+        disabled={disabled}
       />
       <Button
         type="button"
         onClick={handleRemove}
         className="w-[40px] min-w-[40px]"
+        disabled={disabled}
       >
         ⌧
       </Button>
@@ -115,6 +120,7 @@ const ArgumentsEditor = ({
   inputs,
   componentArguments,
   setComponentArguments,
+  disabled = false,
 }: ArgumentsEditorProps) => {
   const handleInputChange = (input: InputSpec, value: string) => {
     setComponentArguments({
@@ -132,6 +138,7 @@ const ArgumentsEditor = ({
             input={input}
             componentArguments={componentArguments}
             setComponentArguments={handleInputChange}
+            disabled={disabled}
           />
         );
       })}
