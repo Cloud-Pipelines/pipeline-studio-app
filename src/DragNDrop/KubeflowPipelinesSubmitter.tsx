@@ -7,10 +7,12 @@
  */
 
 import yaml from "js-yaml";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import {
   buildArgoWorkflowFromGraphComponent,
   type Workflow,

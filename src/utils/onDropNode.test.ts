@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import onDropNode from "./onDropNode";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { ComponentSpec, GraphSpec, TaskSpec } from "../componentSpec";
+import onDropNode from "./onDropNode";
 
 describe("onDropNode", () => {
   let mockEvent: any;

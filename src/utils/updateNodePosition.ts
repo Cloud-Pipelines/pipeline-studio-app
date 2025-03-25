@@ -1,4 +1,5 @@
 import type { Node } from "@xyflow/react";
+
 import type { ComponentSpec } from "../componentSpec";
 
 const nodeIdToTaskId = (id: string) => id.replace(/^task_/, "");

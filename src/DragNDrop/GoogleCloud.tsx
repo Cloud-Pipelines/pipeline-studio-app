@@ -10,12 +10,14 @@
 /* global gapi */
 
 import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { ComponentSpec } from "../componentSpec";
+
 import { buildVertexPipelineJobFromGraphComponent } from "../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler";
 import type { PipelineJob } from "../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec";
+import type { ComponentSpec } from "../componentSpec";
 
 const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY =
   "GoogleCloudSubmitter/gcsOutputDirectory";

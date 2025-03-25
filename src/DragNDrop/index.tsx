@@ -6,27 +6,28 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { useEffect, useState } from "react";
-import {
-  ReactFlowProvider,
-  Controls,
-  Background,
-  MiniMap,
-} from "@xyflow/react";
-import { DndContext } from "@dnd-kit/core";
-
-import { downloadDataWithCache } from "../cacheUtils";
-import type { ComponentSpec } from "../componentSpec";
-import GraphComponentSpecFlow from "./GraphComponentSpecFlow";
-import Sidebar from "./Sidebar";
-import { getAppSettings } from "../appSettings";
-import { type ComponentReferenceWithSpec } from "../componentStore";
-import { PipelineAutoSaver } from "./PipelineAutoSaver";
-
 import "./dnd.css";
+
+import { DndContext } from "@dnd-kit/core";
+import { useLocation } from "@tanstack/react-router";
+import {
+  Background,
+  Controls,
+  MiniMap,
+  ReactFlowProvider,
+} from "@xyflow/react";
+import { useEffect, useState } from "react";
+
 import loadPipelineByName from "@/utils/loadPipelineByName";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
-import { useLocation } from "@tanstack/react-router";
+
+import { getAppSettings } from "../appSettings";
+import { downloadDataWithCache } from "../cacheUtils";
+import type { ComponentSpec } from "../componentSpec";
+import { type ComponentReferenceWithSpec } from "../componentStore";
+import GraphComponentSpecFlow from "./GraphComponentSpecFlow";
+import { PipelineAutoSaver } from "./PipelineAutoSaver";
+import Sidebar from "./Sidebar";
 
 const GRID_SIZE = 10;
 

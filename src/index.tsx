@@ -1,13 +1,13 @@
-import { scan } from "react-scan";
-import { StrictMode } from "react";
-import ReactDOM from "react-dom/client";
-import { RouterProvider } from "@tanstack/react-router";
+import "./styles.css";
+import "@xyflow/react/dist/style.css";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import "./styles.css";
-import reportWebVitals from "./reportWebVitals.ts";
+import { RouterProvider } from "@tanstack/react-router";
+import { StrictMode } from "react";
+import ReactDOM from "react-dom/client";
+import { scan } from "react-scan";
 
-import "@xyflow/react/dist/style.css";
+import reportWebVitals from "./reportWebVitals.ts";
 import { router } from "./router.tsx";
 
 const queryClient = new QueryClient();

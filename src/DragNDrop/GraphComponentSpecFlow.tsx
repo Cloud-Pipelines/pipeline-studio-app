@@ -6,18 +6,16 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { useState } from "react";
-import type { DragEvent } from "react";
-
-import { ReactFlow, type OnInit } from "@xyflow/react";
-
 import type {
-  ReactFlowInstance,
   Edge,
   Node,
-  ReactFlowProps,
   NodeChange,
+  ReactFlowInstance,
+  ReactFlowProps,
 } from "@xyflow/react";
+import { type OnInit, ReactFlow } from "@xyflow/react";
+import type { DragEvent } from "react";
+import { useState } from "react";
 
 import type {
   ArgumentType,
@@ -25,19 +23,18 @@ import type {
   GraphSpec,
   TaskOutputArgument,
 } from "../componentSpec";
-
-import ComponentTaskNode from "./ComponentTaskNode";
-import useComponentSpecToNodes from "../hooks/useComponentSpecToNodes";
 import useComponentSpecToEdges from "../hooks/useComponentSpecToEdges";
-import onDropNode from "../utils/onDropNode";
-import { updateNodePositions } from "../utils/updateNodePosition";
-import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
+import useComponentSpecToNodes from "../hooks/useComponentSpecToNodes";
 import { useConnectionHandler } from "../hooks/useConnectionHandler";
 import {
   nodeIdToInputName,
   nodeIdToOutputName,
   nodeIdToTaskId,
 } from "../utils/nodeIdUtils";
+import onDropNode from "../utils/onDropNode";
+import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
+import { updateNodePositions } from "../utils/updateNodePosition";
+import ComponentTaskNode from "./ComponentTaskNode";
 
 export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
   implementation: {

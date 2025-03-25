@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import useComponentSpecToNodes from "./useComponentSpecToNodes";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { ComponentSpec } from "../componentSpec";
 import { isGraphImplementation } from "../componentSpec";
+import useComponentSpecToNodes from "./useComponentSpecToNodes";
 
 describe("useComponentSpecToNodes", () => {
   const createBasicComponentSpec = (implementation: any): ComponentSpec => ({

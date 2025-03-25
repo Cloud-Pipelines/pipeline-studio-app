@@ -6,10 +6,11 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import { DndContext, type DragEndEvent, useDraggable } from "@dnd-kit/core";
+import { GripVertical } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import type { ArgumentType, ComponentSpec, TaskSpec } from "../componentSpec";
-import ArgumentsEditor from "./ArgumentsEditor";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,8 +20,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DndContext, useDraggable, type DragEndEvent } from "@dnd-kit/core";
-import { GripVertical } from "lucide-react";
+
+import type { ArgumentType, ComponentSpec, TaskSpec } from "../componentSpec";
+import ArgumentsEditor from "./ArgumentsEditor";
 
 // Global counter for z-index management
 let globalZIndexCounter = 1000;

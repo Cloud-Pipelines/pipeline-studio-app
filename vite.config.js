@@ -1,8 +1,8 @@
-import { defineConfig } from "vite";
-import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import viteReact from "@vitejs/plugin-react";
 import path from "path";
 import { fileURLToPath } from "url";
+import { defineConfig } from "vite";
 
 // Create __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);

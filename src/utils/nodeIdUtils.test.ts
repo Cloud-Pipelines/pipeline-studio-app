@@ -1,11 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
-  nodeIdToTaskId,
+  inputNameToNodeId,
   nodeIdToInputName,
   nodeIdToOutputName,
-  taskIdToNodeId,
-  inputNameToNodeId,
+  nodeIdToTaskId,
   outputNameToNodeId,
+  taskIdToNodeId,
 } from "./nodeIdUtils";
 
 describe("nodeIdUtils", () => {

@@ -1,10 +1,11 @@
+import { getAppSettings } from "@/appSettings";
 import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
 import {
+  type ComponentFileEntry,
   fullyLoadComponentRefFromUrl,
   getAllComponentFilesFromList,
-  type ComponentFileEntry,
 } from "@/componentStore";
-import { getAppSettings } from "@/appSettings";
+
 import { USER_PIPELINES_LIST_NAME } from "./constants";
 
 interface PipelineLibrary {

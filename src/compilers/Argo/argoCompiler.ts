@@ -9,14 +9,12 @@
 import {
   type ArgumentType,
   type ComponentSpec,
-  type StringOrPlaceholder,
+  type InputSpec,
   isContainerImplementation,
   isGraphImplementation,
-  type InputSpec,
+  type StringOrPlaceholder,
 } from "../../componentSpec";
-
 import { assertDefined, notUndefined } from "../../utils";
-
 import * as argo from "./argo-workflows/ui/src/models/workflows";
 
 export type {

@@ -1,27 +1,26 @@
-import { useState, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-
-import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
-import { EDITOR_PATH } from "@/utils/constants";
 import localForage from "localforage";
+import { List } from "lucide-react";
+import { useEffect, useState } from "react";
 
+import type {
+  GetExecutionInfoResponse,
+  GetGraphExecutionStateResponse,
+} from "@/api/types.gen";
+import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { EDITOR_PATH } from "@/utils/constants";
+
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { ScrollArea } from "../ui/scroll-area";
+import RunListItem from "./RunListItem";
+import StatusIcon from "./StatusIcon";
 import {
   type PipelineRowProps,
   type PipelineRun,
   type TaskStatusCounts,
 } from "./types";
 import { countTaskStatuses } from "./utils";
-import StatusIcon from "./StatusIcon";
-import RunListItem from "./RunListItem";
-
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { ScrollArea } from "../ui/scroll-area";
-import { List } from "lucide-react";
-import type {
-  GetExecutionInfoResponse,
-  GetGraphExecutionStateResponse,
-} from "@/api/types.gen";
 
 const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 

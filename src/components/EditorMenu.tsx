@@ -1,5 +1,6 @@
-import { EDITOR_PATH } from "@/utils/constants";
 import { useLocation } from "@tanstack/react-router";
+
+import { EDITOR_PATH } from "@/utils/constants";
 
 const EditorMenu = () => {
   const location = useLocation();
