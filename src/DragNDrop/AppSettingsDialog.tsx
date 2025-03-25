@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -77,6 +78,10 @@ const AppSettingsDialog = ({ isOpen, handleClose }: AppSettingsDialogProps) => {
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
         </DialogHeader>
+
+        <DialogDescription className="hidden">
+          Application settings.
+        </DialogDescription>
 
         <Label htmlFor="component_library_url">Component library URL</Label>
         <Input

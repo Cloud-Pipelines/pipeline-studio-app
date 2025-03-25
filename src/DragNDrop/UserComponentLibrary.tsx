@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -198,11 +199,15 @@ const ImportComponentFromUrlDialog = ({
   };
 
   return (
-    <Dialog open={isOpen}>
+    <Dialog open={isOpen} onOpenChange={onCancel}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{"Import component"}</DialogTitle>
         </DialogHeader>
+
+        <DialogDescription className="hidden">
+          Enter a component URL to import from.
+        </DialogDescription>
 
         <Label htmlFor="name">Component URL</Label>
         <Input
