@@ -122,15 +122,16 @@ export const preloadComponentReferences = async (
     )) {
       const componentUrl = taskSpec.componentRef.url;
       let taskComponentSpec = taskSpec.componentRef.spec;
+
       if (taskComponentSpec === undefined) {
         if (taskSpec.componentRef.text !== undefined) {
-          const taskComponentRef = await loadComponentFromUrlAsRef(
+          const taskComponentRef = await loadComponentAsRefFromText(
             taskSpec.componentRef.text,
-            downloadData,
           );
           taskComponentSpec = taskComponentRef.spec;
         } else if (componentUrl !== undefined) {
           taskComponentSpec = componentMap.get(componentUrl);
+
           if (taskComponentSpec === undefined) {
             const taskComponentRef = await loadComponentFromUrlAsRef(
               componentUrl,
@@ -140,6 +141,7 @@ export const preloadComponentReferences = async (
             componentMap.set(componentUrl, taskComponentSpec);
           }
         }
+
         if (taskComponentSpec === undefined) {
           // TODO: Print task name here
           console.error(

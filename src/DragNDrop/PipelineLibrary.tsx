@@ -8,7 +8,7 @@
 
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@xyflow/react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -244,28 +244,49 @@ const PipelineLibrary = ({
           throw Error(`File "${name}" already exists.`);
         }
       }
+
       if (!componentSpec) {
         return;
       }
+
       const graphComponent = updateComponentSpecFromNodes(
         componentSpec,
         nodes,
         false,
         true,
       );
+
       graphComponent.name = name;
+
       const componentText = componentSpecToYaml(graphComponent);
       const fileEntry = await writeComponentToFileListFromText(
         USER_PIPELINES_LIST_NAME,
         name,
         componentText,
       );
+
       await openPipelineFile(fileEntry);
 
       closeSaveAsDialog();
     },
     [componentSpec, closeSaveAsDialog, nodes, openPipelineFile],
   );
+
+  useEffect(() => {
+    const fetchFileEntry = async () => {
+      if (componentSpec?.name) {
+        const fileEntry = await getComponentFileFromList(
+          USER_PIPELINES_LIST_NAME,
+          componentSpec.name,
+        );
+        if (fileEntry) {
+          setPipelineFile(fileEntry);
+        }
+      }
+    };
+
+    fetchFileEntry();
+  }, [componentSpec]);
 
   const componentLink = useRef<HTMLAnchorElement>(null);
 
