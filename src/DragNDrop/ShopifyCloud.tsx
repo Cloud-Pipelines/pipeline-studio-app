@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
 import { Button } from "@/components/ui/button";
-import { APP_ROUTES } from "@/utils/constants";
+import { API_URL, APP_ROUTES } from "@/utils/constants";
 
 import type { ComponentSpec } from "../componentSpec";
 
@@ -25,8 +25,6 @@ interface PipelineRun {
   pipeline_name: string;
   pipeline_digest?: string;
 }
-
-const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 
 const createPipelineRun = async (payload: BodyCreateApiPipelineRunsPost) => {
   const response = await fetch(`${API_URL}/api/pipeline_runs/`, {

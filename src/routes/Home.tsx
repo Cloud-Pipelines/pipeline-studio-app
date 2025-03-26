@@ -21,9 +21,7 @@ import {
   type ComponentFileEntry,
   getAllComponentFilesFromList,
 } from "@/componentStore";
-import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
-
-const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
+import { API_URL, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 const Home = () => {
   const [userPipelines, setUserPipelines] = useState<

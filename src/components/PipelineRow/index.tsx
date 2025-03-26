@@ -9,7 +9,7 @@ import type {
 } from "@/api/types.gen";
 import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { EDITOR_PATH } from "@/utils/constants";
+import { API_URL, EDITOR_PATH } from "@/utils/constants";
 
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
@@ -21,8 +21,6 @@ import {
   type TaskStatusCounts,
 } from "./types";
 import { countTaskStatuses } from "./utils";
-
-const API_URL = import.meta.env.VITE_BACKEND_API_URL ?? "";
 
 const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
   const [rowData, setRowData] = useState<any>(null);
