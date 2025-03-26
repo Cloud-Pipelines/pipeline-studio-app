@@ -3,10 +3,12 @@ import { Terminal } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { ListPipelineJobsResponse } from "@/api/types.gen";
+import NewExperimentDialog from "@/components/NewExperiment";
 import PipelineRow from "@/components/PipelineRow";
 import RunListItem from "@/components/PipelineRow/RunListItem";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -29,23 +31,24 @@ const Home = () => {
   >(new Map());
   const [isLoadingUserPipelines, setIsLoadingUserPipelines] = useState(false);
 
-  const { data, isLoading } = useQuery<ListPipelineJobsResponse>({
-    queryKey: ["runs"],
-    queryFn: async () => {
-      const response = await fetch(`${API_URL}/api/pipeline_runs/`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch pipeline runs: ${response.statusText}`,
-        );
-      }
-      return response.json();
-    },
-  });
+  const { data, isLoading: isLoadingUserRuns } =
+    useQuery<ListPipelineJobsResponse>({
+      queryKey: ["runs"],
+      queryFn: async () => {
+        const response = await fetch(`${API_URL}/api/pipeline_runs/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch pipeline runs: ${response.statusText}`,
+          );
+        }
+        return response.json();
+      },
+    });
 
   useEffect(() => {
     fetchUserPipelines();
@@ -69,10 +72,6 @@ const Home = () => {
     fetchUserPipelines();
   };
 
-  if (isLoadingUserPipelines || isLoading) {
-    return <div>Loading pipelines...</div>;
-  }
-
   return (
     <div className="container mx-auto w-3/4 p-4 flex flex-col gap-4">
       <Alert variant="destructive">
@@ -91,6 +90,19 @@ const Home = () => {
           <TabsTrigger value="runs">All Runs</TabsTrigger>
         </TabsList>
         <TabsContent value="pipelines">
+          {isLoadingUserPipelines && (
+            <div className="flex gap-2 items-center">
+              <Spinner /> Loading...
+            </div>
+          )}
+
+          {!isLoadingUserPipelines && userPipelines.size === 0 && (
+            <div>
+              <p>No pipelines found.</p>
+              <NewExperimentDialog />
+            </div>
+          )}
+
           {userPipelines.size > 0 && (
             <Table>
               <TableHeader>
@@ -117,6 +129,17 @@ const Home = () => {
           )}
         </TabsContent>
         <TabsContent value="runs" className="flex flex-col gap-1">
+          {isLoadingUserRuns && (
+            <div className="flex gap-2 items-center">
+              <Spinner /> Loading...
+            </div>
+          )}
+
+          {!isLoadingUserRuns &&
+            (!data?.pipeline_runs || data?.pipeline_runs?.length === 0) && (
+              <div>No runs found. Run a pipeline to see it here.</div>
+            )}
+
           {data?.pipeline_runs?.map((run) => (
             <RunListItem
               key={run.root_execution_id}
