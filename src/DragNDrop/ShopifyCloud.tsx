@@ -129,7 +129,12 @@ const ShopifyCloudSubmitter = ({
     <div className="flex flex-col gap-2 p-2">
       <Button
         onClick={handleSubmit}
-        disabled={isSubmitting || !componentSpec}
+        disabled={
+          isSubmitting ||
+          !componentSpec ||
+          ("graph" in componentSpec.implementation &&
+            Object.keys(componentSpec.implementation.graph.tasks).length === 0)
+        }
         className="w-full"
       >
         {isSubmitting ? (
