@@ -74,22 +74,24 @@ const Home = () => {
 
   return (
     <div className="container mx-auto w-3/4 p-4 flex flex-col gap-4">
-      <Alert variant="destructive">
-        <Terminal className="h-4 w-4" />
-        <AlertTitle>Heads up!</AlertTitle>
-        <AlertDescription>
-          Your pipelines are stored in your browser&apos;s local storage.
-          Clearing your browser data or cookies will delete all saved pipelines.
-          Consider exporting important pipelines to files for backup.
-        </AlertDescription>
-      </Alert>
       <h1 className="text-2xl font-bold">Pipelines</h1>
-      <Tabs defaultValue="pipelines" className="w-full">
+      <Tabs defaultValue="runs" className="w-full">
         <TabsList>
-          <TabsTrigger value="pipelines">My pipelines</TabsTrigger>
           <TabsTrigger value="runs">All Runs</TabsTrigger>
+          <TabsTrigger value="pipelines">My pipelines</TabsTrigger>
         </TabsList>
         <TabsContent value="pipelines">
+          <Alert variant="destructive">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Heads up!</AlertTitle>
+            <AlertDescription>
+              Your pipelines are stored in your browser&apos;s local storage.
+              Clearing your browser data or cookies will delete all saved
+              pipelines. Consider exporting important pipelines to files for
+              backup.
+            </AlertDescription>
+          </Alert>
+
           {isLoadingUserPipelines && (
             <div className="flex gap-2 items-center">
               <Spinner /> Loading...
@@ -149,7 +151,7 @@ const Home = () => {
         </TabsContent>
       </Tabs>
 
-      <Button onClick={refreshAll} className="mt-6">
+      <Button onClick={refreshAll} className="mt-6 max-w-96">
         Refresh
       </Button>
     </div>
