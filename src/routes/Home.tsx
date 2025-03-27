@@ -35,17 +35,9 @@ const Home = () => {
     useQuery<ListPipelineJobsResponse>({
       queryKey: ["runs", pageToken],
       queryFn: async () => {
-        const url = new URL(`${API_URL}/api/pipeline_runs/`);
-        if (pageToken) {
-          url.searchParams.set("page_token", pageToken);
-        }
-
-        const response = await fetch(url.toString(), {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const pageTokenParam = pageToken ? `?page_token=${pageToken}` : "";
+        const url = `${API_URL}/api/pipeline_runs/${pageTokenParam}`;
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error(
             `Failed to fetch pipeline runs: ${response.statusText}`,
