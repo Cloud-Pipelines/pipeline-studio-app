@@ -1,9 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "@tanstack/react-router";
 
 import type { GetArtifactsApiExecutionsIdArtifactsGetResponse } from "@/api/types.gen";
-import { type RunDetailParams, runDetailRoute } from "@/router";
-import { API_URL, RUNS_BASE_PATH } from "@/utils/constants";
+import { API_URL } from "@/utils/constants";
 
 const getArtifacts = async (executionId: string) => {
   if (!executionId) return null;
@@ -25,11 +23,28 @@ const formatBytes = (bytes: number) => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
-const ArtifactsInner = () => {
-  const { id: executionId } = runDetailRoute.useParams() as RunDetailParams;
+const ArtifactValue = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="flex text-xs">
+    <span className="text-gray-500 w-20 flex-shrink-0">{label}:</span>
+    {label === "URI" && typeof value === "string" ? (
+      <a
+        href={value}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-mono break-all text-blue-600 hover:text-blue-800 hover:underline"
+      >
+        {value}
+      </a>
+    ) : (
+      <span className="font-mono break-all">{value}</span>
+    )}
+  </div>
+);
+
+const Artifacts = ({ executionId }: { executionId?: string | number }) => {
   const { data: artifacts, isLoading: isLoadingArtifacts } = useQuery({
     queryKey: ["artifacts", executionId],
-    queryFn: () => getArtifacts(executionId),
+    queryFn: () => getArtifacts(String(executionId)),
     enabled: !!executionId,
   });
 
@@ -37,159 +52,112 @@ const ArtifactsInner = () => {
     return <div>Loading...</div>;
   }
 
-  const inputArtifacts = artifacts?.input_artifacts;
-  const outputArtifacts = artifacts?.output_artifacts;
-
-  if (!inputArtifacts?.length && !outputArtifacts?.length) {
-    return <div>No artifacts available</div>;
+  if (!artifacts?.input_artifacts && !artifacts?.output_artifacts) {
+    return <div className="text-sm text-gray-500">No artifacts available</div>;
   }
+
+  const inputArtifacts = artifacts.input_artifacts;
+  const outputArtifacts = artifacts.output_artifacts;
 
   return (
     <div className="space-y-4">
-      <div className="space-y-4">
-        <section>
-          <h4 className="text-sm font-medium mb-2">Input Artifacts</h4>
-          <div className="border rounded-md divide-y">
-            {inputArtifacts ? (
-              Object.entries(inputArtifacts).map(([key, artifact]) => (
-                <div key={key} className="px-3 py-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{key}</span>
-                      {artifact.type_name && (
-                        <span className="text-xs text-gray-500">
-                          {artifact.type_name}
-                        </span>
-                      )}
-                    </div>
-                    {artifact.producer_execution_id && (
-                      <span className="text-xs text-gray-500">
-                        From execution #{artifact.producer_execution_id}
+      <section>
+        <h4 className="text-sm font-medium mb-2">Input Artifacts</h4>
+        <div className="border rounded-md divide-y">
+          {inputArtifacts && Object.entries(inputArtifacts).length > 0 ? (
+            Object.entries(inputArtifacts).map(([key, artifact]) => (
+              <div key={key} className="px-3 py-2">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-medium text-sm truncate">{key}</span>
+                    {artifact.type_name && (
+                      <span className="text-xs text-gray-500 flex-shrink-0">
+                        {artifact.type_name}
                       </span>
                     )}
                   </div>
-                  {artifact.artifact_data && (
-                    <div className="space-y-1 text-sm">
-                      {artifact.artifact_data.uri && (
-                        <div className="flex items-center text-xs">
-                          <span className="text-gray-500 w-20">URI:</span>
-                          <span className="font-mono break-all">
-                            {artifact.artifact_data.uri}
-                          </span>
-                        </div>
-                      )}
-                      {artifact.artifact_data.total_size && (
-                        <div className="flex items-center text-xs">
-                          <span className="text-gray-500 w-20">Size:</span>
-                          <span>
-                            {formatBytes(artifact.artifact_data.total_size)}
-                          </span>
-                        </div>
-                      )}
-                      {artifact.artifact_data.value !== undefined && (
-                        <div className="flex items-center text-xs">
-                          <span className="text-gray-500 w-20">Value:</span>
-                          <span className="font-mono">
-                            {JSON.stringify(artifact.artifact_data.value)}
-                          </span>
-                        </div>
-                      )}
-                      {artifact.artifact_data.is_dir && (
-                        <div className="flex items-center text-xs">
-                          <span className="text-gray-500 w-20">Type:</span>
-                          <span>Directory</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
-              ))
-            ) : (
-              <div className="p-2 text-sm text-gray-500">
-                No input artifacts available
+                {artifact.artifact_data && (
+                  <div className="space-y-1">
+                    {artifact.artifact_data.value !== undefined && (
+                      <ArtifactValue
+                        label="Value"
+                        value={JSON.stringify(artifact.artifact_data.value)}
+                      />
+                    )}
+                    {artifact.artifact_data.total_size && (
+                      <ArtifactValue
+                        label="Size"
+                        value={formatBytes(artifact.artifact_data.total_size)}
+                      />
+                    )}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </section>
-        <section>
-          <h4 className="text-sm font-medium mb-2">Output Artifacts</h4>
-          <div className="border rounded-md divide-y">
-            {outputArtifacts ? (
-              Object.entries(outputArtifacts).map(([key, artifact]) => (
-                <div key={key} className="px-3 py-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{key}</span>
-                      {artifact.type_name && (
-                        <span className="text-xs text-gray-500">
-                          {artifact.type_name}
-                        </span>
-                      )}
-                    </div>
-                    {artifact.producer_execution_id && (
-                      <span className="text-xs text-gray-500">
-                        From execution #{artifact.producer_execution_id}
+            ))
+          ) : (
+            <div className="p-2 text-sm text-gray-500">
+              No input artifacts available
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h4 className="text-sm font-medium mb-2">Output Artifacts</h4>
+        <div className="border rounded-md divide-y">
+          {outputArtifacts && Object.entries(outputArtifacts).length > 0 ? (
+            Object.entries(outputArtifacts).map(([key, artifact]) => (
+              <div key={key} className="px-3 py-2">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-medium text-sm truncate">{key}</span>
+                    {artifact.type_name && (
+                      <span className="text-xs text-gray-500 flex-shrink-0">
+                        {artifact.type_name}
                       </span>
                     )}
                   </div>
-                  {artifact.artifact_data && (
-                    <div className="space-y-1 text-sm">
-                      {artifact.artifact_data.uri && (
-                        <div className="flex items-center text-xs">
-                          <span className="text-gray-500 w-20">URI:</span>
-                          <span className="font-mono break-all">
-                            {artifact.artifact_data.uri}
-                          </span>
-                        </div>
-                      )}
-                      {artifact.artifact_data.total_size && (
-                        <div className="flex items-center text-xs">
-                          <span className="text-gray-500 w-20">Size:</span>
-                          <span>
-                            {formatBytes(artifact.artifact_data.total_size)}
-                          </span>
-                        </div>
-                      )}
-                      {artifact.artifact_data.value !== undefined && (
-                        <div className="flex items-center text-xs">
-                          <span className="text-gray-500 w-20">Value:</span>
-                          <span className="font-mono">
-                            {JSON.stringify(artifact.artifact_data.value)}
-                          </span>
-                        </div>
-                      )}
-                      {artifact.artifact_data.is_dir && (
-                        <div className="flex items-center text-xs">
-                          <span className="text-gray-500 w-20">Type:</span>
-                          <span>Directory</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
-              ))
-            ) : (
-              <div className="p-2 text-sm text-gray-500">
-                No output artifacts available
+                {artifact.artifact_data && (
+                  <div className="space-y-1">
+                    {artifact.artifact_data.uri && (
+                      <ArtifactValue
+                        label="URI"
+                        value={artifact.artifact_data.uri}
+                      />
+                    )}
+                    {artifact.artifact_data.total_size && (
+                      <ArtifactValue
+                        label="Size"
+                        value={formatBytes(artifact.artifact_data.total_size)}
+                      />
+                    )}
+                    {artifact.artifact_data.value !== undefined && (
+                      <ArtifactValue
+                        label="Value"
+                        value={JSON.stringify(artifact.artifact_data.value)}
+                      />
+                    )}
+                    {artifact.artifact_data.is_dir && (
+                      <ArtifactValue
+                        label="Type"
+                        value="Directory"
+                      />
+                    )}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </section>
-      </div>
+            ))
+          ) : (
+            <div className="p-2 text-sm text-gray-500">
+              No output artifacts available
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
-};
-
-const Artifacts = () => {
-  const location = useLocation();
-
-  const isRunDetailRoute = location.pathname.includes(RUNS_BASE_PATH);
-
-  if (!isRunDetailRoute) {
-    return null;
-  }
-
-  return <ArtifactsInner />;
 };
 
 export default Artifacts;

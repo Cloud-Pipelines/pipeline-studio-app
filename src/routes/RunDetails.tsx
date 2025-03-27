@@ -74,11 +74,13 @@ const RunDetails = () => {
       Object.entries(componentSpec.implementation.graph.tasks).map(
         ([taskId, taskSpec]) => {
           const status = taskStatusMap.get(taskId);
+          const executionId = detailsData?.child_task_execution_ids?.[taskId];
           const enhancedTaskSpec = {
             ...taskSpec,
             annotations: {
               ...taskSpec.annotations,
               status: status,
+              executionId: executionId,
             },
           };
           return [taskId, enhancedTaskSpec];
