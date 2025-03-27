@@ -7,6 +7,38 @@ import type { ComponentReferenceWithSpec } from "@/componentStore";
 import { API_URL } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 
+const fetchExecutionDetails = async (
+  id: string,
+): Promise<GetExecutionInfoResponse> => {
+  const response = await fetch(`${API_URL}/api/executions/${id}/details`);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch execution details: ${response.statusText}`,
+    );
+  }
+  return response.json();
+};
+
+const mergeExecutionDetails = (
+  parent: GetExecutionInfoResponse,
+  child: GetExecutionInfoResponse,
+): GetExecutionInfoResponse => {
+  return {
+    ...child,
+    task_spec: {
+      ...child.task_spec,
+      componentRef: {
+        ...child.task_spec.componentRef,
+        spec: parent.task_spec.componentRef.spec,
+      },
+    },
+    child_task_execution_ids: {
+      ...parent.child_task_execution_ids,
+      ...child.child_task_execution_ids,
+    },
+  };
+};
+
 export const useLoadComponentSpecAndDetailsFromId = (id: string) => {
   if (!id) {
     return {
@@ -19,17 +51,22 @@ export const useLoadComponentSpecAndDetailsFromId = (id: string) => {
   const [componentSpec, setComponentSpec] = useState<
     ComponentSpec | undefined
   >();
+
   const { data: detailsData, isLoading: detailsLoading } =
     useQuery<GetExecutionInfoResponse>({
       queryKey: ["run_details", id],
       queryFn: async () => {
-        const response = await fetch(`${API_URL}/api/executions/${id}/details`);
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch execution details: ${response.statusText}`,
+        const details = await fetchExecutionDetails(id);
+
+        // If there's a parent execution, fetch and merge its details
+        if (details.parent_execution_id) {
+          const parentDetails = await fetchExecutionDetails(
+            details.parent_execution_id.toString(),
           );
+          return mergeExecutionDetails(parentDetails, details);
         }
-        return response.json();
+
+        return details;
       },
     });
 
