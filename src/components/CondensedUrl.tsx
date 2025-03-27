@@ -7,14 +7,15 @@ const CondensedUrl = ({ url, className }: CondensedUrlProps) => {
   return (
     <p className={className}>
       <a className="text-gray-500" href={url}>
-        {new URL(url).hostname}
+        {url.split("/").pop()}
       </a>
       {url.includes("raw.githubusercontent.com") && (
         <a
           className="text-blue-500 ml-2"
           href={url
             .replace("raw.githubusercontent.com", "github.com")
-            .replace(/\/([^/]+)\/([^/]+)\/([^/]+)\//, "/$1/$2/$3/tree/")}
+            .replace(/\/([^/]+)\/([^/]+)\/([^/]+)\//, "/$1/$2/$3/tree/")
+            .replace(/\/[^/]+$/, "")}
           target="_blank"
           rel="noopener noreferrer"
         >
