@@ -47,7 +47,9 @@ const formatLogLine = (line: string) => {
 };
 
 const getLogs = async (executionId: string) => {
-  const response = await fetch(`${API_URL}/api/executions/${executionId}/logs`);
+  const response = await fetch(
+    `${API_URL}/api/executions/${executionId}/container_log`,
+  );
   return response.json();
 };
 
