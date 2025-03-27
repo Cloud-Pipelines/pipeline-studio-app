@@ -34,7 +34,7 @@ export const fetchPipelineRuns = async (pipelineName: string) => {
 
     runs.sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
     return { runs, latestRun };
