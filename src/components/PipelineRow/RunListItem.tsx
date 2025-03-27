@@ -26,11 +26,11 @@ const RunListItem = ({ runId }: { runId: number }) => {
     queryKey: ["pipeline-run-details", runId],
     queryFn: async () => {
       const response = await fetch(
-        `${API_URL}/api/executions/${runId}/details`,
+        `${API_URL}/api/executions/${runId}/details`
       );
       if (!response.ok) {
         throw new Error(
-          `Failed to fetch execution details: ${response.statusText}`,
+          `Failed to fetch execution details: ${response.statusText}`
         );
       }
       return response.json();
@@ -47,7 +47,7 @@ const RunListItem = ({ runId }: { runId: number }) => {
       const response = await fetch(`${API_URL}/api/executions/${runId}/state`);
       if (!response.ok) {
         throw new Error(
-          `Failed to fetch execution state: ${response.statusText}`,
+          `Failed to fetch execution state: ${response.statusText}`
         );
       }
       return response.json();
@@ -107,6 +107,12 @@ const RunListItem = ({ runId }: { runId: number }) => {
             <>
               <span>•</span>
               <span className="text-gray-500 text-xs">{`${formatDate(metadata.created_at)}`}</span>
+              {metadata.created_by && (
+                <>
+                  <span className="text-2xs">• Initated by</span>
+                  <span className="text-2xs">{`${metadata.created_by}`}</span>
+                </>
+              )}
             </>
           )}
         </div>

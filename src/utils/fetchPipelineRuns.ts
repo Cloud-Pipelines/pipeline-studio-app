@@ -4,6 +4,7 @@ export interface PipelineRun {
   id: number;
   root_execution_id: number;
   created_at: string;
+  created_by: string;
   pipeline_name: string;
   pipeline_digest?: string;
   status?: string;
@@ -33,7 +34,7 @@ export const fetchPipelineRuns = async (pipelineName: string) => {
 
     runs.sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
     return { runs, latestRun };
