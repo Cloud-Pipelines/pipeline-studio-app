@@ -3,7 +3,8 @@ export interface TaskStatusCounts {
   succeeded: number;
   failed: number;
   running: number;
-  pending: number;
+  waiting: number;
+  skipped: number;
 }
 
 export interface PipelineRowProps {

@@ -15,7 +15,8 @@ export const countTaskStatuses = (
   let succeeded = 0,
     failed = 0,
     running = 0,
-    pending = 0;
+    waiting = 0,
+    skipped = 0;
 
   if (
     details.child_task_execution_ids &&
@@ -29,31 +30,36 @@ export const countTaskStatuses = (
       if (statusStats) {
         const status = Object.keys(statusStats)[0];
 
-        if (status === "SUCCEEDED") {
-          succeeded++;
-        } else if (
-          [
-            "FAILED",
-            "SYSTEM_ERROR",
-            "INVALID",
-            "UPSTREAM_FAILED",
-            "UPSTREAM_FAILED_OR_SKIPPED",
-          ].includes(status)
-        ) {
-          failed++;
-        } else if (["RUNNING", "STARTING", "CANCELLING"].includes(status)) {
-          running++;
-        } else {
-          pending++;
+        switch (status) {
+          case "SUCCEEDED":
+            succeeded++;
+            break;
+          case "FAILED":
+          case "SYSTEM_ERROR":
+          case "INVALID":
+          case "UPSTREAM_FAILED":
+            failed++;
+            break;
+          case "UPSTREAM_FAILED_OR_SKIPPED":
+          case "CANCELLING":
+            skipped++;
+            break;
+          case "RUNNING":
+          case "STARTING":
+            running++;
+            break;
+          default:
+            waiting++;
+            break;
         }
       } else {
-        pending++;
+        waiting++;
       }
     });
   }
 
-  const total = succeeded + failed + running + pending;
-  return { total, succeeded, failed, running, pending };
+  const total = succeeded + failed + running + waiting + skipped;
+  return { total, succeeded, failed, running, waiting, skipped };
 };
 
 /**
@@ -63,7 +69,7 @@ const STATUS = {
   FAILED: "FAILED",
   RUNNING: "RUNNING",
   SUCCEEDED: "SUCCEEDED",
-  PENDING: "PENDING",
+  WAITING: "WAITING",
   UNKNOWN: "UNKNOWN",
 } as const;
 
@@ -74,8 +80,8 @@ export const getRunStatus = (statusData: TaskStatusCounts) => {
   if (statusData.running > 0) {
     return STATUS.RUNNING;
   }
-  if (statusData.pending > 0) {
-    return STATUS.PENDING;
+  if (statusData.waiting > 0) {
+    return STATUS.WAITING;
   }
   if (statusData.succeeded > 0) {
     return STATUS.SUCCEEDED;

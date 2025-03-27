@@ -116,21 +116,29 @@ const RunListItem = ({ runId }: { runId: number }) => {
               {" "}
               {statusCounts.succeeded} succeeded
             </span>
-            ,
             {statusCounts.failed > 0 && (
               <span className="text-red-500">
-                {" "}
-                {statusCounts.failed} failed
+                <span className="text-black">,</span> {statusCounts.failed}{" "}
+                failed
               </span>
             )}
             {statusCounts.running > 0 && (
               <span className="text-blue-500">
-                {" "}
-                {statusCounts.running} running
+                <span className="text-black">,</span> {statusCounts.running}{" "}
+                running
               </span>
             )}
-            {statusCounts.pending > 0 && (
-              <span> {statusCounts.pending} pending</span>
+            {statusCounts.skipped > 0 && (
+              <span className="text-gray-800">
+                <span className="text-black">,</span> {statusCounts.skipped}{" "}
+                skipped
+              </span>
+            )}
+            {statusCounts.waiting > 0 && (
+              <span className="text-gray-500">
+                <span className="text-black">,</span> {statusCounts.waiting}{" "}
+                waiting
+              </span>
             )}
           </div>
         )}
