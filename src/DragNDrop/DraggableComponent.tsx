@@ -8,6 +8,8 @@
 
 import type { DragEvent } from "react";
 
+import CondensedUrl from "@/components/CondensedUrl";
+
 import type { ComponentReference, TaskSpec } from "../componentSpec";
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
@@ -73,23 +75,10 @@ const DraggableComponent = ({
       <div className="flex flex-col items-center">
         <p>{componentReference.spec?.name ?? "Component"}</p>
         {componentReference.url && (
-          <p className="text-[0.5625rem]">
-            <a className="text-gray-500" href={componentReference.url}>
-              {new URL(componentReference.url).hostname}
-            </a>
-            {componentReference.url.includes("raw.githubusercontent.com") && (
-              <a
-                className="text-blue-500 ml-2"
-                href={componentReference.url
-                  .replace("raw.githubusercontent.com", "github.com")
-                  .replace(/\/([^/]+)\/([^/]+)\/([^/]+)\//, "/$1/$2/$3/tree/")}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View Repo
-              </a>
-            )}
-          </p>
+          <CondensedUrl
+            url={componentReference.url}
+            className="text-[0.5625rem]"
+          />
         )}
       </div>
     </div>
