@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Terminal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Terminal } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { ListPipelineJobsResponse } from "@/api/types.gen";
@@ -28,12 +28,19 @@ const Home = () => {
     Map<string, ComponentFileEntry>
   >(new Map());
   const [isLoadingUserPipelines, setIsLoadingUserPipelines] = useState(false);
+  const [pageToken, setPageToken] = useState<string | undefined>();
+  const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
   const { data, isLoading: isLoadingUserRuns } =
     useQuery<ListPipelineJobsResponse>({
-      queryKey: ["runs"],
+      queryKey: ["runs", pageToken],
       queryFn: async () => {
-        const response = await fetch(`${API_URL}/api/pipeline_runs/`, {
+        const url = new URL(`${API_URL}/api/pipeline_runs/`);
+        if (pageToken) {
+          url.searchParams.set("page_token", pageToken);
+        }
+
+        const response = await fetch(url.toString(), {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -44,9 +51,23 @@ const Home = () => {
             `Failed to fetch pipeline runs: ${response.statusText}`,
           );
         }
+
         return response.json();
       },
     });
+
+  const handleNextPage = () => {
+    if (data?.next_page_token) {
+      setPreviousPageTokens([...previousPageTokens, pageToken || ""]);
+      setPageToken(data.next_page_token);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    const previousToken = previousPageTokens[previousPageTokens.length - 1];
+    setPreviousPageTokens(previousPageTokens.slice(0, -1));
+    setPageToken(previousToken);
+  };
 
   useEffect(() => {
     fetchUserPipelines();
@@ -144,6 +165,27 @@ const Home = () => {
               runId={run.root_execution_id}
             />
           ))}
+
+          {(data?.next_page_token || previousPageTokens.length > 0) && (
+            <div className="flex justify-between items-center mt-4">
+              <Button
+                variant="outline"
+                onClick={handlePreviousPage}
+                disabled={previousPageTokens.length === 0}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleNextPage}
+                disabled={!data?.next_page_token}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
