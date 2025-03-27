@@ -1,5 +1,7 @@
 import type { TaskSpec } from "@/componentSpec";
 
+import CondensedUrl from "../CondensedUrl";
+
 interface InfoProps {
   taskSpec: TaskSpec;
   taskId: string;
@@ -27,9 +29,10 @@ const Info = ({ taskSpec, runStatus, taskId }: InfoProps) => {
           {taskSpec.componentRef.url && (
             <div className="flex items-center px-3 py-1.5">
               <div className="w-36 text-sm text-gray-500">URL</div>
-              <div className="text-sm font-mono break-all">
-                {taskSpec.componentRef.url}
-              </div>
+              <CondensedUrl
+                url={taskSpec.componentRef.url}
+                className="text-sm"
+              />
             </div>
           )}
           {taskSpec.componentRef.digest && (
