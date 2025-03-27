@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import localForage from "localforage";
 import { List } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -10,17 +9,14 @@ import type {
 import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { API_URL, EDITOR_PATH } from "@/utils/constants";
+import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
 
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
 import RunListItem from "./RunListItem";
 import StatusIcon from "./StatusIcon";
-import {
-  type PipelineRowProps,
-  type PipelineRun,
-  type TaskStatusCounts,
-} from "./types";
-import { countTaskStatuses } from "./utils";
+import { type PipelineRowProps, type TaskStatusCounts } from "./types";
+import { countTaskStatuses, formatDate, getRunStatus } from "./utils";
 
 const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
   const [rowData, setRowData] = useState<any>(null);
@@ -63,43 +59,18 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
   }, [url, componentRef, name]);
 
   useEffect(() => {
-    const fetchPipelineRuns = async () => {
+    const fetchData = async () => {
       if (!name) return;
 
-      try {
-        const pipelineRunsDb = localForage.createInstance({
-          name: "components",
-          storeName: "pipeline_runs",
-        });
+      const res = await fetchPipelineRuns(name);
 
-        const runs: PipelineRun[] = [];
-        let latestRun: PipelineRun | null = null;
-        let latestDate = new Date(0);
+      if (!res) return;
 
-        await pipelineRunsDb.iterate<PipelineRun, void>((run) => {
-          if (run.pipeline_name === name) {
-            runs.push(run);
-            const runDate = new Date(run.created_at);
-            if (runDate > latestDate) {
-              latestDate = runDate;
-              latestRun = run;
-            }
-          }
-        });
-
-        runs.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        );
-
-        setPipelineRuns(runs);
-        setLatestRun(latestRun);
-      } catch (error) {
-        console.error("Error fetching pipeline runs:", error);
-      }
+      setPipelineRuns(res.runs);
+      setLatestRun(res.latestRun);
     };
 
-    fetchPipelineRuns();
+    fetchData();
   }, [name]);
 
   useEffect(() => {
@@ -177,20 +148,30 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
     },
   };
 
+  if (latestRun) {
+    const statusData = runTaskStatuses[latestRun.id];
+    if (statusData) {
+      latestRun.status = getRunStatus(statusData);
+    }
+  }
+
   return (
     <TableRow onClick={handleOpenInEditor} className="cursor-pointer">
       <TableCell className="text-sm">
         <Link {...LinkProps}>{displayName}</Link>
       </TableCell>
-
-      <TableCell>
-        {latestRun && runTaskStatuses[latestRun.id] && (
-          <StatusIcon status={latestRun.status} />
-        )}
-      </TableCell>
-      <TableCell className="text-gray-500 text-xs">0:12:38</TableCell>
       <TableCell className="text-gray-500 text-xs">
-        3/20/2025 12:00:00
+        {latestRun ? (
+          <div className="flex items-center gap-1">
+            {latestRun && runTaskStatuses[latestRun.id] && (
+              <StatusIcon status={latestRun.status} />
+            )}
+            <p>{formatDate(latestRun.created_at)}</p>
+            {/* <p>{`(ran for 0h:12m:38s)`}</p> */}
+          </div>
+        ) : (
+          "None"
+        )}
       </TableCell>
       <TableCell>
         {pipelineRuns.length > 0 && (

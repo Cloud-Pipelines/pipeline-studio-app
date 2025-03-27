@@ -108,8 +108,6 @@ const Home = () => {
               <TableHeader>
                 <TableRow className="text-xs">
                   <TableHead>Title</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Duration</TableHead>
                   <TableHead>Last run</TableHead>
                   <TableHead>Runs</TableHead>
                 </TableRow>
