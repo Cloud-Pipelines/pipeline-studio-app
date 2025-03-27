@@ -1,25 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 import type {
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
 import { API_URL, APP_ROUTES } from "@/utils/constants";
+import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
 
 import StatusIcon from "./StatusIcon";
 import TaskStatusBar from "./TaskStatusBar";
-import { countTaskStatuses } from "./utils";
-
-const STATUS = {
-  FAILED: "FAILED",
-  RUNNING: "RUNNING",
-  SUCCEEDED: "SUCCEEDED",
-  PENDING: "PENDING",
-} as const;
+import { countTaskStatuses, formatDate, getRunStatus } from "./utils";
 
 const RunListItem = ({ runId }: { runId: number }) => {
   const navigate = useNavigate();
+
+  const [metadata, setMetadata] = useState<PipelineRun | null>(null);
 
   const {
     data: details,
@@ -57,6 +54,21 @@ const RunListItem = ({ runId }: { runId: number }) => {
     },
   });
 
+  const name = details?.task_spec?.componentRef?.spec?.name;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!name) return;
+
+      const res = await fetchPipelineRuns(name);
+      if (!res) return;
+
+      setMetadata(res.latestRun);
+    };
+
+    fetchData();
+  }, [name]);
+
   if (isDetailsLoading || isStateLoading) {
     return <div>Loading...</div>;
   }
@@ -78,20 +90,6 @@ const RunListItem = ({ runId }: { runId: number }) => {
     navigate({ to: `${APP_ROUTES.RUNS}/${runId}` });
   };
 
-  const currentStatus = () => {
-    if (statusCounts.failed > 0) {
-      return STATUS.FAILED;
-    }
-    if (statusCounts.running > 0) {
-      return STATUS.RUNNING;
-    }
-    if (statusCounts.succeeded > 0) {
-      return STATUS.SUCCEEDED;
-    }
-
-    return STATUS.PENDING;
-  };
-
   return (
     <div
       onClick={(e) => {
@@ -102,9 +100,15 @@ const RunListItem = ({ runId }: { runId: number }) => {
     >
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
-          <StatusIcon status={currentStatus()} />
-          <span>{details?.task_spec?.componentRef?.spec?.name}</span>
-          <span className="text-gray-500 text-xs">#{runId}</span>
+          <StatusIcon status={getRunStatus(statusCounts)} />
+          <span>{name}</span>
+          <span className="text-gray-500 text-xs">{`#${runId}`}</span>
+          {metadata && (
+            <>
+              <span>•</span>
+              <span className="text-gray-500 text-xs">{`${formatDate(metadata.created_at)}`}</span>
+            </>
+          )}
         </div>
         {statusCounts && (
           <div className="text-xs text-gray-500 mt-1">

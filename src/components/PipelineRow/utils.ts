@@ -10,7 +10,7 @@ import { type TaskStatusCounts } from "./types";
  */
 export const countTaskStatuses = (
   details: GetExecutionInfoResponse,
-  stateData: GetGraphExecutionStateResponse
+  stateData: GetGraphExecutionStateResponse,
 ): TaskStatusCounts => {
   let succeeded = 0,
     failed = 0,
@@ -59,20 +59,28 @@ export const countTaskStatuses = (
 /**
  * Determine the overall run status based on the task statuses.
  */
+const STATUS = {
+  FAILED: "FAILED",
+  RUNNING: "RUNNING",
+  SUCCEEDED: "SUCCEEDED",
+  PENDING: "PENDING",
+  UNKNOWN: "UNKNOWN",
+} as const;
+
 export const getRunStatus = (statusData: TaskStatusCounts) => {
   if (statusData.failed > 0) {
-    return "FAILED";
+    return STATUS.FAILED;
   }
   if (statusData.running > 0) {
-    return "RUNNING";
+    return STATUS.RUNNING;
   }
   if (statusData.pending > 0) {
-    return "PENDING";
+    return STATUS.PENDING;
   }
   if (statusData.succeeded > 0) {
-    return "SUCCEEDED";
+    return STATUS.SUCCEEDED;
   }
-  return "UNKNOWN";
+  return STATUS.UNKNOWN;
 };
 
 /**
