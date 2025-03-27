@@ -20,7 +20,7 @@ import {
   type PipelineRun,
   type TaskStatusCounts,
 } from "./types";
-import { countTaskStatuses } from "./utils";
+import { countTaskStatuses, formatDate, getRunStatus } from "./utils";
 
 const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
   const [rowData, setRowData] = useState<any>(null);
@@ -177,20 +177,30 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
     },
   };
 
+  if (latestRun) {
+    const statusData = runTaskStatuses[latestRun.id];
+    if (statusData) {
+      latestRun.status = getRunStatus(statusData);
+    }
+  }
+
   return (
     <TableRow onClick={handleOpenInEditor} className="cursor-pointer">
       <TableCell className="text-sm">
         <Link {...LinkProps}>{displayName}</Link>
       </TableCell>
-
-      <TableCell>
-        {latestRun && runTaskStatuses[latestRun.id] && (
-          <StatusIcon status={latestRun.status} />
-        )}
-      </TableCell>
-      <TableCell className="text-gray-500 text-xs">0:12:38</TableCell>
       <TableCell className="text-gray-500 text-xs">
-        3/20/2025 12:00:00
+        {latestRun ? (
+          <div className="flex items-center gap-1">
+            {latestRun && runTaskStatuses[latestRun.id] && (
+              <StatusIcon status={latestRun.status} />
+            )}
+            <p>{formatDate(latestRun.created_at)}</p>
+            {/* <p>{`(ran for 0h:12m:38s)`}</p> */}
+          </div>
+        ) : (
+          "None"
+        )}
       </TableCell>
       <TableCell>
         {pipelineRuns.length > 0 && (

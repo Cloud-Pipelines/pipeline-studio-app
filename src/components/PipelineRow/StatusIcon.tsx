@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, RefreshCcw } from "lucide-react";
+import { CircleAlert, CircleCheck, CircleHelp, RefreshCcw } from "lucide-react";
 
 const StatusIcon = ({ status }: { status?: string }) => {
   switch (status) {
@@ -15,7 +15,7 @@ const StatusIcon = ({ status }: { status?: string }) => {
     case "CANCELLING":
       return <RefreshCcw className="w-4 h-4 text-blue-500 animate-spin" />;
     default:
-      return <RefreshCcw className="w-4 h-4 text-blue-500 animate-spin" />;
+      return <CircleHelp className="w-4 h-4 text-orange-500" />;
   }
 };
 
