@@ -23,6 +23,13 @@ const formatBytes = (bytes: number) => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
+const transformGcsUrl = (url: string) => {
+  if (url.startsWith("gs://")) {
+    return url.replace("gs://", "https://storage.cloud.google.com/");
+  }
+  return url;
+};
+
 const ArtifactValue = ({
   label,
   value,
@@ -34,7 +41,7 @@ const ArtifactValue = ({
     <span className="text-gray-500 w-20 flex-shrink-0">{label}:</span>
     {label === "URI" && typeof value === "string" ? (
       <a
-        href={value}
+        href={transformGcsUrl(value)}
         target="_blank"
         rel="noopener noreferrer"
         className="font-mono break-all text-blue-600 hover:text-blue-800 hover:underline"
@@ -85,6 +92,12 @@ const Artifacts = ({ executionId }: { executionId?: string | number }) => {
                 </div>
                 {artifact.artifact_data && (
                   <div className="space-y-1">
+                    {artifact.artifact_data.uri && (
+                      <ArtifactValue
+                        label="URI"
+                        value={artifact.artifact_data.uri}
+                      />
+                    )}
                     {artifact.artifact_data.value !== undefined && (
                       <ArtifactValue
                         label="Value"
