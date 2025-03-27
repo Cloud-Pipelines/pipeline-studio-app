@@ -148,7 +148,16 @@ const UserComponentLibrary = () => {
       <Button onClick={() => setIsImportComponentDialogOpen(true)}>
         Import from URL
       </Button>
-      <div {...getRootProps()}>
+      <div
+        {...getRootProps({
+          onClick: (event) => {
+            // Prevent triggering file input if clicking on a DraggableComponent
+            if ((event.target as HTMLElement).closest(".draggable-component")) {
+              event.stopPropagation();
+            }
+          },
+        })}
+      >
         <Input {...getInputProps()} />
         <div className="border border-black p-4 min-h-12">
           {isDragActive
@@ -156,20 +165,17 @@ const UserComponentLibrary = () => {
             : errorMessage ||
               "Drag and drop component.yaml files or click to select files"}
           {Array.from(componentFiles.entries()).map(([fileName, fileEntry]) => (
-            <>
-              <DraggableComponent
-                key={fileName}
-                componentReference={fileEntry.componentRef}
-              />
+            <div key={fileName} className="draggable-component">
+              <DraggableComponent componentReference={fileEntry.componentRef} />
               <Button onClick={handleDelete(fileName)}>Delete</Button>
-            </>
+            </div>
           ))}
         </div>
       </div>
       <ImportComponentFromUrlDialog
         isOpen={isImportComponentDialogOpen}
         onCancel={() => setIsImportComponentDialogOpen(false)}
-        initialValue={"https://raw.githubusercontent.com/.../component.yaml"}
+        placeholder={"https://raw.githubusercontent.com/.../component.yaml"}
         onImport={onImportFromUrl}
       />
     </div>
@@ -182,7 +188,8 @@ interface SaveAsDialogProps {
   isOpen: boolean;
   onImport: (name: string) => void;
   onCancel: () => void;
-  initialValue: string | undefined;
+  initialValue?: string;
+  placeholder?: string;
 }
 
 const ImportComponentFromUrlDialog = ({
@@ -190,6 +197,7 @@ const ImportComponentFromUrlDialog = ({
   onImport,
   onCancel,
   initialValue,
+  placeholder,
 }: SaveAsDialogProps) => {
   const [url, setUrl] = useState(initialValue);
 
@@ -214,7 +222,7 @@ const ImportComponentFromUrlDialog = ({
         <Input
           id="name"
           type="text"
-          placeholder={initialValue}
+          placeholder={placeholder}
           required
           autoFocus
           value={url}
