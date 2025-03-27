@@ -93,10 +93,12 @@ const TaskDetailsSheet = ({
               <Io taskSpec={taskSpec} />
             </TabsContent>
             <TabsContent value="artifacts">
-              <Artifacts executionId={taskSpec.annotations?.executionId as string} />
+              <Artifacts
+                executionId={taskSpec.annotations?.executionId as string}
+              />
             </TabsContent>
             <TabsContent value="logs">
-              <Logs />
+              <Logs executionId={taskSpec.annotations?.executionId as string} />
             </TabsContent>
           </Tabs>
         </div>

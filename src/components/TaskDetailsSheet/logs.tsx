@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "@tanstack/react-router";
 
-import { type RunDetailParams, runDetailRoute } from "@/router";
-import { API_URL, RUNS_BASE_PATH } from "@/utils/constants";
+import { API_URL } from "@/utils/constants";
 
 const LogDisplay = ({
   logs,
@@ -53,12 +51,10 @@ const getLogs = async (executionId: string) => {
   return response.json();
 };
 
-const LogsInner = () => {
-  const { id: executionId } = runDetailRoute.useParams() as RunDetailParams;
-
+const Logs = ({ executionId }: { executionId?: string | number }) => {
   const { data: logs, isLoading: isLoadingLogs } = useQuery({
     queryKey: ["logs", executionId],
-    queryFn: () => getLogs(executionId),
+    queryFn: () => getLogs(String(executionId)),
     enabled: !!executionId,
   });
 
@@ -76,18 +72,6 @@ const LogsInner = () => {
       </div>
     </div>
   );
-};
-
-const Logs = () => {
-  const location = useLocation();
-
-  const isRunDetailRoute = location.pathname.includes(RUNS_BASE_PATH);
-
-  if (!isRunDetailRoute) {
-    return null;
-  }
-
-  return <LogsInner />;
 };
 
 export default Logs;
