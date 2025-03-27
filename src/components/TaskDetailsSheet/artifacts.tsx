@@ -23,7 +23,13 @@ const formatBytes = (bytes: number) => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
-const ArtifactValue = ({ label, value }: { label: string; value: React.ReactNode }) => (
+const ArtifactValue = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) => (
   <div className="flex text-xs">
     <span className="text-gray-500 w-20 flex-shrink-0">{label}:</span>
     {label === "URI" && typeof value === "string" ? (
@@ -140,10 +146,7 @@ const Artifacts = ({ executionId }: { executionId?: string | number }) => {
                       />
                     )}
                     {artifact.artifact_data.is_dir && (
-                      <ArtifactValue
-                        label="Type"
-                        value="Directory"
-                      />
+                      <ArtifactValue label="Type" value="Directory" />
                     )}
                   </div>
                 )}
