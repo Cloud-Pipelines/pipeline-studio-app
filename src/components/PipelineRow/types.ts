@@ -11,4 +11,5 @@ export interface PipelineRowProps {
   url?: string;
   componentRef?: import("@/componentStore").ComponentReferenceWithSpec;
   name?: string;
+  modificationTime?: Date;
 }
