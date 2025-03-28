@@ -6,6 +6,7 @@ import { type RunDetailParams, runDetailRoute } from "@/router";
 import { RUNS_BASE_PATH } from "@/utils/constants";
 import { copyRunToPipeline } from "@/utils/copyRunToPipeline";
 
+import { PipelineNameDialog } from "./shared/PipelineNameDialog";
 import { Button } from "./ui/button";
 
 const CloneRunButtonInner = () => {
@@ -14,13 +15,13 @@ const CloneRunButtonInner = () => {
     useLoadComponentSpecAndDetailsFromId(id);
   const navigate = useNavigate();
 
-  const handleClone = async () => {
+  const handleClone = async (name: string) => {
     if (!componentSpec) {
       console.error("No component spec found");
       return;
     }
 
-    const result = await copyRunToPipeline(componentSpec);
+    const result = await copyRunToPipeline(componentSpec, name);
     if (result?.url) {
       navigate({ to: result.url });
     } else {
@@ -36,10 +37,31 @@ const CloneRunButtonInner = () => {
     );
   }
 
+  const getInitialName = () => {
+    const dateTime = new Date().toISOString();
+    return componentSpec?.name
+      ? `${componentSpec.name} (${dateTime})`
+      : `Pipeline ${dateTime}`;
+  };
+
+  const isSubmitDisabled = (name: string) => {
+    return name === componentSpec?.name;
+  };
+
   return (
-    <Button variant="outline" onClick={handleClone} className="cursor-pointer">
-      <CopyIcon /> Clone Run
-    </Button>
+    <PipelineNameDialog
+      trigger={
+        <Button variant="outline" className="cursor-pointer">
+          Clone Pipeline
+        </Button>
+      }
+      title="Clone Pipeline"
+      initialName={getInitialName()}
+      onSubmit={handleClone}
+      submitButtonText="Clone Run"
+      submitButtonIcon={<CopyIcon />}
+      isSubmitDisabled={isSubmitDisabled}
+    />
   );
 };
 
