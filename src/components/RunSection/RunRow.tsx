@@ -76,17 +76,26 @@ const RunRow = ({ runId }: { runId: string }) => {
   }, [name]);
 
   if (isDetailsLoading || isStateLoading) {
-    return <div>Loading...</div>;
+    return (
+      <TableRow>
+        <TableCell colSpan={4}>Loading...</TableCell>
+      </TableRow>
+    );
   }
 
   if (detailsError || stateError || !details || !state) {
     return (
-      <div className="flex flex-col p-2 text-sm text-red-500">
-        <span>Error loading run details</span>
-        <span className="text-xs">
-          {detailsError?.message || stateError?.message}
-        </span>
-      </div>
+      <TableRow>
+        <TableCell
+          colSpan={4}
+          className="flex flex-col p-2 text-sm text-red-500"
+        >
+          <span>Error loading run details</span>
+          <span className="text-xs">
+            {detailsError?.message || stateError?.message}
+          </span>
+        </TableCell>
+      </TableRow>
     );
   }
 
