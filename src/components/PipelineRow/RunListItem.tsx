@@ -14,38 +14,32 @@ import StatusText from "./StatusText";
 import TaskStatusBar from "./TaskStatusBar";
 import { countTaskStatuses, formatDate, getRunStatus } from "./utils";
 
-const RunListItem = ({ runId }: { runId: string }) => {
+const RunListItem = ({ run }: { run: PipelineRun }) => {
   const navigate = useNavigate();
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
 
-  const { data, isLoading, error } = fetchExecutionInfo(runId);
-  const { details, state } = data;
+  const executionId = `${run.root_execution_id}`;
 
-  console.log(data, metadata);
+  const { data, isLoading, error } = fetchExecutionInfo(executionId);
+  const { details, state } = data;
 
   const name = details?.task_spec?.componentRef?.spec?.name;
 
   useEffect(() => {
     const fetchData = async () => {
-      // if (!name) return;
-
-      const res = await fetchPipelineRunById(runId);
+      const res = await fetchPipelineRunById(`${run.id}`);
       if (!res) return;
 
-      const run = res as PipelineRun;
+      const runData = res as PipelineRun;
 
-      run.status = await fetchExecutionStatus(`${res.root_execution_id}`);
+      runData.status = await fetchExecutionStatus(`${res.root_execution_id}`);
 
-      // if (run.pipeline_name === "purple spend whose lost") {
-      // console.log(`run ${runId}`, run);
-      // }
-
-      setMetadata(res);
+      setMetadata(runData);
     };
 
     fetchData();
-  }, [runId]);
+  }, [run]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -62,15 +56,11 @@ const RunListItem = ({ runId }: { runId: string }) => {
 
   const statusCounts = countTaskStatuses(details, state);
 
-  const handleOnClick = (runId: string) => {
-    navigate({ to: `${APP_ROUTES.RUNS}/${runId}` });
-  };
-
   return (
     <div
       onClick={(e) => {
         e.stopPropagation();
-        handleOnClick(runId);
+        navigate({ to: `${APP_ROUTES.RUNS}/${executionId}` });
       }}
       className="flex flex-col p-2 text-sm hover:bg-gray-50 cursor-pointer"
     >
@@ -78,7 +68,7 @@ const RunListItem = ({ runId }: { runId: string }) => {
         <div className="flex items-center gap-2">
           <StatusIcon status={getRunStatus(statusCounts)} />
           <span>{name}</span>
-          <span className="text-gray-500 text-xs">{`#${runId}`}</span>
+          <span className="text-gray-500 text-xs">{`#${executionId}`}</span>
           {metadata && (
             <>
               <span>•</span>

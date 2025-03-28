@@ -69,18 +69,12 @@ const PipelineRow = ({
       if (res.latestRun) {
         const latestRun = res.latestRun as PipelineRun;
 
-        // if (latestRun.pipeline_name === "purple spend whose lost") {
-        //   console.log(latestRun);
-        // }
-
         latestRun.status = await fetchExecutionStatus(
           `${latestRun.root_execution_id}`,
         );
 
         setLatestRun(latestRun);
       }
-
-      console.log(res.runs);
 
       setPipelineRuns(res.runs);
     };
@@ -151,10 +145,7 @@ const PipelineRow = ({
               <div className="text-sm mb-2">Runs - {pipelineRuns.length}</div>
               <ScrollArea className="h-[300px]">
                 {pipelineRuns.map((run) => (
-                  <RunListItem
-                    key={run.root_execution_id}
-                    runId={`${run.root_execution_id}`}
-                  />
+                  <RunListItem key={run.id} run={run} />
                 ))}
               </ScrollArea>
             </PopoverContent>

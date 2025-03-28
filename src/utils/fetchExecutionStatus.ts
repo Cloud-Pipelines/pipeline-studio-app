@@ -35,14 +35,6 @@ export const fetchExecutionStatus = async (executionId: string) => {
     const taskStatuses = countTaskStatuses(details, stateData);
     const runStatus = getRunStatus(taskStatuses);
 
-    // if (executionId === "10") {
-    //   console.log(`###Getting Run Status for run: ${executionId}`);
-    //   console.log("Details", details);
-    //   console.log("State", stateData);
-    //   console.log("taskStatus", taskStatuses);
-    //   console.log("runstatus:", runStatus);
-    // }
-
     return runStatus;
   } catch (error) {
     console.error(

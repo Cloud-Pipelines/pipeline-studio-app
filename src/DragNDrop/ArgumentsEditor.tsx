@@ -95,7 +95,10 @@ const ArgumentInput = ({
         <Label htmlFor={input.name} className="text-sm break-words">
           {input.name.replace(/_/g, " ")}
         </Label>
-        <span className="text-xs text-gray-500 truncate" title={typeSpecToString(input.type)}>
+        <span
+          className="text-xs text-gray-500 truncate"
+          title={typeSpecToString(input.type)}
+        >
           ({typeSpecToString(input.type)}
           {!input.optional ? "*" : ""})
         </span>
