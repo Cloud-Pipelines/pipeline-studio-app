@@ -28,7 +28,7 @@ export const RunSection = () => {
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(
-          `Failed to fetch pipeline runs: ${response.statusText}`
+          `Failed to fetch pipeline runs: ${response.statusText}`,
         );
       }
 
@@ -78,10 +78,7 @@ export const RunSection = () => {
         </TableHeader>
         <TableBody>
           {data.pipeline_runs?.map((run) => (
-            <RunRow
-              key={run.root_execution_id}
-              runId={`${run.root_execution_id}`}
-            />
+            <RunRow key={run.root_execution_id} run={run} />
           ))}
         </TableBody>
       </Table>

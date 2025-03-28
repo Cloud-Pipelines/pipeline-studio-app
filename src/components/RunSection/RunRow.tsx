@@ -1,14 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 
-import type {
-  GetExecutionInfoResponse,
-  GetGraphExecutionStateResponse,
-} from "@/api/types.gen";
+import type { PipelineRunResponse } from "@/api/types.gen";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { API_URL, APP_ROUTES } from "@/utils/constants";
-import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
+import { APP_ROUTES } from "@/utils/constants";
+import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
 
 import StatusIcon from "../PipelineRow/StatusIcon";
 import StatusText from "../PipelineRow/StatusText";
@@ -19,63 +14,17 @@ import {
   getRunStatus,
 } from "../PipelineRow/utils";
 
-const RunRow = ({ runId }: { runId: string }) => {
+const RunRow = ({ run }: { run: PipelineRunResponse }) => {
   const navigate = useNavigate();
 
-  const [metadata, setMetadata] = useState<PipelineRun | null>(null);
+  const executionId = `${run.root_execution_id}`;
 
-  const {
-    data: details,
-    isLoading: isDetailsLoading,
-    error: detailsError,
-  } = useQuery<GetExecutionInfoResponse>({
-    queryKey: ["pipeline-run-details", runId],
-    queryFn: async () => {
-      const response = await fetch(
-        `${API_URL}/api/executions/${runId}/details`,
-      );
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch execution details: ${response.statusText}`,
-        );
-      }
-      return response.json();
-    },
-  });
-
-  const {
-    data: state,
-    isLoading: isStateLoading,
-    error: stateError,
-  } = useQuery<GetGraphExecutionStateResponse>({
-    queryKey: ["pipeline-run-state", runId],
-    queryFn: async () => {
-      const response = await fetch(`${API_URL}/api/executions/${runId}/state`);
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch execution state: ${response.statusText}`,
-        );
-      }
-      return response.json();
-    },
-  });
+  const { data, isLoading, error } = fetchExecutionInfo(executionId);
+  const { details, state } = data;
 
   const name = details?.task_spec?.componentRef?.spec?.name;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!name) return;
-
-      const res = await fetchPipelineRuns(name);
-      if (!res) return;
-
-      setMetadata(res.latestRun);
-    };
-
-    fetchData();
-  }, [name]);
-
-  if (isDetailsLoading || isStateLoading) {
+  if (isLoading) {
     return (
       <TableRow>
         <TableCell colSpan={4}>Loading...</TableCell>
@@ -83,7 +32,7 @@ const RunRow = ({ runId }: { runId: string }) => {
     );
   }
 
-  if (detailsError || stateError || !details || !state) {
+  if (error || !details || !state) {
     return (
       <TableRow>
         <TableCell
@@ -91,9 +40,7 @@ const RunRow = ({ runId }: { runId: string }) => {
           className="flex flex-col p-2 text-sm text-red-500"
         >
           <span>Error loading run details</span>
-          <span className="text-xs">
-            {detailsError?.message || stateError?.message}
-          </span>
+          <span className="text-xs">{error?.message}</span>
         </TableCell>
       </TableRow>
     );
@@ -101,7 +48,7 @@ const RunRow = ({ runId }: { runId: string }) => {
 
   const statusCounts = countTaskStatuses(details, state);
 
-  const clickThroughUrl = `${APP_ROUTES.RUNS}/${runId}`;
+  const clickThroughUrl = `${APP_ROUTES.RUNS}/${executionId}`;
 
   const LinkProps = {
     to: clickThroughUrl,
@@ -122,7 +69,7 @@ const RunRow = ({ runId }: { runId: string }) => {
       <TableCell className="text-sm flex items-center gap-2">
         <StatusIcon status={getRunStatus(statusCounts)} />
         <Link {...LinkProps}>{name}</Link>
-        <span>{`#${runId}`}</span>
+        <span>{`#${executionId}`}</span>
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
@@ -135,11 +82,9 @@ const RunRow = ({ runId }: { runId: string }) => {
         </div>
       </TableCell>
       <TableCell>
-        {metadata ? `${formatDate(metadata.created_at)}` : "Data not found..."}
+        {run.created_at ? `${formatDate(run.created_at)}` : "Data not found..."}
       </TableCell>
-      <TableCell>
-        {metadata ? `${metadata.created_by ?? "Unknown user"}` : ""}
-      </TableCell>
+      <TableCell>{run ? `${run.created_by ?? "Unknown user"}` : ""}</TableCell>
     </TableRow>
   );
 };

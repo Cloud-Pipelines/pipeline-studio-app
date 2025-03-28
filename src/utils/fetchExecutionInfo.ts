@@ -9,11 +9,11 @@ import { API_URL } from "@/utils/constants";
 const fetchExecutionInfo = (executionId: string) => {
   const fetchDetails = async (): Promise<GetExecutionInfoResponse> => {
     const response = await fetch(
-      `${API_URL}/api/executions/${executionId}/details`
+      `${API_URL}/api/executions/${executionId}/details`,
     );
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch execution details: ${response.statusText}`
+        `Failed to fetch execution details: ${response.statusText}`,
       );
     }
     return response.json();
@@ -21,11 +21,11 @@ const fetchExecutionInfo = (executionId: string) => {
 
   const fetchState = async (): Promise<GetGraphExecutionStateResponse> => {
     const response = await fetch(
-      `${API_URL}/api/executions/${executionId}/state`
+      `${API_URL}/api/executions/${executionId}/state`,
     );
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch execution state: ${response.statusText}`
+        `Failed to fetch execution state: ${response.statusText}`,
       );
     }
     return response.json();

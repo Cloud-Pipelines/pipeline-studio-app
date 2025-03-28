@@ -74,7 +74,7 @@ const PipelineRow = ({
         // }
 
         latestRun.status = await fetchExecutionStatus(
-          `${latestRun.root_execution_id}`
+          `${latestRun.root_execution_id}`,
         );
 
         setLatestRun(latestRun);
@@ -97,7 +97,7 @@ const PipelineRow = ({
         const safeName = name || "unnamed";
         window.open(
           `${window.location.origin}${EDITOR_PATH}/${encodeURIComponent(safeName)}`,
-          "_blank"
+          "_blank",
         );
       } else {
         navigate({ to: `${EDITOR_PATH}/${name}` });
