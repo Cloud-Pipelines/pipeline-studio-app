@@ -19,13 +19,15 @@ import {
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 export type Pipelines = Map<string, ComponentFileEntry>;
 
 export const PipelineSection = () => {
   const [pipelines, setPipelines] = useState<Pipelines>(new Map());
   const [isLoading, setIsLoading] = useState(false);
-
+  const [searchQuery, setSearchQuery] = useState("");
   useEffect(() => {
     fetchUserPipelines();
   }, []);
@@ -65,6 +67,14 @@ export const PipelineSection = () => {
     );
   }
 
+  const filteredPipelines = Array.from(pipelines.entries()).filter(([name]) => {
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
   return (
     <div>
       <Alert variant="destructive">
@@ -77,6 +87,11 @@ export const PipelineSection = () => {
         </AlertDescription>
       </Alert>
 
+      <div className="py-4 w-[200px]">
+        <Label className="mb-2">Search pipelines</Label>
+        <Input type="text" value={searchQuery} onChange={handleSearch} />
+      </div>
+
       {pipelines.size > 0 && (
         <Table>
           <TableHeader>
@@ -87,7 +102,7 @@ export const PipelineSection = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.from(pipelines.entries()).map(([name, fileEntry]) => (
+            {filteredPipelines.map(([name, fileEntry]) => (
               <PipelineRow
                 key={fileEntry.componentRef.digest}
                 componentRef={fileEntry.componentRef}
