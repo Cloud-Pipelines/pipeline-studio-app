@@ -459,7 +459,10 @@ export const refreshComponentDb = async (
       }
     }
   }
-  if (componentSearchConfig.GitHubSearchLocations !== undefined) {
+  if (
+    componentSearchConfig.GitHubSearchLocations &&
+    componentSearchConfig.GitHubSearchLocations.length > 0
+  ) {
     await importComponentsFromGitHubSearch(
       componentSearchConfig.GitHubSearchLocations,
       downloadData,

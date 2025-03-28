@@ -28,8 +28,12 @@ const COMPONENT_FEED_URLS_DEFAULT_VALUE = [
 const COMPONENT_FEED_URLS_LOCAL_STORAGE_KEY =
   "ComponentSearch/component_feed_urls";
 
-const GITHUB_SEARCH_LOCATIONS_DEFAULT_VALUE = [
-  "repo:Ark-kun/pipeline_components path:components",
+const GITHUB_SEARCH_LOCATIONS_DEFAULT_VALUE: string[] = [
+  /* 
+    GitHub Search integration is currently not functioning.
+    Leaving this array empty will skip Github search and avoid any errors. 
+  */
+  // "repo:Ark-kun/pipeline_components path:components",
 ];
 const GITHUB_SEARCH_LOCATIONS_LOCAL_STORAGE_KEY =
   "ComponentSearch/github_search_locations";
