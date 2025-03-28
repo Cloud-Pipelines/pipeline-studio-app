@@ -3,10 +3,18 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import type { ListPipelineJobsResponse } from "@/api/types.gen";
-import RunListItem from "@/components/PipelineRow/RunListItem";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { API_URL } from "@/utils/constants";
+
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
+import RunRow from "./RunRow";
 
 export const RunSection = () => {
   const [pageToken, setPageToken] = useState<string | undefined>();
@@ -59,14 +67,26 @@ export const RunSection = () => {
 
   return (
     <div>
-      {data?.pipeline_runs?.map((run) => (
-        <RunListItem
-          key={run.root_execution_id}
-          runId={run.root_execution_id}
-        />
-      ))}
+      <Table>
+        <TableHeader>
+          <TableRow className="text-xs">
+            <TableHead className="w-1/3">Name</TableHead>
+            <TableHead className="w-1/3">Status</TableHead>
+            <TableHead className="w-1/6">Date</TableHead>
+            <TableHead className="w-1/6">Initiated By</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.pipeline_runs?.map((run) => (
+            <RunRow
+              key={run.root_execution_id}
+              runId={`${run.root_execution_id}`}
+            />
+          ))}
+        </TableBody>
+      </Table>
 
-      {(data?.next_page_token || previousPageTokens.length > 0) && (
+      {(data.next_page_token || previousPageTokens.length > 0) && (
         <div className="flex justify-between items-center mt-4">
           <Button
             variant="outline"

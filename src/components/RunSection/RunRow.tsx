@@ -1,20 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import type {
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { API_URL, APP_ROUTES } from "@/utils/constants";
 import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
 
-import StatusIcon from "./StatusIcon";
-import StatusText from "./StatusText";
-import TaskStatusBar from "./TaskStatusBar";
-import { countTaskStatuses, formatDate, getRunStatus } from "./utils";
+import StatusIcon from "../PipelineRow/StatusIcon";
+import StatusText from "../PipelineRow/StatusText";
+import TaskStatusBar from "../PipelineRow/TaskStatusBar";
+import {
+  countTaskStatuses,
+  formatDate,
+  getRunStatus,
+} from "../PipelineRow/utils";
 
-const RunListItem = ({ runId }: { runId: string }) => {
+const RunRow = ({ runId }: { runId: string }) => {
   const navigate = useNavigate();
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
@@ -87,36 +92,47 @@ const RunListItem = ({ runId }: { runId: string }) => {
 
   const statusCounts = countTaskStatuses(details, state);
 
-  const handleOnClick = (runId: string) => {
-    navigate({ to: `${APP_ROUTES.RUNS}/${runId}` });
+  const clickThroughUrl = `${APP_ROUTES.RUNS}/${runId}`;
+
+  const LinkProps = {
+    to: clickThroughUrl,
+    className: "underline hover:text-blue-500 text-black",
+    onClick: (e: React.MouseEvent) => {
+      e.stopPropagation(); // Prevent triggering the row click handler
+    },
   };
 
   return (
-    <div
+    <TableRow
       onClick={(e) => {
         e.stopPropagation();
-        handleOnClick(runId);
+        navigate({ to: clickThroughUrl });
       }}
-      className="flex flex-col p-2 text-sm hover:bg-gray-50 cursor-pointer"
+      className="cursor-pointer text-gray-500 text-xs"
     >
-      <div className="flex items-center justify-between mb-1">
+      <TableCell className="text-sm flex items-center gap-2">
+        <StatusIcon status={getRunStatus(statusCounts)} />
+        <Link {...LinkProps}>{name}</Link>
+        <span>{`#${runId}`}</span>
+      </TableCell>
+      <TableCell>
         <div className="flex items-center gap-2">
-          <StatusIcon status={getRunStatus(statusCounts)} />
-          <span>{name}</span>
-          <span className="text-gray-500 text-xs">{`#${runId}`}</span>
-          {metadata && (
-            <>
-              <span>•</span>
-              <span className="text-gray-500 text-xs">{`${formatDate(metadata.created_at)}`}</span>
-            </>
-          )}
+          <div className="w-1/2">
+            <TaskStatusBar statusCounts={statusCounts} />
+          </div>
+          <div className="w-1/2">
+            {statusCounts && <StatusText statusCounts={statusCounts} />}
+          </div>
         </div>
-        <StatusText statusCounts={statusCounts} shorthand />
-      </div>
-
-      <TaskStatusBar statusCounts={statusCounts} />
-    </div>
+      </TableCell>
+      <TableCell>
+        {metadata ? `${formatDate(metadata.created_at)}` : "Data not found..."}
+      </TableCell>
+      <TableCell>
+        {metadata ? `${metadata.created_by ?? "Unknown user"}` : ""}
+      </TableCell>
+    </TableRow>
   );
 };
 
-export default RunListItem;
+export default RunRow;
