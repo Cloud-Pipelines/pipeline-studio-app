@@ -90,11 +90,16 @@ const ArgumentInput = ({
   };
 
   return (
-    <div className="flex w-full items-center gap-2">
-      <Label htmlFor={input.name} className="w-[200px] min-w-[200px] text-sm">
-        {input.name} (
-        {typeSpecToString(input.type) + (!input.optional ? "*" : "")})
-      </Label>
+    <div className="flex w-full items-center gap-2 py-1">
+      <div className="w-[300px] min-w-[300px] flex flex-col">
+        <Label htmlFor={input.name} className="text-sm break-words">
+          {input.name.replace(/_/g, " ")}
+        </Label>
+        <span className="text-xs text-gray-500 truncate" title={typeSpecToString(input.type)}>
+          ({typeSpecToString(input.type)}
+          {!input.optional ? "*" : ""})
+        </span>
+      </div>
       <Input
         id={input.name}
         value={inputValue}
@@ -132,7 +137,7 @@ const ArgumentsEditor = ({
   };
 
   return (
-    <div className="h-auto w-[550px] flex flex-col gap-2">
+    <div className="h-auto w-[650px] flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-4">
       {inputs.map((input) => {
         return (
           <ArgumentInput
