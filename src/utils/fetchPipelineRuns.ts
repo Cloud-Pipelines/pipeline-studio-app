@@ -19,14 +19,14 @@ export const fetchPipelineRuns = async (pipelineName: string) => {
 
     const runs: PipelineRun[] = [];
     let latestRun: PipelineRun | null = null;
-    let latestDate = new Date(0);
 
     await pipelineRunsDb.iterate<PipelineRun, void>((run) => {
       if (run.pipeline_name === pipelineName) {
         runs.push(run);
-        const runDate = new Date(run.created_at);
-        if (runDate > latestDate) {
-          latestDate = runDate;
+        if (
+          !latestRun ||
+          new Date(run.created_at) > new Date(latestRun.created_at)
+        ) {
           latestRun = run;
         }
       }
@@ -40,5 +40,20 @@ export const fetchPipelineRuns = async (pipelineName: string) => {
     return { runs, latestRun };
   } catch (error) {
     console.error("Error fetching pipeline runs:", error);
+  }
+};
+
+export const fetchPipelineRunById = async (runId: string) => {
+  try {
+    const pipelineRunsDb = localForage.createInstance({
+      name: "components",
+      storeName: "pipeline_runs",
+    });
+
+    const run = await pipelineRunsDb.getItem<PipelineRun>(runId.toString());
+    return run || null;
+  } catch (error) {
+    console.error("Error fetching pipeline run by ID:", error);
+    return null;
   }
 };

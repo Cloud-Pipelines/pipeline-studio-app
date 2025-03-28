@@ -43,7 +43,10 @@ export const PipelineSection = () => {
       //  sort pipelines by pipeline.modificationTime
       const sortedPipelines = new Map(
         [...pipelines.entries()].sort((a, b) => {
-          return new Date(b[1].modificationTime).getTime() - new Date(a[1].modificationTime).getTime();
+          return (
+            new Date(b[1].modificationTime).getTime() -
+            new Date(a[1].modificationTime).getTime()
+          );
         }),
       );
       setPipelines(sortedPipelines);

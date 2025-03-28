@@ -2,32 +2,32 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { List } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import type {
-  GetExecutionInfoResponse,
-  GetGraphExecutionStateResponse,
-} from "@/api/types.gen";
 import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { API_URL, EDITOR_PATH } from "@/utils/constants";
+import { EDITOR_PATH } from "@/utils/constants";
+import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
 import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
 
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
 import RunListItem from "./RunListItem";
 import StatusIcon from "./StatusIcon";
-import { type PipelineRowProps, type TaskStatusCounts } from "./types";
-import { countTaskStatuses, formatDate, getRunStatus } from "./utils";
+import { type PipelineRowProps } from "./types";
+import { formatDate } from "./utils";
 
-const PipelineRow = ({ url, componentRef, name, modificationTime }: PipelineRowProps) => {
+const PipelineRow = ({
+  url,
+  componentRef,
+  name,
+  modificationTime,
+}: PipelineRowProps) => {
+  const navigate = useNavigate();
+
   const [rowData, setRowData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [latestRun, setLatestRun] = useState<PipelineRun | null>(null);
   const [pipelineRuns, setPipelineRuns] = useState<PipelineRun[]>([]);
-  const [runTaskStatuses, setRunTaskStatuses] = useState<
-    Record<number, TaskStatusCounts>
-  >({});
-  const navigate = useNavigate();
+  const [latestRun, setLatestRun] = useState<PipelineRun | null>(null);
 
   useEffect(() => {
     if (componentRef) {
@@ -66,56 +66,21 @@ const PipelineRow = ({ url, componentRef, name, modificationTime }: PipelineRowP
 
       if (!res) return;
 
+      if (res.latestRun) {
+        const latestRun = res.latestRun as PipelineRun;
+
+        latestRun.status = await fetchExecutionStatus(
+          `${latestRun.root_execution_id}`,
+        );
+
+        setLatestRun(latestRun);
+      }
+
       setPipelineRuns(res.runs);
-      setLatestRun(res.latestRun);
     };
 
     fetchData();
   }, [name]);
-
-  useEffect(() => {
-    const fetchTaskStatuses = async () => {
-      if (pipelineRuns.length === 0) return;
-
-      const statuses: Record<number, TaskStatusCounts> = {};
-
-      for (const run of pipelineRuns) {
-        try {
-          const response = await fetch(
-            `${API_URL}/api/executions/${run.id}/details`,
-          );
-          if (!response.ok) {
-            throw new Error(
-              `Failed to fetch execution details: ${response.statusText}`,
-            );
-          }
-          const details: GetExecutionInfoResponse = await response.json();
-
-          const stateResponse = await fetch(
-            `${API_URL}/api/executions/${run.id}/state`,
-          );
-          if (!stateResponse.ok) {
-            throw new Error(
-              `Failed to fetch execution state: ${stateResponse.statusText}`,
-            );
-          }
-          const stateData: GetGraphExecutionStateResponse =
-            await stateResponse.json();
-
-          statuses[run.id] = countTaskStatuses(details, stateData);
-        } catch (error) {
-          console.error(
-            `Error fetching task statuses for run ${run.id}:`,
-            error,
-          );
-        }
-      }
-
-      setRunTaskStatuses(statuses);
-    };
-
-    fetchTaskStatuses();
-  }, [pipelineRuns]);
 
   const handleOpenInEditor = (e: React.MouseEvent) => {
     const isAccordionClick =
@@ -148,13 +113,6 @@ const PipelineRow = ({ url, componentRef, name, modificationTime }: PipelineRowP
     },
   };
 
-  if (latestRun) {
-    const statusData = runTaskStatuses[latestRun.id];
-    if (statusData) {
-      latestRun.status = getRunStatus(statusData);
-    }
-  }
-
   return (
     <TableRow onClick={handleOpenInEditor} className="cursor-pointer">
       <TableCell className="text-sm">
@@ -166,9 +124,7 @@ const PipelineRow = ({ url, componentRef, name, modificationTime }: PipelineRowP
       <TableCell className="text-gray-500 text-xs">
         {latestRun ? (
           <div className="flex items-center gap-1">
-            {latestRun && runTaskStatuses[latestRun.id] && (
-              <StatusIcon status={latestRun.status} />
-            )}
+            {latestRun.status && <StatusIcon status={latestRun.status} />}
             <p>{formatDate(latestRun.created_at)}</p>
             {/* <p>{`(ran for 0h:12m:38s)`}</p> */}
           </div>
@@ -189,10 +145,7 @@ const PipelineRow = ({ url, componentRef, name, modificationTime }: PipelineRowP
               <div className="text-sm mb-2">Runs - {pipelineRuns.length}</div>
               <ScrollArea className="h-[300px]">
                 {pipelineRuns.map((run) => (
-                  <RunListItem
-                    key={run.root_execution_id}
-                    runId={`${run.root_execution_id}`}
-                  />
+                  <RunListItem key={run.id} run={run} />
                 ))}
               </ScrollArea>
             </PopoverContent>

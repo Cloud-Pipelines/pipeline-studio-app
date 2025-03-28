@@ -77,12 +77,7 @@ export const RunSection = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.pipeline_runs?.map((run) => (
-            <RunRow
-              key={run.root_execution_id}
-              runId={`${run.root_execution_id}`}
-            />
-          ))}
+          {data.pipeline_runs?.map((run) => <RunRow key={run.id} run={run} />)}
         </TableBody>
       </Table>
 
