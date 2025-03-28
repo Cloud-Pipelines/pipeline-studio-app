@@ -9,35 +9,38 @@ const StatusText = ({
 }) => {
   return (
     <div className="text-xs text-gray-500 mt-1">
-      {Object.entries(statusCounts).map(([key, count]) => {
+      {Object.entries(statusCounts).map(([key, count], index, array) => {
         if (key === "total") return;
 
-        if (count > 0) {
-          const statusColors: Record<string, string> = {
-            succeeded: "text-green-500",
-            failed: "text-red-500",
-            running: "text-blue-500",
-            skipped: "text-gray-800",
-            waiting: "text-gray-500",
-          };
-          const statusText = shorthand
-            ? `${key[0]}`
-            : `${key}${count > 1 ? " " : ""}`;
+        if (count === 0) return;
 
-          return (
-            <span key={key}>
-              <span className={statusColors[key]}>
-                {count}
-                {shorthand ? statusText : ` ${statusText.trim()}`}
-              </span>
-              {!shorthand && count > 1 && (
-                <span className="text-black">, </span>
-              )}
-              {shorthand && <span> </span>}
+        const statusColors: Record<string, string> = {
+          succeeded: "text-green-500",
+          failed: "text-red-500",
+          running: "text-blue-500",
+          skipped: "text-gray-800",
+          waiting: "text-gray-500",
+        };
+        const statusText = shorthand
+          ? `${key[0]}`
+          : `${key}${count > 1 ? " " : ""}`;
+
+        const isLastVisibleItem = array
+          .slice(index + 1)
+          .some(([nextKey, nextCount]) => nextKey !== "total" && nextCount > 0);
+
+        return (
+          <span key={key}>
+            <span className={statusColors[key]}>
+              {count}
+              {shorthand ? statusText : ` ${statusText.trim()}`}
             </span>
-          );
-        }
-        return null;
+            {!shorthand && isLastVisibleItem && (
+              <span className="text-black">, </span>
+            )}
+            {shorthand && <span> </span>}
+          </span>
+        );
       })}
     </div>
   );
