@@ -1,19 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import type { ListPipelineJobsResponse } from "@/api/types.gen";
 import RunListItem from "@/components/PipelineRow/RunListItem";
-import { type Pipelines, PipelineSection } from "@/components/PipelineSection";
+import { PipelineSection } from "@/components/PipelineSection";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAllComponentFilesFromList } from "@/componentStore";
-import { API_URL, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import { API_URL } from "@/utils/constants";
 
 const Home = () => {
-  const [userPipelines, setUserPipelines] = useState<Pipelines>(new Map());
-  const [isLoadingUserPipelines, setIsLoadingUserPipelines] = useState(false);
   const [pageToken, setPageToken] = useState<string | undefined>();
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
@@ -26,7 +23,7 @@ const Home = () => {
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(
-            `Failed to fetch pipeline runs: ${response.statusText}`,
+            `Failed to fetch pipeline runs: ${response.statusText}`
           );
         }
 
@@ -47,35 +44,10 @@ const Home = () => {
     setPageToken(previousToken);
   };
 
-  useEffect(() => {
-    fetchUserPipelines();
-  }, []);
-
-  const fetchUserPipelines = async () => {
-    setIsLoadingUserPipelines(true);
-    try {
-      const pipelines = await getAllComponentFilesFromList(
-        USER_PIPELINES_LIST_NAME,
-      );
-      setUserPipelines(pipelines);
-    } catch (error) {
-      console.error("Failed to load user pipelines:", error);
-    } finally {
-      setIsLoadingUserPipelines(false);
-    }
-  };
-
-  const refreshAll = () => {
-    fetchUserPipelines();
-  };
-
   return (
     <div className="container mx-auto w-3/4 p-4 flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Pipelines</h1>
-        <Button onClick={refreshAll} className="mt-6 max-w-96">
-          Refresh
-        </Button>
       </div>
       <Tabs defaultValue="runs" className="w-full">
         <TabsList>
@@ -83,10 +55,7 @@ const Home = () => {
           <TabsTrigger value="pipelines">My pipelines</TabsTrigger>
         </TabsList>
         <TabsContent value="pipelines">
-          <PipelineSection
-            pipelines={userPipelines}
-            isLoading={isLoadingUserPipelines}
-          />
+          <PipelineSection />
         </TabsContent>
         <TabsContent value="runs" className="flex flex-col gap-1">
           {isLoadingUserRuns && (

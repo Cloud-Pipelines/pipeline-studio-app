@@ -1,4 +1,5 @@
 import { Terminal } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import NewExperimentDialog from "@/components/NewExperiment";
 import PipelineRow from "@/components/PipelineRow";
@@ -11,19 +12,42 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type ComponentFileEntry } from "@/componentStore";
+import {
+  type ComponentFileEntry,
+  getAllComponentFilesFromList,
+} from "@/componentStore";
+import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+
+import { Button } from "../ui/button";
 
 export type Pipelines = Map<string, ComponentFileEntry>;
 
-interface PipelineSectionProps {
-  pipelines: Pipelines;
-  isLoading?: boolean;
-}
+export const PipelineSection = () => {
+  const [pipelines, setPipelines] = useState<Pipelines>(new Map());
+  const [isLoading, setIsLoading] = useState(false);
 
-export const PipelineSection = ({
-  pipelines,
-  isLoading,
-}: PipelineSectionProps) => {
+  useEffect(() => {
+    fetchUserPipelines();
+  }, []);
+
+  const fetchUserPipelines = async () => {
+    setIsLoading(true);
+    try {
+      const pipelines = await getAllComponentFilesFromList(
+        USER_PIPELINES_LIST_NAME
+      );
+      setPipelines(pipelines);
+    } catch (error) {
+      console.error("Failed to load user pipelines:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refreshAll = () => {
+    fetchUserPipelines();
+  };
+
   if (isLoading) {
     return (
       <div className="flex gap-2 items-center">
@@ -73,6 +97,10 @@ export const PipelineSection = ({
           </TableBody>
         </Table>
       )}
+
+      <Button onClick={refreshAll} className="mt-6 max-w-96">
+        Refresh
+      </Button>
     </div>
   );
 };
