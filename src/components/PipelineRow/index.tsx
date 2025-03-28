@@ -18,7 +18,7 @@ import StatusIcon from "./StatusIcon";
 import { type PipelineRowProps, type TaskStatusCounts } from "./types";
 import { countTaskStatuses, formatDate, getRunStatus } from "./utils";
 
-const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
+const PipelineRow = ({ url, componentRef, name, modificationTime }: PipelineRowProps) => {
   const [rowData, setRowData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -159,6 +159,9 @@ const PipelineRow = ({ url, componentRef, name }: PipelineRowProps) => {
     <TableRow onClick={handleOpenInEditor} className="cursor-pointer">
       <TableCell className="text-sm">
         <Link {...LinkProps}>{displayName}</Link>
+      </TableCell>
+      <TableCell className="text-gray-500 text-xs">
+        {modificationTime ? formatDate(modificationTime.toISOString()) : "N/A"}
       </TableCell>
       <TableCell className="text-gray-500 text-xs">
         {latestRun ? (

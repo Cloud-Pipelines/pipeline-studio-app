@@ -40,7 +40,13 @@ export const PipelineSection = () => {
       const pipelines = await getAllComponentFilesFromList(
         USER_PIPELINES_LIST_NAME,
       );
-      setPipelines(pipelines);
+      //  sort pipelines by pipeline.modificationTime
+      const sortedPipelines = new Map(
+        [...pipelines.entries()].sort((a, b) => {
+          return new Date(b[1].modificationTime).getTime() - new Date(a[1].modificationTime).getTime();
+        }),
+      );
+      setPipelines(sortedPipelines);
     } catch (error) {
       console.error("Failed to load user pipelines:", error);
     } finally {
@@ -108,6 +114,7 @@ export const PipelineSection = () => {
           <TableHeader>
             <TableRow className="text-xs">
               <TableHead>Title</TableHead>
+              <TableHead>Modified at</TableHead>
               <TableHead>Last run</TableHead>
               <TableHead>Runs</TableHead>
             </TableRow>
@@ -121,6 +128,7 @@ export const PipelineSection = () => {
                 key={fileEntry.componentRef.digest}
                 componentRef={fileEntry.componentRef}
                 name={name.replace(/_/g, " ")}
+                modificationTime={fileEntry.modificationTime}
               />
             ))}
           </TableBody>
