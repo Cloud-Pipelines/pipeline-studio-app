@@ -28,7 +28,7 @@ export const RunSection = () => {
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(
-          `Failed to fetch pipeline runs: ${response.statusText}`,
+          `Failed to fetch pipeline runs: ${response.statusText}`
         );
       }
 

@@ -1,13 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import type {
-  GetExecutionInfoResponse,
-  GetGraphExecutionStateResponse,
-} from "@/api/types.gen";
-import { API_URL, APP_ROUTES } from "@/utils/constants";
-import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
+import { APP_ROUTES } from "@/utils/constants";
+import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
+import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
+import {
+  fetchPipelineRunById,
+  type PipelineRun,
+} from "@/utils/fetchPipelineRuns";
 
 import StatusIcon from "./StatusIcon";
 import StatusText from "./StatusText";
@@ -19,68 +19,43 @@ const RunListItem = ({ runId }: { runId: string }) => {
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
 
-  const {
-    data: details,
-    isLoading: isDetailsLoading,
-    error: detailsError,
-  } = useQuery<GetExecutionInfoResponse>({
-    queryKey: ["pipeline-run-details", runId],
-    queryFn: async () => {
-      const response = await fetch(
-        `${API_URL}/api/executions/${runId}/details`,
-      );
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch execution details: ${response.statusText}`,
-        );
-      }
-      return response.json();
-    },
-  });
+  const { data, isLoading, error } = fetchExecutionInfo(runId);
+  const { details, state } = data;
 
-  const {
-    data: state,
-    isLoading: isStateLoading,
-    error: stateError,
-  } = useQuery<GetGraphExecutionStateResponse>({
-    queryKey: ["pipeline-run-state", runId],
-    queryFn: async () => {
-      const response = await fetch(`${API_URL}/api/executions/${runId}/state`);
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch execution state: ${response.statusText}`,
-        );
-      }
-      return response.json();
-    },
-  });
+  console.log(data, metadata);
 
   const name = details?.task_spec?.componentRef?.spec?.name;
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!name) return;
+      // if (!name) return;
 
-      const res = await fetchPipelineRuns(name);
+      const res = await fetchPipelineRunById(runId);
       if (!res) return;
 
-      setMetadata(res.latestRun);
+      const run = res as PipelineRun;
+
+      run.status = await fetchExecutionStatus(`${res.root_execution_id}`);
+
+      // if (run.pipeline_name === "purple spend whose lost") {
+      // console.log(`run ${runId}`, run);
+      // }
+
+      setMetadata(res);
     };
 
     fetchData();
-  }, [name]);
+  }, [runId]);
 
-  if (isDetailsLoading || isStateLoading) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (detailsError || stateError || !details || !state) {
+  if (error || !details || !state) {
     return (
       <div className="flex flex-col p-2 text-sm text-red-500">
         <span>Error loading run details</span>
-        <span className="text-xs">
-          {detailsError?.message || stateError?.message}
-        </span>
+        <span className="text-xs">{error?.message}</span>
       </div>
     );
   }

@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { EDITOR_PATH } from "@/utils/constants";
+import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
 import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
-import { fetchRunStatus } from "@/utils/fetchRunStatus";
 
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
@@ -68,9 +68,19 @@ const PipelineRow = ({
 
       if (res.latestRun) {
         const latestRun = res.latestRun as PipelineRun;
-        latestRun.status = await fetchRunStatus(`${latestRun.id}`);
+
+        // if (latestRun.pipeline_name === "purple spend whose lost") {
+        //   console.log(latestRun);
+        // }
+
+        latestRun.status = await fetchExecutionStatus(
+          `${latestRun.root_execution_id}`
+        );
+
         setLatestRun(latestRun);
       }
+
+      console.log(res.runs);
 
       setPipelineRuns(res.runs);
     };

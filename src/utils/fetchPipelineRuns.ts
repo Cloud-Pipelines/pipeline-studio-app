@@ -34,11 +34,26 @@ export const fetchPipelineRuns = async (pipelineName: string) => {
 
     runs.sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
     return { runs, latestRun };
   } catch (error) {
     console.error("Error fetching pipeline runs:", error);
+  }
+};
+
+export const fetchPipelineRunById = async (runId: string) => {
+  try {
+    const pipelineRunsDb = localForage.createInstance({
+      name: "components",
+      storeName: "pipeline_runs",
+    });
+
+    const run = await pipelineRunsDb.getItem<PipelineRun>(runId.toString());
+    return run || null;
+  } catch (error) {
+    console.error("Error fetching pipeline run by ID:", error);
+    return null;
   }
 };
