@@ -1,4 +1,4 @@
-import { Terminal } from "lucide-react";
+import { CircleX, Terminal } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import NewExperimentDialog from "@/components/NewExperiment";
@@ -16,6 +16,7 @@ import {
   type ComponentFileEntry,
   getAllComponentFilesFromList,
 } from "@/componentStore";
+import { cn } from "@/lib/utils";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 import { Button } from "../ui/button";
@@ -28,6 +29,7 @@ export const PipelineSection = () => {
   const [pipelines, setPipelines] = useState<Pipelines>(new Map());
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
   useEffect(() => {
     fetchUserPipelines();
   }, []);
@@ -87,9 +89,18 @@ export const PipelineSection = () => {
         </AlertDescription>
       </Alert>
 
-      <div className="py-4 w-[200px]">
+      <div className="py-4 w-[256px]">
         <Label className="mb-2">Search pipelines</Label>
-        <Input type="text" value={searchQuery} onChange={handleSearch} />
+        <div className="flex gap-1">
+          <Input type="text" value={searchQuery} onChange={handleSearch} />
+          <Button
+            variant="ghost"
+            className={cn(searchQuery ? "" : "invisible")}
+            onClick={() => setSearchQuery("")}
+          >
+            <CircleX />
+          </Button>
+        </div>
       </div>
 
       {pipelines.size > 0 && (
@@ -102,6 +113,9 @@ export const PipelineSection = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {filteredPipelines.length === 0 && (
+              <TableRow>No Pipelines found.</TableRow>
+            )}
             {filteredPipelines.map(([name, fileEntry]) => (
               <PipelineRow
                 key={fileEntry.componentRef.digest}
