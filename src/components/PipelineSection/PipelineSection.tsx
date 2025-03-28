@@ -34,7 +34,7 @@ export const PipelineSection = () => {
     setIsLoading(true);
     try {
       const pipelines = await getAllComponentFilesFromList(
-        USER_PIPELINES_LIST_NAME
+        USER_PIPELINES_LIST_NAME,
       );
       setPipelines(pipelines);
     } catch (error) {
