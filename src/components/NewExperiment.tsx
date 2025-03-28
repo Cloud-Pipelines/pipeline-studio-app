@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { AlertCircle, InfoIcon } from "lucide-react";
 import { generate } from "random-words";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,55 +15,29 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  type ComponentFileEntry,
-  getAllComponentFilesFromList,
-  writeComponentToFileListFromText,
-} from "@/componentStore";
+import { writeComponentToFileListFromText } from "@/componentStore";
 import { replaceLocalStorageWithExperimentYaml } from "@/DragNDrop/PipelineAutoSaver";
+import useLoadUserPipelines from "@/hooks/useLoadUserPipelines";
 import {
   defaultPipelineYamlWithName,
   EDITOR_PATH,
   USER_PIPELINES_LIST_NAME,
+  VALID_NAME_MESSAGE,
+  VALID_NAME_REGEX,
 } from "@/utils/constants";
 
 import { Alert, AlertDescription } from "./ui/alert";
 
-const VALID_NAME_REGEX = /^[a-zA-Z0-9\s]+$/;
-const VALID_NAME_MESSAGE =
-  "Name must be unique and contain only alphanumeric characters and spaces";
 const randomName = () => (generate(4) as string[]).join(" ");
 
 const NewExperimentDialog = () => {
   const navigate = useNavigate();
 
-  const [userPipelines, setUserPipelines] = useState<
-    Map<string, ComponentFileEntry>
-  >(new Map());
-
   const [error, setError] = useState<string | null>(null);
 
-  const [isLoadingUserPipelines, setIsLoadingUserPipelines] = useState(false);
+  const { userPipelines, isLoadingUserPipelines } = useLoadUserPipelines();
 
   const [name, setName] = useState(randomName());
-
-  useEffect(() => {
-    fetchUserPipelines();
-  }, []);
-
-  const fetchUserPipelines = async () => {
-    setIsLoadingUserPipelines(true);
-    try {
-      const pipelines = await getAllComponentFilesFromList(
-        USER_PIPELINES_LIST_NAME,
-      );
-      setUserPipelines(pipelines);
-    } catch (error) {
-      console.error("Failed to load user pipelines:", error);
-    } finally {
-      setIsLoadingUserPipelines(false);
-    }
-  };
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
