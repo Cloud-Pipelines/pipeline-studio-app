@@ -151,6 +151,7 @@ export interface ComponentTaskNodeProps extends Record<string, unknown> {
   taskSpec: TaskSpec;
   taskId: string;
   setArguments?: (args: Record<string, ArgumentType>) => void;
+  onDelete: () => void;
 }
 
 const getStatusIcon = (status: string) => {
@@ -288,6 +289,11 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
     }
   };
 
+  const handleDelete = () => {
+    typedData.onDelete();
+    closeArgumentsEditor();
+  };
+
   return (
     <>
       <div
@@ -333,6 +339,7 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
           closeEditor={closeArgumentsEditor}
           setArguments={typedData.setArguments}
           disabled={!!runStatus}
+          handleDelete={handleDelete}
         />
       )}
     </>

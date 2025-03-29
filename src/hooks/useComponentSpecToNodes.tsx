@@ -14,16 +14,17 @@ type SetComponentSpec = (componentSpec: ComponentSpec) => void;
 const useComponentSpecToNodes = (
   componentSpec: ComponentSpec,
   setComponentSpec: SetComponentSpec,
+  removeNode: (nodeId: string) => void,
 ): {
   nodes: Node<any>[];
   onNodesChange: (changes: NodeChange[]) => void;
 } => {
   const [nodes, setNodes, onNodesChange] = useNodesState(
-    getNodes(componentSpec, setComponentSpec),
+    getNodes(componentSpec, setComponentSpec, removeNode),
   );
 
   useEffect(() => {
-    const newNodes = getNodes(componentSpec, setComponentSpec);
+    const newNodes = getNodes(componentSpec, setComponentSpec, removeNode);
     setNodes(newNodes);
   }, [componentSpec]);
 
@@ -36,13 +37,19 @@ const useComponentSpecToNodes = (
 const getNodes = (
   componentSpec: ComponentSpec,
   setComponentSpec: SetComponentSpec,
+  removeNode: (nodeId: string) => void,
 ): Node<any>[] => {
   if (!("graph" in componentSpec.implementation)) {
     return [];
   }
 
   const graphSpec = componentSpec.implementation.graph;
-  const taskNodes = getTaskNodes(graphSpec, componentSpec, setComponentSpec);
+  const taskNodes = getTaskNodes(
+    graphSpec,
+    componentSpec,
+    setComponentSpec,
+    removeNode,
+  );
   const inputNodes = getInputNodes(componentSpec);
   const outputNodes = getOutputNodes(componentSpec);
 
@@ -53,13 +60,15 @@ const getTaskNodes = (
   graphSpec: GraphSpec,
   componentSpec: ComponentSpec,
   setComponentSpec: SetComponentSpec,
+  removeNode: (nodeId: string) => void,
 ) => {
   return Object.entries(graphSpec.tasks).map<Node<any>>(
     ([taskId, taskSpec]) => {
       const position = extractPositionFromAnnotations(taskSpec.annotations);
+      const nodeId = `task_${taskId}`;
 
       return {
-        id: `task_${taskId}`,
+        id: nodeId,
         data: {
           taskSpec: taskSpec,
           taskId: taskId,
@@ -73,6 +82,9 @@ const getTaskNodes = (
               ...componentSpec,
               implementation: { graph: newGraphSpec },
             });
+          },
+          onDelete: () => {
+            removeNode(nodeId);
           },
         },
         position: position,

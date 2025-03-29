@@ -7,7 +7,7 @@
  */
 
 import { DndContext, type DragEndEvent, useDraggable } from "@dnd-kit/core";
-import { GripVertical } from "lucide-react";
+import { CircleX, GripVertical, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -33,6 +33,7 @@ interface ArgumentsEditorDialogProps {
   setArguments?: (args: Record<string, ArgumentType>) => void;
   position?: { x: number; y: number };
   disabled?: boolean;
+  handleDelete: () => void;
 }
 
 const ArgumentsEditorDialog = ({
@@ -41,6 +42,7 @@ const ArgumentsEditorDialog = ({
   setArguments,
   position = { x: 100, y: 100 },
   disabled = false,
+  handleDelete,
 }: ArgumentsEditorDialogProps) => {
   const [currentArguments, setCurrentArguments] = useState<
     Record<string, ArgumentType>
@@ -90,6 +92,7 @@ const ArgumentsEditorDialog = ({
         zIndex={currentZIndex}
         bringToFront={bringToFront}
         disabled={disabled}
+        handleDelete={handleDelete}
       />
     </DndContext>
   );
@@ -107,6 +110,7 @@ const DraggableDialogContent = ({
   zIndex,
   bringToFront,
   disabled,
+  handleDelete,
 }: {
   dialogPosition: { x: number; y: number };
   componentSpec: ComponentSpec;
@@ -117,6 +121,7 @@ const DraggableDialogContent = ({
   zIndex: number;
   bringToFront: () => void;
   disabled: boolean;
+  handleDelete: () => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: "arguments-dialog",
@@ -146,8 +151,15 @@ const DraggableDialogContent = ({
             {componentSpec.name}
           </CardTitle>
           <CardDescription>
-            Configure the component&apos;s input parameters.
+            {`Configure the component's input parameters.`}
           </CardDescription>
+          <Button
+            onClick={closeEditor}
+            className="cursor-pointer absolute top-2 right-2"
+            variant="ghost"
+          >
+            <CircleX />
+          </Button>
         </CardHeader>
         <CardContent>
           <ArgumentsEditor
@@ -158,8 +170,12 @@ const DraggableDialogContent = ({
           />
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button onClick={closeEditor} className="cursor-pointer">
-            Close
+          <Button
+            onClick={handleDelete}
+            className="cursor-pointer"
+            variant="destructive"
+          >
+            <TrashIcon /> Delete
           </Button>
           <Button
             onClick={handleApply}
