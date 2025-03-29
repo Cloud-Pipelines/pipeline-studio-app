@@ -37,7 +37,7 @@ type InputOrOutputSpec = InputSpec | OutputSpec;
 const NODE_WIDTH_IN_PX = 200;
 
 export const isComponentTaskNode = (
-  node: Node,
+  node: Node
 ): node is Node<ComponentTaskNodeProps> =>
   node.type === "task" &&
   node.data !== undefined &&
@@ -49,7 +49,7 @@ function generateHandles(
   handleType: HandleType,
   position: Position,
   idPrefix: string,
-  inputsWithMissingArguments?: string[],
+  inputsWithMissingArguments?: string[]
 ): React.ReactElement[] {
   const handleComponents = [];
   const numHandles = ioSpecs.length;
@@ -92,7 +92,7 @@ function generateHandles(
         <div className={labelClasses} style={labelStyle}>
           {ioSpec.name}
         </div>
-      </Handle>,
+      </Handle>
     );
   }
   return handleComponents;
@@ -100,7 +100,7 @@ function generateHandles(
 
 function generateLabelStyle(
   position: Position,
-  numHandles: number,
+  numHandles: number
 ): [string, CSSProperties] {
   let maxLabelWidthPx = NODE_WIDTH_IN_PX;
   let labelClasses = "label";
@@ -125,25 +125,25 @@ function generateLabelStyle(
 
 function generateInputHandles(
   inputSpecs: InputSpec[],
-  inputsWithInvalidArguments?: string[],
+  inputsWithInvalidArguments?: string[]
 ): React.ReactElement[] {
   return generateHandles(
     inputSpecs,
     "target",
     inputHandlePosition,
     "input_",
-    inputsWithInvalidArguments,
+    inputsWithInvalidArguments
   );
 }
 
 function generateOutputHandles(
-  outputSpecs: OutputSpec[],
+  outputSpecs: OutputSpec[]
 ): React.ReactElement[] {
   return generateHandles(
     outputSpecs,
     "source",
     outputHandlePosition,
-    "output_",
+    "output_"
   );
 }
 
@@ -151,6 +151,7 @@ export interface ComponentTaskNodeProps extends Record<string, unknown> {
   taskSpec: TaskSpec;
   taskId: string;
   setArguments?: (args: Record<string, ArgumentType>) => void;
+  onDelete: () => void;
 }
 
 const getStatusIcon = (status: string) => {
@@ -224,12 +225,12 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
       (inputSpec) =>
         inputSpec.optional !== true &&
         inputSpec.default === undefined &&
-        !(inputSpec.name in (taskSpec.arguments ?? {})),
+        !(inputSpec.name in (taskSpec.arguments ?? {}))
     )
     .map((inputSpec) => inputSpec.name);
   const inputHandles = generateInputHandles(
     componentSpec.inputs ?? [],
-    inputsWithInvalidArguments,
+    inputsWithInvalidArguments
   );
   const outputHandles = generateOutputHandles(componentSpec.outputs ?? []);
   const handleComponents = inputHandles.concat(outputHandles);
@@ -290,6 +291,11 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
     }
   };
 
+  const handleDelete = () => {
+    typedData.onDelete();
+    closeArgumentsEditor();
+  };
+
   return (
     <>
       <div
@@ -337,6 +343,7 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
           setArguments={typedData.setArguments}
           disabled={!!runStatus}
           initialPosition={getDialogPosition(nodeRef.current, 650)}
+          handleDelete={handleDelete}
         />
       )}
     </>

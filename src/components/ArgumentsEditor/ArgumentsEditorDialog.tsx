@@ -6,6 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import { Trash } from "lucide-react";
 import { useState } from "react";
 
 import DraggableDialog from "@/DragNDrop/DraggableDialog";
@@ -23,6 +24,7 @@ interface ArgumentsEditorDialogProps {
   closeEditor: () => void;
   setArguments?: (args: Record<string, ArgumentType>) => void;
   disabled?: boolean;
+  handleDelete: () => void;
 }
 
 const ArgumentsEditorDialog = ({
@@ -31,6 +33,7 @@ const ArgumentsEditorDialog = ({
   setArguments,
   disabled = false,
   initialPosition,
+  handleDelete,
 }: ArgumentsEditorDialogProps) => {
   const componentSpec = taskSpec.componentRef.spec;
 
@@ -75,7 +78,7 @@ const ArgumentsEditorDialog = ({
   if (componentSpec === undefined) {
     console.error(
       "ArgumentsEditor called with missing taskSpec.componentRef.spec",
-      taskSpec,
+      taskSpec
     );
     return null;
   }
@@ -85,7 +88,7 @@ const ArgumentsEditorDialog = ({
     const argumentValues = Object.fromEntries(
       currentArguments
         .filter(({ isRemoved }) => !isRemoved)
-        .map(({ key, value }) => [key, value]),
+        .map(({ key, value }) => [key, value])
     );
 
     setArguments?.(argumentValues);
@@ -101,6 +104,20 @@ const ArgumentsEditorDialog = ({
       onClose={closeEditor}
       onConfirm={handleApply}
       position={initialPosition}
+      secondaryActions={[
+        {
+          children: (
+            <div className="flex items-center gap-2">
+              <Trash />
+              Delete
+            </div>
+          ),
+          variant: "destructive",
+          className: "cursor-pointer",
+          disabled,
+          onClick: handleDelete,
+        },
+      ]}
     >
       <ArgumentsEditor
         argumentData={currentArguments}
