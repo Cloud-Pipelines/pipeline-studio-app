@@ -6,9 +6,11 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import type { DragEvent } from "react";
+import { CircleX } from "lucide-react";
+import { type DragEvent, type MouseEvent } from "react";
 
 import CondensedUrl from "@/components/CondensedUrl";
+import { Button } from "@/components/ui/button";
 
 import type { ComponentReference, TaskSpec } from "../componentSpec";
 
@@ -30,10 +32,12 @@ interface DraggableComponentProps
     HTMLDivElement
   > {
   componentReference: ComponentReference;
+  onDelete?: (e: MouseEvent) => void;
 }
 
 const DraggableComponent = ({
   componentReference,
+  onDelete,
   ...props
 }: DraggableComponentProps) => {
   let title = componentReference.spec?.name || "";
@@ -61,6 +65,7 @@ const DraggableComponent = ({
       min-h-10
       p-2
       text-center
+      relative
       "
       draggable
       onDragStart={(event: DragEvent) => {
@@ -81,6 +86,16 @@ const DraggableComponent = ({
           />
         )}
       </div>
+      {onDelete && (
+        <Button
+          onClick={onDelete}
+          variant="ghost"
+          className="absolute top-0.5 right-0.5 cursor-pointer"
+          size="min"
+        >
+          <CircleX />
+        </Button>
+      )}
     </div>
   );
 };

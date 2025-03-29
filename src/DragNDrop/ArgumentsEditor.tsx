@@ -6,6 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import { Delete } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -117,10 +118,12 @@ const ArgumentInput = ({
       <Button
         type="button"
         onClick={handleRemove}
-        className="w-[40px] min-w-[40px]"
+        className="cursor-pointer"
         disabled={disabled}
+        variant="secondary"
+        size="sm"
       >
-        ⌧
+        <Delete />
       </Button>
     </div>
   );

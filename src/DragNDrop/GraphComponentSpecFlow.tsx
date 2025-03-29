@@ -61,9 +61,24 @@ const GraphComponentSpecFlow = ({
 }: GraphComponentSpecFlowProps) => {
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
+
+  const deleteNode = (nodeId: string) => {
+    const node = nodes.find((n) => n.id === nodeId);
+    if (node) {
+      removeNode(node);
+
+      // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
+      setComponentSpec({
+        ...componentSpec,
+        implementation: { graph: graphSpec },
+      });
+    }
+  };
+
   const { nodes, onNodesChange } = useComponentSpecToNodes(
     componentSpec,
     setComponentSpec,
+    deleteNode,
   );
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
