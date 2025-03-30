@@ -13,14 +13,14 @@
     "Kubernetes",
     "MLOps"
   ],
-  "bugs": "https://github.com/Cloud-Pipelines/pipeline-editor/issues",
+  "bugs": "https://github.com/Cloud-Pipelines/pipeline-studio-app/issues",
   "license": "Apache-2.0",
   "author": {
     "name": "Alexey Volkov",
     "email": "alexey.volkov+oss@ark-kun.com",
     "url": "http://ark-kun.com/"
   },
-  "repository": "github:Cloud-Pipelines/pipeline-editor",
+  "repository": "github:Cloud-Pipelines/pipeline-studio-app",
   "private": true,
   "type": "module",
   "scripts": {

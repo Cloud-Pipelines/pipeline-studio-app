@@ -4,7 +4,7 @@ export const ABOUT_URL =
 
 export const GIVE_FEEDBACK_URL =
   import.meta.env.VITE_GIVE_FEEDBACK_URL ||
-  "https://github.com/Cloud-Pipelines/pipeline-editor/issues";
+  "https://github.com/Cloud-Pipelines/pipeline-studio-app/issues";
 
 export const PRIVACY_POLICY_URL =
   import.meta.env.VITE_PRIVACY_POLICY_URL ||
