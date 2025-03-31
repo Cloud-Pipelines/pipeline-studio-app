@@ -130,7 +130,7 @@ export const PipelineSection = () => {
               <PipelineRow
                 key={fileEntry.componentRef.digest}
                 componentRef={fileEntry.componentRef}
-                name={name.replace(/_/g, " ")}
+                name={name}
                 modificationTime={fileEntry.modificationTime}
               />
             ))}
