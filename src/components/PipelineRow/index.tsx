@@ -80,32 +80,30 @@ const PipelineRow = ({ name, modificationTime }: PipelineRowProps) => {
           "-"
         )}
       </TableCell>
-      <TableCell className="text-muted-foreground text-xs">
-        <div className="flex items-center gap-2">
-          <span>
-            {pipelineRuns.length > 0 ? `${pipelineRuns.length} runs` : "-"}
-          </span>
-          {pipelineRuns.length > 0 && (
-            <Popover>
-              <PopoverTrigger data-popover-trigger asChild>
-                <Button
-                  className="hover:bg-muted p-1 rounded cursor-pointer"
-                  variant="ghost"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[500px]">
-                <div className="text-sm mb-2">Runs - {pipelineRuns.length}</div>
-                <ScrollArea className="h-[300px]">
-                  {pipelineRuns.map((run) => (
-                    <RunListItem key={run.id} run={run} />
-                  ))}
-                </ScrollArea>
-              </PopoverContent>
-            </Popover>
-          )}
-        </div>
+      <TableCell>
+        {pipelineRuns.length > 0 && (
+          <Popover>
+            <PopoverTrigger
+              data-popover-trigger
+              className="cursor-pointer text-gray-500 border border-gray-200 rounded-md p-1 hover:bg-gray-200"
+            >
+              <List className="w-4 h-4" />
+            </PopoverTrigger>
+            <PopoverContent className="w-[500px]">
+              <div className="text-sm mb-2">
+                <span className="font-bold">
+                  {pipelineRuns[0].pipeline_name}
+                </span>{" "}
+                - {pipelineRuns.length} runs
+              </div>
+              <ScrollArea className="h-[300px]">
+                {pipelineRuns.map((run) => (
+                  <RunListItem key={run.id} run={run} />
+                ))}
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
+        )}
       </TableCell>
     </TableRow>
   );

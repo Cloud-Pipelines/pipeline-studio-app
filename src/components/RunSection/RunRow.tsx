@@ -13,6 +13,11 @@ import {
   formatDate,
   getRunStatus,
 } from "../PipelineRow/utils";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "../ui/hover-card";
 
 const RunRow = ({ run }: { run: PipelineRunResponse }) => {
   const navigate = useNavigate();
@@ -72,14 +77,19 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
         <span>{`#${executionId}`}</span>
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-2">
-          <div className="w-1/2">
-            <TaskStatusBar statusCounts={statusCounts} />
-          </div>
-          <div className="w-1/2">
-            {statusCounts && <StatusText statusCounts={statusCounts} />}
-          </div>
-        </div>
+        <HoverCard openDelay={100}>
+          <HoverCardTrigger>
+            <div className="w-2/3">
+              <TaskStatusBar statusCounts={statusCounts} />
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent>
+            <div className="flex flex-col gap-2">
+              <div className="text-sm font-bold">Status</div>
+              <StatusText statusCounts={statusCounts} />
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       </TableCell>
       <TableCell>
         {run.created_at ? `${formatDate(run.created_at)}` : "Data not found..."}
