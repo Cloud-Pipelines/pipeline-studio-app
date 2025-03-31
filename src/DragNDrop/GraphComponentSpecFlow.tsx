@@ -17,6 +17,8 @@ import { type OnInit, ReactFlow } from "@xyflow/react";
 import type { DragEvent } from "react";
 import { useState } from "react";
 
+import { ConfirmationDialog } from "@/components/custom/ConfirmationDialog";
+
 import type {
   ArgumentType,
   ComponentSpec,
@@ -62,16 +64,30 @@ const GraphComponentSpecFlow = ({
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
 
-  const deleteNode = (nodeId: string) => {
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
+    useState(false);
+  const [nodesToDelete, setNodesToDelete] = useState<Node[] | null>(null);
+  const [confirmationDialogHandlers, setConfirmationDialogHandlers] = useState<{
+    onConfirm: () => void;
+    onCancel: () => void;
+  } | null>(null);
+
+  const deleteNode = async (nodeId: string) => {
     const node = nodes.find((n) => n.id === nodeId);
     if (node) {
-      removeNode(node);
-
-      // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
-      setComponentSpec({
-        ...componentSpec,
-        implementation: { graph: graphSpec },
+      const confirmed = await triggerConfirmationDialog({
+        nodes: [node],
+        edges: [],
       });
+      if (confirmed) {
+        removeNode(node);
+
+        // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
+        setComponentSpec({
+          ...componentSpec,
+          implementation: { graph: graphSpec },
+        });
+      }
     }
   };
 
@@ -252,6 +268,33 @@ const GraphComponentSpecFlow = ({
     }
   };
 
+  const triggerConfirmationDialog = async (params: {
+    nodes: Node[];
+    edges: Edge[];
+  }) => {
+    setIsConfirmationDialogOpen(true);
+    setNodesToDelete(params.nodes);
+
+    return await new Promise<boolean>((resolve) => {
+      const handleConfirm = () => {
+        setIsConfirmationDialogOpen(false);
+        setNodesToDelete(null);
+        resolve(true);
+      };
+
+      const handleCancel = () => {
+        setIsConfirmationDialogOpen(false);
+        setNodesToDelete(null);
+        resolve(false);
+      };
+
+      setConfirmationDialogHandlers({
+        onConfirm: handleConfirm,
+        onCancel: handleCancel,
+      });
+    });
+  };
+
   const onElementsRemove = (params: { nodes: Node[]; edges: Edge[] }) => {
     for (const edge of params.edges) {
       removeEdge(edge);
@@ -297,28 +340,66 @@ const GraphComponentSpecFlow = ({
     onNodesChange(changes);
   };
 
+  const handleBeforeDelete = async (params: {
+    nodes: Node[];
+    edges: Edge[];
+  }) => {
+    const confirmed = await triggerConfirmationDialog(params);
+    return confirmed;
+  };
+
+  const isDeletingMultipleNodes = nodesToDelete && nodesToDelete.length > 1;
+
+  const singleDeleteTitle =
+    "Delete Node" + nodesToDelete ? ` '${nodesToDelete?.[0].id}'` : "" + "?";
+  const multiDeleteTitle = `Delete Nodes?`;
+
+  const singleDeleteDesc =
+    "This will also will also delete all connections to and from the Node. This cannot be undone.";
+  const multiDeleteDesc = `Deleting ${
+    nodesToDelete
+      ? nodesToDelete
+          .map((node) => {
+            return `'${node.id}'`;
+          })
+          .join(", ")
+      : "nodes"
+  } will also delete all connections to and from these nodes. This cannot be undone.`;
+
   return (
-    <ReactFlow
-      {...rest}
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={handleOnNodesChange}
-      onEdgesChange={onEdgesChange}
-      nodeTypes={nodeTypes}
-      onConnect={addConnection}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      onDelete={onElementsRemove}
-      onInit={onInit}
-      deleteKeyCode={
-        rest.deleteKeyCode ?? (isAppleOS() ? "Backspace" : "Delete")
-      }
-      multiSelectionKeyCode={
-        rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
-      }
-    >
-      {children}
-    </ReactFlow>
+    <>
+      <ReactFlow
+        {...rest}
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={handleOnNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        onConnect={addConnection}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        onBeforeDelete={handleBeforeDelete}
+        onDelete={onElementsRemove}
+        onInit={onInit}
+        deleteKeyCode={
+          rest.deleteKeyCode ?? (isAppleOS() ? "Backspace" : "Delete")
+        }
+        multiSelectionKeyCode={
+          rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
+        }
+      >
+        {children}
+      </ReactFlow>
+      {nodesToDelete && (
+        <ConfirmationDialog
+          title={isDeletingMultipleNodes ? multiDeleteTitle : singleDeleteTitle}
+          message={isDeletingMultipleNodes ? multiDeleteDesc : singleDeleteDesc}
+          isOpen={isConfirmationDialogOpen}
+          onConfirm={() => confirmationDialogHandlers?.onConfirm()}
+          onCancel={() => confirmationDialogHandlers?.onCancel()}
+        />
+      )}
+    </>
   );
 };
 

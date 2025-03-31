@@ -78,7 +78,7 @@ const ArgumentsEditorDialog = ({
   if (componentSpec === undefined) {
     console.error(
       "ArgumentsEditor called with missing taskSpec.componentRef.spec",
-      taskSpec
+      taskSpec,
     );
     return null;
   }
@@ -88,7 +88,7 @@ const ArgumentsEditorDialog = ({
     const argumentValues = Object.fromEntries(
       currentArguments
         .filter(({ isRemoved }) => !isRemoved)
-        .map(({ key, value }) => [key, value])
+        .map(({ key, value }) => [key, value]),
     );
 
     setArguments?.(argumentValues);
