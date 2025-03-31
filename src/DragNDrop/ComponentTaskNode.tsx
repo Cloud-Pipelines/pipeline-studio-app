@@ -16,18 +16,18 @@ import {
   RefreshCcw,
   SettingsIcon,
 } from "lucide-react";
-import { type CSSProperties, memo, useState } from "react";
+import { type CSSProperties, memo, useRef, useState } from "react";
 
 import TaskDetailsSheet from "@/components/TaskDetailsSheet";
 import { Button } from "@/components/ui/button";
 
+import ArgumentsEditorDialog from "../components/ArgumentsEditor/ArgumentsEditorDialog";
 import type {
   ArgumentType,
   InputSpec,
   OutputSpec,
   TaskSpec,
 } from "../componentSpec";
-import ArgumentsEditorDialog from "./ArgumentsEditorDialog";
 
 const inputHandlePosition = Position.Top;
 const outputHandlePosition = Position.Bottom;
@@ -179,6 +179,8 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
   const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  const nodeRef = useRef<HTMLDivElement>(null);
+
   const typedData = data as ComponentTaskNodeProps;
   const taskSpec = typedData.taskSpec;
   const componentSpec = taskSpec.componentRef.spec;
@@ -295,6 +297,7 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
         onMouseLeave={handleMouseLeave}
         className={`border rounded-md shadow-sm transition-all duration-200 ${getBorderColor()} ${getBgColor()}`}
         style={{ width: `${NODE_WIDTH_IN_PX}px` }}
+        ref={nodeRef}
       >
         <div className="p-3 flex items-center justify-between">
           <div className="font-medium text-gray-800 truncate" title={title}>
@@ -327,12 +330,13 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
         </div>
       </div>
       {handleComponents}
-      {isArgumentsEditorOpen && (
+      {isArgumentsEditorOpen && nodeRef.current && (
         <ArgumentsEditorDialog
           taskSpec={taskSpec}
           closeEditor={closeArgumentsEditor}
           setArguments={typedData.setArguments}
           disabled={!!runStatus}
+          initialPosition={getDialogPosition(nodeRef.current, 650)}
         />
       )}
     </>
@@ -340,3 +344,30 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
 };
 
 export default memo(ComponentTaskNode);
+
+const SMALL_SCREEEN_BREAKPOINT = 720;
+const DIALOG_SPACING = 8;
+const getDialogPosition = (node: HTMLElement, dialogWidth: number) => {
+  // On large screens position the dialog to the right of the node
+  // On small screens position the dialog below the node & center it
+  // Assumed 650px width for the dialog & 720px small screen breakpoint
+
+  const windowWidth = window.innerWidth;
+
+  const positionBelow =
+    windowWidth <= SMALL_SCREEEN_BREAKPOINT ||
+    node.getBoundingClientRect().right + DIALOG_SPACING >
+      windowWidth - dialogWidth;
+
+  return {
+    x: positionBelow
+      ? node.getBoundingClientRect().left +
+        node.getBoundingClientRect().width / 2 -
+        dialogWidth / 2
+      : node.getBoundingClientRect().right + DIALOG_SPACING,
+
+    y: positionBelow
+      ? node.getBoundingClientRect().bottom + DIALOG_SPACING
+      : node.getBoundingClientRect().top,
+  };
+};

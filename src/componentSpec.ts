@@ -199,6 +199,19 @@ export interface TaskOutputArgument {
   };
 }
 export type ArgumentType = string | GraphInputArgument | TaskOutputArgument;
+
+/**
+ * Argument input to the Argument Editor.
+ */
+export type ArgumentInput = {
+  key: string;
+  value: ArgumentType;
+  initialValue: ArgumentType;
+  inputSpec: InputSpec;
+  isRemoved?: boolean;
+  linkedNode?: boolean;
+};
+
 /**
  * Pair of operands for a binary operation.
  */

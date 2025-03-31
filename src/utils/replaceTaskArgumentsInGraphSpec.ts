@@ -8,7 +8,7 @@ const replaceTaskArgumentsInGraphSpec = (
   if (!taskArguments) {
     return graphSpec;
   }
-  // replaceTaskArgumentsInGraphSpec
+
   const newGraphSpec: GraphSpec = {
     ...graphSpec,
     tasks: {

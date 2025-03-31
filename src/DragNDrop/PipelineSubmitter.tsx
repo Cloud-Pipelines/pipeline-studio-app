@@ -8,8 +8,8 @@
 
 import { useEffect, useState } from "react";
 
-import type { ArgumentType, ComponentSpec } from "../componentSpec";
-import ArgumentsEditor from "./ArgumentsEditor";
+import { ArgumentsEditor } from "../components/ArgumentsEditor/ArgumentsEditor";
+import type { ArgumentInput, ComponentSpec } from "../componentSpec";
 import GoogleCloudSubmitter from "./GoogleCloud";
 import KubeflowPipelinesSubmitter from "./KubeflowPipelinesSubmitter";
 import ShopifyCloudSubmitter from "./ShopifyCloud";
@@ -23,9 +23,20 @@ const PipelineSubmitter = ({
   componentSpec,
   googleCloudOAuthClientId,
 }: PipelineSubmitterProps) => {
-  const [pipelineArguments, setPipelineArguments] = useState<
-    Record<string, ArgumentType>
-  >({});
+  const argumentInputs =
+    componentSpec?.inputs?.map((input) => {
+      return {
+        key: input.name,
+        value: "",
+        initialValue: "",
+        inputSpec: input,
+        isRemoved: false,
+        linkedNode: false,
+      } as ArgumentInput;
+    }) ?? [];
+
+  const [pipelineArguments, setPipelineArguments] =
+    useState<ArgumentInput[]>(argumentInputs);
 
   const [stringPipelineArguments, setStringPipelineArguments] = useState<
     Map<string, string>
@@ -34,10 +45,9 @@ const PipelineSubmitter = ({
   useEffect(() => {
     // This filtering is just for typing as the pipeline arguments can only be strings here.
     const newStringPipelineArguments = new Map(
-      Object.entries(pipelineArguments).filter(
-        // Type guard predicate
-        (pair): pair is [string, string] => typeof pair[1] === "string",
-      ),
+      pipelineArguments
+        .filter((arg) => typeof arg.value === "string")
+        .map((arg) => [arg.key, arg.value as string]),
     );
     setStringPipelineArguments(newStringPipelineArguments);
   }, [pipelineArguments]);
@@ -55,9 +65,8 @@ const PipelineSubmitter = ({
         >
           <legend>Arguments</legend>
           <ArgumentsEditor
-            inputs={componentSpec.inputs ?? []}
-            componentArguments={pipelineArguments}
-            setComponentArguments={setPipelineArguments}
+            argumentData={pipelineArguments}
+            setArguments={setPipelineArguments}
           />
         </fieldset>
       )}
