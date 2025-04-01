@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import type { ChangeEvent, ReactElement } from "react";
 import { useRef, useState } from "react";
+import React from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -125,6 +126,16 @@ const ImportPipeline = ({ triggerComponent }: ImportPipelineProps) => {
     triggerComponent
   ) : (
     <Button variant="secondary" className="cursor-pointer">
+      Import Pipeline
+    </Button>
+  );
+
+  const ButtonComponent = buttonComponent ? (
+    React.cloneElement(buttonComponent, {
+      onClick: openDialog,
+    })
+  ) : (
+    <Button onClick={openDialog} variant="secondary" className="cursor-pointer">
       Import Pipeline
     </Button>
   );
