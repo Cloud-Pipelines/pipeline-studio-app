@@ -7,7 +7,10 @@ import {
 
 import { APP_ROUTES, USER_PIPELINES_LIST_NAME } from "./constants";
 
-export const copyRunToPipeline = async (componentSpec: ComponentSpec) => {
+export const copyRunToPipeline = async (
+  componentSpec: ComponentSpec,
+  name?: string,
+) => {
   if (!componentSpec) {
     console.error("No component spec found to copy");
     return {
@@ -31,7 +34,7 @@ export const copyRunToPipeline = async (componentSpec: ComponentSpec) => {
 
     // Generate a name for the copied pipeline
     const originalName = cleanComponentSpec.name || "Unnamed Pipeline";
-    let newName = originalName;
+    let newName = name || originalName;
 
     // Check if the name already exists and append a number if needed
     let nameExists = true;

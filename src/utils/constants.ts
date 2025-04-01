@@ -40,3 +40,7 @@ implementation:
     tasks: {}
     outputValues: {}
 `;
+
+export const VALID_NAME_REGEX = /^[a-zA-Z0-9\s]+$/;
+export const VALID_NAME_MESSAGE =
+  "Name must be unique and contain only alphanumeric characters and spaces";
