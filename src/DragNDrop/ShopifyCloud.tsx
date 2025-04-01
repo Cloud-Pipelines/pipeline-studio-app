@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import localForage from "localforage";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,20 @@ const ShopifyCloudSubmitter = ({
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [runId, setRunId] = useState<number | null>(null);
+  const [cooldownTime, setCooldownTime] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (cooldownTime > 0) {
+      timer = setTimeout(() => {
+        setCooldownTime(cooldownTime - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [cooldownTime]);
 
   // Inside your component
   const { mutate: createPipeline } = useMutation({
@@ -104,6 +117,7 @@ const ShopifyCloudSubmitter = ({
     setIsSubmitting(true);
     setSubmitSuccess(null);
     setErrorMessage(null);
+    setCooldownTime(3);
 
     try {
       // Transform the componentSpec into the format expected by the API
@@ -125,22 +139,28 @@ const ShopifyCloudSubmitter = ({
     }
   };
 
+  const isButtonDisabled =
+    isSubmitting ||
+    !componentSpec ||
+    cooldownTime > 0 ||
+    ("graph" in componentSpec.implementation &&
+      Object.keys(componentSpec.implementation.graph.tasks).length === 0);
+
   return (
     <div className="flex flex-col gap-2 p-2">
       <Button
         onClick={handleSubmit}
-        disabled={
-          isSubmitting ||
-          !componentSpec ||
-          ("graph" in componentSpec.implementation &&
-            Object.keys(componentSpec.implementation.graph.tasks).length === 0)
-        }
-        className="w-full"
+        disabled={isButtonDisabled}
+        className="w-full relative"
       >
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Submitting...
+          </>
+        ) : cooldownTime > 0 ? (
+          <>
+            Submit Run ({cooldownTime}s)
           </>
         ) : (
           "Submit Run"
