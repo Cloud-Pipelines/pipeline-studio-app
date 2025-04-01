@@ -18,28 +18,23 @@ import {
 } from "@xyflow/react";
 import { useEffect, useState } from "react";
 
+import FlowSidebar from "@/components/FlowSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import loadPipelineByName from "@/utils/loadPipelineByName";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 
-import { getAppSettings } from "../appSettings";
-import { downloadDataWithCache } from "../cacheUtils";
 import type { ComponentSpec } from "../componentSpec";
 import { type ComponentReferenceWithSpec } from "../componentStore";
 import GraphComponentSpecFlow from "./GraphComponentSpecFlow";
 import { PipelineAutoSaver } from "./PipelineAutoSaver";
-import Sidebar from "./Sidebar";
 
 const GRID_SIZE = 10;
 
 const DnDFlow = () => {
   const location = useLocation();
-  const [isDirty, setIsDirty] = useState(false);
   const [componentSpec, setComponentSpec] = useState<
     ComponentSpec | undefined
   >();
-  const [appSettings] = useState(getAppSettings());
-
-  const downloadData = downloadDataWithCache;
 
   useEffect(() => {
     const loadPipeline = async () => {
@@ -57,45 +52,41 @@ const DnDFlow = () => {
       setComponentSpec(preparedComponentRef);
     };
     loadPipeline();
-  }, []);
+  }, [location.pathname]);
 
-  if (componentSpec === undefined) {
+  if (!componentSpec) {
     return <></>;
   }
 
   const handleSetComponentSpec = (componentSpec: ComponentSpec) => {
     setComponentSpec(componentSpec);
-    setIsDirty(true);
   };
 
   return (
-    <div className="dndflow">
-      <DndContext>
-        <ReactFlowProvider>
-          <div className="reactflow-wrapper">
-            <GraphComponentSpecFlow
-              componentSpec={componentSpec}
-              setComponentSpec={handleSetComponentSpec}
-              snapToGrid={true}
-              snapGrid={[GRID_SIZE, GRID_SIZE]}
-            >
-              <MiniMap />
-              <Controls />
-              <Background gap={GRID_SIZE} />
-            </GraphComponentSpecFlow>
-          </div>
-          <Sidebar
-            componentSpec={componentSpec}
-            setComponentSpec={handleSetComponentSpec}
-            isDirty={isDirty}
-            setIsDirty={setIsDirty}
-            appSettings={appSettings}
-            downloadData={downloadData}
-          />
-          <PipelineAutoSaver componentSpec={componentSpec} />
-        </ReactFlowProvider>
-      </DndContext>
-    </div>
+    <SidebarProvider>
+      <div className="dndflow w-full">
+        <DndContext>
+          <ReactFlowProvider>
+            <div className="reactflow-wrapper w-full">
+              <GraphComponentSpecFlow
+                componentSpec={componentSpec}
+                setComponentSpec={handleSetComponentSpec}
+                snapToGrid={true}
+                snapGrid={[GRID_SIZE, GRID_SIZE]}
+              >
+                <MiniMap />
+                <Controls />
+                <Background gap={GRID_SIZE} />
+              </GraphComponentSpecFlow>
+            </div>
+
+            <FlowSidebar componentSpec={componentSpec} />
+
+            <PipelineAutoSaver componentSpec={componentSpec} />
+          </ReactFlowProvider>
+        </DndContext>
+      </div>
+    </SidebarProvider>
   );
 };
 

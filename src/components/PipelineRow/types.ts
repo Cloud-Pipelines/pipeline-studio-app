@@ -1,3 +1,5 @@
+import type { ComponentReferenceWithSpec } from "@/componentStore";
+
 export interface TaskStatusCounts {
   total: number;
   succeeded: number;
@@ -8,6 +10,8 @@ export interface TaskStatusCounts {
 }
 
 export interface PipelineRowProps {
+  url?: string;
+  componentRef?: ComponentReferenceWithSpec;
   name?: string;
   modificationTime?: Date;
 }
