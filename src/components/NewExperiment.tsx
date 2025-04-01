@@ -4,9 +4,9 @@ import { generate } from "random-words";
 import { Button } from "@/components/ui/button";
 import { writeComponentToFileListFromText } from "@/componentStore";
 import { replaceLocalStorageWithExperimentYaml } from "@/DragNDrop/PipelineAutoSaver";
+import { EDITOR_PATH } from "@/router";
 import {
   defaultPipelineYamlWithName,
-  EDITOR_PATH,
   USER_PIPELINES_LIST_NAME,
 } from "@/utils/constants";
 

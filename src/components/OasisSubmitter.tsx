@@ -1,22 +1,23 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import localForage from "localforage";
-import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, SendHorizonal } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
 import { Button } from "@/components/ui/button";
-import { API_URL, APP_ROUTES } from "@/utils/constants";
+import { SidebarMenuButton } from "@/components/ui/sidebar";
+import type { ComponentSpec } from "@/componentSpec";
+import useCooldownTimer from "@/hooks/useCooldownTimer";
+import useToastNotification from "@/hooks/useToastNotification";
+import { APP_ROUTES } from "@/router";
+import { DB_NAME, PIPELINE_RUNS_STORE_NAME } from "@/utils/constants";
+import createPipelineRun from "@/utils/createPipelineRun";
 
-import type { ComponentSpec } from "../componentSpec";
-
-interface ShopifyCloudSubmitterProps {
+interface OasisSubmitterProps {
   componentSpec?: ComponentSpec;
+  postSubmit?: () => void;
 }
-
-// IndexedDB constants
-const DB_NAME = "components";
-const PIPELINE_RUNS_STORE_NAME = "pipeline_runs";
 
 interface PipelineRun {
   id: number;
@@ -26,45 +27,41 @@ interface PipelineRun {
   pipeline_digest?: string;
 }
 
-const createPipelineRun = async (payload: BodyCreateApiPipelineRunsPost) => {
-  const response = await fetch(`${API_URL}/api/pipeline_runs/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to create pipeline run");
-  }
-
-  return response.json();
-};
-
-const ShopifyCloudSubmitter = ({
-  componentSpec,
-}: ShopifyCloudSubmitterProps) => {
+const OasisSubmitter = ({ componentSpec, postSubmit }: OasisSubmitterProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [runId, setRunId] = useState<number | null>(null);
-  const [cooldownTime, setCooldownTime] = useState(0);
+  const { cooldownTime, setCooldownTime } = useCooldownTimer(0);
+  const notify = useToastNotification();
   const navigate = useNavigate();
 
+  // Handle error messages
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (cooldownTime > 0) {
-      timer = setTimeout(() => {
-        setCooldownTime(cooldownTime - 1);
-      }, 1000);
+    if (errorMessage) {
+      notify(errorMessage, "error");
     }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [cooldownTime]);
+  }, [errorMessage]);
 
-  // Inside your component
+  // Handle success messages
+  useEffect(() => {
+    if (submitSuccess) {
+      const SuccessComponent = () => (
+        <div className="flex flex-col gap-3 py-2">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">
+              Pipeline successfully submitted
+            </span>
+          </div>
+          <Button onClick={handleViewRun} className="w-full">
+            View Run
+          </Button>
+        </div>
+      );
+      notify(<SuccessComponent />, "success");
+    }
+  }, [submitSuccess]);
+
   const { mutate: createPipeline } = useMutation({
     mutationFn: createPipelineRun,
     onSuccess: async (responseData) => {
@@ -91,6 +88,8 @@ const ShopifyCloudSubmitter = ({
       }
 
       setSubmitSuccess(true);
+      setIsSubmitting(false);
+      postSubmit?.();
 
       setRunId(responseData.root_execution_id);
     },
@@ -98,6 +97,7 @@ const ShopifyCloudSubmitter = ({
       console.error("Error submitting pipeline:", error);
       setErrorMessage("Failed to submit pipeline");
       setSubmitSuccess(false);
+      setIsSubmitting(false);
     },
   });
 
@@ -110,17 +110,16 @@ const ShopifyCloudSubmitter = ({
   const handleSubmit = async () => {
     if (!componentSpec) {
       setErrorMessage("No pipeline to submit");
-      setSubmitSuccess(false);
       return;
     }
 
+    notify("Submitting pipeline...", "info");
     setIsSubmitting(true);
     setSubmitSuccess(null);
     setErrorMessage(null);
     setCooldownTime(3);
 
     try {
-      // Transform the componentSpec into the format expected by the API
       const payload = {
         root_task: {
           componentRef: {
@@ -134,9 +133,15 @@ const ShopifyCloudSubmitter = ({
       console.error("Error submitting pipeline:", error);
       setErrorMessage("Failed to submit pipeline");
       setSubmitSuccess(false);
-    } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const getButtonText = () => {
+    if (cooldownTime > 0) {
+      return `Run submitted (${cooldownTime}s)`;
+    }
+    return "Submit Run";
   };
 
   const isButtonDisabled =
@@ -146,49 +151,32 @@ const ShopifyCloudSubmitter = ({
     ("graph" in componentSpec.implementation &&
       Object.keys(componentSpec.implementation.graph.tasks).length === 0);
 
+  const getButtonIcon = () => {
+    if (isSubmitting) {
+      return <Loader2 className="animate-spin" />;
+    }
+    if (submitSuccess === false && cooldownTime > 0) {
+      return <AlertCircle />;
+    }
+    if (submitSuccess === true && cooldownTime > 0) {
+      return <CheckCircle />;
+    }
+    return <SendHorizonal />;
+  };
+
   return (
-    <div className="flex flex-col gap-2 p-2">
+    <SidebarMenuButton asChild>
       <Button
         onClick={handleSubmit}
+        className="w-full justify-start px-2! cursor-pointer mb-2"
+        variant="ghost"
         disabled={isButtonDisabled}
-        className="w-full relative"
       >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Submitting...
-          </>
-        ) : cooldownTime > 0 ? (
-          <>Submit Run ({cooldownTime}s)</>
-        ) : (
-          "Submit Run"
-        )}
+        {getButtonIcon()}
+        <span className="font-normal">{getButtonText()}</span>
       </Button>
-
-      {submitSuccess === true && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center text-green-600 text-sm mt-1">
-            <CheckCircle className="h-4 w-4 mr-1" />
-            Pipeline submitted successfully!
-          </div>
-          <Button
-            onClick={handleViewRun}
-            variant="outline"
-            className="cursor-pointer"
-          >
-            View Run
-          </Button>
-        </div>
-      )}
-
-      {submitSuccess === false && (
-        <div className="flex items-center text-red-600 text-sm mt-1">
-          <AlertCircle className="h-4 w-4 mr-1" />
-          {errorMessage || "Failed to submit pipeline"}
-        </div>
-      )}
-    </div>
+    </SidebarMenuButton>
   );
 };
 
-export default ShopifyCloudSubmitter;
+export default OasisSubmitter;

@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
+import React from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { EDITOR_PATH } from "@/utils/constants";
+import { EDITOR_PATH } from "@/router";
 import {
   importPipelineFromFile,
   importPipelineFromYaml,
@@ -22,7 +23,11 @@ import {
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
-export default function ImportPipeline() {
+interface ImportPipelineProps {
+  buttonComponent?: React.ReactElement<{ onClick?: () => void }>;
+}
+
+const ImportPipeline = ({ buttonComponent }: ImportPipelineProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [yamlContent, setYamlContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -140,16 +145,20 @@ export default function ImportPipeline() {
     setYamlContent("");
   };
 
+  const ButtonComponent = buttonComponent ? (
+    React.cloneElement(buttonComponent, {
+      onClick: openDialog,
+    })
+  ) : (
+    <Button onClick={openDialog} variant="secondary" className="cursor-pointer">
+      Import Pipeline
+    </Button>
+  );
+
   return (
     <>
-      <Button
-        onClick={openDialog}
-        variant="secondary"
-        className="cursor-pointer"
-      >
-        Import Pipeline
-      </Button>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {ButtonComponent}
+      <Dialog open={isOpen} onOpenChange={closeDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Import Pipeline</DialogTitle>
@@ -240,4 +249,6 @@ export default function ImportPipeline() {
       </Dialog>
     </>
   );
-}
+};
+
+export default ImportPipeline;
