@@ -16,6 +16,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        sourcemapExcludeSources: false,
+      },
+    },
+  },
   test: {
     globals: true,
     environment: "jsdom",
