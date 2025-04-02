@@ -14,12 +14,12 @@ import {
   CircleDashed,
   EyeIcon,
   RefreshCcw,
-  SettingsIcon,
 } from "lucide-react";
-import { type CSSProperties, memo, useState } from "react";
+import { type CSSProperties, memo, useEffect, useRef, useState } from "react";
 
 import TaskDetailsSheet from "@/components/TaskDetailsSheet";
-import { Button } from "@/components/ui/button";
+import TaskNodeConfigurationSheet from "@/components/TaskNode/TaskNodeConfigurationSheet";
+import { cn } from "@/lib/utils";
 
 import type {
   ArgumentType,
@@ -27,7 +27,6 @@ import type {
   OutputSpec,
   TaskSpec,
 } from "../componentSpec";
-import ArgumentsEditorDialog from "./ArgumentsEditorDialog";
 
 const inputHandlePosition = Position.Top;
 const outputHandlePosition = Position.Bottom;
@@ -176,8 +175,10 @@ const getStatusIcon = (status: string) => {
 };
 
 const ComponentTaskNode = ({ data }: NodeProps) => {
-  const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isComponentEditorOpen, setIsComponentEditorOpen] = useState(false);
+
+  const nodeRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
 
   const typedData = data as ComponentTaskNodeProps;
   const taskSpec = typedData.taskSpec;
@@ -200,7 +201,7 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
   // ][Math.floor(Math.random() * 10)];
 
   if (componentSpec === undefined) {
-    return <></>;
+    return null;
   }
 
   const label = componentSpec.name ?? "<component>";
@@ -232,10 +233,6 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
   const outputHandles = generateOutputHandles(componentSpec.outputs ?? []);
   const handleComponents = inputHandles.concat(outputHandles);
 
-  const closeArgumentsEditor = () => {
-    setIsArgumentsEditorOpen(false);
-  };
-
   const getBorderColor = () => {
     switch (runStatus) {
       case "SUCCEEDED":
@@ -251,7 +248,7 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
       case "CANCELLING":
         return "border-sky-500";
       default:
-        return isHovered ? "border-slate-400" : "border-slate-300";
+        return "border-slate-300";
     }
   };
 
@@ -274,67 +271,76 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
     }
   };
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-
-  const handleDoubleClick = () => {
-    if (!isArgumentsEditorOpen) {
-      setIsArgumentsEditorOpen(true);
+  const handleClick = () => {
+    if (!isComponentEditorOpen && !runStatus) {
+      setIsComponentEditorOpen(true);
     }
   };
 
+  useEffect(() => {
+    if (textRef.current && nodeRef.current) {
+      const containerWidth = textRef.current.clientWidth;
+      const textWidth = textRef.current.scrollWidth;
+
+      if (textWidth > containerWidth) {
+        const scaleFactor = containerWidth / textWidth;
+        textRef.current.style.transform = `scale(${scaleFactor})`;
+        textRef.current.style.transformOrigin = "left center";
+      } else {
+        textRef.current.style.transform = "none";
+      }
+    }
+  }, [textRef.current, nodeRef.current]);
+
   return (
     <>
-      <div
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className={`border rounded-md shadow-sm transition-all duration-200 ${getBorderColor()} ${getBgColor()}`}
-        style={{ width: `${NODE_WIDTH_IN_PX}px` }}
-      >
-        <div className="p-3 flex items-center justify-between">
-          <div className="font-medium text-gray-800 truncate" title={title}>
-            {label}
-          </div>
-          <div className="flex items-center gap-2">
-            {!runStatus && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="cursor-pointer"
-                onClick={handleDoubleClick}
+      <TaskNodeConfigurationSheet
+        taskSpec={taskSpec}
+        isOpen={isComponentEditorOpen}
+        onOpenChange={setIsComponentEditorOpen}
+        setArguments={typedData.setArguments}
+        disabled={!!runStatus}
+        trigger={
+          <div
+            onClick={handleClick}
+            className={cn(
+              `border rounded-md shadow-sm transition-all duration-200 ${getBorderColor()} ${getBgColor()} hover:cursor-pointer`,
+              isComponentEditorOpen
+                ? "border-blue-400 hover:border-blue-600"
+                : "hover:border-slate-400",
+            )}
+            style={{
+              width: `${NODE_WIDTH_IN_PX}px`,
+            }}
+            ref={nodeRef}
+          >
+            <div className="p-3 flex items-center justify-between">
+              <div
+                className="font-medium text-gray-800 whitespace-nowrap w-full"
+                title={title}
+                ref={textRef}
               >
-                <SettingsIcon className="w-3 h-3" />
-              </Button>
-            )}
-            {runStatus && (
-              <TaskDetailsSheet
-                taskSpec={taskSpec}
-                taskId={typedData.taskId}
-                runStatus={runStatus}
-              />
-            )}
-            {runStatus && (
-              <div className="flex items-center ml-2 flex-shrink-0">
-                {getStatusIcon(runStatus)}
+                {label}
               </div>
-            )}
+              <div className="flex items-center gap-2">
+                {runStatus && (
+                  <TaskDetailsSheet
+                    taskSpec={taskSpec}
+                    taskId={typedData.taskId}
+                    runStatus={runStatus}
+                  />
+                )}
+                {runStatus && (
+                  <div className="flex items-center ml-2 flex-shrink-0">
+                    {getStatusIcon(runStatus)}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
       {handleComponents}
-      {isArgumentsEditorOpen && (
-        <ArgumentsEditorDialog
-          taskSpec={taskSpec}
-          closeEditor={closeArgumentsEditor}
-          setArguments={typedData.setArguments}
-          disabled={!!runStatus}
-        />
-      )}
     </>
   );
 };
