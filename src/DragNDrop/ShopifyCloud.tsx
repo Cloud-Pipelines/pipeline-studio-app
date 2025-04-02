@@ -159,9 +159,7 @@ const ShopifyCloudSubmitter = ({
             Submitting...
           </>
         ) : cooldownTime > 0 ? (
-          <>
-            Submit Run ({cooldownTime}s)
-          </>
+          <>Submit Run ({cooldownTime}s)</>
         ) : (
           "Submit Run"
         )}

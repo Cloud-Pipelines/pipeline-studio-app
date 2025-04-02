@@ -14,12 +14,10 @@ import {
   CircleDashed,
   EyeIcon,
   RefreshCcw,
-  SettingsIcon,
 } from "lucide-react";
-import { type CSSProperties, memo, useRef, useState } from "react";
+import { type CSSProperties, memo, useEffect, useRef, useState } from "react";
 
 import TaskDetailsSheet from "@/components/TaskDetailsSheet";
-import { Button } from "@/components/ui/button";
 
 import ArgumentsEditorDialog from "../components/ArgumentsEditor/ArgumentsEditorDialog";
 import type {
@@ -177,9 +175,9 @@ const getStatusIcon = (status: string) => {
 
 const ComponentTaskNode = ({ data }: NodeProps) => {
   const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const nodeRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
 
   const typedData = data as ComponentTaskNodeProps;
   const taskSpec = typedData.taskSpec;
@@ -253,7 +251,7 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
       case "CANCELLING":
         return "border-sky-500";
       default:
-        return isHovered ? "border-slate-400" : "border-slate-300";
+        return "border-slate-300";
     }
   };
 
@@ -276,44 +274,45 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
     }
   };
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-
-  const handleDoubleClick = () => {
-    if (!isArgumentsEditorOpen) {
+  const handleClick = () => {
+    if (!isArgumentsEditorOpen && !runStatus) {
       setIsArgumentsEditorOpen(true);
     }
   };
 
+  useEffect(() => {
+    // Scale down the font size of the node if the text overflows
+    if (textRef.current) {
+      const containerWidth = textRef.current.clientWidth;
+      const textWidth = textRef.current.scrollWidth;
+
+      if (textWidth > containerWidth) {
+        const scaleFactor = containerWidth / textWidth;
+        textRef.current.style.transform = `scale(${scaleFactor})`;
+        textRef.current.style.transformOrigin = "left center";
+      } else {
+        textRef.current.style.transform = "none";
+      }
+    }
+  }, [textRef.current]);
+
   return (
     <>
       <div
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className={`border rounded-md shadow-sm transition-all duration-200 ${getBorderColor()} ${getBgColor()}`}
+        onClick={handleClick}
+        className={`border rounded-md shadow-sm transition-all duration-200 ${getBorderColor()} ${getBgColor()} hover:border-slate-400 cursor-pointer`}
         style={{ width: `${NODE_WIDTH_IN_PX}px` }}
         ref={nodeRef}
       >
         <div className="p-3 flex items-center justify-between">
-          <div className="font-medium text-gray-800 truncate" title={title}>
+          <div
+            className="font-medium text-gray-800 whitespace-nowrap w-full text-center"
+            title={title}
+            ref={textRef}
+          >
             {label}
           </div>
           <div className="flex items-center gap-2">
-            {!runStatus && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="cursor-pointer"
-                onClick={handleDoubleClick}
-              >
-                <SettingsIcon className="w-3 h-3" />
-              </Button>
-            )}
             {runStatus && (
               <TaskDetailsSheet
                 taskSpec={taskSpec}
