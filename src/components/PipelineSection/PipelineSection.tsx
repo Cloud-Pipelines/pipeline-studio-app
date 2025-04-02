@@ -129,8 +129,7 @@ export const PipelineSection = () => {
             {filteredPipelines.map(([name, fileEntry]) => (
               <PipelineRow
                 key={fileEntry.componentRef.digest}
-                componentRef={fileEntry.componentRef}
-                name={name}
+                name={name.replace(/_/g, " ")}
                 modificationTime={fileEntry.modificationTime}
               />
             ))}
