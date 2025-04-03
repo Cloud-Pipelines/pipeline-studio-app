@@ -13,9 +13,10 @@ import type {
   ReactFlowInstance,
   ReactFlowProps,
 } from "@xyflow/react";
-import { type OnInit, ReactFlow } from "@xyflow/react";
+import { getNodesBounds, type OnInit, ReactFlow } from "@xyflow/react";
 import type { DragEvent } from "react";
 import { useState } from "react";
+import { useEffect } from "react";
 
 import type {
   ArgumentType,
@@ -34,6 +35,7 @@ import onDropNode from "../utils/onDropNode";
 import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
 import { updateNodePositions } from "../utils/updateNodePosition";
 import ComponentTaskNode from "./ComponentTaskNode";
+import SelectionToolbar from "./SelectionToolbar";
 
 export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
   implementation: {
@@ -51,6 +53,7 @@ export interface GraphComponentSpecFlowProps
 
 const nodeTypes: Record<string, React.ComponentType<any>> = {
   task: ComponentTaskNode,
+  toolbar: SelectionToolbar,
 };
 
 const GraphComponentSpecFlow = ({
@@ -282,6 +285,75 @@ const GraphComponentSpecFlow = ({
     onNodesChange(changes);
   };
 
+  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
+  const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+  const handleSelectionChange = (nodes: Node[]) => {
+    setSelectedNodes(nodes);
+
+    if (nodes.length < 2) {
+      setIsToolbarVisible(false);
+    }
+  };
+
+  const handleSelectionEnd = (nodes: Node[]) => {
+    setIsToolbarVisible(nodes.length > 1);
+  };
+
+  useEffect(() => {
+    const toolbarHeight = 24;
+    const toolbarWidth = 64;
+
+    // todo: fetch toolbar dimension from within the toolbar node
+    // todo: clean this up
+    // todo: toolbar needs to move if selection is directly moved
+    // todo: add bulk delete & duplicate via toolbar
+
+    if (reactFlowInstance) {
+      if (isToolbarVisible && selectedNodes.length > 1) {
+        const bounds = getNodesBounds(selectedNodes);
+
+        if (bounds) {
+          const toolbarNodeId = "selection-toolbar";
+          const toolbarNode = {
+            id: toolbarNodeId,
+            type: "toolbar",
+            position: {
+              x: bounds.x + bounds.width - toolbarWidth,
+              y: bounds.y - toolbarHeight,
+            },
+            data: {
+              isOpen: true,
+            },
+          };
+
+          const existingToolbarNode = reactFlowInstance.getNode(toolbarNodeId);
+
+          if (!existingToolbarNode) {
+            reactFlowInstance.addNodes(toolbarNode);
+          } else {
+            reactFlowInstance.setNodes((nodes) =>
+              nodes.map((node) =>
+                node.id === toolbarNodeId
+                  ? {
+                      ...node,
+                      position: {
+                        x: bounds.x + bounds.width - toolbarWidth,
+                        y: bounds.y - toolbarHeight,
+                      },
+                    }
+                  : node,
+              ),
+            );
+          }
+        }
+      } else {
+        reactFlowInstance.setNodes((nodes) =>
+          nodes.filter((node) => node.id !== "selection-toolbar"),
+        );
+      }
+    }
+  }, [isToolbarVisible, selectedNodes, reactFlowInstance]);
+
   return (
     <ReactFlow
       {...rest}
@@ -301,6 +373,8 @@ const GraphComponentSpecFlow = ({
       multiSelectionKeyCode={
         rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
       }
+      onSelectionChange={(params) => handleSelectionChange(params.nodes)}
+      onSelectionEnd={() => handleSelectionEnd(selectedNodes)}
     >
       {children}
     </ReactFlow>
