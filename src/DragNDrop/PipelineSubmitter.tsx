@@ -33,7 +33,6 @@ const PipelineSubmitter = ({
         initialValue: "",
         inputSpec: input,
         isRemoved: false,
-        linkedNode: false,
       } as ArgumentInput;
     }) ?? [];
 

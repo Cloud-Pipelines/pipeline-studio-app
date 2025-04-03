@@ -21,16 +21,12 @@ import type {
 } from "../../componentSpec";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
-/**
- * Argument input to the Argument Editor.
- */
 export type ArgumentInput = {
   key: string;
   value: ArgumentType;
   initialValue: ArgumentType;
   inputSpec: InputSpec;
   isRemoved?: boolean;
-  linkedNode?: boolean;
 };
 
 export const ArgumentInputField = ({
@@ -48,7 +44,7 @@ export const ArgumentInputField = ({
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
-    setArgument({ ...argument, value, linkedNode: false, isRemoved: false });
+    setArgument({ ...argument, value, isRemoved: false });
   };
 
   const handleRemove = () => {
@@ -60,10 +56,9 @@ export const ArgumentInputField = ({
     if (!updatedArgument.isRemoved && updatedArgument.value === "") {
       const defaultValue = getDefaultValue(updatedArgument);
 
-      updatedArgument.value = defaultValue.value;
-      updatedArgument.linkedNode = false;
+      updatedArgument.value = defaultValue;
 
-      setInputValue(defaultValue.value);
+      setInputValue(defaultValue);
     }
 
     setArgument(updatedArgument);
@@ -72,9 +67,8 @@ export const ArgumentInputField = ({
   const handleReset = () => {
     const defaultValue = getDefaultValue(argument);
 
-    setInputValue(defaultValue.value);
-
-    setArgument({ ...argument, value: defaultValue.value, linkedNode: false });
+    setInputValue(defaultValue);
+    setArgument({ ...argument, value: defaultValue });
   };
 
   const handleUndo = () => {
@@ -91,8 +85,13 @@ export const ArgumentInputField = ({
     if (argument.inputSpec.default !== undefined) {
       return argument.inputSpec.default;
     }
+
+    if (argument.isRemoved) {
+      return "";
+    }
+
     return getPlaceholder(argument.value);
-  }, [argument.inputSpec.default, argument.value]);
+  }, [argument]);
 
   return (
     <div className="flex w-full items-center gap-2 py-1">
@@ -186,7 +185,7 @@ export const ArgumentInputField = ({
               disabled={
                 disabled ||
                 argument.isRemoved ||
-                argument.value === getDefaultValue(argument).value
+                argument.value === getDefaultValue(argument)
               }
               variant="ghost"
               size="icon"
@@ -244,11 +243,5 @@ const getInputValue = (argumentInput: ArgumentInput) => {
 };
 
 const getDefaultValue = (argumentInput: ArgumentInput) => {
-  const value = argumentInput.inputSpec.default ?? "";
-
-  if (argumentInput.inputSpec.default === undefined) {
-    return { value, linkedNode: false };
-  }
-
-  return { value, linkedNode: argumentInput.linkedNode };
+  return argumentInput.inputSpec.default ?? "";
 };
