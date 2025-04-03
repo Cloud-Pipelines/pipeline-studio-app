@@ -8,8 +8,10 @@
 
 import { useEffect, useState } from "react";
 
+import type { ArgumentInput } from "@/components/ArgumentsEditor";
+
 import { ArgumentsEditor } from "../components/ArgumentsEditor/ArgumentsEditor";
-import type { ArgumentInput, ComponentSpec } from "../componentSpec";
+import type { ComponentSpec } from "../componentSpec";
 import GoogleCloudSubmitter from "./GoogleCloud";
 import KubeflowPipelinesSubmitter from "./KubeflowPipelinesSubmitter";
 import ShopifyCloudSubmitter from "./ShopifyCloud";

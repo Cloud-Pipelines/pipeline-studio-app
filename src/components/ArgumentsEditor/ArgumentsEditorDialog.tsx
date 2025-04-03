@@ -10,11 +10,8 @@ import { useState } from "react";
 
 import DraggableDialog from "@/DragNDrop/DraggableDialog";
 
-import type {
-  ArgumentInput,
-  ArgumentType,
-  TaskSpec,
-} from "../../componentSpec";
+import type { ArgumentType, TaskSpec } from "../../componentSpec";
+import type { ArgumentInput } from "./ArgumentInputField";
 import { ArgumentsEditor } from "./ArgumentsEditor";
 
 interface ArgumentsEditorDialogProps {
@@ -53,18 +50,19 @@ const ArgumentsEditorDialog = ({
       */
 
       const existingArgument = taskSpec.arguments?.[input.name];
+      const initialValue = existingArgument ?? input.default;
 
       return {
         key: input.name,
-        value: existingArgument ?? "",
-        initialValue: existingArgument,
+        value: initialValue ?? "",
+        initialValue: initialValue ?? "",
         inputSpec: input,
-        isRemoved: existingArgument === undefined,
+        isRemoved: initialValue === undefined,
         linkedNode: !!(
-          existingArgument &&
-          typeof existingArgument === "object" &&
-          "taskOutput" in existingArgument &&
-          existingArgument.taskOutput
+          initialValue &&
+          typeof initialValue === "object" &&
+          "taskOutput" in initialValue &&
+          initialValue.taskOutput
         ),
       } as ArgumentInput;
     }) ?? [];

@@ -15,11 +15,23 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 import type {
-  ArgumentInput,
   ArgumentType,
+  InputSpec,
   TypeSpecType,
 } from "../../componentSpec";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+
+/**
+ * Argument input to the Argument Editor.
+ */
+export type ArgumentInput = {
+  key: string;
+  value: ArgumentType;
+  initialValue: ArgumentType;
+  inputSpec: InputSpec;
+  isRemoved?: boolean;
+  linkedNode?: boolean;
+};
 
 export const ArgumentInputField = ({
   argument,
@@ -31,17 +43,12 @@ export const ArgumentInputField = ({
   disabled?: boolean;
 }) => {
   const [inputValue, setInputValue] = useState(getInputValue(argument));
-  const [hidePlaceholder, setHidePlaceholder] = useState(argument.linkedNode);
 
   const undoValue = useMemo(() => argument, []);
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
-
-    const defaultValue = getDefaultValue(argument);
-
-    setArgument({ ...argument, value, linkedNode: false });
-    setHidePlaceholder(!!defaultValue.linkedNode);
+    setArgument({ ...argument, value, linkedNode: false, isRemoved: false });
   };
 
   const handleRemove = () => {
@@ -57,7 +64,6 @@ export const ArgumentInputField = ({
       updatedArgument.linkedNode = false;
 
       setInputValue(defaultValue.value);
-      setHidePlaceholder(!!defaultValue.linkedNode);
     }
 
     setArgument(updatedArgument);
@@ -69,12 +75,10 @@ export const ArgumentInputField = ({
     setInputValue(defaultValue.value);
 
     setArgument({ ...argument, value: defaultValue.value, linkedNode: false });
-    setHidePlaceholder(!!defaultValue.linkedNode);
   };
 
   const handleUndo = () => {
     setInputValue(getInputValue(undoValue));
-    setHidePlaceholder(undoValue.linkedNode);
     setArgument({ ...undoValue });
   };
 
@@ -82,6 +86,13 @@ export const ArgumentInputField = ({
     () => JSON.stringify(argument) !== JSON.stringify(undoValue),
     [argument, undoValue],
   );
+
+  const placeholder = useMemo(() => {
+    if (argument.inputSpec.default !== undefined) {
+      return argument.inputSpec.default;
+    }
+    return getPlaceholder(argument.value);
+  }, [argument.inputSpec.default, argument.value]);
 
   return (
     <div className="flex w-full items-center gap-2 py-1">
@@ -112,9 +123,7 @@ export const ArgumentInputField = ({
           onChange={(e) => {
             handleInputChange(e.target.value);
           }}
-          placeholder={
-            hidePlaceholder ? getPlaceholder(argument.initialValue) : ""
-          }
+          placeholder={placeholder}
           required={!argument.inputSpec.optional}
           className={cn(
             "flex-1",
@@ -122,8 +131,9 @@ export const ArgumentInputField = ({
             !argument.inputSpec.optional && argument.isRemoved
               ? "border-red-200"
               : "",
+            argument.isRemoved ? "border-gray-100 text-gray-500" : "",
           )}
-          disabled={disabled || argument.isRemoved}
+          disabled={disabled}
         />
         {canUndo && (
           <Tooltip>
