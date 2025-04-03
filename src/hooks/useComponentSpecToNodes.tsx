@@ -74,6 +74,30 @@ const getTaskNodes = (
               implementation: { graph: newGraphSpec },
             });
           },
+          duplicateTask: () => {
+            const newTaskId = generateDuplicateTaskId(taskId);
+            const offset = 10;
+            const annotations = taskSpec.annotations || {};
+            const updatedAnnotations = setPositionInAnnotations(annotations, {
+              x: position.x + offset,
+              y: position.y + offset,
+            });
+            const newTaskSpec = {
+              ...taskSpec,
+              annotations: { ...updatedAnnotations },
+            };
+            const newGraphSpec = {
+              ...graphSpec,
+              tasks: {
+                ...graphSpec.tasks,
+                [newTaskId]: newTaskSpec,
+              },
+            };
+            setComponentSpec({
+              ...componentSpec,
+              implementation: { graph: newGraphSpec },
+            });
+          },
         },
         position: position,
         type: "task",
@@ -127,6 +151,41 @@ const extractPositionFromAnnotations = (
   } catch {
     return defaultPosition;
   }
+};
+
+const setPositionInAnnotations = (
+  annotations: Record<string, unknown>,
+  position: XYPosition,
+): Record<string, unknown> => {
+  const updatedAnnotations = { ...annotations };
+  updatedAnnotations["editor.position"] = JSON.stringify(position);
+  return updatedAnnotations;
+};
+
+const generateDuplicateTaskId = (taskId: string): string => {
+  // If taskId does not end with "_copy", append "_copy"
+  // e.g., "task" becomes "task_copy"
+  if (!taskId.endsWith("_copy")) {
+    return taskId + "_copy";
+  }
+
+  // If taskId ends with "_copy", add a number to the end
+  // e.g., "task_copy" becomes "task_copy2"
+  if (taskId.endsWith("_copy")) {
+    return taskId + "2";
+  }
+
+  // If taskId ends with "_copyX", increment X
+  // e.g., "task_copy2" becomes "task_copy3"
+  const match = taskId.match(/^(.*_copy)(\d+)$/);
+  if (match) {
+    const base = match[1];
+    const number = parseInt(match[2], 10);
+    return `${base}${number + 1}`;
+  }
+
+  // Otherwise, append "_c" - this case should not occur
+  return taskId + "_c";
 };
 
 export default useComponentSpecToNodes;

@@ -12,6 +12,7 @@ import {
   CircleAlert,
   CircleCheck,
   CircleDashed,
+  Copy,
   EyeIcon,
   RefreshCcw,
   SettingsIcon,
@@ -290,6 +291,12 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
     }
   };
 
+  const handleCopy = () => {
+    if ("duplicateTask" in data && typeof data.duplicateTask === "function") {
+      (data as { duplicateTask: () => void }).duplicateTask();
+    }
+  };
+
   return (
     <>
       <div
@@ -314,6 +321,14 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
                 <SettingsIcon className="w-3 h-3" />
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="icon"
+              className="cursor-pointer"
+              onClick={handleCopy}
+            >
+              <Copy className="w-3 h-3" />
+            </Button>
             {runStatus && (
               <TaskDetailsSheet
                 taskSpec={taskSpec}
