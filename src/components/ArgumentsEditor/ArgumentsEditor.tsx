@@ -6,9 +6,8 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import type { ArgumentInput } from "../../componentSpec";
 import { TooltipProvider } from "../ui/tooltip";
-import { ArgumentInputField } from "./ArgumentInputField";
+import { type ArgumentInput, ArgumentInputField } from "./ArgumentInputField";
 
 interface ArgumentsEditorProps {
   argumentData: ArgumentInput[];

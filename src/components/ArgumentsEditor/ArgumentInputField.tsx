@@ -15,11 +15,19 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 import type {
-  ArgumentInput,
   ArgumentType,
+  InputSpec,
   TypeSpecType,
 } from "../../componentSpec";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+
+export type ArgumentInput = {
+  key: string;
+  value: ArgumentType;
+  initialValue: ArgumentType;
+  inputSpec: InputSpec;
+  isRemoved?: boolean;
+};
 
 export const ArgumentInputField = ({
   argument,
@@ -31,17 +39,12 @@ export const ArgumentInputField = ({
   disabled?: boolean;
 }) => {
   const [inputValue, setInputValue] = useState(getInputValue(argument));
-  const [hidePlaceholder, setHidePlaceholder] = useState(argument.linkedNode);
 
   const undoValue = useMemo(() => argument, []);
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
-
-    const defaultValue = getDefaultValue(argument);
-
-    setArgument({ ...argument, value, linkedNode: false });
-    setHidePlaceholder(!!defaultValue.linkedNode);
+    setArgument({ ...argument, value, isRemoved: false });
   };
 
   const handleRemove = () => {
@@ -53,11 +56,9 @@ export const ArgumentInputField = ({
     if (!updatedArgument.isRemoved && updatedArgument.value === "") {
       const defaultValue = getDefaultValue(updatedArgument);
 
-      updatedArgument.value = defaultValue.value;
-      updatedArgument.linkedNode = false;
+      updatedArgument.value = defaultValue;
 
-      setInputValue(defaultValue.value);
-      setHidePlaceholder(!!defaultValue.linkedNode);
+      setInputValue(defaultValue);
     }
 
     setArgument(updatedArgument);
@@ -66,15 +67,12 @@ export const ArgumentInputField = ({
   const handleReset = () => {
     const defaultValue = getDefaultValue(argument);
 
-    setInputValue(defaultValue.value);
-
-    setArgument({ ...argument, value: defaultValue.value, linkedNode: false });
-    setHidePlaceholder(!!defaultValue.linkedNode);
+    setInputValue(defaultValue);
+    setArgument({ ...argument, value: defaultValue });
   };
 
   const handleUndo = () => {
     setInputValue(getInputValue(undoValue));
-    setHidePlaceholder(undoValue.linkedNode);
     setArgument({ ...undoValue });
   };
 
@@ -82,6 +80,18 @@ export const ArgumentInputField = ({
     () => JSON.stringify(argument) !== JSON.stringify(undoValue),
     [argument, undoValue],
   );
+
+  const placeholder = useMemo(() => {
+    if (argument.inputSpec.default !== undefined) {
+      return argument.inputSpec.default;
+    }
+
+    if (argument.isRemoved) {
+      return "";
+    }
+
+    return getPlaceholder(argument.value);
+  }, [argument]);
 
   return (
     <div className="flex w-full items-center gap-2 py-1">
@@ -112,9 +122,7 @@ export const ArgumentInputField = ({
           onChange={(e) => {
             handleInputChange(e.target.value);
           }}
-          placeholder={
-            hidePlaceholder ? getPlaceholder(argument.initialValue) : ""
-          }
+          placeholder={placeholder}
           required={!argument.inputSpec.optional}
           className={cn(
             "flex-1",
@@ -122,8 +130,9 @@ export const ArgumentInputField = ({
             !argument.inputSpec.optional && argument.isRemoved
               ? "border-red-200"
               : "",
+            argument.isRemoved ? "border-gray-100 text-gray-500" : "",
           )}
-          disabled={disabled || argument.isRemoved}
+          disabled={disabled}
         />
         {canUndo && (
           <Tooltip>
@@ -176,7 +185,7 @@ export const ArgumentInputField = ({
               disabled={
                 disabled ||
                 argument.isRemoved ||
-                argument.value === getDefaultValue(argument).value
+                argument.value === getDefaultValue(argument)
               }
               variant="ghost"
               size="icon"
@@ -234,11 +243,5 @@ const getInputValue = (argumentInput: ArgumentInput) => {
 };
 
 const getDefaultValue = (argumentInput: ArgumentInput) => {
-  const value = argumentInput.inputSpec.default ?? "";
-
-  if (argumentInput.inputSpec.default === undefined) {
-    return { value, linkedNode: false };
-  }
-
-  return { value, linkedNode: argumentInput.linkedNode };
+  return argumentInput.inputSpec.default ?? "";
 };

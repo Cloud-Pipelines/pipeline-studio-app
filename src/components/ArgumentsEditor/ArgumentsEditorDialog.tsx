@@ -10,11 +10,8 @@ import { useState } from "react";
 
 import DraggableDialog from "@/DragNDrop/DraggableDialog";
 
-import type {
-  ArgumentInput,
-  ArgumentType,
-  TaskSpec,
-} from "../../componentSpec";
+import type { ArgumentType, TaskSpec } from "../../componentSpec";
+import type { ArgumentInput } from "./ArgumentInputField";
 import { ArgumentsEditor } from "./ArgumentsEditor";
 
 interface ArgumentsEditorDialogProps {
@@ -43,7 +40,6 @@ const ArgumentsEditorDialog = ({
         * [initialValue] - This is the initial value of the argument when the Editor is opened. Immutable. It is used to determine if the argument has been changed during the current editing session.
         * [inputSpec] - These are some general constants for the argument. Immutable. It is used to display the argument name and type in the UI.
         * [isRemoved] - This is used to remove unwanted arguments from the Task Spec, as specified by the user. This is essentially used in place of an "undefined" input, since React requires an empty string for controlled components.
-        * [linkedNode] - This is used to determine if the argument is linked to a node in the graph (i.e. there is a visible line). This is used for showing the informative placeholder text in the UI.
         
         * Note that "undefined" and "empty string" are treated differently in the task spec, but we can only use "empty string" in the UI due to React's rules around controlled components.
         * The difference is best seen in a required argument with a linked node:
@@ -53,19 +49,14 @@ const ArgumentsEditorDialog = ({
       */
 
       const existingArgument = taskSpec.arguments?.[input.name];
+      const initialValue = existingArgument ?? input.default;
 
       return {
         key: input.name,
-        value: existingArgument ?? "",
-        initialValue: existingArgument,
+        value: initialValue ?? "",
+        initialValue: initialValue ?? "",
         inputSpec: input,
-        isRemoved: existingArgument === undefined,
-        linkedNode: !!(
-          existingArgument &&
-          typeof existingArgument === "object" &&
-          "taskOutput" in existingArgument &&
-          existingArgument.taskOutput
-        ),
+        isRemoved: initialValue === undefined,
       } as ArgumentInput;
     }) ?? [];
 
