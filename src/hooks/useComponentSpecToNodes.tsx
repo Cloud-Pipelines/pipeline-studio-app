@@ -15,13 +15,13 @@ type SetComponentSpec = (componentSpec: ComponentSpec) => void;
 
 const useComponentSpecToNodes = (
   componentSpec: ComponentSpec,
-  setComponentSpec: SetComponentSpec
+  setComponentSpec: SetComponentSpec,
 ): {
   nodes: Node<any>[];
   onNodesChange: (changes: NodeChange[]) => void;
 } => {
   const [nodes, setNodes, onNodesChange] = useNodesState(
-    getNodes(componentSpec, setComponentSpec)
+    getNodes(componentSpec, setComponentSpec),
   );
 
   useEffect(() => {
@@ -37,7 +37,7 @@ const useComponentSpecToNodes = (
 
 const getNodes = (
   componentSpec: ComponentSpec,
-  setComponentSpec: SetComponentSpec
+  setComponentSpec: SetComponentSpec,
 ): Node<any>[] => {
   if (!("graph" in componentSpec.implementation)) {
     return [];
@@ -54,7 +54,7 @@ const getNodes = (
 const getTaskNodes = (
   graphSpec: GraphSpec,
   componentSpec: ComponentSpec,
-  setComponentSpec: SetComponentSpec
+  setComponentSpec: SetComponentSpec,
 ) => {
   return Object.entries(graphSpec.tasks).map<Node<any>>(
     ([taskId, taskSpec]) => {
@@ -69,7 +69,7 @@ const getTaskNodes = (
             const newGraphSpec = replaceTaskArgumentsInGraphSpec(
               taskId,
               graphSpec,
-              args
+              args,
             );
             setComponentSpec({
               ...componentSpec,
@@ -104,7 +104,7 @@ const getTaskNodes = (
         position: position,
         type: "task",
       };
-    }
+    },
   );
 };
 
@@ -135,7 +135,7 @@ const getOutputNodes = (componentSpec: ComponentSpec) => {
 };
 
 const extractPositionFromAnnotations = (
-  annotations?: Record<string, unknown>
+  annotations?: Record<string, unknown>,
 ): XYPosition => {
   const defaultPosition: XYPosition = { x: 0, y: 0 };
 
@@ -157,7 +157,7 @@ const extractPositionFromAnnotations = (
 
 const setPositionInAnnotations = (
   annotations: Record<string, unknown>,
-  position: XYPosition
+  position: XYPosition,
 ): Record<string, unknown> => {
   const updatedAnnotations = { ...annotations };
   updatedAnnotations["editor.position"] = JSON.stringify(position);

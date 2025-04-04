@@ -1,3 +1,4 @@
+/* This will eventually need to move into a Context Provider so that we can manage id uniqueness globally across the app */
 export const generateDuplicateStringId = (stringId: string) => {
   // If stringId does not end with "_copy", append "_copy"
   // e.g., "task" becomes "task_copy"
