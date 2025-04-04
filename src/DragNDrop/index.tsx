@@ -54,7 +54,6 @@ const DnDFlow = () => {
     loadPipeline();
   }, [location.pathname]);
 
-
   if (!componentSpec) {
     return <></>;
   }
