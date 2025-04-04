@@ -7,11 +7,11 @@
  */
 
 import { DndContext, type DragEndEvent, useDraggable } from "@dnd-kit/core";
-import { GripVertical } from "lucide-react";
+import { CircleX, GripVertical } from "lucide-react";
 import { type PropsWithChildren, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -44,6 +44,7 @@ interface DraggableDialogProps extends PropsWithChildren {
   description: string;
   position?: { x: number; y: number };
   disabled?: boolean;
+  secondaryActions?: ButtonProps[];
   onClose: () => void;
   onConfirm?: () => void;
 }
@@ -54,6 +55,7 @@ const DraggableDialogPortal = ({
   description,
   position = { x: 100, y: 100 },
   disabled,
+  secondaryActions,
   onClose,
   onConfirm,
   children,
@@ -76,6 +78,7 @@ const DraggableDialogPortal = ({
         description={description}
         position={dialogPosition}
         disabled={disabled}
+        secondaryActions={secondaryActions}
         onClose={onClose}
         onConfirm={onConfirm}
       >
@@ -93,6 +96,7 @@ const DraggableDialog = ({
   description,
   position = { x: 100, y: 100 },
   disabled,
+  secondaryActions,
   onClose,
   onConfirm,
   children,
@@ -154,12 +158,22 @@ const DraggableDialog = ({
             {title}
           </CardTitle>
           <CardDescription>{description}</CardDescription>
+          <Button
+            onClick={onClose}
+            className="cursor-pointer absolute top-2 right-2"
+            variant="ghost"
+          >
+            <CircleX />
+          </Button>
         </CardHeader>
         <CardContent>{children}</CardContent>
         <CardFooter className="flex justify-between">
-          <Button onClick={onClose} className="cursor-pointer">
-            Close
-          </Button>
+          <div className="flex gap-2">
+            {secondaryActions &&
+              secondaryActions.map((action, index) => (
+                <Button key={index} {...action} />
+              ))}
+          </div>
           {onConfirm && (
             <Button
               onClick={onConfirm}

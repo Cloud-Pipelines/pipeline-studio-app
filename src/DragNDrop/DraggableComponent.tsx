@@ -6,9 +6,12 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import type { DragEvent } from "react";
+import { CircleX } from "lucide-react";
+import { type DragEvent, type MouseEvent, useState } from "react";
 
 import CondensedUrl from "@/components/CondensedUrl";
+import { ConfirmationDialog } from "@/components/custom/ConfirmationDialog";
+import { Button } from "@/components/ui/button";
 
 import type { ComponentReference, TaskSpec } from "../componentSpec";
 
@@ -30,12 +33,17 @@ interface DraggableComponentProps
     HTMLDivElement
   > {
   componentReference: ComponentReference;
+  onDelete?: (e: MouseEvent) => void;
 }
 
 const DraggableComponent = ({
   componentReference,
+  onDelete,
   ...props
 }: DraggableComponentProps) => {
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
+    useState(false);
+
   let title = componentReference.spec?.name || "";
   if (componentReference.url) {
     title += "\nUrl: " + componentReference.url;
@@ -46,9 +54,25 @@ const DraggableComponent = ({
   if (componentReference.spec?.description) {
     title += "\nDescription: " + componentReference.spec?.description;
   }
+
+  const name = componentReference.spec?.name ?? "Component";
+
+  const handleConfirm = (e?: MouseEvent) => {
+    if (e) {
+      onDelete?.(e);
+    }
+    setIsConfirmationDialogOpen(false);
+  };
+
+  const handleCancel = (e?: MouseEvent) => {
+    e?.stopPropagation();
+    setIsConfirmationDialogOpen(false);
+  };
+
   return (
-    <div
-      className="
+    <>
+      <div
+        className="
       react-flow__node
       react-flow__node-task
       sidebar-node
@@ -61,27 +85,49 @@ const DraggableComponent = ({
       min-h-10
       p-2
       text-center
+      relative
       "
-      draggable
-      onDragStart={(event: DragEvent) => {
-        const taskSpec: TaskSpec = {
-          componentRef: componentReference,
-        };
-        return onDragStart(event, { task: taskSpec });
-      }}
-      title={title}
-      {...props}
-    >
-      <div className="flex flex-col items-center">
-        <p>{componentReference.spec?.name ?? "Component"}</p>
-        {componentReference.url && (
-          <CondensedUrl
-            url={componentReference.url}
-            className="text-[0.5625rem]"
-          />
+        draggable
+        onDragStart={(event: DragEvent) => {
+          const taskSpec: TaskSpec = {
+            componentRef: componentReference,
+          };
+          return onDragStart(event, { task: taskSpec });
+        }}
+        title={title}
+        {...props}
+      >
+        <div className="flex flex-col items-center">
+          <p>{name}</p>
+          {componentReference.url && (
+            <CondensedUrl
+              url={componentReference.url}
+              className="text-[0.5625rem]"
+            />
+          )}
+        </div>
+        {onDelete && (
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              setIsConfirmationDialogOpen(true);
+            }}
+            variant="ghost"
+            className="absolute top-0.5 right-0.5 cursor-pointer"
+            size="min"
+          >
+            <CircleX />
+          </Button>
         )}
       </div>
-    </div>
+      <ConfirmationDialog
+        title={`Delete ${name}?`}
+        message={`'${name}' is a custom user component. This action cannot be undone.`}
+        isOpen={isConfirmationDialogOpen}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
+    </>
   );
 };
 
