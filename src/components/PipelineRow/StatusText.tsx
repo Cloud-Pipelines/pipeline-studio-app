@@ -9,7 +9,7 @@ const StatusText = ({
 }) => {
   return (
     <div className="text-xs text-gray-500 mt-1">
-      {Object.entries(statusCounts).map(([key, count], index, array) => {
+      {Object.entries(statusCounts).map(([key, count]) => {
         if (key === "total") return;
 
         if (count === 0) return;
@@ -25,20 +25,24 @@ const StatusText = ({
           ? `${key[0]}`
           : `${key}${count > 1 ? " " : ""}`;
 
-        const isLastVisibleItem = array
-          .slice(index + 1)
-          .some(([nextKey, nextCount]) => nextKey !== "total" && nextCount > 0);
+        const statusColor = statusColors[key];
 
-        return (
-          <span key={key}>
-            <span className={statusColors[key]}>
-              {count}
-              {shorthand ? statusText : ` ${statusText.trim()}`}
+        if (shorthand) {
+          return (
+            <span key={key} className="group">
+              <span className={statusColor}>
+                {count}
+                {statusText}
+              </span>
+              <span className="group-last:hidden"> • </span>
             </span>
-            {!shorthand && isLastVisibleItem && (
-              <span className="text-black">, </span>
-            )}
-            {shorthand && <span> </span>}
+          );
+        }
+        return (
+          <span key={key} className="flex items-center gap-1">
+            <span className={statusColor}>
+              {count} {statusText.trim()}
+            </span>
           </span>
         );
       })}

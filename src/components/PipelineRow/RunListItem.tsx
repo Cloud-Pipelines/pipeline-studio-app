@@ -24,8 +24,6 @@ const RunListItem = ({ run }: { run: PipelineRun }) => {
   const { data, isLoading, error } = fetchExecutionInfo(executionId);
   const { details, state } = data;
 
-  const name = details?.task_spec?.componentRef?.spec?.name;
-
   useEffect(() => {
     const fetchData = async () => {
       const res = await fetchPipelineRunById(`${run.id}`);
@@ -65,18 +63,16 @@ const RunListItem = ({ run }: { run: PipelineRun }) => {
       className="flex flex-col p-2 text-sm hover:bg-gray-50 cursor-pointer"
     >
       <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-2">
-          <StatusIcon status={getRunStatus(statusCounts)} />
-          <span>{name}</span>
-          <span className="text-gray-500 text-xs">{`#${executionId}`}</span>
+        <div className="flex items-center gap-1 w-full justify-between">
+          <div className="flex items-center gap-3">
+            <StatusIcon status={getRunStatus(statusCounts)} />
+            <div className="text-xs">{`#${executionId}`}</div>
+          </div>
           {metadata && (
-            <>
-              <span>•</span>
-              <span className="text-gray-500 text-xs">{`${formatDate(metadata.created_at)}`}</span>
-            </>
+            <span className="text-gray-500 text-xs">{`${formatDate(metadata.created_at)}`}</span>
           )}
+          <StatusText statusCounts={statusCounts} shorthand />
         </div>
-        <StatusText statusCounts={statusCounts} shorthand />
       </div>
 
       <TaskStatusBar statusCounts={statusCounts} />
