@@ -76,22 +76,35 @@ const getTaskNodes = (
               implementation: { graph: newGraphSpec },
             });
           },
-          duplicateTask: () => {
+          duplicateTask: (selected = true) => {
             const newTaskId = generateDuplicateStringId(taskId);
             const offset = 10;
             const annotations = taskSpec.annotations || {};
-            const updatedAnnotations = setPositionInAnnotations(annotations, {
+
+            annotations.selected = false; // deselect the original task
+
+            const updatedTaskSpec = {
+              ...taskSpec,
+              annotations: annotations,
+            };
+
+            const newAnnotations = setPositionInAnnotations(annotations, {
               x: position.x + offset,
               y: position.y + offset,
             });
+
+            newAnnotations.selected = selected; // new duplicate tasks are selected by default
+
             const newTaskSpec = {
               ...taskSpec,
-              annotations: { ...updatedAnnotations },
+              annotations: { ...newAnnotations },
             };
+
             const newGraphSpec = {
               ...graphSpec,
               tasks: {
                 ...graphSpec.tasks,
+                [taskId]: updatedTaskSpec,
                 [newTaskId]: newTaskSpec,
               },
             };
@@ -103,6 +116,7 @@ const getTaskNodes = (
         },
         position: position,
         type: "task",
+        selected: taskSpec.annotations?.selected as boolean,
       };
     },
   );

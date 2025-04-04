@@ -338,13 +338,14 @@ const GraphComponentSpecFlow = ({
   };
 
   const duplicateNodes = (nodesToDuplicate: Node[]) => {
-    if (!reactFlowInstance) return;
-
     const offset = 10;
+    const DEFAULT_SELECTED = true;
+
     const newNodes: Node[] = [];
     const newTasks: Record<string, TaskSpec> = {};
     const taskIdMap: Record<string, string> = {};
 
+    // Create new nodes and map old task IDs to new task IDs
     nodesToDuplicate.forEach((node) => {
       const newNodeId = generateDuplicateStringId(node.id);
       const newNode = {
@@ -355,7 +356,7 @@ const GraphComponentSpecFlow = ({
           y: node.position.y + offset,
         },
         data: { ...node.data },
-        selected: true,
+        selected: DEFAULT_SELECTED,
       };
 
       newNodes.push(newNode);
@@ -374,6 +375,8 @@ const GraphComponentSpecFlow = ({
           y: node.position.y + offset,
         });
 
+        updatedAnnotations.selected = DEFAULT_SELECTED; // new nodes are selected by default
+
         const newTaskSpec = {
           ...taskSpec,
           annotations: updatedAnnotations,
@@ -382,7 +385,7 @@ const GraphComponentSpecFlow = ({
       }
     });
 
-    // Update connections to point to correct duplicated node in the new taskspec
+    // Update arguments to point to correct duplicated node in the new taskspec
     Object.entries(newTasks).forEach((tasks) => {
       const [taskId, taskSpec] = tasks;
 
@@ -422,8 +425,17 @@ const GraphComponentSpecFlow = ({
       }
     });
 
-    reactFlowInstance.addNodes(newNodes);
+    // Deselect the original tasks
+    Object.entries(graphSpec.tasks).forEach(([taskId, taskSpec]) => {
+      const annotations = taskSpec.annotations || {};
+      annotations.selected = false;
+      newTasks[taskId] = {
+        ...taskSpec,
+        annotations,
+      };
+    });
 
+    // Update the spec (which will trigger a new render in ReactFlow)
     const updatedTasks = { ...graphSpec.tasks, ...newTasks };
     const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
 
@@ -436,7 +448,6 @@ const GraphComponentSpecFlow = ({
   useEffect(() => {
     // todo: clean this component & method up
     // todo: move into a separate file "useSelectionToolbar"
-    // todo: duplicated group should be selected
 
     if (reactFlowInstance) {
       if (isToolbarVisible) {
@@ -521,6 +532,33 @@ const GraphComponentSpecFlow = ({
       }
     }
   }, [isToolbarVisible, selectedNodes, reactFlowInstance]);
+
+  useEffect(() => {
+    // Sync ReactFlow "selection" changes with the componentSpec so we can correctly auto-select new duplicated tasks
+    const updatedTasks = { ...graphSpec.tasks };
+
+    Object.entries(updatedTasks).forEach(([taskId, taskSpec]) => {
+      const annotations = taskSpec.annotations || {};
+      annotations.selected = selectedNodes.some(
+        (node) => nodeIdToTaskId(node.id) === taskId,
+      );
+      updatedTasks[taskId] = {
+        ...taskSpec,
+        annotations,
+      };
+    });
+
+    const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
+
+    if (JSON.stringify(updatedGraphSpec) === JSON.stringify(graphSpec)) {
+      return;
+    }
+
+    setComponentSpec({
+      ...componentSpec,
+      implementation: { graph: updatedGraphSpec },
+    });
+  }, [selectedNodes, graphSpec, componentSpec, setComponentSpec]);
 
   return (
     <ReactFlow
