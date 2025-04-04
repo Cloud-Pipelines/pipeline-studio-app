@@ -1,7 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { APP_ROUTES } from "@/utils/constants";
+import { APP_ROUTES } from "@/router";
 import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
 import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
 import {
@@ -14,10 +15,32 @@ import StatusText from "./StatusText";
 import TaskStatusBar from "./TaskStatusBar";
 import { countTaskStatuses, formatDate, getRunStatus } from "./utils";
 
-const RunListItem = ({ run }: { run: PipelineRun }) => {
+interface RunListItemProps {
+  run: PipelineRun;
+  config?: {
+    showStatus?: boolean;
+    showName?: boolean;
+    showExecutionId?: boolean;
+    showCreatedAt?: boolean;
+    showTaskStatusBar?: boolean;
+    showStatusCounts?: boolean;
+  };
+}
+
+const defaultConfig = {
+  showStatus: true,
+  showName: true,
+  showExecutionId: true,
+  showCreatedAt: true,
+  showTaskStatusBar: true,
+  showStatusCounts: true,
+};
+
+const RunListItem = ({ run, config = defaultConfig }: RunListItemProps) => {
   const navigate = useNavigate();
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
+  const [loadingMetadata, setLoadingMetadata] = useState(true);
 
   const executionId = `${run.root_execution_id}`;
 
@@ -34,13 +57,20 @@ const RunListItem = ({ run }: { run: PipelineRun }) => {
       runData.status = await fetchExecutionStatus(`${res.root_execution_id}`);
 
       setMetadata(runData);
+      setLoadingMetadata(false);
     };
 
     fetchData();
   }, [run]);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isLoading || loadingMetadata) {
+    return (
+      <div className="flex flex-col p-2 text-sm">
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin" />
+        </div>
+      </div>
+    );
   }
 
   if (error || !details || !state) {
@@ -63,19 +93,29 @@ const RunListItem = ({ run }: { run: PipelineRun }) => {
       className="flex flex-col p-2 text-sm hover:bg-gray-50 cursor-pointer"
     >
       <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-1 w-full justify-between">
-          <div className="flex items-center gap-3">
-            <StatusIcon status={getRunStatus(statusCounts)} />
-            <div className="text-xs">{`#${executionId}`}</div>
-          </div>
-          {metadata && (
-            <span className="text-gray-500 text-xs">{`${formatDate(metadata.created_at)}`}</span>
+        <div className="flex items-center gap-2">
+          {config?.showName && <span>{run.pipeline_name}</span>}
+          {config?.showExecutionId && (
+            <div className="flex items-center gap-3">
+              <StatusIcon status={getRunStatus(statusCounts)} />
+              <div className="text-xs">{`#${executionId}`}</div>
+            </div>
           )}
-          <StatusText statusCounts={statusCounts} shorthand />
+          {config?.showCreatedAt && metadata?.created_at && (
+            <>
+              <span>•</span>
+              <span className="text-gray-500 text-xs">{`${formatDate(metadata?.created_at || "")}`}</span>
+            </>
+          )}
         </div>
+        {config?.showStatusCounts && (
+          <StatusText statusCounts={statusCounts} shorthand />
+        )}
       </div>
 
-      <TaskStatusBar statusCounts={statusCounts} />
+      {config?.showTaskStatusBar && (
+        <TaskStatusBar statusCounts={statusCounts} />
+      )}
     </div>
   );
 };

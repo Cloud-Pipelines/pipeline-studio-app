@@ -2,8 +2,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { CopyIcon, Loader2 } from "lucide-react";
 
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
-import { type RunDetailParams, runDetailRoute } from "@/router";
-import { RUNS_BASE_PATH } from "@/utils/constants";
+import { type RunDetailParams, runDetailRoute, RUNS_BASE_PATH } from "@/router";
 import { copyRunToPipeline } from "@/utils/copyRunToPipeline";
 
 import { PipelineNameDialog } from "./shared/PipelineNameDialog";

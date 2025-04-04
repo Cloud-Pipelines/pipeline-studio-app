@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 
 import type { PipelineRunResponse } from "@/api/types.gen";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { APP_ROUTES } from "@/utils/constants";
+import { APP_ROUTES } from "@/router";
 import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
 
 import StatusIcon from "../PipelineRow/StatusIcon";

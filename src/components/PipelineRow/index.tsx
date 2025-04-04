@@ -1,13 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
 import { List } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import { TableCell, TableRow } from "@/components/ui/table";
-import { EDITOR_PATH } from "@/utils/constants";
-import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
-import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
+import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
+import { EDITOR_PATH } from "@/router";
 
-import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
 import RunListItem from "./RunListItem";
@@ -17,29 +15,7 @@ import { formatDate } from "./utils";
 
 const PipelineRow = ({ name, modificationTime }: PipelineRowProps) => {
   const navigate = useNavigate();
-  const [pipelineRuns, setPipelineRuns] = useState<PipelineRun[]>([]);
-  const [latestRun, setLatestRun] = useState<PipelineRun | null>(null);
-
-  const handleFetchRuns = useCallback(async () => {
-    if (!name) return;
-
-    const res = await fetchPipelineRuns(name);
-    if (!res) return;
-
-    if (res.latestRun) {
-      const latestRun = res.latestRun as PipelineRun;
-      latestRun.status = await fetchExecutionStatus(
-        `${latestRun.root_execution_id}`,
-      );
-      setLatestRun(latestRun);
-    }
-
-    setPipelineRuns(res.runs);
-  }, [name]);
-
-  useEffect(() => {
-    handleFetchRuns();
-  }, [handleFetchRuns]);
+  const { pipelineRuns, latestRun } = useLoadPipelineRuns(name || "");
 
   const handleRowClick = useCallback(
     (e: React.MouseEvent) => {
