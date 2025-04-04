@@ -19,6 +19,8 @@ import type { DragEvent } from "react";
 import { useState } from "react";
 import { useEffect } from "react";
 
+import { generateDuplicateStringId } from "@/utils/generateDuplicateStringId";
+
 import type {
   ArgumentType,
   ComponentSpec,
@@ -70,7 +72,7 @@ const GraphComponentSpecFlow = ({
     useState<ReactFlowInstance>();
   const { nodes, onNodesChange } = useComponentSpecToNodes(
     componentSpec,
-    setComponentSpec,
+    setComponentSpec
   );
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
@@ -82,7 +84,7 @@ const GraphComponentSpecFlow = ({
   const setTaskArgument = (
     taskId: string,
     inputName: string,
-    argument?: ArgumentType,
+    argument?: ArgumentType
   ) => {
     const oldTaskSpec = graphSpec.tasks[taskId];
     const oldTaskSpecArguments = oldTaskSpec.arguments || {};
@@ -96,7 +98,7 @@ const GraphComponentSpecFlow = ({
     const newGraphSpec = replaceTaskArgumentsInGraphSpec(
       taskId,
       graphSpec,
-      newTaskSpecArguments,
+      newTaskSpecArguments
     );
 
     setComponentSpec({
@@ -106,7 +108,7 @@ const GraphComponentSpecFlow = ({
   };
   const setGraphOutputValue = (
     outputName: string,
-    outputValue?: TaskOutputArgument,
+    outputValue?: TaskOutputArgument
   ) => {
     const nonNullOutputObject = outputValue
       ? { [outputName]: outputValue }
@@ -142,7 +144,7 @@ const GraphComponentSpecFlow = ({
     // Not really needed since react-flow sends the node's incoming and outcoming edges for deletion when a node is deleted
     for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
       for (const [inputName, argument] of Object.entries(
-        taskSpec.arguments ?? {},
+        taskSpec.arguments ?? {}
       )) {
         if (typeof argument !== "string" && "graphInput" in argument) {
           if (argument.graphInput.inputName === inputNameToRemove) {
@@ -153,7 +155,7 @@ const GraphComponentSpecFlow = ({
     }
 
     const newInputs = (componentSpec.inputs ?? []).filter(
-      (inputSpec) => inputSpec.name !== inputNameToRemove,
+      (inputSpec) => inputSpec.name !== inputNameToRemove
     );
     setComponentSpec({ ...componentSpec, inputs: newInputs });
   };
@@ -162,7 +164,7 @@ const GraphComponentSpecFlow = ({
     setGraphOutputValue(outputNameToRemove);
     // Removing the output itself
     const newOutputs = (componentSpec.outputs ?? []).filter(
-      (outputSpec) => outputSpec.name !== outputNameToRemove,
+      (outputSpec) => outputSpec.name !== outputNameToRemove
     );
     setComponentSpec({ ...componentSpec, outputs: newOutputs });
   };
@@ -189,15 +191,15 @@ const GraphComponentSpecFlow = ({
     // Step 2: Remove any connections from this task to graph outputs
     const newGraphOutputValues = Object.fromEntries(
       Object.entries(graphSpec.outputValues ?? {}).filter(
-        ([_, argument]) => argument.taskOutput.taskId !== taskIdToRemove,
-      ),
+        ([_, argument]) => argument.taskOutput.taskId !== taskIdToRemove
+      )
     );
 
     // Step 3: Remove the task itself from the graph
     const newTasks = Object.fromEntries(
       Object.entries(graphSpec.tasks).filter(
-        ([taskId]) => taskId !== taskIdToRemove,
-      ),
+        ([taskId]) => taskId !== taskIdToRemove
+      )
     );
 
     // Step 4: Update the graph spec with our changes
@@ -239,7 +241,7 @@ const GraphComponentSpecFlow = ({
         reactFlowInstance,
         componentSpec,
         setComponentSpec,
-        graphSpec,
+        graphSpec
       );
     }
   };
@@ -262,7 +264,7 @@ const GraphComponentSpecFlow = ({
   const handleOnNodesChange = (changes: NodeChange[]) => {
     // Process position changes and update component spec
     const positionChanges = changes.filter(
-      (change) => change.type === "position" && change.dragging === false,
+      (change) => change.type === "position" && change.dragging === false
     );
 
     if (positionChanges.length > 0) {
@@ -327,8 +329,8 @@ const GraphComponentSpecFlow = ({
                       y: bounds.y - (toolbarNode.measured?.height ?? 0),
                     },
                   }
-                : node,
-            ),
+                : node
+            )
           );
         }
       }
@@ -341,9 +343,10 @@ const GraphComponentSpecFlow = ({
     const offset = 10;
     const newNodes: Node[] = [];
     const newTasks: Record<string, TaskSpec> = {};
+    const taskIdMap: Record<string, string> = {};
 
     nodesToDuplicate.forEach((node) => {
-      const newNodeId = `${node.id}_copy_${Date.now()}`;
+      const newNodeId = generateDuplicateStringId(node.id);
       const newNode = {
         ...node,
         id: newNodeId,
@@ -359,7 +362,10 @@ const GraphComponentSpecFlow = ({
 
       if (node.type === "task") {
         const taskId = nodeIdToTaskId(node.id);
-        const newTaskId = `${taskId}_copy_${Date.now()}`; // todo: use the same taskid generation logic as in the task node (note that nodeid = task_[taskid])
+        const newTaskId = generateDuplicateStringId(taskId);
+
+        taskIdMap[taskId] = newTaskId;
+
         const taskSpec = graphSpec.tasks[taskId];
         const annotations = taskSpec.annotations || {};
 
@@ -368,8 +374,6 @@ const GraphComponentSpecFlow = ({
           y: node.position.y + offset,
         });
 
-        // todo: update connections to point to correct duplicated node
-
         const newTaskSpec = {
           ...taskSpec,
           annotations: updatedAnnotations,
@@ -377,6 +381,9 @@ const GraphComponentSpecFlow = ({
         newTasks[newTaskId] = newTaskSpec;
       }
     });
+
+    // todo: update connections to point to correct duplicated node in the new taskspec
+    // console.log(newTasks);
 
     reactFlowInstance.addNodes(newNodes);
 
@@ -441,8 +448,8 @@ const GraphComponentSpecFlow = ({
                       ...node,
                       position: toolbarPreRenderCoordinates,
                     }
-                  : node,
-              ),
+                  : node
+              )
             );
           }
         }
@@ -465,14 +472,14 @@ const GraphComponentSpecFlow = ({
                         y: bounds.y - (toolbarNode?.measured?.height ?? 0),
                       },
                     }
-                  : node,
-              ),
+                  : node
+              )
             );
           }
         }, 0);
       } else {
         reactFlowInstance.setNodes((nodes) =>
-          nodes.filter((node) => node.id !== SELECTION_TOOLBAR_ID),
+          nodes.filter((node) => node.id !== SELECTION_TOOLBAR_ID)
         );
       }
     }
@@ -518,7 +525,7 @@ const isAppleOS = () =>
 // see also: generateDuplicateTaskId
 const setPositionInAnnotations = (
   annotations: Record<string, unknown>,
-  position: XYPosition,
+  position: XYPosition
 ): Record<string, unknown> => {
   const updatedAnnotations = { ...annotations };
   updatedAnnotations["editor.position"] = JSON.stringify(position);
