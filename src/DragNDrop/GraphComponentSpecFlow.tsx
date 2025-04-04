@@ -12,6 +12,7 @@ import type {
   NodeChange,
   ReactFlowInstance,
   ReactFlowProps,
+  XYPosition,
 } from "@xyflow/react";
 import { getNodesBounds, type OnInit, ReactFlow } from "@xyflow/react";
 import type { DragEvent } from "react";
@@ -22,6 +23,7 @@ import type {
   ArgumentType,
   ComponentSpec,
   TaskOutputArgument,
+  TaskSpec,
 } from "../componentSpec";
 import useComponentSpecToEdges from "../hooks/useComponentSpecToEdges";
 import useComponentSpecToNodes from "../hooks/useComponentSpecToNodes";
@@ -44,6 +46,8 @@ export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
     },
   },
 };
+
+const SELECTION_TOOLBAR_ID = "selection-toolbar";
 
 export interface GraphComponentSpecFlowProps
   extends Omit<ReactFlowProps, "elements"> {
@@ -287,42 +291,141 @@ const GraphComponentSpecFlow = ({
 
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+
   const handleSelectionChange = (nodes: Node[]) => {
     setSelectedNodes(nodes);
 
-    if (nodes.length < 2) {
+    if (nodes.length < 1) {
       setIsToolbarVisible(false);
     }
   };
 
   const handleSelectionEnd = (nodes: Node[]) => {
-    setIsToolbarVisible(nodes.length > 1);
+    setIsToolbarVisible(nodes.length > 0);
+  };
+
+  const handleSelectionDrag = (nodes: Node[]) => {
+    // If the toolbar is visible update its position so it stays attached to the selection box
+    if (!reactFlowInstance) return;
+
+    if (isToolbarVisible) {
+      const bounds = getNodesBounds(nodes);
+      const toolbarNodeId = SELECTION_TOOLBAR_ID;
+      if (bounds) {
+        const toolbarNode = reactFlowInstance?.getNode(toolbarNodeId);
+        if (toolbarNode) {
+          reactFlowInstance.setNodes((nodes) =>
+            nodes.map((node) =>
+              node.id === toolbarNodeId
+                ? {
+                    ...node,
+                    position: {
+                      x:
+                        bounds.x +
+                        bounds.width -
+                        (toolbarNode.measured?.width ?? 0),
+                      y: bounds.y - (toolbarNode.measured?.height ?? 0),
+                    },
+                  }
+                : node,
+            ),
+          );
+        }
+      }
+    }
+  };
+
+  const duplicateNodes = (nodesToDuplicate: Node[]) => {
+    if (!reactFlowInstance) return;
+
+    const offset = 10;
+    const newNodes: Node[] = [];
+    const newTasks: Record<string, TaskSpec> = {};
+
+    nodesToDuplicate.forEach((node) => {
+      const newNodeId = `${node.id}_copy_${Date.now()}`;
+      const newNode = {
+        ...node,
+        id: newNodeId,
+        position: {
+          x: node.position.x + offset,
+          y: node.position.y + offset,
+        },
+        data: { ...node.data },
+        selected: true,
+      };
+
+      newNodes.push(newNode);
+
+      if (node.type === "task") {
+        const taskId = nodeIdToTaskId(node.id);
+        const newTaskId = `${taskId}_copy_${Date.now()}`; // todo: use the same taskid generation logic as in the task node (note that nodeid = task_[taskid])
+        const taskSpec = graphSpec.tasks[taskId];
+        const annotations = taskSpec.annotations || {};
+
+        const updatedAnnotations = setPositionInAnnotations(annotations, {
+          x: node.position.x + offset,
+          y: node.position.y + offset,
+        });
+
+        // todo: update connections to point to correct duplicated node
+
+        const newTaskSpec = {
+          ...taskSpec,
+          annotations: updatedAnnotations,
+        };
+        newTasks[newTaskId] = newTaskSpec;
+      }
+    });
+
+    reactFlowInstance.addNodes(newNodes);
+
+    const updatedTasks = { ...graphSpec.tasks, ...newTasks };
+    const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
+
+    setComponentSpec({
+      ...componentSpec,
+      implementation: { graph: updatedGraphSpec },
+    });
   };
 
   useEffect(() => {
-    const toolbarHeight = 24;
-    const toolbarWidth = 64;
-
-    // todo: fetch toolbar dimension from within the toolbar node
-    // todo: clean this up
-    // todo: toolbar needs to move if selection is directly moved
-    // todo: add bulk delete & duplicate via toolbar
+    // todo: clean this component & method up
+    // todo: fix duplicate via toolbar - nodes are not connecting to the duplicate upstream task
+    // todo: move into a separate file "useSelectionToolbar"
 
     if (reactFlowInstance) {
-      if (isToolbarVisible && selectedNodes.length > 1) {
+      if (isToolbarVisible) {
         const bounds = getNodesBounds(selectedNodes);
+        const toolbarNodeId = SELECTION_TOOLBAR_ID;
 
         if (bounds) {
-          const toolbarNodeId = "selection-toolbar";
+          const toolbarPreRenderCoordinates = {
+            x: -1000 - Math.abs(bounds.x) - Math.abs(bounds.width),
+            y: -1000 - Math.abs(bounds.y) - Math.abs(bounds.height),
+          };
+
           const toolbarNode = {
             id: toolbarNodeId,
             type: "toolbar",
-            position: {
-              x: bounds.x + bounds.width - toolbarWidth,
-              y: bounds.y - toolbarHeight,
-            },
+            position: toolbarPreRenderCoordinates,
+            zIndex: 1200,
             data: {
-              isOpen: true,
+              onDelete: () => {
+                for (const node of selectedNodes) {
+                  removeNode(node);
+                }
+                setIsToolbarVisible(false);
+
+                setComponentSpec({
+                  ...componentSpec,
+                  implementation: { graph: graphSpec },
+                });
+              },
+              onDuplicate: () => {
+                duplicateNodes(selectedNodes);
+                setIsToolbarVisible(false);
+              },
             },
           };
 
@@ -336,19 +439,40 @@ const GraphComponentSpecFlow = ({
                 node.id === toolbarNodeId
                   ? {
                       ...node,
-                      position: {
-                        x: bounds.x + bounds.width - toolbarWidth,
-                        y: bounds.y - toolbarHeight,
-                      },
+                      position: toolbarPreRenderCoordinates,
                     }
                   : node,
               ),
             );
           }
         }
+
+        // Wait for the toolbar node to render and then update its position based on its actual height & width
+        setTimeout(() => {
+          // todo: this can be combined with handleSelectionDrag
+          const toolbarNode = reactFlowInstance.getNode(toolbarNodeId);
+          if (toolbarNode) {
+            reactFlowInstance.setNodes((nodes) =>
+              nodes.map((node) =>
+                node.id === toolbarNodeId
+                  ? {
+                      ...node,
+                      position: {
+                        x:
+                          bounds.x +
+                          bounds.width -
+                          (toolbarNode?.measured?.width ?? 0),
+                        y: bounds.y - (toolbarNode?.measured?.height ?? 0),
+                      },
+                    }
+                  : node,
+              ),
+            );
+          }
+        }, 0);
       } else {
         reactFlowInstance.setNodes((nodes) =>
-          nodes.filter((node) => node.id !== "selection-toolbar"),
+          nodes.filter((node) => node.id !== SELECTION_TOOLBAR_ID),
         );
       }
     }
@@ -375,6 +499,7 @@ const GraphComponentSpecFlow = ({
       }
       onSelectionChange={(params) => handleSelectionChange(params.nodes)}
       onSelectionEnd={() => handleSelectionEnd(selectedNodes)}
+      onSelectionDrag={(_, nodes) => handleSelectionDrag(nodes)}
     >
       {children}
     </ReactFlow>
@@ -388,3 +513,14 @@ const isAppleOS = () =>
   window.navigator.platform.startsWith("iPhone") ||
   window.navigator.platform.startsWith("iPad") ||
   window.navigator.platform.startsWith("iPod");
+
+// todo: copied over from useComponentSPecToNode - can be moved to a shared location
+// see also: generateDuplicateTaskId
+const setPositionInAnnotations = (
+  annotations: Record<string, unknown>,
+  position: XYPosition,
+): Record<string, unknown> => {
+  const updatedAnnotations = { ...annotations };
+  updatedAnnotations["editor.position"] = JSON.stringify(position);
+  return updatedAnnotations;
+};

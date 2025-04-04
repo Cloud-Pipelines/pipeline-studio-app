@@ -7,7 +7,8 @@ const toolbarHeight = 24;
 const toolbarWidth = 64;
 
 interface SelectionToolbarProps extends Record<string, unknown> {
-  isOpen: boolean;
+  onDuplicate: () => void;
+  onDelete: () => void;
 }
 
 const SelectionToolbar = ({ data }: NodeProps) => {
@@ -25,12 +26,14 @@ const SelectionToolbar = ({ data }: NodeProps) => {
       <Button
         className="cursor-pointer h-full aspect-square w-min rounded-sm"
         variant="ghost"
+        onClick={typedData.onDuplicate}
       >
         <Copy className="p-0.5" />
       </Button>
       <Button
         className="cursor-pointer h-full aspect-square w-min rounded-sm text-destructive hover:text-destructive"
         variant="ghost"
+        onClick={typedData.onDelete}
       >
         <Trash className="p-0.5" />
       </Button>
