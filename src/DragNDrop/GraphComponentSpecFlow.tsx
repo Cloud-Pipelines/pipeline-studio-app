@@ -6,26 +6,28 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import type {
-  Edge,
-  Node,
-  NodeChange,
-  ReactFlowInstance,
-  ReactFlowProps,
-  XYPosition,
+import {
+  type Edge,
+  getNodesBounds,
+  type Node,
+  type NodeChange,
+  type OnInit,
+  ReactFlow,
+  type ReactFlowInstance,
+  type ReactFlowProps,
+  type XYPosition,
 } from "@xyflow/react";
-import { getNodesBounds, type OnInit, ReactFlow } from "@xyflow/react";
-import type { DragEvent } from "react";
-import { useState } from "react";
-import { useEffect } from "react";
+import { type DragEvent, useCallback, useEffect, useState } from "react";
 
-import { generateDuplicateStringId } from "@/utils/generateDuplicateStringId";
+import { useSelectionToolbar } from "@/hooks/useSelectionToolbar";
+import { generateUniqueDuplicateStringId } from "@/utils/generateUniqueDuplicateStringId";
 
-import type {
-  ArgumentType,
-  ComponentSpec,
-  TaskOutputArgument,
-  TaskSpec,
+import {
+  type ArgumentType,
+  type ComponentSpec,
+  type GraphImplementation,
+  type TaskOutputArgument,
+  type TaskSpec,
 } from "../componentSpec";
 import useComponentSpecToEdges from "../hooks/useComponentSpecToEdges";
 import useComponentSpecToNodes from "../hooks/useComponentSpecToNodes";
@@ -70,16 +72,17 @@ const GraphComponentSpecFlow = ({
 }: GraphComponentSpecFlowProps) => {
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
+
+  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
+
   const { nodes, onNodesChange } = useComponentSpecToNodes(
     componentSpec,
     setComponentSpec,
   );
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
-  if (!("graph" in componentSpec.implementation)) {
-    return null;
-  }
-  const graphSpec = componentSpec.implementation.graph;
+  const implementation = componentSpec.implementation as GraphImplementation;
+  const graphSpec = implementation.graph;
 
   const setTaskArgument = (
     taskId: string,
@@ -106,6 +109,7 @@ const GraphComponentSpecFlow = ({
       implementation: { graph: newGraphSpec },
     });
   };
+
   const setGraphOutputValue = (
     outputName: string,
     outputValue?: TaskOutputArgument,
@@ -246,20 +250,23 @@ const GraphComponentSpecFlow = ({
     }
   };
 
-  const onElementsRemove = (params: { nodes: Node[]; edges: Edge[] }) => {
-    for (const edge of params.edges) {
-      removeEdge(edge);
-    }
-    for (const node of params.nodes) {
-      removeNode(node);
-    }
+  const onElementsRemove = useCallback(
+    (params: { nodes: Node[]; edges: Edge[] }) => {
+      for (const edge of params.edges) {
+        removeEdge(edge);
+      }
+      for (const node of params.nodes) {
+        removeNode(node);
+      }
 
-    // Save the updated graph spec to the component spec
-    setComponentSpec({
-      ...componentSpec,
-      implementation: { graph: graphSpec },
-    });
-  };
+      // Save the updated graph spec to the component spec
+      setComponentSpec({
+        ...componentSpec,
+        implementation: { graph: graphSpec },
+      });
+    },
+    [graphSpec, componentSpec, setComponentSpec],
+  );
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
     // Process position changes and update component spec
@@ -291,19 +298,23 @@ const GraphComponentSpecFlow = ({
     onNodesChange(changes);
   };
 
-  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
-  const [isToolbarVisible, setIsToolbarVisible] = useState(false);
-
   const handleSelectionChange = (nodes: Node[]) => {
     setSelectedNodes(nodes);
 
     if (nodes.length < 1) {
-      setIsToolbarVisible(false);
+      // setIsToolbarVisible(false);
+      hideToolbar();
     }
   };
 
   const handleSelectionEnd = (nodes: Node[]) => {
-    setIsToolbarVisible(nodes.length > 0);
+    // setIsToolbarVisible(nodes.length > 0);
+
+    if (nodes.length > 0) {
+      showToolbar();
+    } else {
+      hideToolbar();
+    }
   };
 
   const handleSelectionDrag = (nodes: Node[]) => {
@@ -337,204 +348,140 @@ const GraphComponentSpecFlow = ({
     }
   };
 
-  const duplicateNodes = (nodesToDuplicate: Node[]) => {
-    const offset = 10;
-    const DEFAULT_SELECTED = true;
+  const duplicateNodes = useCallback(
+    (nodesToDuplicate: Node[]) => {
+      const offset = 10;
+      const DEFAULT_SELECTED = true;
 
-    const newNodes: Node[] = [];
-    const newTasks: Record<string, TaskSpec> = {};
-    const taskIdMap: Record<string, string> = {};
+      const newNodes: Node[] = [];
+      const newTasks: Record<string, TaskSpec> = {};
+      const taskIdMap: Record<string, string> = {};
 
-    // Create new nodes and map old task IDs to new task IDs
-    nodesToDuplicate.forEach((node) => {
-      const newNodeId = generateDuplicateStringId(node.id);
-      const newNode = {
-        ...node,
-        id: newNodeId,
-        position: {
-          x: node.position.x + offset,
-          y: node.position.y + offset,
-        },
-        data: { ...node.data },
-        selected: DEFAULT_SELECTED,
-      };
+      const existingNodeIds = nodes.map((node) => node.id);
 
-      newNodes.push(newNode);
+      const implementation =
+        componentSpec.implementation as GraphImplementation;
+      const graphSpec = implementation.graph;
 
-      if (node.type === "task") {
-        const oldTaskId = nodeIdToTaskId(node.id);
-        const newTaskId = nodeIdToTaskId(newNodeId);
+      // Create new nodes and map old task IDs to new task IDs
+      nodesToDuplicate.forEach((node) => {
+        const newNodeId = generateUniqueDuplicateStringId(
+          node.id,
+          existingNodeIds,
+        );
 
-        taskIdMap[oldTaskId] = newTaskId;
+        existingNodeIds.push(newNodeId);
 
-        const taskSpec = graphSpec.tasks[oldTaskId];
-        const annotations = taskSpec.annotations || {};
-
-        const updatedAnnotations = setPositionInAnnotations(annotations, {
-          x: node.position.x + offset,
-          y: node.position.y + offset,
-        });
-
-        updatedAnnotations.selected = DEFAULT_SELECTED; // new nodes are selected by default
-
-        const newTaskSpec = {
-          ...taskSpec,
-          annotations: updatedAnnotations,
+        const newNode = {
+          ...node,
+          id: newNodeId,
+          position: {
+            x: node.position.x + offset,
+            y: node.position.y + offset,
+          },
+          data: { ...node.data },
+          selected: DEFAULT_SELECTED,
         };
-        newTasks[newTaskId] = newTaskSpec;
-      }
-    });
 
-    // Update arguments to point to correct duplicated node in the new taskspec
-    Object.entries(newTasks).forEach((tasks) => {
-      const [taskId, taskSpec] = tasks;
+        newNodes.push(newNode);
 
-      if (taskSpec.arguments) {
-        Object.entries(taskSpec.arguments).forEach(([argKey, argument]) => {
-          if (typeof argument !== "string" && "taskOutput" in argument) {
-            const oldTaskId = argument.taskOutput.taskId;
+        if (node.type === "task") {
+          const oldTaskId = nodeIdToTaskId(node.id);
+          const newTaskId = nodeIdToTaskId(newNodeId);
 
-            // Only update the argument if the old task ID is part of the nodes being duplicated
-            if (
-              nodesToDuplicate.some(
-                (node) => nodeIdToTaskId(node.id) === oldTaskId,
-              )
-            ) {
-              const newTaskId = taskIdMap[oldTaskId];
+          taskIdMap[oldTaskId] = newTaskId;
 
-              if (newTaskId && taskSpec.arguments) {
-                // Update the taskSpec in the newTasks object
-                const updatedTaskSpec = {
-                  ...(newTasks[taskId] || taskSpec),
-                  arguments: {
-                    ...(newTasks[taskId]?.arguments || taskSpec.arguments),
-                    [argKey]: {
-                      ...argument,
-                      taskOutput: {
-                        ...argument.taskOutput,
-                        taskId: newTaskId,
+          const taskSpec = graphSpec.tasks[oldTaskId];
+          const annotations = taskSpec.annotations || {};
+
+          const updatedAnnotations = setPositionInAnnotations(annotations, {
+            x: node.position.x + offset,
+            y: node.position.y + offset,
+          });
+
+          updatedAnnotations.selected = DEFAULT_SELECTED; // new nodes are selected by default
+
+          const newTaskSpec = {
+            ...taskSpec,
+            annotations: updatedAnnotations,
+          };
+          newTasks[newTaskId] = newTaskSpec;
+        }
+      });
+
+      // Update arguments to point to correct duplicated node in the new taskspec
+      Object.entries(newTasks).forEach((tasks) => {
+        const [taskId, taskSpec] = tasks;
+
+        if (taskSpec.arguments) {
+          Object.entries(taskSpec.arguments).forEach(([argKey, argument]) => {
+            if (typeof argument !== "string" && "taskOutput" in argument) {
+              const oldTaskId = argument.taskOutput.taskId;
+
+              // Only update the argument if the old task ID is part of the nodes being duplicated
+              if (
+                nodesToDuplicate.some(
+                  (node) => nodeIdToTaskId(node.id) === oldTaskId,
+                )
+              ) {
+                const newTaskId = taskIdMap[oldTaskId];
+
+                if (newTaskId && taskSpec.arguments) {
+                  // Update the taskSpec in the newTasks object
+                  const updatedTaskSpec = {
+                    ...(newTasks[taskId] || taskSpec),
+                    arguments: {
+                      ...(newTasks[taskId]?.arguments || taskSpec.arguments),
+                      [argKey]: {
+                        ...argument,
+                        taskOutput: {
+                          ...argument.taskOutput,
+                          taskId: newTaskId,
+                        },
                       },
                     },
-                  },
-                };
-                newTasks[taskId] = updatedTaskSpec;
+                  };
+                  newTasks[taskId] = updatedTaskSpec;
+                }
               }
             }
-          }
-        });
-      }
-    });
-
-    // Deselect the original tasks
-    Object.entries(graphSpec.tasks).forEach(([taskId, taskSpec]) => {
-      const annotations = taskSpec.annotations || {};
-      annotations.selected = false;
-      newTasks[taskId] = {
-        ...taskSpec,
-        annotations,
-      };
-    });
-
-    // Update the spec (which will trigger a new render in ReactFlow)
-    const updatedTasks = { ...graphSpec.tasks, ...newTasks };
-    const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
-
-    setComponentSpec({
-      ...componentSpec,
-      implementation: { graph: updatedGraphSpec },
-    });
-  };
-
-  useEffect(() => {
-    // todo: clean this component & method up
-    // todo: move into a separate file "useSelectionToolbar"
-
-    if (reactFlowInstance) {
-      if (isToolbarVisible) {
-        const bounds = getNodesBounds(selectedNodes);
-        const toolbarNodeId = SELECTION_TOOLBAR_ID;
-
-        if (bounds) {
-          const toolbarPreRenderCoordinates = {
-            x: -1000 - Math.abs(bounds.x) - Math.abs(bounds.width),
-            y: -1000 - Math.abs(bounds.y) - Math.abs(bounds.height),
-          };
-
-          const toolbarNode = {
-            id: toolbarNodeId,
-            type: "toolbar",
-            position: toolbarPreRenderCoordinates,
-            zIndex: 1200,
-            data: {
-              onDelete: () => {
-                for (const node of selectedNodes) {
-                  removeNode(node);
-                }
-                setIsToolbarVisible(false);
-
-                setComponentSpec({
-                  ...componentSpec,
-                  implementation: { graph: graphSpec },
-                });
-              },
-              onDuplicate: () => {
-                duplicateNodes(selectedNodes);
-                setIsToolbarVisible(false);
-              },
-            },
-          };
-
-          const existingToolbarNode = reactFlowInstance.getNode(toolbarNodeId);
-
-          if (!existingToolbarNode) {
-            reactFlowInstance.addNodes(toolbarNode);
-          } else {
-            reactFlowInstance.setNodes((nodes) =>
-              nodes.map((node) =>
-                node.id === toolbarNodeId
-                  ? {
-                      ...node,
-                      position: toolbarPreRenderCoordinates,
-                    }
-                  : node,
-              ),
-            );
-          }
+          });
         }
+      });
 
-        // Wait for the toolbar node to render and then update its position based on its actual height & width
-        setTimeout(() => {
-          // todo: this can be combined with handleSelectionDrag
-          const toolbarNode = reactFlowInstance.getNode(toolbarNodeId);
-          if (toolbarNode) {
-            reactFlowInstance.setNodes((nodes) =>
-              nodes.map((node) =>
-                node.id === toolbarNodeId
-                  ? {
-                      ...node,
-                      position: {
-                        x:
-                          bounds.x +
-                          bounds.width -
-                          (toolbarNode?.measured?.width ?? 0),
-                        y: bounds.y - (toolbarNode?.measured?.height ?? 0),
-                      },
-                    }
-                  : node,
-              ),
-            );
-          }
-        }, 0);
-      } else {
-        reactFlowInstance.setNodes((nodes) =>
-          nodes.filter((node) => node.id !== SELECTION_TOOLBAR_ID),
-        );
-      }
-    }
-  }, [isToolbarVisible, selectedNodes, reactFlowInstance]);
+      // Deselect the original tasks
+      Object.entries(graphSpec.tasks).forEach(([taskId, taskSpec]) => {
+        const annotations = taskSpec.annotations || {};
+        annotations.selected = false;
+        newTasks[taskId] = {
+          ...taskSpec,
+          annotations,
+        };
+      });
+
+      // Update the spec (which will trigger a new render in ReactFlow)
+      const updatedTasks = { ...graphSpec.tasks, ...newTasks };
+      const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
+
+      setComponentSpec({
+        ...componentSpec,
+        implementation: { graph: updatedGraphSpec },
+      });
+    },
+    [componentSpec, setComponentSpec],
+  );
+
+  const { showToolbar, hideToolbar, isToolbarVisible } = useSelectionToolbar({
+    reactFlowInstance,
+    selectedNodes,
+    onDeleteNodes: onElementsRemove,
+    onDuplicateNodes: duplicateNodes,
+  });
 
   useEffect(() => {
     // Sync ReactFlow "selection" changes with the componentSpec so we can correctly auto-select new duplicated tasks
+    if (!graphSpec) return;
+
     const updatedTasks = { ...graphSpec.tasks };
 
     Object.entries(updatedTasks).forEach(([taskId, taskSpec]) => {
@@ -559,6 +506,10 @@ const GraphComponentSpecFlow = ({
       implementation: { graph: updatedGraphSpec },
     });
   }, [selectedNodes, graphSpec, componentSpec, setComponentSpec]);
+
+  if (!("graph" in componentSpec.implementation)) {
+    return null;
+  }
 
   return (
     <ReactFlow

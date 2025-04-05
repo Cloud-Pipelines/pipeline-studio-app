@@ -6,7 +6,7 @@ import {
 } from "@xyflow/react";
 import { useEffect } from "react";
 
-import { generateDuplicateStringId } from "@/utils/generateDuplicateStringId";
+import { generateUniqueDuplicateStringId } from "@/utils/generateUniqueDuplicateStringId";
 
 import type { ArgumentType, ComponentSpec, GraphSpec } from "../componentSpec";
 import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
@@ -77,11 +77,13 @@ const getTaskNodes = (
             });
           },
           duplicateTask: (selected = true) => {
-            const newTaskId = generateDuplicateStringId(taskId);
+            const existingTaskIds = Object.keys(graphSpec.tasks);
+            const newTaskId = generateUniqueDuplicateStringId(
+              taskId,
+              existingTaskIds,
+            );
             const offset = 10;
             const annotations = taskSpec.annotations || {};
-
-            annotations.selected = false; // deselect the original task
 
             const updatedTaskSpec = {
               ...taskSpec,
@@ -93,6 +95,13 @@ const getTaskNodes = (
               y: position.y + offset,
             });
 
+            // deselect all tasks
+            Object.values(graphSpec.tasks).forEach((task) => {
+              task.annotations = {
+                ...task.annotations,
+                selected: false,
+              };
+            });
             newAnnotations.selected = selected; // new duplicate tasks are selected by default
 
             const newTaskSpec = {
