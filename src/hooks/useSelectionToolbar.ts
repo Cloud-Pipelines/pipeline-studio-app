@@ -1,8 +1,8 @@
 import {
   type Edge,
-  getNodesBounds,
   type Node,
   type ReactFlowInstance,
+  useReactFlow,
 } from "@xyflow/react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -19,6 +19,8 @@ export function useSelectionToolbar({
   onDeleteNodes: (params: { nodes: Node[]; edges: Edge[] }) => void;
   onDuplicateNodes: (nodes: Node[]) => void;
 }) {
+  const { getNodesBounds } = useReactFlow();
+
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
 
   const showToolbar = useCallback(() => {
@@ -38,6 +40,39 @@ export function useSelectionToolbar({
     onDuplicateNodes(selectedNodes);
     hideToolbar();
   }, [selectedNodes, onDuplicateNodes, hideToolbar]);
+
+  const updateToolbarPosition = useCallback(
+    (nodes: Node[]) => {
+      if (!reactFlowInstance) return;
+
+      // TODO: the toolbar is detaching itself from the selection
+
+      const bounds = getNodesBounds(nodes);
+      const toolbarNodeId = SELECTION_TOOLBAR_ID;
+      if (bounds) {
+        const toolbarNode = reactFlowInstance?.getNode(toolbarNodeId);
+        if (toolbarNode) {
+          reactFlowInstance.setNodes((nodes) =>
+            nodes.map((node) =>
+              node.id === toolbarNodeId
+                ? {
+                    ...node,
+                    position: {
+                      x:
+                        bounds.x +
+                        bounds.width -
+                        (toolbarNode.measured?.width ?? 0),
+                      y: bounds.y - (toolbarNode.measured?.height ?? 0),
+                    },
+                  }
+                : node,
+            ),
+          );
+        }
+      }
+    },
+    [reactFlowInstance, isToolbarVisible],
+  );
 
   useEffect(() => {
     if (reactFlowInstance) {
@@ -119,5 +154,6 @@ export function useSelectionToolbar({
     showToolbar,
     hideToolbar,
     isToolbarVisible,
+    updateToolbarPosition,
   };
 }

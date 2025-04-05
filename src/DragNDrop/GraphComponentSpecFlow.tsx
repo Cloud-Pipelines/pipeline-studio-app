@@ -8,7 +8,6 @@
 
 import {
   type Edge,
-  getNodesBounds,
   type Node,
   type NodeChange,
   type OnInit,
@@ -50,8 +49,6 @@ export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
     },
   },
 };
-
-const SELECTION_TOOLBAR_ID = "selection-toolbar";
 
 export interface GraphComponentSpecFlowProps
   extends Omit<ReactFlowProps, "elements"> {
@@ -298,56 +295,7 @@ const GraphComponentSpecFlow = ({
     onNodesChange(changes);
   };
 
-  const handleSelectionChange = (nodes: Node[]) => {
-    setSelectedNodes(nodes);
-
-    if (nodes.length < 1) {
-      // setIsToolbarVisible(false);
-      hideToolbar();
-    }
-  };
-
-  const handleSelectionEnd = (nodes: Node[]) => {
-    // setIsToolbarVisible(nodes.length > 0);
-
-    if (nodes.length > 0) {
-      showToolbar();
-    } else {
-      hideToolbar();
-    }
-  };
-
-  const handleSelectionDrag = (nodes: Node[]) => {
-    // If the toolbar is visible update its position so it stays attached to the selection box
-    if (!reactFlowInstance) return;
-
-    if (isToolbarVisible) {
-      const bounds = getNodesBounds(nodes);
-      const toolbarNodeId = SELECTION_TOOLBAR_ID;
-      if (bounds) {
-        const toolbarNode = reactFlowInstance?.getNode(toolbarNodeId);
-        if (toolbarNode) {
-          reactFlowInstance.setNodes((nodes) =>
-            nodes.map((node) =>
-              node.id === toolbarNodeId
-                ? {
-                    ...node,
-                    position: {
-                      x:
-                        bounds.x +
-                        bounds.width -
-                        (toolbarNode.measured?.width ?? 0),
-                      y: bounds.y - (toolbarNode.measured?.height ?? 0),
-                    },
-                  }
-                : node,
-            ),
-          );
-        }
-      }
-    }
-  };
-
+  // todo: move core logic into the hook
   const duplicateNodes = useCallback(
     (nodesToDuplicate: Node[]) => {
       const offset = 10;
@@ -471,12 +419,45 @@ const GraphComponentSpecFlow = ({
     [componentSpec, setComponentSpec],
   );
 
-  const { showToolbar, hideToolbar, isToolbarVisible } = useSelectionToolbar({
-    reactFlowInstance,
-    selectedNodes,
-    onDeleteNodes: onElementsRemove,
-    onDuplicateNodes: duplicateNodes,
-  });
+  const { isToolbarVisible, showToolbar, hideToolbar, updateToolbarPosition } =
+    useSelectionToolbar({
+      reactFlowInstance,
+      selectedNodes,
+      onDeleteNodes: onElementsRemove,
+      onDuplicateNodes: duplicateNodes,
+    });
+
+  const handleSelectionChange = useCallback(
+    (nodes: Node[]) => {
+      setSelectedNodes(nodes);
+
+      if (nodes.length < 1) {
+        hideToolbar();
+      }
+    },
+    [hideToolbar],
+  );
+
+  const handleSelectionEnd = useCallback(
+    (nodes: Node[]) => {
+      if (nodes.length > 0) {
+        showToolbar();
+      } else {
+        hideToolbar();
+      }
+    },
+    [showToolbar, hideToolbar],
+  );
+
+  const handleSelectionDrag = useCallback(
+    (nodes: Node[]) => {
+      if (!isToolbarVisible) return;
+
+      // If the toolbar is visible update its position so it stays attached to the selection box
+      updateToolbarPosition(nodes);
+    },
+    [isToolbarVisible, updateToolbarPosition],
+  );
 
   useEffect(() => {
     // Sync ReactFlow "selection" changes with the componentSpec so we can correctly auto-select new duplicated tasks
@@ -548,7 +529,6 @@ const isAppleOS = () =>
   window.navigator.platform.startsWith("iPod");
 
 // todo: copied over from useComponentSPecToNode - can be moved to a shared location
-// see also: generateDuplicateTaskId
 const setPositionInAnnotations = (
   annotations: Record<string, unknown>,
   position: XYPosition,
