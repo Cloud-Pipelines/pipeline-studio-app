@@ -12,6 +12,7 @@ import {
   CircleAlert,
   CircleCheck,
   CircleDashed,
+  Copy,
   EyeIcon,
   RefreshCcw,
   SettingsIcon,
@@ -20,6 +21,7 @@ import { type CSSProperties, memo, useRef, useState } from "react";
 
 import TaskDetailsSheet from "@/components/TaskDetailsSheet";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import ArgumentsEditorDialog from "../components/ArgumentsEditor/ArgumentsEditorDialog";
 import type {
@@ -151,6 +153,7 @@ export interface ComponentTaskNodeProps extends Record<string, unknown> {
   taskSpec: TaskSpec;
   taskId: string;
   setArguments?: (args: Record<string, ArgumentType>) => void;
+  duplicateTask: () => void;
 }
 
 const getStatusIcon = (status: string) => {
@@ -175,7 +178,7 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-const ComponentTaskNode = ({ data }: NodeProps) => {
+const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -290,12 +293,19 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
     }
   };
 
+  const handleCopy = () => {
+    typedData.duplicateTask();
+  };
+
   return (
     <>
       <div
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`border rounded-md shadow-sm transition-all duration-200 ${getBorderColor()} ${getBgColor()}`}
+        className={cn(
+          `border rounded-md shadow-sm transition-all duration-200 ${getBorderColor()} ${getBgColor()}`,
+          selected && "border-sky-500",
+        )}
         style={{ width: `${NODE_WIDTH_IN_PX}px` }}
         ref={nodeRef}
       >
@@ -314,6 +324,14 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
                 <SettingsIcon className="w-3 h-3" />
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="icon"
+              className="cursor-pointer"
+              onClick={handleCopy}
+            >
+              <Copy className="w-3 h-3" />
+            </Button>
             {runStatus && (
               <TaskDetailsSheet
                 taskSpec={taskSpec}

@@ -6,21 +6,27 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import type {
-  Edge,
-  Node,
-  NodeChange,
-  ReactFlowInstance,
-  ReactFlowProps,
+import {
+  type Edge,
+  type Node,
+  type NodeChange,
+  type OnInit,
+  ReactFlow,
+  type ReactFlowInstance,
+  type ReactFlowProps,
+  type XYPosition,
 } from "@xyflow/react";
-import { type OnInit, ReactFlow } from "@xyflow/react";
-import type { DragEvent } from "react";
-import { useState } from "react";
+import { type DragEvent, useCallback, useEffect, useState } from "react";
 
-import type {
-  ArgumentType,
-  ComponentSpec,
-  TaskOutputArgument,
+import { useSelectionToolbar } from "@/hooks/useSelectionToolbar";
+import { generateUniqueDuplicateStringId } from "@/utils/generateUniqueDuplicateStringId";
+
+import {
+  type ArgumentType,
+  type ComponentSpec,
+  type GraphImplementation,
+  type TaskOutputArgument,
+  type TaskSpec,
 } from "../componentSpec";
 import useComponentSpecToEdges from "../hooks/useComponentSpecToEdges";
 import useComponentSpecToNodes from "../hooks/useComponentSpecToNodes";
@@ -34,6 +40,7 @@ import onDropNode from "../utils/onDropNode";
 import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
 import { updateNodePositions } from "../utils/updateNodePosition";
 import ComponentTaskNode from "./ComponentTaskNode";
+import SelectionToolbar from "./SelectionToolbar";
 
 export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
   implementation: {
@@ -51,6 +58,7 @@ export interface GraphComponentSpecFlowProps
 
 const nodeTypes: Record<string, React.ComponentType<any>> = {
   task: ComponentTaskNode,
+  toolbar: SelectionToolbar,
 };
 
 const GraphComponentSpecFlow = ({
@@ -61,16 +69,17 @@ const GraphComponentSpecFlow = ({
 }: GraphComponentSpecFlowProps) => {
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
+
+  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
+
   const { nodes, onNodesChange } = useComponentSpecToNodes(
     componentSpec,
     setComponentSpec,
   );
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
-  if (!("graph" in componentSpec.implementation)) {
-    return null;
-  }
-  const graphSpec = componentSpec.implementation.graph;
+  const implementation = componentSpec.implementation as GraphImplementation;
+  const graphSpec = implementation.graph;
 
   const setTaskArgument = (
     taskId: string,
@@ -97,6 +106,7 @@ const GraphComponentSpecFlow = ({
       implementation: { graph: newGraphSpec },
     });
   };
+
   const setGraphOutputValue = (
     outputName: string,
     outputValue?: TaskOutputArgument,
@@ -237,20 +247,23 @@ const GraphComponentSpecFlow = ({
     }
   };
 
-  const onElementsRemove = (params: { nodes: Node[]; edges: Edge[] }) => {
-    for (const edge of params.edges) {
-      removeEdge(edge);
-    }
-    for (const node of params.nodes) {
-      removeNode(node);
-    }
+  const onElementsRemove = useCallback(
+    (params: { nodes: Node[]; edges: Edge[] }) => {
+      for (const edge of params.edges) {
+        removeEdge(edge);
+      }
+      for (const node of params.nodes) {
+        removeNode(node);
+      }
 
-    // Save the updated graph spec to the component spec
-    setComponentSpec({
-      ...componentSpec,
-      implementation: { graph: graphSpec },
-    });
-  };
+      // Save the updated graph spec to the component spec
+      setComponentSpec({
+        ...componentSpec,
+        implementation: { graph: graphSpec },
+      });
+    },
+    [graphSpec, componentSpec, setComponentSpec],
+  );
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
     // Process position changes and update component spec
@@ -282,6 +295,203 @@ const GraphComponentSpecFlow = ({
     onNodesChange(changes);
   };
 
+  // todo: move core logic into the hook
+  const duplicateNodes = useCallback(
+    (nodesToDuplicate: Node[]) => {
+      const offset = 10;
+      const DEFAULT_SELECTED = true;
+
+      const newNodes: Node[] = [];
+      const newTasks: Record<string, TaskSpec> = {};
+      const taskIdMap: Record<string, string> = {};
+
+      const existingNodeIds = nodes.map((node) => node.id);
+
+      const implementation =
+        componentSpec.implementation as GraphImplementation;
+      const graphSpec = implementation.graph;
+
+      // Create new nodes and map old task IDs to new task IDs
+      nodesToDuplicate.forEach((node) => {
+        const newNodeId = generateUniqueDuplicateStringId(
+          node.id,
+          existingNodeIds,
+        );
+
+        existingNodeIds.push(newNodeId);
+
+        const newNode = {
+          ...node,
+          id: newNodeId,
+          position: {
+            x: node.position.x + offset,
+            y: node.position.y + offset,
+          },
+          data: { ...node.data },
+          selected: DEFAULT_SELECTED,
+        };
+
+        newNodes.push(newNode);
+
+        if (node.type === "task") {
+          const oldTaskId = nodeIdToTaskId(node.id);
+          const newTaskId = nodeIdToTaskId(newNodeId);
+
+          taskIdMap[oldTaskId] = newTaskId;
+
+          const taskSpec = graphSpec.tasks[oldTaskId];
+          const annotations = taskSpec.annotations || {};
+
+          const updatedAnnotations = setPositionInAnnotations(annotations, {
+            x: node.position.x + offset,
+            y: node.position.y + offset,
+          });
+
+          updatedAnnotations.selected = DEFAULT_SELECTED; // new nodes are selected by default
+
+          const newTaskSpec = {
+            ...taskSpec,
+            annotations: updatedAnnotations,
+          };
+          newTasks[newTaskId] = newTaskSpec;
+        }
+      });
+
+      // Update arguments to point to correct duplicated node in the new taskspec
+      Object.entries(newTasks).forEach((tasks) => {
+        const [taskId, taskSpec] = tasks;
+
+        if (taskSpec.arguments) {
+          Object.entries(taskSpec.arguments).forEach(([argKey, argument]) => {
+            if (typeof argument !== "string" && "taskOutput" in argument) {
+              const oldTaskId = argument.taskOutput.taskId;
+
+              // Only update the argument if the old task ID is part of the nodes being duplicated
+              if (
+                nodesToDuplicate.some(
+                  (node) => nodeIdToTaskId(node.id) === oldTaskId,
+                )
+              ) {
+                const newTaskId = taskIdMap[oldTaskId];
+
+                if (newTaskId && taskSpec.arguments) {
+                  // Update the taskSpec in the newTasks object
+                  const updatedTaskSpec = {
+                    ...(newTasks[taskId] || taskSpec),
+                    arguments: {
+                      ...(newTasks[taskId]?.arguments || taskSpec.arguments),
+                      [argKey]: {
+                        ...argument,
+                        taskOutput: {
+                          ...argument.taskOutput,
+                          taskId: newTaskId,
+                        },
+                      },
+                    },
+                  };
+                  newTasks[taskId] = updatedTaskSpec;
+                }
+              }
+            }
+          });
+        }
+      });
+
+      // Deselect the original tasks
+      Object.entries(graphSpec.tasks).forEach(([taskId, taskSpec]) => {
+        const annotations = taskSpec.annotations || {};
+        annotations.selected = false;
+        newTasks[taskId] = {
+          ...taskSpec,
+          annotations,
+        };
+      });
+
+      // Update the spec (which will trigger a new render in ReactFlow)
+      const updatedTasks = { ...graphSpec.tasks, ...newTasks };
+      const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
+
+      setComponentSpec({
+        ...componentSpec,
+        implementation: { graph: updatedGraphSpec },
+      });
+    },
+    [componentSpec, setComponentSpec],
+  );
+
+  const { isToolbarVisible, showToolbar, hideToolbar, updateToolbarPosition } =
+    useSelectionToolbar({
+      reactFlowInstance,
+      selectedNodes,
+      onDeleteNodes: onElementsRemove,
+      onDuplicateNodes: duplicateNodes,
+    });
+
+  const handleSelectionChange = useCallback(
+    (nodes: Node[]) => {
+      setSelectedNodes(nodes);
+
+      if (nodes.length < 1) {
+        hideToolbar();
+      }
+    },
+    [hideToolbar],
+  );
+
+  const handleSelectionEnd = useCallback(
+    (nodes: Node[]) => {
+      if (nodes.length > 0) {
+        showToolbar();
+      } else {
+        hideToolbar();
+      }
+    },
+    [showToolbar, hideToolbar],
+  );
+
+  const handleSelectionDrag = useCallback(
+    (nodes: Node[]) => {
+      if (!isToolbarVisible) return;
+
+      // If the toolbar is visible update its position so it stays attached to the selection box
+      updateToolbarPosition(nodes);
+    },
+    [isToolbarVisible, updateToolbarPosition],
+  );
+
+  useEffect(() => {
+    // Sync ReactFlow "selection" changes with the componentSpec so we can correctly auto-select new duplicated tasks
+    if (!graphSpec) return;
+
+    const updatedTasks = { ...graphSpec.tasks };
+
+    Object.entries(updatedTasks).forEach(([taskId, taskSpec]) => {
+      const annotations = taskSpec.annotations || {};
+      annotations.selected = selectedNodes.some(
+        (node) => nodeIdToTaskId(node.id) === taskId,
+      );
+      updatedTasks[taskId] = {
+        ...taskSpec,
+        annotations,
+      };
+    });
+
+    const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
+
+    if (JSON.stringify(updatedGraphSpec) === JSON.stringify(graphSpec)) {
+      return;
+    }
+
+    setComponentSpec({
+      ...componentSpec,
+      implementation: { graph: updatedGraphSpec },
+    });
+  }, [selectedNodes, graphSpec, componentSpec, setComponentSpec]);
+
+  if (!("graph" in componentSpec.implementation)) {
+    return null;
+  }
+
   return (
     <ReactFlow
       {...rest}
@@ -301,6 +511,9 @@ const GraphComponentSpecFlow = ({
       multiSelectionKeyCode={
         rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
       }
+      onSelectionChange={(params) => handleSelectionChange(params.nodes)}
+      onSelectionEnd={() => handleSelectionEnd(selectedNodes)}
+      onSelectionDrag={(_, nodes) => handleSelectionDrag(nodes)}
     >
       {children}
     </ReactFlow>
@@ -314,3 +527,13 @@ const isAppleOS = () =>
   window.navigator.platform.startsWith("iPhone") ||
   window.navigator.platform.startsWith("iPad") ||
   window.navigator.platform.startsWith("iPod");
+
+// todo: copied over from useComponentSPecToNode - can be moved to a shared location
+const setPositionInAnnotations = (
+  annotations: Record<string, unknown>,
+  position: XYPosition,
+): Record<string, unknown> => {
+  const updatedAnnotations = { ...annotations };
+  updatedAnnotations["editor.position"] = JSON.stringify(position);
+  return updatedAnnotations;
+};

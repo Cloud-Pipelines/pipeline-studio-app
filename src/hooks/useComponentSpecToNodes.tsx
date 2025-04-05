@@ -6,6 +6,8 @@ import {
 } from "@xyflow/react";
 import { useEffect } from "react";
 
+import { generateUniqueDuplicateStringId } from "@/utils/generateUniqueDuplicateStringId";
+
 import type { ArgumentType, ComponentSpec, GraphSpec } from "../componentSpec";
 import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
 
@@ -74,9 +76,56 @@ const getTaskNodes = (
               implementation: { graph: newGraphSpec },
             });
           },
+          duplicateTask: (selected = true) => {
+            const existingTaskIds = Object.keys(graphSpec.tasks);
+            const newTaskId = generateUniqueDuplicateStringId(
+              taskId,
+              existingTaskIds,
+            );
+            const offset = 10;
+            const annotations = taskSpec.annotations || {};
+
+            const updatedTaskSpec = {
+              ...taskSpec,
+              annotations: annotations,
+            };
+
+            const newAnnotations = setPositionInAnnotations(annotations, {
+              x: position.x + offset,
+              y: position.y + offset,
+            });
+
+            // deselect all tasks
+            Object.values(graphSpec.tasks).forEach((task) => {
+              task.annotations = {
+                ...task.annotations,
+                selected: false,
+              };
+            });
+            newAnnotations.selected = selected; // new duplicate tasks are selected by default
+
+            const newTaskSpec = {
+              ...taskSpec,
+              annotations: { ...newAnnotations },
+            };
+
+            const newGraphSpec = {
+              ...graphSpec,
+              tasks: {
+                ...graphSpec.tasks,
+                [taskId]: updatedTaskSpec,
+                [newTaskId]: newTaskSpec,
+              },
+            };
+            setComponentSpec({
+              ...componentSpec,
+              implementation: { graph: newGraphSpec },
+            });
+          },
         },
         position: position,
         type: "task",
+        selected: taskSpec.annotations?.selected as boolean,
       };
     },
   );
@@ -127,6 +176,15 @@ const extractPositionFromAnnotations = (
   } catch {
     return defaultPosition;
   }
+};
+
+const setPositionInAnnotations = (
+  annotations: Record<string, unknown>,
+  position: XYPosition,
+): Record<string, unknown> => {
+  const updatedAnnotations = { ...annotations };
+  updatedAnnotations["editor.position"] = JSON.stringify(position);
+  return updatedAnnotations;
 };
 
 export default useComponentSpecToNodes;
