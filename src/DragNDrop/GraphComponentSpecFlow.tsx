@@ -16,7 +16,13 @@ import {
   type ReactFlowProps,
   type XYPosition,
 } from "@xyflow/react";
-import { type DragEvent, useCallback, useEffect, useState } from "react";
+import {
+  type DragEvent,
+  type MouseEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { useSelectionToolbar } from "@/hooks/useSelectionToolbar";
 import { generateUniqueDuplicateStringId } from "@/utils/generateUniqueDuplicateStringId";
@@ -435,35 +441,41 @@ const GraphComponentSpecFlow = ({
     });
 
   const handleSelectionChange = useCallback(
-    (nodes: Node[]) => {
+    (params: { nodes: Node[]; edges: Edge[] }) => {
+      const nodes = params.nodes;
+
       setSelectedNodes(nodes);
 
       if (nodes.length < 1) {
         hideToolbar();
       }
     },
-    [hideToolbar]
+    [hideToolbar, reactFlowInstance]
   );
 
-  const handleSelectionEnd = useCallback(
-    (nodes: Node[]) => {
-      if (nodes.length > 0) {
-        showToolbar();
-      } else {
-        hideToolbar();
-      }
-    },
-    [showToolbar, hideToolbar]
-  );
+  const handleSelectionEnd = useCallback(() => {
+    if (selectedNodes.length > 0) {
+      showToolbar();
+    } else {
+      hideToolbar();
+    }
+  }, [selectedNodes, showToolbar, hideToolbar]);
 
   const handleSelectionDrag = useCallback(
-    (nodes: Node[]) => {
+    (_e: MouseEvent, nodes: Node[]) => {
       if (!isToolbarVisible) return;
 
       // If the toolbar is visible update its position so it stays attached to the selection box
       updateToolbarPosition(nodes);
     },
     [isToolbarVisible, updateToolbarPosition]
+  );
+
+  const handleSelectionDragEnd = useCallback(
+    (_e: MouseEvent, nodes: Node[]) => {
+      setSelectedNodes(nodes);
+    },
+    []
   );
 
   useEffect(() => {
@@ -518,9 +530,10 @@ const GraphComponentSpecFlow = ({
       multiSelectionKeyCode={
         rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
       }
-      onSelectionChange={(params) => handleSelectionChange(params.nodes)}
-      onSelectionEnd={() => handleSelectionEnd(selectedNodes)}
-      onSelectionDrag={(_, nodes) => handleSelectionDrag(nodes)}
+      onSelectionChange={handleSelectionChange}
+      onSelectionEnd={handleSelectionEnd}
+      onSelectionDrag={handleSelectionDrag}
+      onSelectionDragStop={handleSelectionDragEnd}
     >
       {children}
     </ReactFlow>
@@ -535,7 +548,7 @@ const isAppleOS = () =>
   window.navigator.platform.startsWith("iPad") ||
   window.navigator.platform.startsWith("iPod");
 
-// todo: copied over from useComponentSPecToNode - can be moved to a shared location
+// todo: copied over from useComponentSpecToNode - can be moved to a shared location
 const setPositionInAnnotations = (
   annotations: Record<string, unknown>,
   position: XYPosition

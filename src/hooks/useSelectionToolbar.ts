@@ -52,20 +52,6 @@ export function useSelectionToolbar({
       const bounds = getNodesBounds(nodes);
       if (!bounds) return null;
 
-      /*
-       * 'getNodesBounds' from useReactFlow currently appears to be bugged and is producing the coordinates of the previous node position, not the current node position.
-       * As a workaround this method calculates the selection origin manually (min x and min y position of all selected nodes).
-       */
-      const getMinCoordinates = (nodes: Node[]) => {
-        return nodes.reduce(
-          (min, node) => ({
-            x: Math.min(min.x, node.position.x),
-            y: Math.min(min.y, node.position.y),
-          }),
-          { x: Infinity, y: Infinity }
-        );
-      };
-
       const minCoordinates = getMinCoordinates(nodes);
 
       bounds.x = minCoordinates.x;
@@ -81,7 +67,7 @@ export function useSelectionToolbar({
         position,
       }));
     },
-    [reactFlowInstance, selectedNodes, getNodesBounds]
+    [reactFlowInstance, getNodesBounds]
   );
 
   useEffect(() => {
@@ -103,8 +89,8 @@ export function useSelectionToolbar({
       if (bounds) {
         // Render the toolbar offscreen so we can measure its dimensions before moving it to the correct position
         const initialPosition = {
-          x: -1000 + bounds.x + bounds.width,
-          y: -1000 + bounds.y,
+          x: -1000 + Math.abs(bounds.x + bounds.width),
+          y: -1000 + Math.abs(bounds.y),
         };
 
         setToolbarNode({
@@ -138,3 +124,17 @@ export function useSelectionToolbar({
     updateToolbarPosition,
   };
 }
+
+/*
+ * 'getNodesBounds' from useReactFlow currently appears to be bugged and is producing the coordinates of the previous node position, not the current node position.
+ * As a workaround this method calculates the selection origin manually (min x and min y position of all selected nodes).
+ */
+const getMinCoordinates = (nodes: Node[]) => {
+  return nodes.reduce(
+    (min, node) => ({
+      x: Math.min(min.x, node.position.x),
+      y: Math.min(min.y, node.position.y),
+    }),
+    { x: Infinity, y: Infinity }
+  );
+};
