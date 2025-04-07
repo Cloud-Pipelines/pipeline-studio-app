@@ -17,6 +17,7 @@ export function useSelectionToolbar({
   onDuplicateNodes: (nodes: Node[]) => void;
 }) {
   const { getNodesBounds } = useReactFlow();
+
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
   const [toolbarNode, setToolbarNode] = useState<{
     id: string;
@@ -51,6 +52,25 @@ export function useSelectionToolbar({
       const bounds = getNodesBounds(nodes);
       if (!bounds) return null;
 
+      /*
+       * 'getNodesBounds' from useReactFlow currently appears to be bugged and is producing the coordinates of the previous node position, not the current node position.
+       * As a workaround this method calculates the selection origin manually (min x and min y position of all selected nodes).
+       */
+      const getMinCoordinates = (nodes: Node[]) => {
+        return nodes.reduce(
+          (min, node) => ({
+            x: Math.min(min.x, node.position.x),
+            y: Math.min(min.y, node.position.y),
+          }),
+          { x: Infinity, y: Infinity }
+        );
+      };
+
+      const minCoordinates = getMinCoordinates(nodes);
+
+      bounds.x = minCoordinates.x;
+      bounds.y = minCoordinates.y;
+
       const position = {
         x: bounds.x + bounds.width - (size.width ?? 0),
         y: bounds.y - (size.height ?? 0),
@@ -61,7 +81,7 @@ export function useSelectionToolbar({
         position,
       }));
     },
-    [reactFlowInstance, getNodesBounds]
+    [reactFlowInstance, selectedNodes, getNodesBounds]
   );
 
   useEffect(() => {
@@ -81,6 +101,7 @@ export function useSelectionToolbar({
     if (isToolbarVisible) {
       const bounds = getNodesBounds(selectedNodes);
       if (bounds) {
+        // Render the toolbar offscreen so we can measure its dimensions before moving it to the correct position
         const initialPosition = {
           x: -1000 + bounds.x + bounds.width,
           y: -1000 + bounds.y,
@@ -97,6 +118,7 @@ export function useSelectionToolbar({
           },
         });
 
+        // A timeout is needed to avoid a race condition between rendering the toolbar to measure it and rendering it in its final position
         setTimeout(() => updateToolbarPosition(selectedNodes), 0);
       }
     }

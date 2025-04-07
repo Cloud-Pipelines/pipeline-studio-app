@@ -460,8 +460,6 @@ const GraphComponentSpecFlow = ({
     (nodes: Node[]) => {
       if (!isToolbarVisible) return;
 
-      console.log("moving...");
-
       // If the toolbar is visible update its position so it stays attached to the selection box
       updateToolbarPosition(nodes);
     },
