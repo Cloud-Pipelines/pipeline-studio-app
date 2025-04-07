@@ -13,6 +13,8 @@ describe("useComponentSpecToNodes", () => {
     outputs: [],
   });
 
+  const onDelete = vi.fn();
+
   const mockSetComponentSpec = vi.fn();
 
   beforeEach(() => {
@@ -25,7 +27,7 @@ describe("useComponentSpecToNodes", () => {
     });
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
 
     expect(result.current.nodes).toEqual([]);
@@ -51,7 +53,7 @@ describe("useComponentSpecToNodes", () => {
     }
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
 
     expect(result.current.nodes).toContainEqual(
@@ -81,7 +83,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
 
     expect(result.current.nodes).toContainEqual({
@@ -108,7 +110,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
 
     expect(result.current.nodes).toContainEqual({
@@ -137,7 +139,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
     const defaultPosition = { x: 0, y: 0 };
 
@@ -175,7 +177,7 @@ describe("useComponentSpecToNodes", () => {
     });
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
     const taskNode = result.current.nodes.find(
       (node) => node.id === "task_task1",

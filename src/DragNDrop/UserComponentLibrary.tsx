@@ -166,8 +166,10 @@ const UserComponentLibrary = () => {
               "Drag and drop component.yaml files or click to select files"}
           {Array.from(componentFiles.entries()).map(([fileName, fileEntry]) => (
             <div key={fileName} className="draggable-component">
-              <DraggableComponent componentReference={fileEntry.componentRef} />
-              <Button onClick={handleDelete(fileName)}>Delete</Button>
+              <DraggableComponent
+                componentReference={fileEntry.componentRef}
+                onDelete={handleDelete(fileName)}
+              />
             </div>
           ))}
         </div>
