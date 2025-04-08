@@ -5,6 +5,19 @@ import type { SelectionToolbarProps } from "@/DragNDrop/SelectionToolbar";
 
 const SELECTION_TOOLBAR_ID = "selection-toolbar";
 
+const FALSE_POSITION = {
+  x: -1000,
+  y: -1000,
+};
+
+const TOOLBAR_NODE_BASE = {
+  id: SELECTION_TOOLBAR_ID,
+  type: "toolbar",
+  position: FALSE_POSITION,
+  zIndex: 1200,
+  data: {},
+};
+
 export function useSelectionToolbar({
   reactFlowInstance,
   selectedNodes,
@@ -19,16 +32,120 @@ export function useSelectionToolbar({
   const { getNodesBounds } = useReactFlow();
 
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
-  const [toolbarNode, setToolbarNode] = useState<{
-    id: string;
-    type: string;
-    position: { x: number; y: number };
-    zIndex: number;
-    data: SelectionToolbarProps;
-  } | null>(null);
+  const [toolbarSize, setToolbarSize] = useState<{
+    width: number;
+    height: number;
+  }>({
+    width: 0,
+    height: 0,
+  });
 
-  const showToolbar = useCallback(() => setIsToolbarVisible(true), []);
-  const hideToolbar = useCallback(() => setIsToolbarVisible(false), []);
+  const addToolbarNode = useCallback(
+    (position: { x: number; y: number }) => {
+      if (!reactFlowInstance) {
+        console.log("No reactFlowInstance found");
+        return;
+      }
+
+      const toolbar = getToolbarData();
+
+      console.log("Adding toolbar node at position:", position);
+
+      const newNode = {
+        ...toolbar,
+        position,
+      };
+
+      reactFlowInstance.addNodes([newNode]);
+    },
+    [reactFlowInstance]
+  );
+
+  const updateToolbarNode = useCallback(
+    (position: { x: number; y: number }) => {
+      if (!reactFlowInstance) {
+        console.log("No reactFlowInstance found");
+        return;
+      }
+
+      const toolbar = getToolbarData();
+
+      const updatedNode = {
+        ...toolbar,
+        position,
+      };
+
+      reactFlowInstance.updateNode(SELECTION_TOOLBAR_ID, updatedNode);
+    },
+    [reactFlowInstance]
+  );
+
+  const removeToolbarNode = useCallback(() => {
+    if (!reactFlowInstance) {
+      console.log("No reactFlowInstance found");
+      return;
+    }
+
+    console.log("Removing toolbar node");
+    reactFlowInstance.deleteElements({
+      nodes: [{ id: SELECTION_TOOLBAR_ID }],
+    });
+  }, [reactFlowInstance]);
+
+  const addOrUpdateToolbarNode = useCallback(
+    (position: { x: number; y: number }) => {
+      // to be removed
+      if (position.x === -1000 && position.y === -1000) {
+        console.log("Toolbar position is offscreen");
+        return;
+      }
+
+      const existingNode = reactFlowInstance?.getNode(SELECTION_TOOLBAR_ID);
+
+      if (existingNode) {
+        console.log("Toolbar node exists, updating it");
+        updateToolbarNode(position);
+      } else {
+        console.log("Toolbar node does not exist, adding it");
+        addToolbarNode(position);
+      }
+    },
+    [reactFlowInstance, updateToolbarNode, addToolbarNode]
+  );
+
+  const updateToolbarPosition = useCallback(
+    (nodes: Node[]) => {
+      const bounds = getNodesBounds(nodes);
+      if (!bounds) return null;
+
+      const minCoordinates = getMinCoordinates(nodes);
+
+      bounds.x = minCoordinates.x;
+      bounds.y = minCoordinates.y;
+
+      const position = {
+        x: bounds.x + bounds.width - (toolbarSize.width ?? 0),
+        y: bounds.y - (toolbarSize.height ?? 0),
+      };
+
+      console.log("updateToolbarPosition", position);
+
+      addOrUpdateToolbarNode(position);
+    },
+    [toolbarSize, getNodesBounds, addOrUpdateToolbarNode]
+  );
+
+  const showToolbar = useCallback(() => {
+    console.log("unhidden");
+    setIsToolbarVisible(true);
+    updateToolbarPosition(selectedNodes);
+  }, [selectedNodes, updateToolbarPosition]);
+
+  const hideToolbar = useCallback(() => {
+    console.log("hiding");
+    setIsToolbarVisible(false);
+    removeToolbarNode();
+  }, [removeToolbarNode]);
 
   const handleDelete = useCallback(() => {
     onDeleteNodes(selectedNodes);
@@ -40,82 +157,67 @@ export function useSelectionToolbar({
     hideToolbar();
   }, [selectedNodes, onDuplicateNodes, hideToolbar]);
 
-  const updateToolbarPosition = useCallback(
-    (nodes: Node[]) => {
-      if (!reactFlowInstance) return null;
+  const getToolbarData = useCallback(() => {
+    return {
+      ...TOOLBAR_NODE_BASE,
+      data: {
+        onDelete: handleDelete,
+        onDuplicate: handleDuplicate,
+      } as SelectionToolbarProps,
+    };
+  }, [handleDelete, handleDuplicate]);
 
-      const toolbar = reactFlowInstance.getNode(SELECTION_TOOLBAR_ID);
-      if (!toolbar?.measured) return null;
-
-      const size = toolbar.measured;
-
-      const bounds = getNodesBounds(nodes);
-      if (!bounds) return null;
-
-      const minCoordinates = getMinCoordinates(nodes);
-
-      bounds.x = minCoordinates.x;
-      bounds.y = minCoordinates.y;
-
-      const position = {
-        x: bounds.x + bounds.width - (size.width ?? 0),
-        y: bounds.y - (size.height ?? 0),
-      };
-
-      setToolbarNode((prev) => ({
-        ...prev!,
-        position,
-      }));
-    },
-    [reactFlowInstance, getNodesBounds]
-  );
-
+  // Mount the toolbar on initial load and record its size
   useEffect(() => {
-    if (reactFlowInstance && toolbarNode) {
-      reactFlowInstance.setNodes((nodes: Node[]) => {
-        const filteredNodes = nodes.filter(
-          (node) => node.id !== SELECTION_TOOLBAR_ID
-        );
-        return isToolbarVisible
-          ? [...filteredNodes, toolbarNode]
-          : filteredNodes;
-      });
-    }
-  }, [reactFlowInstance, toolbarNode, isToolbarVisible]);
+    console.log("Mounting toolbar");
+    if (!reactFlowInstance) return;
 
-  useEffect(() => {
-    if (isToolbarVisible) {
-      const bounds = getNodesBounds(selectedNodes);
-      if (bounds) {
-        // Render the toolbar offscreen so we can measure its dimensions before moving it to the correct position
-        const initialPosition = {
-          x: -1000 + Math.abs(bounds.x + bounds.width),
-          y: -1000 + Math.abs(bounds.y),
+    console.log("ReactFlow found");
+
+    reactFlowInstance.addNodes([TOOLBAR_NODE_BASE]);
+
+    // Wait to ensure the node has been rendered
+    setTimeout(() => {
+      const mountedNode = reactFlowInstance.getNode(SELECTION_TOOLBAR_ID);
+      console.log("mountedNode", mountedNode);
+
+      if (mountedNode) {
+        const size = {
+          width: mountedNode.measured?.width ?? 0,
+          height: mountedNode.measured?.height ?? 0,
         };
 
-        setToolbarNode({
-          id: SELECTION_TOOLBAR_ID,
-          type: "toolbar",
-          position: initialPosition,
-          zIndex: 1200,
-          data: {
-            onDelete: handleDelete,
-            onDuplicate: handleDuplicate,
-          },
-        });
+        console.log("toolbar size", size);
 
-        // A timeout is needed to avoid a race condition between rendering the toolbar to measure it and rendering it in its final position
-        setTimeout(() => updateToolbarPosition(selectedNodes), 0);
+        setToolbarSize(size);
       }
+
+      reactFlowInstance.deleteElements({
+        nodes: [{ id: SELECTION_TOOLBAR_ID }],
+      });
+
+      console.log("initialization complete");
+    }, 1000);
+  }, [reactFlowInstance]);
+
+  useEffect(() => {
+    console.log("visiblity changed to", isToolbarVisible);
+  }, [isToolbarVisible]);
+
+  useEffect(() => {
+    if (reactFlowInstance) {
+      setTimeout(() => {
+        console.log(
+          "Toolbar in ReactFlow:",
+          reactFlowInstance.getNode(SELECTION_TOOLBAR_ID)?.position // why doesn't the node exist after it has been made?
+        );
+      }, 1000);
+    } else {
+      console.log("useeffect - No reactFlowInstance found");
     }
-  }, [
-    isToolbarVisible,
-    selectedNodes,
-    getNodesBounds,
-    handleDelete,
-    handleDuplicate,
-    updateToolbarPosition,
-  ]);
+
+    console.log(isToolbarVisible);
+  }, [reactFlowInstance, selectedNodes, isToolbarVisible]);
 
   return {
     showToolbar,

@@ -444,13 +444,15 @@ const GraphComponentSpecFlow = ({
     (params: { nodes: Node[]; edges: Edge[] }) => {
       const nodes = params.nodes;
 
+      console.log("change", nodes[0]?.position);
+
       setSelectedNodes(nodes);
 
       if (nodes.length < 1) {
         hideToolbar();
       }
     },
-    [hideToolbar, reactFlowInstance]
+    [hideToolbar]
   );
 
   const handleSelectionEnd = useCallback(() => {
@@ -473,7 +475,8 @@ const GraphComponentSpecFlow = ({
 
   const handleSelectionDragEnd = useCallback(
     (_e: MouseEvent, nodes: Node[]) => {
-      setSelectedNodes(nodes);
+      // console.log("drag end", nodes[0]?.position);
+      // setSelectedNodes(nodes);
     },
     []
   );
