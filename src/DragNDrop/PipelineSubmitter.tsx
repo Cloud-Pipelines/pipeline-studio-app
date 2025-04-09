@@ -9,12 +9,12 @@
 import { useEffect, useState } from "react";
 
 import type { ArgumentInput } from "@/components/ArgumentsEditor";
+import OasisSubmitter from "@/components/OasisSubmitter";
 
 import { ArgumentsEditor } from "../components/ArgumentsEditor/ArgumentsEditor";
 import type { ComponentSpec } from "../componentSpec";
 import GoogleCloudSubmitter from "./GoogleCloud";
 import KubeflowPipelinesSubmitter from "./KubeflowPipelinesSubmitter";
-import ShopifyCloudSubmitter from "./ShopifyCloud";
 
 interface PipelineSubmitterProps {
   componentSpec?: ComponentSpec;
@@ -71,7 +71,7 @@ const PipelineSubmitter = ({
           />
         </fieldset>
       )}
-      <ShopifyCloudSubmitter componentSpec={componentSpec} />
+      <OasisSubmitter componentSpec={componentSpec} />
       <details
         style={{
           border: "1px solid #aaa",

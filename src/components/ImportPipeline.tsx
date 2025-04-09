@@ -1,35 +1,71 @@
 import { useNavigate } from "@tanstack/react-router";
-import type { ChangeEvent } from "react";
+import { Loader2 } from "lucide-react";
+import type { ChangeEvent, ReactElement } from "react";
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { EDITOR_PATH } from "@/utils/constants";
+import { EDITOR_PATH } from "@/router";
 import {
   importPipelineFromFile,
   importPipelineFromYaml,
+  type ImportResult,
 } from "@/utils/importPipeline";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
-export default function ImportPipeline() {
+interface ImportPipelineProps {
+  triggerComponent?: ReactElement<{ onClick?: () => void }>;
+}
+
+const ImportPipeline = ({ triggerComponent }: ImportPipelineProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [newPipelineName, setNewPipelineName] = useState<string | null>(null);
   const [yamlContent, setYamlContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  const navigateToPipeline = () => {
+    if (newPipelineName) {
+      setIsOpen(false);
+      setNewPipelineName(null);
+      setIsLoading(false);
+      setError(null);
+      setSuccessMessage(null);
+      navigate({ to: `${EDITOR_PATH}/${encodeURIComponent(newPipelineName)}` });
+    }
+  };
+
+  const handleImportResult = (result: ImportResult) => {
+    if (result.successful) {
+      if (result.errorMessage?.includes("was renamed")) {
+        setSuccessMessage(result.errorMessage);
+      } else if (result.successful) {
+        setSuccessMessage(`Pipeline "${result.name}" imported successfully.`);
+      }
+      setNewPipelineName(result.name);
+    } else {
+      throw new Error(
+        result.errorMessage ||
+          "Failed to import pipeline. Please check that the YAML is valid.",
+      );
+    }
+  };
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -37,35 +73,11 @@ export default function ImportPipeline() {
 
     setIsLoading(true);
     setError(null);
-    setSuccess(null);
+    setSuccessMessage(null);
 
     try {
       const result = await importPipelineFromFile(files[0]);
-
-      if (result.successful) {
-        if (
-          result.errorMessage &&
-          result.errorMessage.includes("was renamed")
-        ) {
-          setSuccess(result.errorMessage);
-          setTimeout(() => {
-            setIsOpen(false);
-            navigate({
-              to: `${EDITOR_PATH}/${encodeURIComponent(result.name)}`,
-            });
-          }, 2000);
-        } else {
-          setIsOpen(false);
-          navigate({
-            to: `${EDITOR_PATH}/${encodeURIComponent(result.name)}`,
-          });
-        }
-      } else {
-        setError(
-          result.errorMessage ||
-            "Failed to import pipeline. Please check that the file is a valid pipeline YAML.",
-        );
-      }
+      handleImportResult(result);
     } catch (err) {
       setError(
         (err as Error).message ||
@@ -87,35 +99,11 @@ export default function ImportPipeline() {
 
     setIsLoading(true);
     setError(null);
-    setSuccess(null);
+    setSuccessMessage(null);
 
     try {
       const result = await importPipelineFromYaml(yamlContent);
-
-      if (result.successful) {
-        if (
-          result.errorMessage &&
-          result.errorMessage.includes("was renamed")
-        ) {
-          setSuccess(result.errorMessage);
-          setTimeout(() => {
-            setIsOpen(false);
-            navigate({
-              to: `${EDITOR_PATH}/${encodeURIComponent(result.name)}`,
-            });
-          }, 2000);
-        } else {
-          setIsOpen(false);
-          navigate({
-            to: `${EDITOR_PATH}/${encodeURIComponent(result.name)}`,
-          });
-        }
-      } else {
-        setError(
-          result.errorMessage ||
-            "Failed to import pipeline. Please check that the YAML is valid.",
-        );
-      }
+      handleImportResult(result);
     } catch (err) {
       setError(
         (err as Error).message ||
@@ -126,30 +114,25 @@ export default function ImportPipeline() {
     }
   };
 
-  const openDialog = () => {
-    setIsOpen(true);
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
     setError(null);
-    setSuccess(null);
+    setSuccessMessage(null);
     setYamlContent("");
   };
 
-  const closeDialog = () => {
-    setIsOpen(false);
-    setError(null);
-    setSuccess(null);
-    setYamlContent("");
-  };
+  const ButtonComponent = triggerComponent ? (
+    triggerComponent
+  ) : (
+    <Button variant="secondary" className="cursor-pointer">
+      Import Pipeline
+    </Button>
+  );
 
   return (
     <>
-      <Button
-        onClick={openDialog}
-        variant="secondary"
-        className="cursor-pointer"
-      >
-        Import Pipeline
-      </Button>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+        <DialogTrigger asChild>{ButtonComponent}</DialogTrigger>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Import Pipeline</DialogTitle>
@@ -159,62 +142,66 @@ export default function ImportPipeline() {
               be automatically generated.
             </DialogDescription>
           </DialogHeader>
-          <Tabs defaultValue="file" className="w-full gap-4">
-            <TabsList>
-              <TabsTrigger value="file">Import from File</TabsTrigger>
-              <TabsTrigger value="paste">Paste YAML</TabsTrigger>
-            </TabsList>
-            <TabsContent value="file">
-              <div className="grid w-full items-center gap-1.5">
-                <Label
-                  htmlFor="pipeline-file"
-                  className="text-sm cursor-pointer"
-                >
-                  Pipeline YAML File. Drag and drop a file here or click to
-                  upload.
-                </Label>
-                <Input
-                  ref={fileInputRef}
-                  id="pipeline-file"
-                  type="file"
-                  accept=".yaml,.yml"
-                  onChange={handleFileChange}
-                  disabled={isLoading}
-                  className="cursor-pointer"
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="paste">
-              <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="yaml-content">Pipeline YAML Content</Label>
-                <Textarea
-                  id="yaml-content"
-                  placeholder="Paste your YAML content here..."
-                  value={yamlContent}
-                  onChange={(e) => setYamlContent(e.target.value)}
-                  rows={25}
-                  disabled={isLoading}
-                  className="font-mono text-sm resize-none max-h-[300px]"
-                />
-                <Button
-                  onClick={handlePasteImport}
-                  disabled={isLoading || !yamlContent.trim()}
-                >
-                  {isLoading ? "Importing..." : "Import"}
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
+          {isLoading && (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="w-4 h-4 animate-spin" />
+            </div>
+          )}
+          {!successMessage && !isLoading && (
+            <Tabs defaultValue="file" className="w-full gap-4">
+              <TabsList>
+                <TabsTrigger value="file">Import from File</TabsTrigger>
+                <TabsTrigger value="paste">Paste YAML</TabsTrigger>
+              </TabsList>
+              <TabsContent value="file">
+                <div className="grid w-full items-center gap-1.5">
+                  <Label
+                    htmlFor="pipeline-file"
+                    className="text-sm cursor-pointer"
+                  >
+                    Pipeline YAML File. Drag and drop a file here or click to
+                    upload.
+                  </Label>
+                  <Input
+                    ref={fileInputRef}
+                    id="pipeline-file"
+                    type="file"
+                    accept=".yaml,.yml"
+                    onChange={handleFileChange}
+                    disabled={isLoading}
+                    className="cursor-pointer"
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="paste">
+                <div className="grid w-full items-center gap-1.5">
+                  <Label htmlFor="yaml-content">Pipeline YAML Content</Label>
+                  <Textarea
+                    id="yaml-content"
+                    placeholder="Paste your YAML content here..."
+                    value={yamlContent}
+                    onChange={(e) => setYamlContent(e.target.value)}
+                    rows={25}
+                    disabled={isLoading}
+                    className="font-mono text-sm resize-none max-h-[300px]"
+                  />
+                  <Button
+                    onClick={handlePasteImport}
+                    disabled={isLoading || !yamlContent.trim()}
+                  >
+                    {isLoading ? "Importing..." : "Import"}
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
 
-          {success && (
+          {successMessage && (
             <div className="border border-green-200 bg-green-50 p-3 rounded-md mt-4">
               <h4 className="text-green-600 font-medium mb-1">
                 Import Successful
               </h4>
-              <p className="text-green-500 text-sm">{success}</p>
-              <p className="text-green-600 text-sm mt-1">
-                You&apos;ll be redirected to the editor in a moment...
-              </p>
+              <p className="text-green-500 text-sm">{successMessage}</p>
             </div>
           )}
 
@@ -228,16 +215,25 @@ export default function ImportPipeline() {
           )}
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={closeDialog}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                {successMessage ? "Close" : "Cancel"}
+              </Button>
+            </DialogClose>
+            {successMessage && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={navigateToPipeline}
+              >
+                Go to Pipeline
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
   );
-}
+};
+
+export default ImportPipeline;
