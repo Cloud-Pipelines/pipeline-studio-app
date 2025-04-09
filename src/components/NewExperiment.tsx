@@ -3,6 +3,10 @@ import { generate } from "random-words";
 
 import { Button } from "@/components/ui/button";
 import { writeComponentToFileListFromText } from "@/componentStore";
+<<<<<<< HEAD
+=======
+import { replaceLocalStorageWithExperimentYaml } from "@/DragNDrop/PipelineAutoSaver";
+>>>>>>> c77e4a5 (Adds new side menu for editor (#165))
 import { EDITOR_PATH } from "@/router";
 import {
   defaultPipelineYamlWithName,

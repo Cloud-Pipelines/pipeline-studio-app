@@ -1,13 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@xyflow/react";
-import {
-  ChevronDown,
-  Component,
-  Download,
-  Import,
-  Save,
-  SaveAll,
-} from "lucide-react";
+import { ChevronDown, Download, Import, Save, SaveAll } from "lucide-react";
 import { useMemo } from "react";
 
 import {
@@ -153,19 +146,6 @@ const SettingsAndActions = ({ componentSpec }: SettingsAndActionsProps) => {
                     </SidebarMenuButton>
                   }
                 />
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-start px-2!"
-                  >
-                    <Component />
-                    <span className="font-normal">Import Component (soon)</span>
-                  </Button>
-                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
