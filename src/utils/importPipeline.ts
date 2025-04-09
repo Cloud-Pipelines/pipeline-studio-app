@@ -10,7 +10,7 @@ import {
 
 import { USER_PIPELINES_LIST_NAME } from "./constants";
 
-interface ImportResult {
+export interface ImportResult {
   name: string;
   overwritten: boolean;
   successful: boolean;

@@ -64,7 +64,6 @@ export const PipelineNameDialog = ({
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
       setError(null);
-      setName(initialName);
     }
     onOpenChange?.(open);
   };
