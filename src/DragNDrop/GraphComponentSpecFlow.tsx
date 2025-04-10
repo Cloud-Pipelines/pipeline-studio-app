@@ -17,7 +17,7 @@ import { type OnInit, ReactFlow } from "@xyflow/react";
 import type { ComponentType, DragEvent } from "react";
 import { useCallback, useState } from "react";
 
-import { ConfirmationDialog } from "@/components/custom/ConfirmationDialog";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 
 import type { ArgumentType, TaskOutputArgument } from "../componentSpec";
 import useComponentSpecToEdges from "../hooks/useComponentSpecToEdges";
@@ -398,7 +398,9 @@ const GraphComponentSpecFlow = ({
       {nodesToDelete && (
         <ConfirmationDialog
           title={isDeletingMultipleNodes ? multiDeleteTitle : singleDeleteTitle}
-          message={isDeletingMultipleNodes ? multiDeleteDesc : singleDeleteDesc}
+          description={
+            isDeletingMultipleNodes ? multiDeleteDesc : singleDeleteDesc
+          }
           isOpen={isConfirmationDialogOpen}
           onConfirm={() => confirmationDialogHandlers?.onConfirm()}
           onCancel={() => confirmationDialogHandlers?.onCancel()}

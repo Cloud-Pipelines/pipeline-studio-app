@@ -9,9 +9,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import type { ComponentSpec } from "@/componentSpec";
 import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import { cn } from "@/lib/utils";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
 import RunListItem from "../../PipelineRow/RunListItem";
 import {
@@ -21,11 +21,8 @@ import {
 } from "../../ui/collapsible";
 import { ScrollArea } from "../../ui/scroll-area";
 
-interface RunsAndSubmissionProps {
-  componentSpec: ComponentSpec;
-}
-
-const RunsAndSubmission = ({ componentSpec }: RunsAndSubmissionProps) => {
+const RunsAndSubmission = () => {
+  const { componentSpec } = useComponentSpec();
   const [runsIsOpen, setRunsIsOpen] = useState(false);
 
   const { pipelineRuns, refetch } = useLoadPipelineRuns(
@@ -92,6 +89,7 @@ const RunsAndSubmission = ({ componentSpec }: RunsAndSubmissionProps) => {
                   "bg-gray-100 border rounded-sm",
                   runsStyle,
                   runBoxStyle,
+                  runListItems.length === 0 ? "hidden" : "",
                 )}
               >
                 <div className="flex flex-col">{runListItems}</div>

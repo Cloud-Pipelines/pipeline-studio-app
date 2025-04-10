@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@xyflow/react";
-import { ChevronDown, Download, Import, Save, SaveAll } from "lucide-react";
+import { ChevronDown, FileDown, Import, Save, SaveAll } from "lucide-react";
 import { useMemo } from "react";
 
 import {
@@ -11,9 +11,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import type { ComponentSpec } from "@/componentSpec";
 import { componentSpecToYaml } from "@/componentStore";
 import useToastNotification from "@/hooks/useToastNotification";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/router";
 import { updateComponentSpecFromNodes } from "@/utils/updateComponentSpecFromNodes";
 import useSavePipeline from "@/utils/useSavePipeline";
@@ -26,12 +26,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../../ui/collapsible";
+import ImportComponent from "../components/ImportComponent";
 
-interface SettingsAndActionsProps {
-  componentSpec: ComponentSpec;
-}
-
-const SettingsAndActions = ({ componentSpec }: SettingsAndActionsProps) => {
+const SettingsAndActions = () => {
+  const { componentSpec } = useComponentSpec();
   const { savePipeline } = useSavePipeline(componentSpec);
   const notify = useToastNotification();
   const navigate = useNavigate();
@@ -126,8 +124,8 @@ const SettingsAndActions = ({ componentSpec }: SettingsAndActionsProps) => {
                     href={URL.createObjectURL(componentTextBlob)}
                     download={filename}
                   >
-                    <Download />
-                    <span>Export</span>
+                    <FileDown />
+                    <span>Export Pipeline</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -141,12 +139,14 @@ const SettingsAndActions = ({ componentSpec }: SettingsAndActionsProps) => {
                         className="w-full justify-start px-2! cursor-pointer"
                       >
                         <Import />
-                        <span className="font-normal">Import</span>
+                        <span className="font-normal">Import Pipeline</span>
                       </Button>
                     </SidebarMenuButton>
                   }
                 />
               </SidebarMenuItem>
+
+              <ImportComponent />
             </SidebarMenu>
           </SidebarGroupContent>
         </CollapsibleContent>

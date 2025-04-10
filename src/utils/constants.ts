@@ -38,3 +38,5 @@ export const VALID_NAME_MESSAGE =
 // IndexedDB constants
 export const DB_NAME = "components";
 export const PIPELINE_RUNS_STORE_NAME = "pipeline_runs";
+
+export const USER_COMPONENTS_LIST_NAME = "user_components";

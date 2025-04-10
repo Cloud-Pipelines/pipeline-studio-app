@@ -32,7 +32,6 @@ export const hasChildMatchingComponent = (
   // Check direct child components
   if (folder.components?.length) {
     const hasMatchingComponents = folder.components.some((component) => {
-<<<<<<< HEAD
       // If component has a loaded spec, check all its fields
       if (component.spec) {
         // Check component name from spec (more accurate)
@@ -54,15 +53,6 @@ export const hasChildMatchingComponent = (
       // As a last resort, check the URL
       // This is less ideal as URLs may contain information not relevant to functionality
       return containsSearchTerm(component.url, searchTerm);
-=======
-      if (!component.url) return false;
-      const componentName =
-        component.url.split("/").pop()?.replace(".yaml", "") || "";
-      return (
-        containsSearchTerm(componentName, searchTerm) ||
-        containsSearchTerm(component.url, searchTerm)
-      );
->>>>>>> f98fa00 (Adds components to side bar)
     });
 
     if (hasMatchingComponents) return true;

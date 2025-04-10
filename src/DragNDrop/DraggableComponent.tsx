@@ -7,11 +7,10 @@
  */
 
 import { CircleX } from "lucide-react";
-import { type DragEvent, type MouseEvent, useState } from "react";
+import { type DragEvent, type MouseEvent } from "react";
 
 import CondensedUrl from "@/components/CondensedUrl";
-import { ConfirmationDialog } from "@/components/custom/ConfirmationDialog";
-import { Button } from "@/components/ui/button";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 
 import type { ComponentReference, TaskSpec } from "../componentSpec";
 
@@ -41,9 +40,6 @@ const DraggableComponent = ({
   onDelete,
   ...props
 }: DraggableComponentProps) => {
-  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-    useState(false);
-
   let title = componentReference.spec?.name || "";
   if (componentReference.url) {
     title += "\nUrl: " + componentReference.url;
@@ -61,12 +57,10 @@ const DraggableComponent = ({
     if (e) {
       onDelete?.(e);
     }
-    setIsConfirmationDialogOpen(false);
   };
 
   const handleCancel = (e?: MouseEvent) => {
     e?.stopPropagation();
-    setIsConfirmationDialogOpen(false);
   };
 
   return (
@@ -107,26 +101,19 @@ const DraggableComponent = ({
           )}
         </div>
         {onDelete && (
-          <Button
-            onClick={(e) => {
-              e.preventDefault();
-              setIsConfirmationDialogOpen(true);
-            }}
-            variant="ghost"
-            className="absolute top-0.5 right-0.5 cursor-pointer"
-            size="min"
-          >
-            <CircleX />
-          </Button>
+          <ConfirmationDialog
+            title={`Delete ${name}?`}
+            description={`'${name}' is a custom user component. This action cannot be undone.`}
+            trigger={
+              <div className="absolute top-0.5 right-0.5 cursor-pointer">
+                <CircleX className="size-4 text-red-500" />
+              </div>
+            }
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />
         )}
       </div>
-      <ConfirmationDialog
-        title={`Delete ${name}?`}
-        message={`'${name}' is a custom user component. This action cannot be undone.`}
-        isOpen={isConfirmationDialogOpen}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
     </>
   );
 };
