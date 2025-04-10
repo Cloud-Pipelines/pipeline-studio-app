@@ -1,13 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@xyflow/react";
-import {
-  ChevronDown,
-  Component,
-  Download,
-  Import,
-  Save,
-  SaveAll,
-} from "lucide-react";
+import { ChevronDown, Download, Import, Save, SaveAll } from "lucide-react";
 import { useMemo } from "react";
 
 import {
@@ -33,6 +26,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../../ui/collapsible";
+import ImportComponent from "../components/ImportComponent";
 
 interface SettingsAndActionsProps {
   componentSpec: ComponentSpec;
@@ -155,18 +149,7 @@ const SettingsAndActions = ({ componentSpec }: SettingsAndActionsProps) => {
                 />
               </SidebarMenuItem>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-start px-2!"
-                  >
-                    <Component />
-                    <span className="font-normal">Import Component (soon)</span>
-                  </Button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              <ImportComponent />
             </SidebarMenu>
           </SidebarGroupContent>
         </CollapsibleContent>

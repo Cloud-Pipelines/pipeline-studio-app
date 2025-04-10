@@ -18,6 +18,108 @@ import {
   TooltipTrigger,
 } from "../../ui/tooltip";
 
+interface ComponentMarkupProps {
+  url: string;
+  componentSpec: ComponentSpec;
+  componentDigest: string;
+  componentText: string;
+  displayName: string;
+  isLoading?: boolean;
+  error?: string | null;
+}
+
+const ComponentMarkup = ({
+  url,
+  componentSpec,
+  componentDigest,
+  componentText,
+  displayName,
+  isLoading,
+  error,
+}: ComponentMarkupProps) => {
+  const onDragStart = useCallback(
+    (event: React.DragEvent) => {
+      const componentRef: ComponentReference = {
+        url,
+        spec: componentSpec || undefined,
+        digest: componentDigest || undefined,
+        text: componentText || undefined,
+      };
+
+      // Create a task spec that the graph can understand
+      const taskSpec: TaskSpec = {
+        componentRef,
+      };
+
+      // Set the data in the format expected by the onDrop handler
+      event.dataTransfer.setData(
+        "application/reactflow",
+        JSON.stringify({ task: taskSpec }),
+      );
+
+      // Add offset information for better positioning
+      event.dataTransfer.setData(
+        "DragStart.offset",
+        JSON.stringify({
+          offsetX: event.nativeEvent.offsetX,
+          offsetY: event.nativeEvent.offsetY,
+        }),
+      );
+
+      event.dataTransfer.effectAllowed = "move";
+    },
+    [url, componentSpec, componentDigest, componentText],
+  );
+
+  const tooltipContent = useMemo(() => {
+    let content = displayName;
+    if (componentSpec?.description) {
+      content += `\n\nDescription: ${componentSpec.description}`;
+    }
+    if (componentSpec?.inputs?.length) {
+      content += `\n\nInputs: ${componentSpec.inputs
+        .map((input) => input.name)
+        .join(", ")}`;
+    }
+    if (componentSpec?.outputs?.length) {
+      content += `\n\nOutputs: ${componentSpec.outputs
+        .map((output) => output.name)
+        .join(", ")}`;
+    }
+    return content;
+  }, [isLoading, error, displayName, componentSpec]);
+
+  return (
+    <TooltipProvider>
+      <Tooltip delayDuration={1200}>
+        <TooltipTrigger asChild>
+          <SidebarMenuItem
+            className="cursor-grab hover:bg-gray-100 active:bg-gray-200 pl-2 py-1.5"
+            draggable
+            onDragStart={onDragStart}
+          >
+            <div className="flex items-center gap-2">
+              <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
+              {isLoading ? (
+                <span className="text-gray-400 truncate text-sm">
+                  Loading...
+                </span>
+              ) : (
+                <span className="truncate text-xs text-gray-800">
+                  {displayName}
+                </span>
+              )}
+            </div>
+          </SidebarMenuItem>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs whitespace-pre-wrap">
+          {tooltipContent}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
 const ComponentItem = ({ url, searchTerm = "" }: ComponentItemProps) => {
   if (!url) return null;
 
@@ -102,61 +204,6 @@ const ComponentItem = ({ url, searchTerm = "" }: ComponentItemProps) => {
     );
   }, [componentSpec, url]);
 
-  const onDragStart = useCallback(
-    (event: React.DragEvent) => {
-      const componentRef: ComponentReference = {
-        url,
-        spec: componentSpec || undefined,
-        digest: componentDigest || undefined,
-        text: componentText || undefined,
-      };
-
-      // Create a task spec that the graph can understand
-      const taskSpec: TaskSpec = {
-        componentRef,
-      };
-
-      // Set the data in the format expected by the onDrop handler
-      event.dataTransfer.setData(
-        "application/reactflow",
-        JSON.stringify({ task: taskSpec }),
-      );
-
-      // Add offset information for better positioning
-      event.dataTransfer.setData(
-        "DragStart.offset",
-        JSON.stringify({
-          offsetX: event.nativeEvent.offsetX,
-          offsetY: event.nativeEvent.offsetY,
-        }),
-      );
-
-      event.dataTransfer.effectAllowed = "move";
-    },
-    [url, componentSpec, componentDigest, componentText],
-  );
-
-  const tooltipContent = useMemo(() => {
-    if (isLoading) return "Loading component information...";
-    if (error) return `Error: ${error}`;
-
-    let content = displayName;
-    if (componentSpec?.description) {
-      content += `\n\nDescription: ${componentSpec.description}`;
-    }
-    if (componentSpec?.inputs?.length) {
-      content += `\n\nInputs: ${componentSpec.inputs
-        .map((input) => input.name)
-        .join(", ")}`;
-    }
-    if (componentSpec?.outputs?.length) {
-      content += `\n\nOutputs: ${componentSpec.outputs
-        .map((output) => output.name)
-        .join(", ")}`;
-    }
-    return content;
-  }, [isLoading, error, displayName, componentSpec]);
-
   const matchesSearch = useMemo(() => {
     if (!searchTerm) return true;
 
@@ -200,35 +247,21 @@ const ComponentItem = ({ url, searchTerm = "" }: ComponentItemProps) => {
 
   if (!matchesSearch) return null;
 
+  if (!componentSpec || !componentDigest || !componentText) return null;
+
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={1200}>
-        <TooltipTrigger asChild>
-          <SidebarMenuItem
-            className="cursor-grab hover:bg-gray-100 active:bg-gray-200 pl-2 py-1.5"
-            draggable
-            onDragStart={onDragStart}
-          >
-            <div className="flex items-center gap-2">
-              <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
-              {isLoading ? (
-                <span className="text-gray-400 truncate text-sm">
-                  Loading...
-                </span>
-              ) : (
-                <span className="truncate text-xs text-gray-800">
-                  {displayName}
-                </span>
-              )}
-            </div>
-          </SidebarMenuItem>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-xs whitespace-pre-wrap">
-          {tooltipContent}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <ComponentMarkup
+      url={url}
+      componentSpec={componentSpec}
+      componentDigest={componentDigest}
+      componentText={componentText}
+      displayName={displayName}
+      isLoading={isLoading}
+      error={error}
+    />
   );
 };
 
 export default ComponentItem;
+
+export { ComponentMarkup };
