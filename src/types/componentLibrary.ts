@@ -1,7 +1,8 @@
 import type { ComponentReference } from "@/componentSpec";
 
 export type ComponentItemProps = {
-  url: string | undefined;
+  url?: string;
+  componentRef?: ComponentReference;
   searchTerm?: string;
 };
 

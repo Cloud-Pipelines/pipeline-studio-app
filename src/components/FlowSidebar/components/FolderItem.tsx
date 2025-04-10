@@ -5,7 +5,7 @@ import { hasChildMatchingComponent } from "@/services/componentSpecService";
 import { type FolderItemProps } from "@/types/componentLibrary";
 import { containsSearchTerm } from "@/utils/searchUtils";
 
-import ComponentItem from "./ComponentItem";
+import ComponentItem, { ComponentMarkup } from "./ComponentItem";
 
 const FolderItem = ({
   folder,
@@ -91,13 +91,30 @@ const FolderItem = ({
         <div className="pl-3">
           {hasComponents && (
             <div>
-              {folder.components!.map((component, index) => (
-                <ComponentItem
-                  key={`${folder.name}-component-${index}`}
-                  url={component.url}
-                  searchTerm={searchTerm}
-                />
-              ))}
+              {folder.components!.map((component, index) => {
+                const key = `${folder.name}-component-${index}`;
+
+                if (component.spec) {
+                  return (
+                    <ComponentMarkup
+                      key={key}
+                      url={component.url || ""}
+                      componentSpec={component.spec}
+                      componentDigest={component.digest || ""}
+                      componentText={component.text || ""}
+                      displayName={component.spec.name || ""}
+                    />
+                  );
+                }
+
+                return (
+                  <ComponentItem
+                    key={key}
+                    url={component.url}
+                    searchTerm={searchTerm}
+                  />
+                );
+              })}
             </div>
           )}
           {hasSubfolders && (
