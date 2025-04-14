@@ -7,7 +7,6 @@ import { EDITOR_PATH } from "@/utils/constants";
 import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
 import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
 
-import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
 import RunListItem from "./RunListItem";

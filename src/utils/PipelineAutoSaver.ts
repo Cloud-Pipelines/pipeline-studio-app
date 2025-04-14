@@ -11,7 +11,7 @@ import yaml from "js-yaml";
 
 import type { ComponentSpec } from "../componentSpec";
 import { componentSpecToYaml } from "../componentStore";
-import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
+import { updateComponentSpecFromNodes } from "./updateComponentSpecFromNodes";
 
 const SAVED_COMPONENT_SPEC_KEY = "autosaved.component.yaml";
 

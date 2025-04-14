@@ -7,8 +7,8 @@ import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { scan } from "react-scan";
 
-import reportWebVitals from "./reportWebVitals.ts";
-import { router } from "./router.tsx";
+import reportWebVitals from "./reportWebVitals";
+import { router } from "./router";
 
 const queryClient = new QueryClient();
 
