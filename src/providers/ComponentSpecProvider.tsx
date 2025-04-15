@@ -33,6 +33,7 @@ interface ComponentSpecContextType {
   graphSpec: GraphSpec;
   isLoading: boolean;
   refetch: () => void;
+  updateGraphSpec: (newGraphSpec: GraphSpec) => void;
 }
 
 const ComponentSpecContext = createContext<
@@ -92,6 +93,16 @@ export const ComponentSpecProvider = ({
     loadPipeline();
   }, [loadPipeline]);
 
+  const updateGraphSpec = useCallback((newGraphSpec: GraphSpec) => {
+    setComponentSpec((prevSpec) => ({
+      ...prevSpec,
+      implementation: {
+        ...prevSpec.implementation,
+        graph: newGraphSpec,
+      },
+    }));
+  }, []);
+
   useEffect(() => {
     loadPipeline();
   }, [loadPipeline]);
@@ -113,6 +124,7 @@ export const ComponentSpecProvider = ({
         graphSpec,
         isLoading,
         refetch,
+        updateGraphSpec,
       }}
     >
       {children}

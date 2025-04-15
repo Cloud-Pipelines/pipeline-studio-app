@@ -38,23 +38,18 @@ const nodeTypes: Record<string, ComponentType<any>> = {
   task: ComponentTaskNode,
 };
 
+type ConfirmationDialogHandlers = {
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
 const GraphComponentSpecFlow = ({
   readOnly,
   children,
   ...rest
 }: ReactFlowProps & { readOnly?: boolean }) => {
-  const { componentSpec, setComponentSpec, graphSpec } = useComponentSpec();
-
-  const [reactFlowInstance, setReactFlowInstance] =
-    useState<ReactFlowInstance>();
-
-  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-    useState(false);
-  const [nodesToDelete, setNodesToDelete] = useState<Node[] | null>(null);
-  const [confirmationDialogHandlers, setConfirmationDialogHandlers] = useState<{
-    onConfirm: () => void;
-    onCancel: () => void;
-  } | null>(null);
+  const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
+    useComponentSpec();
 
   const deleteNode = async (nodeId: string) => {
     const node = nodes.find((n) => n.id === nodeId);
@@ -67,10 +62,7 @@ const GraphComponentSpecFlow = ({
         removeNode(node);
 
         // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
-        setComponentSpec({
-          ...componentSpec,
-          implementation: { graph: graphSpec },
-        });
+        updateGraphSpec(graphSpec);
       }
     }
   };
@@ -82,9 +74,14 @@ const GraphComponentSpecFlow = ({
   );
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
-  if (!("graph" in componentSpec.implementation)) {
-    return null;
-  }
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance>();
+
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
+    useState(false);
+  const [nodesToDelete, setNodesToDelete] = useState<Node[] | null>(null);
+  const [confirmationDialogHandlers, setConfirmationDialogHandlers] =
+    useState<ConfirmationDialogHandlers | null>(null);
 
   const setTaskArgument = (
     taskId: string,
@@ -110,10 +107,7 @@ const GraphComponentSpecFlow = ({
       newTaskSpecArguments
     );
 
-    setComponentSpec({
-      ...componentSpec,
-      implementation: { graph: newGraphSpec },
-    });
+    updateGraphSpec(newGraphSpec);
   };
 
   const setGraphOutputValue = (
@@ -128,10 +122,8 @@ const GraphComponentSpecFlow = ({
       ...nonNullOutputObject,
     };
     const newGraphSpec = { ...graphSpec, outputValues: newGraphOutputValues };
-    setComponentSpec({
-      ...componentSpec,
-      implementation: { graph: newGraphSpec },
-    });
+
+    updateGraphSpec(newGraphSpec);
   };
 
   const addConnection = useConnectionHandler({
@@ -301,10 +293,7 @@ const GraphComponentSpecFlow = ({
     }
 
     // Save the updated graph spec to the component spec
-    setComponentSpec({
-      ...componentSpec,
-      implementation: { graph: graphSpec },
-    });
+    updateGraphSpec(graphSpec);
   };
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
