@@ -16,10 +16,18 @@ import {
   RefreshCcw,
   SettingsIcon,
 } from "lucide-react";
-import { type CSSProperties, memo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  memo,
+  type ReactElement,
+  useRef,
+  useState,
+} from "react";
 
 import TaskDetailsSheet from "@/components/TaskDetailsSheet";
 import { Button } from "@/components/ui/button";
+import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
+import { cn } from "@/lib/utils";
 
 import ArgumentsEditorDialog from "../components/ArgumentsEditor/ArgumentsEditorDialog";
 import type {
@@ -50,7 +58,7 @@ function generateHandles(
   position: Position,
   idPrefix: string,
   inputsWithMissingArguments?: string[],
-): React.ReactElement[] {
+): ReactElement[] {
   const handleComponents = [];
   const numHandles = ioSpecs.length;
   for (let i = 0; i < numHandles; i++) {
@@ -117,7 +125,7 @@ function generateLabelStyle(
     maxLabelWidthPx = 60;
   }
 
-  labelClasses += " truncate text-xs";
+  labelClasses += " truncate text-xs hover:!overflow-visible hover:font-medium";
 
   const labelStyle: CSSProperties = { maxWidth: `${maxLabelWidthPx}px` };
   return [labelClasses, labelStyle];
@@ -126,7 +134,7 @@ function generateLabelStyle(
 function generateInputHandles(
   inputSpecs: InputSpec[],
   inputsWithInvalidArguments?: string[],
-): React.ReactElement[] {
+): ReactElement[] {
   return generateHandles(
     inputSpecs,
     "target",
@@ -136,9 +144,7 @@ function generateInputHandles(
   );
 }
 
-function generateOutputHandles(
-  outputSpecs: OutputSpec[],
-): React.ReactElement[] {
+function generateOutputHandles(outputSpecs: OutputSpec[]): ReactElement[] {
   return generateHandles(
     outputSpecs,
     "source",
@@ -176,11 +182,13 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-const ComponentTaskNode = ({ data }: NodeProps) => {
+const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const nodeRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useDynamicFontSize(textRef);
 
   const typedData = data as ComponentTaskNodeProps;
   const taskSpec = typedData.taskSpec;
@@ -254,7 +262,7 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
       case "CANCELLING":
         return "border-sky-500";
       default:
-        return isHovered ? "border-slate-400" : "border-slate-300";
+        return "border-slate-300";
     }
   };
 
@@ -277,14 +285,6 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
     }
   };
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-
   const handleDoubleClick = () => {
     if (!isArgumentsEditorOpen) {
       setIsArgumentsEditorOpen(true);
@@ -299,14 +299,21 @@ const ComponentTaskNode = ({ data }: NodeProps) => {
   return (
     <>
       <div
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className={`border rounded-md shadow-sm transition-all duration-200 ${getBorderColor()} ${getBgColor()}`}
+        className={cn(
+          `border rounded-md shadow-sm transition-all duration-200 hover:border-slate-400`,
+          getBorderColor(),
+          getBgColor(),
+          selected && "border-sky-500",
+        )}
         style={{ width: `${NODE_WIDTH_IN_PX}px` }}
         ref={nodeRef}
       >
         <div className="p-3 flex items-center justify-between">
-          <div className="font-medium text-gray-800 truncate" title={title}>
+          <div
+            className="font-medium text-gray-800 w-3/4 text-center whitespace-nowrap"
+            title={title}
+            ref={textRef}
+          >
             {label}
           </div>
           <div className="flex items-center gap-2">
