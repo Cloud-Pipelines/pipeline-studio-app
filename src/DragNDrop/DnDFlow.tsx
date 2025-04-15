@@ -19,11 +19,11 @@ import {
 
 import { getAppSettings } from "../appSettings";
 import { downloadDataWithCache } from "../cacheUtils";
-import { PipelineAutoSaver } from "../utils/PipelineAutoSaver";
 import {
   ComponentSpecProvider,
   useComponentSpec,
-} from "./ComponentSpecProvider";
+} from "../providers/ComponentSpecProvider";
+import { PipelineAutoSaver } from "../utils/PipelineAutoSaver";
 import GraphComponentSpecFlow from "./GraphComponentSpecFlow";
 import Sidebar from "./Sidebar";
 
@@ -47,16 +47,14 @@ const DnDFlow = () => {
 };
 
 const PageWrapper = () => {
-  const { componentSpec } = useComponentSpec();
-
-  if (!componentSpec) {
-    return null;
-  }
-
   return (
     <>
       <div className="reactflow-wrapper">
-        <GraphComponentSpecFlowWrapper />
+        <GraphComponentSpecFlow snapGrid={[GRID_SIZE, GRID_SIZE]} snapToGrid>
+          <MiniMap />
+          <Controls />
+          <Background gap={GRID_SIZE} />
+        </GraphComponentSpecFlow>
       </div>
       <SidebarWrapper />
       <PipelineAutoSaverWrapper />
@@ -64,30 +62,8 @@ const PageWrapper = () => {
   );
 };
 
-const GraphComponentSpecFlowWrapper = () => {
-  const { componentSpec, setComponentSpec } = useComponentSpec();
-
-  if (!componentSpec) {
-    return null;
-  }
-
-  return (
-    <GraphComponentSpecFlow
-      componentSpec={componentSpec}
-      setComponentSpec={setComponentSpec}
-      snapToGrid={true}
-      snapGrid={[GRID_SIZE, GRID_SIZE]}
-    >
-      <MiniMap />
-      <Controls />
-      <Background gap={GRID_SIZE} />
-    </GraphComponentSpecFlow>
-  );
-};
-
 const SidebarWrapper = () => {
-  const { componentSpec, setComponentSpec, isDirty, setIsDirty } =
-    useComponentSpec();
+  const { componentSpec, setComponentSpec, isDirty } = useComponentSpec();
   const appSettings = getAppSettings();
   const downloadData = downloadDataWithCache;
 
@@ -96,7 +72,6 @@ const SidebarWrapper = () => {
       componentSpec={componentSpec}
       setComponentSpec={setComponentSpec}
       isDirty={isDirty}
-      setIsDirty={setIsDirty}
       appSettings={appSettings}
       downloadData={downloadData}
     />
@@ -105,10 +80,6 @@ const SidebarWrapper = () => {
 
 const PipelineAutoSaverWrapper = () => {
   const { componentSpec } = useComponentSpec();
-
-  if (!componentSpec) {
-    return null;
-  }
 
   return <PipelineAutoSaver componentSpec={componentSpec} />;
 };

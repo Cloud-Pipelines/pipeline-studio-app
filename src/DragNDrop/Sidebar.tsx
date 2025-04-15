@@ -29,7 +29,7 @@ const onDragStart = (event: DragEvent, nodeData: object) => {
     JSON.stringify({
       offsetX: event.nativeEvent.offsetX,
       offsetY: event.nativeEvent.offsetY,
-    }),
+    })
   );
   event.dataTransfer.effectAllowed = "move";
 };
@@ -40,7 +40,6 @@ interface SidebarProps {
   appSettings: AppSettings;
   downloadData: DownloadDataType;
   isDirty: boolean;
-  setIsDirty: (isDirty: boolean) => void;
 }
 
 const Sidebar = ({
@@ -49,7 +48,6 @@ const Sidebar = ({
   appSettings,
   downloadData = downloadDataWithCache,
   isDirty,
-  setIsDirty,
 }: SidebarProps) => {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
@@ -79,7 +77,6 @@ const Sidebar = ({
         samplePipelineLibraryUrl={appSettings.pipelineLibraryUrl}
         downloadData={downloadData}
         isDirty={isDirty}
-        setIsDirty={setIsDirty}
       />
       <details
         style={{

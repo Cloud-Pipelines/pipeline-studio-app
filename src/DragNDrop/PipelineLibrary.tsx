@@ -42,7 +42,6 @@ interface PipelineLibraryProps {
   samplePipelineLibraryUrl?: string;
   downloadData: DownloadDataType;
   isDirty: boolean;
-  setIsDirty: (isDirty: boolean) => void;
 }
 
 interface SavePipelineAsDialogProps {
@@ -204,7 +203,6 @@ const PipelineLibrary = ({
   setComponentSpec,
   downloadData = downloadDataWithCache,
   isDirty,
-  setIsDirty,
 }: PipelineLibraryProps) => {
   const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
@@ -216,12 +214,12 @@ const PipelineLibrary = ({
       // TODO: Move this functionality to the setComponentSpec function
       await preloadComponentReferences(
         fileEntry.componentRef.spec,
-        downloadData,
+        downloadData
       );
       setComponentSpec?.(fileEntry.componentRef.spec);
       setPipelineFile(fileEntry);
     },
-    [setComponentSpec, setPipelineFile, downloadData],
+    [setComponentSpec, setPipelineFile, downloadData]
   );
 
   const openSaveAsDialog = useCallback(() => {
@@ -230,15 +228,14 @@ const PipelineLibrary = ({
 
   const closeSaveAsDialog = useCallback(() => {
     setSaveAsDialogIsOpen(false);
-    setIsDirty(false);
-  }, [setSaveAsDialogIsOpen, setIsDirty]);
+  }, [setSaveAsDialogIsOpen]);
 
   const handlePipelineSave = useCallback(
     async (name: string, overwrite: boolean = false) => {
       if (!overwrite) {
         const existingFileEntry = await getComponentFileFromList(
           USER_PIPELINES_LIST_NAME,
-          name,
+          name
         );
         if (existingFileEntry !== null) {
           throw Error(`File "${name}" already exists.`);
@@ -253,7 +250,7 @@ const PipelineLibrary = ({
         componentSpec,
         nodes,
         false,
-        true,
+        true
       );
 
       graphComponent.name = name;
@@ -262,14 +259,14 @@ const PipelineLibrary = ({
       const fileEntry = await writeComponentToFileListFromText(
         USER_PIPELINES_LIST_NAME,
         name,
-        componentText,
+        componentText
       );
 
       await openPipelineFile(fileEntry);
 
       closeSaveAsDialog();
     },
-    [componentSpec, closeSaveAsDialog, nodes, openPipelineFile],
+    [componentSpec, closeSaveAsDialog, nodes, openPipelineFile]
   );
 
   useEffect(() => {
@@ -277,7 +274,7 @@ const PipelineLibrary = ({
       if (componentSpec?.name) {
         const fileEntry = await getComponentFileFromList(
           USER_PIPELINES_LIST_NAME,
-          componentSpec.name,
+          componentSpec.name
         );
         if (fileEntry) {
           setPipelineFile(fileEntry);
