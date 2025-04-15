@@ -33,7 +33,7 @@ const RunDetails = () => {
         const response = await fetch(`${API_URL}/api/executions/${id}/state`);
         if (!response.ok) {
           throw new Error(
-            `Failed to fetch execution state: ${response.statusText}`
+            `Failed to fetch execution state: ${response.statusText}`,
           );
         }
         return response.json();
@@ -58,7 +58,7 @@ const RunDetails = () => {
           const status = Object.keys(statusStats)[0];
           taskStatusMap.set(taskId, status);
         }
-      }
+      },
     );
   }
 
@@ -85,8 +85,8 @@ const RunDetails = () => {
             },
           };
           return [taskId, enhancedTaskSpec];
-        }
-      )
+        },
+      ),
     );
     const enhancedComponentSpec = {
       ...componentSpec,

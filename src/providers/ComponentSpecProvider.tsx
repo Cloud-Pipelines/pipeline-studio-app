@@ -50,7 +50,7 @@ export const ComponentSpecProvider = ({
   children: ReactNode;
 }) => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
-    spec ?? EMPTY_GRAPH_COMPONENT_SPEC
+    spec ?? EMPTY_GRAPH_COMPONENT_SPEC,
   );
   const [originalComponentSpec, setOriginalComponentSpec] =
     useState<ComponentSpec>(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
@@ -81,7 +81,7 @@ export const ComponentSpecProvider = ({
     const result = await loadPipelineByName(experimentName);
 
     const preparedComponentRef = await prepareComponentRefForEditor(
-      result.experiment?.componentRef as ComponentReferenceWithSpec
+      result.experiment?.componentRef as ComponentReferenceWithSpec,
     );
 
     setComponentSpec(preparedComponentRef);
@@ -136,7 +136,7 @@ export const useComponentSpec = () => {
   const context = useContext(ComponentSpecContext);
   if (!context) {
     throw new Error(
-      "useComponentSpec must be used within a ComponentSpecProvider"
+      "useComponentSpec must be used within a ComponentSpecProvider",
     );
   }
   return context;

@@ -57,12 +57,12 @@ const PipelineLibrary = ({
       // TODO: Move this functionality to the setComponentSpec function
       await preloadComponentReferences(
         fileEntry.componentRef.spec,
-        downloadData
+        downloadData,
       );
       setComponentSpec(fileEntry.componentRef.spec);
       setPipelineFile(fileEntry);
     },
-    [setComponentSpec, setPipelineFile, downloadData]
+    [setComponentSpec, setPipelineFile, downloadData],
   );
 
   const openSaveAsDialog = useCallback(() => {
@@ -78,7 +78,7 @@ const PipelineLibrary = ({
       if (!overwrite) {
         const existingFileEntry = await getComponentFileFromList(
           USER_PIPELINES_LIST_NAME,
-          name
+          name,
         );
         if (existingFileEntry !== null) {
           throw Error(`File "${name}" already exists.`);
@@ -93,7 +93,7 @@ const PipelineLibrary = ({
         componentSpec,
         nodes,
         false,
-        true
+        true,
       );
 
       graphComponent.name = name;
@@ -102,7 +102,7 @@ const PipelineLibrary = ({
       const fileEntry = await writeComponentToFileListFromText(
         USER_PIPELINES_LIST_NAME,
         name,
-        componentText
+        componentText,
       );
 
       await openPipelineFile(fileEntry);
@@ -111,7 +111,7 @@ const PipelineLibrary = ({
 
       closeSaveAsDialog();
     },
-    [componentSpec, closeSaveAsDialog, nodes, openPipelineFile, refetch]
+    [componentSpec, closeSaveAsDialog, nodes, openPipelineFile, refetch],
   );
 
   useEffect(() => {
@@ -119,7 +119,7 @@ const PipelineLibrary = ({
       if (componentSpec.name) {
         const fileEntry = await getComponentFileFromList(
           USER_PIPELINES_LIST_NAME,
-          componentSpec.name
+          componentSpec.name,
         );
         if (fileEntry) {
           setPipelineFile(fileEntry);

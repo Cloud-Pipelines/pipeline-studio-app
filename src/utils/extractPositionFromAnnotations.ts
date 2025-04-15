@@ -3,7 +3,7 @@ import type { XYPosition } from "@xyflow/react";
 import type { MetadataSpec } from "@/componentSpec";
 
 export const extractPositionFromAnnotations = (
-  annotations?: MetadataSpec["annotations"]
+  annotations?: MetadataSpec["annotations"],
 ): XYPosition => {
   const defaultPosition: XYPosition = { x: 0, y: 0 };
 

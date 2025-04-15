@@ -16,7 +16,7 @@ type NodeCallbacks = {
 
 const useComponentSpecToNodes = (
   componentSpec: ComponentSpec,
-  nodeCallbacks: NodeCallbacks
+  nodeCallbacks: NodeCallbacks,
 ): {
   nodes: Node[];
   onNodesChange: (changes: NodeChange[]) => void;
@@ -37,7 +37,7 @@ const useComponentSpecToNodes = (
 
 const createNodes = (
   componentSpec: ComponentSpec,
-  nodeCallbacks: NodeCallbacks
+  nodeCallbacks: NodeCallbacks,
 ): Node[] => {
   if (!("graph" in componentSpec.implementation)) {
     return [];
@@ -53,7 +53,7 @@ const createNodes = (
 
 const createTaskNodes = (
   graphSpec: GraphSpec,
-  nodeCallbacks: NodeCallbacks
+  nodeCallbacks: NodeCallbacks,
 ) => {
   return Object.entries(graphSpec.tasks).map(([taskId, taskSpec]) => {
     const position = extractPositionFromAnnotations(taskSpec.annotations);
@@ -64,7 +64,7 @@ const createTaskNodes = (
       Object.entries(nodeCallbacks).map(([callbackName, callbackFn]) => [
         callbackName,
         (...args: any[]) => callbackFn({ taskId, nodeId }, ...args),
-      ])
+      ]),
     );
 
     return {
