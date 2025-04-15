@@ -25,8 +25,8 @@ import { getAppSettings } from "../appSettings";
 import { downloadDataWithCache } from "../cacheUtils";
 import type { ComponentSpec } from "../componentSpec";
 import { type ComponentReferenceWithSpec } from "../componentStore";
+import { PipelineAutoSaver } from "../utils/PipelineAutoSaver";
 import GraphComponentSpecFlow from "./GraphComponentSpecFlow";
-import { PipelineAutoSaver } from "./PipelineAutoSaver";
 import Sidebar from "./Sidebar";
 
 const GRID_SIZE = 10;

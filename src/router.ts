@@ -2,12 +2,9 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
-  Outlet,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 
-import AppFooter from "./components/AppFooter";
-import AppMenu from "./components/AppMenu";
+import RootLayout from "./components/RootLayout";
 import Editor from "./routes/Editor";
 import Home from "./routes/Home";
 import RunDetails from "./routes/RunDetails";
@@ -20,20 +17,7 @@ declare module "@tanstack/react-router" {
 }
 
 const rootRoute = createRootRoute({
-  component: () => (
-    <>
-      <div className="App flex flex-col min-h-screen w-full">
-        <AppMenu />
-        <main className="flex-1 grid">
-          <Outlet />
-        </main>
-        <AppFooter />
-        {import.meta.env.VITE_ENABLE_ROUTER_DEVTOOLS === "true" && (
-          <TanStackRouterDevtools />
-        )}
-      </div>
-    </>
-  ),
+  component: RootLayout,
 });
 
 export const indexRoute = createRoute({
