@@ -21,11 +21,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 import type { DownloadDataType } from "../cacheUtils";
 import { downloadDataWithCache } from "../cacheUtils";
-import type { ComponentSpec } from "../componentSpec";
 import {
   type ComponentFileEntry,
   componentSpecToYaml,
@@ -37,12 +37,150 @@ import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNo
 import GraphComponentLink from "./GraphComponentLink";
 
 interface PipelineLibraryProps {
-  componentSpec?: ComponentSpec;
-  setComponentSpec?: (componentSpec: ComponentSpec) => void;
   samplePipelineLibraryUrl?: string;
   downloadData: DownloadDataType;
-  isDirty: boolean;
 }
+
+const PipelineLibrary = ({
+  downloadData = downloadDataWithCache,
+}: PipelineLibraryProps) => {
+  const { componentSpec, setComponentSpec, isDirty, refetch } =
+    useComponentSpec();
+
+  const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
+  const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
+  const nodes = useStore((store) => store.nodes);
+
+  const openPipelineFile = useCallback(
+    async (fileEntry: ComponentFileEntry) => {
+      // Loading all child components
+      // TODO: Move this functionality to the setComponentSpec function
+      await preloadComponentReferences(
+        fileEntry.componentRef.spec,
+        downloadData
+      );
+      setComponentSpec(fileEntry.componentRef.spec);
+      setPipelineFile(fileEntry);
+    },
+    [setComponentSpec, setPipelineFile, downloadData]
+  );
+
+  const openSaveAsDialog = useCallback(() => {
+    setSaveAsDialogIsOpen(true);
+  }, [setSaveAsDialogIsOpen]);
+
+  const closeSaveAsDialog = useCallback(() => {
+    setSaveAsDialogIsOpen(false);
+  }, [setSaveAsDialogIsOpen]);
+
+  const handlePipelineSave = useCallback(
+    async (name: string, overwrite: boolean = false) => {
+      if (!overwrite) {
+        const existingFileEntry = await getComponentFileFromList(
+          USER_PIPELINES_LIST_NAME,
+          name
+        );
+        if (existingFileEntry !== null) {
+          throw Error(`File "${name}" already exists.`);
+        }
+      }
+
+      if (!componentSpec) {
+        return;
+      }
+
+      const graphComponent = updateComponentSpecFromNodes(
+        componentSpec,
+        nodes,
+        false,
+        true
+      );
+
+      graphComponent.name = name;
+
+      const componentText = componentSpecToYaml(graphComponent);
+      const fileEntry = await writeComponentToFileListFromText(
+        USER_PIPELINES_LIST_NAME,
+        name,
+        componentText
+      );
+
+      await openPipelineFile(fileEntry);
+
+      refetch();
+
+      closeSaveAsDialog();
+    },
+    [componentSpec, closeSaveAsDialog, nodes, openPipelineFile, refetch]
+  );
+
+  useEffect(() => {
+    const fetchFileEntry = async () => {
+      if (componentSpec.name) {
+        const fileEntry = await getComponentFileFromList(
+          USER_PIPELINES_LIST_NAME,
+          componentSpec.name
+        );
+        if (fileEntry) {
+          setPipelineFile(fileEntry);
+        }
+      }
+    };
+
+    fetchFileEntry();
+  }, [componentSpec]);
+
+  const componentLink = useRef<HTMLAnchorElement>(null);
+
+  return (
+    <div className="flex flex-row gap-2">
+      <Button
+        color="primary"
+        disabled={!isDirty}
+        onClick={() => {
+          if (pipelineFile) {
+            handlePipelineSave(pipelineFile?.name, true);
+          } else {
+            openSaveAsDialog();
+          }
+        }}
+      >
+        Save
+      </Button>
+      <Button color="primary" onClick={openSaveAsDialog}>
+        Save as
+      </Button>
+      {saveAsDialogIsOpen && (
+        <SavePipelineAsDialog
+          initialName={componentSpec.name}
+          isOpen={saveAsDialogIsOpen}
+          onCancel={closeSaveAsDialog}
+          onPipelineSave={handlePipelineSave}
+        />
+      )}
+      <Button
+        color="primary"
+        onClick={() => {
+          componentLink.current?.click();
+        }}
+      >
+        Export
+        <GraphComponentLink
+          linkRef={componentLink}
+          componentSpec={componentSpec}
+          linkText="🔗"
+          downloadFileName={
+            (componentSpec.name ? componentSpec.name + "." : "") +
+            "pipeline.component.yaml"
+          }
+          style={{ textDecoration: "none" }}
+        />
+      </Button>
+    </div>
+  );
+};
+
+export default PipelineLibrary;
 
 interface SavePipelineAsDialogProps {
   isOpen: boolean;
@@ -197,144 +335,3 @@ const SaveAsDialog = ({
     </Dialog>
   );
 };
-
-const PipelineLibrary = ({
-  componentSpec,
-  setComponentSpec,
-  downloadData = downloadDataWithCache,
-  isDirty,
-}: PipelineLibraryProps) => {
-  const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
-  const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
-  const nodes = useStore((store) => store.nodes);
-
-  const openPipelineFile = useCallback(
-    async (fileEntry: ComponentFileEntry) => {
-      // Loading all child components
-      // TODO: Move this functionality to the setComponentSpec function
-      await preloadComponentReferences(
-        fileEntry.componentRef.spec,
-        downloadData
-      );
-      setComponentSpec?.(fileEntry.componentRef.spec);
-      setPipelineFile(fileEntry);
-    },
-    [setComponentSpec, setPipelineFile, downloadData]
-  );
-
-  const openSaveAsDialog = useCallback(() => {
-    setSaveAsDialogIsOpen(true);
-  }, [setSaveAsDialogIsOpen]);
-
-  const closeSaveAsDialog = useCallback(() => {
-    setSaveAsDialogIsOpen(false);
-  }, [setSaveAsDialogIsOpen]);
-
-  const handlePipelineSave = useCallback(
-    async (name: string, overwrite: boolean = false) => {
-      if (!overwrite) {
-        const existingFileEntry = await getComponentFileFromList(
-          USER_PIPELINES_LIST_NAME,
-          name
-        );
-        if (existingFileEntry !== null) {
-          throw Error(`File "${name}" already exists.`);
-        }
-      }
-
-      if (!componentSpec) {
-        return;
-      }
-
-      const graphComponent = updateComponentSpecFromNodes(
-        componentSpec,
-        nodes,
-        false,
-        true
-      );
-
-      graphComponent.name = name;
-
-      const componentText = componentSpecToYaml(graphComponent);
-      const fileEntry = await writeComponentToFileListFromText(
-        USER_PIPELINES_LIST_NAME,
-        name,
-        componentText
-      );
-
-      await openPipelineFile(fileEntry);
-
-      closeSaveAsDialog();
-    },
-    [componentSpec, closeSaveAsDialog, nodes, openPipelineFile]
-  );
-
-  useEffect(() => {
-    const fetchFileEntry = async () => {
-      if (componentSpec?.name) {
-        const fileEntry = await getComponentFileFromList(
-          USER_PIPELINES_LIST_NAME,
-          componentSpec.name
-        );
-        if (fileEntry) {
-          setPipelineFile(fileEntry);
-        }
-      }
-    };
-
-    fetchFileEntry();
-  }, [componentSpec]);
-
-  const componentLink = useRef<HTMLAnchorElement>(null);
-
-  return (
-    <div className="flex flex-row gap-2">
-      <Button
-        color="primary"
-        disabled={!isDirty}
-        onClick={() => {
-          if (pipelineFile) {
-            handlePipelineSave(pipelineFile?.name, true);
-          } else {
-            openSaveAsDialog();
-          }
-        }}
-      >
-        Save
-      </Button>
-      <Button color="primary" onClick={openSaveAsDialog}>
-        Save as
-      </Button>
-      {componentSpec && saveAsDialogIsOpen && (
-        <SavePipelineAsDialog
-          initialName={componentSpec.name}
-          isOpen={saveAsDialogIsOpen}
-          onCancel={closeSaveAsDialog}
-          onPipelineSave={handlePipelineSave}
-        />
-      )}
-      <Button
-        color="primary"
-        onClick={() => {
-          componentLink.current?.click();
-        }}
-      >
-        Export
-        {componentSpec && (
-          <GraphComponentLink
-            linkRef={componentLink}
-            componentSpec={componentSpec}
-            linkText="🔗"
-            downloadFileName={
-              (componentSpec.name ? componentSpec.name + "." : "") +
-              "pipeline.component.yaml"
-            }
-            style={{ textDecoration: "none" }}
-          />
-        )}
-      </Button>
-    </div>
-  );
-};
-
-export default PipelineLibrary;

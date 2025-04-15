@@ -14,7 +14,7 @@ import type {
   ReactFlowProps,
 } from "@xyflow/react";
 import { type OnInit, ReactFlow } from "@xyflow/react";
-import type { DragEvent } from "react";
+import type { ComponentType, DragEvent } from "react";
 import { useState } from "react";
 
 import { ConfirmationDialog } from "@/components/custom/ConfirmationDialog";
@@ -34,11 +34,15 @@ import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGrap
 import { updateNodePositions } from "../utils/updateNodePosition";
 import ComponentTaskNode from "./ComponentTaskNode";
 
-const nodeTypes: Record<string, React.ComponentType<any>> = {
+const nodeTypes: Record<string, ComponentType<any>> = {
   task: ComponentTaskNode,
 };
 
-const GraphComponentSpecFlow = ({ children, ...rest }: ReactFlowProps) => {
+const GraphComponentSpecFlow = ({
+  readOnly,
+  children,
+  ...rest
+}: ReactFlowProps & { readOnly?: boolean }) => {
   const { componentSpec, setComponentSpec, graphSpec } = useComponentSpec();
 
   const [reactFlowInstance, setReactFlowInstance] =
@@ -87,6 +91,10 @@ const GraphComponentSpecFlow = ({ children, ...rest }: ReactFlowProps) => {
     inputName: string,
     argument?: ArgumentType
   ) => {
+    if (readOnly) {
+      return;
+    }
+
     const oldTaskSpec = graphSpec.tasks[taskId];
     const oldTaskSpecArguments = oldTaskSpec.arguments || {};
 
@@ -237,6 +245,11 @@ const GraphComponentSpecFlow = ({ children, ...rest }: ReactFlowProps) => {
 
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
+
+    if (readOnly) {
+      return;
+    }
+
     if (reactFlowInstance) {
       onDropNode(
         event,
@@ -276,6 +289,10 @@ const GraphComponentSpecFlow = ({ children, ...rest }: ReactFlowProps) => {
   };
 
   const onElementsRemove = (params: { nodes: Node[]; edges: Edge[] }) => {
+    if (readOnly) {
+      return;
+    }
+
     for (const edge of params.edges) {
       removeEdge(edge);
     }

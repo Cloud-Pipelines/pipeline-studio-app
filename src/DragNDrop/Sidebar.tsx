@@ -6,13 +6,13 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { type DragEvent, useState } from "react";
+import { type DragEvent, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
-import type { AppSettings } from "../appSettings";
-import { type DownloadDataType, downloadDataWithCache } from "../cacheUtils";
-import { type ComponentSpec } from "../componentSpec";
+import { getAppSettings } from "../appSettings";
+import { downloadDataWithCache } from "../cacheUtils";
 import AppSettingsDialog from "./AppSettingsDialog";
 import ComponentLibrary from "./ComponentLibrary";
 import ComponentSearch from "./ComponentSearch";
@@ -22,33 +22,11 @@ import PipelineSubmitter from "./PipelineSubmitter";
 import UserComponentLibrary from "./UserComponentLibrary";
 import VertexAiExporter from "./VertexAiExporter";
 
-const onDragStart = (event: DragEvent, nodeData: object) => {
-  event.dataTransfer.setData("application/reactflow", JSON.stringify(nodeData));
-  event.dataTransfer.setData(
-    "DragStart.offset",
-    JSON.stringify({
-      offsetX: event.nativeEvent.offsetX,
-      offsetY: event.nativeEvent.offsetY,
-    })
-  );
-  event.dataTransfer.effectAllowed = "move";
-};
+const Sidebar = () => {
+  const { componentSpec, setComponentSpec } = useComponentSpec();
 
-interface SidebarProps {
-  componentSpec?: ComponentSpec;
-  setComponentSpec?: (componentSpec: ComponentSpec) => void;
-  appSettings: AppSettings;
-  downloadData: DownloadDataType;
-  isDirty: boolean;
-}
+  const appSettings = useMemo(() => getAppSettings(), []);
 
-const Sidebar = ({
-  componentSpec,
-  setComponentSpec,
-  appSettings,
-  downloadData = downloadDataWithCache,
-  isDirty,
-}: SidebarProps) => {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
   // Do not include the DebugScratch in the production build
@@ -61,7 +39,7 @@ const Sidebar = ({
         DebugScratch({
           componentSpec: componentSpec,
           setComponentSpec: setComponentSpec,
-          downloadData: downloadData,
+          downloadData: downloadDataWithCache,
         });
     } catch (e) {
       console.error(e);
@@ -72,11 +50,8 @@ const Sidebar = ({
     <aside className="nodeList">
       Save/Load pipeline
       <PipelineLibrary
-        componentSpec={componentSpec}
-        setComponentSpec={setComponentSpec}
         samplePipelineLibraryUrl={appSettings.pipelineLibraryUrl}
-        downloadData={downloadData}
-        isDirty={isDirty}
+        downloadData={downloadDataWithCache}
       />
       <details
         style={{
@@ -138,7 +113,7 @@ const Sidebar = ({
         <div style={{ paddingLeft: "10px" }}>
           <ComponentLibrary
             url={appSettings.componentLibraryUrl}
-            downloadData={downloadData}
+            downloadData={downloadDataWithCache}
           />
         </div>
       </details>
@@ -172,7 +147,7 @@ const Sidebar = ({
         <ComponentSearch
           componentFeedUrls={appSettings.componentFeedUrls}
           gitHubSearchLocations={appSettings.gitHubSearchLocations}
-          downloadData={downloadData}
+          downloadData={downloadDataWithCache}
         />
       </details>
       {/* Unmounting the dialog control to reset the state when closed. */}
@@ -193,10 +168,9 @@ const Sidebar = ({
         >
           Settings
         </Button>
-        {componentSpec && (
-          <GraphComponentExporter componentSpec={componentSpec} />
-        )}
-        {componentSpec && <VertexAiExporter componentSpec={componentSpec} />}
+
+        <GraphComponentExporter componentSpec={componentSpec} />
+        <VertexAiExporter componentSpec={componentSpec} />
         <DebugScratchElement />
       </details>
     </aside>
@@ -204,3 +178,15 @@ const Sidebar = ({
 };
 
 export default Sidebar;
+
+const onDragStart = (event: DragEvent, nodeData: object) => {
+  event.dataTransfer.setData("application/reactflow", JSON.stringify(nodeData));
+  event.dataTransfer.setData(
+    "DragStart.offset",
+    JSON.stringify({
+      offsetX: event.nativeEvent.offsetX,
+      offsetY: event.nativeEvent.offsetY,
+    })
+  );
+  event.dataTransfer.effectAllowed = "move";
+};

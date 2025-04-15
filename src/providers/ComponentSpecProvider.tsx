@@ -32,7 +32,7 @@ interface ComponentSpecContextType {
   isDirty: boolean;
   graphSpec: GraphSpec;
   isLoading: boolean;
-  refresh: () => void;
+  refetch: () => void;
 }
 
 const ComponentSpecContext = createContext<
@@ -41,16 +41,18 @@ const ComponentSpecContext = createContext<
 
 export const ComponentSpecProvider = ({
   experimentName,
+  spec,
   children,
 }: {
-  experimentName: string;
+  experimentName?: string;
+  spec?: ComponentSpec;
   children: ReactNode;
 }) => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
-    EMPTY_GRAPH_COMPONENT_SPEC
+    spec ?? EMPTY_GRAPH_COMPONENT_SPEC
   );
   const [originalComponentSpec, setOriginalComponentSpec] =
-    useState<ComponentSpec>(EMPTY_GRAPH_COMPONENT_SPEC);
+    useState<ComponentSpec>(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
 
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +70,11 @@ export const ComponentSpecProvider = ({
   }, [componentSpec]);
 
   const loadPipeline = useCallback(async () => {
+    if (componentSpec) {
+      setComponentSpec(componentSpec);
+      setOriginalComponentSpec(componentSpec);
+    }
+
     if (!experimentName) return;
 
     const result = await loadPipelineByName(experimentName);
@@ -81,7 +88,7 @@ export const ComponentSpecProvider = ({
     setIsLoading(false);
   }, [experimentName]);
 
-  const refresh = useCallback(() => {
+  const refetch = useCallback(() => {
     loadPipeline();
   }, [loadPipeline]);
 
@@ -105,7 +112,7 @@ export const ComponentSpecProvider = ({
         isDirty,
         graphSpec,
         isLoading,
-        refresh,
+        refetch,
       }}
     >
       {children}

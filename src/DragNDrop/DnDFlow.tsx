@@ -17,8 +17,6 @@ import {
   ReactFlowProvider,
 } from "@xyflow/react";
 
-import { getAppSettings } from "../appSettings";
-import { downloadDataWithCache } from "../cacheUtils";
 import {
   ComponentSpecProvider,
   useComponentSpec,
@@ -56,25 +54,9 @@ const PageWrapper = () => {
           <Background gap={GRID_SIZE} />
         </GraphComponentSpecFlow>
       </div>
-      <SidebarWrapper />
+      <Sidebar />
       <PipelineAutoSaverWrapper />
     </>
-  );
-};
-
-const SidebarWrapper = () => {
-  const { componentSpec, setComponentSpec, isDirty } = useComponentSpec();
-  const appSettings = getAppSettings();
-  const downloadData = downloadDataWithCache;
-
-  return (
-    <Sidebar
-      componentSpec={componentSpec}
-      setComponentSpec={setComponentSpec}
-      isDirty={isDirty}
-      appSettings={appSettings}
-      downloadData={downloadData}
-    />
   );
 };
 
