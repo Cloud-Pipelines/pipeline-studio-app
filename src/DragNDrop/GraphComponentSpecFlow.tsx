@@ -15,13 +15,15 @@ import type {
 } from "@xyflow/react";
 import { type OnInit, ReactFlow } from "@xyflow/react";
 import type { ComponentType, DragEvent } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/custom/ConfirmationDialog";
 
 import type { ArgumentType, TaskOutputArgument } from "../componentSpec";
 import useComponentSpecToEdges from "../hooks/useComponentSpecToEdges";
-import useComponentSpecToNodes from "../hooks/useComponentSpecToNodes";
+import useComponentSpecToNodes, {
+  type NodeAndTaskId,
+} from "../hooks/useComponentSpecToNodes";
 import { useConnectionHandler } from "../hooks/useConnectionHandler";
 import { useComponentSpec } from "../providers/ComponentSpecProvider";
 import {
@@ -51,7 +53,8 @@ const GraphComponentSpecFlow = ({
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
 
-  const deleteNode = async (nodeId: string) => {
+  const onDelete = useCallback(async (ids: NodeAndTaskId) => {
+    const nodeId = ids.nodeId;
     const node = nodes.find((n) => n.id === nodeId);
     if (node) {
       const confirmed = await triggerConfirmationDialog({
@@ -65,13 +68,26 @@ const GraphComponentSpecFlow = ({
         updateGraphSpec(graphSpec);
       }
     }
-  };
+  }, []);
 
-  const { nodes, onNodesChange } = useComponentSpecToNodes(
-    componentSpec,
-    setComponentSpec,
-    deleteNode
+  const setArguments = useCallback(
+    (ids: NodeAndTaskId, args: Record<string, ArgumentType>) => {
+      const taskId = ids.taskId;
+      const newGraphSpec = replaceTaskArgumentsInGraphSpec(
+        taskId,
+        graphSpec,
+        args
+      );
+      updateGraphSpec(newGraphSpec);
+    },
+    []
   );
+
+  const { nodes, onNodesChange } = useComponentSpecToNodes(componentSpec, {
+    onDelete,
+    setArguments,
+  });
+
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
   const [reactFlowInstance, setReactFlowInstance] =

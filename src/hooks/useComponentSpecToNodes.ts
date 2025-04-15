@@ -1,30 +1,31 @@
-import {
-  type Node,
-  type NodeChange,
-  useNodesState,
-  type XYPosition,
-} from "@xyflow/react";
+import { type Node, type NodeChange, useNodesState } from "@xyflow/react";
 import { useEffect } from "react";
 
-import type { ArgumentType, ComponentSpec, GraphSpec } from "../componentSpec";
-import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
+import { extractPositionFromAnnotations } from "@/utils/extractPositionFromAnnotations";
 
-type SetComponentSpec = (componentSpec: ComponentSpec) => void;
+import type { ComponentSpec, GraphSpec } from "../componentSpec";
+
+export type NodeAndTaskId = {
+  taskId: string;
+  nodeId: string;
+};
+
+type NodeCallbacks = {
+  [key: string]: (ids: NodeAndTaskId, ...args: any[]) => void;
+};
 
 const useComponentSpecToNodes = (
   componentSpec: ComponentSpec,
-  setComponentSpec: SetComponentSpec,
-  removeNode: (nodeId: string) => void,
+  nodeCallbacks: NodeCallbacks
 ): {
-  nodes: Node<any>[];
+  nodes: Node[];
   onNodesChange: (changes: NodeChange[]) => void;
 } => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(
-    getNodes(componentSpec, setComponentSpec, removeNode),
-  );
+  const initialNodes = createNodes(componentSpec, nodeCallbacks);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 
   useEffect(() => {
-    const newNodes = getNodes(componentSpec, setComponentSpec, removeNode);
+    const newNodes = createNodes(componentSpec, nodeCallbacks);
     setNodes(newNodes);
   }, [componentSpec]);
 
@@ -34,68 +35,53 @@ const useComponentSpecToNodes = (
   };
 };
 
-const getNodes = (
+const createNodes = (
   componentSpec: ComponentSpec,
-  setComponentSpec: SetComponentSpec,
-  removeNode: (nodeId: string) => void,
-): Node<any>[] => {
+  nodeCallbacks: NodeCallbacks
+): Node[] => {
   if (!("graph" in componentSpec.implementation)) {
     return [];
   }
 
   const graphSpec = componentSpec.implementation.graph;
-  const taskNodes = getTaskNodes(
-    graphSpec,
-    componentSpec,
-    setComponentSpec,
-    removeNode,
-  );
-  const inputNodes = getInputNodes(componentSpec);
-  const outputNodes = getOutputNodes(componentSpec);
+  const taskNodes = createTaskNodes(graphSpec, nodeCallbacks);
+  const inputNodes = createInputNodes(componentSpec);
+  const outputNodes = createOutputNodes(componentSpec);
 
   return [...taskNodes, ...inputNodes, ...outputNodes];
 };
 
-const getTaskNodes = (
+const createTaskNodes = (
   graphSpec: GraphSpec,
-  componentSpec: ComponentSpec,
-  setComponentSpec: SetComponentSpec,
-  removeNode: (nodeId: string) => void,
+  nodeCallbacks: NodeCallbacks
 ) => {
-  return Object.entries(graphSpec.tasks).map<Node<any>>(
-    ([taskId, taskSpec]) => {
-      const position = extractPositionFromAnnotations(taskSpec.annotations);
-      const nodeId = `task_${taskId}`;
+  return Object.entries(graphSpec.tasks).map(([taskId, taskSpec]) => {
+    const position = extractPositionFromAnnotations(taskSpec.annotations);
+    const nodeId = `task_${taskId}`;
 
-      return {
-        id: nodeId,
-        data: {
-          taskSpec: taskSpec,
-          taskId: taskId,
-          setArguments: (args: Record<string, ArgumentType>) => {
-            const newGraphSpec = replaceTaskArgumentsInGraphSpec(
-              taskId,
-              graphSpec,
-              args,
-            );
-            setComponentSpec({
-              ...componentSpec,
-              implementation: { graph: newGraphSpec },
-            });
-          },
-          onDelete: () => {
-            removeNode(nodeId);
-          },
-        },
-        position: position,
-        type: "task",
-      };
-    },
-  );
+    // Dynamically add callbacks to node by first injecting the node & task id
+    const dynamicCallbacks = Object.fromEntries(
+      Object.entries(nodeCallbacks).map(([callbackName, callbackFn]) => [
+        callbackName,
+        (...args: any[]) => callbackFn({ taskId, nodeId }, ...args),
+      ])
+    );
+
+    return {
+      id: nodeId,
+      data: {
+        taskSpec: taskSpec,
+        taskId: taskId,
+        ...dynamicCallbacks,
+      },
+      position: position,
+      type: "task",
+    } as Node;
+  });
 };
 
-const getInputNodes = (componentSpec: ComponentSpec) => {
-  return (componentSpec.inputs ?? []).map<Node>((inputSpec) => {
+const createInputNodes = (componentSpec: ComponentSpec) => {
+  return (componentSpec.inputs ?? []).map((inputSpec) => {
     const position = extractPositionFromAnnotations(inputSpec.annotations);
 
     return {
@@ -103,12 +89,12 @@ const getInputNodes = (componentSpec: ComponentSpec) => {
       data: { label: inputSpec.name },
       position: position,
       type: "input",
-    };
+    } as Node;
   });
 };
 
-const getOutputNodes = (componentSpec: ComponentSpec) => {
-  return (componentSpec.outputs ?? []).map<Node>((outputSpec) => {
+const createOutputNodes = (componentSpec: ComponentSpec) => {
+  return (componentSpec.outputs ?? []).map((outputSpec) => {
     const position = extractPositionFromAnnotations(outputSpec.annotations);
 
     return {
@@ -116,29 +102,8 @@ const getOutputNodes = (componentSpec: ComponentSpec) => {
       data: { label: outputSpec.name },
       position: position,
       type: "output",
-    };
+    } as Node;
   });
-};
-
-const extractPositionFromAnnotations = (
-  annotations?: Record<string, unknown>,
-): XYPosition => {
-  const defaultPosition: XYPosition = { x: 0, y: 0 };
-
-  if (!annotations) return defaultPosition;
-
-  try {
-    const layoutAnnotation = annotations["editor.position"] as string;
-    if (!layoutAnnotation) return defaultPosition;
-
-    const decodedPosition = JSON.parse(layoutAnnotation);
-    return {
-      x: decodedPosition["x"] || 0,
-      y: decodedPosition["y"] || 0,
-    };
-  } catch {
-    return defaultPosition;
-  }
 };
 
 export default useComponentSpecToNodes;
