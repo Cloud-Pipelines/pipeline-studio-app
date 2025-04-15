@@ -344,6 +344,10 @@ const GraphComponentSpecFlow = ({
     nodes: Node[];
     edges: Edge[];
   }) => {
+    if (params.nodes.length === 0 && params.edges.length === 0) {
+      return false;
+    }
+
     const confirmed = await triggerConfirmationDialog(params);
     return confirmed;
   };
@@ -351,7 +355,11 @@ const GraphComponentSpecFlow = ({
   const isDeletingMultipleNodes = nodesToDelete && nodesToDelete.length > 1;
 
   const singleDeleteTitle =
-    "Delete Node" + nodesToDelete ? ` '${nodesToDelete?.[0].id}'` : "" + "?";
+    "Delete Node" +
+    (nodesToDelete && nodesToDelete.length > 0
+      ? ` '${nodesToDelete?.[0].id}'`
+      : "") +
+    "?";
   const multiDeleteTitle = `Delete Nodes?`;
 
   const singleDeleteDesc =
@@ -381,12 +389,7 @@ const GraphComponentSpecFlow = ({
         onBeforeDelete={handleBeforeDelete}
         onDelete={onElementsRemove}
         onInit={onInit}
-        deleteKeyCode={
-          rest.deleteKeyCode ?? (isAppleOS() ? "Backspace" : "Delete")
-        }
-        multiSelectionKeyCode={
-          rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
-        }
+        deleteKeyCode={["Delete", "Backspace"]}
       >
         {children}
       </ReactFlow>
@@ -404,9 +407,3 @@ const GraphComponentSpecFlow = ({
 };
 
 export default GraphComponentSpecFlow;
-
-const isAppleOS = () =>
-  window.navigator.platform.startsWith("Mac") ||
-  window.navigator.platform.startsWith("iPhone") ||
-  window.navigator.platform.startsWith("iPad") ||
-  window.navigator.platform.startsWith("iPod");
