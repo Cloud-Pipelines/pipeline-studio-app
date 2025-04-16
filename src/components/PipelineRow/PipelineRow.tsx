@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { EDITOR_PATH } from "@/utils/constants";
+import { EDITOR_PATH } from "@/router";
 import deletePipeline from "@/utils/deletePipeline";
 import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
 import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
