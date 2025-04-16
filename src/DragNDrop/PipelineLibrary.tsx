@@ -7,7 +7,6 @@
  */
 
 import { useNavigate } from "@tanstack/react-router";
-import { useStore } from "@xyflow/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -24,46 +23,17 @@ import { Label } from "@/components/ui/label";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
-import type { DownloadDataType } from "../cacheUtils";
-import { downloadDataWithCache } from "../cacheUtils";
 import {
   type ComponentFileEntry,
-  componentSpecToYaml,
   getComponentFileFromList,
-  writeComponentToFileListFromText,
 } from "../componentStore";
-import { preloadComponentReferences } from "../componentStore";
-import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
 import GraphComponentLink from "./GraphComponentLink";
 
-interface PipelineLibraryProps {
-  samplePipelineLibraryUrl?: string;
-  downloadData: DownloadDataType;
-}
-
-const PipelineLibrary = ({
-  downloadData = downloadDataWithCache,
-}: PipelineLibraryProps) => {
-  const { componentSpec, setComponentSpec, isDirty, refetch } =
-    useComponentSpec();
+const PipelineLibrary = () => {
+  const { componentSpec, isDirty, saveComponentSpec } = useComponentSpec();
 
   const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
-  const nodes = useStore((store) => store.nodes);
-
-  const openPipelineFile = useCallback(
-    async (fileEntry: ComponentFileEntry) => {
-      // Loading all child components
-      // TODO: Move this functionality to the setComponentSpec function
-      await preloadComponentReferences(
-        fileEntry.componentRef.spec,
-        downloadData,
-      );
-      setComponentSpec(fileEntry.componentRef.spec);
-      setPipelineFile(fileEntry);
-    },
-    [setComponentSpec, setPipelineFile, downloadData],
-  );
 
   const openSaveAsDialog = useCallback(() => {
     setSaveAsDialogIsOpen(true);
@@ -85,33 +55,11 @@ const PipelineLibrary = ({
         }
       }
 
-      if (!componentSpec) {
-        return;
-      }
-
-      const graphComponent = updateComponentSpecFromNodes(
-        componentSpec,
-        nodes,
-        false,
-        true,
-      );
-
-      graphComponent.name = name;
-
-      const componentText = componentSpecToYaml(graphComponent);
-      const fileEntry = await writeComponentToFileListFromText(
-        USER_PIPELINES_LIST_NAME,
-        name,
-        componentText,
-      );
-
-      await openPipelineFile(fileEntry);
-
-      refetch();
+      saveComponentSpec(name);
 
       closeSaveAsDialog();
     },
-    [componentSpec, closeSaveAsDialog, nodes, openPipelineFile, refetch],
+    [closeSaveAsDialog, saveComponentSpec],
   );
 
   useEffect(() => {

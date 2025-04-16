@@ -49,10 +49,7 @@ const Sidebar = () => {
   return (
     <aside className="nodeList">
       Save/Load pipeline
-      <PipelineLibrary
-        samplePipelineLibraryUrl={appSettings.pipelineLibraryUrl}
-        downloadData={downloadDataWithCache}
-      />
+      <PipelineLibrary />
       <details
         style={{
           border: "1px solid #aaa",
