@@ -17,10 +17,7 @@ import {
   ReactFlowProvider,
 } from "@xyflow/react";
 
-import {
-  ComponentSpecProvider,
-  useComponentSpec,
-} from "../providers/ComponentSpecProvider";
+import { ComponentSpecProvider } from "../providers/ComponentSpecProvider";
 import { PipelineAutoSaver } from "../utils/PipelineAutoSaver";
 import GraphComponentSpecFlow from "./GraphComponentSpecFlow";
 import Sidebar from "./Sidebar";
@@ -55,15 +52,9 @@ const PageWrapper = () => {
         </GraphComponentSpecFlow>
       </div>
       <Sidebar />
-      <PipelineAutoSaverWrapper />
+      <PipelineAutoSaver />
     </>
   );
-};
-
-const PipelineAutoSaverWrapper = () => {
-  const { componentSpec } = useComponentSpec();
-
-  return <PipelineAutoSaver componentSpec={componentSpec} />;
 };
 
 export default DnDFlow;

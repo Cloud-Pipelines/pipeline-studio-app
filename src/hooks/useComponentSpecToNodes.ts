@@ -1,6 +1,7 @@
 import { type Node, type NodeChange, useNodesState } from "@xyflow/react";
 import { useEffect } from "react";
 
+import type { ComponentTaskNodeCallbacks } from "@/DragNDrop/ComponentTaskNode";
 import { extractPositionFromAnnotations } from "@/utils/extractPositionFromAnnotations";
 
 import type { ComponentSpec, GraphSpec } from "../componentSpec";
@@ -10,8 +11,20 @@ export type NodeAndTaskId = {
   nodeId: string;
 };
 
+// Dynamic Node Callback types - every callback has the node & task id added to it as an input parameter
+type CallbackArgs = Parameters<
+  NonNullable<ComponentTaskNodeCallbacks[keyof ComponentTaskNodeCallbacks]>
+>;
+
+type CallbackWithIds<K extends keyof ComponentTaskNodeCallbacks> = (
+  ids: NodeAndTaskId,
+  ...args: K extends keyof ComponentTaskNodeCallbacks
+    ? Parameters<NonNullable<ComponentTaskNodeCallbacks[K]>>
+    : never
+) => void;
+
 type NodeCallbacks = {
-  [key: string]: (ids: NodeAndTaskId, ...args: any[]) => void;
+  [K in keyof ComponentTaskNodeCallbacks]: CallbackWithIds<K>;
 };
 
 const useComponentSpecToNodes = (
@@ -63,7 +76,10 @@ const createTaskNodes = (
     const dynamicCallbacks = Object.fromEntries(
       Object.entries(nodeCallbacks).map(([callbackName, callbackFn]) => [
         callbackName,
-        (...args: any[]) => callbackFn({ taskId, nodeId }, ...args),
+        (...args: CallbackArgs) =>
+          args.length
+            ? callbackFn({ taskId, nodeId }, ...args)
+            : callbackFn({ taskId, nodeId }, {}),
       ]),
     );
 
