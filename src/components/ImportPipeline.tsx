@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { EDITOR_PATH } from "@/router";
 import {
@@ -23,8 +24,6 @@ import {
   importPipelineFromYaml,
   type ImportResult,
 } from "@/utils/importPipeline";
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 interface ImportPipelineProps {
   triggerComponent?: ReactElement<{ onClick?: () => void }>;

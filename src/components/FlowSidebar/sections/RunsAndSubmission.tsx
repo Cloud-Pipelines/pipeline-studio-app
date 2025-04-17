@@ -3,6 +3,12 @@ import { useMemo, useState } from "react";
 
 import OasisSubmitter from "@/components/OasisSubmitter";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -14,12 +20,6 @@ import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
 import RunListItem from "../../PipelineRow/RunListItem";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../../ui/collapsible";
-import { ScrollArea } from "../../ui/scroll-area";
 
 const RunsAndSubmission = () => {
   const { componentSpec } = useComponentSpec();

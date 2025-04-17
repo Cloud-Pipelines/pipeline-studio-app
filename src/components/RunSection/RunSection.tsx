@@ -5,15 +5,15 @@ import { useState } from "react";
 import type { ListPipelineJobsResponse } from "@/api/types.gen";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { API_URL } from "@/utils/constants";
-
 import {
   Table,
   TableBody,
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
+} from "@/components/ui/table";
+import { API_URL } from "@/utils/constants";
+
 import RunRow from "./RunRow";
 
 export const RunSection = () => {

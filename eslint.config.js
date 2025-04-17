@@ -28,6 +28,29 @@ export default [
       ],
       "simple-import-sort/imports": "warn",
       "simple-import-sort/exports": "warn",
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@/components/ui",
+              message:
+                "Use absolute imports for '@/components/ui' instead of relative imports.",
+            },
+          ],
+          patterns: [
+            {
+              group: [
+                "**/ui/*",
+                "!@/components/ui/*",
+                "!**/argo-workflows/ui/*",
+              ],
+              message:
+                "Only '@/components/ui/*' is allowed for importing from the ui folder.",
+            },
+          ],
+        },
+      ],
     },
     plugins: {
       "simple-import-sort": simpleImportSort,

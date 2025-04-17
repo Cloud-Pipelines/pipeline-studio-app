@@ -12,6 +12,11 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -19,7 +24,6 @@ import type {
   InputSpec,
   TypeSpecType,
 } from "../../componentSpec";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export type ArgumentInput = {
   key: string;

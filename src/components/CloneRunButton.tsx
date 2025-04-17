@@ -1,12 +1,12 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { CopyIcon, Loader2 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 import { type RunDetailParams, runDetailRoute, RUNS_BASE_PATH } from "@/router";
 import { copyRunToPipeline } from "@/utils/copyRunToPipeline";
 
 import { PipelineNameDialog } from "./shared/PipelineNameDialog";
-import { Button } from "./ui/button";
 
 const CloneRunButtonInner = () => {
   const { id } = runDetailRoute.useParams() as RunDetailParams;
