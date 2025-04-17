@@ -1,6 +1,11 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import type { PipelineRunResponse } from "@/api/types.gen";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { APP_ROUTES } from "@/router";
 import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
@@ -13,11 +18,6 @@ import {
   formatDate,
   getRunStatus,
 } from "../PipelineRow/utils";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "../ui/hover-card";
 
 const RunRow = ({ run }: { run: PipelineRunResponse }) => {
   const navigate = useNavigate();

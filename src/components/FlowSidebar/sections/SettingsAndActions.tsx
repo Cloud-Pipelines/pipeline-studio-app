@@ -3,6 +3,12 @@ import { useStore } from "@xyflow/react";
 import { ChevronDown, FileDown, Import, Save, SaveAll } from "lucide-react";
 import { useMemo } from "react";
 
+import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -20,12 +26,6 @@ import useSavePipeline from "@/utils/useSavePipeline";
 
 import ImportPipeline from "../../ImportPipeline";
 import { PipelineNameDialog } from "../../shared/PipelineNameDialog";
-import { Button } from "../../ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../../ui/collapsible";
 import ImportComponent from "../components/ImportComponent";
 
 const SettingsAndActions = () => {
