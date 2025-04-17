@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 
 import {
   addComponentToListByText,
@@ -29,8 +30,6 @@ import {
   getAllComponentFilesFromList,
 } from "../componentStore";
 import DraggableComponent from "./DraggableComponent";
-
-const USER_COMPONENTS_LIST_NAME = "user_components";
 
 const UserComponentLibrary = () => {
   const [errorMessage, setErrorMessage] = useState("");

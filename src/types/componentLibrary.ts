@@ -1,7 +1,8 @@
 import type { ComponentReference } from "@/componentSpec";
 
-export type ComponentItemProps = {
-  url: string | undefined;
+export type ComponentItemFromUrlProps = {
+  url?: string;
+  componentRef?: ComponentReference;
   searchTerm?: string;
 };
 
@@ -9,6 +10,7 @@ export type ComponentFolder = {
   name: string;
   components?: ComponentReference[];
   folders?: ComponentFolder[];
+  isUserFolder?: boolean;
 };
 
 export type FolderItemProps = {

@@ -13,7 +13,7 @@ const SearchInput = ({ value, onChange }: SearchInputProps) => {
         <Input
           type="text"
           placeholder="Search components..."
-          className={"w-full pl-8 text-sm h-8 focus-visible:ring-gray-400/50"}
+          className="w-full pl-8 text-sm h-8 focus-visible:ring-gray-400/50"
           value={value}
           onChange={onChange}
         />

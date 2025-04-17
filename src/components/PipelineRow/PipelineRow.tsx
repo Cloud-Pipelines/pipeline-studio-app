@@ -8,7 +8,6 @@ import {
   useState,
 } from "react";
 
-import { ConfirmationDialog } from "@/components/custom/ConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -22,6 +21,7 @@ import deletePipeline from "@/utils/deletePipeline";
 import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
 import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
 
+import ConfirmationDialog from "../ConfirmationDialog";
 import RunListItem from "./RunListItem";
 import StatusIcon from "./StatusIcon";
 import { type PipelineRowProps } from "./types";
@@ -35,9 +35,6 @@ const PipelineRow = ({
   const navigate = useNavigate();
   const [pipelineRuns, setPipelineRuns] = useState<PipelineRun[]>([]);
   const [latestRun, setLatestRun] = useState<PipelineRun | null>(null);
-
-  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-    useState(false);
 
   const handleFetchRuns = useCallback(async () => {
     if (!name) return;
@@ -71,16 +68,10 @@ const PipelineRow = ({
     [navigate, name],
   );
 
-  const handlePipelineDelete = useCallback(async (e: MouseEvent) => {
-    e.stopPropagation();
-    setIsConfirmationDialogOpen(true);
-  }, []);
-
   const confirmPipelineDelete = useCallback(async () => {
     if (!name) return;
 
     const deleteCallback = () => {
-      setIsConfirmationDialogOpen(false);
       onDelete?.();
     };
 
@@ -142,24 +133,22 @@ const PipelineRow = ({
           )}
         </TableCell>
         <TableCell className="w-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="opacity-0 group-hover:opacity-100 cursor-pointer text-destructive-foreground hover:text-destructive-foreground"
-            onClick={handlePipelineDelete}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
+          <ConfirmationDialog
+            trigger={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="opacity-0 group-hover:opacity-100 cursor-pointer text-destructive-foreground hover:text-destructive-foreground"
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            }
+            title={`Delete pipeline "${name}"?`}
+            description="Are you sure you want to delete this pipeline? Existing pipeline runs will not be impacted. This action cannot be undone."
+            onConfirm={confirmPipelineDelete}
+          />
         </TableCell>
       </TableRow>
-
-      <ConfirmationDialog
-        title={`Delete pipeline "${name}"`}
-        message="Are you sure you want to delete this pipeline? Existing pipeline runs will not be impacted. This action cannot be undone."
-        isOpen={isConfirmationDialogOpen}
-        onConfirm={confirmPipelineDelete}
-        onCancel={() => setIsConfirmationDialogOpen(false)}
-      />
     </>
   );
 };
