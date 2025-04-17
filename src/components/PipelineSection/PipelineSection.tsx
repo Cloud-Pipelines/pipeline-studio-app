@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import NewExperimentDialog from "@/components/NewExperiment";
 import PipelineRow from "@/components/PipelineRow";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
@@ -18,10 +21,6 @@ import {
 } from "@/componentStore";
 import { cn } from "@/lib/utils";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
-
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 
 export type Pipelines = Map<string, ComponentFileEntry>;
 
@@ -120,6 +119,7 @@ export const PipelineSection = () => {
               <TableHead>Modified at</TableHead>
               <TableHead>Last run</TableHead>
               <TableHead>Runs</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -131,6 +131,7 @@ export const PipelineSection = () => {
                 key={fileEntry.componentRef.digest}
                 name={name.replace(/_/g, " ")}
                 modificationTime={fileEntry.modificationTime}
+                onDelete={fetchUserPipelines}
               />
             ))}
           </TableBody>

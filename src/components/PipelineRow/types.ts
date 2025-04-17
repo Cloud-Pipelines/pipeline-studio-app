@@ -10,4 +10,5 @@ export interface TaskStatusCounts {
 export interface PipelineRowProps {
   name?: string;
   modificationTime?: Date;
+  onDelete?: () => void;
 }
