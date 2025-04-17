@@ -8,13 +8,21 @@ import RootLayout from "./components/RootLayout";
 import Editor from "./routes/Editor";
 import Home from "./routes/Home";
 import RunDetails from "./routes/RunDetails";
-import { APP_ROUTES } from "./utils/constants";
 
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
 }
+
+export const EDITOR_PATH = "/editor";
+export const RUNS_BASE_PATH = "/runs";
+export const APP_ROUTES = {
+  HOME: "/",
+  PIPELINE_EDITOR: `${EDITOR_PATH}/$name`,
+  RUN_DETAIL: `${RUNS_BASE_PATH}/$id`,
+  RUNS: RUNS_BASE_PATH,
+};
 
 const rootRoute = createRootRoute({
   component: RootLayout,

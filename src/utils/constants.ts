@@ -18,16 +18,6 @@ export const GIT_REPO_URL =
 
 export const GIT_COMMIT = import.meta.env.VITE_GIT_COMMIT || "master";
 
-/* App Config */
-export const EDITOR_PATH = "/editor";
-export const RUNS_BASE_PATH = "/runs";
-export const APP_ROUTES = {
-  HOME: "/",
-  PIPELINE_EDITOR: `${EDITOR_PATH}/$name`,
-  RUN_DETAIL: `${RUNS_BASE_PATH}/$id`,
-  RUNS: RUNS_BASE_PATH,
-};
-
 export const USER_PIPELINES_LIST_NAME = "user_pipelines";
 
 export const defaultPipelineYamlWithName = (name: string) => `
@@ -44,3 +34,9 @@ implementation:
 export const VALID_NAME_REGEX = /^[a-zA-Z0-9\s]+$/;
 export const VALID_NAME_MESSAGE =
   "Name must be unique and contain only alphanumeric characters and spaces";
+
+// IndexedDB constants
+export const DB_NAME = "components";
+export const PIPELINE_RUNS_STORE_NAME = "pipeline_runs";
+
+export const USER_COMPONENTS_LIST_NAME = "user_components";

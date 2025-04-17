@@ -21,7 +21,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
-import { EDITOR_PATH, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import { EDITOR_PATH } from "@/router";
+import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 import {
   type ComponentFileEntry,

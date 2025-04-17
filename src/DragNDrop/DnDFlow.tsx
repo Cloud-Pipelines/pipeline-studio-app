@@ -17,10 +17,11 @@ import {
   ReactFlowProvider,
 } from "@xyflow/react";
 
+import FlowSidebar from "@/components/FlowSidebar";
+
 import { ComponentSpecProvider } from "../providers/ComponentSpecProvider";
 import { PipelineAutoSaver } from "../utils/PipelineAutoSaver";
 import GraphComponentSpecFlow from "./GraphComponentSpecFlow";
-import Sidebar from "./Sidebar";
 
 const GRID_SIZE = 10;
 
@@ -51,7 +52,7 @@ const PageWrapper = () => {
           <Background gap={GRID_SIZE} />
         </GraphComponentSpecFlow>
       </div>
-      <Sidebar />
+      <FlowSidebar />
       <PipelineAutoSaver />
     </>
   );
