@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 
 import type { GetArtifactsApiExecutionsIdArtifactsGetResponse } from "@/api/types.gen";
 import { API_URL } from "@/utils/constants";
@@ -35,7 +36,7 @@ const ArtifactValue = ({
   value,
 }: {
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
 }) => (
   <div className="flex text-xs">
     <span className="text-gray-500 w-20 flex-shrink-0">{label}:</span>

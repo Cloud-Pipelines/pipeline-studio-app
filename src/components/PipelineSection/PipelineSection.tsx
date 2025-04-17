@@ -1,5 +1,5 @@
 import { CircleX, Terminal } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type ChangeEvent, useEffect, useState } from "react";
 
 import NewExperimentDialog from "@/components/NewExperiment";
 import PipelineRow from "@/components/PipelineRow";
@@ -81,7 +81,7 @@ export const PipelineSection = () => {
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 

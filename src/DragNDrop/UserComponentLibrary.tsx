@@ -6,7 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 import { Button } from "@/components/ui/button";
@@ -123,7 +123,7 @@ const UserComponentLibrary = () => {
   );
 
   const handleDelete = useCallback(
-    (fileName: string) => (e: React.MouseEvent) => {
+    (fileName: string) => (e: MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
       if (fileName) {
