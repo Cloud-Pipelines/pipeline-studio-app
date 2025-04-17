@@ -1,5 +1,5 @@
 import { AlertCircle, InfoIcon } from "lucide-react";
-import { useState } from "react";
+import { type ChangeEvent, type ReactNode, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -18,13 +18,13 @@ import useLoadUserPipelines from "@/hooks/useLoadUserPipelines";
 import { VALID_NAME_MESSAGE, VALID_NAME_REGEX } from "@/utils/constants";
 
 interface PipelineNameDialogProps {
-  trigger: React.ReactNode;
+  trigger: ReactNode;
   title: string;
   description?: string;
   initialName: string;
   onSubmit: (name: string) => void;
   submitButtonText: string;
-  submitButtonIcon?: React.ReactNode;
+  submitButtonIcon?: ReactNode;
   isSubmitDisabled?: (name: string, error: string | null) => boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -44,7 +44,7 @@ export const PipelineNameDialog = ({
   const [name, setName] = useState(initialName);
   const { userPipelines, isLoadingUserPipelines } = useLoadUserPipelines();
 
-  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOnChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
     const existingPipelineNames = new Set(
       Array.from(userPipelines.keys()).map((name) => name.toLowerCase()),

@@ -7,6 +7,7 @@
  */
 
 import { useStore } from "@xyflow/react";
+import type { CSSProperties, Ref } from "react";
 
 import type { ComponentSpec } from "../componentSpec";
 import { componentSpecToYaml } from "../componentStore";
@@ -16,8 +17,8 @@ interface GraphComponentLinkProps {
   componentSpec: ComponentSpec;
   downloadFileName?: string;
   linkText?: string;
-  linkRef?: React.Ref<HTMLAnchorElement>;
-  style?: React.CSSProperties;
+  linkRef?: Ref<HTMLAnchorElement>;
+  style?: CSSProperties;
 }
 
 const GraphComponentLink = ({

@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { type MouseEvent } from "react";
 
 import type { PipelineRunResponse } from "@/api/types.gen";
 import {
@@ -58,7 +59,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
   const LinkProps = {
     to: clickThroughUrl,
     className: "underline hover:text-blue-500 text-black",
-    onClick: (e: React.MouseEvent) => {
+    onClick: (e: MouseEvent) => {
       e.stopPropagation(); // Prevent triggering the row click handler
     },
   };
