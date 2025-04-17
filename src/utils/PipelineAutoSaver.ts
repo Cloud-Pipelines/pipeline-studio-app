@@ -9,6 +9,8 @@
 import { type Node, useStore } from "@xyflow/react";
 import yaml from "js-yaml";
 
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+
 import type { ComponentSpec } from "../componentSpec";
 import { componentSpecToYaml } from "../componentStore";
 import { updateComponentSpecFromNodes } from "./updateComponentSpecFromNodes";
@@ -63,11 +65,9 @@ export const loadPipelineSpecFromSessionStorage = () => {
 // Auto-saver is extracted to its own child component since useStoreState in the parent causes infinite re-rendering
 // (each render of GraphComponentSpecFlow seems to change the Redux store).
 // This component seems to be triggered for every node movement, so even pure layout changes are saved.
-export const PipelineAutoSaver = ({
-  componentSpec,
-}: {
-  componentSpec: ComponentSpec;
-}) => {
+export const PipelineAutoSaver = () => {
+  const { componentSpec } = useComponentSpec();
+
   const nodes = useStore((store) => store.nodes);
   // Fixing issue where a React error would cause all node positions to be recorded as undefined (`!<tag:yaml.org,2002:js/undefined>`)
   // nodes should never be undefined in normal situation.

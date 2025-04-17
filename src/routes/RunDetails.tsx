@@ -9,6 +9,7 @@ import {
 
 import type { GetGraphExecutionStateResponse } from "@/api/types.gen";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
+import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/router";
 import { API_URL } from "@/utils/constants";
 
@@ -128,26 +129,27 @@ const RunDetails = () => {
   }
 
   return (
-    <div className="dndflow">
-      <DndContext>
-        <ReactFlowProvider>
-          <div className="reactflow-wrapper h-full w-full">
-            <GraphComponentSpecFlow
-              componentSpec={newComponentSpec}
-              setComponentSpec={() => {}}
-              snapToGrid={true}
-              snapGrid={[GRID_SIZE, GRID_SIZE]}
-              nodesDraggable={false}
-              fitView
-            >
-              <MiniMap />
-              <Controls />
-              <Background gap={GRID_SIZE} />
-            </GraphComponentSpecFlow>
-          </div>
-        </ReactFlowProvider>
-      </DndContext>
-    </div>
+    <ComponentSpecProvider spec={newComponentSpec}>
+      <div className="dndflow">
+        <DndContext>
+          <ReactFlowProvider>
+            <div className="reactflow-wrapper h-full w-full">
+              <GraphComponentSpecFlow
+                snapToGrid={true}
+                snapGrid={[GRID_SIZE, GRID_SIZE]}
+                nodesDraggable={false}
+                fitView
+                readOnly
+              >
+                <MiniMap />
+                <Controls />
+                <Background gap={GRID_SIZE} />
+              </GraphComponentSpecFlow>
+            </div>
+          </ReactFlowProvider>
+        </DndContext>
+      </div>
+    </ComponentSpecProvider>
   );
 };
 

@@ -13,12 +13,13 @@ describe("useComponentSpecToNodes", () => {
     outputs: [],
   });
 
-  const onDelete = vi.fn();
-
-  const mockSetComponentSpec = vi.fn();
+  const mockNodeCallbacks = {
+    onDelete: vi.fn(),
+    setArguments: vi.fn(),
+  };
 
   beforeEach(() => {
-    mockSetComponentSpec.mockClear();
+    mockNodeCallbacks.setArguments.mockClear();
   });
 
   it("returns empty array for non-graph implementations", () => {
@@ -27,7 +28,7 @@ describe("useComponentSpecToNodes", () => {
     });
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
+      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
     );
 
     expect(result.current.nodes).toEqual([]);
@@ -53,7 +54,7 @@ describe("useComponentSpecToNodes", () => {
     }
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
+      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
     );
 
     expect(result.current.nodes).toContainEqual(
@@ -83,7 +84,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
+      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
     );
 
     expect(result.current.nodes).toContainEqual({
@@ -110,7 +111,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
+      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
     );
 
     expect(result.current.nodes).toContainEqual({
@@ -139,7 +140,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
+      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
     );
     const defaultPosition = { x: 0, y: 0 };
 
@@ -164,10 +165,15 @@ describe("useComponentSpecToNodes", () => {
   });
 
   it("tests the setArguments function in task nodes", () => {
+    const taskId = "task1";
+    const nodeId = `task_${taskId}`;
+
+    const mockSetArguments = mockNodeCallbacks.setArguments;
+
     const componentSpec = createBasicComponentSpec({
       graph: {
         tasks: {
-          task1: {
+          [taskId]: {
             componentRef: {},
             arguments: { existingArg: "value" },
           },
@@ -177,28 +183,16 @@ describe("useComponentSpecToNodes", () => {
     });
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
+      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
     );
-    const taskNode = result.current.nodes.find(
-      (node) => node.id === "task_task1",
-    );
+    const taskNode = result.current.nodes.find((node) => node.id === nodeId) as
+      | { id: string; data: { setArguments: (args: any) => void } }
+      | undefined;
 
     const newArgs = { newArg: "newValue" };
     taskNode?.data.setArguments(newArgs);
 
-    expect(mockSetComponentSpec).toHaveBeenCalledTimes(1);
-    expect(mockSetComponentSpec).toHaveBeenCalledWith(
-      expect.objectContaining({
-        implementation: expect.objectContaining({
-          graph: expect.objectContaining({
-            tasks: expect.objectContaining({
-              task1: expect.objectContaining({
-                arguments: newArgs,
-              }),
-            }),
-          }),
-        }),
-      }),
-    );
+    expect(mockSetArguments).toHaveBeenCalledTimes(1);
+    expect(mockSetArguments).toHaveBeenCalledWith({ taskId, nodeId }, newArgs);
   });
 });

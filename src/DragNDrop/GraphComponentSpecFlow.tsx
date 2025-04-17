@@ -14,19 +14,18 @@ import type {
   ReactFlowProps,
 } from "@xyflow/react";
 import { type OnInit, ReactFlow } from "@xyflow/react";
-import type { DragEvent } from "react";
-import { useState } from "react";
+import type { ComponentType, DragEvent } from "react";
+import { useCallback, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/custom/ConfirmationDialog";
 
-import type {
-  ArgumentType,
-  ComponentSpec,
-  TaskOutputArgument,
-} from "../componentSpec";
+import type { ArgumentType, TaskOutputArgument } from "../componentSpec";
 import useComponentSpecToEdges from "../hooks/useComponentSpecToEdges";
-import useComponentSpecToNodes from "../hooks/useComponentSpecToNodes";
+import useComponentSpecToNodes, {
+  type NodeAndTaskId,
+} from "../hooks/useComponentSpecToNodes";
 import { useConnectionHandler } from "../hooks/useConnectionHandler";
+import { useComponentSpec } from "../providers/ComponentSpecProvider";
 import {
   nodeIdToInputName,
   nodeIdToOutputName,
@@ -37,42 +36,25 @@ import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGrap
 import { updateNodePositions } from "../utils/updateNodePosition";
 import ComponentTaskNode from "./ComponentTaskNode";
 
-export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
-  implementation: {
-    graph: {
-      tasks: {},
-    },
-  },
-};
-
-export interface GraphComponentSpecFlowProps
-  extends Omit<ReactFlowProps, "elements"> {
-  componentSpec: ComponentSpec;
-  setComponentSpec: (componentSpec: ComponentSpec) => void;
-}
-
-const nodeTypes: Record<string, React.ComponentType<any>> = {
+const nodeTypes: Record<string, ComponentType<any>> = {
   task: ComponentTaskNode,
 };
 
+type ConfirmationDialogHandlers = {
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
 const GraphComponentSpecFlow = ({
+  readOnly,
   children,
-  componentSpec = EMPTY_GRAPH_COMPONENT_SPEC,
-  setComponentSpec,
   ...rest
-}: GraphComponentSpecFlowProps) => {
-  const [reactFlowInstance, setReactFlowInstance] =
-    useState<ReactFlowInstance>();
+}: ReactFlowProps & { readOnly?: boolean }) => {
+  const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
+    useComponentSpec();
 
-  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-    useState(false);
-  const [nodesToDelete, setNodesToDelete] = useState<Node[] | null>(null);
-  const [confirmationDialogHandlers, setConfirmationDialogHandlers] = useState<{
-    onConfirm: () => void;
-    onCancel: () => void;
-  } | null>(null);
-
-  const deleteNode = async (nodeId: string) => {
+  const onDelete = useCallback(async (ids: NodeAndTaskId) => {
+    const nodeId = ids.nodeId;
     const node = nodes.find((n) => n.id === nodeId);
     if (node) {
       const confirmed = await triggerConfirmationDialog({
@@ -83,31 +65,49 @@ const GraphComponentSpecFlow = ({
         removeNode(node);
 
         // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
-        setComponentSpec({
-          ...componentSpec,
-          implementation: { graph: graphSpec },
-        });
+        updateGraphSpec(graphSpec);
       }
     }
-  };
+  }, []);
 
-  const { nodes, onNodesChange } = useComponentSpecToNodes(
-    componentSpec,
-    setComponentSpec,
-    deleteNode,
+  const setArguments = useCallback(
+    (ids: NodeAndTaskId, args: Record<string, ArgumentType>) => {
+      const taskId = ids.taskId;
+      const newGraphSpec = replaceTaskArgumentsInGraphSpec(
+        taskId,
+        graphSpec,
+        args,
+      );
+      updateGraphSpec(newGraphSpec);
+    },
+    [],
   );
+
+  const { nodes, onNodesChange } = useComponentSpecToNodes(componentSpec, {
+    onDelete,
+    setArguments,
+  });
+
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
-  if (!("graph" in componentSpec.implementation)) {
-    return null;
-  }
-  const graphSpec = componentSpec.implementation.graph;
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance>();
+
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
+    useState(false);
+  const [nodesToDelete, setNodesToDelete] = useState<Node[] | null>(null);
+  const [confirmationDialogHandlers, setConfirmationDialogHandlers] =
+    useState<ConfirmationDialogHandlers | null>(null);
 
   const setTaskArgument = (
     taskId: string,
     inputName: string,
     argument?: ArgumentType,
   ) => {
+    if (readOnly) {
+      return;
+    }
+
     const oldTaskSpec = graphSpec.tasks[taskId];
     const oldTaskSpecArguments = oldTaskSpec.arguments || {};
 
@@ -123,11 +123,9 @@ const GraphComponentSpecFlow = ({
       newTaskSpecArguments,
     );
 
-    setComponentSpec({
-      ...componentSpec,
-      implementation: { graph: newGraphSpec },
-    });
+    updateGraphSpec(newGraphSpec);
   };
+
   const setGraphOutputValue = (
     outputName: string,
     outputValue?: TaskOutputArgument,
@@ -140,10 +138,8 @@ const GraphComponentSpecFlow = ({
       ...nonNullOutputObject,
     };
     const newGraphSpec = { ...graphSpec, outputValues: newGraphOutputValues };
-    setComponentSpec({
-      ...componentSpec,
-      implementation: { graph: newGraphSpec },
-    });
+
+    updateGraphSpec(newGraphSpec);
   };
 
   const addConnection = useConnectionHandler({
@@ -257,6 +253,11 @@ const GraphComponentSpecFlow = ({
 
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
+
+    if (readOnly) {
+      return;
+    }
+
     if (reactFlowInstance) {
       onDropNode(
         event,
@@ -296,6 +297,10 @@ const GraphComponentSpecFlow = ({
   };
 
   const onElementsRemove = (params: { nodes: Node[]; edges: Edge[] }) => {
+    if (readOnly) {
+      return;
+    }
+
     for (const edge of params.edges) {
       removeEdge(edge);
     }
@@ -304,10 +309,7 @@ const GraphComponentSpecFlow = ({
     }
 
     // Save the updated graph spec to the component spec
-    setComponentSpec({
-      ...componentSpec,
-      implementation: { graph: graphSpec },
-    });
+    updateGraphSpec(graphSpec);
   };
 
   const handleOnNodesChange = (changes: NodeChange[]) => {

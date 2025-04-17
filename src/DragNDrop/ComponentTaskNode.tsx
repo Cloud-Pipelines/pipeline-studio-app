@@ -153,11 +153,16 @@ function generateOutputHandles(outputSpecs: OutputSpec[]): ReactElement[] {
   );
 }
 
-export interface ComponentTaskNodeProps extends Record<string, unknown> {
-  taskSpec: TaskSpec;
-  taskId: string;
+export interface ComponentTaskNodeCallbacks {
   setArguments?: (args: Record<string, ArgumentType>) => void;
   onDelete: () => void;
+}
+
+export interface ComponentTaskNodeProps
+  extends Record<string, unknown>,
+    ComponentTaskNodeCallbacks {
+  taskSpec: TaskSpec;
+  taskId: string;
 }
 
 const getStatusIcon = (status: string) => {
