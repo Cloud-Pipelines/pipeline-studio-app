@@ -11,9 +11,9 @@ import yaml from "js-yaml";
 
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
-import type { ComponentSpec } from "../componentSpec";
-import { componentSpecToYaml } from "../componentStore";
-import { updateComponentSpecFromNodes } from "./updateComponentSpecFromNodes";
+import { updateComponentSpecFromNodes } from "../components/shared/ReactFlow/FlowGraph/utils/updateComponentSpecFromNodes";
+import type { ComponentSpec } from "./componentSpec";
+import { componentSpecToYaml } from "./componentStore";
 
 const SAVED_COMPONENT_SPEC_KEY = "autosaved.component.yaml";
 

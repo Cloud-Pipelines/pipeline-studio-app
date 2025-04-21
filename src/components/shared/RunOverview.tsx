@@ -9,13 +9,11 @@ import {
   StatusIcon,
   StatusText,
 } from "@/components/shared/Status/";
-import { APP_ROUTES } from "@/router";
+import { APP_ROUTES } from "@/routes/router";
+import { fetchPipelineRunById } from "@/services/pipelineRunService";
+import type { PipelineRun } from "@/types/pipelineRun";
 import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
 import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
-import {
-  fetchPipelineRunById,
-  type PipelineRun,
-} from "@/utils/fetchPipelineRuns";
 
 import { formatDate } from "../Home/utils";
 

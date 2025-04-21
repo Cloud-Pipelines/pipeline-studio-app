@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import {
   addComponentToListByText,
   addComponentToListByUrl,
-} from "@/componentStore";
+} from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 
 interface ImportComponentProps {

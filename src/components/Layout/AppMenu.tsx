@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
-import NewExperimentDialog from "@/components/NewExperiment";
+import NewExperimentDialog from "@/components/shared/NewExperiment";
 
 import CloneRunButton from "./CloneRunButton";
 import EditorMenu from "./EditorMenu";

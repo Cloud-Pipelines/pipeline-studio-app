@@ -1,10 +1,10 @@
-import { downloadDataWithCache } from "@/cacheUtils";
-import { isGraphImplementation } from "@/componentSpec";
+import { downloadDataWithCache } from "@/utils/cache";
+import { isGraphImplementation } from "@/utils/componentSpec";
 import {
   type ComponentReferenceWithSpec,
   loadComponentAsRefFromText,
   preloadComponentReferences,
-} from "@/componentStore";
+} from "@/utils/componentStore";
 
 const loadInlineComponentRefs = async (tasks: Record<string, any>) => {
   for (const taskId in tasks) {

@@ -1,4 +1,4 @@
-import type { ArgumentType, GraphSpec } from "../componentSpec";
+import type { ArgumentType, GraphSpec } from "./componentSpec";
 
 const replaceTaskArgumentsInGraphSpec = (
   taskId: string,

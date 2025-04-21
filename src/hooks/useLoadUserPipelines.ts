@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import {
   type ComponentFileEntry,
   getAllComponentFilesFromList,
-} from "@/componentStore";
+} from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 const useLoadUserPipelines = () => {

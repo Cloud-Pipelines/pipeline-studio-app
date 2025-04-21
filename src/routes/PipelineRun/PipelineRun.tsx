@@ -8,11 +8,11 @@ import {
 } from "@xyflow/react";
 
 import type { GetGraphExecutionStateResponse } from "@/api/types.gen";
-import { FlowGraph } from "@/components/Editor/ReactFlow";
-import type { ComponentSpec } from "@/componentSpec";
+import { FlowGraph } from "@/components/shared/ReactFlow";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
-import { type RunDetailParams, runDetailRoute } from "@/router";
+import { type RunDetailParams, runDetailRoute } from "@/routes/router";
+import type { ComponentSpec } from "@/utils/componentSpec";
 import { API_URL } from "@/utils/constants";
 
 const GRID_SIZE = 10;

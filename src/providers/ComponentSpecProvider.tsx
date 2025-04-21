@@ -8,20 +8,20 @@ import {
   useState,
 } from "react";
 
+import { loadPipelineByName } from "@/services/pipelineService";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
-import loadPipelineByName from "@/utils/loadPipelineByName";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 
 import type {
   ComponentSpec,
   GraphImplementation,
   GraphSpec,
-} from "../componentSpec";
+} from "../utils/componentSpec";
 import {
   type ComponentReferenceWithSpec,
   componentSpecToYaml,
   writeComponentToFileListFromText,
-} from "../componentStore";
+} from "../utils/componentStore";
 
 export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
   implementation: {

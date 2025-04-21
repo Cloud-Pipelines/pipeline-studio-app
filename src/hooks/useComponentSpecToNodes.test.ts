@@ -1,8 +1,8 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ComponentSpec } from "../componentSpec";
-import { isGraphImplementation } from "../componentSpec";
+import type { ComponentSpec } from "../utils/componentSpec";
+import { isGraphImplementation } from "../utils/componentSpec";
 import useComponentSpecToNodes from "./useComponentSpecToNodes";
 
 describe("useComponentSpecToNodes", () => {

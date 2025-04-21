@@ -15,7 +15,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { APP_ROUTES } from "@/router";
+import { APP_ROUTES } from "@/routes/router";
 import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
 
 import { formatDate } from "../utils";

@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { List, Trash } from "lucide-react";
 import { type MouseEvent, useCallback, useMemo } from "react";
 
-import ConfirmationDialog from "@/components/shared/ConfirmationDialog";
+import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
 import RunOverview from "@/components/shared/RunOverview";
 import StatusIcon from "@/components/shared/Status/StatusIcon";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,19 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TableCell, TableRow } from "@/components/ui/table";
 import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
-import { EDITOR_PATH } from "@/router";
-import deletePipeline from "@/utils/deletePipeline";
+import { EDITOR_PATH } from "@/routes/router";
+import { deletePipeline } from "@/services/pipelineService";
+import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
 
 import { formatDate } from "../../utils";
-import { type PipelineRowProps } from "./types";
+
+interface PipelineRowProps {
+  url?: string;
+  componentRef?: ComponentReferenceWithSpec;
+  name?: string;
+  modificationTime?: Date;
+  onDelete?: () => void;
+}
 
 const PipelineRow = ({
   name,

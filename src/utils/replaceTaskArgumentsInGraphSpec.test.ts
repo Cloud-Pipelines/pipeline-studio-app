@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { ArgumentType, GraphSpec } from "../componentSpec";
+import type { ArgumentType, GraphSpec } from "./componentSpec";
 import replaceTaskArgumentsInGraphSpec from "./replaceTaskArgumentsInGraphSpec";
 
 describe("replaceTaskArgumentsInGraphSpec", () => {

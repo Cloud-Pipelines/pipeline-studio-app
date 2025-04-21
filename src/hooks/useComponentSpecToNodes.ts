@@ -1,10 +1,10 @@
 import { type Node, type NodeChange, useNodesState } from "@xyflow/react";
 import { useEffect } from "react";
 
-import type { ComponentTaskNodeCallbacks } from "@/components/Editor/ReactFlow/FlowGraph/ComponentTaskNode";
-import { extractPositionFromAnnotations } from "@/utils/extractPositionFromAnnotations";
+import { extractPositionFromAnnotations } from "@/components/shared/ReactFlow/FlowGraph/utils/extractPositionFromAnnotations";
+import type { ComponentTaskNodeCallbacks } from "@/components/shared/ReactFlow/FlowGraph/utils/isComponentTaskNode";
 
-import type { ComponentSpec, GraphSpec } from "../componentSpec";
+import type { ComponentSpec, GraphSpec } from "../utils/componentSpec";
 
 export type NodeAndTaskId = {
   taskId: string;

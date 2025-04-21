@@ -18,12 +18,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { EDITOR_PATH } from "@/router";
+import { EDITOR_PATH } from "@/routes/router";
 import {
   importPipelineFromFile,
   importPipelineFromYaml,
   type ImportResult,
-} from "@/utils/importPipeline";
+} from "@/services/pipelineService";
 
 interface ImportPipelineProps {
   triggerComponent?: ReactElement<{ onClick?: () => void }>;

@@ -2,9 +2,8 @@ import "@/styles/editor.css";
 
 import { Background, Controls, MiniMap } from "@xyflow/react";
 
+import { FlowGraph, FlowSidebar } from "@/components/shared/ReactFlow";
 import { PipelineAutoSaver } from "@/utils/PipelineAutoSaver";
-
-import { FlowGraph, FlowSidebar } from "./ReactFlow";
 
 const GRID_SIZE = 10;
 

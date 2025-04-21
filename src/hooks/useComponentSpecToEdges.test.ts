@@ -2,7 +2,7 @@ import { renderHook } from "@testing-library/react";
 import { MarkerType } from "@xyflow/react";
 import { describe, expect, it } from "vitest";
 
-import type { ComponentSpec } from "../componentSpec";
+import type { ComponentSpec } from "../utils/componentSpec";
 import useComponentSpecToEdges from "./useComponentSpecToEdges";
 
 describe("useComponentSpecToEdges", () => {

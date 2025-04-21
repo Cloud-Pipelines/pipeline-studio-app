@@ -1,7 +1,7 @@
 import { CircleX, Terminal } from "lucide-react";
 import { type ChangeEvent, useEffect, useState } from "react";
 
-import NewExperimentDialog from "@/components/NewExperiment";
+import NewExperimentDialog from "@/components/shared/NewExperiment";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import {
   type ComponentFileEntry,
   getAllComponentFilesFromList,
-} from "@/componentStore";
-import { cn } from "@/lib/utils";
+} from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 import PipelineRow from "./PipelineRow";
