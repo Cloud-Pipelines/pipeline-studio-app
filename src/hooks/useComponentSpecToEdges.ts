@@ -6,11 +6,6 @@ import {
 } from "@xyflow/react";
 import { useEffect } from "react";
 
-import {
-  inputNameToNodeId,
-  outputNameToNodeId,
-  taskIdToNodeId,
-} from "../components/shared/ReactFlow/FlowGraph/utils/nodeIdUtils";
 import type {
   ArgumentType,
   ComponentSpec,
@@ -18,7 +13,12 @@ import type {
   GraphSpec,
   TaskOutputArgument,
   TaskSpec,
-} from "../utils/componentSpec";
+} from "@/utils/componentSpec";
+import {
+  inputNameToNodeId,
+  outputNameToNodeId,
+  taskIdToNodeId,
+} from "@/utils/nodes/nodeIdUtils";
 
 const useComponentSpecToEdges = (
   componentSpec: ComponentSpec,

@@ -5,7 +5,8 @@ import {
   nodeIdToInputName,
   nodeIdToOutputName,
   nodeIdToTaskId,
-} from "../components/shared/ReactFlow/FlowGraph/utils/nodeIdUtils";
+} from "@/utils/nodes/nodeIdUtils";
+
 import type {
   ArgumentType,
   GraphInputArgument,

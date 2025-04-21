@@ -18,7 +18,6 @@ import type { ComponentType, DragEvent } from "react";
 import { useCallback, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
-import replaceTaskArgumentsInGraphSpec from "@/components/shared/ReactFlow/FlowGraph/utils/replaceTaskArgumentsInGraphSpec";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useComponentSpecToNodes, {
   type NodeAndTaskId,
@@ -26,15 +25,16 @@ import useComponentSpecToNodes, {
 import { useConnectionHandler } from "@/hooks/useConnectionHandler";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { ArgumentType, TaskOutputArgument } from "@/utils/componentSpec";
-
-import ComponentTaskNode from "./TaskNode/TaskNode";
 import {
   nodeIdToInputName,
   nodeIdToOutputName,
   nodeIdToTaskId,
-} from "./utils/nodeIdUtils";
-import onDropNode from "./utils/onDropNode";
-import { updateNodePositions } from "./utils/updateNodePosition";
+} from "@/utils/nodes/nodeIdUtils";
+
+import onDropNode from "../utils/onDropNode";
+import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
+import { updateNodePositions } from "../utils/updateNodePosition";
+import ComponentTaskNode from "./TaskNode/TaskNode";
 
 const nodeTypes: Record<string, ComponentType<any>> = {
   task: ComponentTaskNode,

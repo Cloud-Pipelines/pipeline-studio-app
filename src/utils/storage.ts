@@ -9,9 +9,9 @@
 import { type Node } from "@xyflow/react";
 import yaml from "js-yaml";
 
-import { updateComponentSpecFromNodes } from "../components/shared/ReactFlow/FlowGraph/utils/updateComponentSpecFromNodes";
 import type { ComponentSpec } from "./componentSpec";
 import { componentSpecToYaml } from "./componentStore";
+import { updateComponentSpecFromNodes } from "./nodes/updateComponentSpecFromNodes";
 
 const SAVED_COMPONENT_SPEC_KEY = "autosaved.component.yaml";
 

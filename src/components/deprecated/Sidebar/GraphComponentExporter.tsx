@@ -8,9 +8,9 @@
 
 import { useStore } from "@xyflow/react";
 
-import { updateComponentSpecFromNodes } from "@/components/shared/ReactFlow/FlowGraph/utils/updateComponentSpecFromNodes";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { componentSpecToYaml } from "@/utils/componentStore";
+import { updateComponentSpecFromNodes } from "@/utils/nodes/updateComponentSpecFromNodes";
 
 interface GraphComponentExporterProps {
   componentSpec: ComponentSpec;

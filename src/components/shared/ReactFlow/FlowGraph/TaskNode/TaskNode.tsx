@@ -27,9 +27,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
 import { cn } from "@/lib/utils";
-import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
+import type { ComponentTaskNodeCallbacks } from "@/types/taskNode";
+import type { InputSpec, OutputSpec, TaskSpec } from "@/utils/componentSpec";
 
-import type { ComponentTaskNodeProps } from "../utils/isComponentTaskNode";
 import ArgumentsEditorDialog from "./ArgumentsEditor";
 import TaskDetailsSheet from "./TaskDetailsSheet";
 
@@ -39,6 +39,13 @@ const outputHandlePosition = Position.Bottom;
 type InputOrOutputSpec = InputSpec | OutputSpec;
 
 const NODE_WIDTH_IN_PX = 200;
+
+export interface ComponentTaskNodeProps
+  extends Record<string, unknown>,
+    ComponentTaskNodeCallbacks {
+  taskSpec: TaskSpec;
+  taskId: string;
+}
 
 function generateHandles(
   ioSpecs: InputOrOutputSpec[],

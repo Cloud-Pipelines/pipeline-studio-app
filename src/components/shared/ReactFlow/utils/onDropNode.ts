@@ -7,7 +7,7 @@ import type {
   InputSpec,
   OutputSpec,
   TaskSpec,
-} from "../../../../../utils/componentSpec";
+} from "@/utils/componentSpec";
 
 const makeNameUniqueByAddingIndex = (
   name: string,
