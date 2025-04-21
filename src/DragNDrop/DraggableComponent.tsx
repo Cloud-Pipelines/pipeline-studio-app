@@ -7,7 +7,12 @@
  */
 
 import { CircleX } from "lucide-react";
-import { type DragEvent, type MouseEvent } from "react";
+import {
+  type DetailedHTMLProps,
+  type DragEvent,
+  type HTMLAttributes,
+  type MouseEvent,
+} from "react";
 
 import CondensedUrl from "@/components/CondensedUrl";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
@@ -21,16 +26,13 @@ const onDragStart = (event: DragEvent, nodeData: object) => {
     JSON.stringify({
       offsetX: event.nativeEvent.offsetX,
       offsetY: event.nativeEvent.offsetY,
-    }),
+    })
   );
   event.dataTransfer.effectAllowed = "move";
 };
 
 interface DraggableComponentProps
-  extends React.DetailedHTMLProps<
-    React.HTMLAttributes<HTMLDivElement>,
-    HTMLDivElement
-  > {
+  extends DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
   componentReference: ComponentReference;
   onDelete?: (e: MouseEvent) => void;
 }
