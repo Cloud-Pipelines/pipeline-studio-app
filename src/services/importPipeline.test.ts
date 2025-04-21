@@ -2,17 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as componentSpecModule from "@/utils/componentSpec";
 import * as componentStore from "@/utils/componentStore";
+import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
-import { USER_PIPELINES_LIST_NAME } from "../utils/constants";
 import { importPipelineFromYaml } from "./pipelineService";
 
-vi.mock("@/componentStore", () => ({
+vi.mock("@/utils/componentStore", () => ({
   componentSpecToYaml: vi.fn(),
   getComponentFileFromList: vi.fn(),
   writeComponentToFileListFromText: vi.fn().mockResolvedValue({}),
 }));
 
-vi.mock("@/componentSpec", () => ({
+vi.mock("@/utils/componentSpec", () => ({
   isGraphImplementation: vi.fn(),
 }));
 

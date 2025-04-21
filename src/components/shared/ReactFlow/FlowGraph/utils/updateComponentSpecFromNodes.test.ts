@@ -9,11 +9,11 @@ import {
 
 import { updateComponentSpecFromNodes } from "./updateComponentSpecFromNodes";
 
-vi.mock("../componentSpec", () => ({
+vi.mock("@/utils/componentSpec", () => ({
   isGraphImplementation: vi.fn(),
 }));
 
-vi.mock("../DragNDrop/ComponentTaskNode", () => ({
+vi.mock("./isComponentTaskNode", () => ({
   isComponentTaskNode: vi.fn((node) => node.type === "task"),
 }));
 
