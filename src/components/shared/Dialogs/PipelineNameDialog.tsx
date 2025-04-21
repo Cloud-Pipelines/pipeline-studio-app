@@ -29,7 +29,7 @@ interface PipelineNameDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export const PipelineNameDialog = ({
+const PipelineNameDialog = ({
   trigger,
   title,
   description = "Please, name your pipeline.",
@@ -122,3 +122,5 @@ export const PipelineNameDialog = ({
     </Dialog>
   );
 };
+
+export default PipelineNameDialog;

@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { File, Trash2 } from "lucide-react";
 import { type DragEvent, useCallback, useMemo } from "react";
 
-import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
+import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
 import {
   Tooltip,

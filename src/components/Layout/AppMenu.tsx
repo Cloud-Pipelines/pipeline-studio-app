@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
 
-import NewExperimentDialog from "@/components/shared/NewExperiment";
+import CloneRunButton from "@/components/shared/CloneRunButton";
+import { NewExperimentDialog } from "@/components/shared/Dialogs";
+import ImportPipeline from "@/components/shared/ImportPipeline";
 
-import CloneRunButton from "./CloneRunButton";
 import EditorMenu from "./EditorMenu";
-import ImportPipeline from "./ImportPipeline";
 
 const AppMenu = () => {
   return (

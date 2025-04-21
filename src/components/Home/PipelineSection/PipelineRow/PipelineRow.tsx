@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { List, Trash } from "lucide-react";
 import { type MouseEvent, useCallback, useMemo } from "react";
 
-import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
+import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import RunOverview from "@/components/shared/RunOverview";
 import StatusIcon from "@/components/shared/Status/StatusIcon";
 import { Button } from "@/components/ui/button";

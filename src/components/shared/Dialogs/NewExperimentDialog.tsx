@@ -10,7 +10,7 @@ import {
 } from "@/utils/constants";
 import { replaceLocalStorageWithExperimentYaml } from "@/utils/storage";
 
-import { PipelineNameDialog } from "./Dialogs/PipelineNameDialog";
+import PipelineNameDialog from "./PipelineNameDialog";
 
 const randomName = () => (generate(4) as string[]).join(" ");
 

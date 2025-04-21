@@ -1,7 +1,7 @@
 import { CircleX, Terminal } from "lucide-react";
 import { type ChangeEvent, useEffect, useState } from "react";
 
-import NewExperimentDialog from "@/components/shared/NewExperiment";
+import { NewExperimentDialog } from "@/components/shared/Dialogs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -10,7 +10,7 @@ import {
 } from "@/routes/router";
 import { copyRunToPipeline } from "@/services/pipelineRunService";
 
-import { PipelineNameDialog } from "../shared/Dialogs/PipelineNameDialog";
+import { PipelineNameDialog } from "./Dialogs";
 
 const CloneRunButtonInner = () => {
   const { id } = runDetailRoute.useParams() as RunDetailParams;

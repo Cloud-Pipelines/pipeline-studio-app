@@ -17,7 +17,7 @@ import { type OnInit, ReactFlow } from "@xyflow/react";
 import type { ComponentType, DragEvent } from "react";
 import { useCallback, useState } from "react";
 
-import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
+import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import replaceTaskArgumentsInGraphSpec from "@/components/shared/ReactFlow/FlowGraph/utils/replaceTaskArgumentsInGraphSpec";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useComponentSpecToNodes, {

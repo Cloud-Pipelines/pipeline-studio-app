@@ -15,7 +15,7 @@ import {
 } from "react";
 
 import CondensedUrl from "@/components/shared/CondensedUrl";
-import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
+import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
