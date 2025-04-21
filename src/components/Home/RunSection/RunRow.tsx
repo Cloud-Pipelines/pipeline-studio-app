@@ -3,6 +3,13 @@ import { type MouseEvent } from "react";
 
 import type { PipelineRunResponse } from "@/api/types.gen";
 import {
+  countTaskStatuses,
+  getRunStatus,
+  StatusBar,
+  StatusIcon,
+  StatusText,
+} from "@/components/shared/Status";
+import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
@@ -11,14 +18,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { APP_ROUTES } from "@/router";
 import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
 
-import StatusIcon from "../PipelineRow/StatusIcon";
-import StatusText from "../PipelineRow/StatusText";
-import TaskStatusBar from "../PipelineRow/TaskStatusBar";
-import {
-  countTaskStatuses,
-  formatDate,
-  getRunStatus,
-} from "../PipelineRow/utils";
+import { formatDate } from "../utils";
 
 const RunRow = ({ run }: { run: PipelineRunResponse }) => {
   const navigate = useNavigate();
@@ -81,7 +81,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
         <HoverCard openDelay={100}>
           <HoverCardTrigger>
             <div className="w-2/3">
-              <TaskStatusBar statusCounts={statusCounts} />
+              <StatusBar statusCounts={statusCounts} />
             </div>
           </HoverCardTrigger>
           <HoverCardContent>

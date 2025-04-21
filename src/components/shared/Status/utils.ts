@@ -3,8 +3,34 @@ import type {
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
 
-import { type TaskStatusCounts } from "./types";
+import type { TaskStatusCounts } from "./types";
 
+/**
+ * Determine the overall run status based on the task statuses.
+ */
+const STATUS = {
+  FAILED: "FAILED",
+  RUNNING: "RUNNING",
+  SUCCEEDED: "SUCCEEDED",
+  WAITING: "WAITING",
+  UNKNOWN: "UNKNOWN",
+} as const;
+
+export const getRunStatus = (statusData: TaskStatusCounts) => {
+  if (statusData.failed > 0) {
+    return STATUS.FAILED;
+  }
+  if (statusData.running > 0) {
+    return STATUS.RUNNING;
+  }
+  if (statusData.waiting > 0) {
+    return STATUS.WAITING;
+  }
+  if (statusData.succeeded > 0) {
+    return STATUS.SUCCEEDED;
+  }
+  return STATUS.UNKNOWN;
+};
 /**
  * Count task statuses from API response
  */
@@ -60,45 +86,4 @@ export const countTaskStatuses = (
 
   const total = succeeded + failed + running + waiting + skipped;
   return { total, succeeded, failed, running, waiting, skipped };
-};
-
-/**
- * Determine the overall run status based on the task statuses.
- */
-const STATUS = {
-  FAILED: "FAILED",
-  RUNNING: "RUNNING",
-  SUCCEEDED: "SUCCEEDED",
-  WAITING: "WAITING",
-  UNKNOWN: "UNKNOWN",
-} as const;
-
-export const getRunStatus = (statusData: TaskStatusCounts) => {
-  if (statusData.failed > 0) {
-    return STATUS.FAILED;
-  }
-  if (statusData.running > 0) {
-    return STATUS.RUNNING;
-  }
-  if (statusData.waiting > 0) {
-    return STATUS.WAITING;
-  }
-  if (statusData.succeeded > 0) {
-    return STATUS.SUCCEEDED;
-  }
-  return STATUS.UNKNOWN;
-};
-
-/**
- * Format date string to localized string
- */
-const defaultFormat: Intl.DateTimeFormatOptions = {
-  month: "short",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-};
-export const formatDate = (dateString: string, format = defaultFormat) => {
-  const date = new Date(dateString);
-  return date.toLocaleString("en-US", format);
 };

@@ -2,7 +2,7 @@ import { ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import OasisSubmitter from "@/components/OasisSubmitter";
-import RunListItem from "@/components/PipelineRow/RunListItem";
+import RunOverview from "@/components/shared/RunOverview";
 import {
   Collapsible,
   CollapsibleContent,
@@ -32,10 +32,10 @@ const RunsAndSubmission = () => {
     setRunsIsOpen(e);
   };
 
-  const runListItems = useMemo(
+  const runOverviews = useMemo(
     () =>
       pipelineRuns.map((run) => (
-        <RunListItem
+        <RunOverview
           key={run.id}
           run={run}
           config={{
@@ -88,10 +88,10 @@ const RunsAndSubmission = () => {
                   "bg-gray-100 border rounded-sm",
                   runsStyle,
                   runBoxStyle,
-                  runListItems.length === 0 ? "hidden" : "",
+                  runOverviews.length === 0 ? "hidden" : "",
                 )}
               >
-                <div className="flex flex-col">{runListItems}</div>
+                <div className="flex flex-col">{runOverviews}</div>
               </ScrollArea>
             </SidebarMenuItem>
           </SidebarMenu>

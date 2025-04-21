@@ -2,6 +2,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { List, Trash } from "lucide-react";
 import { type MouseEvent, useCallback, useMemo } from "react";
 
+import ConfirmationDialog from "@/components/shared/ConfirmationDialog";
+import RunOverview from "@/components/shared/RunOverview";
+import StatusIcon from "@/components/shared/Status/StatusIcon";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -14,11 +17,8 @@ import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import { EDITOR_PATH } from "@/router";
 import deletePipeline from "@/utils/deletePipeline";
 
-import ConfirmationDialog from "../ConfirmationDialog";
-import RunListItem from "./RunListItem";
-import StatusIcon from "./StatusIcon";
+import { formatDate } from "../../utils";
 import { type PipelineRowProps } from "./types";
-import { formatDate } from "./utils";
 
 const PipelineRow = ({
   name,
@@ -97,7 +97,7 @@ const PipelineRow = ({
                 </div>
                 <ScrollArea className="h-[300px]">
                   {pipelineRuns.map((run) => (
-                    <RunListItem key={run.id} run={run} />
+                    <RunOverview key={run.id} run={run} />
                   ))}
                 </ScrollArea>
               </PopoverContent>

@@ -2,7 +2,6 @@ import { CircleX, Terminal } from "lucide-react";
 import { type ChangeEvent, useEffect, useState } from "react";
 
 import NewExperimentDialog from "@/components/NewExperiment";
-import PipelineRow from "@/components/PipelineRow";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +20,8 @@ import {
 } from "@/componentStore";
 import { cn } from "@/lib/utils";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+
+import PipelineRow from "./PipelineRow";
 
 export type Pipelines = Map<string, ComponentFileEntry>;
 

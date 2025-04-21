@@ -2,6 +2,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import {
+  countTaskStatuses,
+  getRunStatus,
+  StatusBar,
+  StatusIcon,
+  StatusText,
+} from "@/components/shared/Status/";
 import { APP_ROUTES } from "@/router";
 import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
 import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
@@ -10,12 +17,9 @@ import {
   type PipelineRun,
 } from "@/utils/fetchPipelineRuns";
 
-import StatusIcon from "./StatusIcon";
-import StatusText from "./StatusText";
-import TaskStatusBar from "./TaskStatusBar";
-import { countTaskStatuses, formatDate, getRunStatus } from "./utils";
+import { formatDate } from "../Home/utils";
 
-interface RunListItemProps {
+interface RunOverviewProps {
   run: PipelineRun;
   config?: {
     showStatus?: boolean;
@@ -36,7 +40,7 @@ const defaultConfig = {
   showStatusCounts: true,
 };
 
-const RunListItem = ({ run, config = defaultConfig }: RunListItemProps) => {
+const RunOverview = ({ run, config = defaultConfig }: RunOverviewProps) => {
   const navigate = useNavigate();
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
@@ -113,11 +117,9 @@ const RunListItem = ({ run, config = defaultConfig }: RunListItemProps) => {
         )}
       </div>
 
-      {config?.showTaskStatusBar && (
-        <TaskStatusBar statusCounts={statusCounts} />
-      )}
+      {config?.showTaskStatusBar && <StatusBar statusCounts={statusCounts} />}
     </div>
   );
 };
 
-export default RunListItem;
+export default RunOverview;

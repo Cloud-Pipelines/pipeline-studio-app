@@ -17,7 +17,7 @@ import { type OnInit, ReactFlow } from "@xyflow/react";
 import type { ComponentType, DragEvent } from "react";
 import { useCallback, useState } from "react";
 
-import ConfirmationDialog from "@/components/ConfirmationDialog";
+import ConfirmationDialog from "@/components/shared/ConfirmationDialog";
 
 import type {
   ArgumentType,

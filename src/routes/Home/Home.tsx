@@ -1,5 +1,4 @@
-import { PipelineSection } from "@/components/PipelineSection";
-import { RunSection } from "@/components/RunSection";
+import { PipelineSection, RunSection } from "@/components/Home";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Home = () => {

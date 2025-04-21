@@ -5,7 +5,7 @@ import type {
 import {
   countTaskStatuses,
   getRunStatus,
-} from "@/components/PipelineRow/utils";
+} from "@/components/shared/Status/utils";
 
 import { API_URL } from "./constants";
 
