@@ -19,21 +19,24 @@ import { useCallback, useState } from "react";
 
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 
-import type { ArgumentType, TaskOutputArgument } from "../componentSpec";
-import useComponentSpecToEdges from "../hooks/useComponentSpecToEdges";
+import type {
+  ArgumentType,
+  TaskOutputArgument,
+} from "../../../../componentSpec";
+import useComponentSpecToEdges from "../../../../hooks/useComponentSpecToEdges";
 import useComponentSpecToNodes, {
   type NodeAndTaskId,
-} from "../hooks/useComponentSpecToNodes";
-import { useConnectionHandler } from "../hooks/useConnectionHandler";
-import { useComponentSpec } from "../providers/ComponentSpecProvider";
+} from "../../../../hooks/useComponentSpecToNodes";
+import { useConnectionHandler } from "../../../../hooks/useConnectionHandler";
+import { useComponentSpec } from "../../../../providers/ComponentSpecProvider";
 import {
   nodeIdToInputName,
   nodeIdToOutputName,
   nodeIdToTaskId,
-} from "../utils/nodeIdUtils";
-import onDropNode from "../utils/onDropNode";
-import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
-import { updateNodePositions } from "../utils/updateNodePosition";
+} from "../../../../utils/nodeIdUtils";
+import onDropNode from "../../../../utils/onDropNode";
+import replaceTaskArgumentsInGraphSpec from "../../../../utils/replaceTaskArgumentsInGraphSpec";
+import { updateNodePositions } from "../../../../utils/updateNodePosition";
 import ComponentTaskNode from "./ComponentTaskNode";
 
 const nodeTypes: Record<string, ComponentType<any>> = {
@@ -45,7 +48,7 @@ type ConfirmationDialogHandlers = {
   onCancel: () => void;
 };
 
-const GraphComponentSpecFlow = ({
+const FlowGraph = ({
   readOnly,
   children,
   ...rest
@@ -410,4 +413,4 @@ const GraphComponentSpecFlow = ({
   );
 };
 
-export default GraphComponentSpecFlow;
+export default FlowGraph;

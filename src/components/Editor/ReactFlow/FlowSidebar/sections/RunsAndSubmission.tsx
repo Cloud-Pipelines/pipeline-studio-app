@@ -2,6 +2,7 @@ import { ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import OasisSubmitter from "@/components/OasisSubmitter";
+import RunListItem from "@/components/PipelineRow/RunListItem";
 import {
   Collapsible,
   CollapsibleContent,
@@ -18,8 +19,6 @@ import {
 import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
-
-import RunListItem from "../../PipelineRow/RunListItem";
 
 const RunsAndSubmission = () => {
   const { componentSpec } = useComponentSpec();

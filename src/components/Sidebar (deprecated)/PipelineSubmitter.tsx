@@ -8,13 +8,15 @@
 
 import { useEffect, useState } from "react";
 
-import type { ArgumentInput } from "@/components/ArgumentsEditor";
+import {
+  type ArgumentInput,
+  ArgumentsEditor,
+} from "@/components/Editor/ReactFlow/FlowGraph/ArgumentsEditor";
 import OasisSubmitter from "@/components/OasisSubmitter";
 
-import { ArgumentsEditor } from "../components/ArgumentsEditor/ArgumentsEditor";
-import type { ComponentSpec } from "../componentSpec";
-import GoogleCloudSubmitter from "./GoogleCloud";
-import KubeflowPipelinesSubmitter from "./KubeflowPipelinesSubmitter";
+import type { ComponentSpec } from "../../componentSpec";
+import GoogleCloudSubmitter from "../../DragNDrop/GoogleCloud";
+import KubeflowPipelinesSubmitter from "../../DragNDrop/KubeflowPipelinesSubmitter";
 
 interface PipelineSubmitterProps {
   componentSpec?: ComponentSpec;

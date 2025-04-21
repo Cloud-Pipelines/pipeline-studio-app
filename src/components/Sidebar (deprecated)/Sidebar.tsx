@@ -11,16 +11,16 @@ import { type DragEvent, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
-import { getAppSettings } from "../appSettings";
-import { downloadDataWithCache } from "../cacheUtils";
-import AppSettingsDialog from "./AppSettingsDialog";
-import ComponentLibrary from "./ComponentLibrary";
-import ComponentSearch from "./ComponentSearch";
-import GraphComponentExporter from "./GraphComponentExporter";
-import PipelineLibrary from "./PipelineLibrary";
+import { getAppSettings } from "../../appSettings";
+import { downloadDataWithCache } from "../../cacheUtils";
+import AppSettingsDialog from "../../DragNDrop/AppSettingsDialog";
+import GraphComponentExporter from "../../DragNDrop/GraphComponentExporter";
+import PipelineLibrary from "../../DragNDrop/PipelineLibrary";
+import VertexAiExporter from "../../DragNDrop/VertexAiExporter";
+import ComponentLibrary from "./ComponentLibrary/ComponentLibrary";
+import ComponentSearch from "./ComponentLibrary/ComponentSearch";
+import UserComponentLibrary from "./ComponentLibrary/UserComponentLibrary";
 import PipelineSubmitter from "./PipelineSubmitter";
-import UserComponentLibrary from "./UserComponentLibrary";
-import VertexAiExporter from "./VertexAiExporter";
 
 const Sidebar = () => {
   const { componentSpec, setComponentSpec } = useComponentSpec();

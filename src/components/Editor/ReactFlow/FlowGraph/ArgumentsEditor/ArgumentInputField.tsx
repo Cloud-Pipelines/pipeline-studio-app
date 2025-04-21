@@ -17,13 +17,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { ArgumentType, InputSpec, TypeSpecType } from "@/componentSpec";
 import { cn } from "@/lib/utils";
-
-import type {
-  ArgumentType,
-  InputSpec,
-  TypeSpecType,
-} from "../../componentSpec";
 
 export type ArgumentInput = {
   key: string;

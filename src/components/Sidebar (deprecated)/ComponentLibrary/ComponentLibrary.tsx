@@ -8,11 +8,12 @@
 
 import { useEffect, useState } from "react";
 
-import type { DownloadDataType } from "../cacheUtils";
-import { downloadDataWithCache, loadObjectFromYamlData } from "../cacheUtils";
-import type { ComponentReference } from "../componentSpec";
-import type { ComponentReferenceWithSpec } from "../componentStore";
-import { fullyLoadComponentRef } from "../componentStore";
+import type { DownloadDataType } from "@/cacheUtils";
+import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
+import type { ComponentReference } from "@/componentSpec";
+import type { ComponentReferenceWithSpec } from "@/componentStore";
+import { fullyLoadComponentRef } from "@/componentStore";
+
 import DraggableComponent from "./DraggableComponent";
 
 export type ComponentLibraryFolder = {

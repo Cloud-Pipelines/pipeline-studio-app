@@ -16,8 +16,7 @@ import {
 
 import CondensedUrl from "@/components/CondensedUrl";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
-
-import type { ComponentReference, TaskSpec } from "../componentSpec";
+import type { ComponentReference, TaskSpec } from "@/componentSpec";
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData("application/reactflow", JSON.stringify(nodeData));
@@ -26,7 +25,7 @@ const onDragStart = (event: DragEvent, nodeData: object) => {
     JSON.stringify({
       offsetX: event.nativeEvent.offsetX,
       offsetY: event.nativeEvent.offsetY,
-    })
+    }),
   );
   event.dataTransfer.effectAllowed = "move";
 };

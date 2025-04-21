@@ -1,7 +1,7 @@
 import { type Node, type NodeChange, useNodesState } from "@xyflow/react";
 import { useEffect } from "react";
 
-import type { ComponentTaskNodeCallbacks } from "@/DragNDrop/ComponentTaskNode";
+import type { ComponentTaskNodeCallbacks } from "@/components/Editor/ReactFlow/FlowGraph/ComponentTaskNode";
 import { extractPositionFromAnnotations } from "@/utils/extractPositionFromAnnotations";
 
 import type { ComponentSpec, GraphSpec } from "../componentSpec";

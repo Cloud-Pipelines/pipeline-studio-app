@@ -6,7 +6,7 @@ import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSp
 import { type RunDetailParams, runDetailRoute, RUNS_BASE_PATH } from "@/router";
 import { copyRunToPipeline } from "@/utils/copyRunToPipeline";
 
-import { PipelineNameDialog } from "./shared/PipelineNameDialog";
+import { PipelineNameDialog } from "../shared/PipelineNameDialog";
 
 const CloneRunButtonInner = () => {
   const { id } = runDetailRoute.useParams() as RunDetailParams;

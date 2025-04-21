@@ -26,16 +26,16 @@ import {
 
 import TaskDetailsSheet from "@/components/TaskDetailsSheet";
 import { Button } from "@/components/ui/button";
-import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
-import { cn } from "@/lib/utils";
-
-import ArgumentsEditorDialog from "../components/ArgumentsEditor/ArgumentsEditorDialog";
 import type {
   ArgumentType,
   InputSpec,
   OutputSpec,
   TaskSpec,
-} from "../componentSpec";
+} from "@/componentSpec";
+import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
+import { cn } from "@/lib/utils";
+
+import ArgumentsEditorDialog from "./ArgumentsEditor";
 
 const inputHandlePosition = Position.Top;
 const outputHandlePosition = Position.Bottom;

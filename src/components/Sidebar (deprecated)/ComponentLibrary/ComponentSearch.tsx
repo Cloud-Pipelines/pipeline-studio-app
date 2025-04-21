@@ -8,17 +8,17 @@
 
 import { useState } from "react";
 
+import type { DownloadDataType } from "@/cacheUtils";
+import { downloadDataWithCache } from "@/cacheUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-import type { DownloadDataType } from "../cacheUtils";
-import { downloadDataWithCache } from "../cacheUtils";
-import type { ComponentReference } from "../componentSpec";
+import type { ComponentReference } from "@/componentSpec";
 import {
   isComponentDbEmpty,
   refreshComponentDb,
   searchComponentsByName,
-} from "../github";
+} from "@/github";
+
 import DraggableComponent from "./DraggableComponent";
 
 interface ComponentSearchProps {

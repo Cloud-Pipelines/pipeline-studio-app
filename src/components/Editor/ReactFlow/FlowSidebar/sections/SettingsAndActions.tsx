@@ -3,6 +3,8 @@ import { useStore } from "@xyflow/react";
 import { ChevronDown, FileDown, Import, Save, SaveAll } from "lucide-react";
 import { useMemo } from "react";
 
+import ImportPipeline from "@/components/Layout/ImportPipeline";
+import { PipelineNameDialog } from "@/components/shared/PipelineNameDialog";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -24,8 +26,6 @@ import { EDITOR_PATH } from "@/router";
 import { updateComponentSpecFromNodes } from "@/utils/updateComponentSpecFromNodes";
 import useSavePipeline from "@/utils/useSavePipeline";
 
-import ImportPipeline from "../../ImportPipeline";
-import { PipelineNameDialog } from "../../shared/PipelineNameDialog";
 import ImportComponent from "../components/ImportComponent";
 
 const SettingsAndActions = () => {

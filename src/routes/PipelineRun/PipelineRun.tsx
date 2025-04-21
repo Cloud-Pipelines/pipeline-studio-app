@@ -13,12 +13,12 @@ import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/router";
 import { API_URL } from "@/utils/constants";
 
-import type { ComponentSpec } from "../componentSpec";
-import GraphComponentSpecFlow from "../DragNDrop/GraphComponentSpecFlow";
+import GraphComponentSpecFlow from "../../components/Editor/ReactFlow/FlowGraph/FlowGraph";
+import type { ComponentSpec } from "../../componentSpec";
 
 const GRID_SIZE = 10;
 
-const RunDetails = () => {
+const PipelineRun = () => {
   const { id } = runDetailRoute.useParams() as RunDetailParams;
   const {
     componentSpec,
@@ -153,4 +153,4 @@ const RunDetails = () => {
   );
 };
 
-export default RunDetails;
+export default PipelineRun;

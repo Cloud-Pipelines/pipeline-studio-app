@@ -4,13 +4,6 @@ import { type ChangeEvent, useMemo, useState } from "react";
 
 import { loadObjectFromYamlData } from "@/cacheUtils";
 import {
-  EmptyState,
-  ErrorState,
-  FolderItem,
-  LoadingState,
-  SearchInput,
-} from "@/components/FlowSidebar/components";
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -22,12 +15,20 @@ import {
 } from "@/components/ui/sidebar";
 import type { ComponentReference } from "@/componentSpec";
 import { getAllComponentFilesFromList } from "@/componentStore";
+import type { ComponentFolder } from "@/types/componentLibrary";
+import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
+
+import {
+  EmptyState,
+  ErrorState,
+  FolderItem,
+  LoadingState,
+  SearchInput,
+} from "../components";
 import {
   type ComponentLibraryStruct,
   isValidComponentLibraryStruct,
-} from "@/DragNDrop/ComponentLibrary";
-import type { ComponentFolder } from "@/types/componentLibrary";
-import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
+} from "../utils/componentLibrary";
 
 const fetchComponentLibrary = async (): Promise<ComponentLibraryStruct> => {
   const response = await fetch("/component_library.yaml");

@@ -1,5 +1,7 @@
 import type { Node } from "@xyflow/react";
 
+import { isComponentTaskNode } from "@/components/Editor/ReactFlow/FlowGraph/ComponentTaskNode";
+
 import {
   type ComponentSpec,
   type GraphSpec,
@@ -8,7 +10,6 @@ import {
   type OutputSpec,
   type TaskSpec,
 } from "../componentSpec";
-import { isComponentTaskNode } from "../DragNDrop/ComponentTaskNode";
 import {
   nodeIdToInputName,
   nodeIdToOutputName,

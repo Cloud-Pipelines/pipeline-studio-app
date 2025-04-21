@@ -1,3 +1,3 @@
 export * from "./ArgumentInputField";
 export * from "./ArgumentsEditor";
-export * from "./ArgumentsEditorDialog";
+export { default } from "./ArgumentsEditorDialog";

@@ -28,7 +28,7 @@ import {
   type ComponentFileEntry,
   deleteComponentFileFromList,
   getAllComponentFilesFromList,
-} from "../componentStore";
+} from "../../../componentStore";
 import DraggableComponent from "./DraggableComponent";
 
 const UserComponentLibrary = () => {

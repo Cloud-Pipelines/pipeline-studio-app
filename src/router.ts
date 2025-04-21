@@ -4,10 +4,10 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 
-import RootLayout from "./components/RootLayout";
+import RootLayout from "./components/Layout/RootLayout";
 import Editor from "./routes/Editor";
 import Home from "./routes/Home";
-import RunDetails from "./routes/RunDetails";
+import PipelineRun from "./routes/PipelineRun";
 
 declare module "@tanstack/react-router" {
   interface Register {
@@ -51,7 +51,7 @@ export interface RunDetailParams {
 export const runDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: APP_ROUTES.RUN_DETAIL,
-  component: RunDetails,
+  component: PipelineRun,
 });
 
 const routeTree = rootRoute.addChildren([
