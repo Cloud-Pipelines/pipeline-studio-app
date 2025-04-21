@@ -23,7 +23,7 @@ import RunListItem from "../../PipelineRow/RunListItem";
 
 const RunsAndSubmission = () => {
   const { componentSpec } = useComponentSpec();
-  const [runsIsOpen, setRunsIsOpen] = useState(false);
+  const [runsIsOpen, setRunsIsOpen] = useState(true);
 
   const { pipelineRuns, refetch } = useLoadPipelineRuns(
     componentSpec.name || "",
@@ -60,6 +60,7 @@ const RunsAndSubmission = () => {
   return (
     <Collapsible
       className="group/collapsible"
+      defaultOpen={runsIsOpen}
       onOpenChange={handleRunsCollapsedChange}
     >
       <SidebarGroup>
