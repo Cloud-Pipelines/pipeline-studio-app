@@ -8,7 +8,7 @@ import {
   defaultPipelineYamlWithName,
   USER_PIPELINES_LIST_NAME,
 } from "@/utils/constants";
-import { replaceLocalStorageWithExperimentYaml } from "@/utils/PipelineAutoSaver";
+import { replaceLocalStorageWithExperimentYaml } from "@/utils/storage";
 
 import { PipelineNameDialog } from "./Dialogs/PipelineNameDialog";
 

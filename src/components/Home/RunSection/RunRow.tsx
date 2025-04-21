@@ -2,13 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { type MouseEvent } from "react";
 
 import type { PipelineRunResponse } from "@/api/types.gen";
-import {
-  countTaskStatuses,
-  getRunStatus,
-  StatusBar,
-  StatusIcon,
-  StatusText,
-} from "@/components/shared/Status";
+import { StatusBar, StatusIcon, StatusText } from "@/components/shared/Status";
 import {
   HoverCard,
   HoverCardContent,
@@ -16,7 +10,11 @@ import {
 } from "@/components/ui/hover-card";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { APP_ROUTES } from "@/routes/router";
-import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
+import {
+  countTaskStatuses,
+  fetchExecutionInfo,
+  getRunStatus,
+} from "@/services/executionService";
 
 import { formatDate } from "../utils";
 

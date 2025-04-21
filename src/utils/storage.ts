@@ -6,16 +6,20 @@
  * @copyright 2022 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { type Node, useStore } from "@xyflow/react";
+import { type Node } from "@xyflow/react";
 import yaml from "js-yaml";
-
-import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
 import { updateComponentSpecFromNodes } from "../components/shared/ReactFlow/FlowGraph/utils/updateComponentSpecFromNodes";
 import type { ComponentSpec } from "./componentSpec";
 import { componentSpecToYaml } from "./componentStore";
 
 const SAVED_COMPONENT_SPEC_KEY = "autosaved.component.yaml";
+
+export const replaceLocalStorageWithExperimentYaml = (
+  experimentYaml: string,
+) => {
+  window.sessionStorage.setItem(SAVED_COMPONENT_SPEC_KEY, experimentYaml);
+};
 
 export const savePipelineSpecToSessionStorage = (
   componentSpec: ComponentSpec,
@@ -60,25 +64,4 @@ export const loadPipelineSpecFromSessionStorage = () => {
     console.error(err);
   }
   return undefined;
-};
-
-// Auto-saver is extracted to its own child component since useStoreState in the parent causes infinite re-rendering
-// (each render of GraphComponentSpecFlow seems to change the Redux store).
-// This component seems to be triggered for every node movement, so even pure layout changes are saved.
-export const PipelineAutoSaver = () => {
-  const { componentSpec } = useComponentSpec();
-
-  const nodes = useStore((store) => store.nodes);
-  // Fixing issue where a React error would cause all node positions to be recorded as undefined (`!<tag:yaml.org,2002:js/undefined>`)
-  // nodes should never be undefined in normal situation.
-  if (nodes !== undefined && nodes.length > 0) {
-    savePipelineSpecToSessionStorage(componentSpec, nodes);
-  }
-  return null;
-};
-
-export const replaceLocalStorageWithExperimentYaml = (
-  experimentYaml: string,
-) => {
-  window.sessionStorage.setItem(SAVED_COMPONENT_SPEC_KEY, experimentYaml);
 };

@@ -1,4 +1,4 @@
-import { type TaskStatusCounts } from "./types";
+import type { TaskStatusCounts } from "@/services/executionService";
 
 const TaskStatusBar = ({
   statusCounts,

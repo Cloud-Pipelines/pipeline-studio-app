@@ -2,18 +2,16 @@ import { useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { StatusBar, StatusIcon, StatusText } from "@/components/shared/Status/";
+import { APP_ROUTES } from "@/routes/router";
 import {
   countTaskStatuses,
+  fetchExecutionInfo,
+  fetchExecutionStatus,
   getRunStatus,
-  StatusBar,
-  StatusIcon,
-  StatusText,
-} from "@/components/shared/Status/";
-import { APP_ROUTES } from "@/routes/router";
+} from "@/services/executionService";
 import { fetchPipelineRunById } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
-import fetchExecutionInfo from "@/utils/fetchExecutionInfo";
-import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
 
 import { formatDate } from "../Home/utils";
 
