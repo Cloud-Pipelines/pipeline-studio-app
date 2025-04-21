@@ -13,10 +13,9 @@ import {
   ArgumentsEditor,
 } from "@/components/Editor/ReactFlow/FlowGraph/ArgumentsEditor";
 import OasisSubmitter from "@/components/OasisSubmitter";
+import type { ComponentSpec } from "@/componentSpec";
 
-import type { ComponentSpec } from "../../componentSpec";
-import GoogleCloudSubmitter from "../../DragNDrop/GoogleCloud";
-import KubeflowPipelinesSubmitter from "../../DragNDrop/KubeflowPipelinesSubmitter";
+import { GoogleCloudSubmitter, KubeflowPipelinesSubmitter } from "./Submitters";
 
 interface PipelineSubmitterProps {
   componentSpec?: ComponentSpec;

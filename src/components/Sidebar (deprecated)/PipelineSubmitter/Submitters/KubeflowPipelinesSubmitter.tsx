@@ -16,8 +16,8 @@ import { Label } from "@/components/ui/label";
 import {
   buildArgoWorkflowFromGraphComponent,
   type Workflow,
-} from "../compilers/Argo/argoCompiler";
-import type { ComponentSpec } from "../componentSpec";
+} from "../../../../compilers/Argo/argoCompiler";
+import type { ComponentSpec } from "../../../../componentSpec";
 import { ensureGoogleCloudAuthorizesScopes } from "./GoogleCloud";
 
 const LOCAL_STORAGE_ENDPOINT_KEY = "KubeflowPipelinesSubmitter/endpoint";

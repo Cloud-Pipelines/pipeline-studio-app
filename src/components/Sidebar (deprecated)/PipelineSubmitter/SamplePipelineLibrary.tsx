@@ -8,18 +8,17 @@
 
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-
 import {
   type DownloadDataType,
   downloadDataWithCache,
   loadObjectFromYamlData,
-} from "../cacheUtils";
-import { type ComponentReference, type ComponentSpec } from "../componentSpec";
+} from "@/cacheUtils";
+import { Button } from "@/components/ui/button";
+import { type ComponentReference, type ComponentSpec } from "@/componentSpec";
 import {
   type ComponentReferenceWithSpec,
   fullyLoadComponentRefFromUrl,
-} from "../componentStore";
+} from "@/componentStore";
 
 type PipelineLibraryStruct = {
   annotations?: {

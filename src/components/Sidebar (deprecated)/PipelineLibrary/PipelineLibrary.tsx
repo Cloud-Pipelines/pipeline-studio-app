@@ -20,14 +20,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  type ComponentFileEntry,
+  getComponentFileFromList,
+} from "@/componentStore";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/router";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
-import {
-  type ComponentFileEntry,
-  getComponentFileFromList,
-} from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
 
 const PipelineLibrary = () => {

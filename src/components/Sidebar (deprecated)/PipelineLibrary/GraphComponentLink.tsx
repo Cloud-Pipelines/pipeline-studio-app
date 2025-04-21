@@ -9,9 +9,9 @@
 import { useStore } from "@xyflow/react";
 import type { CSSProperties, Ref } from "react";
 
-import type { ComponentSpec } from "../componentSpec";
-import { componentSpecToYaml } from "../componentStore";
-import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
+import type { ComponentSpec } from "@/componentSpec";
+import { componentSpecToYaml } from "@/componentStore";
+import { updateComponentSpecFromNodes } from "@/utils/updateComponentSpecFromNodes";
 
 interface GraphComponentLinkProps {
   componentSpec: ComponentSpec;

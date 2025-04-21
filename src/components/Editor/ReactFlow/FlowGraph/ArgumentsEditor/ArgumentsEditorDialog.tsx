@@ -9,8 +9,8 @@
 import { Trash } from "lucide-react";
 import { useState } from "react";
 
+import DraggableDialog from "@/components/shared/DraggableDialog";
 import type { ArgumentType, TaskSpec } from "@/componentSpec";
-import DraggableDialog from "@/DragNDrop/DraggableDialog";
 
 import type { ArgumentInput } from "./ArgumentInputField";
 import { ArgumentsEditor } from "./ArgumentsEditor";

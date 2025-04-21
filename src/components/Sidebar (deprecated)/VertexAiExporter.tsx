@@ -8,9 +8,9 @@
 
 import { useStore } from "@xyflow/react";
 
-import { buildVertexPipelineSpecFromGraphComponentSpec } from "../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler";
-import type { ComponentSpec } from "../componentSpec";
-import { updateComponentSpecFromNodes } from "../utils/updateComponentSpecFromNodes";
+import { buildVertexPipelineSpecFromGraphComponentSpec } from "@/compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler";
+import type { ComponentSpec } from "@/componentSpec";
+import { updateComponentSpecFromNodes } from "@/utils/updateComponentSpecFromNodes";
 
 interface VertexAiExporterProps {
   componentSpec: ComponentSpec;

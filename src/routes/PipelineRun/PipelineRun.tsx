@@ -8,13 +8,12 @@ import {
 } from "@xyflow/react";
 
 import type { GetGraphExecutionStateResponse } from "@/api/types.gen";
+import { FlowGraph } from "@/components/Editor/ReactFlow";
+import type { ComponentSpec } from "@/componentSpec";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/router";
 import { API_URL } from "@/utils/constants";
-
-import GraphComponentSpecFlow from "../../components/Editor/ReactFlow/FlowGraph/FlowGraph";
-import type { ComponentSpec } from "../../componentSpec";
 
 const GRID_SIZE = 10;
 
@@ -134,7 +133,7 @@ const PipelineRun = () => {
         <DndContext>
           <ReactFlowProvider>
             <div className="reactflow-wrapper h-full w-full">
-              <GraphComponentSpecFlow
+              <FlowGraph
                 snapToGrid={true}
                 snapGrid={[GRID_SIZE, GRID_SIZE]}
                 nodesDraggable={false}
@@ -144,7 +143,7 @@ const PipelineRun = () => {
                 <MiniMap />
                 <Controls />
                 <Background gap={GRID_SIZE} />
-              </GraphComponentSpecFlow>
+              </FlowGraph>
             </div>
           </ReactFlowProvider>
         </DndContext>
