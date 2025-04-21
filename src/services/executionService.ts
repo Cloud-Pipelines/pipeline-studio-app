@@ -6,6 +6,16 @@ import type {
 } from "@/api/types.gen";
 import { API_URL } from "@/utils/constants";
 
+export const fetchExecutionState = async (executionId: string) => {
+  const response = await fetch(
+    `${API_URL}/api/executions/${executionId}/state`,
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch execution state: ${response.statusText}`);
+  }
+  return response.json();
+};
+
 export const fetchExecutionInfo = (executionId: string) => {
   const fetchDetails = async (): Promise<GetExecutionInfoResponse> => {
     const response = await fetch(
@@ -14,18 +24,6 @@ export const fetchExecutionInfo = (executionId: string) => {
     if (!response.ok) {
       throw new Error(
         `Failed to fetch execution details: ${response.statusText}`,
-      );
-    }
-    return response.json();
-  };
-
-  const fetchState = async (): Promise<GetGraphExecutionStateResponse> => {
-    const response = await fetch(
-      `${API_URL}/api/executions/${executionId}/state`,
-    );
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch execution state: ${response.statusText}`,
       );
     }
     return response.json();
@@ -46,7 +44,7 @@ export const fetchExecutionInfo = (executionId: string) => {
     error: stateError,
   } = useQuery<GetGraphExecutionStateResponse>({
     queryKey: ["pipeline-run-state", executionId],
-    queryFn: fetchState,
+    queryFn: () => fetchExecutionState(executionId),
   });
 
   const isLoading = isDetailsLoading || isStateLoading;
