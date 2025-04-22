@@ -24,6 +24,7 @@ import {
   FolderItem,
   LoadingState,
   SearchInput,
+  SearchResults,
 } from "../components";
 import {
   type ComponentLibraryStruct,
@@ -113,6 +114,22 @@ const GraphComponents = () => {
     if (error) return <ErrorState message={(error as Error).message} />;
     if (!componentLibrary) return <EmptyState />;
 
+    // If there's a search term, use the SearchResults component
+    if (searchTerm.trim()) {
+      const allFolders = [];
+
+      // Add user components if available
+      if (userComponentsFolder) {
+        allFolders.push(userComponentsFolder);
+      }
+
+      // Add library components
+      allFolders.push(...componentLibrary.folders);
+
+      return <SearchResults folders={allFolders} searchTerm={searchTerm} />;
+    }
+
+    // Otherwise show the regular folder structure
     const hasUserComponents =
       userComponentsFolder?.components &&
       userComponentsFolder.components.length > 0;
@@ -123,7 +140,7 @@ const GraphComponents = () => {
           <FolderItem
             key="user-components-folder"
             folder={userComponentsFolder}
-            searchTerm={searchTerm}
+            searchTerm=""
           />
         )}
 
@@ -131,7 +148,7 @@ const GraphComponents = () => {
           <FolderItem
             key={folder.name}
             folder={folder}
-            searchTerm={searchTerm}
+            searchTerm=""
           />
         ))}
       </div>

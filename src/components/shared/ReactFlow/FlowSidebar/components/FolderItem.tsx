@@ -26,68 +26,29 @@ const FolderItem = ({ folder, searchTerm = "" }: FolderItemProps) => {
       return true;
     }
 
-    // Include folder name in search
-    if (containsSearchTerm(folder.name, searchTerm)) {
-      return true;
-    }
-
-    // Check if any components match
+    // Check if any components match by name only
     const hasMatchingComponents =
       hasComponents &&
       folder.components &&
       folder.components.some((component) => {
-        if (isUserFolder && component.spec) {
-          if (containsSearchTerm(component.spec.name || "", searchTerm))
-            return true;
-          if (containsSearchTerm(component.spec.description || "", searchTerm))
-            return true;
-
-          if (
-            component.spec.inputs?.some(
-              (input) =>
-                containsSearchTerm(input.name, searchTerm) ||
-                (input.description &&
-                  containsSearchTerm(input.description, searchTerm)),
-            )
-          )
-            return true;
-
-          if (
-            component.spec.outputs?.some(
-              (output) =>
-                containsSearchTerm(output.name, searchTerm) ||
-                (output.description &&
-                  containsSearchTerm(output.description, searchTerm)),
-            )
-          )
-            return true;
-
-          if (
-            component.name &&
-            containsSearchTerm(component.name, searchTerm)
-          ) {
-            return true;
-          }
+        // For user components with spec
+        if (isUserFolder && component.spec && component.spec.name) {
+          return containsSearchTerm(component.spec.name, searchTerm);
         }
 
-        if (!component.url) return false;
-        const componentName =
-          component.url.split("/").pop()?.replace(".yaml", "") || "";
-        // Check full URL for matches like "GCS" which might be in the URL path
-        return (
-          containsSearchTerm(componentName, searchTerm) ||
-          containsSearchTerm(component.url, searchTerm)
-        );
+        // For components with URLs, extract just the component name
+        if (component.url) {
+          const componentName = component.url.split("/").pop()?.replace(".yaml", "") || "";
+          return containsSearchTerm(componentName, searchTerm);
+        }
+
+        return false;
       });
 
     const hasMatchingSubfolders =
       hasSubfolders &&
       folder.folders &&
-      folder.folders.some(
-        (subfolder) =>
-          containsSearchTerm(subfolder.name, searchTerm) ||
-          hasChildMatchingComponent(subfolder, searchTerm),
-      );
+      folder.folders.some((subfolder) => hasChildMatchingComponent(subfolder, searchTerm));
 
     const hasMatches = hasMatchingComponents || hasMatchingSubfolders;
 
