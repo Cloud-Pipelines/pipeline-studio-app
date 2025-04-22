@@ -12,8 +12,8 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
+import { fetchAndStoreComponentLibrary } from "@/services/componentService";
 import type { ComponentFolder } from "@/types/componentLibrary";
-import { loadObjectFromYamlData } from "@/utils/cache";
 import type { ComponentReference } from "@/utils/componentSpec";
 import { getAllComponentFilesFromList } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
@@ -26,26 +26,6 @@ import {
   SearchInput,
   SearchResults,
 } from "../components";
-import {
-  type ComponentLibraryStruct,
-  isValidComponentLibraryStruct,
-} from "../utils/componentLibrary";
-
-const fetchComponentLibrary = async (): Promise<ComponentLibraryStruct> => {
-  const response = await fetch("/component_library.yaml");
-  if (!response.ok) {
-    throw new Error(`Failed to load component library: ${response.statusText}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  const obj = loadObjectFromYamlData(arrayBuffer);
-
-  if (!isValidComponentLibraryStruct(obj)) {
-    throw new Error("Invalid component library structure");
-  }
-
-  return obj;
-};
 
 const fetchUserComponents = async (): Promise<ComponentFolder> => {
   try {
@@ -88,7 +68,7 @@ const GraphComponents = () => {
     error: libraryError,
   } = useQuery({
     queryKey: ["componentLibrary"],
-    queryFn: fetchComponentLibrary,
+    queryFn: fetchAndStoreComponentLibrary,
   });
 
   const {
@@ -116,17 +96,7 @@ const GraphComponents = () => {
 
     // If there's a search term, use the SearchResults component
     if (searchTerm.trim()) {
-      const allFolders = [];
-
-      // Add user components if available
-      if (userComponentsFolder) {
-        allFolders.push(userComponentsFolder);
-      }
-
-      // Add library components
-      allFolders.push(...componentLibrary.folders);
-
-      return <SearchResults folders={allFolders} searchTerm={searchTerm} />;
+      return <SearchResults searchTerm={searchTerm} />;
     }
 
     // Otherwise show the regular folder structure
@@ -140,16 +110,11 @@ const GraphComponents = () => {
           <FolderItem
             key="user-components-folder"
             folder={userComponentsFolder}
-            searchTerm=""
           />
         )}
 
         {componentLibrary.folders.map((folder) => (
-          <FolderItem
-            key={folder.name}
-            folder={folder}
-            searchTerm=""
-          />
+          <FolderItem key={folder.name} folder={folder} />
         ))}
       </div>
     );

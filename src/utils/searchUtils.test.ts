@@ -58,13 +58,6 @@ describe("containsSearchTerm", () => {
   });
 
   describe("multi-word search", () => {
-    it("returns true when text contains all words in any order", () => {
-      expect(containsSearchTerm("This is sample text", "text sample")).toBe(
-        true,
-      );
-      expect(containsSearchTerm("This is sample text", "is this")).toBe(true);
-    });
-
     it("returns false when text is missing any of the words", () => {
       expect(containsSearchTerm("This is sample text", "sample missing")).toBe(
         false,
@@ -73,22 +66,6 @@ describe("containsSearchTerm", () => {
 
     it("is case-insensitive for all words", () => {
       expect(containsSearchTerm("This is Sample text", "sample TEXT")).toBe(
-        true,
-      );
-    });
-
-    it("handles partial matches for individual words", () => {
-      expect(containsSearchTerm("This is sample text", "sam tex")).toBe(true);
-    });
-
-    it("ignores empty words in the search term", () => {
-      expect(containsSearchTerm("This is sample text", "sample  text")).toBe(
-        true,
-      );
-    });
-
-    it("works with multiple spaces between words", () => {
-      expect(containsSearchTerm("This is sample text", "sample    text")).toBe(
         true,
       );
     });

@@ -1,83 +1,107 @@
-import { ComponentItemFromUrl, ComponentMarkup } from "./ComponentItem";
-import UserComponentItem from "./UserComponentItem";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+
+import {
+  generateDigest,
+  parseComponentData,
+} from "@/services/componentService";
+import type { ComponentSpec } from "@/utils/componentSpec";
+import { getAllComponents, getAllUserComponents } from "@/utils/localforge";
+import { containsSearchTerm } from "@/utils/searchUtils";
+
+import { ComponentMarkup } from "./ComponentItem";
 
 interface SearchResultsProps {
-  folders: any[];
   searchTerm: string;
 }
 
-interface MatchedComponent {
-  name: string;
-  url?: string;
-  spec?: any;
-  digest?: string;
-  text?: string;
-  isUserComponent: boolean;
-  folderPath?: string; // Track folder path for display context
+interface ComponentData {
+  digest: string;
+  url: string;
+  data: ComponentSpec;
 }
 
-const SearchResults = ({ folders, searchTerm }: SearchResultsProps) => {
-  if (!searchTerm) return null;
+const SearchResults = ({ searchTerm }: SearchResultsProps) => {
+  const [matchedComponents, setMatchedComponents] = useState<ComponentData[]>(
+    [],
+  );
+  const [matchedUserComponents, setMatchedUserComponents] = useState<
+    ComponentData[]
+  >([]);
 
-  const findMatchingComponents = (
-    folderList: any[],
-    isUserFolder = false,
-    parentPath = ""
-  ): MatchedComponent[] => {
-    let results: MatchedComponent[] = [];
+  const { data: components, isLoading } = useQuery({
+    queryKey: ["get-all-components"],
+    queryFn: getAllComponents,
+  });
 
-    for (const folder of folderList) {
-      const currentPath = parentPath ? `${parentPath} > ${folder.name}` : folder.name;
+  const { data: userComponents, isLoading: isLoadingUserComponents } = useQuery(
+    {
+      queryKey: ["get-all-user-components"],
+      queryFn: getAllUserComponents,
+    },
+  );
 
-      // Check components in this folder
-      if (folder.components && folder.components.length > 0) {
-        for (const component of folder.components) {
-          let componentName = "";
-          let fullUrl = "";
+  useEffect(() => {
+    if (!components) return;
 
-          // For user components with spec
-          if (component.spec && component.spec.name) {
-            componentName = component.spec.name;
-          }
-          // For components with URLs, extract just the component name
-          else if (component.url) {
-            fullUrl = component.url;
-            componentName = component.url.split("/").pop()?.replace(".yaml", "") || "";
-          }
+    const fetchMatchedComponents = async () => {
+      const results: ComponentData[] = [];
 
-          // Check if the component name or URL contains the search term
-          if ((componentName && componentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-              (fullUrl && fullUrl.toLowerCase().includes(searchTerm.toLowerCase()))) {
-            results.push({
-              name: componentName,
-              url: component.url,
-              spec: component.spec,
-              digest: component.digest,
-              text: component.text,
-              isUserComponent: isUserFolder,
-              folderPath: currentPath
-            });
-          }
+      for (const component of components) {
+        const parsedSpec = parseComponentData(component.data);
+        if (parsedSpec && containsSearchTerm(parsedSpec.name, searchTerm)) {
+          const digest = await generateDigest(component.data);
+          results.push({
+            digest,
+            url: component.url,
+            data: {
+              ...parsedSpec,
+              name: parsedSpec.name || "Unnamed Component",
+            },
+          });
         }
       }
 
-      // Check subfolders recursively
-      if (folder.folders && folder.folders.length > 0) {
-        const subResults = findMatchingComponents(
-          folder.folders,
-          isUserFolder || !!folder.isUserFolder,
-          currentPath
-        );
-        results = [...results, ...subResults];
+      setMatchedComponents(results);
+    };
+
+    fetchMatchedComponents();
+  }, [components, searchTerm]);
+
+  useEffect(() => {
+    if (!userComponents) return;
+
+    const fetchMatchedUserComponents = async () => {
+      const results: ComponentData[] = [];
+
+      for (const userComponent of userComponents) {
+        if (containsSearchTerm(userComponent.name, searchTerm)) {
+          results.push({
+            digest: userComponent.componentRef.digest || "",
+            url: userComponent.componentRef.url || "",
+            data: userComponent.componentRef.spec || {
+              name: userComponent.name,
+              implementation: {
+                graph: {
+                  tasks: {},
+                },
+              },
+            },
+          });
+        }
       }
-    }
 
-    return results;
-  };
+      setMatchedUserComponents(results);
+    };
 
-  const matchingComponents = findMatchingComponents(folders);
+    fetchMatchedUserComponents();
+  }, [userComponents, searchTerm]);
 
-  if (matchingComponents.length === 0) {
+  if (isLoading || isLoadingUserComponents) return <div>Loading...</div>;
+
+  const hasResults =
+    matchedComponents.length > 0 || matchedUserComponents.length > 0;
+  if (!hasResults) {
     return (
       <div className="px-4 py-2 text-sm text-gray-500">
         No components matching &ldquo;{searchTerm}&rdquo;
@@ -85,57 +109,57 @@ const SearchResults = ({ folders, searchTerm }: SearchResultsProps) => {
     );
   }
 
+  const totalResults = matchedComponents.length + matchedUserComponents.length;
+
   return (
     <div className="py-2">
       <div className="px-4 pb-2 text-sm font-medium text-gray-600 border-b">
-        Search Results ({matchingComponents.length})
+        Search Results ({totalResults})
       </div>
       <div className="mt-1">
-        {matchingComponents.map((component, index) => {
-          const key = `search-result-${index}`;
+        {matchedUserComponents.length > 0 && (
+          <>
+            {/* User component section header if both types exist */}
+            {matchedComponents.length > 0 && (
+              <div className="px-4 py-1 text-xs font-medium text-gray-500">
+                User Components
+              </div>
+            )}
+            {/* User component results */}
+            {matchedUserComponents.map((component, index) => (
+              <ComponentMarkup
+                key={`user-${index}`}
+                url={component.url}
+                componentSpec={component.data}
+                componentDigest={component.digest}
+                componentText={JSON.stringify(component.data)}
+                displayName={component.data.name!}
+              />
+            ))}
+          </>
+        )}
 
-          // Create a component with additional folder path info
-          const componentWithPath = (
-            <div>
-              {component.spec ? (
-                component.isUserComponent ? (
-                  <UserComponentItem
-                    key={key}
-                    url={component.url || ""}
-                    fileName={component.name}
-                    componentSpec={component.spec}
-                    componentDigest={component.digest || ""}
-                    componentText={component.text || ""}
-                    displayName={component.name}
-                    searchTerm={searchTerm}
-                  />
-                ) : (
-                  <ComponentMarkup
-                    key={key}
-                    url={component.url || ""}
-                    componentSpec={component.spec}
-                    componentDigest={component.digest || ""}
-                    componentText={component.text || ""}
-                    displayName={component.name}
-                  />
-                )
-              ) : (
-                <ComponentItemFromUrl
-                  key={key}
-                  url={component.url || ""}
-                  searchTerm={searchTerm}
-                />
-              )}
-              {component.folderPath && (
-                <div className="text-xs text-gray-500 pl-10 -mt-1 mb-1">
-                  {component.folderPath}
-                </div>
-              )}
-            </div>
-          );
-
-          return componentWithPath;
-        })}
+        {matchedComponents.length > 0 && (
+          <>
+            {/* Library component section header if both types exist */}
+            {matchedUserComponents.length > 0 && (
+              <div className="px-4 py-1 mt-2 text-xs font-medium text-gray-500">
+                Library Components
+              </div>
+            )}
+            {/* Library component results */}
+            {matchedComponents.map((component, index) => (
+              <ComponentMarkup
+                key={`lib-${index}`}
+                url={component.url}
+                componentSpec={component.data}
+                componentDigest={component.digest}
+                componentText={JSON.stringify(component.data)}
+                displayName={component.data.name!}
+              />
+            ))}
+          </>
+        )}
       </div>
     </div>
   );

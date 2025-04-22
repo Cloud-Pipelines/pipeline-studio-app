@@ -13,7 +13,6 @@ import {
 import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
 import { deleteComponentFileFromList } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
-import { containsSearchTerm } from "@/utils/searchUtils";
 
 interface UserComponentItemProps {
   url: string;
@@ -22,7 +21,6 @@ interface UserComponentItemProps {
   componentDigest: string;
   componentText: string;
   displayName: string;
-  searchTerm?: string;
 }
 
 const UserComponentItem = ({
@@ -32,7 +30,6 @@ const UserComponentItem = ({
   componentDigest,
   componentText,
   displayName,
-  searchTerm = "",
 }: UserComponentItemProps) => {
   const queryClient = useQueryClient();
 
@@ -103,48 +100,6 @@ const UserComponentItem = ({
 
     return content;
   }, [displayName, componentSpec]);
-
-  const matchesSearch = useMemo(() => {
-    if (!searchTerm) return true;
-
-    // Check component name (most common case)
-    if (containsSearchTerm(displayName, searchTerm)) return true;
-
-    // Check component description
-    if (
-      componentSpec?.description &&
-      containsSearchTerm(componentSpec.description, searchTerm)
-    ) {
-      return true;
-    }
-
-    // Check inputs and outputs
-    const inputMatches = componentSpec?.inputs?.some(
-      (input) =>
-        containsSearchTerm(input.name, searchTerm) ||
-        (input.description &&
-          containsSearchTerm(input.description, searchTerm)),
-    );
-
-    if (inputMatches) return true;
-
-    const outputMatches = componentSpec?.outputs?.some(
-      (output) =>
-        containsSearchTerm(output.name, searchTerm) ||
-        (output.description &&
-          containsSearchTerm(output.description, searchTerm)),
-    );
-
-    if (outputMatches) return true;
-
-    // Check URL and filename
-    if (containsSearchTerm(url, searchTerm)) return true;
-    if (containsSearchTerm(fileName, searchTerm)) return true;
-
-    return false;
-  }, [searchTerm, displayName, componentSpec, url, fileName]);
-
-  if (searchTerm && !matchesSearch) return null;
 
   return (
     <TooltipProvider>
