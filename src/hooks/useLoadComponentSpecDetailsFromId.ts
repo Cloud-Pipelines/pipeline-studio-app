@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import type { GetExecutionInfoResponse } from "@/api/types.gen";
-import type { ComponentSpec } from "@/componentSpec";
-import type { ComponentReferenceWithSpec } from "@/componentStore";
+import type { ComponentSpec } from "@/utils/componentSpec";
+import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
 import { API_URL } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 

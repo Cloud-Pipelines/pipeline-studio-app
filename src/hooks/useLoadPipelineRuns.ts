@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { fetchExecutionStatus } from "@/utils/fetchExecutionStatus";
-import { fetchPipelineRuns, type PipelineRun } from "@/utils/fetchPipelineRuns";
+import { fetchExecutionStatus } from "@/services/executionService";
+import { fetchPipelineRuns } from "@/services/pipelineRunService";
+import type { PipelineRun } from "@/types/pipelineRun";
 
 const useLoadPipelineRuns = (pipelineName: string) => {
   const [pipelineRuns, setPipelineRuns] = useState<PipelineRun[]>([]);

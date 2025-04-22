@@ -1,6 +1,6 @@
-import { downloadDataWithCache, loadObjectFromYamlData } from "@/cacheUtils";
-import type { ComponentSpec } from "@/componentSpec";
 import { type ComponentFolder } from "@/types/componentLibrary";
+import { downloadDataWithCache, loadObjectFromYamlData } from "@/utils/cache";
+import type { ComponentSpec } from "@/utils/componentSpec";
 import { containsSearchTerm } from "@/utils/searchUtils";
 
 const componentSpecCache = new Map<string, Promise<ComponentSpec>>();

@@ -13,12 +13,12 @@ import type {
   GraphSpec,
   TaskOutputArgument,
   TaskSpec,
-} from "../componentSpec";
+} from "@/utils/componentSpec";
 import {
   inputNameToNodeId,
   outputNameToNodeId,
   taskIdToNodeId,
-} from "../utils/nodeIdUtils";
+} from "@/utils/nodes/nodeIdUtils";
 
 const useComponentSpecToEdges = (
   componentSpec: ComponentSpec,

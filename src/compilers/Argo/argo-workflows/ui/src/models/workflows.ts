@@ -1,7 +1,7 @@
 // File taken from https://github.com/argoproj/argo-workflows/blob/75350939442d26f35afc57ebe183280dc3d158ac/ui/src/models/workflows.ts
 
 //import * as kubernetes from 'argo-ui/src/models/kubernetes';
-import * as kubernetes from "../../../../argo-ui/src/models/kubernetes";
+import * as kubernetes from "@/compilers/Argo/argo-ui/src/models/kubernetes";
 
 // <Additions>
 /**

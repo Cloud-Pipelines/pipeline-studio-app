@@ -5,12 +5,12 @@ import type {
   ArgumentType,
   GraphInputArgument,
   TaskOutputArgument,
-} from "../componentSpec";
+} from "@/utils/componentSpec";
 import {
   nodeIdToInputName,
   nodeIdToOutputName,
   nodeIdToTaskId,
-} from "../utils/nodeIdUtils";
+} from "@/utils/nodes/nodeIdUtils";
 
 interface ConnectionHandlerProps {
   setTaskArgument: (

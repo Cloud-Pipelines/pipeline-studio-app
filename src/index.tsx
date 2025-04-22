@@ -1,4 +1,4 @@
-import "./styles.css";
+import "./styles/global.css";
 import "@xyflow/react/dist/style.css";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,7 +8,7 @@ import ReactDOM from "react-dom/client";
 import { scan } from "react-scan";
 
 import reportWebVitals from "./reportWebVitals";
-import { router } from "./router";
+import { router } from "./routes/router";
 
 const queryClient = new QueryClient();
 

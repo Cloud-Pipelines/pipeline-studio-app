@@ -1,0 +1,116 @@
+/**
+ * @license
+ * Copyright 2022 Alexey Volkov
+ * SPDX-License-Identifier: Apache-2.0
+ * @author         Alexey Volkov <alexey.volkov+oss@ark-kun.com>
+ * @copyright 2022 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
+ */
+
+import { useEffect, useState } from "react";
+
+import OasisSubmitter from "@/components/shared/OasisSubmitter";
+import {
+  type ArgumentInput,
+  ArgumentsEditor,
+} from "@/components/shared/ReactFlow/FlowGraph/TaskNode/ArgumentsEditor";
+import type { ComponentSpec } from "@/utils/componentSpec";
+
+import { GoogleCloudSubmitter, KubeflowPipelinesSubmitter } from "./Submitters";
+
+interface PipelineSubmitterProps {
+  componentSpec?: ComponentSpec;
+  googleCloudOAuthClientId: string;
+}
+
+const PipelineSubmitter = ({
+  componentSpec,
+  googleCloudOAuthClientId,
+}: PipelineSubmitterProps) => {
+  const argumentInputs =
+    componentSpec?.inputs?.map((input) => {
+      return {
+        key: input.name,
+        value: "",
+        initialValue: "",
+        inputSpec: input,
+        isRemoved: false,
+      } as ArgumentInput;
+    }) ?? [];
+
+  const [pipelineArguments, setPipelineArguments] =
+    useState<ArgumentInput[]>(argumentInputs);
+
+  const [stringPipelineArguments, setStringPipelineArguments] = useState<
+    Map<string, string>
+  >(new Map());
+
+  useEffect(() => {
+    // This filtering is just for typing as the pipeline arguments can only be strings here.
+    const newStringPipelineArguments = new Map(
+      pipelineArguments
+        .filter((arg) => typeof arg.value === "string")
+        .map((arg) => [arg.key, arg.value as string]),
+    );
+    setStringPipelineArguments(newStringPipelineArguments);
+  }, [pipelineArguments]);
+
+  return (
+    <>
+      {componentSpec === undefined || // This check is redundant, but TypeScript needs it.
+      (componentSpec?.inputs?.length ?? 0) === 0 ? undefined : (
+        <fieldset
+          style={{
+            // Reduce the default padding
+            padding: "2px",
+            marginBottom: "4px",
+          }}
+        >
+          <legend>Arguments</legend>
+          <ArgumentsEditor
+            argumentData={pipelineArguments}
+            setArguments={setPipelineArguments}
+          />
+        </fieldset>
+      )}
+      <OasisSubmitter componentSpec={componentSpec} />
+      <details
+        style={{
+          border: "1px solid #aaa",
+          borderRadius: "4px",
+          padding: "4px",
+        }}
+      >
+        <summary
+          style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}
+        >
+          Submit to Google Cloud
+        </summary>
+        <GoogleCloudSubmitter
+          componentSpec={componentSpec}
+          pipelineArguments={stringPipelineArguments}
+          googleCloudOAuthClientId={googleCloudOAuthClientId}
+        />
+      </details>
+      <details
+        style={{
+          border: "1px solid #aaa",
+          borderRadius: "4px",
+          padding: "4px",
+        }}
+      >
+        <summary
+          style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}
+        >
+          Submit to Kubeflow Pipelines
+        </summary>
+        <KubeflowPipelinesSubmitter
+          componentSpec={componentSpec}
+          pipelineArguments={stringPipelineArguments}
+          googleCloudOAuthClientId={googleCloudOAuthClientId}
+        />
+      </details>
+    </>
+  );
+};
+
+export default PipelineSubmitter;

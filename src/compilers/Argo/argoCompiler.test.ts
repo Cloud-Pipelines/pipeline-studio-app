@@ -11,7 +11,8 @@ import yaml from "js-yaml";
 import path from "path";
 import { expect, test } from "vitest";
 
-import type { ComponentSpec } from "../../componentSpec";
+import type { ComponentSpec } from "@/utils/componentSpec";
+
 import { buildArgoWorkflowFromGraphComponent } from "./argoCompiler";
 
 test("buildArgoWorkflowFromGraphComponent compiles Data_passing_pipeline", () => {

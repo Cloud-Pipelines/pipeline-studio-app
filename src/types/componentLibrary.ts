@@ -1,4 +1,4 @@
-import type { ComponentReference } from "@/componentSpec";
+import type { ComponentReference } from "@/utils/componentSpec";
 
 export type ComponentItemFromUrlProps = {
   url?: string;
