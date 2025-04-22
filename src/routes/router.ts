@@ -4,7 +4,7 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 
-import RootLayout from "../components/layout/RootLayout";
+import RootLayout from "../components/layout2/RootLayout";
 import Editor from "./Editor";
 import Home from "./Home";
 import PipelineRun from "./PipelineRun";
