@@ -19,16 +19,16 @@ import { getAllComponentFilesFromList } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 
 import {
-  type ComponentLibraryStruct,
-  isValidComponentLibraryStruct,
-} from "../../utils/componentLibrary";
-import {
   EmptyState,
   ErrorState,
   FolderItem,
   LoadingState,
   SearchInput,
 } from "../components";
+import {
+  type ComponentLibraryStruct,
+  isValidComponentLibraryStruct,
+} from "../utils/componentLibrary";
 
 const fetchComponentLibrary = async (): Promise<ComponentLibraryStruct> => {
   const response = await fetch("/component_library.yaml");

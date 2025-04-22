@@ -15,8 +15,7 @@ import {
   fetchExecutionInfo,
   getRunStatus,
 } from "@/services/executionService";
-
-import { formatDate } from "../utils";
+import { formatDate } from "@/utils/date";
 
 const RunRow = ({ run }: { run: PipelineRunResponse }) => {
   const navigate = useNavigate();

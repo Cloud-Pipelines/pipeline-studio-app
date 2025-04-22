@@ -13,7 +13,8 @@ import {
   isContainerImplementation,
   isGraphImplementation,
   type StringOrPlaceholder,
-} from "../../utils/componentSpec";
+} from "@/utils/componentSpec";
+
 import * as argo from "./argo-workflows/ui/src/models/workflows";
 import { assertDefined, notUndefined } from "./utils";
 

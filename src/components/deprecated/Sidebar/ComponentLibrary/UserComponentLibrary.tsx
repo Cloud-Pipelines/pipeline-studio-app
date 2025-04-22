@@ -20,15 +20,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
-
 import {
   addComponentToListByText,
   addComponentToListByUrl,
   type ComponentFileEntry,
   deleteComponentFileFromList,
   getAllComponentFilesFromList,
-} from "../../../../utils/componentStore";
+} from "@/utils/componentStore";
+import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
+
 import DraggableComponent from "./DraggableComponent";
 
 const UserComponentLibrary = () => {

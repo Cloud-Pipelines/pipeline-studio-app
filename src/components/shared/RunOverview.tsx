@@ -12,8 +12,7 @@ import {
 } from "@/services/executionService";
 import { fetchPipelineRunById } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
-
-import { formatDate } from "../Home/utils";
+import { formatDate } from "@/utils/date";
 
 interface RunOverviewProps {
   run: PipelineRun;

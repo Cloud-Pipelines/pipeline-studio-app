@@ -17,8 +17,7 @@ import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import { EDITOR_PATH } from "@/routes/router";
 import { deletePipeline } from "@/services/pipelineService";
 import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
-
-import { formatDate } from "../../utils";
+import { formatDate } from "@/utils/date";
 
 interface PipelineRowProps {
   url?: string;

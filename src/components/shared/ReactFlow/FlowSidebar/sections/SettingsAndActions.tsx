@@ -24,9 +24,9 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/routes/router";
 import { useSavePipeline } from "@/services/pipelineService";
 import { componentSpecToYaml } from "@/utils/componentStore";
+import { updateComponentSpecFromNodes } from "@/utils/nodes/updateComponentSpecFromNodes";
 
-import { updateComponentSpecFromNodes } from "../../../../../utils/nodes/updateComponentSpecFromNodes";
-import ImportComponent from "../components/ImportComponent";
+import { ImportComponent } from "../components";
 
 const SettingsAndActions = () => {
   const { componentSpec } = useComponentSpec();

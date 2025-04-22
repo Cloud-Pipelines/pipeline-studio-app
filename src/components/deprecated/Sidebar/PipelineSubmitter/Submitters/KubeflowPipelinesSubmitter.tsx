@@ -9,15 +9,15 @@
 import yaml from "js-yaml";
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
 import {
   buildArgoWorkflowFromGraphComponent,
   type Workflow,
-} from "../../../../../compilers/Argo/argoCompiler";
-import type { ComponentSpec } from "../../../../../utils/componentSpec";
+} from "@/compilers/Argo/argoCompiler";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import type { ComponentSpec } from "@/utils/componentSpec";
+
 import { ensureGoogleCloudAuthorizesScopes } from "./GoogleCloud";
 
 const LOCAL_STORAGE_ENDPOINT_KEY = "KubeflowPipelinesSubmitter/endpoint";

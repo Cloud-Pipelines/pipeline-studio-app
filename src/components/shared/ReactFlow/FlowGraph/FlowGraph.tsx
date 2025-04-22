@@ -31,10 +31,10 @@ import {
   nodeIdToTaskId,
 } from "@/utils/nodes/nodeIdUtils";
 
-import onDropNode from "../utils/onDropNode";
-import replaceTaskArgumentsInGraphSpec from "../utils/replaceTaskArgumentsInGraphSpec";
-import { updateNodePositions } from "../utils/updateNodePosition";
 import ComponentTaskNode from "./TaskNode/TaskNode";
+import onDropNode from "./utils/onDropNode";
+import replaceTaskArgumentsInGraphSpec from "./utils/replaceTaskArgumentsInGraphSpec";
+import { updateNodePositions } from "./utils/updateNodePosition";
 
 const nodeTypes: Record<string, ComponentType<any>> = {
   task: ComponentTaskNode,

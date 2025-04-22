@@ -14,7 +14,8 @@ import {
   isGraphImplementation,
   type StringOrPlaceholder,
   type TypeSpecType,
-} from "../../utils/componentSpec";
+} from "@/utils/componentSpec";
+
 import * as vertex from "./vertexPipelineSpec";
 
 // # How to handle I/O:
