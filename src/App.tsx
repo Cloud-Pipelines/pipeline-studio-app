@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import AppFooter from "./components/layout2/AppFooter";
+import AppFooter from "./components/layout/AppFooter";
 
 function App({ children }: { children: ReactNode }) {
   return (
