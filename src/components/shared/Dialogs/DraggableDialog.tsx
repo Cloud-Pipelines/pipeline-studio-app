@@ -137,6 +137,19 @@ const DraggableDialog = ({
   const translateX = position.x + (transform?.x || 0);
   const translateY = position.y + (transform?.y || 0);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
   return (
     <div
       ref={setNodeRef}
