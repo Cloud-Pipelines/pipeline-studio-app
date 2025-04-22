@@ -10,12 +10,16 @@ import AppMenu from "./AppMenu";
 const RootLayout = () => (
   <SidebarProvider>
     <ToastContainer />
+
     <div className="App flex flex-col min-h-screen w-full">
       <AppMenu />
+
       <main className="flex-1 grid">
         <Outlet />
       </main>
+
       <AppFooter />
+
       {import.meta.env.VITE_ENABLE_ROUTER_DEVTOOLS === "true" && (
         <TanStackRouterDevtools />
       )}
