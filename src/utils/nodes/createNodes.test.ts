@@ -1,11 +1,10 @@
-import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ComponentSpec } from "../utils/componentSpec";
-import { isGraphImplementation } from "../utils/componentSpec";
-import useComponentSpecToNodes from "./useComponentSpecToNodes";
+import type { ComponentSpec } from "../componentSpec";
+import { isGraphImplementation } from "../componentSpec";
+import createNodes from "./createNodes";
 
-describe("useComponentSpecToNodes", () => {
+describe("createNodes", () => {
   const createBasicComponentSpec = (implementation: any): ComponentSpec => ({
     name: "Test Component",
     implementation,
@@ -27,11 +26,9 @@ describe("useComponentSpecToNodes", () => {
       container: { image: "test" },
     });
 
-    const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
-    );
+    const result = createNodes(componentSpec, mockNodeCallbacks);
 
-    expect(result.current.nodes).toEqual([]);
+    expect(result).toEqual([]);
   });
 
   it("creates task nodes correctly", () => {
@@ -53,11 +50,9 @@ describe("useComponentSpecToNodes", () => {
       throw new Error("Expected graph implementation");
     }
 
-    const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
-    );
+    const result = createNodes(componentSpec, mockNodeCallbacks);
 
-    expect(result.current.nodes).toContainEqual(
+    expect(result).toContainEqual(
       expect.objectContaining({
         id: "task_task1",
         position: { x: 100, y: 200 },
@@ -83,11 +78,9 @@ describe("useComponentSpecToNodes", () => {
       outputs: [],
     };
 
-    const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
-    );
+    const result = createNodes(componentSpec, mockNodeCallbacks);
 
-    expect(result.current.nodes).toContainEqual({
+    expect(result).toContainEqual({
       id: "input_input1",
       data: { label: "input1" },
       position: { x: 50, y: 100 },
@@ -110,11 +103,9 @@ describe("useComponentSpecToNodes", () => {
       ],
     };
 
-    const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
-    );
+    const result = createNodes(componentSpec, mockNodeCallbacks);
 
-    expect(result.current.nodes).toContainEqual({
+    expect(result).toContainEqual({
       id: "output_output1",
       data: { label: "output1" },
       position: { x: 300, y: 150 },
@@ -139,24 +130,22 @@ describe("useComponentSpecToNodes", () => {
       outputs: [{ name: "output1" }],
     };
 
-    const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
-    );
+    const result = createNodes(componentSpec, mockNodeCallbacks);
     const defaultPosition = { x: 0, y: 0 };
 
-    expect(result.current.nodes).toContainEqual(
+    expect(result).toContainEqual(
       expect.objectContaining({
         id: "task_task1",
         position: defaultPosition,
       }),
     );
-    expect(result.current.nodes).toContainEqual(
+    expect(result).toContainEqual(
       expect.objectContaining({
         id: "input_input1",
         position: defaultPosition,
       }),
     );
-    expect(result.current.nodes).toContainEqual(
+    expect(result).toContainEqual(
       expect.objectContaining({
         id: "output_output1",
         position: defaultPosition,
@@ -182,10 +171,8 @@ describe("useComponentSpecToNodes", () => {
       },
     });
 
-    const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
-    );
-    const taskNode = result.current.nodes.find((node) => node.id === nodeId) as
+    const result = createNodes(componentSpec, mockNodeCallbacks);
+    const taskNode = result.find((node) => node.id === nodeId) as
       | { id: string; data: { setArguments: (args: any) => void } }
       | undefined;
 

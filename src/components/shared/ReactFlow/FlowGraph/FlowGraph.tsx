@@ -13,18 +13,16 @@ import type {
   ReactFlowInstance,
   ReactFlowProps,
 } from "@xyflow/react";
-import { type OnInit, ReactFlow } from "@xyflow/react";
+import { type OnInit, ReactFlow, useNodesState } from "@xyflow/react";
 import type { ComponentType, DragEvent } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
-import useComponentSpecToNodes, {
-  type NodeAndTaskId,
-} from "@/hooks/useComponentSpecToNodes";
 import { useConnectionHandler } from "@/hooks/useConnectionHandler";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { ArgumentType, TaskOutputArgument } from "@/utils/componentSpec";
+import { createNodes, type NodeAndTaskId } from "@/utils/nodes/createNodes";
 import {
   nodeIdToInputName,
   nodeIdToOutputName,
@@ -53,22 +51,16 @@ const FlowGraph = ({
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
 
-  const onDelete = useCallback(async (ids: NodeAndTaskId) => {
-    const nodeId = ids.nodeId;
-    const node = nodes.find((n) => n.id === nodeId);
-    if (node) {
-      const confirmed = await triggerConfirmationDialog({
-        nodes: [node],
-        edges: [],
-      });
-      if (confirmed) {
-        removeNode(node);
+  /* Initialize nodes with an empty array and sync with the ComponentSpec via useEffect to avoid infinite renders */
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 
-        // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
-        updateGraphSpec(graphSpec);
-      }
-    }
-  }, []);
+  useEffect(() => {
+    const newNodes = createNodes(componentSpec, {
+      onDelete,
+      setArguments,
+    });
+    setNodes(newNodes);
+  }, [componentSpec]);
 
   const setArguments = useCallback(
     (ids: NodeAndTaskId, args: Record<string, ArgumentType>) => {
@@ -76,17 +68,33 @@ const FlowGraph = ({
       const newGraphSpec = replaceTaskArgumentsInGraphSpec(
         taskId,
         graphSpec,
-        args,
+        args
       );
       updateGraphSpec(newGraphSpec);
     },
-    [],
+    []
   );
 
-  const { nodes, onNodesChange } = useComponentSpecToNodes(componentSpec, {
-    onDelete,
-    setArguments,
-  });
+  const onDelete = useCallback(
+    async (ids: NodeAndTaskId) => {
+      const nodeId = ids.nodeId;
+      const node = nodes.find((n) => n.id === nodeId);
+
+      if (node) {
+        const confirmed = await triggerConfirmationDialog({
+          nodes: [node],
+          edges: [],
+        });
+        if (confirmed) {
+          removeNode(node);
+
+          // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
+          updateGraphSpec(graphSpec);
+        }
+      }
+    },
+    [nodes]
+  );
 
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
@@ -102,7 +110,7 @@ const FlowGraph = ({
   const setTaskArgument = (
     taskId: string,
     inputName: string,
-    argument?: ArgumentType,
+    argument?: ArgumentType
   ) => {
     if (readOnly) {
       return;
@@ -120,7 +128,7 @@ const FlowGraph = ({
     const newGraphSpec = replaceTaskArgumentsInGraphSpec(
       taskId,
       graphSpec,
-      newTaskSpecArguments,
+      newTaskSpecArguments
     );
 
     updateGraphSpec(newGraphSpec);
@@ -128,7 +136,7 @@ const FlowGraph = ({
 
   const setGraphOutputValue = (
     outputName: string,
-    outputValue?: TaskOutputArgument,
+    outputValue?: TaskOutputArgument
   ) => {
     const nonNullOutputObject = outputValue
       ? { [outputName]: outputValue }
@@ -162,7 +170,7 @@ const FlowGraph = ({
     // Not really needed since react-flow sends the node's incoming and outcoming edges for deletion when a node is deleted
     for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
       for (const [inputName, argument] of Object.entries(
-        taskSpec.arguments ?? {},
+        taskSpec.arguments ?? {}
       )) {
         if (typeof argument !== "string" && "graphInput" in argument) {
           if (argument.graphInput.inputName === inputNameToRemove) {
@@ -173,7 +181,7 @@ const FlowGraph = ({
     }
 
     const newInputs = (componentSpec.inputs ?? []).filter(
-      (inputSpec) => inputSpec.name !== inputNameToRemove,
+      (inputSpec) => inputSpec.name !== inputNameToRemove
     );
     setComponentSpec({ ...componentSpec, inputs: newInputs });
   };
@@ -182,7 +190,7 @@ const FlowGraph = ({
     setGraphOutputValue(outputNameToRemove);
     // Removing the output itself
     const newOutputs = (componentSpec.outputs ?? []).filter(
-      (outputSpec) => outputSpec.name !== outputNameToRemove,
+      (outputSpec) => outputSpec.name !== outputNameToRemove
     );
     setComponentSpec({ ...componentSpec, outputs: newOutputs });
   };
@@ -209,15 +217,15 @@ const FlowGraph = ({
     // Step 2: Remove any connections from this task to graph outputs
     const newGraphOutputValues = Object.fromEntries(
       Object.entries(graphSpec.outputValues ?? {}).filter(
-        ([_, argument]) => argument.taskOutput.taskId !== taskIdToRemove,
-      ),
+        ([_, argument]) => argument.taskOutput.taskId !== taskIdToRemove
+      )
     );
 
     // Step 3: Remove the task itself from the graph
     const newTasks = Object.fromEntries(
       Object.entries(graphSpec.tasks).filter(
-        ([taskId]) => taskId !== taskIdToRemove,
-      ),
+        ([taskId]) => taskId !== taskIdToRemove
+      )
     );
 
     // Step 4: Update the graph spec with our changes
@@ -264,7 +272,7 @@ const FlowGraph = ({
         reactFlowInstance,
         componentSpec,
         setComponentSpec,
-        graphSpec,
+        graphSpec
       );
     }
   };
@@ -315,7 +323,7 @@ const FlowGraph = ({
   const handleOnNodesChange = (changes: NodeChange[]) => {
     // Process position changes and update component spec
     const positionChanges = changes.filter(
-      (change) => change.type === "position" && change.dragging === false,
+      (change) => change.type === "position" && change.dragging === false
     );
 
     if (positionChanges.length > 0) {

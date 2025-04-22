@@ -18,9 +18,9 @@ import { ArgumentsEditor } from "./ArgumentsEditor";
 interface ArgumentsEditorDialogProps {
   initialPosition?: { x: number; y: number };
   taskSpec: TaskSpec;
+  disabled?: boolean;
   closeEditor: () => void;
   setArguments?: (args: Record<string, ArgumentType>) => void;
-  disabled?: boolean;
   handleDelete: () => void;
 }
 

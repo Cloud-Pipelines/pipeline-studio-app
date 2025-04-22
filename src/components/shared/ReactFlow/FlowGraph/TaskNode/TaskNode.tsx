@@ -197,7 +197,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   // ][Math.floor(Math.random() * 10)];
 
   if (componentSpec === undefined) {
-    return <></>;
+    return null;
   }
 
   const label = componentSpec.name ?? "<component>";
