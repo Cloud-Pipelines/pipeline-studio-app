@@ -58,7 +58,7 @@ const ConfirmationDialog = ({
           {trigger}
         </AlertDialogTrigger>
       )}
-      <AlertDialogContent>
+      <AlertDialogContent className="z-[9999]">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
