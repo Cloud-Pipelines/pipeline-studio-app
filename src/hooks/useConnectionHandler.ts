@@ -1,17 +1,16 @@
 import type { Connection, Edge } from "@xyflow/react";
 import { useCallback } from "react";
 
+import type {
+  ArgumentType,
+  GraphInputArgument,
+  TaskOutputArgument,
+} from "@/utils/componentSpec";
 import {
   nodeIdToInputName,
   nodeIdToOutputName,
   nodeIdToTaskId,
 } from "@/utils/nodes/nodeIdUtils";
-
-import type {
-  ArgumentType,
-  GraphInputArgument,
-  TaskOutputArgument,
-} from "../utils/componentSpec";
 
 interface ConnectionHandlerProps {
   setTaskArgument: (

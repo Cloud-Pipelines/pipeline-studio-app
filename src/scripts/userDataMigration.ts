@@ -12,7 +12,7 @@ import {
   type ComponentFileEntry,
   getAllComponentFilesFromList,
   unsafeWriteFilesToList,
-} from "../utils/componentStore";
+} from "@/utils/componentStore";
 
 const OLD_SITE_ORIGIN = "https://cloud-pipelines.github.io";
 const NEW_SITE_ORIGIN = "https://cloud-pipelines.net";
