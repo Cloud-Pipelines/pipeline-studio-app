@@ -279,7 +279,6 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
 
   const handleDelete = () => {
     typedData.onDelete();
-    closeArgumentsEditor();
   };
 
   return (
