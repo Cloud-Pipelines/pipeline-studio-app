@@ -1,3 +1,5 @@
+import yaml from "js-yaml";
+
 import CondensedUrl from "@/components/shared/CondensedUrl";
 import type { TaskSpec } from "@/utils/componentSpec";
 
@@ -62,7 +64,10 @@ const Info = ({ taskSpec, runStatus, taskId }: InfoProps) => {
         </div>
         <div className="border rounded-md">
           <pre className="text-xs p-3 overflow-x-auto">
-            {JSON.stringify(taskSpec.componentRef, null, 2)}
+            {yaml.dump(taskSpec.componentRef, {
+              lineWidth: 10000,
+              quotingType: '"',
+            })}
           </pre>
         </div>
       </section>
