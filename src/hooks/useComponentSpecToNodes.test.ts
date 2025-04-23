@@ -1,8 +1,9 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ComponentSpec } from "../utils/componentSpec";
-import { isGraphImplementation } from "../utils/componentSpec";
+import type { ComponentSpec } from "@/utils/componentSpec";
+import { isGraphImplementation } from "@/utils/componentSpec";
+
 import useComponentSpecToNodes from "./useComponentSpecToNodes";
 
 describe("useComponentSpecToNodes", () => {
@@ -13,13 +14,12 @@ describe("useComponentSpecToNodes", () => {
     outputs: [],
   });
 
-  const mockNodeCallbacks = {
-    onDelete: vi.fn(),
-    setArguments: vi.fn(),
-  };
+  const onDelete = vi.fn();
+
+  const mockSetComponentSpec = vi.fn();
 
   beforeEach(() => {
-    mockNodeCallbacks.setArguments.mockClear();
+    mockSetComponentSpec.mockClear();
   });
 
   it("returns empty array for non-graph implementations", () => {
@@ -28,7 +28,7 @@ describe("useComponentSpecToNodes", () => {
     });
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
 
     expect(result.current.nodes).toEqual([]);
@@ -54,7 +54,7 @@ describe("useComponentSpecToNodes", () => {
     }
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
 
     expect(result.current.nodes).toContainEqual(
@@ -84,7 +84,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
 
     expect(result.current.nodes).toContainEqual({
@@ -111,7 +111,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
 
     expect(result.current.nodes).toContainEqual({
@@ -140,7 +140,7 @@ describe("useComponentSpecToNodes", () => {
     };
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
     const defaultPosition = { x: 0, y: 0 };
 
@@ -165,15 +165,10 @@ describe("useComponentSpecToNodes", () => {
   });
 
   it("tests the setArguments function in task nodes", () => {
-    const taskId = "task1";
-    const nodeId = `task_${taskId}`;
-
-    const mockSetArguments = mockNodeCallbacks.setArguments;
-
     const componentSpec = createBasicComponentSpec({
       graph: {
         tasks: {
-          [taskId]: {
+          task1: {
             componentRef: {},
             arguments: { existingArg: "value" },
           },
@@ -183,16 +178,32 @@ describe("useComponentSpecToNodes", () => {
     });
 
     const { result } = renderHook(() =>
-      useComponentSpecToNodes(componentSpec, mockNodeCallbacks),
+      useComponentSpecToNodes(componentSpec, mockSetComponentSpec, onDelete),
     );
-    const taskNode = result.current.nodes.find((node) => node.id === nodeId) as
-      | { id: string; data: { setArguments: (args: any) => void } }
-      | undefined;
+    const taskNode = result.current.nodes.find(
+      (node) => node.id === "task_task1",
+    );
 
     const newArgs = { newArg: "newValue" };
-    taskNode?.data.setArguments(newArgs);
+    (
+      taskNode?.data.setArguments as (
+        args: Record<string, string | number | boolean>,
+      ) => void
+    )?.(newArgs);
 
-    expect(mockSetArguments).toHaveBeenCalledTimes(1);
-    expect(mockSetArguments).toHaveBeenCalledWith({ taskId, nodeId }, newArgs);
+    expect(mockSetComponentSpec).toHaveBeenCalledTimes(1);
+    expect(mockSetComponentSpec).toHaveBeenCalledWith(
+      expect.objectContaining({
+        implementation: expect.objectContaining({
+          graph: expect.objectContaining({
+            tasks: expect.objectContaining({
+              task1: expect.objectContaining({
+                arguments: newArgs,
+              }),
+            }),
+          }),
+        }),
+      }),
+    );
   });
 });

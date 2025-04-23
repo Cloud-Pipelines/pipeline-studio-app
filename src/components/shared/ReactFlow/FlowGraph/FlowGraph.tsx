@@ -15,13 +15,11 @@ import type {
 } from "@xyflow/react";
 import { type OnInit, ReactFlow } from "@xyflow/react";
 import type { ComponentType, DragEvent } from "react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
-import useComponentSpecToNodes, {
-  type NodeAndTaskId,
-} from "@/hooks/useComponentSpecToNodes";
+import useComponentSpecToNodes from "@/hooks/useComponentSpecToNodes";
 import { useConnectionHandler } from "@/hooks/useConnectionHandler";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { ArgumentType, TaskOutputArgument } from "@/utils/componentSpec";
@@ -53,40 +51,29 @@ const FlowGraph = ({
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
 
-  const onDelete = useCallback(async (ids: NodeAndTaskId) => {
-    const nodeId = ids.nodeId;
+  const deleteNode = async (nodeId: string) => {
     const node = nodes.find((n) => n.id === nodeId);
-    if (node) {
-      const confirmed = await triggerConfirmationDialog({
-        nodes: [node],
-        edges: [],
-      });
-      if (confirmed) {
-        removeNode(node);
+    const edgesToRemove = edges.filter(
+      (edge) => edge.source === nodeId || edge.target === nodeId,
+    );
 
-        // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
-        updateGraphSpec(graphSpec);
-      }
+    const params = {
+      nodes: [node] as Node[],
+      edges: edgesToRemove as Edge[],
+    };
+
+    const result = await handleBeforeDelete(params);
+
+    if (result) {
+      onElementsRemove(params);
     }
-  }, []);
+  };
 
-  const setArguments = useCallback(
-    (ids: NodeAndTaskId, args: Record<string, ArgumentType>) => {
-      const taskId = ids.taskId;
-      const newGraphSpec = replaceTaskArgumentsInGraphSpec(
-        taskId,
-        graphSpec,
-        args,
-      );
-      updateGraphSpec(newGraphSpec);
-    },
-    [],
+  const { nodes, onNodesChange } = useComponentSpecToNodes(
+    componentSpec,
+    setComponentSpec,
+    deleteNode,
   );
-
-  const { nodes, onNodesChange } = useComponentSpecToNodes(componentSpec, {
-    onDelete,
-    setArguments,
-  });
 
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
@@ -221,8 +208,14 @@ const FlowGraph = ({
     );
 
     // Step 4: Update the graph spec with our changes
-    graphSpec.tasks = newTasks;
-    graphSpec.outputValues = newGraphOutputValues;
+    const updatedGraphSpec = {
+      ...graphSpec,
+      tasks: newTasks,
+      outputValues: newGraphOutputValues,
+    };
+
+    // Update component spec immediately
+    updateGraphSpec(updatedGraphSpec);
   };
 
   const removeNode = (node: Node) => {
@@ -301,15 +294,66 @@ const FlowGraph = ({
       return;
     }
 
+    // First handle explicit edges being deleted
     for (const edge of params.edges) {
       removeEdge(edge);
     }
+
+    // Process node deletions - removeNode already handles edge cleanup internally
     for (const node of params.nodes) {
       removeNode(node);
     }
 
-    // Save the updated graph spec to the component spec
-    updateGraphSpec(graphSpec);
+    // Final cleanup of tasks to ensure all references are gone
+    const nodesToDeleteIds = params.nodes
+      .map((node) =>
+        node.id.startsWith("task_") ? node.id.replace("task_", "") : "",
+      )
+      .filter((id) => id); // Get all task IDs to delete and filter out empty strings
+
+    // Clean up any arguments in remaining tasks that reference deleted tasks
+    const cleanedTasks = { ...graphSpec.tasks };
+    for (const taskId in cleanedTasks) {
+      const taskSpec = cleanedTasks[taskId];
+
+      // Skip if this task has no arguments
+      if (!taskSpec.arguments) continue;
+
+      // Create a new arguments object without references to deleted tasks
+      const newArguments = { ...taskSpec.arguments };
+      let argumentsChanged = false;
+
+      // Check each argument for references to deleted tasks
+      for (const [argName, argValue] of Object.entries(newArguments)) {
+        if (typeof argValue !== "string" && "taskOutput" in argValue) {
+          // If this argument references a task that's being deleted, remove it
+          if (nodesToDeleteIds.includes(argValue.taskOutput.taskId)) {
+            delete newArguments[argName];
+            argumentsChanged = true;
+          }
+        }
+      }
+
+      // If we changed arguments, update the task
+      if (argumentsChanged) {
+        cleanedTasks[taskId] = {
+          ...taskSpec,
+          arguments: newArguments,
+        };
+      }
+    }
+
+    // Create the final graph spec with cleaned tasks
+    const newGraphSpec = {
+      ...graphSpec,
+      tasks: Object.fromEntries(
+        Object.entries(cleanedTasks).filter(
+          ([taskId]) => !nodesToDeleteIds.includes(taskId),
+        ),
+      ),
+    };
+
+    updateGraphSpec(newGraphSpec);
   };
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
@@ -350,8 +394,7 @@ const FlowGraph = ({
       return false;
     }
 
-    const confirmed = await triggerConfirmationDialog(params);
-    return confirmed;
+    return await triggerConfirmationDialog(params);
   };
 
   const isDeletingMultipleNodes = nodesToDelete && nodesToDelete.length > 1;
