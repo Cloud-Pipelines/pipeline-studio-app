@@ -3,7 +3,6 @@ import type { ComponentReference } from "@/utils/componentSpec";
 export type ComponentItemFromUrlProps = {
   url?: string;
   componentRef?: ComponentReference;
-  searchTerm?: string;
 };
 
 export type ComponentFolder = {
@@ -15,7 +14,6 @@ export type ComponentFolder = {
 
 export type FolderItemProps = {
   folder: ComponentFolder;
-  searchTerm?: string;
 };
 
 export type SearchInputProps = {

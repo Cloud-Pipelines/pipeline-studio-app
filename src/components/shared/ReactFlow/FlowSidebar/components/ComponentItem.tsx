@@ -11,14 +11,18 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { EMPTY_GRAPH_COMPONENT_SPEC } from "@/providers/ComponentSpecProvider";
-import { loadComponentSpec } from "@/services/componentSpecService";
+import {
+  fetchAndStoreComponent,
+  generateDigest,
+  parseComponentData,
+} from "@/services/componentService";
 import { type ComponentItemFromUrlProps } from "@/types/componentLibrary";
 import type {
   ComponentReference,
   ComponentSpec,
   TaskSpec,
 } from "@/utils/componentSpec";
-import { containsSearchTerm } from "@/utils/searchUtils";
+import { getComponentByUrl } from "@/utils/localforge";
 
 interface ComponentMarkupProps {
   url: string;
@@ -152,21 +156,7 @@ const ComponentMarkup = ({
   );
 };
 
-const generateDigest = async (text: string): Promise<string> => {
-  const hashBuffer = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(text),
-  );
-
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-};
-
-const ComponentItemFromUrl = ({
-  url,
-  searchTerm = "",
-}: ComponentItemFromUrlProps) => {
+const ComponentItemFromUrl = ({ url }: ComponentItemFromUrlProps) => {
   if (!url) return null;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -181,31 +171,55 @@ const ComponentItemFromUrl = ({
     const controller = new AbortController();
     const signal = controller.signal;
 
-    const fetchComponentSpec = async () => {
+    const loadComponent = async () => {
       if (!url) return;
 
       try {
         setIsLoading(true);
         setError(null);
 
-        const spec = await loadComponentSpec(url);
-        if (signal.aborted) return;
-        setComponentSpec(spec);
+        const storedComponent = await getComponentByUrl(url);
 
-        const response = await fetch(url, { signal });
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch: ${response.status} ${response.statusText}`,
-          );
+        if (storedComponent) {
+          if (signal.aborted) return;
+          // Parse the component data
+          const text = storedComponent.data;
+          setComponentText(text);
+
+          try {
+            // Parse the component spec from the text
+            const parsedSpec = parseComponentData(text);
+            if (parsedSpec) {
+              setComponentSpec(parsedSpec);
+              const digest = await generateDigest(text);
+              setComponentDigest(digest);
+              setIsLoading(false);
+              return;
+            }
+          } catch (err) {
+            console.error("Error parsing component from local storage:", err);
+            // Fall through to network fetch
+          }
         }
 
-        const text = await response.text();
+        // If component doesn't exist in storage or parsing failed, fetch and store it
+        const spec = await fetchAndStoreComponent(url);
         if (signal.aborted) return;
-        setComponentText(text);
 
-        const digest = await generateDigest(text);
-        if (signal.aborted) return;
-        setComponentDigest(digest);
+        if (spec) {
+          setComponentSpec(spec);
+
+          // Get the stored component to get the text
+          const updatedComponent = await getComponentByUrl(url);
+          if (updatedComponent && !signal.aborted) {
+            const text = updatedComponent.data;
+            setComponentText(text);
+            const digest = await generateDigest(text);
+            setComponentDigest(digest);
+          }
+        } else {
+          throw new Error("Failed to load component specification");
+        }
       } catch (err) {
         if (!signal.aborted) {
           setError(err instanceof Error ? err.message : String(err));
@@ -217,7 +231,7 @@ const ComponentItemFromUrl = ({
       }
     };
 
-    fetchComponentSpec();
+    loadComponent();
     return () => controller.abort();
   }, [url]);
 
@@ -228,41 +242,6 @@ const ComponentItemFromUrl = ({
       "Component",
     [componentSpec, url],
   );
-
-  const matchesSearch = useMemo(() => {
-    if (!searchTerm) return true;
-
-    if (containsSearchTerm(displayName, searchTerm)) return true;
-
-    if (
-      componentSpec?.description &&
-      containsSearchTerm(componentSpec.description, searchTerm)
-    ) {
-      return true;
-    }
-
-    const inputMatches = componentSpec?.inputs?.some(
-      (input) =>
-        containsSearchTerm(input.name, searchTerm) ||
-        (input.description &&
-          containsSearchTerm(input.description, searchTerm)),
-    );
-
-    if (inputMatches) return true;
-
-    const outputMatches = componentSpec?.outputs?.some(
-      (output) =>
-        containsSearchTerm(output.name, searchTerm) ||
-        (output.description &&
-          containsSearchTerm(output.description, searchTerm)),
-    );
-
-    if (outputMatches) return true;
-
-    return containsSearchTerm(url, searchTerm);
-  }, [searchTerm, displayName, componentSpec, url]);
-
-  if (!matchesSearch) return null;
 
   return (
     <ComponentMarkup

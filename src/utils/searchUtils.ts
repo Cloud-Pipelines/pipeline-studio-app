@@ -6,8 +6,8 @@ export const normalizeForSearch = (text: string): string => {
 };
 
 /**
- * Checks if a search term is contained in text, handling multi-word searches
- * For multi-word searches, all words must be present in the text to match
+ * Checks if a search term is contained in text
+ * Simple substring match check
  */
 export const containsSearchTerm = (
   text: string | undefined,
@@ -18,14 +18,6 @@ export const containsSearchTerm = (
   const normalizedText = normalizeForSearch(text);
   const normalizedSearchTerm = normalizeForSearch(searchTerm);
 
-  // For single word searches, just check for includes
-  if (!normalizedSearchTerm.includes(" ")) {
-    return normalizedText.includes(normalizedSearchTerm);
-  }
-
-  // For multi-word searches, check if all words are present
-  const searchWords = normalizedSearchTerm
-    .split(" ")
-    .filter((word) => word.length > 0);
-  return searchWords.every((word) => normalizedText.includes(word));
+  // Just check if the text includes the search term
+  return normalizedText.includes(normalizedSearchTerm);
 };
