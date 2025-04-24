@@ -79,17 +79,23 @@ const FlowGraph = ({
     async (ids: NodeAndTaskId) => {
       const nodeId = ids.nodeId;
       const node = nodes.find((n) => n.id === nodeId);
+      const edgesToRemove = edges.filter(
+        (edge) => edge.source === nodeId || edge.target === nodeId,
+      );
 
       if (node) {
         const confirmed = await triggerConfirmationDialog({
           nodes: [node],
           edges: [],
         });
-        if (confirmed) {
-          removeNode(node);
 
-          // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
-          updateGraphSpec(graphSpec);
+        const params = {
+          nodes: [node] as Node[],
+          edges: edgesToRemove as Edge[],
+        };
+
+        if (confirmed) {
+          onElementsRemove(params);
         }
       }
     },
@@ -309,15 +315,66 @@ const FlowGraph = ({
       return;
     }
 
+    // First handle explicit edges being deleted
     for (const edge of params.edges) {
       removeEdge(edge);
     }
+
+    // Process node deletions - removeNode already handles edge cleanup internally
     for (const node of params.nodes) {
       removeNode(node);
     }
 
-    // Save the updated graph spec to the component spec
-    updateGraphSpec(graphSpec);
+    // Final cleanup of tasks to ensure all references are gone
+    const nodesToDeleteIds = params.nodes
+      .map((node) =>
+        node.id.startsWith("task_") ? node.id.replace("task_", "") : "",
+      )
+      .filter((id) => id); // Get all task IDs to delete and filter out empty strings
+
+    // Clean up any arguments in remaining tasks that reference deleted tasks
+    const cleanedTasks = { ...graphSpec.tasks };
+    for (const taskId in cleanedTasks) {
+      const taskSpec = cleanedTasks[taskId];
+
+      // Skip if this task has no arguments
+      if (!taskSpec.arguments) continue;
+
+      // Create a new arguments object without references to deleted tasks
+      const newArguments = { ...taskSpec.arguments };
+      let argumentsChanged = false;
+
+      // Check each argument for references to deleted tasks
+      for (const [argName, argValue] of Object.entries(newArguments)) {
+        if (typeof argValue !== "string" && "taskOutput" in argValue) {
+          // If this argument references a task that's being deleted, remove it
+          if (nodesToDeleteIds.includes(argValue.taskOutput.taskId)) {
+            delete newArguments[argName];
+            argumentsChanged = true;
+          }
+        }
+      }
+
+      // If we changed arguments, update the task
+      if (argumentsChanged) {
+        cleanedTasks[taskId] = {
+          ...taskSpec,
+          arguments: newArguments,
+        };
+      }
+    }
+
+    // Create the final graph spec with cleaned tasks
+    const newGraphSpec = {
+      ...graphSpec,
+      tasks: Object.fromEntries(
+        Object.entries(cleanedTasks).filter(
+          ([taskId]) => !nodesToDeleteIds.includes(taskId),
+        ),
+      ),
+    };
+
+    updateGraphSpec(newGraphSpec);
   };
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
@@ -354,6 +411,7 @@ const FlowGraph = ({
     nodes: Node[];
     edges: Edge[];
   }) => {
+
     if (params.nodes.length === 0 && params.edges.length === 0) {
       return false;
     }
