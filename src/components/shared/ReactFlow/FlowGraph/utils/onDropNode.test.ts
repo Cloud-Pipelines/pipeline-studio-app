@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ComponentSpec, GraphSpec, TaskSpec } from "@/utils/componentSpec";
+import type { ComponentSpec, TaskSpec } from "@/utils/componentSpec";
 
 import onDropNode from "./onDropNode";
 
@@ -8,8 +8,6 @@ describe("onDropNode", () => {
   let mockEvent: any;
   let mockReactFlowInstance: any;
   let mockComponentSpec: ComponentSpec;
-  let mockGraphSpec: GraphSpec;
-  let mockSetComponentSpec: any;
 
   beforeEach(() => {
     mockEvent = {
@@ -30,12 +28,6 @@ describe("onDropNode", () => {
       outputs: [],
       implementation: { graph: { tasks: {} } },
     };
-
-    mockGraphSpec = {
-      tasks: {},
-    };
-
-    mockSetComponentSpec = vi.fn();
   });
 
   it("should do nothing if dropped data is empty", () => {
@@ -44,15 +36,13 @@ describe("onDropNode", () => {
       return "";
     });
 
-    onDropNode(
+    const result = onDropNode(
       mockEvent as any,
       mockReactFlowInstance,
       mockComponentSpec,
-      mockSetComponentSpec,
-      mockGraphSpec,
     );
 
-    expect(mockSetComponentSpec).not.toHaveBeenCalled();
+    expect(JSON.stringify(result)).toBe(JSON.stringify(mockComponentSpec));
   });
 
   it("should add a task node when task type is dropped", () => {
@@ -74,16 +64,15 @@ describe("onDropNode", () => {
       return "";
     });
 
-    onDropNode(
+    const result = onDropNode(
       mockEvent as any,
       mockReactFlowInstance,
       mockComponentSpec,
-      mockSetComponentSpec,
-      mockGraphSpec,
     );
 
-    expect(mockSetComponentSpec).toHaveBeenCalled();
-    const newComponentSpec = mockSetComponentSpec.mock.calls[0][0];
+    const newComponentSpec = result as typeof mockComponentSpec & {
+      implementation: { graph: { tasks: Record<string, any> } };
+    };
 
     expect(
       Object.keys(newComponentSpec.implementation.graph.tasks).length,
@@ -106,16 +95,15 @@ describe("onDropNode", () => {
       return "";
     });
 
-    onDropNode(
+    const result = onDropNode(
       mockEvent as any,
       mockReactFlowInstance,
       mockComponentSpec,
-      mockSetComponentSpec,
-      mockGraphSpec,
     );
 
-    expect(mockSetComponentSpec).toHaveBeenCalled();
-    const newComponentSpec = mockSetComponentSpec.mock.calls[0][0];
+    const newComponentSpec = result as typeof mockComponentSpec & {
+      inputs: Array<{ name: string; annotations: Record<string, any> }>;
+    };
 
     expect(newComponentSpec.inputs.length).toBe(1);
     expect(newComponentSpec.inputs[0].name).toBe("Input");
@@ -133,16 +121,15 @@ describe("onDropNode", () => {
       return "";
     });
 
-    onDropNode(
+    const result = onDropNode(
       mockEvent as any,
       mockReactFlowInstance,
       mockComponentSpec,
-      mockSetComponentSpec,
-      mockGraphSpec,
     );
 
-    expect(mockSetComponentSpec).toHaveBeenCalled();
-    const newComponentSpec = mockSetComponentSpec.mock.calls[0][0];
+    const newComponentSpec = result as typeof mockComponentSpec & {
+      outputs: Array<{ name: string; annotations: Record<string, any> }>;
+    };
 
     expect(newComponentSpec.outputs.length).toBe(1);
     expect(newComponentSpec.outputs[0].name).toBe("Output");
@@ -152,7 +139,7 @@ describe("onDropNode", () => {
   });
 
   it("should create unique names for tasks when duplicates exist", () => {
-    mockGraphSpec = {
+    const mockGraphSpec = {
       tasks: {
         TestTask: { componentRef: {}, annotations: {} },
       },
@@ -174,18 +161,18 @@ describe("onDropNode", () => {
       return "";
     });
 
-    onDropNode(
-      mockEvent as any,
-      mockReactFlowInstance,
-      { ...mockComponentSpec, implementation: { graph: mockGraphSpec } },
-      mockSetComponentSpec,
-      mockGraphSpec,
-    );
+    const result = onDropNode(mockEvent as any, mockReactFlowInstance, {
+      ...mockComponentSpec,
+      implementation: { graph: mockGraphSpec },
+    });
 
-    expect(mockSetComponentSpec).toHaveBeenCalled();
-    const newComponentSpec = mockSetComponentSpec.mock.calls[0][0];
+    const newComponentSpec = result;
 
-    const taskIds = Object.keys(newComponentSpec.implementation.graph.tasks);
+    const taskIds =
+      "graph" in newComponentSpec.implementation &&
+      newComponentSpec.implementation.graph.tasks
+        ? Object.keys(newComponentSpec.implementation.graph.tasks)
+        : [];
     expect(taskIds.length).toBe(2);
     expect(taskIds).toContain("TestTask 2");
   });
@@ -202,16 +189,15 @@ describe("onDropNode", () => {
       return "";
     });
 
-    onDropNode(
+    const result = onDropNode(
       mockEvent as any,
       mockReactFlowInstance,
       mockComponentSpec,
-      mockSetComponentSpec,
-      mockGraphSpec,
     );
 
-    expect(mockSetComponentSpec).toHaveBeenCalled();
-    const newComponentSpec = mockSetComponentSpec.mock.calls[0][0];
+    const newComponentSpec = result as typeof mockComponentSpec & {
+      inputs: Array<{ name: string; annotations: Record<string, any> }>;
+    };
 
     expect(newComponentSpec.inputs.length).toBe(2);
     expect(newComponentSpec.inputs[1].name).toBe("Input 2");
@@ -229,16 +215,15 @@ describe("onDropNode", () => {
       return "";
     });
 
-    onDropNode(
+    const result = onDropNode(
       mockEvent as any,
       mockReactFlowInstance,
       newMockComponentSpec,
-      mockSetComponentSpec,
-      mockGraphSpec,
     );
 
-    expect(mockSetComponentSpec).toHaveBeenCalled();
-    const newComponentSpec = mockSetComponentSpec.mock.calls[0][0];
+    const newComponentSpec = result as typeof newMockComponentSpec & {
+      outputs: Array<{ name: string; annotations: Record<string, any> }>;
+    };
 
     expect(newComponentSpec.outputs.length).toBe(2);
     expect(newComponentSpec.outputs[1].name).toBe("Output 2");

@@ -8,58 +8,29 @@ import type {
   OutputSpec,
   TaskSpec,
 } from "@/utils/componentSpec";
-
-const makeNameUniqueByAddingIndex = (
-  name: string,
-  existingNames: Set<string>,
-): string => {
-  let finalName = name;
-  let index = 1;
-  while (existingNames.has(finalName)) {
-    index++;
-    finalName = name + " " + index.toString();
-  }
-  return finalName;
-};
-
-const getUniqueInputName = (
-  componentSpec: ComponentSpec,
-  name: string = "Input",
-) => {
-  return makeNameUniqueByAddingIndex(
-    name,
-    new Set(componentSpec.inputs?.map((inputSpec) => inputSpec.name)),
-  );
-};
-
-const getUniqueOutputName = (
-  componentSpec: ComponentSpec,
-  name: string = "Output",
-) => {
-  return makeNameUniqueByAddingIndex(
-    name,
-    new Set(componentSpec.outputs?.map((outputSpec) => outputSpec.name)),
-  );
-};
-
-const getUniqueTaskName = (graphSpec: GraphSpec, name: string = "Task") => {
-  return makeNameUniqueByAddingIndex(
-    name,
-    new Set(Object.keys(graphSpec.tasks)),
-  );
-};
+import {
+  getUniqueInputName,
+  getUniqueOutputName,
+  getUniqueTaskName,
+} from "@/utils/unique";
 
 const onDropNode = (
   event: DragEvent,
   reactFlowInstance: ReactFlowInstance,
   componentSpec: ComponentSpec,
-  setComponentSpec: (componentSpec: ComponentSpec) => void,
-  graphSpec: GraphSpec,
-) => {
+): ComponentSpec => {
+  const newComponentSpec = { ...componentSpec };
+
   if (reactFlowInstance) {
+    if (!("graph" in newComponentSpec.implementation)) {
+      console.error("Implementation does not contain a graph.");
+      return newComponentSpec;
+    }
+    const graphSpec = newComponentSpec.implementation.graph;
+
     const droppedData = event.dataTransfer.getData("application/reactflow");
     if (droppedData === "") {
-      return;
+      return newComponentSpec;
     }
     const droppedDataObject = JSON.parse(droppedData);
     const nodeType = Object.keys(droppedDataObject)[0];
@@ -107,10 +78,8 @@ const onDropNode = (
           [taskId]: taskSpecWithAnnotation,
         },
       };
-      setComponentSpec({
-        ...componentSpec,
-        implementation: { graph: newGraphSpec },
-      });
+
+      newComponentSpec.implementation.graph = newGraphSpec;
     }
 
     if (nodeType === "input") {
@@ -120,7 +89,8 @@ const onDropNode = (
         annotations: positionAnnotations,
       };
       const inputs = (componentSpec.inputs ?? []).concat([inputSpec]);
-      setComponentSpec({ ...componentSpec, inputs: inputs });
+
+      newComponentSpec.inputs = inputs;
     }
 
     if (nodeType === "output") {
@@ -132,9 +102,11 @@ const onDropNode = (
 
       const outputs = (componentSpec.outputs ?? []).concat([outputSpec]);
 
-      setComponentSpec({ ...componentSpec, outputs: outputs });
+      newComponentSpec.outputs = outputs;
     }
   }
+
+  return newComponentSpec;
 };
 
 export default onDropNode;

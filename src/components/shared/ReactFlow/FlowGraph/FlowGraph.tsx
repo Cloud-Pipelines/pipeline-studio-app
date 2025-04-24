@@ -6,31 +6,33 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import type {
-  Edge,
-  Node,
-  NodeChange,
-  ReactFlowInstance,
-  ReactFlowProps,
+import {
+  type Connection,
+  type Edge,
+  type Node,
+  type NodeChange,
+  type OnInit,
+  ReactFlow,
+  type ReactFlowInstance,
+  type ReactFlowProps,
+  useNodesState,
 } from "@xyflow/react";
-import { type OnInit, ReactFlow, useNodesState } from "@xyflow/react";
 import type { ComponentType, DragEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
-import { useConnectionHandler } from "@/hooks/useConnectionHandler";
+import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
-import type { ArgumentType, TaskOutputArgument } from "@/utils/componentSpec";
+import type { ArgumentType } from "@/utils/componentSpec";
 import { createNodes, type NodeAndTaskId } from "@/utils/nodes/createNodes";
-import {
-  nodeIdToInputName,
-  nodeIdToOutputName,
-  nodeIdToTaskId,
-} from "@/utils/nodes/nodeIdUtils";
 
 import ComponentTaskNode from "./TaskNode/TaskNode";
+import { cleanupDeletedTasks } from "./utils/cleanupDeletedTasks";
+import { handleConnection } from "./utils/handleConnection";
 import onDropNode from "./utils/onDropNode";
+import { removeEdge } from "./utils/removeEdge";
+import { removeNode } from "./utils/removeNode";
 import replaceTaskArgumentsInGraphSpec from "./utils/replaceTaskArgumentsInGraphSpec";
 import { updateNodePositions } from "./utils/updateNodePosition";
 
@@ -38,9 +40,9 @@ const nodeTypes: Record<string, ComponentType<any>> = {
   task: ComponentTaskNode,
 };
 
-type ConfirmationDialogHandlers = {
-  onConfirm: () => void;
-  onCancel: () => void;
+type NodesAndEdges = {
+  nodes: Node[];
+  edges: Edge[];
 };
 
 const FlowGraph = ({
@@ -50,6 +52,13 @@ const FlowGraph = ({
 }: ReactFlowProps & { readOnly?: boolean }) => {
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
+  const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
+
+  const {
+    isOpen,
+    handlers,
+    triggerDialog: triggerConfirmationDialog,
+  } = useConfirmationDialog();
 
   /* Initialize nodes with an empty array and sync with the ComponentSpec via useEffect to avoid infinite renders */
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -61,9 +70,46 @@ const FlowGraph = ({
     });
     setNodes(newNodes);
   }, [componentSpec]);
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance>();
+
+  const onInit: OnInit = (instance) => {
+    setReactFlowInstance(instance);
+  };
+
+  const onDelete = useCallback(
+    async (ids: NodeAndTaskId) => {
+      if (readOnly) {
+        return;
+      }
+
+      const nodeId = ids.nodeId;
+      const node = nodes.find((n) => n.id === nodeId);
+      const edgesToRemove = edges.filter(
+        (edge) => edge.source === nodeId || edge.target === nodeId,
+      );
+
+      if (node) {
+        const confirmed = await triggerConfirmationDialog();
+        if (confirmed) {
+          const params = {
+            nodes: [node],
+            edges: edgesToRemove,
+          } as NodesAndEdges;
+
+          onElementsRemove(params);
+        }
+      }
+    },
+    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmationDialog],
+  );
 
   const setArguments = useCallback(
     (ids: NodeAndTaskId, args: Record<string, ArgumentType>) => {
+      if (readOnly) {
+        return;
+      }
+
       const taskId = ids.taskId;
       const newGraphSpec = replaceTaskArgumentsInGraphSpec(
         taskId,
@@ -75,190 +121,17 @@ const FlowGraph = ({
     [graphSpec],
   );
 
-  const onDelete = useCallback(
-    async (ids: NodeAndTaskId) => {
-      const nodeId = ids.nodeId;
-      const node = nodes.find((n) => n.id === nodeId);
-      const edgesToRemove = edges.filter(
-        (edge) => edge.source === nodeId || edge.target === nodeId,
-      );
-
-      if (node) {
-        const confirmed = await triggerConfirmationDialog({
-          nodes: [node],
-          edges: [],
-        });
-
-        const params = {
-          nodes: [node] as Node[],
-          edges: edgesToRemove as Edge[],
-        };
-
-        if (confirmed) {
-          onElementsRemove(params);
-        }
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      if (readOnly) {
+        return;
       }
+
+      const updatedGraphSpec = handleConnection(graphSpec, connection);
+      updateGraphSpec(updatedGraphSpec);
     },
-    [nodes],
+    [graphSpec, handleConnection, updateGraphSpec],
   );
-
-  const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
-
-  const [reactFlowInstance, setReactFlowInstance] =
-    useState<ReactFlowInstance>();
-
-  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-    useState(false);
-  const [nodesToDelete, setNodesToDelete] = useState<Node[] | null>(null);
-  const [confirmationDialogHandlers, setConfirmationDialogHandlers] =
-    useState<ConfirmationDialogHandlers | null>(null);
-
-  const setTaskArgument = (
-    taskId: string,
-    inputName: string,
-    argument?: ArgumentType,
-  ) => {
-    if (readOnly) {
-      return;
-    }
-
-    const oldTaskSpec = graphSpec.tasks[taskId];
-    const oldTaskSpecArguments = oldTaskSpec.arguments || {};
-
-    const nonNullArgumentObject = argument ? { [inputName]: argument } : {};
-    const newTaskSpecArguments = {
-      ...oldTaskSpecArguments,
-      ...nonNullArgumentObject,
-    };
-
-    const newGraphSpec = replaceTaskArgumentsInGraphSpec(
-      taskId,
-      graphSpec,
-      newTaskSpecArguments,
-    );
-
-    updateGraphSpec(newGraphSpec);
-  };
-
-  const setGraphOutputValue = (
-    outputName: string,
-    outputValue?: TaskOutputArgument,
-  ) => {
-    const nonNullOutputObject = outputValue
-      ? { [outputName]: outputValue }
-      : {};
-    const newGraphOutputValues = {
-      ...graphSpec.outputValues,
-      ...nonNullOutputObject,
-    };
-    const newGraphSpec = { ...graphSpec, outputValues: newGraphOutputValues };
-
-    updateGraphSpec(newGraphSpec);
-  };
-
-  const addConnection = useConnectionHandler({
-    setTaskArgument,
-    setGraphOutputValue,
-  });
-
-  const removeEdge = (edge: Edge) => {
-    const inputName = edge.targetHandle?.replace(/^input_/, "");
-
-    if (inputName !== undefined) {
-      setTaskArgument(nodeIdToTaskId(edge.target), inputName);
-    } else {
-      setGraphOutputValue(nodeIdToOutputName(edge.target));
-    }
-  };
-
-  const removeComponentInput = (inputNameToRemove: string) => {
-    // Removing the outcoming edges
-    // Not really needed since react-flow sends the node's incoming and outcoming edges for deletion when a node is deleted
-    for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
-      for (const [inputName, argument] of Object.entries(
-        taskSpec.arguments ?? {},
-      )) {
-        if (typeof argument !== "string" && "graphInput" in argument) {
-          if (argument.graphInput.inputName === inputNameToRemove) {
-            setTaskArgument(taskId, inputName);
-          }
-        }
-      }
-    }
-
-    const newInputs = (componentSpec.inputs ?? []).filter(
-      (inputSpec) => inputSpec.name !== inputNameToRemove,
-    );
-    setComponentSpec({ ...componentSpec, inputs: newInputs });
-  };
-
-  const removeComponentOutput = (outputNameToRemove: string) => {
-    setGraphOutputValue(outputNameToRemove);
-    // Removing the output itself
-    const newOutputs = (componentSpec.outputs ?? []).filter(
-      (outputSpec) => outputSpec.name !== outputNameToRemove,
-    );
-    setComponentSpec({ ...componentSpec, outputs: newOutputs });
-  };
-
-  const removeTask = (taskIdToRemove: string) => {
-    // Step 1: Remove any connections where this task is used as a source
-    // (i.e., other tasks that depend on this task's outputs)
-    for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
-      if (!taskSpec.arguments) continue;
-
-      for (const [inputName, argument] of Object.entries(taskSpec.arguments)) {
-        // Check if this argument references the task we're removing
-        const isReferencingRemovedTask =
-          typeof argument !== "string" &&
-          "taskOutput" in argument &&
-          argument.taskOutput.taskId === taskIdToRemove;
-
-        if (isReferencingRemovedTask) {
-          setTaskArgument(taskId, inputName);
-        }
-      }
-    }
-
-    // Step 2: Remove any connections from this task to graph outputs
-    const newGraphOutputValues = Object.fromEntries(
-      Object.entries(graphSpec.outputValues ?? {}).filter(
-        ([_, argument]) => argument.taskOutput.taskId !== taskIdToRemove,
-      ),
-    );
-
-    // Step 3: Remove the task itself from the graph
-    const newTasks = Object.fromEntries(
-      Object.entries(graphSpec.tasks).filter(
-        ([taskId]) => taskId !== taskIdToRemove,
-      ),
-    );
-
-    // Step 4: Update the graph spec with our changes
-    graphSpec.tasks = newTasks;
-    graphSpec.outputValues = newGraphOutputValues;
-  };
-
-  const removeNode = (node: Node) => {
-    if (node.type === "task") {
-      const taskId = nodeIdToTaskId(node.id);
-      removeTask(taskId);
-    }
-
-    if (node.type === "input") {
-      const inputName = nodeIdToInputName(node.id);
-      removeComponentInput(inputName);
-    }
-
-    if (node.type === "output") {
-      const outputName = nodeIdToOutputName(node.id);
-      removeComponentOutput(outputName);
-    }
-  };
-
-  const onInit: OnInit = (instance) => {
-    setReactFlowInstance(instance);
-  };
 
   const onDragOver = (event: DragEvent) => {
     event.preventDefault();
@@ -273,112 +146,41 @@ const FlowGraph = ({
     }
 
     if (reactFlowInstance) {
-      onDropNode(
+      const newComponentSpec = onDropNode(
         event,
         reactFlowInstance,
         componentSpec,
-        setComponentSpec,
-        graphSpec,
       );
+      setComponentSpec(newComponentSpec);
     }
   };
 
-  const triggerConfirmationDialog = async (params: {
-    nodes: Node[];
-    edges: Edge[];
-  }) => {
-    setIsConfirmationDialogOpen(true);
-    setNodesToDelete(params.nodes);
-
-    return await new Promise<boolean>((resolve) => {
-      const handleConfirm = () => {
-        setIsConfirmationDialogOpen(false);
-        setNodesToDelete(null);
-        resolve(true);
-      };
-
-      const handleCancel = () => {
-        setIsConfirmationDialogOpen(false);
-        setNodesToDelete(null);
-        resolve(false);
-      };
-
-      setConfirmationDialogHandlers({
-        onConfirm: handleConfirm,
-        onCancel: handleCancel,
-      });
-    });
-  };
-
-  const onElementsRemove = (params: { nodes: Node[]; edges: Edge[] }) => {
-    if (readOnly) {
-      return;
-    }
-
-    // First handle explicit edges being deleted
-    for (const edge of params.edges) {
-      removeEdge(edge);
-    }
-
-    // Process node deletions - removeNode already handles edge cleanup internally
-    for (const node of params.nodes) {
-      removeNode(node);
-    }
-
-    // Final cleanup of tasks to ensure all references are gone
-    const nodesToDeleteIds = params.nodes
-      .map((node) =>
-        node.id.startsWith("task_") ? node.id.replace("task_", "") : "",
-      )
-      .filter((id) => id); // Get all task IDs to delete and filter out empty strings
-
-    // Clean up any arguments in remaining tasks that reference deleted tasks
-    const cleanedTasks = { ...graphSpec.tasks };
-    for (const taskId in cleanedTasks) {
-      const taskSpec = cleanedTasks[taskId];
-
-      // Skip if this task has no arguments
-      if (!taskSpec.arguments) continue;
-
-      // Create a new arguments object without references to deleted tasks
-      const newArguments = { ...taskSpec.arguments };
-      let argumentsChanged = false;
-
-      // Check each argument for references to deleted tasks
-      for (const [argName, argValue] of Object.entries(newArguments)) {
-        if (typeof argValue !== "string" && "taskOutput" in argValue) {
-          // If this argument references a task that's being deleted, remove it
-          if (nodesToDeleteIds.includes(argValue.taskOutput.taskId)) {
-            delete newArguments[argName];
-            argumentsChanged = true;
-          }
-        }
+  const onElementsRemove = useCallback(
+    (params: NodesAndEdges) => {
+      if (readOnly) {
+        return;
       }
 
-      // If we changed arguments, update the task
-      if (argumentsChanged) {
-        cleanedTasks[taskId] = {
-          ...taskSpec,
-          arguments: newArguments,
-        };
+      let updatedComponentSpec = { ...componentSpec };
+
+      for (const edge of params.edges) {
+        updatedComponentSpec = removeEdge(edge, updatedComponentSpec);
       }
-    }
+      for (const node of params.nodes) {
+        updatedComponentSpec = removeNode(node, updatedComponentSpec);
+      }
 
-    // Create the final graph spec with cleaned tasks
-    const newGraphSpec = {
-      ...graphSpec,
-      tasks: Object.fromEntries(
-        Object.entries(cleanedTasks).filter(
-          ([taskId]) => !nodesToDeleteIds.includes(taskId),
-        ),
-      ),
-    };
+      updatedComponentSpec = cleanupDeletedTasks(
+        updatedComponentSpec,
+        params.nodes,
+      );
 
-    updateGraphSpec(newGraphSpec);
-  };
+      setComponentSpec(updatedComponentSpec);
+    },
+    [componentSpec, setComponentSpec],
+  );
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
-    // Process position changes and update component spec
     const positionChanges = changes.filter(
       (change) => change.type === "position" && change.dragging === false,
     );
@@ -400,47 +202,25 @@ const FlowGraph = ({
         .filter(Boolean) as Node[];
 
       if (updatedNodes.length > 0) {
-        updateNodePositions(updatedNodes, componentSpec, setComponentSpec);
+        const updatedComponentSpec = updateNodePositions(
+          updatedNodes,
+          componentSpec,
+        );
+        setComponentSpec(updatedComponentSpec);
       }
     }
 
     onNodesChange(changes);
   };
 
-  const handleBeforeDelete = async (params: {
-    nodes: Node[];
-    edges: Edge[];
-  }) => {
-
+  const handleBeforeDelete = async (params: NodesAndEdges) => {
     if (params.nodes.length === 0 && params.edges.length === 0) {
       return false;
     }
 
-    const confirmed = await triggerConfirmationDialog(params);
+    const confirmed = await triggerConfirmationDialog();
     return confirmed;
   };
-
-  const isDeletingMultipleNodes = nodesToDelete && nodesToDelete.length > 1;
-
-  const singleDeleteTitle =
-    "Delete Node" +
-    (nodesToDelete && nodesToDelete.length > 0
-      ? ` '${nodesToDelete?.[0].id}'`
-      : "") +
-    "?";
-  const multiDeleteTitle = `Delete Nodes?`;
-
-  const singleDeleteDesc =
-    "This will also will also delete all connections to and from the Node. This cannot be undone.";
-  const multiDeleteDesc = `Deleting ${
-    nodesToDelete
-      ? nodesToDelete
-          .map((node) => {
-            return `'${node.id}'`;
-          })
-          .join(", ")
-      : "nodes"
-  } will also delete all connections to and from these nodes. This cannot be undone.`;
 
   return (
     <>
@@ -451,7 +231,7 @@ const FlowGraph = ({
         onNodesChange={handleOnNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
-        onConnect={addConnection}
+        onConnect={onConnect}
         onDragOver={onDragOver}
         onDrop={onDrop}
         onBeforeDelete={handleBeforeDelete}
@@ -461,15 +241,13 @@ const FlowGraph = ({
       >
         {children}
       </ReactFlow>
-      {nodesToDelete && (
+      {!readOnly && (
         <ConfirmationDialog
-          title={isDeletingMultipleNodes ? multiDeleteTitle : singleDeleteTitle}
-          description={
-            isDeletingMultipleNodes ? multiDeleteDesc : singleDeleteDesc
-          }
-          isOpen={isConfirmationDialogOpen}
-          onConfirm={() => confirmationDialogHandlers?.onConfirm()}
-          onCancel={() => confirmationDialogHandlers?.onCancel()}
+          title="Delete Node"
+          description="This will also will also delete all connections to and from the Node. This cannot be undone."
+          isOpen={isOpen}
+          onConfirm={() => handlers?.onConfirm()}
+          onCancel={() => handlers?.onCancel()}
         />
       )}
     </>
