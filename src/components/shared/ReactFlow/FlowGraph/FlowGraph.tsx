@@ -32,7 +32,7 @@ import type { ArgumentType } from "@/utils/componentSpec";
 import { createNodes, type NodeAndTaskId } from "@/utils/nodes/createNodes";
 import { nodeIdToTaskId } from "@/utils/nodes/nodeIdUtils";
 
-import ComponentTaskNode from "./TaskNode/TaskNode";
+import TaskNode from "./TaskNode/TaskNode";
 import { cleanupDeletedTasks } from "./utils/cleanupDeletedTasks";
 import { handleConnection } from "./utils/handleConnection";
 import onDropNode from "./utils/onDropNode";
@@ -42,7 +42,7 @@ import replaceTaskArgumentsInGraphSpec from "./utils/replaceTaskArgumentsInGraph
 import { updateNodePositions } from "./utils/updateNodePosition";
 
 const nodeTypes: Record<string, ComponentType<any>> = {
-  task: ComponentTaskNode,
+  task: TaskNode,
 };
 
 type NodesAndEdges = {
@@ -85,10 +85,6 @@ const FlowGraph = ({
 
   const onDelete = useCallback(
     async (ids: NodeAndTaskId) => {
-      if (readOnly) {
-        return;
-      }
-
       const nodeId = ids.nodeId;
       const node = nodes.find((n) => n.id === nodeId);
       const edgesToRemove = edges.filter(
@@ -112,10 +108,6 @@ const FlowGraph = ({
 
   const setArguments = useCallback(
     (ids: NodeAndTaskId, args: Record<string, ArgumentType>) => {
-      if (readOnly) {
-        return;
-      }
-
       const taskId = ids.taskId;
       const newGraphSpec = replaceTaskArgumentsInGraphSpec(
         taskId,
@@ -129,10 +121,6 @@ const FlowGraph = ({
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      if (readOnly) {
-        return;
-      }
-
       const updatedGraphSpec = handleConnection(graphSpec, connection);
       updateGraphSpec(updatedGraphSpec);
     },
@@ -147,10 +135,6 @@ const FlowGraph = ({
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
 
-    if (readOnly) {
-      return;
-    }
-
     if (reactFlowInstance) {
       const newComponentSpec = onDropNode(
         event,
@@ -163,10 +147,6 @@ const FlowGraph = ({
 
   const onElementsRemove = useCallback(
     (params: NodesAndEdges) => {
-      if (readOnly) {
-        return;
-      }
-
       let updatedComponentSpec = { ...componentSpec };
 
       for (const edge of params.edges) {
@@ -285,6 +265,9 @@ const FlowGraph = ({
         deleteKeyCode={["Delete", "Backspace"]}
         onSelectionChange={handleSelectionChange}
         onSelectionDragStop={handleSelectionDragEnd}
+        nodesDraggable={!readOnly}
+        nodesConnectable={!readOnly}
+        connectOnClick={!readOnly}
       >
         {children}
       </ReactFlow>
