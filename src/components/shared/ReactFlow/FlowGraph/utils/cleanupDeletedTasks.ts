@@ -4,7 +4,7 @@ import type { ComponentSpec } from "@/utils/componentSpec";
 
 export const cleanupDeletedTasks = (
   componentSpec: ComponentSpec,
-  deletedNodes: Node[]
+  deletedNodes: Node[],
 ) => {
   const updatedComponentSpec = { ...componentSpec };
 
@@ -15,7 +15,7 @@ export const cleanupDeletedTasks = (
 
   const nodesToDeleteIds = deletedNodes
     .map((node) =>
-      node.id.startsWith("task_") ? node.id.replace("task_", "") : ""
+      node.id.startsWith("task_") ? node.id.replace("task_", "") : "",
     )
     .filter((id) => id); // Get all task IDs to delete and filter out empty strings
 
@@ -57,8 +57,8 @@ export const cleanupDeletedTasks = (
     ...updatedGraphSpec,
     tasks: Object.fromEntries(
       Object.entries(cleanedTasks).filter(
-        ([taskId]) => !nodesToDeleteIds.includes(taskId)
-      )
+        ([taskId]) => !nodesToDeleteIds.includes(taskId),
+      ),
     ),
   };
 

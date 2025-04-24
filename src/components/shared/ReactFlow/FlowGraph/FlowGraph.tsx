@@ -17,7 +17,11 @@ import {
   type ReactFlowProps,
   useNodesState,
 } from "@xyflow/react";
-import type { ComponentType, DragEvent } from "react";
+import type {
+  ComponentType,
+  DragEvent,
+  MouseEvent as ReactMouseEvent,
+} from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
@@ -26,6 +30,7 @@ import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { ArgumentType } from "@/utils/componentSpec";
 import { createNodes, type NodeAndTaskId } from "@/utils/nodes/createNodes";
+import { nodeIdToTaskId } from "@/utils/nodes/nodeIdUtils";
 
 import ComponentTaskNode from "./TaskNode/TaskNode";
 import { cleanupDeletedTasks } from "./utils/cleanupDeletedTasks";
@@ -76,6 +81,7 @@ const FlowGraph = ({
   const onInit: OnInit = (instance) => {
     setReactFlowInstance(instance);
   };
+  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
 
   const onDelete = useCallback(
     async (ids: NodeAndTaskId) => {
@@ -86,7 +92,7 @@ const FlowGraph = ({
       const nodeId = ids.nodeId;
       const node = nodes.find((n) => n.id === nodeId);
       const edgesToRemove = edges.filter(
-        (edge) => edge.source === nodeId || edge.target === nodeId
+        (edge) => edge.source === nodeId || edge.target === nodeId,
       );
 
       if (node) {
@@ -101,7 +107,7 @@ const FlowGraph = ({
         }
       }
     },
-    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmationDialog]
+    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmationDialog],
   );
 
   const setArguments = useCallback(
@@ -114,11 +120,11 @@ const FlowGraph = ({
       const newGraphSpec = replaceTaskArgumentsInGraphSpec(
         taskId,
         graphSpec,
-        args
+        args,
       );
       updateGraphSpec(newGraphSpec);
     },
-    [graphSpec]
+    [graphSpec],
   );
 
   const onConnect = useCallback(
@@ -130,7 +136,7 @@ const FlowGraph = ({
       const updatedGraphSpec = handleConnection(graphSpec, connection);
       updateGraphSpec(updatedGraphSpec);
     },
-    [graphSpec, handleConnection, updateGraphSpec]
+    [graphSpec, handleConnection, updateGraphSpec],
   );
 
   const onDragOver = (event: DragEvent) => {
@@ -149,7 +155,7 @@ const FlowGraph = ({
       const newComponentSpec = onDropNode(
         event,
         reactFlowInstance,
-        componentSpec
+        componentSpec,
       );
       setComponentSpec(newComponentSpec);
     }
@@ -172,17 +178,17 @@ const FlowGraph = ({
 
       updatedComponentSpec = cleanupDeletedTasks(
         updatedComponentSpec,
-        params.nodes
+        params.nodes,
       );
 
       setComponentSpec(updatedComponentSpec);
     },
-    [componentSpec, setComponentSpec]
+    [componentSpec, setComponentSpec],
   );
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
     const positionChanges = changes.filter(
-      (change) => change.type === "position" && change.dragging === false
+      (change) => change.type === "position" && change.dragging === false,
     );
 
     if (positionChanges.length > 0) {
@@ -204,7 +210,7 @@ const FlowGraph = ({
       if (updatedNodes.length > 0) {
         const updatedComponentSpec = updateNodePositions(
           updatedNodes,
-          componentSpec
+          componentSpec,
         );
         setComponentSpec(updatedComponentSpec);
       }
@@ -222,6 +228,45 @@ const FlowGraph = ({
     return confirmed;
   };
 
+  const handleSelectionChange = useCallback((params: NodesAndEdges) => {
+    const nodes = params.nodes;
+    setSelectedNodes(nodes);
+  }, []);
+
+  const handleSelectionDragEnd = useCallback(
+    (_e: ReactMouseEvent, nodes: Node[]) => {
+      setSelectedNodes(nodes);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    // Sync ReactFlow "selection" changes over to the componentSpec to maintain selection state between re-renders
+    // (createNodes is currently recreating all nodes from scratch each time componentSpec changes, which causes the selection state to desync)
+    const updatedTasks = { ...graphSpec.tasks };
+
+    Object.entries(updatedTasks).forEach(([taskId, taskSpec]) => {
+      const annotations = taskSpec.annotations || {};
+      annotations.selected = selectedNodes.some(
+        (node) => nodeIdToTaskId(node.id) === taskId,
+      );
+      updatedTasks[taskId] = {
+        ...taskSpec,
+        annotations,
+      };
+    });
+
+    const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
+
+    if (JSON.stringify(updatedGraphSpec) === JSON.stringify(graphSpec)) {
+      return;
+    }
+
+    updateGraphSpec(updatedGraphSpec);
+  }, [selectedNodes, graphSpec, updateGraphSpec]);
+
+  const { title, desc } = getConfirmationDialogText(selectedNodes);
+
   return (
     <>
       <ReactFlow
@@ -238,13 +283,15 @@ const FlowGraph = ({
         onDelete={onElementsRemove}
         onInit={onInit}
         deleteKeyCode={["Delete", "Backspace"]}
+        onSelectionChange={handleSelectionChange}
+        onSelectionDragStop={handleSelectionDragEnd}
       >
         {children}
       </ReactFlow>
-      {!readOnly && (
+      {selectedNodes.length > 0 && !readOnly && (
         <ConfirmationDialog
-          title="Delete Node"
-          description="This will also will also delete all connections to and from the Node. This cannot be undone."
+          title={title}
+          description={desc}
           isOpen={isOpen}
           onConfirm={() => handlers?.onConfirm()}
           onCancel={() => handlers?.onCancel()}
@@ -255,3 +302,39 @@ const FlowGraph = ({
 };
 
 export default FlowGraph;
+
+function getConfirmationDialogText(selectedNodes: Node[]) {
+  const isDeletingMultipleNodes = selectedNodes.length > 1;
+
+  if (!isDeletingMultipleNodes) {
+    const singleDeleteTitle =
+      "Delete Node" +
+      (selectedNodes.length > 0 ? ` '${selectedNodes[0].id}'` : "") +
+      "?";
+
+    const singleDeleteDesc =
+      "This will also will also delete all connections to and from the Node. This cannot be undone.";
+
+    return {
+      title: singleDeleteTitle,
+      desc: singleDeleteDesc,
+    };
+  }
+
+  const multiDeleteTitle = `Delete Nodes?`;
+
+  const multiDeleteDesc = `Deleting ${
+    selectedNodes.length
+      ? selectedNodes
+          .map((node) => {
+            return `'${node.id}'`;
+          })
+          .join(", ")
+      : "nodes"
+  } will also delete all connections to and from these nodes. This cannot be undone.`;
+
+  return {
+    title: multiDeleteTitle,
+    desc: multiDeleteDesc,
+  };
+}
