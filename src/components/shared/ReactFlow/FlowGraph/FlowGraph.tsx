@@ -72,7 +72,7 @@ const FlowGraph = ({
       );
       updateGraphSpec(newGraphSpec);
     },
-    [],
+    [graphSpec],
   );
 
   const onDelete = useCallback(
