@@ -64,7 +64,7 @@ const Info = ({ taskSpec, runStatus, taskId }: InfoProps) => {
         </div>
         <div className="border rounded-md">
           <pre className="text-xs p-3 overflow-x-auto">
-            {yaml.dump(taskSpec.componentRef, {
+            {yaml.dump(taskSpec, {
               lineWidth: 10000,
               quotingType: '"',
             })}
