@@ -15,6 +15,7 @@ describe("createNodes", () => {
   const mockNodeCallbacks = {
     onDelete: vi.fn(),
     setArguments: vi.fn(),
+    onDuplicate: vi.fn(),
   };
 
   beforeEach(() => {

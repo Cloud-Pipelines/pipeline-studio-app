@@ -30,6 +30,7 @@ import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { ArgumentType } from "@/utils/componentSpec";
 import { createNodes, type NodeAndTaskId } from "@/utils/nodes/createNodes";
+import { duplicateNode } from "@/utils/nodes/duplicateNode";
 import { nodeIdToTaskId } from "@/utils/nodes/nodeIdUtils";
 
 import TaskNode from "./TaskNode/TaskNode";
@@ -72,15 +73,18 @@ const FlowGraph = ({
     const newNodes = createNodes(componentSpec, {
       onDelete,
       setArguments,
+      onDuplicate,
     });
     setNodes(newNodes);
   }, [componentSpec]);
+
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
 
   const onInit: OnInit = (instance) => {
     setReactFlowInstance(instance);
   };
+
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
 
   const onDelete = useCallback(
@@ -117,6 +121,16 @@ const FlowGraph = ({
       updateGraphSpec(newGraphSpec);
     },
     [graphSpec],
+  );
+
+  const onDuplicate = useCallback(
+    (ids: NodeAndTaskId, selected = true) => {
+      const taskId = ids.taskId;
+      const updatedGraphSpec = duplicateNode(taskId, graphSpec, selected);
+
+      updateGraphSpec(updatedGraphSpec);
+    },
+    [graphSpec, updateGraphSpec],
   );
 
   const onConnect = useCallback(
