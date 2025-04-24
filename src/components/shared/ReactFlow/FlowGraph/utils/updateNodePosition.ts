@@ -9,7 +9,6 @@ const nodeIdToOutputName = (id: string) => id.replace(/^output_/, "");
 export const updateNodePositions = (
   updatedNodes: Node[],
   componentSpec: ComponentSpec,
-  setComponentSpec: (componentSpec: ComponentSpec) => void,
 ) => {
   const newComponentSpec = { ...componentSpec };
 
@@ -33,6 +32,7 @@ export const updateNodePositions = (
       const taskId = nodeIdToTaskId(node.id);
       if (graphSpec.tasks[taskId]) {
         const taskSpec = { ...graphSpec.tasks[taskId] };
+
         taskSpec.annotations = {
           ...taskSpec.annotations,
           "editor.position": positionAnnotation,
@@ -46,7 +46,7 @@ export const updateNodePositions = (
           },
         };
 
-        newComponentSpec.implementation = { graph: newGraphSpec };
+        newComponentSpec.implementation.graph = newGraphSpec;
       }
     } else if (node.type === "input") {
       const inputName = nodeIdToInputName(node.id);
@@ -83,5 +83,5 @@ export const updateNodePositions = (
     }
   }
 
-  setComponentSpec(newComponentSpec);
+  return newComponentSpec;
 };
