@@ -86,7 +86,7 @@ const FlowGraph = ({
       const nodeId = ids.nodeId;
       const node = nodes.find((n) => n.id === nodeId);
       const edgesToRemove = edges.filter(
-        (edge) => edge.source === nodeId || edge.target === nodeId,
+        (edge) => edge.source === nodeId || edge.target === nodeId
       );
 
       if (node) {
@@ -101,7 +101,7 @@ const FlowGraph = ({
         }
       }
     },
-    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmationDialog],
+    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmationDialog]
   );
 
   const setArguments = useCallback(
@@ -114,11 +114,11 @@ const FlowGraph = ({
       const newGraphSpec = replaceTaskArgumentsInGraphSpec(
         taskId,
         graphSpec,
-        args,
+        args
       );
       updateGraphSpec(newGraphSpec);
     },
-    [graphSpec],
+    [graphSpec]
   );
 
   const onConnect = useCallback(
@@ -130,7 +130,7 @@ const FlowGraph = ({
       const updatedGraphSpec = handleConnection(graphSpec, connection);
       updateGraphSpec(updatedGraphSpec);
     },
-    [graphSpec, handleConnection, updateGraphSpec],
+    [graphSpec, handleConnection, updateGraphSpec]
   );
 
   const onDragOver = (event: DragEvent) => {
@@ -149,7 +149,7 @@ const FlowGraph = ({
       const newComponentSpec = onDropNode(
         event,
         reactFlowInstance,
-        componentSpec,
+        componentSpec
       );
       setComponentSpec(newComponentSpec);
     }
@@ -172,17 +172,17 @@ const FlowGraph = ({
 
       updatedComponentSpec = cleanupDeletedTasks(
         updatedComponentSpec,
-        params.nodes,
+        params.nodes
       );
 
       setComponentSpec(updatedComponentSpec);
     },
-    [componentSpec, setComponentSpec],
+    [componentSpec, setComponentSpec]
   );
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
     const positionChanges = changes.filter(
-      (change) => change.type === "position" && change.dragging === false,
+      (change) => change.type === "position" && change.dragging === false
     );
 
     if (positionChanges.length > 0) {
@@ -204,7 +204,7 @@ const FlowGraph = ({
       if (updatedNodes.length > 0) {
         const updatedComponentSpec = updateNodePositions(
           updatedNodes,
-          componentSpec,
+          componentSpec
         );
         setComponentSpec(updatedComponentSpec);
       }
