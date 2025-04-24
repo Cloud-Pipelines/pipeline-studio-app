@@ -263,10 +263,10 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     <>
       <div
         className={cn(
-          `border rounded-md shadow-sm transition-all duration-200 hover:border-slate-400`,
+          "border rounded-md shadow-sm transition-all duration-200",
           getBorderColor(),
           getBgColor(),
-          selected && "border-sky-500",
+          selected ? "border-sky-500" : " hover:border-slate-400",
         )}
         style={{ width: `${NODE_WIDTH_IN_PX}px` }}
         ref={nodeRef}

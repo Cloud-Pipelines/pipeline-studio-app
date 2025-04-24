@@ -3,7 +3,8 @@ import { type Node } from "@xyflow/react";
 import type { ComponentTaskNodeCallbacks } from "@/types/taskNode";
 import type { ComponentSpec, GraphSpec } from "@/utils/componentSpec";
 import { extractPositionFromAnnotations } from "@/utils/nodes/extractPositionFromAnnotations";
-import { taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
+
+import { taskIdToNodeId } from "./nodeIdUtils";
 
 export type NodeAndTaskId = {
   taskId: string;
@@ -48,6 +49,7 @@ const createTaskNodes = (
 ) => {
   return Object.entries(graphSpec.tasks).map(([taskId, taskSpec]) => {
     const position = extractPositionFromAnnotations(taskSpec.annotations);
+    const selected = (taskSpec.annotations?.selected as boolean) ?? false;
     const nodeId = taskIdToNodeId(taskId);
 
     // Dynamically add callbacks to node by first injecting the node & task id
@@ -70,6 +72,7 @@ const createTaskNodes = (
       },
       position: position,
       type: "task",
+      selected: selected,
     } as Node;
   });
 };
