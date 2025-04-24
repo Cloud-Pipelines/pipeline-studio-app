@@ -110,23 +110,24 @@ const UserComponentItem = ({
             draggable
             onDragStart={onDragStart}
           >
-            <div className="flex items-center gap-2">
-              <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
-              <span className="truncate text-xs text-gray-800">
-                {displayName}
-              </span>
+            <div className="flex items-center gap-2 w-full">
+              <div className="flex gap-2 w-full">
+                <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <span className="truncate text-xs text-gray-800 max-w-[200px]">
+                  {displayName}
+                </span>
+              </div>
+              <ConfirmationDialog
+                trigger={
+                  <div className="cursor-pointer mr-[15px]">
+                    <Trash2 className="size-4 text-red-500" />
+                  </div>
+                }
+                title="Delete component"
+                description="Are you sure you want to delete this component?"
+                onConfirm={handleDelete}
+              />
             </div>
-
-            <ConfirmationDialog
-              trigger={
-                <div className="cursor-pointer mr-[15px]">
-                  <Trash2 className="size-4 text-red-500" />
-                </div>
-              }
-              title="Delete component"
-              description="Are you sure you want to delete this component?"
-              onConfirm={handleDelete}
-            />
           </SidebarMenuItem>
         </TooltipTrigger>
         <TooltipContent side="left" className="max-w-xs whitespace-pre-wrap">

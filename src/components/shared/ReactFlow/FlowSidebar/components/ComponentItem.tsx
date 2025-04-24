@@ -1,4 +1,4 @@
-import { File } from "lucide-react";
+import { ExternalLink, File } from "lucide-react";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -141,9 +141,21 @@ const ComponentMarkup = ({
                   Error loading component
                 </span>
               ) : (
-                <span className="truncate text-xs text-gray-800">
-                  {displayName}
-                </span>
+                <div className="flex-1 flex">
+                  <span className="truncate text-xs text-gray-800 max-w-[200px]">
+                    {displayName}
+                  </span>
+                  <div className="flex-1 flex justify-end mr-[15px]">
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="cursor-pointer"
+                    >
+                      <ExternalLink className="size-4 text-sky-500" />
+                    </a>
+                  </div>
+                </div>
               )}
             </div>
           </SidebarMenuItem>
