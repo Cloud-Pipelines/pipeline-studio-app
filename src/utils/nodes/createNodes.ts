@@ -1,9 +1,9 @@
-import { type Node, type NodeChange, useNodesState } from "@xyflow/react";
-import { useEffect } from "react";
+import { type Node } from "@xyflow/react";
 
 import type { ComponentTaskNodeCallbacks } from "@/types/taskNode";
 import type { ComponentSpec, GraphSpec } from "@/utils/componentSpec";
 import { extractPositionFromAnnotations } from "@/utils/nodes/extractPositionFromAnnotations";
+import { taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
 
 export type NodeAndTaskId = {
   taskId: string;
@@ -26,28 +26,7 @@ type NodeCallbacks = {
   [K in keyof ComponentTaskNodeCallbacks]: CallbackWithIds<K>;
 };
 
-const useComponentSpecToNodes = (
-  componentSpec: ComponentSpec,
-  nodeCallbacks: NodeCallbacks,
-): {
-  nodes: Node[];
-  onNodesChange: (changes: NodeChange[]) => void;
-} => {
-  const initialNodes = createNodes(componentSpec, nodeCallbacks);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-
-  useEffect(() => {
-    const newNodes = createNodes(componentSpec, nodeCallbacks);
-    setNodes(newNodes);
-  }, [componentSpec]);
-
-  return {
-    nodes,
-    onNodesChange,
-  };
-};
-
-const createNodes = (
+export const createNodes = (
   componentSpec: ComponentSpec,
   nodeCallbacks: NodeCallbacks,
 ): Node[] => {
@@ -69,7 +48,7 @@ const createTaskNodes = (
 ) => {
   return Object.entries(graphSpec.tasks).map(([taskId, taskSpec]) => {
     const position = extractPositionFromAnnotations(taskSpec.annotations);
-    const nodeId = `task_${taskId}`;
+    const nodeId = taskIdToNodeId(taskId);
 
     // Dynamically add callbacks to node by first injecting the node & task id
     const dynamicCallbacks = Object.fromEntries(
@@ -121,4 +100,4 @@ const createOutputNodes = (componentSpec: ComponentSpec) => {
   });
 };
 
-export default useComponentSpecToNodes;
+export default createNodes;

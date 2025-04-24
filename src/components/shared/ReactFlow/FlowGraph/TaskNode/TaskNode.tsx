@@ -14,7 +14,6 @@ import {
   CircleDashed,
   EyeIcon,
   RefreshCcw,
-  SettingsIcon,
 } from "lucide-react";
 import {
   type CSSProperties,
@@ -24,7 +23,6 @@ import {
   useState,
 } from "react";
 
-import { Button } from "@/components/ui/button";
 import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
 import { cn } from "@/lib/utils";
 import type { ComponentTaskNodeCallbacks } from "@/types/taskNode";
@@ -199,7 +197,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   // ][Math.floor(Math.random() * 10)];
 
   if (componentSpec === undefined) {
-    return <></>;
+    return null;
   }
 
   const label = componentSpec.name ?? "<component>";
@@ -273,15 +271,14 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     }
   };
 
-  const handleDoubleClick = () => {
-    if (!isArgumentsEditorOpen) {
+  const handleClick = () => {
+    if (!isArgumentsEditorOpen && !runStatus) {
       setIsArgumentsEditorOpen(true);
     }
   };
 
   const handleDelete = () => {
     typedData.onDelete();
-    closeArgumentsEditor();
   };
 
   return (
@@ -295,26 +292,17 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
         )}
         style={{ width: `${NODE_WIDTH_IN_PX}px` }}
         ref={nodeRef}
+        onClick={handleClick}
       >
         <div className="p-3 flex items-center justify-between">
           <div
-            className="font-medium text-gray-800 w-3/4 text-center whitespace-nowrap"
+            className="font-medium text-gray-800 whitespace-nowrap w-full text-center"
             title={title}
             ref={textRef}
           >
             {label}
           </div>
           <div className="flex items-center gap-2">
-            {!runStatus && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="cursor-pointer"
-                onClick={handleDoubleClick}
-              >
-                <SettingsIcon className="w-3 h-3" />
-              </Button>
-            )}
             {runStatus && (
               <TaskDetailsSheet
                 taskSpec={taskSpec}

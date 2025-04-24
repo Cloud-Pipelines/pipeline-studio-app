@@ -13,18 +13,16 @@ import type {
   ReactFlowInstance,
   ReactFlowProps,
 } from "@xyflow/react";
-import { type OnInit, ReactFlow } from "@xyflow/react";
+import { type OnInit, ReactFlow, useNodesState } from "@xyflow/react";
 import type { ComponentType, DragEvent } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
-import useComponentSpecToNodes, {
-  type NodeAndTaskId,
-} from "@/hooks/useComponentSpecToNodes";
 import { useConnectionHandler } from "@/hooks/useConnectionHandler";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { ArgumentType, TaskOutputArgument } from "@/utils/componentSpec";
+import { createNodes, type NodeAndTaskId } from "@/utils/nodes/createNodes";
 import {
   nodeIdToInputName,
   nodeIdToOutputName,
@@ -53,22 +51,16 @@ const FlowGraph = ({
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
 
-  const onDelete = useCallback(async (ids: NodeAndTaskId) => {
-    const nodeId = ids.nodeId;
-    const node = nodes.find((n) => n.id === nodeId);
-    if (node) {
-      const confirmed = await triggerConfirmationDialog({
-        nodes: [node],
-        edges: [],
-      });
-      if (confirmed) {
-        removeNode(node);
+  /* Initialize nodes with an empty array and sync with the ComponentSpec via useEffect to avoid infinite renders */
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 
-        // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
-        updateGraphSpec(graphSpec);
-      }
-    }
-  }, []);
+  useEffect(() => {
+    const newNodes = createNodes(componentSpec, {
+      onDelete,
+      setArguments,
+    });
+    setNodes(newNodes);
+  }, [componentSpec]);
 
   const setArguments = useCallback(
     (ids: NodeAndTaskId, args: Record<string, ArgumentType>) => {
@@ -80,13 +72,29 @@ const FlowGraph = ({
       );
       updateGraphSpec(newGraphSpec);
     },
-    [],
+    [graphSpec],
   );
 
-  const { nodes, onNodesChange } = useComponentSpecToNodes(componentSpec, {
-    onDelete,
-    setArguments,
-  });
+  const onDelete = useCallback(
+    async (ids: NodeAndTaskId) => {
+      const nodeId = ids.nodeId;
+      const node = nodes.find((n) => n.id === nodeId);
+
+      if (node) {
+        const confirmed = await triggerConfirmationDialog({
+          nodes: [node],
+          edges: [],
+        });
+        if (confirmed) {
+          removeNode(node);
+
+          // Ideally the graph spec would be updated from within the Node onDelete fcn itself.
+          updateGraphSpec(graphSpec);
+        }
+      }
+    },
+    [nodes],
+  );
 
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
 
