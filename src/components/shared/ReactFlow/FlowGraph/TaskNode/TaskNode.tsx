@@ -9,13 +9,6 @@
 import type { HandleType, NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
 import {
-  CircleAlert,
-  CircleCheck,
-  CircleDashed,
-  EyeIcon,
-  RefreshCcw,
-} from "lucide-react";
-import {
   type CSSProperties,
   memo,
   type ReactElement,
@@ -146,31 +139,9 @@ function generateOutputHandles(outputSpecs: OutputSpec[]): ReactElement[] {
   );
 }
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "SUCCEEDED":
-      return <CircleCheck className="w-3.5 h-3.5 text-emerald-500" />;
-    case "FAILED":
-    case "SYSTEM_ERROR":
-    case "INVALID":
-    case "UPSTREAM_FAILED":
-    case "UPSTREAM_FAILED_OR_SKIPPED":
-      return <CircleAlert className="w-3.5 h-3.5 text-rose-500" />;
-    case "RUNNING":
-    case "STARTING":
-    case "CANCELLING":
-      return <RefreshCcw className="w-3.5 h-3.5 text-sky-500 animate-spin" />;
-    case "CONDITIONALLY_SKIPPED":
-    case "CANCELLED":
-      return <EyeIcon className="w-3.5 h-3.5 text-slate-500" />;
-    default:
-      return <CircleDashed className="w-3.5 h-3.5 text-slate-400" />;
-  }
-};
-
 const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
-
+  const [isTaskDetailsSheetOpen, setIsTaskDetailsSheetOpen] = useState(false);
   const nodeRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
@@ -246,7 +217,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
       case "RUNNING":
       case "STARTING":
       case "CANCELLING":
-        return "border-sky-500";
+        return "border-sky-500 animate-pulse duration-2000";
       default:
         return "border-slate-300";
     }
@@ -275,10 +246,17 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     if (!isArgumentsEditorOpen && !runStatus) {
       setIsArgumentsEditorOpen(true);
     }
+    if (!isTaskDetailsSheetOpen && runStatus) {
+      setIsTaskDetailsSheetOpen(true);
+    }
   };
 
   const handleDelete = () => {
     typedData.onDelete();
+  };
+
+  const handleTaskDetailsSheetClose = () => {
+    setIsTaskDetailsSheetOpen(false);
   };
 
   return (
@@ -305,15 +283,12 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
           <div className="flex items-center gap-2">
             {runStatus && (
               <TaskDetailsSheet
+                isOpen={isTaskDetailsSheetOpen}
                 taskSpec={taskSpec}
                 taskId={typedData.taskId}
                 runStatus={runStatus}
+                onClose={handleTaskDetailsSheetClose}
               />
-            )}
-            {runStatus && (
-              <div className="flex items-center ml-2 flex-shrink-0">
-                {getStatusIcon(runStatus)}
-              </div>
             )}
           </div>
         </div>

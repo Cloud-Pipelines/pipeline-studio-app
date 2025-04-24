@@ -1,14 +1,11 @@
-import type { Content } from "@radix-ui/react-dialog";
 import { ArrowDownToLine, Box, InfoIcon, Terminal } from "lucide-react";
-import { type ComponentProps, useState } from "react";
+import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -23,45 +20,26 @@ interface TaskDetailsSheetProps {
   taskSpec: TaskSpec;
   taskId: string;
   runStatus?: string;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const TaskDetailsSheet = ({
   taskSpec,
   taskId,
   runStatus,
+  isOpen,
+  onClose,
 }: TaskDetailsSheetProps) => {
   const [activeTab, setActiveTab] = useState("info");
 
-  const handleInteractOutside: ComponentProps<
-    typeof Content
-  >["onInteractOutside"] = (event) => {
-    const target = event.target as HTMLElement;
-
-    if (target.closest('[data-slot="sheet-trigger"]')) {
-      return;
-    }
-    event.preventDefault();
-  };
-
   return (
-    <Sheet modal={false}>
-      <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="cursor-pointer"
-          disabled={!runStatus}
-          data-slot="sheet-trigger"
-        >
-          <InfoIcon className="w-3 h-3" />
-        </Button>
-      </SheetTrigger>
+    <Sheet modal={false} open={isOpen} onOpenChange={onClose}>
       <SheetContent
         className={cn(
           "!max-w-none overflow-y-auto mt-[56px] h-[calc(100vh-56px)] transition-[width] duration-150",
           activeTab === "logs" ? "!w-[50%]" : "!w-[33.333333%]",
         )}
-        onInteractOutside={handleInteractOutside}
       >
         <SheetHeader>
           <SheetTitle>Task Details - {taskId}</SheetTitle>
