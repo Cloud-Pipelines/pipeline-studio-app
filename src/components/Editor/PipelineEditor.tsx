@@ -3,7 +3,7 @@ import "@/styles/editor.css";
 import { Background, Controls, MiniMap, useStore } from "@xyflow/react";
 import { useEffect } from "react";
 
-import { FlowGraph, FlowSidebar } from "@/components/shared/ReactFlow";
+import { FlowCanvas, FlowSidebar } from "@/components/shared/ReactFlow";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { savePipelineSpecToSessionStorage } from "@/utils/storage";
 
@@ -29,11 +29,11 @@ const PipelineEditor = () => {
   return (
     <>
       <div className="reactflow-wrapper">
-        <FlowGraph snapGrid={[GRID_SIZE, GRID_SIZE]} snapToGrid>
+        <FlowCanvas snapGrid={[GRID_SIZE, GRID_SIZE]} snapToGrid>
           <MiniMap />
           <Controls />
           <Background gap={GRID_SIZE} />
-        </FlowGraph>
+        </FlowCanvas>
       </div>
       <FlowSidebar />
     </>

@@ -12,7 +12,7 @@ import OasisSubmitter from "@/components/shared/OasisSubmitter";
 import {
   type ArgumentInput,
   ArgumentsEditor,
-} from "@/components/shared/ReactFlow/FlowGraph/TaskNode/ArgumentsEditor";
+} from "@/components/shared/ReactFlow/FlowCanvas/TaskNode/ArgumentsEditor";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
 import { GoogleCloudSubmitter, KubeflowPipelinesSubmitter } from "./Submitters";

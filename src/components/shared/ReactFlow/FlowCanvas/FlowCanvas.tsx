@@ -50,7 +50,7 @@ type NodesAndEdges = {
   edges: Edge[];
 };
 
-const FlowGraph = ({
+const FlowCanvas = ({
   readOnly,
   children,
   ...rest
@@ -301,7 +301,7 @@ const FlowGraph = ({
   );
 };
 
-export default FlowGraph;
+export default FlowCanvas;
 
 function getConfirmationDialogText(selectedNodes: Node[]) {
   const isDeletingMultipleNodes = selectedNodes.length > 1;
