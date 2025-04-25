@@ -30,7 +30,6 @@ import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { ArgumentType } from "@/utils/componentSpec";
 import { createNodes, type NodeAndTaskId } from "@/utils/nodes/createNodes";
-import { nodeIdToTaskId } from "@/utils/nodes/nodeIdUtils";
 
 import ComponentTaskNode from "./TaskNode/TaskNode";
 import { cleanupDeletedTasks } from "./utils/cleanupDeletedTasks";
@@ -73,8 +72,17 @@ const FlowCanvas = ({
       onDelete,
       setArguments,
     });
-    setNodes(newNodes);
+
+    setNodes((prevNodes) => {
+      const updatedNodes = newNodes.map((newNode) => {
+        const existingNode = prevNodes.find((node) => node.id === newNode.id);
+        return existingNode ? { ...existingNode, ...newNode } : newNode;
+      });
+
+      return updatedNodes;
+    });
   }, [componentSpec]);
+
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
 
@@ -239,31 +247,6 @@ const FlowCanvas = ({
     },
     [],
   );
-
-  useEffect(() => {
-    // Sync ReactFlow "selection" changes over to the componentSpec to maintain selection state between re-renders
-    // (createNodes is currently recreating all nodes from scratch each time componentSpec changes, which causes the selection state to desync)
-    const updatedTasks = { ...graphSpec.tasks };
-
-    Object.entries(updatedTasks).forEach(([taskId, taskSpec]) => {
-      const annotations = taskSpec.annotations || {};
-      annotations.selected = selectedNodes.some(
-        (node) => nodeIdToTaskId(node.id) === taskId,
-      );
-      updatedTasks[taskId] = {
-        ...taskSpec,
-        annotations,
-      };
-    });
-
-    const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
-
-    if (JSON.stringify(updatedGraphSpec) === JSON.stringify(graphSpec)) {
-      return;
-    }
-
-    updateGraphSpec(updatedGraphSpec);
-  }, [selectedNodes, graphSpec, updateGraphSpec]);
 
   const { title, desc } = getConfirmationDialogText(selectedNodes);
 

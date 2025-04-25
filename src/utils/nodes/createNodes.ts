@@ -49,7 +49,6 @@ const createTaskNodes = (
 ) => {
   return Object.entries(graphSpec.tasks).map(([taskId, taskSpec]) => {
     const position = extractPositionFromAnnotations(taskSpec.annotations);
-    const selected = (taskSpec.annotations?.selected as boolean) ?? false;
     const nodeId = taskIdToNodeId(taskId);
 
     // Dynamically add callbacks to node by first injecting the node & task id
@@ -72,7 +71,6 @@ const createTaskNodes = (
       },
       position: position,
       type: "task",
-      selected: selected,
     } as Node;
   });
 };
