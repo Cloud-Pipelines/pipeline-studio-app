@@ -1,6 +1,7 @@
 import type { ArgumentType } from "@/utils/componentSpec";
 
-export interface ComponentTaskNodeCallbacks {
-  setArguments?: (args: Record<string, ArgumentType>) => void;
+/* Note: Optional callbacks will cause TypeScript to break when applying the callbacks to the Nodes. */
+export interface TaskNodeCallbacks {
+  setArguments: (args: Record<string, ArgumentType>) => void;
   onDelete: () => void;
 }

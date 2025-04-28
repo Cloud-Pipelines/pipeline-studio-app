@@ -1,6 +1,6 @@
 import { type Node } from "@xyflow/react";
 
-import type { ComponentTaskNodeCallbacks } from "@/types/taskNode";
+import type { TaskNodeCallbacks } from "@/types/taskNode";
 import type { ComponentSpec, GraphSpec } from "@/utils/componentSpec";
 import { extractPositionFromAnnotations } from "@/utils/nodes/extractPositionFromAnnotations";
 
@@ -12,20 +12,18 @@ export type NodeAndTaskId = {
 };
 
 // Dynamic Node Callback types - every callback has the node & task id added to it as an input parameter
-type CallbackArgs = Parameters<
-  NonNullable<ComponentTaskNodeCallbacks[keyof ComponentTaskNodeCallbacks]>
->;
-
-type CallbackWithIds<K extends keyof ComponentTaskNodeCallbacks> = (
-  ids: NodeAndTaskId,
-  ...args: K extends keyof ComponentTaskNodeCallbacks
-    ? Parameters<NonNullable<ComponentTaskNodeCallbacks[K]>>
-    : never
-) => void;
+type CallbackWithIds<K extends keyof TaskNodeCallbacks> =
+  TaskNodeCallbacks[K] extends (...args: infer A) => infer R
+    ? (ids: NodeAndTaskId, ...args: A) => R
+    : never;
 
 type NodeCallbacks = {
-  [K in keyof ComponentTaskNodeCallbacks]: CallbackWithIds<K>;
+  [K in keyof TaskNodeCallbacks]: CallbackWithIds<K>;
 };
+
+type ExcludeNodeAndTaskId<T> = T extends [NodeAndTaskId, ...infer Rest]
+  ? Rest
+  : never;
 
 export const createNodes = (
   componentSpec: ComponentSpec,
@@ -51,15 +49,11 @@ const createTaskNodes = (
     const position = extractPositionFromAnnotations(taskSpec.annotations);
     const nodeId = taskIdToNodeId(taskId);
 
-    // Dynamically add callbacks to node by first injecting the node & task id
-    const dynamicCallbacks = Object.fromEntries(
-      Object.entries(nodeCallbacks).map(([callbackName, callbackFn]) => [
-        callbackName,
-        (...args: CallbackArgs) =>
-          args.length
-            ? callbackFn({ taskId, nodeId }, ...args)
-            : callbackFn({ taskId, nodeId }, {}),
-      ]),
+    // Inject the taskId and nodeId into the callbacks
+    const dynamicCallbacks = generateDynamicCallbacks(
+      nodeCallbacks,
+      taskId,
+      nodeId,
     );
 
     return {
@@ -99,6 +93,33 @@ const createOutputNodes = (componentSpec: ComponentSpec) => {
       type: "output",
     } as Node;
   });
+};
+
+// Utility function
+const generateDynamicCallbacks = (
+  nodeCallbacks: NodeCallbacks,
+  taskId: string,
+  nodeId: string,
+): NodeCallbacks => {
+  return Object.fromEntries(
+    (Object.keys(nodeCallbacks) as (keyof NodeCallbacks)[]).map(
+      (callbackName) => {
+        const callbackFn = nodeCallbacks[callbackName] as CallbackWithIds<
+          typeof callbackName
+        >;
+        return [
+          callbackName,
+          ((...args: any[]) =>
+            callbackFn(
+              { taskId, nodeId },
+              ...((args ?? []) as ExcludeNodeAndTaskId<
+                Parameters<typeof callbackFn>
+              >),
+            )) as NodeCallbacks[typeof callbackName],
+        ];
+      },
+    ),
+  ) as NodeCallbacks;
 };
 
 export default createNodes;

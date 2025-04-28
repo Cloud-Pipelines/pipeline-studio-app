@@ -18,7 +18,7 @@ import {
 
 import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
 import { cn } from "@/lib/utils";
-import type { ComponentTaskNodeCallbacks } from "@/types/taskNode";
+import type { TaskNodeCallbacks } from "@/types/taskNode";
 import type { InputSpec, OutputSpec, TaskSpec } from "@/utils/componentSpec";
 
 import ArgumentsEditorDialog from "./ArgumentsEditor";
@@ -33,7 +33,7 @@ const NODE_WIDTH_IN_PX = 200;
 
 export interface ComponentTaskNodeProps
   extends Record<string, unknown>,
-    ComponentTaskNodeCallbacks {
+    TaskNodeCallbacks {
   taskSpec: TaskSpec;
   taskId: string;
 }
