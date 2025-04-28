@@ -1,15 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { File, Trash2 } from "lucide-react";
-import { type DragEvent, useCallback, useMemo } from "react";
+import { type DragEvent, useCallback, useState } from "react";
 
-import { ConfirmationDialog } from "@/components/shared/Dialogs";
+import ComponentDetails from "@/components/shared/Dialogs/ComponentDetails";
+import { Button } from "@/components/ui/button";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
 import { deleteComponentFileFromList } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
@@ -31,6 +26,7 @@ const UserComponentItem = ({
   componentText,
   displayName,
 }: UserComponentItemProps) => {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const queryClient = useQueryClient();
 
   const onDragStart = useCallback(
@@ -65,76 +61,59 @@ const UserComponentItem = ({
   );
 
   const handleDelete = useCallback(async () => {
-    try {
-      await deleteComponentFileFromList(USER_COMPONENTS_LIST_NAME, fileName);
-      queryClient.invalidateQueries({ queryKey: ["userComponents"] });
-    } catch (error) {
-      console.error("Error deleting component:", error);
+    if (confirmDelete) {
+      try {
+        await deleteComponentFileFromList(USER_COMPONENTS_LIST_NAME, fileName);
+        queryClient.invalidateQueries({ queryKey: ["userComponents"] });
+      } catch (error) {
+        console.error("Error deleting component:", error);
+      }
+    } else {
+      setConfirmDelete(true);
     }
-  }, [fileName, queryClient]);
-
-  const tooltipContent = useMemo(() => {
-    let content = displayName;
-
-    if (componentSpec?.description) {
-      content += `\n\nDescription: ${componentSpec.description}`;
-    }
-
-    if (componentSpec?.inputs?.length) {
-      content += `\n\nInputs: ${componentSpec.inputs
-        .map(
-          (input) =>
-            `${input.name}${input.description ? ` - ${input.description}` : ""}`,
-        )
-        .join(", ")}`;
-    }
-
-    if (componentSpec?.outputs?.length) {
-      content += `\n\nOutputs: ${componentSpec.outputs
-        .map(
-          (output) =>
-            `${output.name}${output.description ? ` - ${output.description}` : ""}`,
-        )
-        .join(", ")}`;
-    }
-
-    return content;
-  }, [displayName, componentSpec]);
+  }, [fileName, queryClient, confirmDelete]);
 
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={2000}>
-        <TooltipTrigger asChild>
-          <SidebarMenuItem
-            className="cursor-grab hover:bg-gray-100 active:bg-gray-200 pl-2 py-1.5 group flex justify-between relative"
-            draggable
-            onDragStart={onDragStart}
-          >
-            <div className="flex items-center gap-2 w-full">
-              <div className="flex gap-2 w-full">
-                <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                <span className="truncate text-xs text-gray-800 max-w-[200px]">
-                  {displayName}
+    <SidebarMenuItem
+      className="cursor-grab hover:bg-gray-100 active:bg-gray-200 pl-2 py-1.5 group flex justify-between relative"
+      draggable
+      onDragStart={onDragStart}
+    >
+      <div className="flex-1 flex">
+        <div className="flex gap-2 w-full">
+          <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
+          <span className="truncate text-xs text-gray-800 max-w-[200px]">
+            {displayName}
+          </span>
+        </div>
+        <div className="flex-1 flex justify-end mr-[15px]">
+          <ComponentDetails
+            url={url}
+            displayName={displayName}
+            componentSpec={componentSpec}
+            componentDigest={componentDigest}
+            componentText={componentText}
+            onClose={() => {
+              setConfirmDelete(false);
+            }}
+            actions={[
+              <Button
+                key="delete-component"
+                variant={confirmDelete ? "destructive" : "destructiveOutline"}
+                size="sm"
+                className="cursor-pointer"
+                onClick={handleDelete}
+              >
+                <Trash2 className="size-4" />
+                <span className="text-xs">
+                  {confirmDelete ? "Confirm Delete" : "Delete"}
                 </span>
-              </div>
-              <ConfirmationDialog
-                trigger={
-                  <div className="cursor-pointer mr-[15px]">
-                    <Trash2 className="size-4 text-red-500" />
-                  </div>
-                }
-                title="Delete component"
-                description="Are you sure you want to delete this component?"
-                onConfirm={handleDelete}
-              />
-            </div>
-          </SidebarMenuItem>
-        </TooltipTrigger>
-        <TooltipContent side="left" className="max-w-xs whitespace-pre-wrap">
-          {tooltipContent}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+              </Button>,
+            ]}
+          />
+        </div>
+      </div>
+    </SidebarMenuItem>
   );
 };
 

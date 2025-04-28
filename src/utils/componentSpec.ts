@@ -142,6 +142,9 @@ export type ImplementationType = ContainerImplementation | GraphImplementation;
 export interface MetadataSpec {
   annotations?: {
     [k: string]: unknown;
+    canonical_location?: string;
+    author?: string;
+    original_python_code?: string;
   };
 }
 /**
