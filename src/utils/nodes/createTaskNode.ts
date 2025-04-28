@@ -16,7 +16,6 @@ export const createTaskNode = (
   const [taskId, taskSpec] = task;
 
   const position = extractPositionFromAnnotations(taskSpec.annotations);
-  const selected = taskSpec.annotations?.selected;
   const nodeId = taskIdToNodeId(taskId);
 
   // Inject the taskId and nodeId into the callbacks
@@ -32,6 +31,5 @@ export const createTaskNode = (
     },
     position: position,
     type: "task",
-    selected: selected,
   } as Node;
 };
