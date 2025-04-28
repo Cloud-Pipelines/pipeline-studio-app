@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ComponentSpec } from "../componentSpec";
 import { isGraphImplementation } from "../componentSpec";
-import createNodes from "./createNodes";
+import createNodesFromComponentSpec from "./createNodesFromComponentSpec";
 
-describe("createNodes", () => {
+describe("createNodesFromComponentSpec", () => {
   const createBasicComponentSpec = (implementation: any): ComponentSpec => ({
     name: "Test Component",
     implementation,
@@ -15,6 +15,7 @@ describe("createNodes", () => {
   const mockNodeCallbacks = {
     onDelete: vi.fn(),
     setArguments: vi.fn(),
+    onDuplicate: vi.fn(),
   };
 
   beforeEach(() => {
@@ -26,7 +27,10 @@ describe("createNodes", () => {
       container: { image: "test" },
     });
 
-    const result = createNodes(componentSpec, mockNodeCallbacks);
+    const result = createNodesFromComponentSpec(
+      componentSpec,
+      mockNodeCallbacks,
+    );
 
     expect(result).toEqual([]);
   });
@@ -50,7 +54,10 @@ describe("createNodes", () => {
       throw new Error("Expected graph implementation");
     }
 
-    const result = createNodes(componentSpec, mockNodeCallbacks);
+    const result = createNodesFromComponentSpec(
+      componentSpec,
+      mockNodeCallbacks,
+    );
 
     expect(result).toContainEqual(
       expect.objectContaining({
@@ -78,7 +85,10 @@ describe("createNodes", () => {
       outputs: [],
     };
 
-    const result = createNodes(componentSpec, mockNodeCallbacks);
+    const result = createNodesFromComponentSpec(
+      componentSpec,
+      mockNodeCallbacks,
+    );
 
     expect(result).toContainEqual({
       id: "input_input1",
@@ -103,7 +113,10 @@ describe("createNodes", () => {
       ],
     };
 
-    const result = createNodes(componentSpec, mockNodeCallbacks);
+    const result = createNodesFromComponentSpec(
+      componentSpec,
+      mockNodeCallbacks,
+    );
 
     expect(result).toContainEqual({
       id: "output_output1",
@@ -130,7 +143,10 @@ describe("createNodes", () => {
       outputs: [{ name: "output1" }],
     };
 
-    const result = createNodes(componentSpec, mockNodeCallbacks);
+    const result = createNodesFromComponentSpec(
+      componentSpec,
+      mockNodeCallbacks,
+    );
     const defaultPosition = { x: 0, y: 0 };
 
     expect(result).toContainEqual(
@@ -171,7 +187,10 @@ describe("createNodes", () => {
       },
     });
 
-    const result = createNodes(componentSpec, mockNodeCallbacks);
+    const result = createNodesFromComponentSpec(
+      componentSpec,
+      mockNodeCallbacks,
+    );
     const taskNode = result.find((node) => node.id === nodeId) as
       | { id: string; data: { setArguments: (args: any) => void } }
       | undefined;

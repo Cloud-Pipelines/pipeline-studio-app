@@ -4,4 +4,5 @@ import type { ArgumentType } from "@/utils/componentSpec";
 export interface TaskNodeCallbacks {
   setArguments: (args: Record<string, ArgumentType>) => void;
   onDelete: () => void;
+  onDuplicate: (selected?: boolean) => void;
 }

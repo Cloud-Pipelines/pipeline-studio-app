@@ -6,7 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { Trash } from "lucide-react";
+import { Copy, Trash } from "lucide-react";
 import { useState } from "react";
 
 import { DraggableDialog } from "@/components/shared/Dialogs";
@@ -18,10 +18,11 @@ import { ArgumentsEditor } from "./ArgumentsEditor";
 interface ArgumentsEditorDialogProps {
   initialPosition?: { x: number; y: number };
   taskSpec: TaskSpec;
+  disabled?: boolean;
   closeEditor: () => void;
   setArguments?: (args: Record<string, ArgumentType>) => void;
-  disabled?: boolean;
   handleDelete: () => void;
+  handleCopy: () => void;
 }
 
 const ArgumentsEditorDialog = ({
@@ -31,6 +32,7 @@ const ArgumentsEditorDialog = ({
   disabled = false,
   initialPosition,
   handleDelete,
+  handleCopy,
 }: ArgumentsEditorDialogProps) => {
   const componentSpec = taskSpec.componentRef.spec;
 
@@ -107,6 +109,18 @@ const ArgumentsEditorDialog = ({
           className: "cursor-pointer",
           disabled,
           onClick: handleDelete,
+        },
+        {
+          children: (
+            <div className="flex items-center gap-2">
+              <Copy />
+              Copy
+            </div>
+          ),
+          variant: "secondary",
+          className: "cursor-pointer",
+          disabled,
+          onClick: handleCopy,
         },
       ]}
     >
