@@ -59,14 +59,7 @@ function generateHandles(
     const ioTypeName = ioSpec.type?.toString() ?? "Any";
     let classNames = [`handle_${idPrefix}${ioTypeName}`.replace(/ /g, "_")];
 
-    let tailwindClasses = "w-2! h-2! border-2! rounded-full! ";
-
     const isInvalid = (inputsWithMissingArguments ?? []).includes(ioSpec.name);
-    if (isInvalid) {
-      tailwindClasses += "border-rose-500! bg-rose-50! ";
-    } else {
-      tailwindClasses += "bg-white! border-slate-300! hover:border-slate-600! ";
-    }
     classNames = classNames.map((className) => className.replace(/ /g, "_"));
 
     const [labelClasses, labelStyle] = generateLabelStyle(position, numHandles);
@@ -81,7 +74,13 @@ function generateHandles(
         style={style}
         isConnectable={true}
         title={handleTitle}
-        className={`${classNames.join(" ")} ${tailwindClasses}`}
+        className={cn(
+          classNames.join(" "),
+          "w-3! h-3! border-2! rounded-full!",
+          isInvalid
+            ? "border-rose-500! bg-rose-50!"
+            : "bg-white! border-slate-300! hover:border-slate-600!",
+        )}
       >
         <div className={labelClasses} style={labelStyle}>
           {ioSpec.name}
@@ -105,7 +104,7 @@ function generateLabelStyle(
     }
     if (maxLabelWidthPx < 35) {
       maxLabelWidthPx = 50;
-      labelClasses += " label-angled";
+      labelClasses += " label-angled p-1";
     }
   } else {
     maxLabelWidthPx = 60;
