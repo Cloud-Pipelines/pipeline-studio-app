@@ -1,4 +1,4 @@
-import { ArrowDownToLine, Box, InfoIcon, Terminal } from "lucide-react";
+import { ArrowDownToLine, InfoIcon, Terminal } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type { TaskSpec } from "@/utils/componentSpec";
 
-import Artifacts from "./artifacts";
 import Info from "./info";
 import Io from "./io";
 import Logs from "./logs";
@@ -55,10 +54,6 @@ const TaskDetailsSheet = ({
                 <ArrowDownToLine className="w-4 h-4 mr-2" />
                 Inputs/Outputs
               </TabsTrigger>
-              <TabsTrigger value="artifacts">
-                <Box className="w-4 h-4 mr-2" />
-                Artifacts
-              </TabsTrigger>
               <TabsTrigger value="logs">
                 <Terminal className="w-4 h-4 mr-2" />
                 Logs
@@ -68,10 +63,8 @@ const TaskDetailsSheet = ({
               <Info taskSpec={taskSpec} runStatus={runStatus} taskId={taskId} />
             </TabsContent>
             <TabsContent value="io">
-              <Io taskSpec={taskSpec} />
-            </TabsContent>
-            <TabsContent value="artifacts">
-              <Artifacts
+              <Io
+                taskSpec={taskSpec}
                 executionId={taskSpec.annotations?.executionId as string}
               />
             </TabsContent>
