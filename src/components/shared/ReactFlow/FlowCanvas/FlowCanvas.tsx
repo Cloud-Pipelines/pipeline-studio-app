@@ -29,7 +29,9 @@ import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { ArgumentType } from "@/utils/componentSpec";
-import { createNodes, type NodeAndTaskId } from "@/utils/nodes/createNodes";
+import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
+import { duplicateTask } from "@/utils/nodes/duplicateTask";
+import type { NodeAndTaskId } from "@/utils/nodes/generateDynamicNodeCallbacks";
 
 import TaskNode from "./TaskNode/TaskNode";
 import { cleanupDeletedTasks } from "./utils/cleanupDeletedTasks";
@@ -64,24 +66,8 @@ const FlowCanvas = ({
     triggerDialog: triggerConfirmationDialog,
   } = useConfirmationDialog();
 
-  /* Initialize nodes with an empty array and sync with the ComponentSpec via useEffect to avoid infinite renders */
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-
-  useEffect(() => {
-    const newNodes = createNodes(componentSpec, {
-      onDelete,
-      setArguments,
-    });
-
-    setNodes((prevNodes) => {
-      const updatedNodes = newNodes.map((newNode) => {
-        const existingNode = prevNodes.find((node) => node.id === newNode.id);
-        return existingNode ? { ...existingNode, ...newNode } : newNode;
-      });
-
-      return updatedNodes;
-    });
-  }, [componentSpec]);
+  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
 
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
@@ -89,7 +75,6 @@ const FlowCanvas = ({
   const onInit: OnInit = (instance) => {
     setReactFlowInstance(instance);
   };
-  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
 
   const onDelete = useCallback(
     async (ids: NodeAndTaskId) => {
@@ -125,6 +110,16 @@ const FlowCanvas = ({
       updateGraphSpec(newGraphSpec);
     },
     [graphSpec],
+  );
+
+  const onDuplicate = useCallback(
+    (ids: NodeAndTaskId, selected = true) => {
+      const taskId = ids.taskId;
+      const updatedGraphSpec = duplicateTask(taskId, graphSpec, selected);
+
+      updateGraphSpec(updatedGraphSpec);
+    },
+    [graphSpec, updateGraphSpec],
   );
 
   const onConnect = useCallback(
@@ -227,6 +222,24 @@ const FlowCanvas = ({
     },
     [],
   );
+
+  useEffect(() => {
+    // Update ReactFlow based on the component spec
+    const newNodes = createNodesFromComponentSpec(componentSpec, {
+      onDelete,
+      setArguments,
+      onDuplicate,
+    });
+
+    setNodes((prevNodes) => {
+      const updatedNodes = newNodes.map((newNode) => {
+        const existingNode = prevNodes.find((node) => node.id === newNode.id);
+        return existingNode ? { ...existingNode, ...newNode } : newNode;
+      });
+
+      return updatedNodes;
+    });
+  }, [componentSpec]);
 
   const { title, desc } = getConfirmationDialogText(selectedNodes);
 

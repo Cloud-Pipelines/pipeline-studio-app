@@ -258,6 +258,11 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     setIsTaskDetailsSheetOpen(false);
   };
 
+  const handleCopy = () => {
+    typedData.onDuplicate();
+    setIsArgumentsEditorOpen(false);
+  };
+
   return (
     <>
       <div
@@ -301,6 +306,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
           disabled={!!runStatus}
           initialPosition={getDialogPosition(nodeRef.current, 650)}
           handleDelete={handleDelete}
+          handleCopy={handleCopy}
         />
       )}
     </>
