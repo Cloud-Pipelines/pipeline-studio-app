@@ -34,7 +34,6 @@ import { duplicateTask } from "@/utils/nodes/duplicateTask";
 import type { NodeAndTaskId } from "@/utils/nodes/generateDynamicNodeCallbacks";
 
 import TaskNode from "./TaskNode/TaskNode";
-import { cleanupDeletedTasks } from "./utils/cleanupDeletedTasks";
 import { handleConnection } from "./utils/handleConnection";
 import onDropNode from "./utils/onDropNode";
 import { removeEdge } from "./utils/removeEdge";
@@ -67,7 +66,10 @@ const FlowCanvas = ({
   } = useConfirmationDialog();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
+  const [selectedElements, setSelectedElements] = useState<NodesAndEdges>({
+    nodes: [],
+    edges: [],
+  });
 
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
@@ -159,11 +161,6 @@ const FlowCanvas = ({
         updatedComponentSpec = removeNode(node, updatedComponentSpec);
       }
 
-      updatedComponentSpec = cleanupDeletedTasks(
-        updatedComponentSpec,
-        params.nodes,
-      );
-
       setComponentSpec(updatedComponentSpec);
     },
     [componentSpec, setComponentSpec],
@@ -212,13 +209,15 @@ const FlowCanvas = ({
   };
 
   const handleSelectionChange = useCallback((params: NodesAndEdges) => {
-    const nodes = params.nodes;
-    setSelectedNodes(nodes);
+    setSelectedElements(params);
   }, []);
 
   const handleSelectionDragEnd = useCallback(
     (_e: ReactMouseEvent, nodes: Node[]) => {
-      setSelectedNodes(nodes);
+      setSelectedElements((prev) => ({
+        ...prev,
+        nodes: nodes,
+      }));
     },
     [],
   );
@@ -241,7 +240,7 @@ const FlowCanvas = ({
     });
   }, [componentSpec]);
 
-  const { title, desc } = getConfirmationDialogText(selectedNodes);
+  const { title, content } = getConfirmationDialogDetails(selectedElements);
 
   return (
     <>
@@ -267,10 +266,11 @@ const FlowCanvas = ({
       >
         {children}
       </ReactFlow>
-      {selectedNodes.length > 0 && !readOnly && (
+      {!readOnly && (
         <ConfirmationDialog
           title={title}
-          description={desc}
+          description=""
+          content={content}
           isOpen={isOpen}
           onConfirm={() => handlers?.onConfirm()}
           onCancel={() => handlers?.onCancel()}
@@ -282,38 +282,94 @@ const FlowCanvas = ({
 
 export default FlowCanvas;
 
-function getConfirmationDialogText(selectedNodes: Node[]) {
-  const isDeletingMultipleNodes = selectedNodes.length > 1;
+function getConfirmationDialogDetails(selectedElements: NodesAndEdges) {
+  const selectedNodes = selectedElements.nodes;
+  const selectedEdges = selectedElements.edges;
 
-  if (!isDeletingMultipleNodes) {
-    const singleDeleteTitle =
-      "Delete Node" +
-      (selectedNodes.length > 0 ? ` '${selectedNodes[0].id}'` : "") +
-      "?";
+  const thisCannotBeUndone = (
+    <p className="text-muted-foreground">This cannot be undone.</p>
+  );
 
-    const singleDeleteDesc =
-      "This will also will also delete all connections to and from the Node. This cannot be undone.";
+  if (selectedNodes.length > 0) {
+    const isDeletingMultipleNodes = selectedNodes.length > 1;
+
+    if (!isDeletingMultipleNodes) {
+      const singleDeleteTitle =
+        "Delete Node" +
+        (selectedNodes.length > 0 ? ` '${selectedNodes[0].id}'` : "") +
+        "?";
+
+      const singleDeleteDesc = (
+        <div className="text-sm">
+          <p>
+            This will also will also delete all connections to and from the
+            Node.
+          </p>
+          <br />
+          {thisCannotBeUndone}
+        </div>
+      );
+
+      return {
+        title: singleDeleteTitle,
+        content: singleDeleteDesc,
+      };
+    }
+
+    const multiDeleteTitle = `Delete Nodes?`;
+
+    const multiDeleteDesc = (
+      <div className="text-sm">
+        <p>{`
+          Deleting
+          ${selectedNodes
+            .map((node) => {
+              return `'${node.id}'`;
+            })
+            .join(
+              ", ",
+            )} will also remove all connections to and from these nodes.`}</p>
+        <br />
+        {thisCannotBeUndone}
+      </div>
+    );
 
     return {
-      title: singleDeleteTitle,
-      desc: singleDeleteDesc,
+      title: multiDeleteTitle,
+      content: multiDeleteDesc,
     };
   }
 
-  const multiDeleteTitle = `Delete Nodes?`;
+  if (selectedEdges.length > 0) {
+    const isDeletingMultipleEdges = selectedEdges.length > 1;
 
-  const multiDeleteDesc = `Deleting ${
-    selectedNodes.length
-      ? selectedNodes
-          .map((node) => {
-            return `'${node.id}'`;
-          })
-          .join(", ")
-      : "nodes"
-  } will also delete all connections to and from these nodes. This cannot be undone.`;
+    const edgeDeleteTitle = isDeletingMultipleEdges
+      ? "Delete Connections?"
+      : "Delete Connection?";
+
+    const edgeDeleteDesc = (
+      <div className="text-sm">
+        <p>This will remove the follow connections between task nodes:</p>
+        <p>
+          {selectedEdges
+            .map((edge) => {
+              return `'${edge.id}'`;
+            })
+            .join(", ")}
+        </p>
+        <br />
+        {thisCannotBeUndone}
+      </div>
+    );
+
+    return {
+      title: edgeDeleteTitle,
+      content: edgeDeleteDesc,
+    };
+  }
 
   return {
-    title: multiDeleteTitle,
-    desc: multiDeleteDesc,
+    title: "",
+    content: "",
   };
 }

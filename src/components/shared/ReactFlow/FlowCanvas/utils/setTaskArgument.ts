@@ -13,7 +13,9 @@ export const setTaskArgument = (
 
   const nonNullArgumentObject = argument ? { [inputName]: argument } : {};
   const newTaskSpecArguments = {
-    ...oldTaskSpecArguments,
+    ...Object.fromEntries(
+      Object.entries(oldTaskSpecArguments).filter(([key]) => key !== inputName),
+    ),
     ...nonNullArgumentObject,
   };
 
