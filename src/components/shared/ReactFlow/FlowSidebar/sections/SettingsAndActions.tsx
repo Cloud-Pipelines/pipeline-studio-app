@@ -1,16 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@xyflow/react";
-import { ChevronDown, FileDown, Import, Save, SaveAll } from "lucide-react";
+import { FileDown, Import, Save, SaveAll } from "lucide-react";
 import { useMemo } from "react";
 
 import { PipelineNameDialog } from "@/components/shared/Dialogs";
 import ImportPipeline from "@/components/shared/ImportPipeline";
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -84,74 +79,69 @@ const SettingsAndActions = () => {
     : "pipeline.component.yaml";
 
   return (
-    <Collapsible defaultOpen className="group/collapsible">
-      <SidebarGroup>
-        <SidebarGroupLabel asChild>
-          <CollapsibleTrigger>
-            Settings & Actions
-            <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-          </CollapsibleTrigger>
-        </SidebarGroupLabel>
-        <CollapsibleContent>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={handleSavePipeline}
-                  className="cursor-pointer"
-                >
-                  <Save />
-                  <span>Save</span>
+    <SidebarGroup className="pb-0">
+      <SidebarGroupLabel asChild>
+        <div className="flex items-center">
+          <span className="font-medium text-sm">Settings & Actions</span>
+        </div>
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleSavePipeline}
+              className="cursor-pointer"
+            >
+              <Save />
+              <span className="font-normal text-xs">Save</span>
+            </SidebarMenuButton>
+            <PipelineNameDialog
+              trigger={
+                <SidebarMenuButton className="cursor-pointer">
+                  <SaveAll />
+                  <span className="font-normal text-xs">Save as</span>
                 </SidebarMenuButton>
-                <PipelineNameDialog
-                  trigger={
-                    <SidebarMenuButton className="cursor-pointer">
-                      <SaveAll />
-                      <span>Save as</span>
-                    </SidebarMenuButton>
-                  }
-                  title="Save Pipeline As"
-                  description="Enter a name for your pipeline"
-                  initialName={getInitialName()}
-                  onSubmit={handleSavePipelineAs}
-                  submitButtonText="Save"
-                  submitButtonIcon={<SaveAll className="mr-2 h-4 w-4" />}
-                />
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild className="cursor-pointer">
-                  <a
-                    href={URL.createObjectURL(componentTextBlob)}
-                    download={filename}
+              }
+              title="Save Pipeline As"
+              description="Enter a name for your pipeline"
+              initialName={getInitialName()}
+              onSubmit={handleSavePipelineAs}
+              submitButtonText="Save"
+              submitButtonIcon={<SaveAll className="mr-2 h-4 w-4" />}
+            />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="cursor-pointer">
+              <a
+                href={URL.createObjectURL(componentTextBlob)}
+                download={filename}
+              >
+                <FileDown />
+                <span className="font-normal text-xs">Export Pipeline</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <ImportPipeline
+              triggerComponent={
+                <SidebarMenuButton asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full justify-start px-2! cursor-pointer"
                   >
-                    <FileDown />
-                    <span>Export Pipeline</span>
-                  </a>
+                    <Import />
+                    <span className="font-normal text-xs">Import Pipeline</span>
+                  </Button>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <ImportPipeline
-                  triggerComponent={
-                    <SidebarMenuButton asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="w-full justify-start px-2! cursor-pointer"
-                      >
-                        <Import />
-                        <span className="font-normal">Import Pipeline</span>
-                      </Button>
-                    </SidebarMenuButton>
-                  }
-                />
-              </SidebarMenuItem>
+              }
+            />
+          </SidebarMenuItem>
 
-              <ImportComponent />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </CollapsibleContent>
-      </SidebarGroup>
-    </Collapsible>
+          <ImportComponent />
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 };
 

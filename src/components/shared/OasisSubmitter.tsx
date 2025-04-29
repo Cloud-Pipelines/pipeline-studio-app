@@ -33,7 +33,6 @@ const OasisSubmitter = ({
 }: OasisSubmitterProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
-  const [runId, setRunId] = useState<number | null>(null);
   const { cooldownTime, setCooldownTime } = useCooldownTimer(0);
   const notify = useToastNotification();
   const navigate = useNavigate();
@@ -42,13 +41,13 @@ const OasisSubmitter = ({
     notify(message, "error");
   };
 
-  const showSuccessNotification = () => {
+  const showSuccessNotification = (runId: number) => {
     const SuccessComponent = () => (
       <div className="flex flex-col gap-3 py-2">
         <div className="flex items-center gap-2">
           <span className="font-semibold">Pipeline successfully submitted</span>
         </div>
-        <Button onClick={handleViewRun} className="w-full">
+        <Button onClick={() => handleViewRun(runId)} className="w-full">
           View Run
         </Button>
       </div>
@@ -56,7 +55,7 @@ const OasisSubmitter = ({
     notify(<SuccessComponent />, "success");
   };
 
-  const handleViewRun = () => {
+  const handleViewRun = (runId: number) => {
     if (runId) {
       navigate({ to: `${APP_ROUTES.RUNS}/${runId}` });
     }
@@ -91,8 +90,7 @@ const OasisSubmitter = ({
       setIsSubmitting(false);
       onSubmitComplete?.();
 
-      setRunId(responseData.root_execution_id);
-      showSuccessNotification();
+      showSuccessNotification(responseData.root_execution_id);
     },
     onError: (error) => {
       console.error("Error submitting pipeline:", error);
@@ -167,7 +165,7 @@ const OasisSubmitter = ({
         disabled={isButtonDisabled}
       >
         {getButtonIcon()}
-        <span className="font-normal">{getButtonText()}</span>
+        <span className="font-normal text-xs">{getButtonText()}</span>
       </Button>
     </SidebarMenuButton>
   );

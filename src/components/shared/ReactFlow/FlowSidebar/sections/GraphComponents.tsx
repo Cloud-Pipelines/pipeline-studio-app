@@ -1,12 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Box, ChevronDown } from "lucide-react";
 import { type ChangeEvent, useMemo, useState } from "react";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -121,26 +115,17 @@ const GraphComponents = () => {
   }, [componentLibrary, userComponentsFolder, isLoading, error, searchTerm]);
 
   return (
-    <Collapsible
-      defaultOpen
-      className="group/collapsible [&_li]:marker:hidden [&_li]:before:content-none [&_li]:list-none"
-    >
-      <SidebarGroup>
-        <SidebarGroupLabel asChild>
-          <CollapsibleTrigger className="flex w-full items-center py-2">
-            <Box className="h-5 w-5 text-gray-700 flex-shrink-0 mr-2" />
-            <span className="font-medium">Components</span>
-            <ChevronDown className="ml-auto h-5 w-5 text-gray-500 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-          </CollapsibleTrigger>
-        </SidebarGroupLabel>
-        <CollapsibleContent>
-          <SidebarGroupContent>
-            <SearchInput value={searchTerm} onChange={handleSearchChange} />
-            {memoizedContent}
-          </SidebarGroupContent>
-        </CollapsibleContent>
-      </SidebarGroup>
-    </Collapsible>
+    <SidebarGroup>
+      <SidebarGroupLabel asChild>
+        <div className="flex items-center">
+          <span className="font-medium text-sm">Components</span>
+        </div>
+      </SidebarGroupLabel>
+      <SidebarGroupContent className="[&_li]:marker:hidden [&_li]:before:content-none [&_li]:list-none">
+        <SearchInput value={searchTerm} onChange={handleSearchChange} />
+        {memoizedContent}
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 };
 
