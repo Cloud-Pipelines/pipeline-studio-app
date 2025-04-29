@@ -14,8 +14,8 @@ const PipelineRunPage = () => {
         fitView
         readOnly
       >
-        <MiniMap />
-        <Controls />
+        <MiniMap position="bottom-left" pannable />
+        <Controls style={{ marginLeft: "224px", marginBottom: "36px" }} />
         <Background gap={GRID_SIZE} />
       </FlowCanvas>
     </div>

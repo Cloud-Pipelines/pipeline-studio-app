@@ -30,8 +30,8 @@ const PipelineEditor = () => {
     <>
       <div className="reactflow-wrapper">
         <FlowCanvas snapGrid={[GRID_SIZE, GRID_SIZE]} snapToGrid>
-          <MiniMap />
-          <Controls />
+          <MiniMap position="bottom-left" pannable />
+          <Controls style={{ marginLeft: "224px", marginBottom: "36px" }} />
           <Background gap={GRID_SIZE} />
         </FlowCanvas>
       </div>
