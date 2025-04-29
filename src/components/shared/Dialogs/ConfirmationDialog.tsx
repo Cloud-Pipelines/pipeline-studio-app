@@ -1,4 +1,4 @@
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 import {
   AlertDialog,
@@ -13,13 +13,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 type ConfirmationDialogProps = {
-  description?: string;
   title?: string;
+  description?: string;
+  content?: ReactNode;
   onConfirm: () => void;
   onCancel?: () => void;
 } & (
-  | { trigger: React.ReactNode; isOpen?: boolean }
-  | { trigger?: React.ReactNode; isOpen: boolean }
+  | { trigger: ReactNode; isOpen?: boolean }
+  | { trigger?: ReactNode; isOpen: boolean }
 );
 
 const defaultTitle = "Are you sure?";
@@ -29,6 +30,7 @@ const ConfirmationDialog = ({
   trigger,
   title = defaultTitle,
   description = defaultDescription,
+  content,
   isOpen,
   onConfirm,
   onCancel = () => {},
@@ -63,6 +65,7 @@ const ConfirmationDialog = ({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
+        {content}
         <AlertDialogFooter>
           <AlertDialogCancel onClick={handleCancel}>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirm}>

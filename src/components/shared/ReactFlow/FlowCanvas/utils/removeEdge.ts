@@ -12,21 +12,27 @@ export const removeEdge = (edge: Edge, componentSpec: ComponentSpec) => {
 
   const inputName = edge.targetHandle?.replace(/^input_/, "");
 
+  const updatedComponentSpec = {
+    ...componentSpec,
+  };
+
   if (inputName !== undefined && graphSpec) {
     const taskId = nodeIdToTaskId(edge.target);
     const newGraphSpec = setTaskArgument(graphSpec, taskId, inputName);
-    componentSpec.implementation = {
-      ...componentSpec.implementation,
+    updatedComponentSpec.implementation = {
+      ...updatedComponentSpec.implementation,
       graph: newGraphSpec,
     };
-    return componentSpec;
+
+    return updatedComponentSpec;
   } else {
     const outputName = nodeIdToOutputName(edge.target);
     const newGraphSpec = setGraphOutputValue(graphSpec, outputName);
-    componentSpec.implementation = {
-      ...componentSpec.implementation,
+    updatedComponentSpec.implementation = {
+      ...updatedComponentSpec.implementation,
       graph: newGraphSpec,
     };
-    return componentSpec;
+
+    return updatedComponentSpec;
   }
 };
