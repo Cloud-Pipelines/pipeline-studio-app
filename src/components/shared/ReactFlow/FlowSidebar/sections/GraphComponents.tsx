@@ -29,9 +29,12 @@ const fetchUserComponents = async (): Promise<ComponentFolder> => {
 
     const components: ComponentReference[] = [];
 
-    Array.from(componentFiles.entries()).forEach(([_, fileEntry]) =>
-      components.push(fileEntry.componentRef),
-    );
+    Array.from(componentFiles.entries()).forEach(([_, fileEntry]) => {
+      components.push({
+        ...fileEntry.componentRef,
+        name: fileEntry.name,
+      });
+    });
 
     // Create a user components folder
     const userComponentsFolder: ComponentFolder = {

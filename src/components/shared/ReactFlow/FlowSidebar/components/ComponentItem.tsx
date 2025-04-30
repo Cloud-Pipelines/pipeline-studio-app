@@ -1,14 +1,9 @@
-import { ExternalLink, File } from "lucide-react";
+import { File } from "lucide-react";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import ComponentDetails from "@/components/shared/Dialogs/ComponentDetails";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { EMPTY_GRAPH_COMPONENT_SPEC } from "@/providers/ComponentSpecProvider";
 import {
@@ -43,12 +38,8 @@ const ComponentMarkup = ({
   isLoading,
   error,
 }: ComponentMarkupProps) => {
-  const [isDragging, setIsDragging] = useState(false);
-
   const onDragStart = useCallback(
     (event: DragEvent) => {
-      setIsDragging(true);
-
       const componentRef: ComponentReference = {
         url,
         spec: componentSpec,
@@ -78,93 +69,47 @@ const ComponentMarkup = ({
     [url, componentSpec, componentDigest, componentText],
   );
 
-  const onDragEnd = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  const tooltipContent = useMemo(() => {
-    if (error) return `Error: ${error}`;
-    if (isLoading) return "Loading component...";
-
-    let content = displayName;
-
-    if (componentSpec?.description) {
-      content += `\n\nDescription: ${componentSpec.description}`;
-    }
-
-    if (componentSpec?.inputs?.length) {
-      content += `\n\nInputs: ${componentSpec.inputs
-        .map(
-          (input) =>
-            `${input.name}${input.description ? ` - ${input.description}` : ""}`,
-        )
-        .join(", ")}`;
-    }
-
-    if (componentSpec?.outputs?.length) {
-      content += `\n\nOutputs: ${componentSpec.outputs
-        .map(
-          (output) =>
-            `${output.name}${output.description ? ` - ${output.description}` : ""}`,
-        )
-        .join(", ")}`;
-    }
-
-    return content;
-  }, [displayName, componentSpec, isLoading, error]);
-
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={1200} open={isDragging ? false : undefined}>
-        <TooltipTrigger asChild>
-          <SidebarMenuItem
-            className={cn(
-              "pl-2 py-1.5",
-              error
-                ? "cursor-not-allowed opacity-60"
-                : "cursor-grab hover:bg-gray-100 active:bg-gray-200",
-            )}
-            draggable={!error && !isLoading}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
-          >
-            <div className="flex items-center gap-2">
-              <File
-                className={`h-4 w-4 flex-shrink-0 ${error ? "text-red-400" : "text-gray-400"}`}
-              />
-              {isLoading ? (
-                <span className="text-gray-400 truncate text-sm">
-                  Loading...
+    <>
+      <SidebarMenuItem
+        className={cn(
+          "pl-2 py-1.5",
+          error
+            ? "cursor-not-allowed opacity-60"
+            : "cursor-grab hover:bg-gray-100 active:bg-gray-200",
+        )}
+        draggable={!error && !isLoading}
+        onDragStart={onDragStart}
+      >
+        <div className="flex items-center gap-2">
+          {isLoading ? (
+            <span className="text-gray-400 truncate text-sm">Loading...</span>
+          ) : error ? (
+            <span className="truncate text-xs text-red-500">
+              Error loading component
+            </span>
+          ) : (
+            <div className="flex-1 flex">
+              <div className="flex gap-2 w-full">
+                <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <span className="truncate text-xs text-gray-800 max-w-[200px]">
+                  {displayName}
                 </span>
-              ) : error ? (
-                <span className="truncate text-xs text-red-500">
-                  Error loading component
-                </span>
-              ) : (
-                <div className="flex-1 flex">
-                  <span className="truncate text-xs text-gray-800 max-w-[200px]">
-                    {displayName}
-                  </span>
-                  <div className="flex-1 flex justify-end mr-[15px]">
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="cursor-pointer"
-                    >
-                      <ExternalLink className="size-4 text-sky-500" />
-                    </a>
-                  </div>
-                </div>
-              )}
+              </div>
+              <div className="flex-1 flex justify-end mr-[15px]">
+                <ComponentDetails
+                  url={url}
+                  displayName={displayName}
+                  componentSpec={componentSpec}
+                  componentDigest={componentDigest}
+                  componentText={componentText}
+                />
+              </div>
             </div>
-          </SidebarMenuItem>
-        </TooltipTrigger>
-        <TooltipContent side="left" className="max-w-xs whitespace-pre-wrap">
-          {tooltipContent}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+          )}
+        </div>
+      </SidebarMenuItem>
+    </>
   );
 };
 

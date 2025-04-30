@@ -42,9 +42,8 @@ const FolderItem = ({ folder }: FolderItemProps) => {
         <div className="pl-3">
           {hasComponents && folder.components && (
             <div>
-              {folder.components.map((component, index) => {
-                const key = `${folder.name}-component-${index}`;
-
+              {folder.components.map((component) => {
+                const key = `${folder.name}-component-${component.name || component?.spec?.name}`;
                 // if the component has a spec or is a user component, render the appropriate component
                 // otherwise, render using URL
                 if (component.spec) {
@@ -53,7 +52,7 @@ const FolderItem = ({ folder }: FolderItemProps) => {
                       <UserComponentItem
                         key={key}
                         url={component.url || ""}
-                        fileName={component.spec.name || ""}
+                        fileName={component.name || ""}
                         componentSpec={component.spec}
                         componentDigest={component.digest || ""}
                         componentText={component.text || ""}
