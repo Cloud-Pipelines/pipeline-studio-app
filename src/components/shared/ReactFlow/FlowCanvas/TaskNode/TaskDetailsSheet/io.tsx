@@ -1,67 +1,267 @@
+import { useQuery } from "@tanstack/react-query";
+
+import type { GetArtifactsApiExecutionsIdArtifactsGetResponse } from "@/api/types.gen";
 import type { TaskSpec } from "@/utils/componentSpec";
+import { API_URL } from "@/utils/constants";
+import { formatBytes } from "@/utils/string";
+import { transformGcsUrl } from "@/utils/URL";
+
+import IoCell from "./ioCell";
 
 interface IoProps {
   taskSpec: TaskSpec;
+  executionId?: string | number;
 }
 
-const Io = ({ taskSpec }: IoProps) => {
+const getArtifacts = async (executionId: string) => {
+  if (!executionId) return null;
+  const response = await fetch(
+    `${API_URL}/api/executions/${executionId}/artifacts`,
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch artifacts: ${response.statusText}`);
+  }
+  return response.json() as Promise<GetArtifactsApiExecutionsIdArtifactsGetResponse>;
+};
+
+const Io = ({ taskSpec, executionId }: IoProps) => {
+  const { data: artifacts, isLoading: isLoadingArtifacts } = useQuery({
+    queryKey: ["artifacts", executionId],
+    queryFn: () => getArtifacts(String(executionId)),
+    enabled: !!executionId,
+  });
+
   return (
     <div className="space-y-4">
       <section>
-        <h4 className="text-sm font-medium mb-2">Inputs</h4>
+        <h3 className="text-base font-medium mb-1">Inputs</h3>
         <div className="border rounded-md divide-y">
-          {taskSpec.componentRef.spec?.inputs?.map((input) => (
-            <div key={input.name} className="px-3 py-2">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{input.name}</span>
-                  <span className="text-xs text-gray-500 font-mono">
-                    {input.type?.toString()}
-                  </span>
-                </div>
-              </div>
-              {input.description && (
-                <div className="text-xs text-gray-500 mb-1">
-                  {input.description}
-                </div>
-              )}
-              <div className="font-mono text-xs bg-gray-50 p-2 rounded">
-                {JSON.stringify(taskSpec.arguments?.[input.name]) ||
-                  "No value set"}
-              </div>
-            </div>
-          ))}
+          {taskSpec.componentRef.spec?.inputs?.map((input) => {
+            const inputArtifact = artifacts?.input_artifacts?.[input.name];
+
+            return (
+              <IoCell
+                key={input.name}
+                io={input}
+                taskSpec={taskSpec}
+                artifacts={inputArtifact}
+              />
+            );
+          })}
           {!taskSpec.componentRef.spec?.inputs?.length && (
-            <div className="p-2 text-sm text-gray-500">No inputs defined</div>
+            <div className="p-2 text-xs text-gray-500">No inputs defined</div>
           )}
         </div>
       </section>
 
       <section>
-        <h4 className="text-sm font-medium mb-2">Outputs</h4>
+        <h3 className="text-base font-medium mb-1">Outputs</h3>
         <div className="border rounded-md divide-y">
-          {taskSpec.componentRef.spec?.outputs?.map((output) => (
-            <div key={output.name} className="px-3 py-2">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{output.name}</span>
-                  <span className="text-xs text-gray-500 font-mono">
-                    {output.type?.toString()}
-                  </span>
-                </div>
-              </div>
-              {output.description && (
-                <div className="text-xs text-gray-500">
-                  {output.description}
-                </div>
-              )}
-            </div>
-          ))}
+          {taskSpec.componentRef.spec?.outputs?.map((output) => {
+            const outputArtifact = artifacts?.output_artifacts?.[output.name];
+
+            return (
+              <IoCell
+                key={output.name}
+                io={output}
+                taskSpec={taskSpec}
+                artifacts={outputArtifact}
+              />
+            );
+          })}
           {!taskSpec.componentRef.spec?.outputs?.length && (
-            <div className="p-2 text-sm text-gray-500">No outputs defined</div>
+            <div className="p-2 text-xs text-gray-500">No outputs defined</div>
           )}
         </div>
       </section>
+
+      {executionId && artifacts && !isLoadingArtifacts && (
+        <>
+          {artifacts.input_artifacts &&
+            Object.keys(artifacts.input_artifacts).length > 0 && (
+              <>
+                {Object.keys(artifacts.input_artifacts).some(
+                  (key) =>
+                    !taskSpec.componentRef.spec?.inputs?.some(
+                      (input) => input.name === key,
+                    ),
+                ) && (
+                  <section>
+                    <h3 className="text-base font-medium mb-1">
+                      Additional Input Artifacts
+                    </h3>
+                    <div className="border rounded-md divide-y">
+                      {Object.entries(artifacts.input_artifacts)
+                        .filter(
+                          ([key]) =>
+                            !taskSpec.componentRef.spec?.inputs?.some(
+                              (input) => input.name === key,
+                            ),
+                        )
+                        .map(([key, artifact]) => (
+                          <div key={key} className="px-3 py-2">
+                            <div className="flex items-center mb-0.5">
+                              <span className="font-medium text-sm">{key}</span>
+                              {artifact.type_name && (
+                                <span className="ml-1.5 text-xs text-gray-500 bg-gray-100 px-1 py-0.5 rounded">
+                                  Type: {artifact.type_name}
+                                </span>
+                              )}
+                            </div>
+
+                            {artifact.artifact_data && (
+                              <div className="space-y-0.5">
+                                {artifact.artifact_data.value !== undefined && (
+                                  <div className="flex text-xs">
+                                    <span className="text-gray-500 w-14 flex-shrink-0">
+                                      Value:
+                                    </span>
+                                    <span className="font-mono break-all">
+                                      {JSON.stringify(
+                                        artifact.artifact_data.value,
+                                      )}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {artifact.artifact_data.uri && (
+                                  <div className="flex text-xs">
+                                    <span className="text-gray-500 w-14 flex-shrink-0">
+                                      URI:
+                                    </span>
+                                    <a
+                                      href={transformGcsUrl(
+                                        artifact.artifact_data.uri,
+                                      )}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-mono break-all text-blue-600 hover:text-blue-800 hover:underline"
+                                    >
+                                      {artifact.artifact_data.uri}
+                                    </a>
+                                  </div>
+                                )}
+
+                                {artifact.artifact_data.total_size && (
+                                  <div className="flex text-xs">
+                                    <span className="text-gray-500 w-14 flex-shrink-0">
+                                      Size:
+                                    </span>
+                                    <span className="font-mono">
+                                      {formatBytes(
+                                        artifact.artifact_data.total_size,
+                                      )}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+
+          {artifacts.output_artifacts &&
+            Object.keys(artifacts.output_artifacts).length > 0 && (
+              <>
+                {Object.keys(artifacts.output_artifacts).some(
+                  (key) =>
+                    !taskSpec.componentRef.spec?.outputs?.some(
+                      (output) => output.name === key,
+                    ),
+                ) && (
+                  <section>
+                    <h3 className="text-base font-medium mb-1">
+                      Additional Output Artifacts
+                    </h3>
+                    <div className="border rounded-md divide-y">
+                      {Object.entries(artifacts.output_artifacts)
+                        .filter(
+                          ([key]) =>
+                            !taskSpec.componentRef.spec?.outputs?.some(
+                              (output) => output.name === key,
+                            ),
+                        )
+                        .map(([key, artifact]) => (
+                          <div key={key} className="px-3 py-2">
+                            <div className="flex items-center mb-0.5">
+                              <span className="font-medium text-sm">{key}</span>
+                              {artifact.type_name && (
+                                <span className="ml-1.5 text-xs text-gray-500 bg-gray-100 px-1 py-0.5 rounded">
+                                  Type: {artifact.type_name}
+                                </span>
+                              )}
+                            </div>
+
+                            {artifact.artifact_data && (
+                              <div className="space-y-0.5">
+                                {artifact.artifact_data.value !== undefined && (
+                                  <div className="flex text-xs">
+                                    <span className="text-gray-500 w-14 flex-shrink-0">
+                                      Value:
+                                    </span>
+                                    <span className="font-mono break-all">
+                                      {JSON.stringify(
+                                        artifact.artifact_data.value,
+                                      )}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {artifact.artifact_data.uri && (
+                                  <div className="flex text-xs">
+                                    <span className="text-gray-500 w-14 flex-shrink-0">
+                                      URI:
+                                    </span>
+                                    <a
+                                      href={transformGcsUrl(
+                                        artifact.artifact_data.uri,
+                                      )}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-mono break-all text-blue-600 hover:text-blue-800 hover:underline"
+                                    >
+                                      {artifact.artifact_data.uri}
+                                    </a>
+                                  </div>
+                                )}
+
+                                {artifact.artifact_data.total_size && (
+                                  <div className="flex text-xs">
+                                    <span className="text-gray-500 w-14 flex-shrink-0">
+                                      Size:
+                                    </span>
+                                    <span className="font-mono">
+                                      {formatBytes(
+                                        artifact.artifact_data.total_size,
+                                      )}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {artifact.artifact_data.is_dir && (
+                                  <div className="flex text-xs">
+                                    <span className="text-gray-500 w-14 flex-shrink-0">
+                                      Type:
+                                    </span>
+                                    <span className="font-mono">Directory</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+        </>
+      )}
     </div>
   );
 };
