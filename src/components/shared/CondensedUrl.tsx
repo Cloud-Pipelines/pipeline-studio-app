@@ -1,3 +1,5 @@
+import { Link } from "@/components/ui/link";
+
 interface CondensedUrlProps {
   url: string;
   className?: string;
@@ -10,17 +12,16 @@ const CondensedUrl = ({ url, className }: CondensedUrlProps) => {
         {url.split("/").pop()}
       </a>
       {url.includes("raw.githubusercontent.com") && (
-        <a
+        <Link
           className="text-blue-500 ml-2"
           href={url
             .replace("raw.githubusercontent.com", "github.com")
             .replace(/\/([^/]+)\/([^/]+)\/([^/]+)\//, "/$1/$2/$3/tree/")
             .replace(/\/[^/]+$/, "")}
-          target="_blank"
-          rel="noopener noreferrer"
+          external
         >
           View Repo
-        </a>
+        </Link>
       )}
     </p>
   );
