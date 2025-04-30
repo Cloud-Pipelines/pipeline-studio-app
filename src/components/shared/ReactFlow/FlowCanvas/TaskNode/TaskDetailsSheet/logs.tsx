@@ -7,13 +7,21 @@ const LogDisplay = ({
   logs,
 }: {
   logs: {
-    log_text: string;
+    log_text?: string;
+    system_error_exception_full?: string;
   };
 }) => {
-  const lines = logs.log_text.split("\n");
+  if (!logs.log_text && !logs.system_error_exception_full) {
+    return <div>No logs available</div>;
+  }
+  const lines = logs?.log_text?.split("\n") || [];
+  const errorLines = logs?.system_error_exception_full?.split("\n") || [];
   return (
     <div className="space-y-1">
       {lines.map((line: string, index: number) => (
+        <div key={index}>{formatLogLine(line)}</div>
+      ))}
+      {errorLines.map((line: string, index: number) => (
         <div key={index}>{formatLogLine(line)}</div>
       ))}
     </div>
