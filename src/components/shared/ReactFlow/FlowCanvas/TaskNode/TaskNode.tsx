@@ -208,8 +208,19 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
         return "border-rose-500";
       case "RUNNING":
       case "STARTING":
-      case "CANCELLING":
+      case "PENDING":
         return "border-sky-500 animate-pulse duration-2000";
+      case "CANCELLING":
+        return "border-orange-500 animate-pulse duration-2000";
+      case "CANCELLED":
+        return "border-orange-500";
+      case "SKIPPED":
+        return "border-slate-400";
+      case "QUEUED":
+        return "border-yellow-500";
+      case "UNINITIALIZED":
+      case "WAITING_FOR_UPSTREAM":
+        return "border-slate-300";
       default:
         return "border-slate-300";
     }
@@ -227,8 +238,19 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
         return "bg-rose-50";
       case "RUNNING":
       case "STARTING":
-      case "CANCELLING":
+      case "PENDING":
         return "bg-sky-50";
+      case "CANCELLING":
+        return "bg-orange-50";
+      case "CANCELLED":
+        return "bg-orange-50";
+      case "SKIPPED":
+        return "bg-slate-100";
+      case "QUEUED":
+        return "bg-yellow-50";
+      case "UNINITIALIZED":
+      case "WAITING_FOR_UPSTREAM":
+        return "bg-white";
       default:
         return "bg-white";
     }
