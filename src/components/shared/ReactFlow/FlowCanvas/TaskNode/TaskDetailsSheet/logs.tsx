@@ -1,24 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 import { API_URL } from "@/utils/constants";
 
 const LogDisplay = ({
   logs,
-  isLoading,
 }: {
   logs: {
     log_text: string;
   };
-  isLoading: boolean;
 }) => {
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!logs || !logs.log_text) {
-    return <div>No logs available</div>;
-  }
-
   const lines = logs.log_text.split("\n");
   return (
     <div className="space-y-1">
@@ -54,23 +45,36 @@ const getLogs = async (executionId: string) => {
 };
 
 const Logs = ({ executionId }: { executionId?: string | number }) => {
-  const { data: logs, isLoading: isLoadingLogs } = useQuery({
+  const [logs, setLogs] = useState<{ log_text: string }>();
+  const {
+    data,
+    isLoading: isLoadingLogs,
+    error,
+  } = useQuery({
     queryKey: ["logs", executionId],
     queryFn: () => getLogs(String(executionId)),
     enabled: !!executionId,
+    refetchInterval: 1000,
+    refetchIntervalInBackground: false,
   });
 
-  if (isLoadingLogs) {
-    return <div>Loading...</div>;
-  }
+  useEffect(() => {
+    if (data && !error) {
+      setLogs({ log_text: data.log_text });
+    }
 
-  if (!logs) {
-    return <div>No logs available</div>;
+    if (error) {
+      setLogs({ log_text: "No logs available" });
+    }
+  }, [data, error]);
+
+  if (isLoadingLogs && !logs) {
+    return <div>Loading...</div>;
   }
   return (
     <div className="space-y-4">
       <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
-        <LogDisplay logs={logs} isLoading={isLoadingLogs} />
+        {logs && <LogDisplay logs={logs} />}
       </div>
     </div>
   );
