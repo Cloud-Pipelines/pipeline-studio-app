@@ -10,6 +10,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type { TaskSpec } from "@/utils/componentSpec";
+import { TOP_NAV_HEIGHT } from "@/utils/constants";
 
 import Info from "./info";
 import Io from "./io";
@@ -32,13 +33,19 @@ const TaskDetailsSheet = ({
 }: TaskDetailsSheetProps) => {
   const [activeTab, setActiveTab] = useState("info");
 
+  const sheetHeight = window.innerHeight - TOP_NAV_HEIGHT;
+
   return (
     <Sheet modal={false} open={isOpen} onOpenChange={onClose}>
       <SheetContent
         className={cn(
-          "!max-w-none overflow-y-auto mt-[56px] h-[calc(100vh-56px)] transition-[width] duration-150",
-          activeTab === "logs" ? "!w-[50%]" : "!w-[33.333333%]",
+          "!max-w-none overflow-y-auto transition-[width] duration-150",
+          activeTab === "logs" ? "!w-1/2" : "!w-1/3",
         )}
+        style={{
+          top: TOP_NAV_HEIGHT + "px",
+          height: sheetHeight + "px",
+        }}
       >
         <SheetHeader>
           <SheetTitle>Task Details - {taskId}</SheetTitle>

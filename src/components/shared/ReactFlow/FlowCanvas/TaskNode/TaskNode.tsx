@@ -159,21 +159,9 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const taskSpec = typedData.taskSpec;
   const componentSpec = taskSpec.componentRef.spec;
 
+  const readOnly = typedData.readOnly;
+
   const runStatus = taskSpec.annotations?.["status"] as string | undefined;
-  // for testing can we assign a status to the node randomly
-  // const runStatus = [
-  //   "SUCCEEDED",
-  //   "FAILED",
-  //   "RUNNING",
-  //   "STARTING",
-  //   "CANCELLING",
-  //   "CONDITIONALLY_SKIPPED",
-  //   "CANCELLED",
-  //   "SYSTEM_ERROR",
-  //   "INVALID",
-  //   "UPSTREAM_FAILED",
-  //   "UPSTREAM_FAILED_OR_SKIPPED",
-  // ][Math.floor(Math.random() * 10)];
 
   if (componentSpec === undefined) {
     return null;
@@ -247,10 +235,10 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   };
 
   const handleClick = () => {
-    if (!isComponentEditorOpen && !runStatus) {
+    if (!isComponentEditorOpen && !readOnly) {
       setIsComponentEditorOpen(true);
     }
-    if (!isTaskDetailsSheetOpen && runStatus) {
+    if (!isTaskDetailsSheetOpen && readOnly) {
       setIsTaskDetailsSheetOpen(true);
     }
   };
@@ -288,6 +276,37 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
 
   return (
     <>
+      <div
+        className={cn(
+          "border rounded-md shadow-sm transition-all duration-200",
+          getBorderColor(),
+          getBgColor(),
+          selected ? "border-sky-500" : " hover:border-slate-400",
+        )}
+        style={{ width: `${NODE_WIDTH_IN_PX}px` }}
+        ref={nodeRef}
+        onClick={handleClick}
+      >
+        <div className="p-3 flex items-center justify-between">
+          <div
+            className="font-medium text-gray-800 whitespace-nowrap w-full text-center"
+            title={title}
+            ref={textRef}
+          >
+            {label}
+          </div>
+          {handleComponents}
+        </div>
+      </div>
+
+      <TaskDetailsSheet
+        isOpen={isTaskDetailsSheetOpen}
+        taskSpec={taskSpec}
+        taskId={typedData.taskId}
+        runStatus={runStatus}
+        onClose={handleTaskDetailsSheetClose}
+      />
+
       <TaskConfigurationSheet
         taskId={typedData.taskId}
         taskSpec={taskSpec}
@@ -330,41 +349,6 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
         ]}
         setArguments={handleSetArguments}
         disabled={!!runStatus}
-        trigger={
-          <div
-            className={cn(
-              "border rounded-md shadow-sm transition-all duration-200",
-              getBorderColor(),
-              getBgColor(),
-              selected ? "border-sky-500" : " hover:border-slate-400",
-            )}
-            style={{ width: `${NODE_WIDTH_IN_PX}px` }}
-            ref={nodeRef}
-            onClick={handleClick}
-          >
-            <div className="p-3 flex items-center justify-between">
-              <div
-                className="font-medium text-gray-800 whitespace-nowrap w-full text-center"
-                title={title}
-                ref={textRef}
-              >
-                {label}
-              </div>
-              <div className="flex items-center gap-2">
-                {runStatus && (
-                  <TaskDetailsSheet
-                    isOpen={isTaskDetailsSheetOpen}
-                    taskSpec={taskSpec}
-                    taskId={typedData.taskId}
-                    runStatus={runStatus}
-                    onClose={handleTaskDetailsSheetClose}
-                  />
-                )}
-              </div>
-              {handleComponents}
-            </div>
-          </div>
-        }
       />
     </>
   );

@@ -18,6 +18,8 @@ describe("createNodesFromComponentSpec", () => {
     onDuplicate: vi.fn(),
   };
 
+  const readOnly = false;
+
   beforeEach(() => {
     mockNodeCallbacks.setArguments.mockClear();
   });
@@ -29,6 +31,7 @@ describe("createNodesFromComponentSpec", () => {
 
     const result = createNodesFromComponentSpec(
       componentSpec,
+      readOnly,
       mockNodeCallbacks,
     );
 
@@ -56,6 +59,7 @@ describe("createNodesFromComponentSpec", () => {
 
     const result = createNodesFromComponentSpec(
       componentSpec,
+      readOnly,
       mockNodeCallbacks,
     );
 
@@ -87,6 +91,7 @@ describe("createNodesFromComponentSpec", () => {
 
     const result = createNodesFromComponentSpec(
       componentSpec,
+      readOnly,
       mockNodeCallbacks,
     );
 
@@ -115,6 +120,7 @@ describe("createNodesFromComponentSpec", () => {
 
     const result = createNodesFromComponentSpec(
       componentSpec,
+      readOnly,
       mockNodeCallbacks,
     );
 
@@ -145,6 +151,7 @@ describe("createNodesFromComponentSpec", () => {
 
     const result = createNodesFromComponentSpec(
       componentSpec,
+      readOnly,
       mockNodeCallbacks,
     );
     const defaultPosition = { x: 0, y: 0 };
@@ -189,6 +196,7 @@ describe("createNodesFromComponentSpec", () => {
 
     const result = createNodesFromComponentSpec(
       componentSpec,
+      readOnly,
       mockNodeCallbacks,
     );
     const taskNode = result.find((node) => node.id === nodeId) as
