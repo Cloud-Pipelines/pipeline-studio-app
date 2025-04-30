@@ -20,12 +20,11 @@ import {
 import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
-import type { TaskNodeCallbacks } from "@/types/taskNode";
+import type { TaskNodeData } from "@/types/taskNode";
 import type {
   ArgumentType,
   InputSpec,
   OutputSpec,
-  TaskSpec,
 } from "@/utils/componentSpec";
 
 import TaskConfigurationSheet from "./TaskConfigurationSheet";
@@ -37,13 +36,6 @@ const outputHandlePosition = Position.Bottom;
 type InputOrOutputSpec = InputSpec | OutputSpec;
 
 const NODE_WIDTH_IN_PX = 200;
-
-export interface ComponentTaskNodeProps
-  extends Record<string, unknown>,
-    TaskNodeCallbacks {
-  taskSpec: TaskSpec;
-  taskId: string;
-}
 
 function generateHandles(
   ioSpecs: InputOrOutputSpec[],
@@ -155,7 +147,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
 
   const notify = useToastNotification();
 
-  const typedData = data as ComponentTaskNodeProps;
+  const typedData = data as TaskNodeData;
   const taskSpec = typedData.taskSpec;
   const componentSpec = taskSpec.componentRef.spec;
 

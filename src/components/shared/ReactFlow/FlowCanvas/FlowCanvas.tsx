@@ -16,6 +16,7 @@ import {
   type ReactFlowInstance,
   type ReactFlowProps,
   useNodesState,
+  useStoreApi,
 } from "@xyflow/react";
 import type {
   ComponentType,
@@ -27,8 +28,11 @@ import { useCallback, useEffect, useState } from "react";
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
+import { useCopyPaste } from "@/hooks/useCopyPaste";
+import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { ArgumentType } from "@/utils/componentSpec";
+import { copyToNewTaskNode } from "@/utils/nodes/copyToNewTaskNode";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
 import { duplicateTask } from "@/utils/nodes/duplicateTask";
 import type { NodeAndTaskId } from "@/utils/nodes/generateDynamicNodeCallbacks";
@@ -64,6 +68,8 @@ const FlowCanvas = ({
     handlers,
     triggerDialog: triggerConfirmationDialog,
   } = useConfirmationDialog();
+
+  const notify = useToastNotification();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [selectedElements, setSelectedElements] = useState<NodesAndEdges>({
@@ -123,6 +129,12 @@ const FlowCanvas = ({
     },
     [graphSpec, updateGraphSpec],
   );
+
+  const nodeCallbacks = {
+    onDelete,
+    setArguments,
+    onDuplicate,
+  };
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -224,11 +236,11 @@ const FlowCanvas = ({
 
   useEffect(() => {
     // Update ReactFlow based on the component spec
-    const newNodes = createNodesFromComponentSpec(componentSpec, !!readOnly, {
-      onDelete,
-      setArguments,
-      onDuplicate,
-    });
+    const newNodes = createNodesFromComponentSpec(
+      componentSpec,
+      !!readOnly,
+      nodeCallbacks,
+    );
 
     setNodes((prevNodes) => {
       const updatedNodes = newNodes.map((newNode) => {
@@ -239,6 +251,85 @@ const FlowCanvas = ({
       return updatedNodes;
     });
   }, [componentSpec]);
+
+  const store = useStoreApi();
+
+  const onCopy = useCallback(() => {
+    // Copy selected nodes to clipboard
+    if (selectedElements.nodes.length > 0) {
+      const selectedNodesJson = JSON.stringify(selectedElements.nodes);
+      navigator.clipboard.writeText(selectedNodesJson).catch((err) => {
+        console.error("Failed to copy nodes to clipboard:", err);
+      });
+      const message = `Copied ${selectedElements.nodes.length} nodes to clipboard`;
+      notify(message, "success");
+    }
+  }, [selectedElements]);
+
+  const onPaste = useCallback(() => {
+    // Paste nodes from clipboard to the centre of the Canvas
+    navigator.clipboard.readText().then((clipboardText) => {
+      try {
+        let parsedData;
+        try {
+          parsedData = JSON.parse(clipboardText);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (err) {
+          return;
+        }
+
+        const nodesToPaste: Node[] = parsedData;
+
+        // Get the center of the canvas
+        const { domNode } = store.getState();
+        const boundingRect = domNode?.getBoundingClientRect();
+
+        if (boundingRect) {
+          const center = reactFlowInstance?.screenToFlowPosition({
+            x: boundingRect.x + boundingRect.width / 2,
+            y: boundingRect.y + boundingRect.height / 2,
+          });
+
+          const reactFlowCenter = {
+            x: center?.x || 0,
+            y: center?.y || 0,
+          };
+
+          // Deselect all currently selected nodes
+          Object.keys(graphSpec.tasks).forEach((taskId) => {
+            const task = graphSpec.tasks[taskId];
+            if (task.annotations?.selected) {
+              task.annotations.selected = false;
+            }
+          });
+
+          let updatedGraphSpec = { ...graphSpec };
+
+          const newNodes = nodesToPaste.map((node) => {
+            const output = copyToNewTaskNode(
+              node,
+              nodeCallbacks,
+              reactFlowCenter,
+              updatedGraphSpec,
+            );
+            updatedGraphSpec = output.updatedGraphSpec;
+
+            return output.newNode;
+          });
+
+          setNodes((prevNodes) => [...prevNodes, ...newNodes]);
+          updateGraphSpec(updatedGraphSpec);
+        }
+      } catch (err) {
+        console.error("Failed to paste nodes from clipboard:", err);
+      }
+    });
+  }, [graphSpec, reactFlowInstance, store, setNodes, nodeCallbacks]);
+
+  useCopyPaste({
+    onCopy,
+    onPaste,
+  });
 
   const { title, content } = getConfirmationDialogDetails(selectedElements);
 
