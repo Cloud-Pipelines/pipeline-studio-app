@@ -224,7 +224,7 @@ const FlowCanvas = ({
 
   useEffect(() => {
     // Update ReactFlow based on the component spec
-    const newNodes = createNodesFromComponentSpec(componentSpec, {
+    const newNodes = createNodesFromComponentSpec(componentSpec, !!readOnly, {
       onDelete,
       setArguments,
       onDuplicate,

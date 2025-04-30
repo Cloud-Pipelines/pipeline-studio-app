@@ -18,7 +18,7 @@ import { TOP_NAV_HEIGHT } from "@/utils/constants";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
 
 interface TaskConfigurationSheetProps {
-  trigger: ReactNode;
+  trigger?: ReactNode;
   taskId: string;
   taskSpec: TaskSpec;
   actions?: ButtonProps[];
@@ -56,8 +56,9 @@ const TaskConfigurationSheet = ({
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="right"
-        className={`!w-[512px] !max-w-[512px] top-[${TOP_NAV_HEIGHT}px] shadow-none`}
+        className={`!w-[512px] !max-w-[512px] shadow-none`}
         style={{
+          top: TOP_NAV_HEIGHT + "px",
           height: sheetHeight + "px",
         }}
         overlay={false}

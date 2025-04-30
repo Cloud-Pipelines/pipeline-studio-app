@@ -8,6 +8,7 @@ import { type NodeCallbacks } from "./generateDynamicNodeCallbacks";
 
 export const createNodesFromComponentSpec = (
   componentSpec: ComponentSpec,
+  readOnly: boolean,
   nodeCallbacks: NodeCallbacks,
 ): Node[] => {
   if (!("graph" in componentSpec.implementation)) {
@@ -15,7 +16,7 @@ export const createNodesFromComponentSpec = (
   }
 
   const graphSpec = componentSpec.implementation.graph;
-  const taskNodes = createTaskNodes(graphSpec, nodeCallbacks);
+  const taskNodes = createTaskNodes(graphSpec, readOnly, nodeCallbacks);
   const inputNodes = createInputNodes(componentSpec);
   const outputNodes = createOutputNodes(componentSpec);
 
@@ -24,10 +25,11 @@ export const createNodesFromComponentSpec = (
 
 const createTaskNodes = (
   graphSpec: GraphSpec,
+  readOnly: boolean,
   nodeCallbacks: NodeCallbacks,
 ) => {
   return Object.entries(graphSpec.tasks).map((task) => {
-    return createTaskNode(task, nodeCallbacks);
+    return createTaskNode(task, readOnly, nodeCallbacks);
   });
 };
 

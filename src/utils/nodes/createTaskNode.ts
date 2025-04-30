@@ -10,6 +10,7 @@ import { taskIdToNodeId } from "./nodeIdUtils";
 
 export const createTaskNode = (
   task: [`${string}`, TaskSpec],
+  readOnly: boolean,
   nodeCallbacks: NodeCallbacks,
 ) => {
   const [taskId, taskSpec] = task;
@@ -24,8 +25,9 @@ export const createTaskNode = (
   return {
     id: nodeId,
     data: {
-      taskSpec: taskSpec,
-      taskId: taskId,
+      readOnly,
+      taskSpec,
+      taskId,
       ...dynamicCallbacks,
     },
     position: position,
