@@ -208,8 +208,9 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
         return "border-rose-500";
       case "RUNNING":
       case "STARTING":
-      case "PENDING":
         return "border-sky-500 animate-pulse duration-2000";
+      case "PENDING":
+        return "border-yellow-500 animate-pulse duration-2000";
       case "CANCELLING":
         return "border-orange-500 animate-pulse duration-2000";
       case "CANCELLED":
@@ -238,8 +239,9 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
         return "bg-rose-50";
       case "RUNNING":
       case "STARTING":
-      case "PENDING":
         return "bg-sky-50";
+      case "PENDING":
+        return "bg-yellow-50";
       case "CANCELLING":
         return "bg-orange-50";
       case "CANCELLED":
