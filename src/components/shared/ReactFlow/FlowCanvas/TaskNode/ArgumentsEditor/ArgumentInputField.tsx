@@ -18,28 +18,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type {
-  ArgumentType,
-  InputSpec,
-  TypeSpecType,
-} from "@/utils/componentSpec";
-
-export type ArgumentInput = {
-  key: string;
-  value: ArgumentType;
-  initialValue: ArgumentType;
-  inputSpec: InputSpec;
-  isRemoved?: boolean;
-};
+import type { ArgumentInput } from "@/types/arguments";
+import type { ArgumentType, TypeSpecType } from "@/utils/componentSpec";
 
 export const ArgumentInputField = ({
   argument,
-  setArgument,
   disabled = false,
+  setArgument,
 }: {
   argument: ArgumentInput;
-  setArgument: (value: ArgumentInput) => void;
   disabled?: boolean;
+  setArgument: (value: ArgumentInput) => void;
 }) => {
   const [inputValue, setInputValue] = useState(getInputValue(argument));
 
@@ -97,28 +86,33 @@ export const ArgumentInputField = ({
   }, [argument]);
 
   return (
-    <div className="flex w-full items-center gap-2 py-1">
-      <div
-        className={cn(
-          "w-[256px] min-w-[256px] flex flex-col",
-          argument.isRemoved ? "opacity-50" : "",
-        )}
-      >
-        <Label
-          htmlFor={argument.inputSpec.name}
-          className="text-sm break-words"
+    <div className="flex w-full items-center justify-between gap-2 py-1">
+      <div className="flex items-center gap-2 w-2/5">
+        <div
+          className={cn(
+            "bg-warning rounded-full h-1 w-1",
+            !canUndo && "invisible",
+          )}
+        />
+        <div
+          className={cn("flex flex-col", argument.isRemoved && "opacity-50")}
         >
-          {argument.inputSpec.name.replace(/_/g, " ")}
-        </Label>
-        <span
-          className="text-xs text-gray-500 truncate"
-          title={typeSpecToString(argument.inputSpec.type)}
-        >
-          ({typeSpecToString(argument.inputSpec.type)}
-          {!argument.inputSpec.optional ? "*" : ""})
-        </span>
+          <Label
+            htmlFor={argument.inputSpec.name}
+            className="text-sm break-words"
+          >
+            {argument.inputSpec.name.replace(/_/g, " ")}
+          </Label>
+          <span
+            className="text-xs text-gray-500 truncate"
+            title={typeSpecToString(argument.inputSpec.type)}
+          >
+            ({typeSpecToString(argument.inputSpec.type)}
+            {!argument.inputSpec.optional ? "*" : ""})
+          </span>
+        </div>
       </div>
-      <div className="flex flex-1 items-center relative">
+      <div className="relative w-48">
         <Input
           id={argument.inputSpec.name}
           value={inputValue}
@@ -130,10 +124,12 @@ export const ArgumentInputField = ({
           className={cn(
             "flex-1",
             canUndo && "pr-10",
-            !argument.inputSpec.optional && argument.isRemoved
-              ? "border-red-200"
-              : "",
-            argument.isRemoved ? "border-gray-100 text-gray-500" : "",
+            argument.isRemoved &&
+              !argument.inputSpec.optional &&
+              "border-red-200",
+            argument.isRemoved &&
+              argument.inputSpec.optional &&
+              "border-gray-100 text-gray-500",
           )}
           disabled={disabled}
         />
@@ -142,7 +138,7 @@ export const ArgumentInputField = ({
             <TooltipTrigger asChild>
               <Button
                 onClick={handleUndo}
-                className="absolute right-1 text-xs h-min w-min p-1"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2"
                 disabled={disabled}
                 variant="ghost"
                 style={{
@@ -157,7 +153,7 @@ export const ArgumentInputField = ({
         )}
       </div>
 
-      <div className="flex gap-1 items-center">
+      <div className="flex gap-1 items-center w-1/5 justify-end">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

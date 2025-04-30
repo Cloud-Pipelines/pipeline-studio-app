@@ -7,8 +7,9 @@
  */
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import type { ArgumentInput } from "@/types/arguments";
 
-import { type ArgumentInput, ArgumentInputField } from "./ArgumentInputField";
+import { ArgumentInputField } from "./ArgumentInputField";
 
 interface ArgumentsEditorProps {
   argumentData: ArgumentInput[];
@@ -29,17 +30,15 @@ export const ArgumentsEditor = ({
 
   return (
     <TooltipProvider>
-      <div className="h-auto w-[650px] flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-4">
-        {argumentData.map((argument) => {
-          return (
-            <ArgumentInputField
-              key={argument.key}
-              argument={argument}
-              setArgument={handleInputChange}
-              disabled={disabled}
-            />
-          );
-        })}
+      <div className="h-auto flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-4">
+        {argumentData.map((argument) => (
+          <ArgumentInputField
+            key={argument.key}
+            argument={argument}
+            setArgument={handleInputChange}
+            disabled={disabled}
+          />
+        ))}
       </div>
     </TooltipProvider>
   );

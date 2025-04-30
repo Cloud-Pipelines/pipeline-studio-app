@@ -10,9 +10,9 @@ import { Copy, Trash } from "lucide-react";
 import { useState } from "react";
 
 import { DraggableDialog } from "@/components/shared/Dialogs";
+import type { ArgumentInput } from "@/types/arguments";
 import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 
-import type { ArgumentInput } from "./ArgumentInputField";
 import { ArgumentsEditor } from "./ArgumentsEditor";
 
 interface ArgumentsEditorDialogProps {
