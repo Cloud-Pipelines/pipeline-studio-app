@@ -9,10 +9,8 @@
 import { useEffect, useState } from "react";
 
 import OasisSubmitter from "@/components/shared/OasisSubmitter";
-import {
-  type ArgumentInput,
-  ArgumentsEditor,
-} from "@/components/shared/ReactFlow/FlowCanvas/TaskNode/ArgumentsEditor";
+import { ArgumentsEditor } from "@/components/shared/ReactFlow/FlowCanvas/TaskNode/ArgumentsEditor";
+import type { ArgumentInput } from "@/types/arguments";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
 import { GoogleCloudSubmitter, KubeflowPipelinesSubmitter } from "./Submitters";

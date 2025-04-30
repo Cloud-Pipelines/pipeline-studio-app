@@ -5,9 +5,10 @@
  * @author         Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
-
 import type { HandleType, NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
+import yaml from "js-yaml";
+import { BookCopy, Copy, Trash } from "lucide-react";
 import {
   type CSSProperties,
   memo,
@@ -17,11 +18,17 @@ import {
 } from "react";
 
 import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
+import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import type { TaskNodeCallbacks } from "@/types/taskNode";
-import type { InputSpec, OutputSpec, TaskSpec } from "@/utils/componentSpec";
+import type {
+  ArgumentType,
+  InputSpec,
+  OutputSpec,
+  TaskSpec,
+} from "@/utils/componentSpec";
 
-import ArgumentsEditorDialog from "./ArgumentsEditor";
+import TaskConfigurationSheet from "./TaskConfigurationSheet";
 import TaskDetailsSheet from "./TaskDetailsSheet";
 
 const inputHandlePosition = Position.Top;
@@ -139,12 +146,14 @@ function generateOutputHandles(outputSpecs: OutputSpec[]): ReactElement[] {
 }
 
 const ComponentTaskNode = ({ data, selected }: NodeProps) => {
-  const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
+  const [isComponentEditorOpen, setIsComponentEditorOpen] = useState(false);
   const [isTaskDetailsSheetOpen, setIsTaskDetailsSheetOpen] = useState(false);
   const nodeRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
   useDynamicFontSize(textRef);
+
+  const notify = useToastNotification();
 
   const typedData = data as ComponentTaskNodeProps;
   const taskSpec = typedData.taskSpec;
@@ -199,10 +208,6 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const outputHandles = generateOutputHandles(componentSpec.outputs ?? []);
   const handleComponents = inputHandles.concat(outputHandles);
 
-  const closeArgumentsEditor = () => {
-    setIsArgumentsEditorOpen(false);
-  };
-
   const getBorderColor = () => {
     switch (runStatus) {
       case "SUCCEEDED":
@@ -242,102 +247,127 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   };
 
   const handleClick = () => {
-    if (!isArgumentsEditorOpen && !runStatus) {
-      setIsArgumentsEditorOpen(true);
+    if (!isComponentEditorOpen && !runStatus) {
+      setIsComponentEditorOpen(true);
     }
     if (!isTaskDetailsSheetOpen && runStatus) {
       setIsTaskDetailsSheetOpen(true);
     }
   };
 
-  const handleDelete = () => {
+  const handleSetArguments = (args: Record<string, ArgumentType>) => {
+    typedData.setArguments(args);
+    notify("Arguments updated", "success");
+  };
+
+  const handleDeleteTaskNode = () => {
     typedData.onDelete();
+  };
+
+  const handleDuplicateTaskNode = () => {
+    typedData.onDuplicate();
+    setIsComponentEditorOpen(false);
+  };
+
+  const handleCopyYaml = () => {
+    const code = yaml.dump(componentSpec?.implementation, {
+      lineWidth: 80,
+      noRefs: true,
+      indent: 2,
+    });
+
+    navigator.clipboard.writeText(code).then(
+      () => notify("Implementation copied to clipboard", "success"),
+      (err) => notify("Failed to copy Implementation: " + err, "error"),
+    );
   };
 
   const handleTaskDetailsSheetClose = () => {
     setIsTaskDetailsSheetOpen(false);
   };
 
-  const handleCopy = () => {
-    typedData.onDuplicate();
-    setIsArgumentsEditorOpen(false);
-  };
-
   return (
     <>
-      <div
-        className={cn(
-          "border rounded-md shadow-sm transition-all duration-200",
-          getBorderColor(),
-          getBgColor(),
-          selected ? "border-sky-500" : " hover:border-slate-400",
-        )}
-        style={{ width: `${NODE_WIDTH_IN_PX}px` }}
-        ref={nodeRef}
-        onClick={handleClick}
-      >
-        <div className="p-3 flex items-center justify-between">
+      <TaskConfigurationSheet
+        taskId={typedData.taskId}
+        taskSpec={taskSpec}
+        isOpen={isComponentEditorOpen}
+        onOpenChange={setIsComponentEditorOpen}
+        actions={[
+          {
+            children: (
+              <div className="flex items-center gap-2">
+                <BookCopy />
+                Copy yaml
+              </div>
+            ),
+            variant: "secondary",
+            className: "cursor-pointer",
+            onClick: handleCopyYaml,
+          },
+          {
+            children: (
+              <div className="flex items-center gap-2">
+                <Copy />
+                Duplicate
+              </div>
+            ),
+            variant: "secondary",
+            className: "cursor-pointer",
+            onClick: handleDuplicateTaskNode,
+          },
+          {
+            children: (
+              <div className="flex items-center gap-2">
+                <Trash />
+                Delete
+              </div>
+            ),
+            variant: "destructive",
+            className: "cursor-pointer",
+            onClick: handleDeleteTaskNode,
+          },
+        ]}
+        setArguments={handleSetArguments}
+        disabled={!!runStatus}
+        trigger={
           <div
-            className="font-medium text-gray-800 whitespace-nowrap w-full text-center"
-            title={title}
-            ref={textRef}
-          >
-            {label}
-          </div>
-          <div className="flex items-center gap-2">
-            {runStatus && (
-              <TaskDetailsSheet
-                isOpen={isTaskDetailsSheetOpen}
-                taskSpec={taskSpec}
-                taskId={typedData.taskId}
-                runStatus={runStatus}
-                onClose={handleTaskDetailsSheetClose}
-              />
+            className={cn(
+              "border rounded-md shadow-sm transition-all duration-200",
+              getBorderColor(),
+              getBgColor(),
+              selected ? "border-sky-500" : " hover:border-slate-400",
             )}
+            style={{ width: `${NODE_WIDTH_IN_PX}px` }}
+            ref={nodeRef}
+            onClick={handleClick}
+          >
+            <div className="p-3 flex items-center justify-between">
+              <div
+                className="font-medium text-gray-800 whitespace-nowrap w-full text-center"
+                title={title}
+                ref={textRef}
+              >
+                {label}
+              </div>
+              <div className="flex items-center gap-2">
+                {runStatus && (
+                  <TaskDetailsSheet
+                    isOpen={isTaskDetailsSheetOpen}
+                    taskSpec={taskSpec}
+                    taskId={typedData.taskId}
+                    runStatus={runStatus}
+                    onClose={handleTaskDetailsSheetClose}
+                  />
+                )}
+              </div>
+              {handleComponents}
+            </div>
           </div>
-        </div>
-      </div>
-      {handleComponents}
-      {isArgumentsEditorOpen && nodeRef.current && (
-        <ArgumentsEditorDialog
-          taskSpec={taskSpec}
-          closeEditor={closeArgumentsEditor}
-          setArguments={typedData.setArguments}
-          disabled={!!runStatus}
-          initialPosition={getDialogPosition(nodeRef.current, 650)}
-          handleDelete={handleDelete}
-          handleCopy={handleCopy}
-        />
-      )}
+        }
+      />
     </>
   );
 };
 
 export default memo(ComponentTaskNode);
-
-const SMALL_SCREEEN_BREAKPOINT = 720;
-const DIALOG_SPACING = 8;
-const getDialogPosition = (node: HTMLElement, dialogWidth: number) => {
-  // On large screens position the dialog to the right of the node
-  // On small screens position the dialog below the node & center it
-  // Assumed 650px width for the dialog & 720px small screen breakpoint
-
-  const windowWidth = window.innerWidth;
-
-  const positionBelow =
-    windowWidth <= SMALL_SCREEEN_BREAKPOINT ||
-    node.getBoundingClientRect().right + DIALOG_SPACING >
-      windowWidth - dialogWidth;
-
-  return {
-    x: positionBelow
-      ? node.getBoundingClientRect().left +
-        node.getBoundingClientRect().width / 2 -
-        dialogWidth / 2
-      : node.getBoundingClientRect().right + DIALOG_SPACING,
-
-    y: positionBelow
-      ? node.getBoundingClientRect().bottom + DIALOG_SPACING
-      : node.getBoundingClientRect().top,
-  };
-};
