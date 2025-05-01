@@ -53,7 +53,10 @@ const getLogs = async (executionId: string) => {
 };
 
 const Logs = ({ executionId }: { executionId?: string | number }) => {
-  const [logs, setLogs] = useState<{ log_text?: string, system_error_exception_full?: string }>();
+  const [logs, setLogs] = useState<{
+    log_text?: string;
+    system_error_exception_full?: string;
+  }>();
   const {
     data,
     isLoading: isLoadingLogs,
@@ -68,7 +71,10 @@ const Logs = ({ executionId }: { executionId?: string | number }) => {
 
   useEffect(() => {
     if (data && !error) {
-      setLogs({ log_text: data?.log_text, system_error_exception_full: data?.system_error_exception_full });
+      setLogs({
+        log_text: data?.log_text,
+        system_error_exception_full: data?.system_error_exception_full,
+      });
     }
 
     if (error) {
