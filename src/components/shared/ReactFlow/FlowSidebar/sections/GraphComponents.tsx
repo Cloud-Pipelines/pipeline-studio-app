@@ -20,6 +20,8 @@ import {
   SearchInput,
   SearchResults,
 } from "../components";
+import { FolderItemMarkup } from "../components/FolderItem";
+import IoComponentItem from "../components/IoComponentItem";
 
 const fetchUserComponents = async (): Promise<ComponentFolder> => {
   try {
@@ -110,6 +112,11 @@ const GraphComponents = () => {
           />
         )}
 
+        <FolderItemMarkup folderName="IO">
+          <IoComponentItem type="input" />
+          <IoComponentItem type="output" />
+        </FolderItemMarkup>
+
         {componentLibrary.folders.map((folder) => (
           <FolderItem key={folder.name} folder={folder} />
         ))}
@@ -126,6 +133,7 @@ const GraphComponents = () => {
       </SidebarGroupLabel>
       <SidebarGroupContent className="[&_li]:marker:hidden [&_li]:before:content-none [&_li]:list-none">
         <SearchInput value={searchTerm} onChange={handleSearchChange} />
+
         {memoizedContent}
       </SidebarGroupContent>
     </SidebarGroup>
