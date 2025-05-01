@@ -20,6 +20,11 @@ describe("createNodesFromComponentSpec", () => {
 
   const readOnly = false;
 
+  const mockNodeData = {
+    readOnly,
+    nodeCallbacks: mockNodeCallbacks,
+  };
+
   beforeEach(() => {
     mockNodeCallbacks.setArguments.mockClear();
   });
@@ -29,11 +34,7 @@ describe("createNodesFromComponentSpec", () => {
       container: { image: "test" },
     });
 
-    const result = createNodesFromComponentSpec(
-      componentSpec,
-      readOnly,
-      mockNodeCallbacks,
-    );
+    const result = createNodesFromComponentSpec(componentSpec, mockNodeData);
 
     expect(result).toEqual([]);
   });
@@ -57,11 +58,7 @@ describe("createNodesFromComponentSpec", () => {
       throw new Error("Expected graph implementation");
     }
 
-    const result = createNodesFromComponentSpec(
-      componentSpec,
-      readOnly,
-      mockNodeCallbacks,
-    );
+    const result = createNodesFromComponentSpec(componentSpec, mockNodeData);
 
     expect(result).toContainEqual(
       expect.objectContaining({
@@ -89,11 +86,7 @@ describe("createNodesFromComponentSpec", () => {
       outputs: [],
     };
 
-    const result = createNodesFromComponentSpec(
-      componentSpec,
-      readOnly,
-      mockNodeCallbacks,
-    );
+    const result = createNodesFromComponentSpec(componentSpec, mockNodeData);
 
     expect(result).toContainEqual({
       id: "input_input1",
@@ -118,11 +111,7 @@ describe("createNodesFromComponentSpec", () => {
       ],
     };
 
-    const result = createNodesFromComponentSpec(
-      componentSpec,
-      readOnly,
-      mockNodeCallbacks,
-    );
+    const result = createNodesFromComponentSpec(componentSpec, mockNodeData);
 
     expect(result).toContainEqual({
       id: "output_output1",
@@ -149,11 +138,7 @@ describe("createNodesFromComponentSpec", () => {
       outputs: [{ name: "output1" }],
     };
 
-    const result = createNodesFromComponentSpec(
-      componentSpec,
-      readOnly,
-      mockNodeCallbacks,
-    );
+    const result = createNodesFromComponentSpec(componentSpec, mockNodeData);
     const defaultPosition = { x: 0, y: 0 };
 
     expect(result).toContainEqual(
@@ -194,17 +179,16 @@ describe("createNodesFromComponentSpec", () => {
       },
     });
 
-    const result = createNodesFromComponentSpec(
-      componentSpec,
-      readOnly,
-      mockNodeCallbacks,
-    );
+    const result = createNodesFromComponentSpec(componentSpec, mockNodeData);
     const taskNode = result.find((node) => node.id === nodeId) as
-      | { id: string; data: { setArguments: (args: any) => void } }
+      | {
+          id: string;
+          data: { callbacks: { setArguments: (args: any) => void } };
+        }
       | undefined;
 
     const newArgs = { newArg: "newValue" };
-    taskNode?.data.setArguments(newArgs);
+    taskNode?.data.callbacks.setArguments(newArgs);
 
     expect(mockSetArguments).toHaveBeenCalledTimes(1);
     expect(mockSetArguments).toHaveBeenCalledWith({ taskId, nodeId }, newArgs);

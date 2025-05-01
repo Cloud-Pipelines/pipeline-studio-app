@@ -1,35 +1,30 @@
 import { type Node } from "@xyflow/react";
 
+import type { TaskNodeData } from "@/types/taskNode";
 import type { ComponentSpec, GraphSpec } from "@/utils/componentSpec";
 import { extractPositionFromAnnotations } from "@/utils/nodes/extractPositionFromAnnotations";
 
 import { createTaskNode } from "./createTaskNode";
-import { type NodeCallbacks } from "./generateDynamicNodeCallbacks";
 
 export const createNodesFromComponentSpec = (
   componentSpec: ComponentSpec,
-  readOnly: boolean,
-  nodeCallbacks: NodeCallbacks,
+  nodeData: TaskNodeData,
 ): Node[] => {
   if (!("graph" in componentSpec.implementation)) {
     return [];
   }
 
   const graphSpec = componentSpec.implementation.graph;
-  const taskNodes = createTaskNodes(graphSpec, readOnly, nodeCallbacks);
+  const taskNodes = createTaskNodes(graphSpec, nodeData);
   const inputNodes = createInputNodes(componentSpec);
   const outputNodes = createOutputNodes(componentSpec);
 
   return [...taskNodes, ...inputNodes, ...outputNodes];
 };
 
-const createTaskNodes = (
-  graphSpec: GraphSpec,
-  readOnly: boolean,
-  nodeCallbacks: NodeCallbacks,
-) => {
+const createTaskNodes = (graphSpec: GraphSpec, nodeData: TaskNodeData) => {
   return Object.entries(graphSpec.tasks).map((task) => {
-    return createTaskNode(task, readOnly, nodeCallbacks);
+    return createTaskNode(task, nodeData);
   });
 };
 

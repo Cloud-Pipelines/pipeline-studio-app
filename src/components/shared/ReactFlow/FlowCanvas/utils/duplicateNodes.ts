@@ -1,6 +1,8 @@
 import { type Node } from "@xyflow/react";
 
+import type { TaskNodeData } from "@/types/taskNode";
 import type { GraphSpec, TaskSpec } from "@/utils/componentSpec";
+import { createTaskNode } from "@/utils/nodes/createTaskNode";
 import { nodeIdToTaskId } from "@/utils/nodes/nodeIdUtils";
 import { setPositionInAnnotations } from "@/utils/nodes/setPositionInAnnotations";
 import { getUniqueTaskName } from "@/utils/unique";
@@ -8,9 +10,10 @@ import { getUniqueTaskName } from "@/utils/unique";
 const OFFSET = 10;
 
 /* This is bulk duplication of a selection of nodes */
-export const duplicateSelectedNodes = (
+export const duplicateNodes = (
   graphSpec: GraphSpec,
   nodesToDuplicate: Node[],
+  selected: boolean,
 ) => {
   const newTasks: Record<string, TaskSpec> = {};
   const taskIdMap: Record<string, string> = {};
@@ -23,7 +26,7 @@ export const duplicateSelectedNodes = (
     if (node.type === "task") {
       taskIdMap[oldTaskId] = newTaskId;
 
-      const taskSpec = graphSpec.tasks[oldTaskId];
+      const taskSpec = node.data.taskSpec as TaskSpec;
       const annotations = taskSpec.annotations || {};
 
       const updatedAnnotations = setPositionInAnnotations(annotations, {
@@ -83,9 +86,40 @@ export const duplicateSelectedNodes = (
     }
   });
 
-  // Update the spec (which will trigger a new render in ReactFlow)
+  // Update the spec
   const updatedTasks = { ...graphSpec.tasks, ...newTasks };
   const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
 
-  return { updatedGraphSpec, taskIdMap };
+  // Create new nodes for the new tasks
+  const updatedNodes: Node[] = [];
+
+  const newNodes = Object.entries(taskIdMap)
+    .map(([oldTaskId, newTaskId]) => {
+      const originalNode = nodesToDuplicate.find(
+        (node) => nodeIdToTaskId(node.id) === oldTaskId,
+      );
+
+      if (originalNode) {
+        const originalNodeData = originalNode.data as TaskNodeData;
+
+        const newNode = createTaskNode(
+          [newTaskId, updatedGraphSpec.tasks[newTaskId]],
+          originalNodeData,
+        );
+
+        if (selected) {
+          originalNode.selected = false;
+          newNode.selected = true;
+        }
+
+        newNode.measured = originalNode.measured;
+
+        updatedNodes.push(originalNode);
+
+        return newNode;
+      }
+    })
+    .filter(Boolean) as Node[];
+
+  return { updatedGraphSpec, taskIdMap, newNodes, updatedNodes };
 };
