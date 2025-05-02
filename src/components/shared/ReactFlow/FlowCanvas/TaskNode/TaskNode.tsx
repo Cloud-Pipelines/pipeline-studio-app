@@ -137,7 +137,7 @@ function generateOutputHandles(outputSpecs: OutputSpec[]): ReactElement[] {
   );
 }
 
-const ComponentTaskNode = ({ data, selected }: NodeProps) => {
+const TaskNode = ({ data, selected }: NodeProps) => {
   const [isComponentEditorOpen, setIsComponentEditorOpen] = useState(false);
   const [isTaskDetailsSheetOpen, setIsTaskDetailsSheetOpen] = useState(false);
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -147,6 +147,8 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
 
   const notify = useToastNotification();
 
+  console.log("selected", selected);
+
   const typedData = data as TaskNodeData;
   const taskSpec = typedData.taskSpec;
   const componentSpec = taskSpec.componentRef.spec;
@@ -155,6 +157,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
 
   const runStatus = taskSpec.annotations?.["status"] as string | undefined;
 
+  console.log("runStatus", runStatus);
   if (componentSpec === undefined) {
     return null;
   }
@@ -189,6 +192,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const handleComponents = inputHandles.concat(outputHandles);
 
   const getBorderColor = () => {
+    console.log("runStatus getBorderColor", runStatus);
     switch (runStatus) {
       case "SUCCEEDED":
         return "border-emerald-500";
@@ -220,6 +224,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   };
 
   const getBgColor = () => {
+    console.log("runStatus getBgColor", runStatus);
     switch (runStatus) {
       case "SUCCEEDED":
         return "bg-emerald-50";
@@ -290,13 +295,15 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     setIsTaskDetailsSheetOpen(false);
   };
 
+  const borderColor = getBorderColor();
+  const bgColor = getBgColor();
   return (
     <>
       <div
         className={cn(
           "border rounded-md shadow-sm transition-all duration-200",
-          getBorderColor(),
-          getBgColor(),
+          borderColor,
+          bgColor,
           selected ? "border-sky-500" : " hover:border-slate-400",
         )}
         style={{ width: `${NODE_WIDTH_IN_PX}px` }}
@@ -370,4 +377,4 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   );
 };
 
-export default memo(ComponentTaskNode);
+export default memo(TaskNode);

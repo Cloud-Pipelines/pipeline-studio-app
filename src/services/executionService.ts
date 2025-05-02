@@ -10,6 +10,7 @@ export const fetchExecutionState = async (executionId: string) => {
   const response = await fetch(
     `${API_URL}/api/executions/${executionId}/state`,
   );
+  console.log("response", response);
   if (!response.ok) {
     throw new Error(`Failed to fetch execution state: ${response.statusText}`);
   }
@@ -69,6 +70,8 @@ export const fetchExecutionStatus = async (executionId: string) => {
     const stateResponse = await fetch(
       `${API_URL}/api/executions/${executionId}/state`,
     );
+
+    console.log("stateResponse", stateResponse);
     if (!stateResponse.ok) {
       throw new Error(
         `Failed to fetch execution state: ${stateResponse.statusText}`,

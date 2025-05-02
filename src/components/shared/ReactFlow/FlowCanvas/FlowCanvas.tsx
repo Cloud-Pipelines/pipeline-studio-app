@@ -96,7 +96,7 @@ const FlowCanvas = ({
       const nodeId = ids.nodeId;
       const node = nodes.find((n) => n.id === nodeId);
       const edgesToRemove = edges.filter(
-        (edge) => edge.source === nodeId || edge.target === nodeId
+        (edge) => edge.source === nodeId || edge.target === nodeId,
       );
 
       if (node) {
@@ -111,7 +111,7 @@ const FlowCanvas = ({
         }
       }
     },
-    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmationDialog]
+    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmationDialog],
   );
 
   const setArguments = useCallback(
@@ -120,11 +120,11 @@ const FlowCanvas = ({
       const newGraphSpec = replaceTaskArgumentsInGraphSpec(
         taskId,
         graphSpec,
-        args
+        args,
       );
       updateGraphSpec(newGraphSpec);
     },
-    [graphSpec]
+    [graphSpec],
   );
 
   const onDuplicate = useCallback(
@@ -143,12 +143,12 @@ const FlowCanvas = ({
             onDelete,
             setArguments,
             onDuplicate,
-          }
+          },
         );
 
         setNodes((prev) => {
           const originalNode = prev.find(
-            (node) => node.id === taskIdToNodeId(taskId)
+            (node) => node.id === taskIdToNodeId(taskId),
           );
 
           if (!originalNode) {
@@ -159,14 +159,14 @@ const FlowCanvas = ({
           newNode.selected = true;
 
           const updatedNodes = prev.map((node) =>
-            node.id === taskIdToNodeId(taskId) ? originalNode : node
+            node.id === taskIdToNodeId(taskId) ? originalNode : node,
           );
 
           return [...updatedNodes, newNode];
         });
       }
     },
-    [graphSpec, updateGraphSpec, setNodes]
+    [graphSpec, updateGraphSpec, setNodes],
   );
 
   const nodeCallbacks = {
@@ -180,7 +180,7 @@ const FlowCanvas = ({
       const updatedGraphSpec = handleConnection(graphSpec, connection);
       updateGraphSpec(updatedGraphSpec);
     },
-    [graphSpec, handleConnection, updateGraphSpec]
+    [graphSpec, handleConnection, updateGraphSpec],
   );
 
   const onDragOver = (event: DragEvent) => {
@@ -195,7 +195,7 @@ const FlowCanvas = ({
       const newComponentSpec = onDropNode(
         event,
         reactFlowInstance,
-        componentSpec
+        componentSpec,
       );
       setComponentSpec(newComponentSpec);
     }
@@ -214,7 +214,7 @@ const FlowCanvas = ({
 
       setComponentSpec(updatedComponentSpec);
     },
-    [componentSpec, setComponentSpec]
+    [componentSpec, setComponentSpec],
   );
 
   const removeNodes = useCallback(async () => {
@@ -226,7 +226,7 @@ const FlowCanvas = ({
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
     const positionChanges = changes.filter(
-      (change) => change.type === "position" && change.dragging === false
+      (change) => change.type === "position" && change.dragging === false,
     );
 
     if (positionChanges.length > 0) {
@@ -248,7 +248,7 @@ const FlowCanvas = ({
       if (updatedNodes.length > 0) {
         const updatedComponentSpec = updateNodePositions(
           updatedNodes,
-          componentSpec
+          componentSpec,
         );
         setComponentSpec(updatedComponentSpec);
       }
@@ -269,7 +269,7 @@ const FlowCanvas = ({
   const duplicateNodes = useCallback(() => {
     const { updatedGraphSpec, taskIdMap } = duplicateSelectedNodes(
       graphSpec,
-      selectedElements.nodes
+      selectedElements.nodes,
     );
 
     updateGraphSpec(updatedGraphSpec);
@@ -285,11 +285,11 @@ const FlowCanvas = ({
             onDelete,
             setArguments,
             onDuplicate,
-          }
+          },
         );
 
         const originalNode = selectedElements.nodes.find(
-          (node) => nodeIdToTaskId(node.id) === oldTaskId
+          (node) => nodeIdToTaskId(node.id) === oldTaskId,
         );
 
         if (originalNode) {
@@ -308,7 +308,7 @@ const FlowCanvas = ({
     setNodes((prev) => {
       const updated = prev.map((node) => {
         const updatedNode = updatedNodes.find(
-          (updatedNode) => updatedNode.id === node.id
+          (updatedNode) => updatedNode.id === node.id,
         );
         return updatedNode ? { ...node, ...updatedNode } : node;
       });
@@ -339,7 +339,7 @@ const FlowCanvas = ({
         updateToolbarPosition(nodes);
       }
     },
-    [hideToolbar, updateToolbarPosition]
+    [hideToolbar, updateToolbarPosition],
   );
 
   const handleSelectionEnd = useCallback(() => {
@@ -357,7 +357,7 @@ const FlowCanvas = ({
       // If the toolbar is visible update its position so it stays attached to the selection box
       updateToolbarPosition(nodes);
     },
-    [toolbar, updateToolbarPosition]
+    [toolbar, updateToolbarPosition],
   );
 
   const handleSelectionDragEnd = useCallback(
@@ -367,7 +367,7 @@ const FlowCanvas = ({
         nodes: nodes,
       }));
     },
-    []
+    [],
   );
 
   useEffect(() => {
@@ -375,7 +375,7 @@ const FlowCanvas = ({
     const newNodes = createNodesFromComponentSpec(
       componentSpec,
       !!readOnly,
-      nodeCallbacks
+      nodeCallbacks,
     );
 
     setNodes((prevNodes) => {
@@ -386,7 +386,7 @@ const FlowCanvas = ({
 
       // If the toolbar is in the previous node list, migrate it to the new one
       const existingToolbarNode = prevNodes.find(
-        (node) => node.id === SELECTION_TOOLBAR_ID
+        (node) => node.id === SELECTION_TOOLBAR_ID,
       );
 
       if (existingToolbarNode) {
@@ -401,12 +401,12 @@ const FlowCanvas = ({
     // Update the toolbar node with the latest props
     setNodes((prevNodes) => {
       const existingToolbarNode = prevNodes.find(
-        (node) => node.id === SELECTION_TOOLBAR_ID
+        (node) => node.id === SELECTION_TOOLBAR_ID,
       );
 
       if (existingToolbarNode) {
         return prevNodes.map((node) =>
-          node.id === SELECTION_TOOLBAR_ID ? { ...node, ...toolbar } : node
+          node.id === SELECTION_TOOLBAR_ID ? { ...node, ...toolbar } : node,
         );
       }
 
@@ -472,7 +472,7 @@ const FlowCanvas = ({
               node,
               nodeCallbacks,
               reactFlowCenter,
-              updatedGraphSpec
+              updatedGraphSpec,
             );
             updatedGraphSpec = output.updatedGraphSpec;
 
@@ -582,7 +582,7 @@ function getConfirmationDialogDetails(selectedElements: NodesAndEdges) {
               return `'${node.id}'`;
             })
             .join(
-              ", "
+              ", ",
             )} will also remove all connections to and from these nodes.`}</p>
         <br />
         {thisCannotBeUndone}

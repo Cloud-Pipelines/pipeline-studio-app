@@ -1,6 +1,7 @@
 import { DndContext } from "@dnd-kit/core";
 import { useQuery } from "@tanstack/react-query";
 import { ReactFlowProvider } from "@xyflow/react";
+import { useEffect, useState } from "react";
 
 import type {
   GetExecutionInfoResponse,
@@ -15,6 +16,8 @@ import type { ComponentSpec } from "@/utils/componentSpec";
 
 const PipelineRun = () => {
   const { id } = runDetailRoute.useParams() as RunDetailParams;
+  const [timestamp, setTimestamp] = useState(Date.now());
+
   const {
     componentSpec,
     detailsData,
@@ -23,11 +26,27 @@ const PipelineRun = () => {
 
   const { data: stateData, isLoading: stateLoading } =
     useQuery<GetGraphExecutionStateResponse>({
-      queryKey: ["run_state", id],
-      queryFn: () => fetchExecutionState(id),
+      queryKey: ["run_state", id, timestamp],
+      queryFn: () => {
+        console.log("stateDatassss fetching state", id, "at timestamp", timestamp);
+        return fetchExecutionState(id);
+      },
       refetchInterval: 5000,
       refetchIntervalInBackground: false,
+      staleTime: 0,
+      gcTime: 0,
+      refetchOnMount: "always",
     });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimestamp(Date.now());
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  console.log("stateDatassss", stateData);
 
   if (detailsLoading || stateLoading) {
     return (
@@ -52,6 +71,8 @@ const PipelineRun = () => {
     detailsData,
   );
 
+  console.log("newComponentSpec", newComponentSpec);
+
   return (
     <ComponentSpecProvider spec={newComponentSpec}>
       <div className="dndflow">
@@ -73,6 +94,9 @@ const buildTaskStatusMap = (
 ) => {
   const taskStatusMap = new Map();
 
+
+  console.log("detailsData", detailsData);
+  console.log("stateData", stateData);
   if (
     detailsData?.child_task_execution_ids &&
     stateData?.child_execution_status_stats
@@ -91,6 +115,8 @@ const buildTaskStatusMap = (
     );
   }
 
+  console.log("taskStatusMap", taskStatusMap);
+
   return taskStatusMap;
 };
 
@@ -104,6 +130,7 @@ const addStatusToComponentSpec = (
     !("graph" in componentSpec.implementation) ||
     taskStatusMap.size === 0
   ) {
+    console.log("if status map is empty", componentSpec);
     return componentSpec;
   }
 
