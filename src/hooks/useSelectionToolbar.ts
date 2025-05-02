@@ -10,6 +10,7 @@ const TOOLBAR_NODE_BASE = {
   position: { x: 0, y: 0 },
   zIndex: 1200,
   selectable: false,
+  // hidden: true, // Note: using data.hidden instead for manual control over toolbar rendering
   data: {
     hidden: true,
   },

@@ -343,7 +343,7 @@ const FlowCanvas = ({
   );
 
   const handleSelectionEnd = useCallback(() => {
-    if (selectedElements.nodes.length > 0) {
+    if (selectedElements.nodes.length > 0 && !readOnly) {
       showToolbar(selectedElements.nodes);
     } else {
       hideToolbar();
