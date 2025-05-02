@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@xyflow/react";
 import { FileDown, Import, Save, SaveAll } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { PipelineNameDialog } from "@/components/shared/Dialogs";
 import ImportPipeline from "@/components/shared/ImportPipeline";
@@ -19,6 +19,7 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/routes/router";
 import { useSavePipeline } from "@/services/pipelineService";
 import { componentSpecToYaml } from "@/utils/componentStore";
+import { SELECTION_TOOLBAR_ID } from "@/utils/constants";
 import { updateComponentSpecFromNodes } from "@/utils/nodes/updateComponentSpecFromNodes";
 
 import { ImportComponent } from "../components";
@@ -54,24 +55,36 @@ const SettingsAndActions = () => {
       : `Untitled Pipeline ${new Date().toLocaleTimeString()}`;
   };
 
+  const componentSpecRef = useRef(componentSpec);
+
+  useEffect(() => {
+    componentSpecRef.current = componentSpec;
+  }, [componentSpec]);
+
   const componentText = useMemo(() => {
     try {
-      if (!componentSpec || !nodes.length) {
+      const nodesWithoutToolbar = nodes.filter(
+        (n) => n.id !== SELECTION_TOOLBAR_ID,
+      );
+
+      if (!componentSpecRef.current || !nodesWithoutToolbar.length) {
         return "";
       }
 
       const cleanedSpec = updateComponentSpecFromNodes(
-        componentSpec,
-        nodes,
+        componentSpecRef.current,
+        nodesWithoutToolbar,
         false,
         true,
       );
       return componentSpecToYaml(cleanedSpec);
     } catch (err) {
       console.error("Error preparing pipeline for export:", err);
-      return componentSpec ? componentSpecToYaml(componentSpec) : "";
+      return componentSpecRef.current
+        ? componentSpecToYaml(componentSpecRef.current)
+        : "";
     }
-  }, [componentSpec, nodes]);
+  }, [nodes]);
 
   const componentTextBlob = new Blob([componentText], { type: "text/yaml" });
   const filename = componentSpec?.name

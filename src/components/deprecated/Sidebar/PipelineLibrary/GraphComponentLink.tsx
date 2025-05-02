@@ -11,6 +11,7 @@ import type { CSSProperties, Ref } from "react";
 
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { componentSpecToYaml } from "@/utils/componentStore";
+import { SELECTION_TOOLBAR_ID } from "@/utils/constants";
 import { updateComponentSpecFromNodes } from "@/utils/nodes/updateComponentSpecFromNodes";
 
 interface GraphComponentLinkProps {
@@ -30,10 +31,14 @@ const GraphComponentLink = ({
 }: GraphComponentLinkProps) => {
   const nodes = useStore((store) => store.nodes);
 
+  const nodesWithoutToolbar = nodes.filter(
+    (node) => node.id !== SELECTION_TOOLBAR_ID,
+  );
+
   try {
     componentSpec = updateComponentSpecFromNodes(
       componentSpec,
-      nodes,
+      nodesWithoutToolbar,
       false,
       true,
     );

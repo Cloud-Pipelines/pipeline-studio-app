@@ -10,6 +10,7 @@ import { useStore } from "@xyflow/react";
 
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { componentSpecToYaml } from "@/utils/componentStore";
+import { SELECTION_TOOLBAR_ID } from "@/utils/constants";
 import { updateComponentSpecFromNodes } from "@/utils/nodes/updateComponentSpecFromNodes";
 
 interface GraphComponentExporterProps {
@@ -21,11 +22,15 @@ const GraphComponentExporter = ({
 }: GraphComponentExporterProps) => {
   const nodes = useStore((store) => store.nodes);
 
+  const nodesWithoutToolbar = nodes.filter(
+    (node) => node.id !== SELECTION_TOOLBAR_ID,
+  );
+
   let componentText = "";
   try {
     const graphComponent = updateComponentSpecFromNodes(
       componentSpec,
-      nodes,
+      nodesWithoutToolbar,
       false,
       true,
     );
