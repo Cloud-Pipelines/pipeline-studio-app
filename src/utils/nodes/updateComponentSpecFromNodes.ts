@@ -215,6 +215,7 @@ export const updateComponentSpecFromNodes = (
       })
       .sort(taskOrderComparer),
   );
+
   if (newTasks !== undefined) {
     graphSpec.tasks = newTasks;
   }

@@ -11,6 +11,7 @@ import yaml from "js-yaml";
 
 import type { ComponentSpec } from "./componentSpec";
 import { componentSpecToYaml } from "./componentStore";
+import { SELECTION_TOOLBAR_ID } from "./constants";
 import { updateComponentSpecFromNodes } from "./nodes/updateComponentSpecFromNodes";
 
 const SAVED_COMPONENT_SPEC_KEY = "autosaved.component.yaml";
@@ -27,12 +28,13 @@ export const savePipelineSpecToSessionStorage = (
 ) => {
   try {
     if (nodes !== undefined) {
-      if (nodes.length === 0) {
-        console.warn("saveComponentSpec: nodes.length === 0");
-      }
+      const nodesWithoutToolbar = nodes.filter(
+        (node) => node.id !== SELECTION_TOOLBAR_ID,
+      );
+
       componentSpec = updateComponentSpecFromNodes(
         componentSpec,
-        nodes,
+        nodesWithoutToolbar,
         true,
         true,
       );
