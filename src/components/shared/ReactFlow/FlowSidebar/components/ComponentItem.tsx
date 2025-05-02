@@ -2,7 +2,7 @@ import { File } from "lucide-react";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import ComponentDetails from "@/components/shared/Dialogs/ComponentDetails";
+import { ComponentDetailsDialog } from "@/components/shared/Dialogs";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { EMPTY_GRAPH_COMPONENT_SPEC } from "@/providers/ComponentSpecProvider";
@@ -17,6 +17,7 @@ import type {
   ComponentSpec,
   TaskSpec,
 } from "@/utils/componentSpec";
+import { getComponentName } from "@/utils/getComponentName";
 import { getComponentByUrl } from "@/utils/localforge";
 
 interface ComponentMarkupProps {
@@ -97,7 +98,7 @@ const ComponentMarkup = ({
                 </span>
               </div>
               <div className="flex-1 flex justify-end mr-[15px]">
-                <ComponentDetails
+                <ComponentDetailsDialog
                   url={url}
                   displayName={displayName}
                   componentSpec={componentSpec}
@@ -193,10 +194,7 @@ const ComponentItemFromUrl = ({ url }: ComponentItemFromUrlProps) => {
   }, [url]);
 
   const displayName = useMemo(
-    () =>
-      componentSpec?.name ||
-      url.split("/").pop()?.replace(".yaml", "") ||
-      "Component",
+    () => getComponentName({ spec: componentSpec ?? undefined, url }),
     [componentSpec, url],
   );
 

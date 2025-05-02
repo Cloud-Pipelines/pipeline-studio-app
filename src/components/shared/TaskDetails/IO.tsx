@@ -1,11 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
-interface IOTabProps {
+interface TaskIOProps {
   componentSpec: ComponentSpec;
 }
 
-const IOTab = ({ componentSpec }: IOTabProps) => {
+const TaskIO = ({ componentSpec }: TaskIOProps) => {
   return (
     <div className="h-full overflow-auto hide-scrollbar">
       {componentSpec?.inputs && componentSpec.inputs.length > 0 && (
@@ -68,4 +68,4 @@ const IOTab = ({ componentSpec }: IOTabProps) => {
   );
 };
 
-export default IOTab;
+export default TaskIO;

@@ -33,6 +33,7 @@ interface CodeViewerProps {
   code: string;
   language?: string;
   title?: string;
+  filename?: string;
   onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
@@ -97,6 +98,7 @@ const CodeViewer = ({
   code,
   language = "yaml",
   title = "Code Implementation",
+  filename = "",
   onFullscreenChange,
 }: CodeViewerProps) => {
   const { openFullscreen } = useFullscreen();
@@ -109,7 +111,9 @@ const CodeViewer = ({
   return (
     <div className="border rounded-md h-full overflow-hidden hide-scrollbar bg-slate-900">
       <div className="flex justify-between items-center p-2 sticky top-0 z-10 bg-slate-800">
-        <h2 className="text-white font-medium">(Read Only)</h2>
+        <h3 className="text-secondary font-medium ml-2">
+          {filename} <span className="text-sm">(Read Only)</span>
+        </h3>
         <Button
           variant="ghost"
           size="icon"

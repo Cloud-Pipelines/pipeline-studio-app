@@ -1,7 +1,10 @@
-import { Info } from "lucide-react";
+import { Code, InfoIcon, Parentheses } from "lucide-react";
 import { type ReactNode } from "react";
 
-import CondensedUrl from "@/components/shared/CondensedUrl";
+import {
+  TaskDetails,
+  TaskImplementation,
+} from "@/components/shared/TaskDetails";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   Sheet,
@@ -12,8 +15,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
+import { getComponentName } from "@/utils/getComponentName";
 
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
 
@@ -51,6 +56,8 @@ const TaskConfigurationSheet = ({
 
   const sheetHeight = window.innerHeight - TOP_NAV_HEIGHT;
 
+  const displayName = getComponentName(taskSpec.componentRef);
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
@@ -66,17 +73,11 @@ const TaskConfigurationSheet = ({
         <SheetHeader>
           <SheetTitle>
             <div className="flex gap-2">
-              <Info />
+              <InfoIcon />
               {componentSpec.name ?? "<component>"}
             </div>
           </SheetTitle>
           <SheetDescription>id: {taskId}</SheetDescription>
-          {taskSpec.componentRef.url && (
-            <div className="flex gap-2 text-sidebar-primary text-sm">
-              Source:
-              <CondensedUrl url={taskSpec.componentRef.url} />
-            </div>
-          )}
           <div className="mt-4 flex flex-col gap-2">
             <div className="flex gap-2">
               {actions &&
@@ -87,18 +88,48 @@ const TaskConfigurationSheet = ({
           </div>
         </SheetHeader>
         <hr className="mx-4" />
-        <div className="flex flex-col overflow-y-auto px-4 gap-4">
-          <div>
-            <h2>Arguments</h2>
-            <p className="text-sm text-muted-foreground">
-              Configure the arguments for this task node.
-            </p>
-            <ArgumentsSection
-              taskSpec={taskSpec}
-              setArguments={setArguments}
-              disabled={disabled}
-            />
-          </div>
+        <div className="flex flex-col px-4 gap-4 overflow-y-auto">
+          <Tabs defaultValue="details">
+            <TabsList className="mb-2">
+              <TabsTrigger value="details" className="flex-1">
+                <InfoIcon className="h-4 w-4" />
+                Details
+              </TabsTrigger>
+              <TabsTrigger value="arguments" className="flex-1">
+                <Parentheses className="w-4 h-4" />
+                Arguments
+              </TabsTrigger>
+              <TabsTrigger value="implementation" className="flex-1">
+                <Code className="h-4 w-4" />
+                Implementation
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="details" className="h-full">
+              <TaskDetails
+                displayName={displayName}
+                componentSpec={componentSpec}
+                componentDigest={taskSpec.componentRef.digest}
+                url={taskSpec.componentRef.url}
+              />
+            </TabsContent>
+            <TabsContent value="arguments" className="h-full">
+              <h2>Arguments</h2>
+              <p className="text-sm text-muted-foreground">
+                Configure the arguments for this task node.
+              </p>
+              <ArgumentsSection
+                taskSpec={taskSpec}
+                setArguments={setArguments}
+                disabled={disabled}
+              />
+            </TabsContent>
+            <TabsContent value="implementation" className="h-full">
+              <TaskImplementation
+                displayName={displayName}
+                componentSpec={componentSpec}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
         <hr className="mx-4" />
         <SheetFooter>
