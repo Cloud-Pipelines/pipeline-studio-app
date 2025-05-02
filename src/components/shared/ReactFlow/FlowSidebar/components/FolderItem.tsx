@@ -43,7 +43,7 @@ const FolderItem = ({ folder }: FolderItemProps) => {
           {hasComponents && folder.components && (
             <div>
               {folder.components.map((component) => {
-                const key = `${folder.name}-component-${component.name || component?.spec?.name}`;
+                const key = `${folder.name}-component-${component.name || component?.spec?.name || component.url}`;
                 // if the component has a spec or is a user component, render the appropriate component
                 // otherwise, render using URL
                 if (component.spec) {
