@@ -1,6 +1,7 @@
 import { DndContext } from "@dnd-kit/core";
 import { useQuery } from "@tanstack/react-query";
 import { ReactFlowProvider } from "@xyflow/react";
+import { useEffect } from "react";
 
 import type {
   GetExecutionInfoResponse,
@@ -8,10 +9,37 @@ import type {
 } from "@/api/types.gen";
 import PipelineRunPage from "@/components/PipelineRun";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
-import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
+import {
+  ComponentSpecProvider,
+  useComponentSpec,
+} from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
 import { fetchExecutionState } from "@/services/executionService";
-import type { ComponentSpec } from "@/utils/componentSpec";
+
+const PipelineRunHtml = ({
+  detailsData,
+  id,
+}: {
+  detailsData: GetExecutionInfoResponse | undefined;
+  id: string;
+}) => {
+  const { setTaskStatusMap } = useComponentSpec();
+
+  const { data: stateData } = useQuery<GetGraphExecutionStateResponse>({
+    queryKey: ["run_state", id],
+    queryFn: () => fetchExecutionState(id),
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+    staleTime: 1000,
+  });
+
+  useEffect(() => {
+    const taskStatusMap = buildTaskStatusMap(detailsData, stateData);
+    setTaskStatusMap(taskStatusMap);
+  }, [stateData]);
+
+  return <PipelineRunPage />;
+};
 
 const PipelineRun = () => {
   const { id } = runDetailRoute.useParams() as RunDetailParams;
@@ -21,15 +49,7 @@ const PipelineRun = () => {
     isLoading: detailsLoading,
   } = useLoadComponentSpecAndDetailsFromId(id);
 
-  const { data: stateData, isLoading: stateLoading } =
-    useQuery<GetGraphExecutionStateResponse>({
-      queryKey: ["run_state", id],
-      queryFn: () => fetchExecutionState(id),
-      refetchInterval: 5000,
-      refetchIntervalInBackground: false,
-    });
-
-  if (detailsLoading || stateLoading) {
+  if (detailsLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         Loading run details...
@@ -37,7 +57,7 @@ const PipelineRun = () => {
     );
   }
 
-  if (!componentSpec || !detailsData || !stateData) {
+  if (!componentSpec) {
     return (
       <div className="flex items-center justify-center h-full">
         No pipeline data available
@@ -45,19 +65,12 @@ const PipelineRun = () => {
     );
   }
 
-  const taskStatusMap = buildTaskStatusMap(detailsData, stateData);
-  const newComponentSpec = addStatusToComponentSpec(
-    componentSpec,
-    taskStatusMap,
-    detailsData,
-  );
-
   return (
-    <ComponentSpecProvider spec={newComponentSpec}>
+    <ComponentSpecProvider spec={componentSpec}>
       <div className="dndflow">
         <DndContext>
           <ReactFlowProvider>
-            <PipelineRunPage />
+            <PipelineRunHtml detailsData={detailsData} id={id} />
           </ReactFlowProvider>
         </DndContext>
       </div>
@@ -68,10 +81,21 @@ const PipelineRun = () => {
 export default PipelineRun;
 
 const buildTaskStatusMap = (
-  detailsData: GetExecutionInfoResponse,
-  stateData: GetGraphExecutionStateResponse,
+  detailsData?: GetExecutionInfoResponse,
+  stateData?: GetGraphExecutionStateResponse,
 ) => {
   const taskStatusMap = new Map();
+  if (!detailsData) {
+    return taskStatusMap;
+  }
+
+  // If no state data is available, set all tasks to WAITING_FOR_UPSTREAM
+  if (!stateData && detailsData?.child_task_execution_ids) {
+    Object.keys(detailsData.child_task_execution_ids).forEach((taskId) => {
+      taskStatusMap.set(taskId, "WAITING_FOR_UPSTREAM");
+    });
+    return taskStatusMap;
+  }
 
   if (
     detailsData?.child_task_execution_ids &&
@@ -86,53 +110,13 @@ const buildTaskStatusMap = (
         if (statusStats) {
           const status = Object.keys(statusStats)[0];
           taskStatusMap.set(taskId, status);
+        } else {
+          // If this task doesn't have status in state data, mark as WAITING
+          taskStatusMap.set(taskId, "WAITING_FOR_UPSTREAM");
         }
       },
     );
   }
 
   return taskStatusMap;
-};
-
-const addStatusToComponentSpec = (
-  componentSpec: ComponentSpec,
-  taskStatusMap: Map<string, string>,
-  detailsData: GetExecutionInfoResponse,
-): ComponentSpec => {
-  if (
-    !componentSpec ||
-    !("graph" in componentSpec.implementation) ||
-    taskStatusMap.size === 0
-  ) {
-    return componentSpec;
-  }
-
-  const tasksWithStatus = Object.fromEntries(
-    Object.entries(componentSpec.implementation.graph.tasks).map(
-      ([taskId, taskSpec]) => {
-        const status = taskStatusMap.get(taskId);
-        const executionId = detailsData?.child_task_execution_ids?.[taskId];
-        const enhancedTaskSpec = {
-          ...taskSpec,
-          annotations: {
-            ...taskSpec.annotations,
-            status: status,
-            executionId: executionId,
-          },
-        };
-        return [taskId, enhancedTaskSpec];
-      },
-    ),
-  );
-
-  return {
-    ...componentSpec,
-    implementation: {
-      ...componentSpec.implementation,
-      graph: {
-        ...componentSpec.implementation.graph,
-        tasks: tasksWithStatus,
-      },
-    },
-  };
 };

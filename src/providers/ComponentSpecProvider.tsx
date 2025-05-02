@@ -40,6 +40,8 @@ interface ComponentSpecContextType {
   refetch: () => void;
   updateGraphSpec: (newGraphSpec: GraphSpec) => void;
   saveComponentSpec: (name: string) => Promise<void>;
+  taskStatusMap: Map<string, string>;
+  setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
 }
 
 const ComponentSpecContext = createContext<
@@ -49,14 +51,19 @@ const ComponentSpecContext = createContext<
 export const ComponentSpecProvider = ({
   experimentName,
   spec,
+  initialTaskStatusMap,
   children,
 }: {
   experimentName?: string;
   spec?: ComponentSpec;
+  initialTaskStatusMap?: Map<string, string>;
   children: ReactNode;
 }) => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
     spec ?? EMPTY_GRAPH_COMPONENT_SPEC,
+  );
+  const [taskStatusMap, setTaskStatusMap] = useState<Map<string, string>>(
+    initialTaskStatusMap ?? new Map(),
   );
   const [originalComponentSpec, setOriginalComponentSpec] =
     useState<ComponentSpec>(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
@@ -153,6 +160,8 @@ export const ComponentSpecProvider = ({
         refetch,
         updateGraphSpec,
         saveComponentSpec,
+        taskStatusMap,
+        setTaskStatusMap,
       }}
     >
       {children}
