@@ -495,6 +495,10 @@ const FlowCanvas = ({
 
   const { title, content } = getConfirmationDialogDetails(selectedElements);
 
+  const nodesWithoutToolbar = nodes.filter(
+    (node) => node.id !== SELECTION_TOOLBAR_ID,
+  );
+
   return (
     <>
       <ReactFlow
@@ -518,6 +522,10 @@ const FlowCanvas = ({
         nodesDraggable={!readOnly}
         nodesConnectable={!readOnly}
         connectOnClick={!readOnly}
+        fitView
+        fitViewOptions={{
+          nodes: nodesWithoutToolbar,
+        }}
       >
         {children}
       </ReactFlow>
