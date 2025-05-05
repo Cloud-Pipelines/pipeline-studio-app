@@ -15,6 +15,7 @@ import {
 } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
 import { fetchExecutionState } from "@/services/executionService";
+import type { ComponentSpec } from "@/utils/componentSpec";
 
 const PipelineRunHtml = ({
   detailsData,
@@ -65,8 +66,13 @@ const PipelineRun = () => {
     );
   }
 
+  const componentSpecWithExecutionIds = addExecutionIdToComponent(
+    componentSpec,
+    detailsData,
+  );
+
   return (
-    <ComponentSpecProvider spec={componentSpec}>
+    <ComponentSpecProvider spec={componentSpecWithExecutionIds}>
       <div className="dndflow">
         <DndContext>
           <ReactFlowProvider>
@@ -119,4 +125,44 @@ const buildTaskStatusMap = (
   }
 
   return taskStatusMap;
+};
+
+const addExecutionIdToComponent = (
+  componentSpec: ComponentSpec,
+  detailsData?: GetExecutionInfoResponse,
+): ComponentSpec => {
+  if (
+    !componentSpec ||
+    !("graph" in componentSpec.implementation) ||
+    !detailsData
+  ) {
+    return componentSpec;
+  }
+
+  const tasksWithExecutionId = Object.fromEntries(
+    Object.entries(componentSpec.implementation.graph.tasks).map(
+      ([taskId, taskSpec]) => {
+        const executionId = detailsData?.child_task_execution_ids?.[taskId];
+        const enhancedTaskSpec = {
+          ...taskSpec,
+          annotations: {
+            ...taskSpec.annotations,
+            executionId: executionId,
+          },
+        };
+        return [taskId, enhancedTaskSpec];
+      },
+    ),
+  );
+
+  return {
+    ...componentSpec,
+    implementation: {
+      ...componentSpec.implementation,
+      graph: {
+        ...componentSpec.implementation.graph,
+        tasks: tasksWithExecutionId,
+      },
+    },
+  };
 };
