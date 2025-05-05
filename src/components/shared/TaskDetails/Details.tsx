@@ -1,26 +1,27 @@
 import { Download, ExternalLink } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { convertRawUrlToDirectoryUrl } from "@/utils/URL";
 
-interface DetailsTabProps {
+interface TaskDetailsProps {
   displayName: string;
   componentSpec: ComponentSpec;
-  componentDigest: string;
-  url: string;
-  actions?: React.ReactNode[];
-  handleDownloadYaml: () => void;
+  componentDigest?: string;
+  url?: string;
+  actions?: ReactNode[];
+  handleDownloadYaml?: () => void;
 }
 
-const DetailsTab = ({
+const TaskDetails = ({
   displayName,
   componentSpec,
   componentDigest,
   url,
   actions = [],
   handleDownloadYaml,
-}: DetailsTabProps) => {
+}: TaskDetailsProps) => {
   const canonicalUrl = componentSpec?.metadata?.annotations?.canonical_location;
 
   return (
@@ -127,15 +128,17 @@ const DetailsTab = ({
         )}
 
         <div className="flex flex-row gap-2 px-3 py-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownloadYaml}
-            className="flex items-center gap-1 cursor-pointer"
-          >
-            <Download className="size-4" />
-            Download YAML
-          </Button>
+          {handleDownloadYaml && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadYaml}
+              className="flex items-center gap-1 cursor-pointer"
+            >
+              <Download className="size-4" />
+              Download YAML
+            </Button>
+          )}
           {actions.map((action, index) => (
             <div
               key={index}
@@ -150,4 +153,4 @@ const DetailsTab = ({
   );
 };
 
-export default DetailsTab;
+export default TaskDetails;

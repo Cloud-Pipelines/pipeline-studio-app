@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { File, Trash2 } from "lucide-react";
 import { type DragEvent, useCallback, useState } from "react";
 
-import ComponentDetails from "@/components/shared/Dialogs/ComponentDetails";
+import { ComponentDetailsDialog } from "@/components/shared/Dialogs";
 import { Button } from "@/components/ui/button";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
 import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
@@ -87,7 +87,7 @@ const UserComponentItem = ({
           </span>
         </div>
         <div className="flex-1 flex justify-end mr-[15px]">
-          <ComponentDetails
+          <ComponentDetailsDialog
             url={url}
             displayName={displayName}
             componentSpec={componentSpec}

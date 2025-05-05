@@ -14,8 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { downloadYamlFromComponentText } from "@/utils/URL";
 
-import InfoIconButton from "../../Buttons/InfoIconButton";
-import { DetailsTab, ImplementationTab, IOTab } from "./tabs";
+import InfoIconButton from "../Buttons/InfoIconButton";
+import { TaskDetails, TaskImplementation, TaskIO } from "../TaskDetails";
 
 interface ComponentDetailsProps {
   url: string;
@@ -90,7 +90,7 @@ const ComponentDetails = ({
 
           <div className="overflow-hidden h-[40vh]">
             <TabsContent value="details" className="h-full">
-              <DetailsTab
+              <TaskDetails
                 displayName={displayName}
                 componentSpec={componentSpec}
                 componentDigest={componentDigest}
@@ -101,11 +101,11 @@ const ComponentDetails = ({
             </TabsContent>
 
             <TabsContent value="io" className="h-full">
-              <IOTab componentSpec={componentSpec} />
+              <TaskIO componentSpec={componentSpec} />
             </TabsContent>
 
             <TabsContent value="implementation" className="h-full">
-              <ImplementationTab
+              <TaskImplementation
                 displayName={displayName}
                 componentSpec={componentSpec}
               />

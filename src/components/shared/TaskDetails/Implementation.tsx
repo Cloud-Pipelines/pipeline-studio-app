@@ -2,16 +2,19 @@ import yaml from "js-yaml";
 
 import CodeViewer from "@/components/shared/CodeViewer";
 import type { ComponentSpec } from "@/utils/componentSpec";
+import { getComponentFilename } from "@/utils/getComponentFilename";
 
-interface ImplementationTabProps {
+interface TaskImplementationProps {
   displayName: string;
   componentSpec: ComponentSpec;
 }
 
-const ImplementationTab = ({
+const TaskImplementation = ({
   displayName,
   componentSpec,
-}: ImplementationTabProps) => {
+}: TaskImplementationProps) => {
+  const filename = getComponentFilename(componentSpec);
+
   return (
     <>
       {componentSpec?.implementation ? (
@@ -23,6 +26,7 @@ const ImplementationTab = ({
           })}
           language="yaml"
           title={`${displayName} Implementation (read-only)`}
+          filename={filename}
         />
       ) : (
         <div className="text-sm text-gray-500 p-4 border rounded-md">
@@ -33,4 +37,4 @@ const ImplementationTab = ({
   );
 };
 
-export default ImplementationTab;
+export default TaskImplementation;
