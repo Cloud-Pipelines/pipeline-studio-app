@@ -1,12 +1,17 @@
 import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 
-export interface TaskNodeData
-  extends Record<string, unknown>,
-    TaskNodeCallbacks {
-  taskSpec: TaskSpec;
-  taskId: string;
-  readOnly: boolean;
+export interface TaskNodeData extends Record<string, unknown> {
+  taskSpec?: TaskSpec;
+  taskId?: string;
+  readOnly?: boolean;
+  callbacks?: TaskNodeCallbacks;
+  nodeCallbacks: NodeCallbacks;
 }
+
+export type NodeAndTaskId = {
+  taskId: string;
+  nodeId: string;
+};
 
 /* Note: Optional callbacks will cause TypeScript to break when applying the callbacks to the Nodes. */
 export interface TaskNodeCallbacks {
@@ -14,3 +19,13 @@ export interface TaskNodeCallbacks {
   onDelete: () => void;
   onDuplicate: (selected?: boolean) => void;
 }
+
+// Dynamic Node Callback types - every callback has a version with the node & task id added to it as an input parameter
+export type CallbackWithIds<K extends keyof TaskNodeCallbacks> =
+  TaskNodeCallbacks[K] extends (...args: infer A) => infer R
+    ? (ids: NodeAndTaskId, ...args: A) => R
+    : never;
+
+export type NodeCallbacks = {
+  [K in keyof TaskNodeCallbacks]: CallbackWithIds<K>;
+};

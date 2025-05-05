@@ -5,12 +5,10 @@ import type { TaskNodeData } from "@/types/taskNode";
 import type { GraphSpec, TaskSpec } from "../componentSpec";
 import { getUniqueTaskName } from "../unique";
 import { createTaskNode } from "./createTaskNode";
-import type { NodeCallbacks } from "./generateDynamicNodeCallbacks";
 import { setPositionInAnnotations } from "./setPositionInAnnotations";
 
 export const copyToNewTaskNode = (
   node: Node,
-  nodeCallbacks: NodeCallbacks,
   position: XYPosition,
   graphSpec: GraphSpec,
 ) => {
@@ -39,11 +37,7 @@ export const copyToNewTaskNode = (
     );
   }
 
-  const newNode = createTaskNode(
-    [taskId, updatedTaskSpec],
-    data.readOnly as boolean,
-    nodeCallbacks,
-  );
+  const newNode = createTaskNode([taskId, updatedTaskSpec], data);
 
   const centeredPosition = {
     x: position.x - (newNode.width || 0) / 2,

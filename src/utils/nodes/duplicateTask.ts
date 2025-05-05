@@ -3,6 +3,8 @@ import { getUniqueTaskName } from "../unique";
 import { extractPositionFromAnnotations } from "./extractPositionFromAnnotations";
 import { setPositionInAnnotations } from "./setPositionInAnnotations";
 
+/* DEPRECATED: to be removed in future versions - Please use duplicateNodes.ts */
+
 const OFFSET = 10;
 
 /* This is direct duplication of a singular Task */

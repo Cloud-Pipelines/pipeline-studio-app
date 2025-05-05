@@ -27,6 +27,7 @@ import type {
   ArgumentType,
   InputSpec,
   OutputSpec,
+  TaskSpec,
 } from "@/utils/componentSpec";
 
 import TaskConfigurationSheet from "./TaskConfigurationSheet";
@@ -155,7 +156,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const notify = useToastNotification();
 
   const typedData = data as TaskNodeData;
-  const taskSpec = typedData.taskSpec;
+  const taskSpec = typedData.taskSpec as TaskSpec;
   const componentSpec = taskSpec.componentRef.spec;
 
   const readOnly = typedData.readOnly;
@@ -267,16 +268,16 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   };
 
   const handleSetArguments = (args: Record<string, ArgumentType>) => {
-    typedData.setArguments(args);
+    typedData.callbacks?.setArguments(args);
     notify("Arguments updated", "success");
   };
 
   const handleDeleteTaskNode = () => {
-    typedData.onDelete();
+    typedData.callbacks?.onDelete();
   };
 
   const handleDuplicateTaskNode = () => {
-    typedData.onDuplicate();
+    typedData.callbacks?.onDuplicate();
     setIsComponentEditorOpen(false);
   };
 
@@ -322,57 +323,61 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
         </div>
       </div>
 
-      <TaskDetailsSheet
-        isOpen={isTaskDetailsSheetOpen}
-        taskSpec={taskSpec}
-        taskId={typedData.taskId}
-        runStatus={runStatus}
-        onClose={handleTaskDetailsSheetClose}
-      />
+      {typedData.taskId && (
+        <>
+          <TaskDetailsSheet
+            isOpen={isTaskDetailsSheetOpen}
+            taskSpec={taskSpec}
+            taskId={typedData.taskId}
+            runStatus={runStatus}
+            onClose={handleTaskDetailsSheetClose}
+          />
 
-      <TaskConfigurationSheet
-        taskId={typedData.taskId}
-        taskSpec={taskSpec}
-        isOpen={isComponentEditorOpen}
-        onOpenChange={setIsComponentEditorOpen}
-        actions={[
-          {
-            children: (
-              <div className="flex items-center gap-2">
-                <BookCopy />
-                Copy yaml
-              </div>
-            ),
-            variant: "secondary",
-            className: "cursor-pointer",
-            onClick: handleCopyYaml,
-          },
-          {
-            children: (
-              <div className="flex items-center gap-2">
-                <Copy />
-                Duplicate
-              </div>
-            ),
-            variant: "secondary",
-            className: "cursor-pointer",
-            onClick: handleDuplicateTaskNode,
-          },
-          {
-            children: (
-              <div className="flex items-center gap-2">
-                <Trash />
-                Delete
-              </div>
-            ),
-            variant: "destructive",
-            className: "cursor-pointer",
-            onClick: handleDeleteTaskNode,
-          },
-        ]}
-        setArguments={handleSetArguments}
-        disabled={!!runStatus}
-      />
+          <TaskConfigurationSheet
+            taskId={typedData.taskId}
+            taskSpec={taskSpec}
+            isOpen={isComponentEditorOpen}
+            onOpenChange={setIsComponentEditorOpen}
+            actions={[
+              {
+                children: (
+                  <div className="flex items-center gap-2">
+                    <BookCopy />
+                    Copy yaml
+                  </div>
+                ),
+                variant: "secondary",
+                className: "cursor-pointer",
+                onClick: handleCopyYaml,
+              },
+              {
+                children: (
+                  <div className="flex items-center gap-2">
+                    <Copy />
+                    Duplicate
+                  </div>
+                ),
+                variant: "secondary",
+                className: "cursor-pointer",
+                onClick: handleDuplicateTaskNode,
+              },
+              {
+                children: (
+                  <div className="flex items-center gap-2">
+                    <Trash />
+                    Delete
+                  </div>
+                ),
+                variant: "destructive",
+                className: "cursor-pointer",
+                onClick: handleDeleteTaskNode,
+              },
+            ]}
+            setArguments={handleSetArguments}
+            disabled={!!runStatus}
+          />
+        </>
+      )}
     </>
   );
 };

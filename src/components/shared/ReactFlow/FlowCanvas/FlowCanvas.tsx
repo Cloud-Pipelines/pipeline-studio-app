@@ -32,18 +32,15 @@ import { useCopyPaste } from "@/hooks/useCopyPaste";
 import { useSelectionToolbar } from "@/hooks/useSelectionToolbar";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import type { NodeAndTaskId } from "@/types/taskNode";
 import type { ArgumentType } from "@/utils/componentSpec";
 import { SELECTION_TOOLBAR_ID } from "@/utils/constants";
 import { copyToNewTaskNode } from "@/utils/nodes/copyToNewTaskNode";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
-import { createTaskNode } from "@/utils/nodes/createTaskNode";
-import { duplicateTask } from "@/utils/nodes/duplicateTask";
-import type { NodeAndTaskId } from "@/utils/nodes/generateDynamicNodeCallbacks";
-import { nodeIdToTaskId, taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
 
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
-import { duplicateSelectedNodes } from "./utils/duplicateSelectedNodes";
+import { duplicateNodes } from "./utils/duplicateNodes";
 import { handleConnection } from "./utils/handleConnection";
 import onDropNode from "./utils/onDropNode";
 import { removeEdge } from "./utils/removeEdge";
@@ -91,6 +88,32 @@ const FlowCanvas = ({
     setReactFlowInstance(instance);
   };
 
+  const updateOrAddNodes = useCallback(
+    ({
+      updatedNodes,
+      newNodes,
+    }: {
+      updatedNodes?: Node[];
+      newNodes?: Node[];
+    }) => {
+      setNodes((prev) => {
+        const updated = prev.map((node) => {
+          const updatedNode = updatedNodes?.find(
+            (updatedNode) => updatedNode.id === node.id,
+          );
+          return updatedNode ? { ...node, ...updatedNode } : node;
+        });
+
+        if (!newNodes) {
+          return updated;
+        }
+
+        return [...updated, ...newNodes];
+      });
+    },
+    [setNodes],
+  );
+
   const onDelete = useCallback(
     async (ids: NodeAndTaskId) => {
       const nodeId = ids.nodeId;
@@ -129,50 +152,34 @@ const FlowCanvas = ({
 
   const onDuplicate = useCallback(
     (ids: NodeAndTaskId, selected = true) => {
-      const taskId = ids.taskId;
-      const { newTaskId, updatedGraphSpec } = duplicateTask(taskId, graphSpec);
+      const nodeId = ids.nodeId;
+      const node = nodes.find((n) => n.id === nodeId);
+
+      if (!node) return;
+
+      const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
+        graphSpec,
+        [node],
+        selected,
+      );
 
       updateGraphSpec(updatedGraphSpec);
 
-      if (selected) {
-        // Move selection state to the new node
-        const newNode = createTaskNode(
-          [newTaskId, updatedGraphSpec.tasks[newTaskId]],
-          !!readOnly,
-          {
-            onDelete,
-            setArguments,
-            onDuplicate,
-          },
-        );
-
-        setNodes((prev) => {
-          const originalNode = prev.find(
-            (node) => node.id === taskIdToNodeId(taskId),
-          );
-
-          if (!originalNode) {
-            return [...prev, newNode];
-          }
-
-          originalNode.selected = false;
-          newNode.selected = true;
-
-          const updatedNodes = prev.map((node) =>
-            node.id === taskIdToNodeId(taskId) ? originalNode : node,
-          );
-
-          return [...updatedNodes, newNode];
-        });
-      }
+      updateOrAddNodes({
+        updatedNodes,
+        newNodes,
+      });
     },
-    [graphSpec, updateGraphSpec, setNodes],
+    [graphSpec, nodes, updateGraphSpec, updateOrAddNodes],
   );
 
-  const nodeCallbacks = {
-    onDelete,
-    setArguments,
-    onDuplicate,
+  const nodeData = {
+    readOnly,
+    nodeCallbacks: {
+      onDelete,
+      setArguments,
+      onDuplicate,
+    },
   };
 
   const onConnect = useCallback(
@@ -217,7 +224,7 @@ const FlowCanvas = ({
     [componentSpec, setComponentSpec],
   );
 
-  const removeNodes = useCallback(async () => {
+  const onRemoveNodes = useCallback(async () => {
     const confirmed = await triggerConfirmationDialog();
     if (confirmed) {
       onElementsRemove(selectedElements);
@@ -266,66 +273,30 @@ const FlowCanvas = ({
     return confirmed;
   };
 
-  const duplicateNodes = useCallback(() => {
-    const { updatedGraphSpec, taskIdMap } = duplicateSelectedNodes(
+  const onDuplicateNodes = useCallback(() => {
+    const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
       graphSpec,
       selectedElements.nodes,
+      true,
     );
 
     updateGraphSpec(updatedGraphSpec);
 
-    const updatedNodes: Node[] = [];
-
-    const newNodes = Object.entries(taskIdMap)
-      .map(([oldTaskId, newTaskId]) => {
-        const newNode = createTaskNode(
-          [newTaskId, updatedGraphSpec.tasks[newTaskId]],
-          !!readOnly,
-          {
-            onDelete,
-            setArguments,
-            onDuplicate,
-          },
-        );
-
-        const originalNode = selectedElements.nodes.find(
-          (node) => nodeIdToTaskId(node.id) === oldTaskId,
-        );
-
-        if (originalNode) {
-          originalNode.selected = false;
-
-          newNode.measured = originalNode.measured;
-          newNode.selected = true;
-
-          updatedNodes.push(originalNode);
-        }
-
-        return newNode;
-      })
-      .filter(Boolean) as Node[];
-
-    setNodes((prev) => {
-      const updated = prev.map((node) => {
-        const updatedNode = updatedNodes.find(
-          (updatedNode) => updatedNode.id === node.id,
-        );
-        return updatedNode ? { ...node, ...updatedNode } : node;
-      });
-
-      return [...updated, ...newNodes];
+    updateOrAddNodes({
+      updatedNodes,
+      newNodes,
     });
 
     // Workaround: return the new nodes directly to the callbackhandler (which is inside useSelectionToolbar) so that the toolbar position can be updated
     // Without this the toolbar will not automatically shift to the newly copied nodes
     return newNodes;
-  }, [graphSpec, selectedElements, updateGraphSpec, setNodes]);
+  }, [graphSpec, selectedElements, updateGraphSpec, updateOrAddNodes]);
 
   const { toolbar, hideToolbar, showToolbar, updateToolbarPosition } =
     useSelectionToolbar({
       reactFlowInstance,
-      onDeleteNodes: removeNodes,
-      onDuplicateNodes: duplicateNodes,
+      onDeleteNodes: onRemoveNodes,
+      onDuplicateNodes: onDuplicateNodes,
     });
 
   const handleSelectionChange = useCallback(
@@ -372,11 +343,7 @@ const FlowCanvas = ({
 
   useEffect(() => {
     // Update ReactFlow based on the component spec
-    const newNodes = createNodesFromComponentSpec(
-      componentSpec,
-      !!readOnly,
-      nodeCallbacks,
-    );
+    const newNodes = createNodesFromComponentSpec(componentSpec, nodeData);
 
     setNodes((prevNodes) => {
       const updatedNodes = newNodes.map((newNode) => {
@@ -429,6 +396,8 @@ const FlowCanvas = ({
   }, [selectedElements]);
 
   const onPaste = useCallback(() => {
+    if (readOnly) return;
+
     // Paste nodes from clipboard to the centre of the Canvas
     navigator.clipboard.readText().then((clipboardText) => {
       try {
@@ -470,7 +439,6 @@ const FlowCanvas = ({
           const newNodes = nodesToPaste.map((node) => {
             const output = copyToNewTaskNode(
               node,
-              nodeCallbacks,
               reactFlowCenter,
               updatedGraphSpec,
             );
@@ -486,7 +454,7 @@ const FlowCanvas = ({
         console.error("Failed to paste nodes from clipboard:", err);
       }
     });
-  }, [graphSpec, reactFlowInstance, store, setNodes, nodeCallbacks]);
+  }, [graphSpec, reactFlowInstance, store, setNodes, nodeData]);
 
   useCopyPaste({
     onCopy,
@@ -564,10 +532,7 @@ function getConfirmationDialogDetails(selectedElements: NodesAndEdges) {
 
       const singleDeleteDesc = (
         <div className="text-sm">
-          <p>
-            This will also will also delete all connections to and from the
-            Node.
-          </p>
+          <p>This will also delete all connections to and from the Node.</p>
           <br />
           {thisCannotBeUndone}
         </div>
