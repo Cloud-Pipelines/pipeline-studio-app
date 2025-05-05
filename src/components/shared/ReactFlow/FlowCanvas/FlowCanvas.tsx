@@ -11,6 +11,7 @@ import {
   type Edge,
   type Node,
   type NodeChange,
+  NodeToolbar,
   type OnInit,
   ReactFlow,
   type ReactFlowInstance,
@@ -18,23 +19,17 @@ import {
   useNodesState,
   useStoreApi,
 } from "@xyflow/react";
-import type {
-  ComponentType,
-  DragEvent,
-  MouseEvent as ReactMouseEvent,
-} from "react";
-import { useCallback, useEffect, useState } from "react";
+import type { ComponentType, DragEvent } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useCopyPaste } from "@/hooks/useCopyPaste";
-import { useSelectionToolbar } from "@/hooks/useSelectionToolbar";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { NodeAndTaskId } from "@/types/taskNode";
 import type { ArgumentType } from "@/utils/componentSpec";
-import { SELECTION_TOOLBAR_ID } from "@/utils/constants";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
 
 import SelectionToolbar from "./SelectionToolbar";
@@ -49,7 +44,6 @@ import { updateNodePositions } from "./utils/updateNodePosition";
 
 const nodeTypes: Record<string, ComponentType<any>> = {
   task: TaskNode,
-  toolbar: SelectionToolbar,
 };
 
 type NodesAndEdges = {
@@ -65,6 +59,7 @@ const FlowCanvas = ({
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 
   const {
     isOpen,
@@ -74,11 +69,7 @@ const FlowCanvas = ({
 
   const notify = useToastNotification();
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [selectedElements, setSelectedElements] = useState<NodesAndEdges>({
-    nodes: [],
-    edges: [],
-  });
+  const [showToolbar, setShowToolbar] = useState(false);
 
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
@@ -111,6 +102,23 @@ const FlowCanvas = ({
       });
     },
     [setNodes],
+  );
+
+  const selectedNodes = useMemo(
+    () => nodes.filter((node) => node.selected),
+    [nodes],
+  );
+  const selectedEdges = useMemo(
+    () => edges.filter((edge) => edge.selected),
+    [edges],
+  );
+
+  const selectedElements = useMemo(
+    () => ({
+      nodes: selectedNodes,
+      edges: selectedEdges,
+    }),
+    [selectedNodes, selectedEdges],
   );
 
   const onDelete = useCallback(
@@ -275,7 +283,7 @@ const FlowCanvas = ({
   const onDuplicateNodes = useCallback(() => {
     const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
       graphSpec,
-      selectedElements.nodes,
+      selectedNodes,
       { selected: true },
     );
 
@@ -285,60 +293,17 @@ const FlowCanvas = ({
       updatedNodes,
       newNodes,
     });
+  }, [graphSpec, selectedNodes, updateGraphSpec, setNodes]);
 
-    // Workaround: return the new nodes directly to the callbackhandler (which is inside useSelectionToolbar) so that the toolbar position can be updated
-    // Without this the toolbar will not automatically shift to the newly copied nodes
-    return newNodes;
-  }, [graphSpec, selectedElements, updateGraphSpec, updateOrAddNodes]);
-
-  const { toolbar, hideToolbar, showToolbar, updateToolbarPosition } =
-    useSelectionToolbar({
-      reactFlowInstance,
-      onDeleteNodes: onRemoveNodes,
-      onDuplicateNodes: onDuplicateNodes,
-    });
-
-  const handleSelectionChange = useCallback(
-    (params: NodesAndEdges) => {
-      setSelectedElements(params);
-
-      const nodes = params.nodes;
-      if (nodes.length < 1) {
-        hideToolbar();
-      } else {
-        updateToolbarPosition(nodes);
-      }
-    },
-    [hideToolbar, updateToolbarPosition],
-  );
+  const handleSelectionChange = useCallback(() => {
+    if (selectedNodes.length < 1) {
+      setShowToolbar(false);
+    }
+  }, [selectedNodes]);
 
   const handleSelectionEnd = useCallback(() => {
-    if (selectedElements.nodes.length > 0 && !readOnly) {
-      showToolbar(selectedElements.nodes);
-    } else {
-      hideToolbar();
-    }
-  }, [selectedElements]);
-
-  const handleSelectionDrag = useCallback(
-    (_e: ReactMouseEvent, nodes: Node[]) => {
-      if (toolbar.data.hidden) return;
-
-      // If the toolbar is visible update its position so it stays attached to the selection box
-      updateToolbarPosition(nodes);
-    },
-    [toolbar, updateToolbarPosition],
-  );
-
-  const handleSelectionDragEnd = useCallback(
-    (_e: ReactMouseEvent, nodes: Node[]) => {
-      setSelectedElements((prev) => ({
-        ...prev,
-        nodes: nodes,
-      }));
-    },
-    [],
-  );
+    setShowToolbar(true);
+  }, []);
 
   useEffect(() => {
     // Update ReactFlow based on the component spec
@@ -350,49 +315,23 @@ const FlowCanvas = ({
         return existingNode ? { ...existingNode, ...newNode } : newNode;
       });
 
-      // If the toolbar is in the previous node list, migrate it to the new one
-      const existingToolbarNode = prevNodes.find(
-        (node) => node.id === SELECTION_TOOLBAR_ID,
-      );
-
-      if (existingToolbarNode) {
-        return [...updatedNodes, { ...existingToolbarNode }];
-      }
-
       return updatedNodes;
     });
   }, [componentSpec]);
-
-  useEffect(() => {
-    // Update the toolbar node with the latest props
-    setNodes((prevNodes) => {
-      const existingToolbarNode = prevNodes.find(
-        (node) => node.id === SELECTION_TOOLBAR_ID,
-      );
-
-      if (existingToolbarNode) {
-        return prevNodes.map((node) =>
-          node.id === SELECTION_TOOLBAR_ID ? { ...node, ...toolbar } : node,
-        );
-      }
-
-      return [...prevNodes, { ...toolbar }];
-    });
-  }, [toolbar]);
 
   const store = useStoreApi();
 
   const onCopy = useCallback(() => {
     // Copy selected nodes to clipboard
-    if (selectedElements.nodes.length > 0) {
-      const selectedNodesJson = JSON.stringify(selectedElements.nodes);
+    if (selectedNodes.length > 0) {
+      const selectedNodesJson = JSON.stringify(selectedNodes);
       navigator.clipboard.writeText(selectedNodesJson).catch((err) => {
         console.error("Failed to copy nodes to clipboard:", err);
       });
-      const message = `Copied ${selectedElements.nodes.length} nodes to clipboard`;
+      const message = `Copied ${selectedNodes.length} nodes to clipboard`;
       notify(message, "success");
     }
-  }, [selectedElements]);
+  }, [selectedNodes]);
 
   const onPaste = useCallback(() => {
     if (readOnly) return;
@@ -457,14 +396,11 @@ const FlowCanvas = ({
 
   const { title, content } = getConfirmationDialogDetails(selectedElements);
 
-  const nodesWithoutToolbar = nodes.filter(
-    (node) => node.id !== SELECTION_TOOLBAR_ID,
-  );
-
   return (
     <>
       <ReactFlow
         {...rest}
+        fitView
         nodes={nodes}
         edges={edges}
         onNodesChange={handleOnNodesChange}
@@ -479,16 +415,21 @@ const FlowCanvas = ({
         deleteKeyCode={["Delete", "Backspace"]}
         onSelectionChange={handleSelectionChange}
         onSelectionEnd={handleSelectionEnd}
-        onSelectionDrag={handleSelectionDrag}
-        onSelectionDragStop={handleSelectionDragEnd}
         nodesDraggable={!readOnly}
         nodesConnectable={!readOnly}
         connectOnClick={!readOnly}
-        fitView
-        fitViewOptions={{
-          nodes: nodesWithoutToolbar,
-        }}
       >
+        <NodeToolbar
+          nodeId={selectedNodes.map((node) => node.id)}
+          isVisible={showToolbar}
+          offset={0}
+          align="end"
+        >
+          <SelectionToolbar
+            onDelete={onRemoveNodes}
+            onDuplicate={onDuplicateNodes}
+          />
+        </NodeToolbar>
         {children}
       </ReactFlow>
       {!readOnly && (

@@ -10,7 +10,6 @@ import { useStore } from "@xyflow/react";
 
 import { buildVertexPipelineSpecFromGraphComponentSpec } from "@/compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler";
 import type { ComponentSpec } from "@/utils/componentSpec";
-import { SELECTION_TOOLBAR_ID } from "@/utils/constants";
 import { updateComponentSpecFromNodes } from "@/utils/nodes/updateComponentSpecFromNodes";
 
 interface VertexAiExporterProps {
@@ -20,17 +19,13 @@ interface VertexAiExporterProps {
 const VertexAiExporter = ({ componentSpec }: VertexAiExporterProps) => {
   const nodes = useStore((store) => store.nodes);
 
-  const nodesWithoutToolbar = nodes.filter(
-    (node) => node.id !== SELECTION_TOOLBAR_ID,
-  );
-
   let vertexPipelineSpecText = "";
   try {
     // Augmenting the componentSpec might be useless right now, but it can stabilize the output (e.g. ordering).
     // Also, in the future, the original spec might be included in the vertexPipelineSpec
     componentSpec = updateComponentSpecFromNodes(
       componentSpec,
-      nodesWithoutToolbar,
+      nodes,
       true,
       true,
     );

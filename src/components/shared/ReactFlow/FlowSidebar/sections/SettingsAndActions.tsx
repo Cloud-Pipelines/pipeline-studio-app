@@ -19,7 +19,6 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/routes/router";
 import { useSavePipeline } from "@/services/pipelineService";
 import { componentSpecToYaml } from "@/utils/componentStore";
-import { SELECTION_TOOLBAR_ID } from "@/utils/constants";
 import { updateComponentSpecFromNodes } from "@/utils/nodes/updateComponentSpecFromNodes";
 
 import { ImportComponent } from "../components";
@@ -63,17 +62,13 @@ const SettingsAndActions = () => {
 
   const componentText = useMemo(() => {
     try {
-      const nodesWithoutToolbar = nodes.filter(
-        (n) => n.id !== SELECTION_TOOLBAR_ID,
-      );
-
-      if (!componentSpecRef.current || !nodesWithoutToolbar.length) {
+      if (!componentSpecRef.current || !nodes.length) {
         return "";
       }
 
       const cleanedSpec = updateComponentSpecFromNodes(
         componentSpecRef.current,
-        nodesWithoutToolbar,
+        nodes,
         false,
         true,
       );
