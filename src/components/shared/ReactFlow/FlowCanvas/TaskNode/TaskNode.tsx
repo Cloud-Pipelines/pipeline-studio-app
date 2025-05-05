@@ -13,6 +13,7 @@ import {
   type CSSProperties,
   memo,
   type ReactElement,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -20,6 +21,7 @@ import {
 import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { TaskNodeData } from "@/types/taskNode";
 import type {
   ArgumentType,
@@ -138,8 +140,13 @@ function generateOutputHandles(outputSpecs: OutputSpec[]): ReactElement[] {
 }
 
 const ComponentTaskNode = ({ data, selected }: NodeProps) => {
+  const { taskStatusMap } = useComponentSpec();
   const [isComponentEditorOpen, setIsComponentEditorOpen] = useState(false);
   const [isTaskDetailsSheetOpen, setIsTaskDetailsSheetOpen] = useState(false);
+  const taskId = useMemo(
+    () => data?.taskId as string | undefined,
+    [data?.taskId],
+  );
   const nodeRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
@@ -153,7 +160,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
 
   const readOnly = typedData.readOnly;
 
-  const runStatus = taskSpec.annotations?.["status"] as string | undefined;
+  const runStatus = taskStatusMap.get(taskId ?? "");
 
   if (componentSpec === undefined) {
     return null;
