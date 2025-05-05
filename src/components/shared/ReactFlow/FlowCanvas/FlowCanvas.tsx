@@ -35,7 +35,6 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { NodeAndTaskId } from "@/types/taskNode";
 import type { ArgumentType } from "@/utils/componentSpec";
 import { SELECTION_TOOLBAR_ID } from "@/utils/constants";
-import { copyToNewTaskNode } from "@/utils/nodes/copyToNewTaskNode";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
 
 import SelectionToolbar from "./SelectionToolbar";
@@ -160,7 +159,7 @@ const FlowCanvas = ({
       const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
         graphSpec,
         [node],
-        selected,
+        { selected },
       );
 
       updateGraphSpec(updatedGraphSpec);
@@ -277,7 +276,7 @@ const FlowCanvas = ({
     const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
       graphSpec,
       selectedElements.nodes,
-      true,
+      { selected: true },
     );
 
     updateGraphSpec(updatedGraphSpec);
@@ -426,35 +425,30 @@ const FlowCanvas = ({
             y: center?.y || 0,
           };
 
-          // Deselect all currently selected nodes
-          Object.keys(graphSpec.tasks).forEach((taskId) => {
-            const task = graphSpec.tasks[taskId];
-            if (task.annotations?.selected) {
-              task.annotations.selected = false;
-            }
+          const { newNodes, updatedGraphSpec } = duplicateNodes(
+            graphSpec,
+            nodesToPaste,
+            { position: reactFlowCenter, connection: "internal" },
+          );
+
+          // Deselect all existing nodes
+          const updatedNodes = nodes.map((node) => ({
+            ...node,
+            selected: false,
+          }));
+
+          updateOrAddNodes({
+            updatedNodes,
+            newNodes,
           });
 
-          let updatedGraphSpec = { ...graphSpec };
-
-          const newNodes = nodesToPaste.map((node) => {
-            const output = copyToNewTaskNode(
-              node,
-              reactFlowCenter,
-              updatedGraphSpec,
-            );
-            updatedGraphSpec = output.updatedGraphSpec;
-
-            return output.newNode;
-          });
-
-          setNodes((prevNodes) => [...prevNodes, ...newNodes]);
           updateGraphSpec(updatedGraphSpec);
         }
       } catch (err) {
         console.error("Failed to paste nodes from clipboard:", err);
       }
     });
-  }, [graphSpec, reactFlowInstance, store, setNodes, nodeData]);
+  }, [graphSpec, nodes, reactFlowInstance, store, updateOrAddNodes]);
 
   useCopyPaste({
     onCopy,
