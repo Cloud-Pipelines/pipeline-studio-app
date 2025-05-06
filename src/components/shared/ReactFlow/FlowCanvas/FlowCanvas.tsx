@@ -62,9 +62,9 @@ const FlowCanvas = ({
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 
   const {
-    isOpen,
-    handlers,
-    triggerDialog: triggerConfirmationDialog,
+    handlers: deleteConfirmationHandlers,
+    triggerDialog: triggerDeleteConfirmation,
+    ...deleteConfirmationProps
   } = useConfirmationDialog();
 
   const notify = useToastNotification();
@@ -130,18 +130,21 @@ const FlowCanvas = ({
       );
 
       if (node) {
-        const confirmed = await triggerConfirmationDialog();
-        if (confirmed) {
-          const params = {
-            nodes: [node],
-            edges: edgesToRemove,
-          } as NodesAndEdges;
+        const params = {
+          nodes: [node],
+          edges: edgesToRemove,
+        } as NodesAndEdges;
 
+        const confirmed = await triggerDeleteConfirmation(
+          getDeleteConfirmationDetails(params),
+        );
+
+        if (confirmed) {
           onElementsRemove(params);
         }
       }
     },
-    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmationDialog],
+    [nodes, edges, componentSpec, setComponentSpec, triggerDeleteConfirmation],
   );
 
   const setArguments = useCallback(
@@ -232,11 +235,13 @@ const FlowCanvas = ({
   );
 
   const onRemoveNodes = useCallback(async () => {
-    const confirmed = await triggerConfirmationDialog();
+    const confirmed = await triggerDeleteConfirmation(
+      getDeleteConfirmationDetails({ nodes: selectedNodes, edges: [] }),
+    );
     if (confirmed) {
       onElementsRemove(selectedElements);
     }
-  }, [selectedElements, onElementsRemove]);
+  }, [selectedElements, onElementsRemove, triggerDeleteConfirmation]);
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
     const positionChanges = changes.filter(
@@ -276,7 +281,9 @@ const FlowCanvas = ({
       return false;
     }
 
-    const confirmed = await triggerConfirmationDialog();
+    const confirmed = await triggerDeleteConfirmation(
+      getDeleteConfirmationDetails(params),
+    );
     return confirmed;
   };
 
@@ -394,8 +401,6 @@ const FlowCanvas = ({
     onPaste,
   });
 
-  const { title, content } = getConfirmationDialogDetails(selectedElements);
-
   return (
     <>
       <ReactFlow
@@ -434,12 +439,9 @@ const FlowCanvas = ({
       </ReactFlow>
       {!readOnly && (
         <ConfirmationDialog
-          title={title}
-          description=""
-          content={content}
-          isOpen={isOpen}
-          onConfirm={() => handlers?.onConfirm()}
-          onCancel={() => handlers?.onCancel()}
+          {...deleteConfirmationProps}
+          onConfirm={() => deleteConfirmationHandlers?.onConfirm()}
+          onCancel={() => deleteConfirmationHandlers?.onCancel()}
         />
       )}
     </>
@@ -448,21 +450,21 @@ const FlowCanvas = ({
 
 export default FlowCanvas;
 
-function getConfirmationDialogDetails(selectedElements: NodesAndEdges) {
-  const selectedNodes = selectedElements.nodes;
-  const selectedEdges = selectedElements.edges;
+function getDeleteConfirmationDetails(deletedElements: NodesAndEdges) {
+  const deletedNodes = deletedElements.nodes;
+  const deletedEdges = deletedElements.edges;
 
   const thisCannotBeUndone = (
     <p className="text-muted-foreground">This cannot be undone.</p>
   );
 
-  if (selectedNodes.length > 0) {
-    const isDeletingMultipleNodes = selectedNodes.length > 1;
+  if (deletedNodes.length > 0) {
+    const isDeletingMultipleNodes = deletedNodes.length > 1;
 
     if (!isDeletingMultipleNodes) {
       const singleDeleteTitle =
         "Delete Node" +
-        (selectedNodes.length > 0 ? ` '${selectedNodes[0].id}'` : "") +
+        (deletedNodes.length > 0 ? ` '${deletedNodes[0].id}'` : "") +
         "?";
 
       const singleDeleteDesc = (
@@ -476,6 +478,7 @@ function getConfirmationDialogDetails(selectedElements: NodesAndEdges) {
       return {
         title: singleDeleteTitle,
         content: singleDeleteDesc,
+        description: "",
       };
     }
 
@@ -485,7 +488,7 @@ function getConfirmationDialogDetails(selectedElements: NodesAndEdges) {
       <div className="text-sm">
         <p>{`
           Deleting
-          ${selectedNodes
+          ${deletedNodes
             .map((node) => {
               return `'${node.id}'`;
             })
@@ -500,11 +503,12 @@ function getConfirmationDialogDetails(selectedElements: NodesAndEdges) {
     return {
       title: multiDeleteTitle,
       content: multiDeleteDesc,
+      description: "",
     };
   }
 
-  if (selectedEdges.length > 0) {
-    const isDeletingMultipleEdges = selectedEdges.length > 1;
+  if (deletedEdges.length > 0) {
+    const isDeletingMultipleEdges = deletedEdges.length > 1;
 
     const edgeDeleteTitle = isDeletingMultipleEdges
       ? "Delete Connections?"
@@ -514,7 +518,7 @@ function getConfirmationDialogDetails(selectedElements: NodesAndEdges) {
       <div className="text-sm">
         <p>This will remove the follow connections between task nodes:</p>
         <p>
-          {selectedEdges
+          {deletedEdges
             .map((edge) => {
               return `'${edge.id}'`;
             })
@@ -528,11 +532,10 @@ function getConfirmationDialogDetails(selectedElements: NodesAndEdges) {
     return {
       title: edgeDeleteTitle,
       content: edgeDeleteDesc,
+      description: "",
     };
   }
 
-  return {
-    title: "",
-    content: "",
-  };
+  // Fallback to default
+  return {};
 }
