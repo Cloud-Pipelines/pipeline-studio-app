@@ -9,24 +9,32 @@ import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 import { getComponentName } from "@/utils/getComponentName";
 
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
 
+interface ButtonPropsWithTooltip extends ButtonProps {
+  tooltip?: string;
+}
 interface TaskConfigurationSheetProps {
   trigger?: ReactNode;
   taskId: string;
   taskSpec: TaskSpec;
-  actions?: ButtonProps[];
+  actions?: ButtonPropsWithTooltip[];
   isOpen: boolean;
   disabled?: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -70,24 +78,9 @@ const TaskConfigurationSheet = ({
         }}
         overlay={false}
       >
-        <SheetHeader>
-          <SheetTitle>
-            <div className="flex gap-2">
-              <InfoIcon />
-              {componentSpec.name ?? "<component>"}
-            </div>
-          </SheetTitle>
-          <SheetDescription>id: {taskId}</SheetDescription>
-          <div className="mt-4 flex flex-col gap-2">
-            <div className="flex gap-2">
-              {actions &&
-                actions.map((action, index) => (
-                  <Button key={index} {...action} />
-                ))}
-            </div>
-          </div>
+        <SheetHeader className="pb-0">
+          <SheetTitle>{componentSpec.name ?? "<component>"}</SheetTitle>
         </SheetHeader>
-        <hr className="mx-4" />
         <div className="flex flex-col px-4 gap-4 overflow-y-auto">
           <Tabs defaultValue="details">
             <TabsList className="mb-2">
@@ -108,8 +101,19 @@ const TaskConfigurationSheet = ({
               <TaskDetails
                 displayName={displayName}
                 componentSpec={componentSpec}
+                taskId={taskId}
                 componentDigest={taskSpec.componentRef.digest}
                 url={taskSpec.componentRef.url}
+                actions={actions?.map((action, index) => (
+                  <TooltipProvider key={index}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button {...action} />
+                      </TooltipTrigger>
+                      <TooltipContent>{action.tooltip}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ))}
               />
             </TabsContent>
             <TabsContent value="arguments" className="h-full">
@@ -131,7 +135,6 @@ const TaskConfigurationSheet = ({
             </TabsContent>
           </Tabs>
         </div>
-        <hr className="mx-4" />
         <SheetFooter>
           <Button
             onClick={() => onOpenChange(false)}

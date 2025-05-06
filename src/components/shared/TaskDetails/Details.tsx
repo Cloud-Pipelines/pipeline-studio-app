@@ -1,28 +1,62 @@
-import { Download, ExternalLink } from "lucide-react";
+import {
+  ChevronsUpDown,
+  ClipboardIcon,
+  DownloadIcon,
+  ExternalLink,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import useToastNotification from "@/hooks/useToastNotification";
 import type { ComponentSpec } from "@/utils/componentSpec";
-import { convertRawUrlToDirectoryUrl } from "@/utils/URL";
+import {
+  convertRawUrlToDirectoryUrl,
+  downloadYamlFromComponentText,
+} from "@/utils/URL";
+import copyToYaml from "@/utils/yaml";
 
 interface TaskDetailsProps {
   displayName: string;
   componentSpec: ComponentSpec;
+  taskId?: string;
   componentDigest?: string;
   url?: string;
   actions?: ReactNode[];
-  handleDownloadYaml?: () => void;
 }
 
 const TaskDetails = ({
   displayName,
   componentSpec,
+  taskId,
   componentDigest,
   url,
   actions = [],
-  handleDownloadYaml,
 }: TaskDetailsProps) => {
+  const notify = useToastNotification();
+
   const canonicalUrl = componentSpec?.metadata?.annotations?.canonical_location;
+
+  const handleDownloadYaml = () => {
+    downloadYamlFromComponentText(componentSpec, displayName);
+  };
+
+  const handleCopyYaml = () => {
+    copyToYaml(componentSpec,
+      (message) => notify(message, "success"),
+      (message) => notify(message, "error"),
+    );
+  };
 
   return (
     <div className="h-full overflow-auto hide-scrollbar">
@@ -35,6 +69,16 @@ const TaskDetails = ({
             {componentSpec?.name || displayName}
           </div>
         </div>
+        {taskId && (
+          <div className="flex flex-col px-3 py-2">
+            <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
+              Task ID
+            </div>
+            <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
+              {taskId}
+            </div>
+          </div>
+        )}
 
         {componentSpec?.metadata?.annotations?.author && (
           <div className="flex flex-col px-3 py-2">
@@ -109,12 +153,23 @@ const TaskDetails = ({
 
         {componentSpec?.description && (
           <div className="flex flex-col px-3 py-2">
-            <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
-              Description
-            </div>
-            <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
-              {componentSpec.description}
-            </div>
+            <Collapsible>
+              <div className="font-medium text-sm text-gray-700 flex items-center gap-1">
+                Description
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <ChevronsUpDown className="h-4 w-4" />
+                    <span className="sr-only">Toggle</span>
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+
+              <CollapsibleContent>
+                <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
+                  {componentSpec.description}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         )}
 
@@ -127,26 +182,35 @@ const TaskDetails = ({
           </div>
         )}
 
-        <div className="flex flex-row gap-2 px-3 py-2">
-          {handleDownloadYaml && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadYaml}
-              className="flex items-center gap-1 cursor-pointer"
-            >
-              <Download className="size-4" />
-              Download YAML
-            </Button>
-          )}
-          {actions.map((action, index) => (
-            <div
-              key={index}
-              className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1"
-            >
-              {action}
-            </div>
-          ))}
+        <div className="px-3 py-2 flex flex-row gap-2" key={0}>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="secondary"
+                  className="cursor-pointer"
+                  onClick={handleDownloadYaml}
+                >
+                  <DownloadIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Download YAML</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="secondary"
+                  className="cursor-pointer"
+                  onClick={handleCopyYaml}
+                >
+                  <ClipboardIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Copy YAML</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {actions}
         </div>
       </div>
     </div>

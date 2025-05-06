@@ -1,14 +1,6 @@
-/**
- * @license
- * Copyright 2021 Alexey Volkov
- * SPDX-License-Identifier: Apache-2.0
- * @author         Alexey Volkov <alexey.volkov+oss@ark-kun.com>
- * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
- */
 import type { HandleType, NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
-import yaml from "js-yaml";
-import { BookCopy, Copy, Trash } from "lucide-react";
+import { CopyIcon, TrashIcon } from "lucide-react";
 import {
   type CSSProperties,
   memo,
@@ -281,19 +273,6 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     setIsComponentEditorOpen(false);
   };
 
-  const handleCopyYaml = () => {
-    const code = yaml.dump(componentSpec?.implementation, {
-      lineWidth: 80,
-      noRefs: true,
-      indent: 2,
-    });
-
-    navigator.clipboard.writeText(code).then(
-      () => notify("Implementation copied to clipboard", "success"),
-      (err) => notify("Failed to copy Implementation: " + err, "error"),
-    );
-  };
-
   const handleTaskDetailsSheetClose = () => {
     setIsTaskDetailsSheetOpen(false);
   };
@@ -342,34 +321,23 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
               {
                 children: (
                   <div className="flex items-center gap-2">
-                    <BookCopy />
-                    Copy yaml
+                    <CopyIcon />
                   </div>
                 ),
                 variant: "secondary",
                 className: "cursor-pointer",
-                onClick: handleCopyYaml,
-              },
-              {
-                children: (
-                  <div className="flex items-center gap-2">
-                    <Copy />
-                    Duplicate
-                  </div>
-                ),
-                variant: "secondary",
-                className: "cursor-pointer",
+                tooltip: "Duplicate Task",
                 onClick: handleDuplicateTaskNode,
               },
               {
                 children: (
                   <div className="flex items-center gap-2">
-                    <Trash />
-                    Delete
+                    <TrashIcon />
                   </div>
                 ),
                 variant: "destructive",
                 className: "cursor-pointer",
+                tooltip: "Delete Task",
                 onClick: handleDeleteTaskNode,
               },
             ]}
