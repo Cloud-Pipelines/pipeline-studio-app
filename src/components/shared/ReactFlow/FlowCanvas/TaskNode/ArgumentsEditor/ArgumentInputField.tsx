@@ -113,26 +113,33 @@ export const ArgumentInputField = ({
         </div>
       </div>
       <div className="relative w-48">
-        <Input
-          id={argument.inputSpec.name}
-          value={inputValue}
-          onChange={(e) => {
-            handleInputChange(e.target.value);
-          }}
-          placeholder={placeholder}
-          required={!argument.inputSpec.optional}
-          className={cn(
-            "flex-1",
-            canUndo && "pr-10",
-            argument.isRemoved &&
-              !argument.inputSpec.optional &&
-              "border-red-200",
-            argument.isRemoved &&
-              argument.inputSpec.optional &&
-              "border-gray-100 text-gray-500",
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Input
+              id={argument.inputSpec.name}
+              value={inputValue}
+              onChange={(e) => {
+                handleInputChange(e.target.value);
+              }}
+              placeholder={placeholder}
+              required={!argument.inputSpec.optional}
+              className={cn(
+                "flex-1",
+                canUndo && "pr-10",
+                argument.isRemoved &&
+                  !argument.inputSpec.optional &&
+                  "border-red-200",
+                argument.isRemoved &&
+                  argument.inputSpec.optional &&
+                  "border-gray-100 text-gray-500",
+              )}
+              disabled={disabled}
+            />
+          </TooltipTrigger>
+          {placeholder && !inputValue && (
+            <TooltipContent className="z-9999">{placeholder}</TooltipContent>
           )}
-          disabled={disabled}
-        />
+        </Tooltip>
         {canUndo && (
           <Tooltip>
             <TooltipTrigger asChild>
