@@ -52,7 +52,8 @@ const TaskDetails = ({
   };
 
   const handleCopyYaml = () => {
-    copyToYaml(componentSpec,
+    copyToYaml(
+      componentSpec,
       (message) => notify(message, "success"),
       (message) => notify(message, "error"),
     );
