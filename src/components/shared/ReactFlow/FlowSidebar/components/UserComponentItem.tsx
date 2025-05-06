@@ -1,10 +1,16 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { File, Trash2 } from "lucide-react";
+import { File, TrashIcon } from "lucide-react";
 import { type DragEvent, useCallback, useState } from "react";
 
 import { ComponentDetailsDialog } from "@/components/shared/Dialogs";
 import { Button } from "@/components/ui/button";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
 import { deleteComponentFileFromList } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
@@ -97,18 +103,27 @@ const UserComponentItem = ({
               setConfirmDelete(false);
             }}
             actions={[
-              <Button
-                key="delete-component"
-                variant={confirmDelete ? "destructive" : "destructiveOutline"}
-                size="sm"
-                className="cursor-pointer"
-                onClick={handleDelete}
-              >
-                <Trash2 className="size-4" />
-                <span className="text-xs">
-                  {confirmDelete ? "Confirm Delete" : "Delete"}
-                </span>
-              </Button>,
+              <TooltipProvider key="delete-component">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      className="cursor-pointer"
+                      onClick={handleDelete}
+                    >
+                      <div className="flex items-center gap-2">
+                        <TrashIcon />
+                        {confirmDelete && (
+                          <span className="text-xs">Confirm Delete</span>
+                        )}
+                      </div>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {confirmDelete ? "Confirm Delete" : "Delete Component"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>,
             ]}
           />
         </div>
