@@ -1,16 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { File, TrashIcon } from "lucide-react";
-import { type DragEvent, useCallback, useState } from "react";
+import { File } from "lucide-react";
+import { type DragEvent, useCallback } from "react";
 
 import { ComponentDetailsDialog } from "@/components/shared/Dialogs";
-import { Button } from "@/components/ui/button";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
 import { deleteComponentFileFromList } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
@@ -32,7 +25,6 @@ const UserComponentItem = ({
   componentText,
   displayName,
 }: UserComponentItemProps) => {
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const queryClient = useQueryClient();
 
   const onDragStart = useCallback(
@@ -67,17 +59,13 @@ const UserComponentItem = ({
   );
 
   const handleDelete = useCallback(async () => {
-    if (confirmDelete) {
-      try {
-        await deleteComponentFileFromList(USER_COMPONENTS_LIST_NAME, fileName);
-        queryClient.invalidateQueries({ queryKey: ["userComponents"] });
-      } catch (error) {
-        console.error("Error deleting component:", error);
-      }
-    } else {
-      setConfirmDelete(true);
+    try {
+      await deleteComponentFileFromList(USER_COMPONENTS_LIST_NAME, fileName);
+      queryClient.invalidateQueries({ queryKey: ["userComponents"] });
+    } catch (error) {
+      console.error("Error deleting component:", error);
     }
-  }, [fileName, queryClient, confirmDelete]);
+  }, [fileName, queryClient]);
 
   return (
     <SidebarMenuItem
@@ -88,9 +76,14 @@ const UserComponentItem = ({
       <div className="flex-1 flex">
         <div className="flex gap-2 w-full">
           <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
-          <span className="truncate text-xs text-gray-800 max-w-[200px]">
-            {displayName}
-          </span>
+          <div className="flex flex-col">
+            <span className="truncate text-xs text-gray-800 max-w-[200px]">
+              {displayName}
+            </span>
+            <span className="truncate text-[10px] text-gray-500 max-w-[100px] font-mono">
+              Ver: {componentDigest}
+            </span>
+          </div>
         </div>
         <div className="flex-1 flex justify-end mr-[15px]">
           <ComponentDetailsDialog
@@ -99,32 +92,7 @@ const UserComponentItem = ({
             componentSpec={componentSpec}
             componentDigest={componentDigest}
             componentText={componentText}
-            onClose={() => {
-              setConfirmDelete(false);
-            }}
-            actions={[
-              <TooltipProvider key="delete-component">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      className="cursor-pointer"
-                      onClick={handleDelete}
-                    >
-                      <div className="flex items-center gap-2">
-                        <TrashIcon />
-                        {confirmDelete && (
-                          <span className="text-xs">Confirm Delete</span>
-                        )}
-                      </div>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {confirmDelete ? "Confirm Delete" : "Delete Component"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>,
-            ]}
+            onDelete={handleDelete}
           />
         </div>
       </div>

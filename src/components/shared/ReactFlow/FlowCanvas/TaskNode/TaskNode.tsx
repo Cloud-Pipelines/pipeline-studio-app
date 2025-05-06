@@ -1,6 +1,6 @@
 import type { HandleType, NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
-import { CopyIcon, TrashIcon } from "lucide-react";
+import { CopyIcon } from "lucide-react";
 import {
   type CSSProperties,
   memo,
@@ -317,6 +317,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
             taskSpec={taskSpec}
             isOpen={isComponentEditorOpen}
             onOpenChange={setIsComponentEditorOpen}
+            onDelete={handleDeleteTaskNode}
             actions={[
               {
                 children: (
@@ -328,17 +329,6 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
                 className: "cursor-pointer",
                 tooltip: "Duplicate Task",
                 onClick: handleDuplicateTaskNode,
-              },
-              {
-                children: (
-                  <div className="flex items-center gap-2">
-                    <TrashIcon />
-                  </div>
-                ),
-                variant: "destructive",
-                className: "cursor-pointer",
-                tooltip: "Delete Task",
-                onClick: handleDeleteTaskNode,
               },
             ]}
             setArguments={handleSetArguments}
