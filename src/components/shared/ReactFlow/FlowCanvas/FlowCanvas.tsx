@@ -424,17 +424,19 @@ const FlowCanvas = ({
         nodesConnectable={!readOnly}
         connectOnClick={!readOnly}
       >
-        <NodeToolbar
-          nodeId={selectedNodes.map((node) => node.id)}
-          isVisible={showToolbar}
-          offset={0}
-          align="end"
-        >
-          <SelectionToolbar
-            onDelete={onRemoveNodes}
-            onDuplicate={onDuplicateNodes}
-          />
-        </NodeToolbar>
+        {!readOnly && (
+          <NodeToolbar
+            nodeId={selectedNodes.map((node) => node.id)}
+            isVisible={showToolbar}
+            offset={0}
+            align="end"
+          >
+            <SelectionToolbar
+              onDelete={onRemoveNodes}
+              onDuplicate={onDuplicateNodes}
+            />
+          </NodeToolbar>
+        )}
         {children}
       </ReactFlow>
       {!readOnly && (
