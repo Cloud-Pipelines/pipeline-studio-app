@@ -1,25 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { XYPosition } from "@xyflow/react";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import type { ComponentSpec, TaskSpec } from "@/utils/componentSpec";
 
-import onDropNode from "./onDropNode";
+import addTask from "./addTask";
 
-describe("onDropNode", () => {
-  let mockEvent: any;
-  let mockReactFlowInstance: any;
+describe("addTask", () => {
+  let position: XYPosition;
   let mockComponentSpec: ComponentSpec;
 
   beforeEach(() => {
-    mockEvent = {
-      clientX: 100,
-      clientY: 200,
-      dataTransfer: {
-        getData: vi.fn(),
-      },
-    };
-
-    mockReactFlowInstance = {
-      screenToFlowPosition: vi.fn().mockReturnValue({ x: 50, y: 100 }),
+    position = {
+      x: 50,
+      y: 100,
     };
 
     mockComponentSpec = {
@@ -31,18 +24,9 @@ describe("onDropNode", () => {
   });
 
   it("should do nothing if dropped data is empty", () => {
-    mockEvent.dataTransfer.getData.mockImplementation((type: string) => {
-      if (type === "application/reactflow") return "";
-      return "";
-    });
+    const result = addTask("task", null, position, mockComponentSpec);
 
-    const result = onDropNode(
-      mockEvent as any,
-      mockReactFlowInstance,
-      mockComponentSpec,
-    );
-
-    expect(JSON.stringify(result)).toBe(JSON.stringify(mockComponentSpec));
+    expect(result).toStrictEqual(mockComponentSpec);
   });
 
   it("should add a task node when task type is dropped", () => {
@@ -56,19 +40,7 @@ describe("onDropNode", () => {
       annotations: {},
     };
 
-    mockEvent.dataTransfer.getData.mockImplementation((type: string) => {
-      if (type === "application/reactflow")
-        return JSON.stringify({ task: mockTaskSpec });
-      if (type === "DragStart.offset")
-        return JSON.stringify({ offsetX: 10, offsetY: 20 });
-      return "";
-    });
-
-    const result = onDropNode(
-      mockEvent as any,
-      mockReactFlowInstance,
-      mockComponentSpec,
-    );
+    const result = addTask("task", mockTaskSpec, position, mockComponentSpec);
 
     const newComponentSpec = result as typeof mockComponentSpec & {
       implementation: { graph: { tasks: Record<string, any> } };
@@ -87,19 +59,7 @@ describe("onDropNode", () => {
   });
 
   it("should add an input node when input type is dropped", () => {
-    mockEvent.dataTransfer.getData.mockImplementation((type: string) => {
-      if (type === "application/reactflow")
-        return JSON.stringify({ input: {} });
-      if (type === "DragStart.offset")
-        return JSON.stringify({ offsetX: 10, offsetY: 20 });
-      return "";
-    });
-
-    const result = onDropNode(
-      mockEvent as any,
-      mockReactFlowInstance,
-      mockComponentSpec,
-    );
+    const result = addTask("input", null, position, mockComponentSpec);
 
     const newComponentSpec = result as typeof mockComponentSpec & {
       inputs: Array<{ name: string; annotations: Record<string, any> }>;
@@ -113,19 +73,7 @@ describe("onDropNode", () => {
   });
 
   it("should add an output node when output type is dropped", () => {
-    mockEvent.dataTransfer.getData.mockImplementation((type: string) => {
-      if (type === "application/reactflow")
-        return JSON.stringify({ output: {} });
-      if (type === "DragStart.offset")
-        return JSON.stringify({ offsetX: 10, offsetY: 20 });
-      return "";
-    });
-
-    const result = onDropNode(
-      mockEvent as any,
-      mockReactFlowInstance,
-      mockComponentSpec,
-    );
+    const result = addTask("output", null, position, mockComponentSpec);
 
     const newComponentSpec = result as typeof mockComponentSpec & {
       outputs: Array<{ name: string; annotations: Record<string, any> }>;
@@ -145,6 +93,11 @@ describe("onDropNode", () => {
       },
     };
 
+    const newMockComponentSpec = {
+      ...mockComponentSpec,
+      implementation: { graph: mockGraphSpec },
+    };
+
     const mockTaskSpec: TaskSpec = {
       componentRef: {
         spec: {
@@ -155,16 +108,12 @@ describe("onDropNode", () => {
       annotations: {},
     };
 
-    mockEvent.dataTransfer.getData.mockImplementation((type: string) => {
-      if (type === "application/reactflow")
-        return JSON.stringify({ task: mockTaskSpec });
-      return "";
-    });
-
-    const result = onDropNode(mockEvent as any, mockReactFlowInstance, {
-      ...mockComponentSpec,
-      implementation: { graph: mockGraphSpec },
-    });
+    const result = addTask(
+      "task",
+      mockTaskSpec,
+      position,
+      newMockComponentSpec,
+    );
 
     const newComponentSpec = result;
 
@@ -178,24 +127,14 @@ describe("onDropNode", () => {
   });
 
   it("should create unique names for inputs when duplicates exist", () => {
-    mockComponentSpec = {
+    const newMockComponentSpec = {
       ...mockComponentSpec,
       inputs: [{ name: "Input", annotations: {} }],
     };
 
-    mockEvent.dataTransfer.getData.mockImplementation((type: string) => {
-      if (type === "application/reactflow")
-        return JSON.stringify({ input: {} });
-      return "";
-    });
+    const result = addTask("input", null, position, newMockComponentSpec);
 
-    const result = onDropNode(
-      mockEvent as any,
-      mockReactFlowInstance,
-      mockComponentSpec,
-    );
-
-    const newComponentSpec = result as typeof mockComponentSpec & {
+    const newComponentSpec = result as typeof newMockComponentSpec & {
       inputs: Array<{ name: string; annotations: Record<string, any> }>;
     };
 
@@ -209,17 +148,7 @@ describe("onDropNode", () => {
       outputs: [{ name: "Output", annotations: {} }],
     };
 
-    mockEvent.dataTransfer.getData.mockImplementation((type: string) => {
-      if (type === "application/reactflow")
-        return JSON.stringify({ output: {} });
-      return "";
-    });
-
-    const result = onDropNode(
-      mockEvent as any,
-      mockReactFlowInstance,
-      newMockComponentSpec,
-    );
+    const result = addTask("output", null, position, newMockComponentSpec);
 
     const newComponentSpec = result as typeof newMockComponentSpec & {
       outputs: Array<{ name: string; annotations: Record<string, any> }>;

@@ -34,9 +34,11 @@ import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromCompo
 
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
+import addTask from "./utils/addTask";
 import { duplicateNodes } from "./utils/duplicateNodes";
+import { getPositionFromEvent } from "./utils/getPositionFromEvent";
+import { getTaskFromEvent } from "./utils/getTaskFromEvent";
 import { handleConnection } from "./utils/handleConnection";
-import onDropNode from "./utils/onDropNode";
 import { removeEdge } from "./utils/removeEdge";
 import { removeNode } from "./utils/removeNode";
 import replaceTaskArgumentsInGraphSpec from "./utils/replaceTaskArgumentsInGraphSpec";
@@ -208,12 +210,28 @@ const FlowCanvas = ({
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
 
+    const { taskSpec: droppedTask, taskType } = getTaskFromEvent(event);
+
+    if (!taskType) {
+      console.error("Dropped task type not identified.");
+      return;
+    }
+
+    if (!droppedTask && taskType === "task") {
+      console.error("Unable to find dropped task.");
+      return;
+    }
+
     if (reactFlowInstance) {
-      const newComponentSpec = onDropNode(
-        event,
-        reactFlowInstance,
+      const position = getPositionFromEvent(event, reactFlowInstance);
+
+      const newComponentSpec = addTask(
+        taskType,
+        droppedTask,
+        position,
         componentSpec,
       );
+
       setComponentSpec(newComponentSpec);
     }
   };
