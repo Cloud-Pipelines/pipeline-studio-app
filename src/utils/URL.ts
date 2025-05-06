@@ -1,3 +1,4 @@
+import yaml from "js-yaml";
 const transformGcsUrl = (url: string) => {
   if (url.startsWith("gs://")) {
     return url.replace("gs://", "https://storage.cloud.google.com/");
@@ -27,10 +28,14 @@ const convertRawUrlToDirectoryUrl = (rawUrl: string) => {
 };
 
 const downloadYamlFromComponentText = (
-  componentText: string,
   componentSpec: ComponentSpec,
   displayName: string,
 ) => {
+  const componentText = yaml.dump(componentSpec, {
+    lineWidth: 80,
+    noRefs: true,
+    indent: 2,
+  });
   const blob = new Blob([componentText], { type: "text/yaml" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

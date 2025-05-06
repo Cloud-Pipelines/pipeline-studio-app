@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ComponentSpec } from "@/utils/componentSpec";
-import { downloadYamlFromComponentText } from "@/utils/URL";
 
 import InfoIconButton from "../Buttons/InfoIconButton";
 import { TaskDetails, TaskImplementation, TaskIO } from "../TaskDetails";
@@ -33,7 +32,6 @@ const ComponentDetails = ({
   displayName,
   componentSpec,
   componentDigest,
-  componentText,
   trigger,
   actions = [],
   onClose,
@@ -41,9 +39,6 @@ const ComponentDetails = ({
   // Get global fullscreen state
   const { isAnyFullscreen } = useFullscreen();
 
-  const handleDownloadYaml = () => {
-    downloadYamlFromComponentText(componentText, componentSpec, displayName);
-  };
   const dialogTriggerButton = trigger || <InfoIconButton />;
 
   const onOpenChange = (open: boolean) => {
@@ -96,7 +91,6 @@ const ComponentDetails = ({
                 componentDigest={componentDigest}
                 url={url}
                 actions={actions}
-                handleDownloadYaml={handleDownloadYaml}
               />
             </TabsContent>
 
