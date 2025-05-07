@@ -32,7 +32,7 @@ const PipelineEditor = () => {
         <FlowCanvas snapGrid={[GRID_SIZE, GRID_SIZE]} snapToGrid>
           <MiniMap position="bottom-left" pannable />
           <Controls style={{ marginLeft: "224px", marginBottom: "36px" }} />
-          <Background gap={GRID_SIZE} />
+          <Background gap={GRID_SIZE} className="bg-slate-50!" />
         </FlowCanvas>
       </div>
       <FlowSidebar />
