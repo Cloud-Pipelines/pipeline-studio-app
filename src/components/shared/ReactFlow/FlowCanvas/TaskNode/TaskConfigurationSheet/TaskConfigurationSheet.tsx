@@ -9,6 +9,7 @@ import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -80,6 +81,9 @@ const TaskConfigurationSheet = ({
       >
         <SheetHeader className="pb-0">
           <SheetTitle>{componentSpec.name ?? "<component>"}</SheetTitle>
+          <SheetDescription className="hidden">
+            {componentSpec.name} configuration sheet
+          </SheetDescription>
         </SheetHeader>
         <div className="flex flex-col px-4 gap-4 overflow-y-auto">
           <Tabs defaultValue="details">
