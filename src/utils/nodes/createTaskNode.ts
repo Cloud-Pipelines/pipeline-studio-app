@@ -26,6 +26,7 @@ export const createTaskNode = (
       ...nodeData,
       taskSpec,
       taskId,
+      highlighted: false,
       callbacks: dynamicCallbacks, // Use these callbacks internally within the node
     },
     position: position,
