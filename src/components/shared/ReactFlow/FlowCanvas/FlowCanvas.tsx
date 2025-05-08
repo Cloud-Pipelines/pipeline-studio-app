@@ -63,15 +63,9 @@ const FlowCanvas = ({
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 
   const {
-    handlers: deleteConfirmationHandlers,
-    triggerDialog: triggerDeleteConfirmation,
-    ...deleteConfirmationProps
-  } = useConfirmationDialog();
-
-  const {
-    handlers: replaceConfirmationHandlers,
-    triggerDialog: triggerReplaceConfirmation,
-    ...replaceConfirmationProps
+    handlers: confirmationHandlers,
+    triggerDialog: triggerConfirmation,
+    ...confirmationProps
   } = useConfirmationDialog();
 
   const notify = useToastNotification();
@@ -143,7 +137,7 @@ const FlowCanvas = ({
           edges: edgesToRemove,
         } as NodesAndEdges;
 
-        const confirmed = await triggerDeleteConfirmation(
+        const confirmed = await triggerConfirmation(
           getDeleteConfirmationDetails(params),
         );
 
@@ -152,7 +146,7 @@ const FlowCanvas = ({
         }
       }
     },
-    [nodes, edges, componentSpec, setComponentSpec, triggerDeleteConfirmation],
+    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmation],
   );
 
   const setArguments = useCallback(
@@ -259,7 +253,7 @@ const FlowCanvas = ({
 
         const { updatedGraphSpec, lostInputs, newTaskId } = replaceTaskNode(
           replaceTarget,
-          droppedTask,
+          droppedTask.componentRef,
           graphSpec,
         );
 
@@ -269,7 +263,7 @@ const FlowCanvas = ({
           lostInputs,
         );
 
-        const confirmed = await triggerReplaceConfirmation(dialogData);
+        const confirmed = await triggerConfirmation(dialogData);
 
         setReplaceTarget(null);
 
@@ -300,7 +294,7 @@ const FlowCanvas = ({
       replaceTarget,
       setComponentSpec,
       updateGraphSpec,
-      triggerReplaceConfirmation,
+      triggerConfirmation,
     ],
   );
 
@@ -321,13 +315,13 @@ const FlowCanvas = ({
   );
 
   const onRemoveNodes = useCallback(async () => {
-    const confirmed = await triggerDeleteConfirmation(
+    const confirmed = await triggerConfirmation(
       getDeleteConfirmationDetails({ nodes: selectedNodes, edges: [] }),
     );
     if (confirmed) {
       onElementsRemove(selectedElements);
     }
-  }, [selectedElements, onElementsRemove, triggerDeleteConfirmation]);
+  }, [selectedElements, onElementsRemove, triggerConfirmation]);
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
     const positionChanges = changes.filter(
@@ -367,7 +361,7 @@ const FlowCanvas = ({
       return false;
     }
 
-    const confirmed = await triggerDeleteConfirmation(
+    const confirmed = await triggerConfirmation(
       getDeleteConfirmationDetails(params),
     );
     return confirmed;
@@ -542,16 +536,9 @@ const FlowCanvas = ({
       </ReactFlow>
       {!readOnly && (
         <ConfirmationDialog
-          {...deleteConfirmationProps}
-          onConfirm={() => deleteConfirmationHandlers?.onConfirm()}
-          onCancel={() => deleteConfirmationHandlers?.onCancel()}
-        />
-      )}
-      {!readOnly && (
-        <ConfirmationDialog
-          {...replaceConfirmationProps}
-          onConfirm={() => replaceConfirmationHandlers?.onConfirm()}
-          onCancel={() => replaceConfirmationHandlers?.onCancel()}
+          {...confirmationProps}
+          onConfirm={() => confirmationHandlers?.onConfirm()}
+          onCancel={() => confirmationHandlers?.onCancel()}
         />
       )}
     </>
