@@ -25,6 +25,7 @@ interface ComponentDetailsProps {
   trigger?: ReactNode;
   actions?: ReactNode[];
   onClose?: () => void;
+  onDelete?: () => void;
 }
 
 const ComponentDetails = ({
@@ -35,6 +36,7 @@ const ComponentDetails = ({
   trigger,
   actions = [],
   onClose,
+  onDelete,
 }: ComponentDetailsProps) => {
   // Get global fullscreen state
   const { isAnyFullscreen } = useFullscreen();
@@ -91,6 +93,7 @@ const ComponentDetails = ({
                 componentDigest={componentDigest}
                 url={url}
                 actions={actions}
+                onDelete={onDelete}
               />
             </TabsContent>
 

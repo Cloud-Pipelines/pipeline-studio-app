@@ -3,8 +3,9 @@ import {
   ClipboardIcon,
   DownloadIcon,
   ExternalLink,
+  TrashIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +33,8 @@ interface TaskDetailsProps {
   componentDigest?: string;
   url?: string;
   actions?: ReactNode[];
+  onDelete?: () => void;
+  hasDeletionConfirmation?: boolean;
 }
 
 const TaskDetails = ({
@@ -41,8 +44,11 @@ const TaskDetails = ({
   componentDigest,
   url,
   actions = [],
+  onDelete,
+  hasDeletionConfirmation = true,
 }: TaskDetailsProps) => {
   const notify = useToastNotification();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const canonicalUrl = componentSpec?.metadata?.annotations?.canonical_location;
 
@@ -57,6 +63,18 @@ const TaskDetails = ({
       (message) => notify(message, "error"),
     );
   };
+
+  const handleDelete = useCallback(async () => {
+    if (confirmDelete || !hasDeletionConfirmation) {
+      try {
+        onDelete?.();
+      } catch (error) {
+        console.error("Error deleting component:", error);
+      }
+    } else if (hasDeletionConfirmation) {
+      setConfirmDelete(true);
+    }
+  }, [onDelete, confirmDelete, hasDeletionConfirmation]);
 
   return (
     <div className="h-full overflow-auto hide-scrollbar">
@@ -182,7 +200,7 @@ const TaskDetails = ({
           </div>
         )}
 
-        <div className="px-3 py-2 flex flex-row gap-2">
+        <div className="px-3 py-2 flex flex-row gap-2" key={0}>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -207,8 +225,31 @@ const TaskDetails = ({
             </TooltipTrigger>
             <TooltipContent>Copy YAML</TooltipContent>
           </Tooltip>
-
           {actions}
+
+          {onDelete && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="destructive"
+                  className="cursor-pointer"
+                  onClick={handleDelete}
+                >
+                  <div className="flex items-center gap-2">
+                    <TrashIcon />
+                    {confirmDelete && hasDeletionConfirmation && (
+                      <span className="text-xs">Confirm Delete</span>
+                    )}
+                  </div>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {confirmDelete || !hasDeletionConfirmation
+                  ? "Confirm Delete. This action cannot be undone."
+                  : "Delete Component"}
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </div>
     </div>

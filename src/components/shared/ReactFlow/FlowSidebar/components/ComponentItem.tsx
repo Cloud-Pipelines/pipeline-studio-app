@@ -91,11 +91,16 @@ const ComponentMarkup = ({
             </span>
           ) : (
             <div className="flex-1 flex">
-              <div className="flex gap-2 w-full">
+              <div className="flex gap-2 w-full items-center">
                 <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                <span className="truncate text-xs text-gray-800 max-w-[200px]">
-                  {displayName}
-                </span>
+                <div className="flex flex-col">
+                  <span className="truncate text-xs text-gray-800 max-w-[200px]">
+                    {displayName}
+                  </span>
+                  <span className="truncate text-[10px] text-gray-500 max-w-[100px] font-mono">
+                    Ver: {componentDigest}
+                  </span>
+                </div>
               </div>
               <div className="flex-1 flex justify-end mr-[15px]">
                 <ComponentDetailsDialog

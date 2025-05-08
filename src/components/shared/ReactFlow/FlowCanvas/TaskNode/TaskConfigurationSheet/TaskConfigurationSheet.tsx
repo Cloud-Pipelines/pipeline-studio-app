@@ -51,6 +51,7 @@ const TaskConfigurationSheet = ({
   disabled = false,
   onOpenChange,
   setArguments,
+  onDelete,
 }: TaskConfigurationSheetProps) => {
   const componentSpec = taskSpec.componentRef.spec;
 
@@ -107,6 +108,8 @@ const TaskConfigurationSheet = ({
                 taskId={taskId}
                 componentDigest={taskSpec.componentRef.digest}
                 url={taskSpec.componentRef.url}
+                onDelete={onDelete}
+                hasDeletionConfirmation={false}
                 actions={actions?.map((action) => (
                   <Tooltip key={action.tooltip}>
                     <TooltipTrigger asChild>
