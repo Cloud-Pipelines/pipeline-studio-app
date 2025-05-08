@@ -126,7 +126,7 @@ const StatusIndicator = ({ status }: StatusIndicatorProps) => {
     <div
       className={cn(
         "absolute -z-1 -top-5 left-0 h-[35px] rounded-t-md px-2.5 py-1 text-[10px]",
-        style,
+        style
       )}
     >
       <div className="flex items-center gap-1 font-mono text-white">
@@ -228,7 +228,7 @@ const TaskNodeContent = ({
       className={cn(
         "rounded-2xl border-gray-200 border-2 max-w-[300px] min-w-[300px] break-words p-0 drop-shadow-none gap-2",
         selected ? "border-gray-500" : "hover:border-slate-200",
-        highlighted && "border-orange-500",
+        highlighted && "border-orange-500"
       )}
       ref={nodeRef}
       onClick={onClick}
@@ -269,7 +269,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const [isTaskDetailsSheetOpen, setIsTaskDetailsSheetOpen] = useState(false);
   const taskId = useMemo(
     () => data?.taskId as string | undefined,
-    [data?.taskId],
+    [data?.taskId]
   );
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
@@ -289,7 +289,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const isCustomComponent = !taskSpec.componentRef.url; // Custom components don't have a source url
 
   const { componentRef: mostRecentComponentRef } = useComponentFromUrl(
-    taskSpec.componentRef.url,
+    taskSpec.componentRef.url
   );
 
   const isOutdated =

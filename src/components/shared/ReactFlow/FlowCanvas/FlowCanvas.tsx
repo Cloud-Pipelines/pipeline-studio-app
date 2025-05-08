@@ -92,7 +92,7 @@ const FlowCanvas = ({
       setNodes((prev) => {
         const updated = prev.map((node) => {
           const updatedNode = updatedNodes?.find(
-            (updatedNode) => updatedNode.id === node.id,
+            (updatedNode) => updatedNode.id === node.id
           );
           return updatedNode ? { ...node, ...updatedNode } : node;
         });
@@ -104,16 +104,16 @@ const FlowCanvas = ({
         return [...updated, ...newNodes];
       });
     },
-    [setNodes],
+    [setNodes]
   );
 
   const selectedNodes = useMemo(
     () => nodes.filter((node) => node.selected),
-    [nodes],
+    [nodes]
   );
   const selectedEdges = useMemo(
     () => edges.filter((edge) => edge.selected),
-    [edges],
+    [edges]
   );
 
   const selectedElements = useMemo(
@@ -121,7 +121,7 @@ const FlowCanvas = ({
       nodes: selectedNodes,
       edges: selectedEdges,
     }),
-    [selectedNodes, selectedEdges],
+    [selectedNodes, selectedEdges]
   );
 
   const onDelete = useCallback(
@@ -129,7 +129,7 @@ const FlowCanvas = ({
       const nodeId = ids.nodeId;
       const node = nodes.find((n) => n.id === nodeId);
       const edgesToRemove = edges.filter(
-        (edge) => edge.source === nodeId || edge.target === nodeId,
+        (edge) => edge.source === nodeId || edge.target === nodeId
       );
 
       if (node) {
@@ -139,7 +139,7 @@ const FlowCanvas = ({
         } as NodesAndEdges;
 
         const confirmed = await triggerConfirmation(
-          getDeleteConfirmationDetails(params),
+          getDeleteConfirmationDetails(params)
         );
 
         if (confirmed) {
@@ -147,7 +147,7 @@ const FlowCanvas = ({
         }
       }
     },
-    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmation],
+    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmation]
   );
 
   const setArguments = useCallback(
@@ -156,11 +156,11 @@ const FlowCanvas = ({
       const newGraphSpec = replaceTaskArgumentsInGraphSpec(
         taskId,
         graphSpec,
-        args,
+        args
       );
       updateGraphSpec(newGraphSpec);
     },
-    [graphSpec],
+    [graphSpec]
   );
 
   const onDuplicate = useCallback(
@@ -173,7 +173,7 @@ const FlowCanvas = ({
       const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
         graphSpec,
         [node],
-        { selected },
+        { selected }
       );
 
       updateGraphSpec(updatedGraphSpec);
@@ -183,7 +183,7 @@ const FlowCanvas = ({
         newNodes,
       });
     },
-    [graphSpec, nodes, updateGraphSpec, updateOrAddNodes],
+    [graphSpec, nodes, updateGraphSpec, updateOrAddNodes]
   );
 
   const onUpgrade = useCallback(
@@ -196,7 +196,7 @@ const FlowCanvas = ({
       const { updatedGraphSpec, lostInputs } = replaceTaskNode(
         node,
         newComponentRef,
-        graphSpec,
+        graphSpec
       );
 
       if (!newComponentRef.digest) {
@@ -207,7 +207,7 @@ const FlowCanvas = ({
       const dialogData = getUpgradeConfirmationDetails(
         node,
         newComponentRef.digest,
-        lostInputs,
+        lostInputs
       );
 
       const confirmed = await triggerConfirmation(dialogData);
@@ -217,7 +217,7 @@ const FlowCanvas = ({
         notify("Component updated", "success");
       }
     },
-    [graphSpec, nodes, updateGraphSpec],
+    [graphSpec, nodes, updateGraphSpec]
   );
 
   const nodeData = {
@@ -235,7 +235,7 @@ const FlowCanvas = ({
       const updatedGraphSpec = handleConnection(graphSpec, connection);
       updateGraphSpec(updatedGraphSpec);
     },
-    [graphSpec, handleConnection, updateGraphSpec],
+    [graphSpec, handleConnection, updateGraphSpec]
   );
 
   /* New Tasks from the Sidebar */
@@ -251,7 +251,7 @@ const FlowCanvas = ({
 
       if (cursorPosition) {
         const hoveredNode = nodes.find((node) =>
-          isPositionInNode(node, cursorPosition),
+          isPositionInNode(node, cursorPosition)
         );
 
         if (hoveredNode?.id === replaceTarget?.id) return;
@@ -259,7 +259,7 @@ const FlowCanvas = ({
         setReplaceTarget(hoveredNode || null);
       }
     },
-    [reactFlowInstance, nodes, replaceTarget, setReplaceTarget],
+    [reactFlowInstance, nodes, replaceTarget, setReplaceTarget]
   );
 
   const onDrop = useCallback(
@@ -282,7 +282,7 @@ const FlowCanvas = ({
       if (replaceTarget) {
         if (!droppedTask) {
           console.error(
-            "Replacement by Input or Output node is currently unsupported.",
+            "Replacement by Input or Output node is currently unsupported."
           );
           return;
         }
@@ -290,13 +290,13 @@ const FlowCanvas = ({
         const { updatedGraphSpec, lostInputs, newTaskId } = replaceTaskNode(
           replaceTarget,
           droppedTask.componentRef,
-          graphSpec,
+          graphSpec
         );
 
         const dialogData = getReplaceConfirmationDetails(
           replaceTarget,
           newTaskId,
-          lostInputs,
+          lostInputs
         );
 
         const confirmed = await triggerConfirmation(dialogData);
@@ -317,7 +317,7 @@ const FlowCanvas = ({
           taskType,
           droppedTask,
           position,
-          componentSpec,
+          componentSpec
         );
 
         setComponentSpec(newComponentSpec);
@@ -331,7 +331,7 @@ const FlowCanvas = ({
       setComponentSpec,
       updateGraphSpec,
       triggerConfirmation,
-    ],
+    ]
   );
 
   const onElementsRemove = useCallback(
@@ -347,12 +347,12 @@ const FlowCanvas = ({
 
       setComponentSpec(updatedComponentSpec);
     },
-    [componentSpec, setComponentSpec],
+    [componentSpec, setComponentSpec]
   );
 
   const onRemoveNodes = useCallback(async () => {
     const confirmed = await triggerConfirmation(
-      getDeleteConfirmationDetails({ nodes: selectedNodes, edges: [] }),
+      getDeleteConfirmationDetails({ nodes: selectedNodes, edges: [] })
     );
     if (confirmed) {
       onElementsRemove(selectedElements);
@@ -361,7 +361,7 @@ const FlowCanvas = ({
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
     const positionChanges = changes.filter(
-      (change) => change.type === "position" && change.dragging === false,
+      (change) => change.type === "position" && change.dragging === false
     );
 
     if (positionChanges.length > 0) {
@@ -383,7 +383,7 @@ const FlowCanvas = ({
       if (updatedNodes.length > 0) {
         const updatedComponentSpec = updateNodePositions(
           updatedNodes,
-          componentSpec,
+          componentSpec
         );
         setComponentSpec(updatedComponentSpec);
       }
@@ -398,7 +398,7 @@ const FlowCanvas = ({
     }
 
     const confirmed = await triggerConfirmation(
-      getDeleteConfirmationDetails(params),
+      getDeleteConfirmationDetails(params)
     );
     return confirmed;
   };
@@ -407,7 +407,7 @@ const FlowCanvas = ({
     const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
       graphSpec,
       selectedNodes,
-      { selected: true },
+      { selected: true }
     );
 
     updateGraphSpec(updatedGraphSpec);
@@ -449,7 +449,7 @@ const FlowCanvas = ({
         return updatedNodes;
       });
     },
-    [setNodes, nodeData, replaceTarget],
+    [setNodes, nodeData, replaceTarget]
   );
 
   useEffect(() => {
@@ -505,7 +505,7 @@ const FlowCanvas = ({
           const { newNodes, updatedGraphSpec } = duplicateNodes(
             graphSpec,
             nodesToPaste,
-            { position: reactFlowCenter, connection: "internal" },
+            { position: reactFlowCenter, connection: "internal" }
           );
 
           // Deselect all existing nodes
