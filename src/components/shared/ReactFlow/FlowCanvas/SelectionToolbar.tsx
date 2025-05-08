@@ -1,13 +1,18 @@
-import { Copy, Trash } from "lucide-react";
+import { CircleFadingArrowUp, Copy, Trash } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 interface SelectionToolbarProps {
   onDuplicate: () => void;
   onDelete: () => void;
+  onUpgrade: () => void;
 }
 
-const SelectionToolbar = ({ onDelete, onDuplicate }: SelectionToolbarProps) => {
+const SelectionToolbar = ({
+  onDelete,
+  onDuplicate,
+  onUpgrade,
+}: SelectionToolbarProps) => {
   return (
     <div
       className="flex gap-1 bg-white rounded-xs items-center justify-center"
@@ -17,6 +22,14 @@ const SelectionToolbar = ({ onDelete, onDuplicate }: SelectionToolbarProps) => {
     >
       <Button
         className="h-full aspect-square w-min rounded-sm p-1"
+        variant="ghost"
+        onClick={onUpgrade}
+        size="icon"
+      >
+        <CircleFadingArrowUp className="p-0.5" />
+      </Button>
+      <Button
+        className="cursor-pointer h-full aspect-square w-min rounded-sm p-1"
         variant="ghost"
         onClick={onDuplicate}
         size="icon"
