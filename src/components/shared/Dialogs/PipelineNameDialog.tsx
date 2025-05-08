@@ -109,7 +109,7 @@ const PipelineNameDialog = ({
             <Button
               type="button"
               size="sm"
-              className="px-3 cursor-pointer"
+              className="px-3"
               onClick={handleSubmit}
               disabled={isDisabled}
             >

@@ -53,11 +53,7 @@ const CloneRunButtonInner = () => {
 
   return (
     <PipelineNameDialog
-      trigger={
-        <Button variant="outline" className="cursor-pointer">
-          Clone Pipeline
-        </Button>
-      }
+      trigger={<Button variant="outline">Clone Pipeline</Button>}
       title="Clone Pipeline"
       initialName={getInitialName()}
       onSubmit={handleClone}

@@ -203,11 +203,7 @@ const TaskDetails = ({
         <div className="px-3 py-2 flex flex-row gap-2" key={0}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="secondary"
-                className="cursor-pointer"
-                onClick={handleDownloadYaml}
-              >
+              <Button variant="secondary" onClick={handleDownloadYaml}>
                 <DownloadIcon />
               </Button>
             </TooltipTrigger>
@@ -215,11 +211,7 @@ const TaskDetails = ({
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="secondary"
-                className="cursor-pointer"
-                onClick={handleCopyYaml}
-              >
+              <Button variant="secondary" onClick={handleCopyYaml}>
                 <ClipboardIcon />
               </Button>
             </TooltipTrigger>
@@ -230,11 +222,7 @@ const TaskDetails = ({
           {onDelete && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="destructive"
-                  className="cursor-pointer"
-                  onClick={handleDelete}
-                >
+                <Button variant="destructive" onClick={handleDelete}>
                   <div className="flex items-center gap-2">
                     <TrashIcon />
                     {confirmDelete && hasDeletionConfirmation && (

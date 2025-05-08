@@ -213,11 +213,7 @@ const ImportComponent = () => {
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button
-              type="button"
-              variant="secondary"
-              className="cursor-pointer"
-            >
+            <Button type="button" variant="secondary">
               Close
             </Button>
           </DialogClose>
@@ -225,7 +221,6 @@ const ImportComponent = () => {
             type="submit"
             onClick={handleImport}
             disabled={isButtonDisabled}
-            className="cursor-pointer"
           >
             Import
           </Button>

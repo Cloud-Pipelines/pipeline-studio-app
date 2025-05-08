@@ -136,7 +136,7 @@ const SettingsAndActions = () => {
                   <Button
                     type="button"
                     variant="ghost"
-                    className="w-full justify-start px-2! cursor-pointer"
+                    className="w-full justify-start px-2!"
                   >
                     <Import />
                     <span className="font-normal text-xs">Import Pipeline</span>

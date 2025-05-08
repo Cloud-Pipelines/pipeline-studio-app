@@ -160,7 +160,7 @@ const OasisSubmitter = ({
     <SidebarMenuButton asChild>
       <Button
         onClick={handleSubmit}
-        className="w-full justify-start px-2! cursor-pointer mb-2"
+        className="w-full justify-start px-2! mb-2"
         variant="ghost"
         disabled={isButtonDisabled}
       >

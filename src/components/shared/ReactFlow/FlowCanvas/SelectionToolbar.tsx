@@ -16,7 +16,7 @@ const SelectionToolbar = ({ onDelete, onDuplicate }: SelectionToolbarProps) => {
       }}
     >
       <Button
-        className="cursor-pointer h-full aspect-square w-min rounded-sm p-1"
+        className="h-full aspect-square w-min rounded-sm p-1"
         variant="ghost"
         onClick={onDuplicate}
         size="icon"
@@ -24,7 +24,7 @@ const SelectionToolbar = ({ onDelete, onDuplicate }: SelectionToolbarProps) => {
         <Copy className="p-0.5" />
       </Button>
       <Button
-        className="cursor-pointer h-full aspect-square w-min rounded-sm text-destructive hover:text-destructive p-1"
+        className="h-full aspect-square w-min rounded-sm text-destructive hover:text-destructive p-1"
         variant="ghost"
         onClick={onDelete}
         size="icon"
