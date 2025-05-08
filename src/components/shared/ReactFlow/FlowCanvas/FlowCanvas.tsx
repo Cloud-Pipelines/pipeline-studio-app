@@ -18,7 +18,11 @@ import {
   useNodesState,
   useStoreApi,
 } from "@xyflow/react";
-import type { ComponentType, DragEvent } from "react";
+import type {
+  ComponentType,
+  DragEvent,
+  MouseEvent as ReactMouseEvent,
+} from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
@@ -41,6 +45,7 @@ import { duplicateNodes } from "./utils/duplicateNodes";
 import { getPositionFromEvent } from "./utils/getPositionFromEvent";
 import { getTaskFromEvent } from "./utils/getTaskFromEvent";
 import { handleConnection } from "./utils/handleConnection";
+import { isNodeCovered } from "./utils/isNodeCovered";
 import { isPositionInNode } from "./utils/isPositionInNode";
 import { removeEdge } from "./utils/removeEdge";
 import { removeNode } from "./utils/removeNode";
@@ -78,6 +83,7 @@ const FlowCanvas = ({
 
   const [showToolbar, setShowToolbar] = useState(false);
   const [replaceTarget, setReplaceTarget] = useState<Node | null>(null);
+  const [draggedNode, setDraggedNode] = useState<Node | null>(null);
 
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
@@ -206,6 +212,29 @@ const FlowCanvas = ({
       updateGraphSpec(updatedGraphSpec);
     },
     [graphSpec, handleConnection, updateGraphSpec],
+  );
+
+  /* Existing TaskNodes */
+  const onNodeDragStart = useCallback((_event: ReactMouseEvent, node: Node) => {
+    setDraggedNode(node);
+  }, []);
+
+  const onNodeDragStop = useCallback((_event: ReactMouseEvent, _node: Node) => {
+    setDraggedNode(null);
+  }, []);
+
+  const onNodeDrag = useCallback(
+    (_event: ReactMouseEvent, node: Node) => {
+      const coveredNode = nodes
+        .filter((existingNode) => existingNode.id !== node.id)
+        .find((existingNode) => isNodeCovered(node, existingNode));
+
+      if (coveredNode?.id === replaceTarget?.id) return;
+
+      setReplaceTarget(coveredNode || null);
+      setDraggedNode(node); // Set the latest version of the dragged node so it has an updated position and does not jump back to its original position on rerender
+    },
+    [nodes, replaceTarget, setReplaceTarget],
   );
 
   /* New Tasks from the Sidebar */
@@ -402,13 +431,25 @@ const FlowCanvas = ({
     (newComponentSpec: ComponentSpec) => {
       const newNodes = createNodesFromComponentSpec(newComponentSpec, nodeData);
 
-      const updatedNewNodes = newNodes.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          highlighted: node.id === replaceTarget?.id,
-        },
-      }));
+      const updatedNewNodes = newNodes
+        .filter((node) => node.id !== draggedNode?.id)
+        .map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            highlighted: node.id === replaceTarget?.id,
+          },
+        }));
+
+      if (draggedNode) {
+        updatedNewNodes.push({
+          ...draggedNode,
+          data: {
+            ...draggedNode.data,
+            highlighted: false,
+          },
+        });
+      }
 
       setNodes((prevNodes) => {
         const updatedNodes = updatedNewNodes.map((newNode) => {
@@ -419,7 +460,7 @@ const FlowCanvas = ({
         return updatedNodes;
       });
     },
-    [setNodes, nodeData, replaceTarget],
+    [setNodes, nodeData, replaceTarget, draggedNode],
   );
 
   useEffect(() => {
@@ -524,6 +565,9 @@ const FlowCanvas = ({
         nodesDraggable={!readOnly}
         nodesConnectable={!readOnly}
         connectOnClick={!readOnly}
+        onNodeDrag={onNodeDrag}
+        onNodeDragStart={onNodeDragStart}
+        onNodeDragStop={onNodeDragStop}
       >
         {!readOnly && (
           <NodeToolbar
