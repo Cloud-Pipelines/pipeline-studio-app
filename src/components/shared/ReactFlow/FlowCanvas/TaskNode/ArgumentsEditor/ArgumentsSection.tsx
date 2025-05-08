@@ -71,11 +71,7 @@ const ArgumentsSection = ({
             <AlertCircle height={16} /> Unsaved changes
           </div>
         )}
-        <Button
-          onClick={handleApply}
-          disabled={disabled}
-          className="cursor-pointer"
-        >
+        <Button onClick={handleApply} disabled={disabled}>
           Apply
         </Button>
       </div>

@@ -173,7 +173,7 @@ const DraggableDialog = ({
           <CardDescription>{description}</CardDescription>
           <Button
             onClick={onClose}
-            className="cursor-pointer absolute top-2 right-2"
+            className="absolute top-2 right-2"
             variant="ghost"
           >
             <CircleX />
@@ -188,11 +188,7 @@ const DraggableDialog = ({
               ))}
           </div>
           {onConfirm && (
-            <Button
-              onClick={onConfirm}
-              disabled={disabled}
-              className="cursor-pointer"
-            >
+            <Button onClick={onConfirm} disabled={disabled}>
               Apply
             </Button>
           )}

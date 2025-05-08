@@ -328,7 +328,6 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
                   </div>
                 ),
                 variant: "secondary",
-                className: "cursor-pointer",
                 tooltip: "Duplicate Task",
                 onClick: handleDuplicateTaskNode,
               },

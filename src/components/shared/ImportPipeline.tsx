@@ -123,9 +123,7 @@ const ImportPipeline = ({ triggerComponent }: ImportPipelineProps) => {
   const ButtonComponent = triggerComponent ? (
     triggerComponent
   ) : (
-    <Button variant="secondary" className="cursor-pointer">
-      Import Pipeline
-    </Button>
+    <Button variant="secondary">Import Pipeline</Button>
   );
 
   return (

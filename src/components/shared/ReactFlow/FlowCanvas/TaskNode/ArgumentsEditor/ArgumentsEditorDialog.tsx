@@ -106,7 +106,6 @@ const ArgumentsEditorDialog = ({
             </div>
           ),
           variant: "destructive",
-          className: "cursor-pointer",
           disabled,
           onClick: handleDelete,
         },
@@ -118,7 +117,6 @@ const ArgumentsEditorDialog = ({
             </div>
           ),
           variant: "secondary",
-          className: "cursor-pointer",
           disabled,
           onClick: handleCopy,
         },

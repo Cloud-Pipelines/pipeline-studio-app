@@ -35,11 +35,7 @@ const NewExperimentDialog = () => {
 
   return (
     <PipelineNameDialog
-      trigger={
-        <Button variant="outline" className="cursor-pointer">
-          New Pipeline
-        </Button>
-      }
+      trigger={<Button variant="outline">New Pipeline</Button>}
       title="New Pipeline"
       initialName={randomName()}
       onSubmit={handleCreate}

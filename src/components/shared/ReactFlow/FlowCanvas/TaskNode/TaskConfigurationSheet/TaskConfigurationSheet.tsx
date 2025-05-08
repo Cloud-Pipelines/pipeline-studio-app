@@ -144,7 +144,7 @@ const TaskConfigurationSheet = ({
             onClick={() => onOpenChange(false)}
             disabled={disabled}
             variant="secondary"
-            className="w-fit cursor-pointer"
+            className="w-fit"
           >
             Close
           </Button>
