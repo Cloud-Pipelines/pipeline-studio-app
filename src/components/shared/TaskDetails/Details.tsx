@@ -15,7 +15,6 @@ import {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import useToastNotification from "@/hooks/useToastNotification";
@@ -183,33 +182,31 @@ const TaskDetails = ({
           </div>
         )}
 
-        <div className="px-3 py-2 flex flex-row gap-2" key={0}>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="secondary"
-                  className="cursor-pointer"
-                  onClick={handleDownloadYaml}
-                >
-                  <DownloadIcon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Download YAML</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="secondary"
-                  className="cursor-pointer"
-                  onClick={handleCopyYaml}
-                >
-                  <ClipboardIcon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Copy YAML</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        <div className="px-3 py-2 flex flex-row gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="secondary"
+                className="cursor-pointer"
+                onClick={handleDownloadYaml}
+              >
+                <DownloadIcon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Download YAML</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="secondary"
+                className="cursor-pointer"
+                onClick={handleCopyYaml}
+              >
+                <ClipboardIcon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Copy YAML</TooltipContent>
+          </Tooltip>
 
           {actions}
         </div>
