@@ -21,7 +21,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 import { getComponentName } from "@/utils/getComponentName";
@@ -108,15 +107,13 @@ const TaskConfigurationSheet = ({
                 taskId={taskId}
                 componentDigest={taskSpec.componentRef.digest}
                 url={taskSpec.componentRef.url}
-                actions={actions?.map((action, index) => (
-                  <TooltipProvider key={index}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button {...action} />
-                      </TooltipTrigger>
-                      <TooltipContent>{action.tooltip}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                actions={actions?.map((action) => (
+                  <Tooltip key={action.tooltip}>
+                    <TooltipTrigger asChild>
+                      <Button {...action} />
+                    </TooltipTrigger>
+                    <TooltipContent>{action.tooltip}</TooltipContent>
+                  </Tooltip>
                 ))}
               />
             </TabsContent>

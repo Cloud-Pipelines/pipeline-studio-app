@@ -6,7 +6,6 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { TooltipProvider } from "@/components/ui/tooltip";
 import type { ArgumentInput } from "@/types/arguments";
 
 import { ArgumentInputField } from "./ArgumentInputField";
@@ -29,17 +28,15 @@ export const ArgumentsEditor = ({
   };
 
   return (
-    <TooltipProvider>
-      <div className="h-auto flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-4">
-        {argumentData.map((argument) => (
-          <ArgumentInputField
-            key={argument.key}
-            argument={argument}
-            setArgument={handleInputChange}
-            disabled={disabled}
-          />
-        ))}
-      </div>
-    </TooltipProvider>
+    <div className="h-auto flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-4">
+      {argumentData.map((argument) => (
+        <ArgumentInputField
+          key={argument.key}
+          argument={argument}
+          setArgument={handleInputChange}
+          disabled={disabled}
+        />
+      ))}
+    </div>
   );
 };
