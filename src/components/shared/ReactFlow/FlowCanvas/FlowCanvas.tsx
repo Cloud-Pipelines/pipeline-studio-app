@@ -20,11 +20,16 @@ import { useCopyPaste } from "@/hooks/useCopyPaste";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { NodeAndTaskId } from "@/types/taskNode";
-import type { ArgumentType, ComponentSpec } from "@/utils/componentSpec";
+import type {
+  ArgumentType,
+  ComponentReference,
+  ComponentSpec,
+} from "@/utils/componentSpec";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
 
 import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfirmation";
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
+import { getUpgradeConfirmationDetails } from "./ConfirmationDialogs/UpgradeComponent";
 import SmoothEdge from "./Edges/SmoothEdge";
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
@@ -181,12 +186,47 @@ const FlowCanvas = ({
     [graphSpec, nodes, updateGraphSpec, updateOrAddNodes],
   );
 
+  const onUpgrade = useCallback(
+    async (ids: NodeAndTaskId, newComponentRef: ComponentReference) => {
+      const nodeId = ids.nodeId;
+      const node = nodes.find((n) => n.id === nodeId);
+
+      if (!node) return;
+
+      const { updatedGraphSpec, lostInputs } = replaceTaskNode(
+        node,
+        newComponentRef,
+        graphSpec,
+      );
+
+      if (!newComponentRef.digest) {
+        console.error("Component reference does not have a digest.");
+        return;
+      }
+
+      const dialogData = getUpgradeConfirmationDetails(
+        node,
+        newComponentRef.digest,
+        lostInputs,
+      );
+
+      const confirmed = await triggerConfirmation(dialogData);
+
+      if (confirmed) {
+        updateGraphSpec(updatedGraphSpec);
+        notify("Component updated", "success");
+      }
+    },
+    [graphSpec, nodes, updateGraphSpec],
+  );
+
   const nodeData = {
     readOnly,
     nodeCallbacks: {
       onDelete,
       setArguments,
       onDuplicate,
+      onUpgrade,
     },
   };
 
