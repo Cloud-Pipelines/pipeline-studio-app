@@ -49,6 +49,7 @@ describe("useComponentSpecToEdges", () => {
       target: "task_task1",
       targetHandle: "input_input1",
       markerEnd: { type: MarkerType.Arrow },
+      type: "customEdge",
     });
   });
 
@@ -76,6 +77,7 @@ describe("useComponentSpecToEdges", () => {
       target: "task_task1",
       targetHandle: "input_input1",
       markerEnd: { type: MarkerType.Arrow },
+      type: "customEdge",
     });
   });
 
@@ -105,6 +107,7 @@ describe("useComponentSpecToEdges", () => {
       target: "output_graphOutput1",
       targetHandle: null,
       markerEnd: { type: MarkerType.Arrow },
+      type: "customEdge",
     });
   });
 
@@ -176,6 +179,7 @@ describe("useComponentSpecToEdges", () => {
       target: "task_task1",
       targetHandle: "input_input1",
       markerEnd: { type: MarkerType.Arrow },
+      type: "customEdge",
     });
 
     expect(result.current.edges).toContainEqual({
@@ -185,6 +189,7 @@ describe("useComponentSpecToEdges", () => {
       target: "task_task2",
       targetHandle: "input_input1",
       markerEnd: { type: MarkerType.Arrow },
+      type: "customEdge",
     });
 
     expect(result.current.edges).toContainEqual({
@@ -194,6 +199,7 @@ describe("useComponentSpecToEdges", () => {
       target: "output_graphOutput1",
       targetHandle: null,
       markerEnd: { type: MarkerType.Arrow },
+      type: "customEdge",
     });
   });
 });

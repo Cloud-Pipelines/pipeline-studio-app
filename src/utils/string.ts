@@ -6,8 +6,4 @@ const formatBytes = (bytes: number) => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
-const replaceUnderscoresWithSpaces = (str: string) => {
-  return str.replace(/_/g, " ");
-};
-
-export { formatBytes, replaceUnderscoresWithSpaces };
+export { formatBytes };
