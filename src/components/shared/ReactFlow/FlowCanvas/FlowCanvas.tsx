@@ -29,7 +29,7 @@ import { useCopyPaste } from "@/hooks/useCopyPaste";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { NodeAndTaskId } from "@/types/taskNode";
-import type { ArgumentType } from "@/utils/componentSpec";
+import type { ArgumentType, ComponentSpec } from "@/utils/componentSpec";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
 
 import SelectionToolbar from "./SelectionToolbar";
@@ -215,6 +215,7 @@ const FlowCanvas = ({
         componentSpec,
       );
       setComponentSpec(newComponentSpec);
+      updateReactFlow(newComponentSpec);
     }
   };
 
@@ -312,18 +313,25 @@ const FlowCanvas = ({
     setShowToolbar(true);
   }, []);
 
+  const updateReactFlow = useCallback(
+    (newComponentSpec: ComponentSpec) => {
+      const newNodes = createNodesFromComponentSpec(newComponentSpec, nodeData);
+
+      setNodes((prevNodes) => {
+        const updatedNodes = newNodes.map((newNode) => {
+          const existingNode = prevNodes.find((node) => node.id === newNode.id);
+          return existingNode ? { ...existingNode, ...newNode } : newNode;
+        });
+
+        return updatedNodes;
+      });
+    },
+    [setNodes, nodeData],
+  );
+
   useEffect(() => {
     // Update ReactFlow based on the component spec
-    const newNodes = createNodesFromComponentSpec(componentSpec, nodeData);
-
-    setNodes((prevNodes) => {
-      const updatedNodes = newNodes.map((newNode) => {
-        const existingNode = prevNodes.find((node) => node.id === newNode.id);
-        return existingNode ? { ...existingNode, ...newNode } : newNode;
-      });
-
-      return updatedNodes;
-    });
+    updateReactFlow(componentSpec);
   }, [componentSpec]);
 
   const store = useStoreApi();
