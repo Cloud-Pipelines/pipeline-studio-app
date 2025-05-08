@@ -4,6 +4,7 @@ export interface TaskNodeData extends Record<string, unknown> {
   taskSpec?: TaskSpec;
   taskId?: string;
   readOnly?: boolean;
+  highlighted?: boolean;
   callbacks?: TaskNodeCallbacks;
   nodeCallbacks: NodeCallbacks;
 }

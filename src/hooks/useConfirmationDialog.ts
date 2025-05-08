@@ -48,5 +48,12 @@ export default function useConfirmationDialog() {
     });
   };
 
-  return { title, description, content, isOpen, handlers, triggerDialog };
+  return {
+    title,
+    description,
+    content,
+    isOpen,
+    handlers,
+    triggerDialog,
+  };
 }

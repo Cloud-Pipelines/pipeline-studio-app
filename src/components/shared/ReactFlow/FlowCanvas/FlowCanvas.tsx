@@ -8,7 +8,6 @@
 
 import {
   type Connection,
-  type Edge,
   type Node,
   type NodeChange,
   NodeToolbar,
@@ -32,25 +31,25 @@ import type { NodeAndTaskId } from "@/types/taskNode";
 import type { ArgumentType, ComponentSpec } from "@/utils/componentSpec";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
 
+import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfirmation";
+import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
+import type { NodesAndEdges } from "./types";
 import addTask from "./utils/addTask";
 import { duplicateNodes } from "./utils/duplicateNodes";
 import { getPositionFromEvent } from "./utils/getPositionFromEvent";
 import { getTaskFromEvent } from "./utils/getTaskFromEvent";
 import { handleConnection } from "./utils/handleConnection";
+import { isPositionInNode } from "./utils/isPositionInNode";
 import { removeEdge } from "./utils/removeEdge";
 import { removeNode } from "./utils/removeNode";
 import replaceTaskArgumentsInGraphSpec from "./utils/replaceTaskArgumentsInGraphSpec";
+import { replaceTaskNode } from "./utils/replaceTaskNode";
 import { updateNodePositions } from "./utils/updateNodePosition";
 
 const nodeTypes: Record<string, ComponentType<any>> = {
   task: TaskNode,
-};
-
-type NodesAndEdges = {
-  nodes: Node[];
-  edges: Edge[];
 };
 
 const FlowCanvas = ({
@@ -69,9 +68,16 @@ const FlowCanvas = ({
     ...deleteConfirmationProps
   } = useConfirmationDialog();
 
+  const {
+    handlers: replaceConfirmationHandlers,
+    triggerDialog: triggerReplaceConfirmation,
+    ...replaceConfirmationProps
+  } = useConfirmationDialog();
+
   const notify = useToastNotification();
 
   const [showToolbar, setShowToolbar] = useState(false);
+  const [replaceTarget, setReplaceTarget] = useState<Node | null>(null);
 
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
@@ -202,40 +208,101 @@ const FlowCanvas = ({
     [graphSpec, handleConnection, updateGraphSpec],
   );
 
-  const onDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  };
+  /* New Tasks from the Sidebar */
+  const onDragOver = useCallback(
+    (event: DragEvent) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
 
-  const onDrop = (event: DragEvent) => {
-    event.preventDefault();
+      const cursorPosition = reactFlowInstance?.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
 
-    const { taskSpec: droppedTask, taskType } = getTaskFromEvent(event);
+      if (cursorPosition) {
+        const hoveredNode = nodes.find((node) =>
+          isPositionInNode(node, cursorPosition),
+        );
 
-    if (!taskType) {
-      console.error("Dropped task type not identified.");
-      return;
-    }
+        if (hoveredNode?.id === replaceTarget?.id) return;
 
-    if (!droppedTask && taskType === "task") {
-      console.error("Unable to find dropped task.");
-      return;
-    }
+        setReplaceTarget(hoveredNode || null);
+      }
+    },
+    [reactFlowInstance, nodes, replaceTarget, setReplaceTarget],
+  );
 
-    if (reactFlowInstance) {
-      const position = getPositionFromEvent(event, reactFlowInstance);
+  const onDrop = useCallback(
+    async (event: DragEvent) => {
+      event.preventDefault();
 
-      const newComponentSpec = addTask(
-        taskType,
-        droppedTask,
-        position,
-        componentSpec,
-      );
+      const { taskSpec: droppedTask, taskType } = getTaskFromEvent(event);
 
-      setComponentSpec(newComponentSpec);
-      updateReactFlow(newComponentSpec);
-    }
-  };
+      if (!taskType) {
+        console.error("Dropped task type not identified.");
+        return;
+      }
+
+      if (!droppedTask && taskType === "task") {
+        console.error("Unable to find dropped task.");
+        return;
+      }
+
+      // Replacing an existing node
+      if (replaceTarget) {
+        if (!droppedTask) {
+          console.error(
+            "Replacement by Input or Output node is currently unsupported.",
+          );
+          return;
+        }
+
+        const { updatedGraphSpec, lostInputs, newTaskId } = replaceTaskNode(
+          replaceTarget,
+          droppedTask,
+          graphSpec,
+        );
+
+        const dialogData = getReplaceConfirmationDetails(
+          replaceTarget,
+          newTaskId,
+          lostInputs,
+        );
+
+        const confirmed = await triggerReplaceConfirmation(dialogData);
+
+        setReplaceTarget(null);
+
+        if (confirmed) {
+          updateGraphSpec(updatedGraphSpec);
+        }
+
+        return;
+      }
+
+      if (reactFlowInstance) {
+        const position = getPositionFromEvent(event, reactFlowInstance);
+
+        const newComponentSpec = addTask(
+          taskType,
+          droppedTask,
+          position,
+          componentSpec,
+        );
+
+        setComponentSpec(newComponentSpec);
+        updateReactFlow(newComponentSpec);
+      }
+    },
+    [
+      componentSpec,
+      reactFlowInstance,
+      replaceTarget,
+      setComponentSpec,
+      updateGraphSpec,
+      triggerReplaceConfirmation,
+    ],
+  );
 
   const onElementsRemove = useCallback(
     (params: NodesAndEdges) => {
@@ -335,8 +402,16 @@ const FlowCanvas = ({
     (newComponentSpec: ComponentSpec) => {
       const newNodes = createNodesFromComponentSpec(newComponentSpec, nodeData);
 
+      const updatedNewNodes = newNodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          highlighted: node.id === replaceTarget?.id,
+        },
+      }));
+
       setNodes((prevNodes) => {
-        const updatedNodes = newNodes.map((newNode) => {
+        const updatedNodes = updatedNewNodes.map((newNode) => {
           const existingNode = prevNodes.find((node) => node.id === newNode.id);
           return existingNode ? { ...existingNode, ...newNode } : newNode;
         });
@@ -344,13 +419,13 @@ const FlowCanvas = ({
         return updatedNodes;
       });
     },
-    [setNodes, nodeData],
+    [setNodes, nodeData, replaceTarget],
   );
 
   useEffect(() => {
     // Update ReactFlow based on the component spec
     updateReactFlow(componentSpec);
-  }, [componentSpec]);
+  }, [componentSpec, replaceTarget]);
 
   const store = useStoreApi();
 
@@ -472,98 +547,15 @@ const FlowCanvas = ({
           onCancel={() => deleteConfirmationHandlers?.onCancel()}
         />
       )}
+      {!readOnly && (
+        <ConfirmationDialog
+          {...replaceConfirmationProps}
+          onConfirm={() => replaceConfirmationHandlers?.onConfirm()}
+          onCancel={() => replaceConfirmationHandlers?.onCancel()}
+        />
+      )}
     </>
   );
 };
 
 export default FlowCanvas;
-
-function getDeleteConfirmationDetails(deletedElements: NodesAndEdges) {
-  const deletedNodes = deletedElements.nodes;
-  const deletedEdges = deletedElements.edges;
-
-  const thisCannotBeUndone = (
-    <p className="text-muted-foreground">This cannot be undone.</p>
-  );
-
-  if (deletedNodes.length > 0) {
-    const isDeletingMultipleNodes = deletedNodes.length > 1;
-
-    if (!isDeletingMultipleNodes) {
-      const singleDeleteTitle =
-        "Delete Node" +
-        (deletedNodes.length > 0 ? ` '${deletedNodes[0].id}'` : "") +
-        "?";
-
-      const singleDeleteDesc = (
-        <div className="text-sm">
-          <p>This will also delete all connections to and from the Node.</p>
-          <br />
-          {thisCannotBeUndone}
-        </div>
-      );
-
-      return {
-        title: singleDeleteTitle,
-        content: singleDeleteDesc,
-        description: "",
-      };
-    }
-
-    const multiDeleteTitle = `Delete Nodes?`;
-
-    const multiDeleteDesc = (
-      <div className="text-sm">
-        <p>{`
-          Deleting
-          ${deletedNodes
-            .map((node) => {
-              return `'${node.id}'`;
-            })
-            .join(
-              ", ",
-            )} will also remove all connections to and from these nodes.`}</p>
-        <br />
-        {thisCannotBeUndone}
-      </div>
-    );
-
-    return {
-      title: multiDeleteTitle,
-      content: multiDeleteDesc,
-      description: "",
-    };
-  }
-
-  if (deletedEdges.length > 0) {
-    const isDeletingMultipleEdges = deletedEdges.length > 1;
-
-    const edgeDeleteTitle = isDeletingMultipleEdges
-      ? "Delete Connections?"
-      : "Delete Connection?";
-
-    const edgeDeleteDesc = (
-      <div className="text-sm">
-        <p>This will remove the follow connections between task nodes:</p>
-        <p>
-          {deletedEdges
-            .map((edge) => {
-              return `'${edge.id}'`;
-            })
-            .join(", ")}
-        </p>
-        <br />
-        {thisCannotBeUndone}
-      </div>
-    );
-
-    return {
-      title: edgeDeleteTitle,
-      content: edgeDeleteDesc,
-      description: "",
-    };
-  }
-
-  // Fallback to default
-  return {};
-}

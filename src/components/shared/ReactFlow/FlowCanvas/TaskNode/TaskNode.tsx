@@ -152,6 +152,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const componentSpec = taskSpec.componentRef.spec;
 
   const readOnly = typedData.readOnly;
+  const highlighted = typedData.highlighted;
 
   const runStatus = taskStatusMap.get(taskId ?? "");
 
@@ -284,7 +285,8 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
           "border rounded-md shadow-sm transition-all duration-200",
           getBorderColor(),
           getBgColor(),
-          selected ? "border-sky-500" : " hover:border-slate-400",
+          selected ? "border-sky-500" : "hover:border-slate-400",
+          highlighted && "border-orange-500",
         )}
         style={{ width: `${NODE_WIDTH_IN_PX}px` }}
         ref={nodeRef}
