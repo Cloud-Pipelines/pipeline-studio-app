@@ -30,7 +30,7 @@ const LogDisplay = ({
 };
 
 const formatLogLine = (line: string) => {
-  const timestampMatch = line.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+  const timestampMatch = line.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)([+-]\d{2}:\d{2}|Z)\s/);
   if (!timestampMatch) return line;
 
   const timestamp = new Date(timestampMatch[0]);
