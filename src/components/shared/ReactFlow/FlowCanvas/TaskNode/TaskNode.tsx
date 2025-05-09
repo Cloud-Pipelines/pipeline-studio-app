@@ -1,19 +1,21 @@
-import type { HandleType, NodeProps } from "@xyflow/react";
+import type { NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
-import { CopyIcon } from "lucide-react";
 import {
-  type CSSProperties,
-  memo,
-  type ReactElement,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+  CheckCircleIcon,
+  CircleDashedIcon,
+  ClockIcon,
+  CopyIcon,
+  Loader2Icon,
+  XCircleIcon,
+} from "lucide-react";
+import { memo, type RefObject, useMemo, useRef, useState } from "react";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { inputsWithInvalidArguments } from "@/services/componentService";
 import type { TaskNodeData } from "@/types/taskNode";
 import type {
   ArgumentType,
@@ -25,112 +27,238 @@ import type {
 import TaskConfigurationSheet from "./TaskConfigurationSheet";
 import TaskDetailsSheet from "./TaskDetailsSheet";
 
-const inputHandlePosition = Position.Top;
-const outputHandlePosition = Position.Bottom;
+type RunStatusType =
+  | "SUCCEEDED"
+  | "FAILED"
+  | "SYSTEM_ERROR"
+  | "INVALID"
+  | "UPSTREAM_FAILED"
+  | "UPSTREAM_FAILED_OR_SKIPPED"
+  | "RUNNING"
+  | "STARTING"
+  | "PENDING"
+  | "CANCELLING"
+  | "CANCELLED"
+  | "SKIPPED"
+  | "QUEUED"
+  | "UNINITIALIZED"
+  | "WAITING_FOR_UPSTREAM"
+  | string;
 
-type InputOrOutputSpec = InputSpec | OutputSpec;
+type StatusIndicatorProps = {
+  status: RunStatusType | undefined;
+};
 
-const NODE_WIDTH_IN_PX = 200;
+const getRunStatus = (status: RunStatusType) => {
+  switch (status) {
+    case "SUCCEEDED":
+      return {
+        style: "bg-emerald-500",
+        text: "Succeeded",
+        icon: <CheckCircleIcon className="w-2 h-2" />,
+      };
+    case "FAILED":
+    case "SYSTEM_ERROR":
+    case "INVALID":
+    case "UPSTREAM_FAILED":
+    case "UPSTREAM_FAILED_OR_SKIPPED":
+      return {
+        style: "bg-red-700",
+        text: "Failed",
+        icon: <XCircleIcon className="w-2 h-2" />,
+      };
+    case "RUNNING":
+    case "STARTING":
+      return {
+        style: "bg-sky-500",
+        text: "Running",
+        icon: <Loader2Icon className="w-2 h-2 animate-spin" />,
+      };
+    case "PENDING":
+      return {
+        style: "bg-yellow-500",
+        text: "Pending",
+        icon: <ClockIcon className="w-2 h-2 animate-spin duration-2000" />,
+      };
+    case "CANCELLING":
+    case "CANCELLED":
+      return {
+        style: "bg-orange-500",
+        text: status === "CANCELLING" ? "Cancelling" : "Cancelled",
+        icon: <XCircleIcon className="w-2 h-2" />,
+      };
+    case "SKIPPED":
+      return {
+        style: "bg-slate-400",
+        text: "Skipped",
+        icon: <XCircleIcon className="w-2 h-2" />,
+      };
+    case "QUEUED":
+      return {
+        style: "bg-yellow-500",
+        text: "Queued",
+        icon: <ClockIcon className="w-2 h-2 animate-spin duration-2000" />,
+      };
+    case "UNINITIALIZED":
+    case "WAITING_FOR_UPSTREAM":
+      return {
+        style: "bg-slate-500",
+        text: "Waiting for upstream",
+        icon: <ClockIcon className="w-2 h-2 animate-spin duration-2000" />,
+      };
+    default:
+      return {
+        style: "bg-slate-300",
+        text: "Unknown",
+        icon: <CircleDashedIcon className="w-2 h-2" />,
+      };
+  }
+};
 
-function generateHandles(
-  ioSpecs: InputOrOutputSpec[],
-  handleType: HandleType,
-  position: Position,
-  idPrefix: string,
-  inputsWithMissingArguments?: string[],
-): ReactElement[] {
-  const handleComponents = [];
-  const numHandles = ioSpecs.length;
-  for (let i = 0; i < numHandles; i++) {
-    const ioSpec = ioSpecs[i];
-    const id = idPrefix + ioSpec.name;
-    const relativePosition = (i + 1) / (numHandles + 1);
-    const positionPercentString = String(100 * relativePosition) + "%";
-    const style =
-      position === Position.Top || position === Position.Bottom
-        ? { left: positionPercentString }
-        : { top: positionPercentString };
-    const ioTypeName = ioSpec.type?.toString() ?? "Any";
-    let classNames = [`handle_${idPrefix}${ioTypeName}`.replace(/ /g, "_")];
+const StatusIndicator = ({ status }: StatusIndicatorProps) => {
+  if (!status) return null;
 
-    const isInvalid = (inputsWithMissingArguments ?? []).includes(ioSpec.name);
-    classNames = classNames.map((className) => className.replace(/ /g, "_"));
+  const { style, text, icon } = getRunStatus(status);
 
-    const [labelClasses, labelStyle] = generateLabelStyle(position, numHandles);
-    const handleTitle =
-      ioSpec.name + " : " + ioTypeName + "\n" + (ioSpec.description || "");
-    handleComponents.push(
+  return (
+    <div
+      className={cn(
+        "absolute -z-1 -top-5 left-0 h-[35px] rounded-t-md px-2.5 py-1 text-[10px]",
+        style,
+      )}
+    >
+      <div className="flex items-center gap-1 font-mono text-white">
+        {icon}
+        {text}
+      </div>
+    </div>
+  );
+};
+
+type InputHandleProps = {
+  input: InputSpec;
+  invalidArguments: string[];
+};
+
+const InputHandle = ({ input, invalidArguments }: InputHandleProps) => {
+  const required = !input.optional;
+  const isInvalid = invalidArguments.includes(input.name);
+  const missing = isInvalid ? "bg-red-700!" : "bg-gray-500!";
+
+  return (
+    <div className="flex flex-row items-center" key={input.name}>
       <Handle
-        key={id}
-        type={handleType}
-        position={position}
-        id={id}
-        style={style}
+        type="target"
+        id={`input_${input.name}`}
+        position={Position.Left}
         isConnectable={true}
-        title={handleTitle}
-        className={cn(
-          classNames.join(" "),
-          "w-3! h-3! border-2! rounded-full!",
-          isInvalid
-            ? "border-rose-500! bg-rose-50!"
-            : "bg-white! border-slate-300! hover:border-slate-600!",
+        className={`
+          relative!
+          border-0!
+          !w-[12px]
+          !h-[12px]
+          transform-none!
+          -translate-x-6
+          ${missing}
+          `}
+      />
+
+      <div className="text-xs mr-4 text-gray-800! max-w-[250px] truncate bg-gray-200 rounded-md px-2 py-1 -translate-x-3">
+        {required && <span className="text-xs text-red-700 mr-1">*</span>}
+        {input.name.replace(/_/g, " ")}
+      </div>
+    </div>
+  );
+};
+
+type OutputHandleProps = {
+  output: OutputSpec;
+};
+
+const OutputHandle = ({ output }: OutputHandleProps) => {
+  return (
+    <div className="flex flex-row-reverse items-center" key={output.name}>
+      <Handle
+        type="source"
+        id={`output_${output.name}`}
+        position={Position.Right}
+        isConnectable={true}
+        className={`
+          relative!
+          border-0!
+          !w-[12px]
+          !h-[12px]
+          transform-none!
+          translate-x-6
+          bg-gray-500!
+          `}
+      />
+      <div className="text-xs text-gray-800! max-w-[250px] truncate bg-gray-200 rounded-md px-2 py-1 translate-x-3">
+        {output.name.replace(/_/g, " ")}
+      </div>
+    </div>
+  );
+};
+
+type TaskNodeContentProps = {
+  componentSpec: any;
+  inputs: InputSpec[];
+  outputs: OutputSpec[];
+  invalidArguments: string[];
+  selected: boolean;
+  nodeRef: RefObject<HTMLDivElement | null>;
+  onClick: () => void;
+  highlighted?: boolean;
+};
+
+const TaskNodeContent = ({
+  componentSpec,
+  inputs = [],
+  outputs = [],
+  invalidArguments,
+  selected,
+  nodeRef,
+  onClick,
+  highlighted,
+}: TaskNodeContentProps) => {
+  return (
+    <Card
+      className={cn(
+        "rounded-2xl border-gray-200 border-2 max-w-[300px] min-w-[300px] break-words p-0 drop-shadow-none gap-2",
+        selected ? "border-gray-500" : "hover:border-slate-200",
+        highlighted && "border-orange-500",
+      )}
+      ref={nodeRef}
+      onClick={onClick}
+    >
+      <CardHeader className="border-b border-slate-200 px-2 py-2.5">
+        <CardTitle className="max-w-[300px] break-words text-left text-xs text-slate-900">
+          {componentSpec.name}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-2 flex flex-col gap-2">
+        {inputs.length > 0 && (
+          <div className="flex flex-col gap-3 p-2 bg-gray-100 border-1 border-gray-200 rounded-lg">
+            {inputs.map((input) => (
+              <InputHandle
+                key={input.name}
+                input={input}
+                invalidArguments={invalidArguments}
+              />
+            ))}
+          </div>
         )}
-      >
-        <div className={labelClasses} style={labelStyle}>
-          {ioSpec.name}
-        </div>
-      </Handle>,
-    );
-  }
-  return handleComponents;
-}
-
-function generateLabelStyle(
-  position: Position,
-  numHandles: number,
-): [string, CSSProperties] {
-  let maxLabelWidthPx = NODE_WIDTH_IN_PX;
-  let labelClasses = "label";
-
-  if (position === Position.Top || position === Position.Bottom) {
-    if (numHandles > 1) {
-      maxLabelWidthPx = NODE_WIDTH_IN_PX / (numHandles + 1);
-    }
-    if (maxLabelWidthPx < 35) {
-      maxLabelWidthPx = 50;
-      labelClasses += " label-angled p-1";
-    }
-  } else {
-    maxLabelWidthPx = 60;
-  }
-
-  labelClasses += " truncate text-xs hover:!overflow-visible hover:font-medium";
-
-  const labelStyle: CSSProperties = { maxWidth: `${maxLabelWidthPx}px` };
-  return [labelClasses, labelStyle];
-}
-
-function generateInputHandles(
-  inputSpecs: InputSpec[],
-  inputsWithInvalidArguments?: string[],
-): ReactElement[] {
-  return generateHandles(
-    inputSpecs,
-    "target",
-    inputHandlePosition,
-    "input_",
-    inputsWithInvalidArguments,
+        {outputs.length > 0 && (
+          <div className="flex flex-col gap-3 p-2 bg-gray-100 border-1 border-gray-200 rounded-lg">
+            {outputs.map((output) => (
+              <OutputHandle key={output.name} output={output} />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-}
-
-function generateOutputHandles(outputSpecs: OutputSpec[]): ReactElement[] {
-  return generateHandles(
-    outputSpecs,
-    "source",
-    outputHandlePosition,
-    "output_",
-  );
-}
+};
 
 const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const { taskStatusMap } = useComponentSpec();
@@ -140,7 +268,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     () => data?.taskId as string | undefined,
     [data?.taskId],
   );
-  const nodeRef = useRef<HTMLDivElement>(null);
+  const nodeRef = useRef<HTMLDivElement | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
   useDynamicFontSize(textRef);
@@ -150,7 +278,6 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const typedData = data as TaskNodeData;
   const taskSpec = typedData.taskSpec as TaskSpec;
   const componentSpec = taskSpec.componentRef.spec;
-
   const readOnly = typedData.readOnly;
   const highlighted = typedData.highlighted;
 
@@ -160,96 +287,9 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     return null;
   }
 
-  const label = componentSpec.name ?? "<component>";
-  let title = "Task ID: " + typedData.taskId;
-  if (componentSpec.name) {
-    title += "\nComponent: " + componentSpec.name;
-  }
-  if (taskSpec.componentRef.url) {
-    title += "\nUrl: " + taskSpec.componentRef.url;
-  }
-  if (taskSpec.componentRef.digest) {
-    title += "\nDigest: " + taskSpec.componentRef.digest;
-  }
-  if (componentSpec.description) {
-    title += "\nDescription: " + componentSpec.description;
-  }
-  const inputsWithInvalidArguments = (componentSpec.inputs ?? [])
-    .filter(
-      (inputSpec) =>
-        inputSpec.optional !== true &&
-        inputSpec.default === undefined &&
-        !(inputSpec.name in (taskSpec.arguments ?? {})),
-    )
-    .map((inputSpec) => inputSpec.name);
-  const inputHandles = generateInputHandles(
-    componentSpec.inputs ?? [],
-    inputsWithInvalidArguments,
-  );
-  const outputHandles = generateOutputHandles(componentSpec.outputs ?? []);
-  const handleComponents = inputHandles.concat(outputHandles);
-
-  const getBorderColor = () => {
-    switch (runStatus) {
-      case "SUCCEEDED":
-        return "border-emerald-500";
-      case "FAILED":
-      case "SYSTEM_ERROR":
-      case "INVALID":
-      case "UPSTREAM_FAILED":
-      case "UPSTREAM_FAILED_OR_SKIPPED":
-        return "border-rose-500";
-      case "RUNNING":
-      case "STARTING":
-        return "border-sky-500 animate-pulse duration-2000";
-      case "PENDING":
-        return "border-yellow-500 animate-pulse duration-2000";
-      case "CANCELLING":
-        return "border-orange-500 animate-pulse duration-2000";
-      case "CANCELLED":
-        return "border-orange-500";
-      case "SKIPPED":
-        return "border-slate-400";
-      case "QUEUED":
-        return "border-yellow-500";
-      case "UNINITIALIZED":
-      case "WAITING_FOR_UPSTREAM":
-        return "border-slate-300";
-      default:
-        return "border-slate-300";
-    }
-  };
-
-  const getBgColor = () => {
-    switch (runStatus) {
-      case "SUCCEEDED":
-        return "bg-emerald-50";
-      case "FAILED":
-      case "SYSTEM_ERROR":
-      case "INVALID":
-      case "UPSTREAM_FAILED":
-      case "UPSTREAM_FAILED_OR_SKIPPED":
-        return "bg-rose-50";
-      case "RUNNING":
-      case "STARTING":
-        return "bg-sky-50";
-      case "PENDING":
-        return "bg-yellow-50";
-      case "CANCELLING":
-        return "bg-orange-50";
-      case "CANCELLED":
-        return "bg-orange-50";
-      case "SKIPPED":
-        return "bg-slate-100";
-      case "QUEUED":
-        return "bg-yellow-50";
-      case "UNINITIALIZED":
-      case "WAITING_FOR_UPSTREAM":
-        return "bg-white";
-      default:
-        return "bg-white";
-    }
-  };
+  const inputs = componentSpec.inputs || [];
+  const outputs = componentSpec.outputs || [];
+  const invalidArguments = inputsWithInvalidArguments(inputs, taskSpec);
 
   const handleClick = () => {
     if (!isComponentEditorOpen && !readOnly) {
@@ -280,29 +320,18 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
 
   return (
     <>
-      <div
-        className={cn(
-          "border rounded-md shadow-sm transition-all duration-200",
-          getBorderColor(),
-          getBgColor(),
-          selected ? "border-sky-500" : "hover:border-slate-400",
-          highlighted && "border-orange-500",
-        )}
-        style={{ width: `${NODE_WIDTH_IN_PX}px` }}
-        ref={nodeRef}
+      <StatusIndicator status={runStatus} />
+
+      <TaskNodeContent
+        componentSpec={componentSpec}
+        inputs={inputs}
+        outputs={outputs}
+        invalidArguments={invalidArguments}
+        selected={selected}
+        nodeRef={nodeRef}
         onClick={handleClick}
-      >
-        <div className="p-3 flex items-center justify-between">
-          <div
-            className="font-medium text-gray-800 whitespace-nowrap w-full text-center"
-            title={title}
-            ref={textRef}
-          >
-            {label}
-          </div>
-          {handleComponents}
-        </div>
-      </div>
+        highlighted={highlighted ?? false}
+      />
 
       {typedData.taskId && (
         <>

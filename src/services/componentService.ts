@@ -6,7 +6,7 @@ import {
 } from "@/components/shared/ReactFlow/FlowSidebar/utils/componentLibrary";
 import type { ComponentFolder } from "@/types/componentLibrary";
 import { loadObjectFromYamlData } from "@/utils/cache";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import type { ComponentSpec, InputSpec, TaskSpec } from "@/utils/componentSpec";
 import {
   type Component,
   componentExistsByUrl,
@@ -192,4 +192,22 @@ export const parseComponentData = (data: string): ComponentSpec | null => {
     console.error("Error parsing component data:", error);
     return null;
   }
+};
+
+export const inputsWithInvalidArguments = (
+  inputs: InputSpec[] | undefined,
+  taskSpec: TaskSpec | undefined,
+) => {
+  if (!inputs || !taskSpec) {
+    return [];
+  }
+
+  return inputs
+    .filter((input) => {
+      const isOptional = input.optional;
+      const hasDefault = input.default;
+      const isDefinedInArguments = input.name in (taskSpec.arguments ?? {});
+      return !isOptional && !hasDefault && !isDefinedInArguments;
+    })
+    .map((input) => input.name);
 };

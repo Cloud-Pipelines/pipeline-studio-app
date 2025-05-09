@@ -99,6 +99,7 @@ const createTaskOutputEdge = (
     target: taskIdToNodeId(taskId),
     targetHandle: inputNameToNodeId(inputName),
     markerEnd: { type: MarkerType.Arrow },
+    type: "customEdge",
   };
 };
 
@@ -113,6 +114,7 @@ const createGraphInputEdge = (
     sourceHandle: null,
     target: taskIdToNodeId(taskId),
     targetHandle: inputNameToNodeId(inputName),
+    type: "customEdge",
     markerEnd: { type: MarkerType.Arrow },
   };
 };
@@ -127,6 +129,7 @@ const createOutputEdgesFromGraphSpec = (graphSpec: GraphSpec) => {
         sourceHandle: outputNameToNodeId(taskOutput.outputName),
         target: outputNameToNodeId(outputName),
         targetHandle: null,
+        type: "customEdge",
         markerEnd: { type: MarkerType.Arrow },
       };
       return edge;
