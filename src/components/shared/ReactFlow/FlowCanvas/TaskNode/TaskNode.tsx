@@ -262,6 +262,7 @@ const TaskNodeContent = ({
 
 const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const { taskStatusMap } = useComponentSpec();
+
   const [isComponentEditorOpen, setIsComponentEditorOpen] = useState(false);
   const [isTaskDetailsSheetOpen, setIsTaskDetailsSheetOpen] = useState(false);
   const taskId = useMemo(

@@ -2,6 +2,7 @@ import type { Node } from "@xyflow/react";
 
 import type {
   ArgumentType,
+  ComponentReference,
   GraphSpec,
   InputSpec,
   TaskSpec,
@@ -11,12 +12,11 @@ import { getUniqueTaskName } from "@/utils/unique";
 
 export const replaceTaskNode = (
   nodeToReplace: Node,
-  newTask: TaskSpec,
+  newComponentRef: ComponentReference,
   graphSpec: GraphSpec,
 ) => {
   const updatedGraphSpec = deepClone(graphSpec);
 
-  const newComponentRef = newTask.componentRef;
   const taskName = newComponentRef.spec?.name;
   const newTaskInputs = newComponentRef.spec?.inputs;
   const newTaskOutputs = newComponentRef.spec?.outputs;

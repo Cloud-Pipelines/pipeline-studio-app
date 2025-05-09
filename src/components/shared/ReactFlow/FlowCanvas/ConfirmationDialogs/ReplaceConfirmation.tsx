@@ -7,9 +7,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { ArgumentType, InputSpec, TaskSpec } from "@/utils/componentSpec";
+import type { InputSpec, TaskSpec } from "@/utils/componentSpec";
 
-import { thisCannotBeUndone } from "./shared";
+import { getArgumentDetails, thisCannotBeUndone } from "./shared";
 
 export function getReplaceConfirmationDetails(
   replacedNode: Node,
@@ -85,45 +85,4 @@ export function getReplaceConfirmationDetails(
     description,
     content,
   };
-}
-
-function getArgumentDetails(
-  taskArguments: { [k: string]: ArgumentType } | undefined,
-  inputName: string,
-) {
-  const notSet = "No value";
-
-  if (!taskArguments) {
-    return { value: notSet, isBrokenConnection: false };
-  }
-
-  const argument = taskArguments[inputName];
-
-  if (!argument) {
-    return { value: notSet, isBrokenConnection: false };
-  }
-
-  if (typeof argument === "object" && argument !== null) {
-    if ("taskOutput" in argument && argument.taskOutput) {
-      return {
-        value: `from "${argument.taskOutput.taskId}"`,
-        isBrokenConnection: true,
-      };
-    }
-    if ("graphInput" in argument && argument.graphInput) {
-      return {
-        value: `"${argument.graphInput.inputName}"`,
-        isBrokenConnection: true,
-      };
-    }
-  }
-
-  if (typeof argument === "string") {
-    if (argument === "") {
-      return { value: notSet, isBrokenConnection: false };
-    }
-    return { value: `"${argument}"`, isBrokenConnection: false };
-  }
-
-  return { value: notSet, isBrokenConnection: false };
 }
