@@ -499,6 +499,8 @@ const FlowCanvas = ({
         fitView
         nodes={nodes}
         edges={edges}
+        minZoom={0.01}
+        maxZoom={3}
         onNodesChange={handleOnNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
