@@ -3,6 +3,7 @@ import { Handle, Position } from "@xyflow/react";
 import {
   CheckCircleIcon,
   CircleDashedIcon,
+  CircleFadingArrowUp,
   ClockIcon,
   CopyIcon,
   Loader2Icon,
@@ -11,6 +12,7 @@ import {
 import { memo, type RefObject, useMemo, useRef, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import useComponentFromUrl from "@/hooks/useComponentFromUrl";
 import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
@@ -284,6 +286,15 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
 
   const runStatus = taskStatusMap.get(taskId ?? "");
 
+  const isCustomComponent = !taskSpec.componentRef.url; // Custom components don't have a source url
+
+  const { componentRef: mostRecentComponentRef } = useComponentFromUrl(
+    taskSpec.componentRef.url,
+  );
+
+  const isOutdated =
+    taskSpec.componentRef.digest !== mostRecentComponentRef.digest;
+
   if (componentSpec === undefined) {
     return null;
   }
@@ -313,6 +324,15 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const handleDuplicateTaskNode = () => {
     typedData.callbacks?.onDuplicate();
     setIsComponentEditorOpen(false);
+  };
+
+  const handleUpgradeTaskNode = () => {
+    if (!isOutdated) {
+      notify("Component version already matches source URL", "info");
+      return;
+    }
+
+    typedData.callbacks?.onUpgrade(mostRecentComponentRef);
   };
 
   const handleTaskDetailsSheetClose = () => {
@@ -360,6 +380,17 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
                 variant: "secondary",
                 tooltip: "Duplicate Task",
                 onClick: handleDuplicateTaskNode,
+              },
+              {
+                children: (
+                  <div className="flex items-center gap-2">
+                    <CircleFadingArrowUp />
+                  </div>
+                ),
+                variant: "secondary",
+                className: cn(isCustomComponent && "hidden"), // Update button is hidden for custom components, since they don't have a source URL
+                tooltip: "Update Task from Source URL",
+                onClick: handleUpgradeTaskNode,
               },
             ]}
             setArguments={handleSetArguments}

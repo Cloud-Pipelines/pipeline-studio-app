@@ -1,4 +1,8 @@
-import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
+import type {
+  ArgumentType,
+  ComponentReference,
+  TaskSpec,
+} from "@/utils/componentSpec";
 
 export interface TaskNodeData extends Record<string, unknown> {
   taskSpec?: TaskSpec;
@@ -21,6 +25,7 @@ export interface TaskNodeCallbacks {
   setArguments: (args: Record<string, ArgumentType>) => void;
   onDelete: () => void;
   onDuplicate: (selected?: boolean) => void;
+  onUpgrade: (newComponentRef: ComponentReference) => void;
 }
 
 // Dynamic Node Callback types - every callback has a version with the node & task id added to it as an input parameter

@@ -16,6 +16,7 @@ describe("createNodesFromComponentSpec", () => {
     onDelete: vi.fn(),
     setArguments: vi.fn(),
     onDuplicate: vi.fn(),
+    onUpgrade: vi.fn(),
   };
 
   const readOnly = false;
