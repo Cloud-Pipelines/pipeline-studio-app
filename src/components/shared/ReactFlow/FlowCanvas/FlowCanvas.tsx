@@ -24,9 +24,12 @@ import type {
   ArgumentType,
   ComponentReference,
   ComponentSpec,
+  InputSpec,
+  TaskSpec,
 } from "@/utils/componentSpec";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
 
+import { getBulkUpdateConfirmationDetails } from "./ConfirmationDialogs/BulkUpdateConfirmationDialog";
 import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfirmation";
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
 import { getUpgradeConfirmationDetails } from "./ConfirmationDialogs/UpgradeComponent";
@@ -418,6 +421,47 @@ const FlowCanvas = ({
     });
   }, [graphSpec, selectedNodes, updateGraphSpec, setNodes]);
 
+  const onUpgradeNodes = useCallback(async () => {
+    let newGraphSpec = graphSpec;
+    const allLostInputs: InputSpec[] = [];
+    const includedNodes: Node[] = [];
+    const excludedNodes: Node[] = [];
+
+    selectedNodes.forEach((node) => {
+      const taskSpec = node.data.taskSpec as TaskSpec | undefined;
+      // Custom components don't have a componentRef.url so they are currently excluded from bulk operations
+      if (taskSpec?.componentRef && taskSpec.componentRef.url) {
+        const { updatedGraphSpec, lostInputs } = replaceTaskNode(
+          node,
+          taskSpec.componentRef,
+          newGraphSpec,
+        );
+
+        if (lostInputs.length > 0) {
+          allLostInputs.push(...lostInputs);
+        }
+
+        includedNodes.push(node);
+        newGraphSpec = { ...updatedGraphSpec };
+      } else {
+        excludedNodes.push(node);
+      }
+    });
+
+    const dialogData = getBulkUpdateConfirmationDetails(
+      includedNodes,
+      excludedNodes,
+      allLostInputs,
+    );
+
+    const confirmed = await triggerConfirmation(dialogData);
+
+    if (confirmed) {
+      updateGraphSpec(newGraphSpec);
+      notify(`${includedNodes.length} nodes updated`, "success");
+    }
+  }, [graphSpec, selectedNodes, updateGraphSpec]);
+
   const handleSelectionChange = useCallback(() => {
     if (selectedNodes.length < 1) {
       setShowToolbar(false);
@@ -568,6 +612,7 @@ const FlowCanvas = ({
             <SelectionToolbar
               onDelete={onRemoveNodes}
               onDuplicate={onDuplicateNodes}
+              onUpgrade={onUpgradeNodes}
             />
           </NodeToolbar>
         )}

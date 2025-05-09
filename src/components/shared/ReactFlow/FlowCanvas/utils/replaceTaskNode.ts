@@ -23,7 +23,7 @@ export const replaceTaskNode = (
   const newTaskId = getUniqueTaskName(graphSpec, taskName);
 
   const oldTaskId = nodeToReplace.data.taskId as string;
-  const oldTask = deepClone(nodeToReplace.data.taskSpec) as TaskSpec;
+  const oldTask = deepClone(updatedGraphSpec.tasks[oldTaskId]) as TaskSpec;
   const oldTaskInputs = oldTask.componentRef.spec?.inputs;
 
   // Migrate the task to the new componentRef
