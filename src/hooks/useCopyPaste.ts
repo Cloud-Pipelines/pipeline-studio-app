@@ -11,11 +11,20 @@ export function useCopyPaste({ onCopy, onPaste }: UseCopyPasteProps) {
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
       const copyKey = isMac ? event.metaKey : event.ctrlKey;
 
-      // Ignore events if the focus is on an input or text element
       const target = event.target as HTMLElement;
-      const permittedTags = ["BODY", "DIV", "BUTTON", "SVG"];
 
-      if (!permittedTags.includes(target.tagName)) return;
+      // Check if the target is editable
+      const isEditable =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.isContentEditable;
+
+      // Check if there is a text selection
+      const selection = window.getSelection();
+      const hasSelectionText =
+        selection && selection.toString().trim().length > 0;
+
+      if (isEditable || hasSelectionText) return;
 
       if (copyKey && event.key === "c") {
         event.preventDefault();
