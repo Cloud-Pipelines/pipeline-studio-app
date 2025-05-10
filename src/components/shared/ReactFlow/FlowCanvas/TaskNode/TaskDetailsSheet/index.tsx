@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -49,6 +50,9 @@ const TaskDetailsSheet = ({
       >
         <SheetHeader>
           <SheetTitle>Task Details - {taskId}</SheetTitle>
+          <SheetDescription className="hidden">
+            {taskId} task details sheet
+          </SheetDescription>
         </SheetHeader>
         <div className="px-4 pb-8">
           <Tabs defaultValue="info" onValueChange={setActiveTab}>
