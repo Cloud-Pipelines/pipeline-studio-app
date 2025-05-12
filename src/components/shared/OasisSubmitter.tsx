@@ -12,6 +12,7 @@ import useToastNotification from "@/hooks/useToastNotification";
 import { APP_ROUTES } from "@/routes/router";
 import { createPipelineRun } from "@/services/pipelineRunService";
 import type { ComponentSpec } from "@/utils/componentSpec";
+import { preloadComponentReferences } from "@/utils/componentStore";
 import { DB_NAME, PIPELINE_RUNS_STORE_NAME } from "@/utils/constants";
 
 interface OasisSubmitterProps {
@@ -115,7 +116,7 @@ const OasisSubmitter = ({
       const payload = {
         root_task: {
           componentRef: {
-            spec: componentSpec,
+            spec: preloadComponentReferences(componentSpec),
           },
         },
       };
