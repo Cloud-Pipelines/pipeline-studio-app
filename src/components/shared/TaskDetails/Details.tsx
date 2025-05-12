@@ -6,6 +6,7 @@ import {
   TrashIcon,
 } from "lucide-react";
 import { type ReactNode, useCallback, useState } from "react";
+import { FaPython } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +56,22 @@ const TaskDetails = ({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const canonicalUrl = componentSpec?.metadata?.annotations?.canonical_location;
+  const pythonOriginalCode =
+    componentSpec?.metadata?.annotations?.original_python_code || "";
+
+  const stringToPythonCodeDownload = () => {
+    if (!pythonOriginalCode) return;
+
+    const blob = new Blob([pythonOriginalCode], { type: "text/x-python" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${componentSpec?.name || displayName}.py`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const handleDownloadYaml = () => {
     downloadYamlFromComponentText(componentSpec, displayName);
@@ -223,6 +240,19 @@ const TaskDetails = ({
             </TooltipTrigger>
             <TooltipContent>Download YAML</TooltipContent>
           </Tooltip>
+          {pythonOriginalCode && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="secondary"
+                  onClick={stringToPythonCodeDownload}
+                >
+                  <FaPython className="mr-1" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Download Python Code</TooltipContent>
+            </Tooltip>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="secondary" onClick={handleCopyYaml}>

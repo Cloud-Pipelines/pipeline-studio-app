@@ -75,6 +75,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
+    "react-icons": "^5.5.0",
     "react-scan": "^0.0.44",
     "react-syntax-highlighter": "^15.6.1",
     "react-toastify": "^11.0.5",
