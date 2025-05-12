@@ -23,7 +23,7 @@ const LogDisplay = ({
           code={logs.log_text || ""}
           language="text"
           title="Logs"
-          filename="logs.txt"
+          filename="logs"
         />
       )}
       {logs?.system_error_exception_full && (
@@ -31,7 +31,7 @@ const LogDisplay = ({
           code={logs?.system_error_exception_full || ""}
           language="text"
           title="Logs"
-          filename="logs.txt"
+          filename="error"
         />
       )}
     </>
