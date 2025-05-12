@@ -4,30 +4,35 @@ import { ToastContainer } from "react-toastify";
 
 import { FullscreenProvider } from "@/components/shared/CodeViewer";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 import AppFooter from "./AppFooter";
 import AppMenu from "./AppMenu";
 
-const RootLayout = () => (
-  <SidebarProvider>
-    <FullscreenProvider>
-      <ToastContainer />
+const RootLayout = () => {
+  useDocumentTitle();
 
-      <div className="App flex flex-col min-h-screen w-full">
-        <AppMenu />
+  return (
+    <SidebarProvider>
+      <FullscreenProvider>
+        <ToastContainer />
 
-        <main className="flex-1 grid">
-          <Outlet />
-        </main>
+        <div className="App flex flex-col min-h-screen w-full">
+          <AppMenu />
 
-        <AppFooter />
+          <main className="flex-1 grid">
+            <Outlet />
+          </main>
 
-        {import.meta.env.VITE_ENABLE_ROUTER_DEVTOOLS === "true" && (
-          <TanStackRouterDevtools />
-        )}
-      </div>
-    </FullscreenProvider>
-  </SidebarProvider>
-);
+          <AppFooter />
+
+          {import.meta.env.VITE_ENABLE_ROUTER_DEVTOOLS === "true" && (
+            <TanStackRouterDevtools />
+          )}
+        </div>
+      </FullscreenProvider>
+    </SidebarProvider>
+  );
+};
 
 export default RootLayout;

@@ -27,7 +27,6 @@ import type {
 } from "@/utils/componentSpec";
 
 import TaskConfigurationSheet from "./TaskConfigurationSheet";
-import TaskDetailsSheet from "./TaskDetailsSheet";
 
 type RunStatusType =
   | "SUCCEEDED"
@@ -266,7 +265,6 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const { taskStatusMap } = useComponentSpec();
 
   const [isComponentEditorOpen, setIsComponentEditorOpen] = useState(false);
-  const [isTaskDetailsSheetOpen, setIsTaskDetailsSheetOpen] = useState(false);
   const taskId = useMemo(
     () => data?.taskId as string | undefined,
     [data?.taskId],
@@ -304,11 +302,8 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const invalidArguments = inputsWithInvalidArguments(inputs, taskSpec);
 
   const handleClick = () => {
-    if (!isComponentEditorOpen && !readOnly) {
+    if (!isComponentEditorOpen) {
       setIsComponentEditorOpen(true);
-    }
-    if (!isTaskDetailsSheetOpen && readOnly) {
-      setIsTaskDetailsSheetOpen(true);
     }
   };
 
@@ -335,10 +330,6 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     typedData.callbacks?.onUpgrade(mostRecentComponentRef);
   };
 
-  const handleTaskDetailsSheetClose = () => {
-    setIsTaskDetailsSheetOpen(false);
-  };
-
   return (
     <>
       <StatusIndicator status={runStatus} />
@@ -356,20 +347,14 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
 
       {typedData.taskId && (
         <>
-          <TaskDetailsSheet
-            isOpen={isTaskDetailsSheetOpen}
-            taskSpec={taskSpec}
-            taskId={typedData.taskId}
-            runStatus={runStatus}
-            onClose={handleTaskDetailsSheetClose}
-          />
-
           <TaskConfigurationSheet
             taskId={typedData.taskId}
             taskSpec={taskSpec}
             isOpen={isComponentEditorOpen}
             onOpenChange={setIsComponentEditorOpen}
             onDelete={handleDeleteTaskNode}
+            readOnly={readOnly}
+            runStatus={runStatus}
             actions={[
               {
                 children: (
