@@ -1,4 +1,4 @@
-import { Code, InfoIcon, Parentheses } from "lucide-react";
+import { Code, InfoIcon, LogsIcon, Parentheses } from "lucide-react";
 import { type ReactNode } from "react";
 
 import {
@@ -26,6 +26,8 @@ import { TOP_NAV_HEIGHT } from "@/utils/constants";
 import { getComponentName } from "@/utils/getComponentName";
 
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
+import Io from "./io";
+import Logs from "./logs";
 
 interface ButtonPropsWithTooltip extends ButtonProps {
   tooltip?: string;
@@ -40,6 +42,8 @@ interface TaskConfigurationSheetProps {
   onOpenChange: (isOpen: boolean) => void;
   setArguments: (args: Record<string, ArgumentType>) => void;
   onDelete?: () => void;
+  readOnly?: boolean;
+  runStatus?: string;
 }
 
 const TaskConfigurationSheet = ({
@@ -52,6 +56,8 @@ const TaskConfigurationSheet = ({
   onOpenChange,
   setArguments,
   onDelete,
+  readOnly = false,
+  runStatus,
 }: TaskConfigurationSheetProps) => {
   const componentSpec = taskSpec.componentRef.spec;
 
@@ -100,6 +106,12 @@ const TaskConfigurationSheet = ({
                 <Code className="h-4 w-4" />
                 Implementation
               </TabsTrigger>
+              {readOnly && (
+                <TabsTrigger value="logs" className="flex-1">
+                  <LogsIcon className="h-4 w-4" />
+                  Logs
+                </TabsTrigger>
+              )}
             </TabsList>
             <TabsContent value="details" className="h-full">
               <TaskDetails
@@ -109,7 +121,9 @@ const TaskConfigurationSheet = ({
                 componentDigest={taskSpec.componentRef.digest}
                 url={taskSpec.componentRef.url}
                 onDelete={onDelete}
+                runStatus={runStatus}
                 hasDeletionConfirmation={false}
+                readOnly={readOnly}
                 actions={actions?.map((action) => (
                   <Tooltip key={action.tooltip}>
                     <TooltipTrigger asChild>
@@ -122,14 +136,24 @@ const TaskConfigurationSheet = ({
             </TabsContent>
             <TabsContent value="arguments" className="h-full">
               <h2>Arguments</h2>
-              <p className="text-sm text-muted-foreground">
-                Configure the arguments for this task node.
-              </p>
-              <ArgumentsSection
-                taskSpec={taskSpec}
-                setArguments={setArguments}
-                disabled={disabled}
-              />
+              {!readOnly && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Configure the arguments for this task node.
+                  </p>
+                  <ArgumentsSection
+                    taskSpec={taskSpec}
+                    setArguments={setArguments}
+                    disabled={disabled}
+                  />
+                </>
+              )}
+              {readOnly && (
+                <Io
+                  taskSpec={taskSpec}
+                  executionId={taskSpec.annotations?.executionId as string}
+                />
+              )}
             </TabsContent>
             <TabsContent value="implementation" className="h-full">
               <TaskImplementation
@@ -137,6 +161,13 @@ const TaskConfigurationSheet = ({
                 componentSpec={componentSpec}
               />
             </TabsContent>
+            {readOnly && (
+              <TabsContent value="logs">
+                <Logs
+                  executionId={taskSpec.annotations?.executionId as string}
+                />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
         <SheetFooter>

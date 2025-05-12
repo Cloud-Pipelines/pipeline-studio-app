@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
+import CodeViewer from "@/components/shared/CodeViewer";
 import { API_URL } from "@/utils/constants";
 
 const LogDisplay = ({
@@ -14,34 +15,26 @@ const LogDisplay = ({
   if (!logs.log_text && !logs.system_error_exception_full) {
     return <div>No logs available</div>;
   }
-  const lines = logs?.log_text?.split("\n") || [];
-  const errorLines = logs?.system_error_exception_full?.split("\n") || [];
-  return (
-    <div className="space-y-1">
-      {lines.map((line: string, index: number) => (
-        <div key={index}>{formatLogLine(line)}</div>
-      ))}
-      {errorLines.map((line: string, index: number) => (
-        <div key={index}>{formatLogLine(line)}</div>
-      ))}
-    </div>
-  );
-};
-
-const formatLogLine = (line: string) => {
-  const timestampMatch = line.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-  if (!timestampMatch) return line;
-
-  const timestamp = new Date(timestampMatch[0]);
-  const content = line.slice(timestampMatch[0].length + 1);
 
   return (
-    <div key={line} className="flex">
-      <span className="text-gray-400 mr-4 select-none whitespace-nowrap shrink-0">
-        {timestamp.toLocaleTimeString()}
-      </span>
-      <span className="break-all">{content}</span>
-    </div>
+    <>
+      {logs?.log_text && (
+        <CodeViewer
+          code={logs.log_text || ""}
+          language="text"
+          title="Logs"
+          filename="logs.txt"
+        />
+      )}
+      {logs?.system_error_exception_full && (
+        <CodeViewer
+          code={logs?.system_error_exception_full || ""}
+          language="text"
+          title="Logs"
+          filename="logs.txt"
+        />
+      )}
+    </>
   );
 };
 
