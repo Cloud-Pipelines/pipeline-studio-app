@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import yaml from "js-yaml";
 import localForage from "localforage";
 import { AlertCircle, CheckCircle, Loader2, SendHorizonal } from "lucide-react";
 import { useState } from "react";
@@ -11,8 +12,147 @@ import useCooldownTimer from "@/hooks/useCooldownTimer";
 import useToastNotification from "@/hooks/useToastNotification";
 import { APP_ROUTES } from "@/routes/router";
 import { createPipelineRun } from "@/services/pipelineRunService";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
 import { DB_NAME, PIPELINE_RUNS_STORE_NAME } from "@/utils/constants";
+
+// Fetch component with timeout to avoid hanging on unresponsive URLs
+const fetchWithTimeout = async (url: string, timeoutMs = 10000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
+
+// Load component from text and parse YAML
+const parseComponentYaml = (text: string): ComponentSpec => {
+  if (!text || text.trim() === "") {
+    throw new Error("Received empty component specification");
+  }
+
+  const loadedSpec = yaml.load(text) as ComponentSpec;
+
+  if (!loadedSpec || typeof loadedSpec !== "object") {
+    throw new Error("Invalid component specification format");
+  }
+
+  return loadedSpec;
+};
+
+// Process component spec recursively to load all references
+const processComponentSpec = async (
+  spec: ComponentSpec,
+  componentCache: Map<string, ComponentSpec> = new Map(),
+  onError?: (taskId: string, error: unknown) => void
+): Promise<ComponentSpec> => {
+  if (!spec || !spec.implementation || !("graph" in spec.implementation)) {
+    return spec;
+  }
+
+  const graph = spec.implementation.graph;
+  if (!graph.tasks) {
+    return spec;
+  }
+
+  // Process each task
+  for (const [taskId, taskObj] of Object.entries(graph.tasks)) {
+    // Type guard to ensure taskObj has componentRef
+    if (!taskObj || typeof taskObj !== "object" || !("componentRef" in taskObj)) {
+      continue;
+    }
+
+    const task = taskObj as { componentRef: ComponentReference };
+
+    if (!task.componentRef) {
+      continue;
+    }
+
+    // If there's a URL but no spec, fetch the component
+    if (task.componentRef.url && !task.componentRef.spec) {
+      try {
+        // Check if we already have this component in cache
+        if (componentCache.has(task.componentRef.url)) {
+          console.log(`Using cached component for ${taskId} from ${task.componentRef.url}`);
+          task.componentRef.spec = componentCache.get(task.componentRef.url);
+          continue;
+        }
+
+        console.log(`Loading component for task ${taskId} from ${task.componentRef.url}`);
+
+        const response = await fetchWithTimeout(task.componentRef.url);
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch component: ${response.statusText} (${response.status})`
+          );
+        }
+
+        const text = await response.text();
+        task.componentRef.text = text;
+
+        // Parse the YAML
+        try {
+          const loadedSpec = parseComponentYaml(text);
+          task.componentRef.spec = loadedSpec;
+
+          // Add to cache
+          componentCache.set(task.componentRef.url, loadedSpec);
+
+          // Process nested components recursively
+          if (loadedSpec.implementation && "graph" in loadedSpec.implementation) {
+            await processComponentSpec(loadedSpec, componentCache, onError);
+          }
+        } catch (yamlError: unknown) {
+          console.error(`Error parsing component YAML for ${taskId}:`, yamlError);
+          const errorMessage = yamlError instanceof Error ? yamlError.message : "Invalid component format";
+          throw new Error(`Invalid component format: ${errorMessage}`);
+        }
+      } catch (error: unknown) {
+        console.error(`Error loading component for task ${taskId}:`, error);
+
+        if (onError) {
+          onError(taskId, error);
+        }
+
+        throw error;
+      }
+    } else if (task.componentRef.spec) {
+      // If spec exists, process it recursively
+      await processComponentSpec(task.componentRef.spec, componentCache, onError);
+    }
+  }
+
+  return spec;
+};
+
+// Save pipeline run to IndexedDB
+const savePipelineRun = async (
+  responseData: { id: number; root_execution_id: number; created_at: string },
+  pipelineName: string,
+  pipelineDigest?: string
+): Promise<PipelineRun> => {
+  const pipelineRunsDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: PIPELINE_RUNS_STORE_NAME,
+  });
+
+  const pipelineRun: PipelineRun = {
+    id: responseData.id,
+    root_execution_id: responseData.root_execution_id,
+    created_at: responseData.created_at,
+    pipeline_name: pipelineName || "Untitled Pipeline",
+    pipeline_digest: pipelineDigest,
+  };
+
+  await pipelineRunsDb.setItem(String(responseData.id), pipelineRun);
+  return pipelineRun;
+};
 
 interface OasisSubmitterProps {
   componentSpec?: ComponentSpec;
@@ -66,24 +206,11 @@ const OasisSubmitter = ({
     onSuccess: async (responseData) => {
       // Store the run in IndexedDB
       if (responseData.id) {
-        // Initialize the pipeline runs store
-        const pipelineRunsDb = localForage.createInstance({
-          name: DB_NAME,
-          storeName: PIPELINE_RUNS_STORE_NAME,
-        });
-
-        // Create a run entry
-        const pipelineRun: PipelineRun = {
-          id: responseData.id,
-          root_execution_id: responseData.root_execution_id,
-          created_at: responseData.created_at,
-          pipeline_name: componentSpec?.name || "Untitled Pipeline",
-          pipeline_digest: componentSpec?.metadata?.annotations?.digest as
-            | string
-            | undefined,
-        };
-
-        await pipelineRunsDb.setItem(responseData.id, pipelineRun);
+        await savePipelineRun(
+          responseData,
+          componentSpec?.name || "Untitled Pipeline",
+          componentSpec?.metadata?.annotations?.digest as string | undefined
+        );
       }
 
       setSubmitSuccess(true);
@@ -112,10 +239,25 @@ const OasisSubmitter = ({
     setCooldownTime(3);
 
     try {
+      // Create a deep copy of the component spec
+      const specCopy = JSON.parse(JSON.stringify(componentSpec));
+      const componentCache = new Map<string, ComponentSpec>();
+
+      // Process the root component and all nested components
+      const fullyLoadedSpec = await processComponentSpec(
+        specCopy,
+        componentCache,
+        (taskId, error) => {
+          // Handle component loading errors
+          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          handleError(`Failed to load component "${taskId}": ${errorMessage}`);
+        }
+      );
+
       const payload = {
         root_task: {
           componentRef: {
-            spec: componentSpec,
+            spec: fullyLoadedSpec,
           },
         },
       };
