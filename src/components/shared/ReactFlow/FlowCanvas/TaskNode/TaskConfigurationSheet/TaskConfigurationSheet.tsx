@@ -1,4 +1,10 @@
-import { Code, InfoIcon, LogsIcon, Parentheses } from "lucide-react";
+import {
+  AmphoraIcon,
+  Code,
+  InfoIcon,
+  LogsIcon,
+  Parentheses,
+} from "lucide-react";
 import { type ReactNode } from "react";
 
 import {
@@ -73,6 +79,11 @@ const TaskConfigurationSheet = ({
 
   const displayName = getComponentName(taskSpec.componentRef);
 
+  const onFullscreenChange = (isFullscreen: boolean) => {
+    if (isFullscreen) {
+      onOpenChange(false);
+    }
+  };
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
@@ -98,13 +109,17 @@ const TaskConfigurationSheet = ({
                 <InfoIcon className="h-4 w-4" />
                 Details
               </TabsTrigger>
-              <TabsTrigger value="arguments" className="flex-1">
-                <Parentheses className="w-4 h-4" />
-                Arguments
+              <TabsTrigger value="io" className="flex-1">
+                {readOnly ? (
+                  <AmphoraIcon className="w-4 h-4" />
+                ) : (
+                  <Parentheses className="w-4 h-4" />
+                )}
+                {readOnly ? "Artifacts" : "Inputs/Outputs"}
               </TabsTrigger>
-              <TabsTrigger value="implementation" className="flex-1">
+              <TabsTrigger value="Component YAML" className="flex-1">
                 <Code className="h-4 w-4" />
-                Implementation
+                Component YAML
               </TabsTrigger>
               {readOnly && (
                 <TabsTrigger value="logs" className="flex-1">
@@ -134,7 +149,7 @@ const TaskConfigurationSheet = ({
                 ))}
               />
             </TabsContent>
-            <TabsContent value="arguments" className="h-full">
+            <TabsContent value="io" className="h-full">
               <h2>Arguments</h2>
               {!readOnly && (
                 <>
@@ -155,16 +170,18 @@ const TaskConfigurationSheet = ({
                 />
               )}
             </TabsContent>
-            <TabsContent value="implementation" className="h-full">
+            <TabsContent value="Component YAML" className="h-full">
               <TaskImplementation
                 displayName={displayName}
                 componentSpec={componentSpec}
+                onFullscreenChange={onFullscreenChange}
               />
             </TabsContent>
             {readOnly && (
               <TabsContent value="logs">
                 <Logs
                   executionId={taskSpec.annotations?.executionId as string}
+                  onFullscreenChange={onFullscreenChange}
                 />
               </TabsContent>
             )}

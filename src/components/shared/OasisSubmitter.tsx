@@ -49,7 +49,7 @@ const parseComponentYaml = (text: string): ComponentSpec => {
 const processComponentSpec = async (
   spec: ComponentSpec,
   componentCache: Map<string, ComponentSpec> = new Map(),
-  onError?: (taskId: string, error: unknown) => void
+  onError?: (taskId: string, error: unknown) => void,
 ): Promise<ComponentSpec> => {
   if (!spec || !spec.implementation || !("graph" in spec.implementation)) {
     return spec;
@@ -63,7 +63,11 @@ const processComponentSpec = async (
   // Process each task
   for (const [taskId, taskObj] of Object.entries(graph.tasks)) {
     // Type guard to ensure taskObj has componentRef
-    if (!taskObj || typeof taskObj !== "object" || !("componentRef" in taskObj)) {
+    if (
+      !taskObj ||
+      typeof taskObj !== "object" ||
+      !("componentRef" in taskObj)
+    ) {
       continue;
     }
 
@@ -78,18 +82,16 @@ const processComponentSpec = async (
       try {
         // Check if we already have this component in cache
         if (componentCache.has(task.componentRef.url)) {
-          console.log(`Using cached component for ${taskId} from ${task.componentRef.url}`);
           task.componentRef.spec = componentCache.get(task.componentRef.url);
           continue;
         }
 
-        console.log(`Loading component for task ${taskId} from ${task.componentRef.url}`);
 
         const response = await fetchWithTimeout(task.componentRef.url);
 
         if (!response.ok) {
           throw new Error(
-            `Failed to fetch component: ${response.statusText} (${response.status})`
+            `Failed to fetch component: ${response.statusText} (${response.status})`,
           );
         }
 
@@ -105,12 +107,21 @@ const processComponentSpec = async (
           componentCache.set(task.componentRef.url, loadedSpec);
 
           // Process nested components recursively
-          if (loadedSpec.implementation && "graph" in loadedSpec.implementation) {
+          if (
+            loadedSpec.implementation &&
+            "graph" in loadedSpec.implementation
+          ) {
             await processComponentSpec(loadedSpec, componentCache, onError);
           }
         } catch (yamlError: unknown) {
-          console.error(`Error parsing component YAML for ${taskId}:`, yamlError);
-          const errorMessage = yamlError instanceof Error ? yamlError.message : "Invalid component format";
+          console.error(
+            `Error parsing component YAML for ${taskId}:`,
+            yamlError,
+          );
+          const errorMessage =
+            yamlError instanceof Error
+              ? yamlError.message
+              : "Invalid component format";
           throw new Error(`Invalid component format: ${errorMessage}`);
         }
       } catch (error: unknown) {
@@ -124,7 +135,11 @@ const processComponentSpec = async (
       }
     } else if (task.componentRef.spec) {
       // If spec exists, process it recursively
-      await processComponentSpec(task.componentRef.spec, componentCache, onError);
+      await processComponentSpec(
+        task.componentRef.spec,
+        componentCache,
+        onError,
+      );
     }
   }
 
@@ -135,7 +150,7 @@ const processComponentSpec = async (
 const savePipelineRun = async (
   responseData: { id: number; root_execution_id: number; created_at: string },
   pipelineName: string,
-  pipelineDigest?: string
+  pipelineDigest?: string,
 ): Promise<PipelineRun> => {
   const pipelineRunsDb = localForage.createInstance({
     name: DB_NAME,
@@ -209,7 +224,7 @@ const OasisSubmitter = ({
         await savePipelineRun(
           responseData,
           componentSpec?.name || "Untitled Pipeline",
-          componentSpec?.metadata?.annotations?.digest as string | undefined
+          componentSpec?.metadata?.annotations?.digest as string | undefined,
         );
       }
 
@@ -249,9 +264,10 @@ const OasisSubmitter = ({
         componentCache,
         (taskId, error) => {
           // Handle component loading errors
-          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
           handleError(`Failed to load component "${taskId}": ${errorMessage}`);
-        }
+        },
       );
 
       const payload = {
