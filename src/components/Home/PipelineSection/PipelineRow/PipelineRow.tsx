@@ -17,7 +17,7 @@ import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import { EDITOR_PATH } from "@/routes/router";
 import { deletePipeline } from "@/services/pipelineService";
 import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
-import { formatDate } from "@/utils/date";
+import { convertUTCToLocalTime, formatDate } from "@/utils/date";
 
 interface PipelineRowProps {
   url?: string;
@@ -80,7 +80,11 @@ const PipelineRow = ({
           {latestRun ? (
             <div className="flex items-center gap-2">
               <StatusIcon status={latestRun.status} />
-              <span>{formatDate(latestRun.created_at)}</span>
+              <span>
+                {formatDate(
+                  convertUTCToLocalTime(latestRun.created_at).toISOString(),
+                )}
+              </span>
             </div>
           ) : (
             "-"
