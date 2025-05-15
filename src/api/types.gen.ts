@@ -21,16 +21,16 @@ export type ArtifactDataResponse = {
 };
 
 export type ArtifactNodeIdResponse = {
-    id: number;
+    id: string;
 };
 
 export type ArtifactNodeResponse = {
-    id: number;
+    id: string;
     type_name?: string | null;
     type_properties?: {
         [key: string]: unknown;
     } | null;
-    producer_execution_id?: number | null;
+    producer_execution_id?: string | null;
     producer_output_name?: string | null;
     artifact_data?: ArtifactDataResponse | null;
 };
@@ -125,7 +125,7 @@ export type ExecutionOptionsSpec = {
 };
 
 export type GetArtifactInfoResponse = {
-    id: number;
+    id: string;
     artifact_data?: ArtifactData | null;
 };
 
@@ -135,6 +135,15 @@ export type GetArtifactSignedUrlResponse = {
 
 export type GetContainerExecutionLogResponse = {
     log_text?: string | null;
+    system_error_exception_full?: string | null;
+    orchestration_error_message?: string | null;
+};
+
+export type GetContainerExecutionStateResponse = {
+    status: ContainerExecutionStatus;
+    exit_code?: number | null;
+    started_at?: string | null;
+    ended_at?: string | null;
 };
 
 export type GetExecutionArtifactsResponse = {
@@ -147,11 +156,11 @@ export type GetExecutionArtifactsResponse = {
 };
 
 export type GetExecutionInfoResponse = {
-    id: number;
+    id: string;
     task_spec: TaskSpecOutput;
-    parent_execution_id?: number | null;
+    parent_execution_id?: string | null;
     child_task_execution_ids: {
-        [key: string]: number;
+        [key: string]: string;
     };
     input_artifacts?: {
         [key: string]: ArtifactNodeIdResponse;
@@ -285,8 +294,8 @@ export type OutputSpec = {
 };
 
 export type PipelineRunResponse = {
-    id: number;
-    root_execution_id: number;
+    id: string;
+    root_execution_id: string;
     annotations?: {
         [key: string]: unknown;
     } | null;
@@ -340,7 +349,7 @@ export type ValidationError = {
 export type GetApiArtifactsIdGetData = {
     body?: never;
     path: {
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/artifacts/{id}';
@@ -367,7 +376,7 @@ export type GetApiArtifactsIdGetResponse = GetApiArtifactsIdGetResponses[keyof G
 export type GetApiExecutionsIdDetailsGetData = {
     body?: never;
     path: {
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/executions/{id}/details';
@@ -394,7 +403,7 @@ export type GetApiExecutionsIdDetailsGetResponse = GetApiExecutionsIdDetailsGetR
 export type GetGraphExecutionStateApiExecutionsIdStateGetData = {
     body?: never;
     path: {
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/executions/{id}/state';
@@ -418,10 +427,64 @@ export type GetGraphExecutionStateApiExecutionsIdStateGetResponses = {
 
 export type GetGraphExecutionStateApiExecutionsIdStateGetResponse = GetGraphExecutionStateApiExecutionsIdStateGetResponses[keyof GetGraphExecutionStateApiExecutionsIdStateGetResponses];
 
+export type GetGraphExecutionStateApiExecutionsIdGraphExecutionStateGetData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/executions/{id}/graph_execution_state';
+};
+
+export type GetGraphExecutionStateApiExecutionsIdGraphExecutionStateGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetGraphExecutionStateApiExecutionsIdGraphExecutionStateGetError = GetGraphExecutionStateApiExecutionsIdGraphExecutionStateGetErrors[keyof GetGraphExecutionStateApiExecutionsIdGraphExecutionStateGetErrors];
+
+export type GetGraphExecutionStateApiExecutionsIdGraphExecutionStateGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: GetGraphExecutionStateResponse;
+};
+
+export type GetGraphExecutionStateApiExecutionsIdGraphExecutionStateGetResponse = GetGraphExecutionStateApiExecutionsIdGraphExecutionStateGetResponses[keyof GetGraphExecutionStateApiExecutionsIdGraphExecutionStateGetResponses];
+
+export type GetContainerExecutionStateApiExecutionsIdContainerStateGetData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/executions/{id}/container_state';
+};
+
+export type GetContainerExecutionStateApiExecutionsIdContainerStateGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetContainerExecutionStateApiExecutionsIdContainerStateGetError = GetContainerExecutionStateApiExecutionsIdContainerStateGetErrors[keyof GetContainerExecutionStateApiExecutionsIdContainerStateGetErrors];
+
+export type GetContainerExecutionStateApiExecutionsIdContainerStateGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: GetContainerExecutionStateResponse;
+};
+
+export type GetContainerExecutionStateApiExecutionsIdContainerStateGetResponse = GetContainerExecutionStateApiExecutionsIdContainerStateGetResponses[keyof GetContainerExecutionStateApiExecutionsIdContainerStateGetResponses];
+
 export type GetArtifactsApiExecutionsIdArtifactsGetData = {
     body?: never;
     path: {
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/executions/{id}/artifacts';
@@ -448,7 +511,7 @@ export type GetArtifactsApiExecutionsIdArtifactsGetResponse = GetArtifactsApiExe
 export type GetContainerLogApiExecutionsIdContainerLogGetData = {
     body?: never;
     path: {
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/executions/{id}/container_log';
@@ -475,7 +538,7 @@ export type GetContainerLogApiExecutionsIdContainerLogGetResponse = GetContainer
 export type StreamContainerLogApiExecutionsIdStreamContainerLogGetData = {
     body?: never;
     path: {
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/executions/{id}/stream_container_log';
@@ -502,6 +565,7 @@ export type ListApiPipelineRunsGetData = {
     path?: never;
     query?: {
         page_token?: string | null;
+        filter?: string | null;
     };
     url: '/api/pipeline_runs/';
 };
@@ -552,7 +616,7 @@ export type CreateApiPipelineRunsPostResponse = CreateApiPipelineRunsPostRespons
 export type GetApiPipelineRunsIdGetData = {
     body?: never;
     path: {
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/pipeline_runs/{id}';
@@ -579,7 +643,7 @@ export type GetApiPipelineRunsIdGetResponse = GetApiPipelineRunsIdGetResponses[k
 export type GetSignedArtifactUrlApiArtifactsIdSignedArtifactUrlGetData = {
     body?: never;
     path: {
-        id: number;
+        id: string;
     };
     query?: never;
     url: '/api/artifacts/{id}/signed_artifact_url';
@@ -631,7 +695,7 @@ export type AdminSetReadOnlyModelApiAdminSetReadOnlyModelPutResponses = {
 export type AdminSetExecutionNodeStatusApiAdminExecutionNodeIdStatusPutData = {
     body?: never;
     path: {
-        id: number;
+        id: string;
     };
     query: {
         status: ContainerExecutionStatus;
@@ -863,6 +927,33 @@ export type MysqlListTablesMysqlListTablesGetResponses = {
 };
 
 export type MysqlListTablesMysqlListTablesGetResponse = MysqlListTablesMysqlListTablesGetResponses[keyof MysqlListTablesMysqlListTablesGetResponses];
+
+export type MysqlRecreateAllTablesDontRunAdminMysqlRecreateAllTablesDontRunPostData = {
+    body?: never;
+    path?: never;
+    query: {
+        authorization: string;
+    };
+    url: '/admin/mysql_recreate_all_tables_dont_run';
+};
+
+export type MysqlRecreateAllTablesDontRunAdminMysqlRecreateAllTablesDontRunPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MysqlRecreateAllTablesDontRunAdminMysqlRecreateAllTablesDontRunPostError = MysqlRecreateAllTablesDontRunAdminMysqlRecreateAllTablesDontRunPostErrors[keyof MysqlRecreateAllTablesDontRunAdminMysqlRecreateAllTablesDontRunPostErrors];
+
+export type MysqlRecreateAllTablesDontRunAdminMysqlRecreateAllTablesDontRunPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<string>;
+};
+
+export type MysqlRecreateAllTablesDontRunAdminMysqlRecreateAllTablesDontRunPostResponse = MysqlRecreateAllTablesDontRunAdminMysqlRecreateAllTablesDontRunPostResponses[keyof MysqlRecreateAllTablesDontRunAdminMysqlRecreateAllTablesDontRunPostResponses];
 
 export type VertexListCustomJobsVertexListCustomJobsGetData = {
     body?: never;

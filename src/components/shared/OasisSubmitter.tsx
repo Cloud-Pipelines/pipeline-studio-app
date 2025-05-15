@@ -86,7 +86,6 @@ const processComponentSpec = async (
           continue;
         }
 
-
         const response = await fetchWithTimeout(task.componentRef.url);
 
         if (!response.ok) {

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
+import type { ContainerExecutionStatus } from "@/api/types.gen";
 import CodeViewer from "@/components/shared/CodeViewer";
 import { API_URL } from "@/utils/constants";
 
@@ -42,6 +43,24 @@ const LogDisplay = ({
   );
 };
 
+export const isStatusActivelyLogging = (
+  status?: ContainerExecutionStatus,
+): boolean => {
+  if (!status) {
+    return false;
+  }
+  switch (status) {
+    case "RUNNING":
+    case "PENDING":
+    case "QUEUED":
+    case "WAITING_FOR_UPSTREAM":
+    case "CANCELLING":
+      return true;
+    default:
+      return false;
+  }
+};
+
 const getLogs = async (executionId: string) => {
   const response = await fetch(
     `${API_URL}/api/executions/${executionId}/container_log`,
@@ -49,7 +68,16 @@ const getLogs = async (executionId: string) => {
   return response.json();
 };
 
-const Logs = ({ executionId, onFullscreenChange }: { executionId?: string | number, onFullscreenChange: (isFullscreen: boolean) => void }) => {
+const Logs = ({
+  executionId,
+  onFullscreenChange,
+  status,
+}: {
+  executionId?: string | number;
+  onFullscreenChange: (isFullscreen: boolean) => void;
+  status?: ContainerExecutionStatus;
+}) => {
+  const [isLogging, setIsLogging] = useState(!!executionId);
   const [logs, setLogs] = useState<{
     log_text?: string;
     system_error_exception_full?: string;
@@ -61,10 +89,16 @@ const Logs = ({ executionId, onFullscreenChange }: { executionId?: string | numb
   } = useQuery({
     queryKey: ["logs", executionId],
     queryFn: () => getLogs(String(executionId)),
-    enabled: !!executionId,
+    enabled: isLogging,
     refetchInterval: 1000,
     refetchIntervalInBackground: false,
   });
+
+  useEffect(() => {
+    if (status) {
+      setIsLogging(isStatusActivelyLogging(status));
+    }
+  }, [status]);
 
   useEffect(() => {
     if (data && !error) {
@@ -85,7 +119,9 @@ const Logs = ({ executionId, onFullscreenChange }: { executionId?: string | numb
   return (
     <div className="space-y-4">
       <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
-        {logs && <LogDisplay logs={logs} onFullscreenChange={onFullscreenChange} />}
+        {logs && (
+          <LogDisplay logs={logs} onFullscreenChange={onFullscreenChange} />
+        )}
       </div>
     </div>
   );
