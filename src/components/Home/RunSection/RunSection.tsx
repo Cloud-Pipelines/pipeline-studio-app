@@ -33,6 +33,7 @@ export const RunSection = () => {
 
   const { data, isLoading, refetch } = useQuery<ListPipelineJobsResponse>({
     queryKey: ["runs", pageToken],
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const pageTokenParam = pageToken ? `?page_token=${pageToken}` : "";
       const url = `${API_URL}/api/pipeline_runs/${pageTokenParam}${filter}`;

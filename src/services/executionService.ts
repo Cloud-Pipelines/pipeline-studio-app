@@ -35,6 +35,7 @@ export const fetchExecutionInfo = (executionId: string) => {
     error: detailsError,
   } = useQuery<GetExecutionInfoResponse>({
     queryKey: ["pipeline-run-details", executionId],
+    refetchOnWindowFocus: false,
     queryFn: fetchDetails,
   });
 
@@ -44,6 +45,7 @@ export const fetchExecutionInfo = (executionId: string) => {
     error: stateError,
   } = useQuery<GetGraphExecutionStateResponse>({
     queryKey: ["pipeline-run-state", executionId],
+    refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionState(executionId),
   });
 
