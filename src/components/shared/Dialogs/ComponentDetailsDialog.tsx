@@ -49,6 +49,12 @@ const ComponentDetails = ({
     }
   };
 
+  const onFullscreenChange = (isFullscreen: boolean) => {
+    if (!isFullscreen) {
+      onClose?.();
+    }
+  };
+
   return (
     <Dialog modal={!isAnyFullscreen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{dialogTriggerButton}</DialogTrigger>
@@ -105,6 +111,7 @@ const ComponentDetails = ({
               <TaskImplementation
                 displayName={displayName}
                 componentSpec={componentSpec}
+                onFullscreenChange={onFullscreenChange}
               />
             </TabsContent>
           </div>

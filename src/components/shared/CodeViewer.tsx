@@ -99,13 +99,13 @@ const CodeViewer = ({
   language = "yaml",
   title = "Code Implementation",
   filename = "",
-  onFullscreenChange,
+  onFullscreenChange = () => {},
 }: CodeViewerProps) => {
   const { openFullscreen } = useFullscreen();
 
   const handleEnterFullscreen = useCallback(() => {
     openFullscreen({ code, language, title });
-    onFullscreenChange?.(true);
+    onFullscreenChange(true);
   }, [code, language, title, openFullscreen, onFullscreenChange]);
 
   return (
@@ -155,7 +155,7 @@ const FullscreenView = ({ content, onClose }: FullscreenViewProps) => {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] bg-black/95 flex flex-col"
+      className="fixed inset-0 z-[999999] bg-black/95 flex flex-col"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="flex justify-between items-center p-4 bg-slate-800">

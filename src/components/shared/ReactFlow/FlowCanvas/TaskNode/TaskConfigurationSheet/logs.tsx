@@ -5,8 +5,10 @@ import CodeViewer from "@/components/shared/CodeViewer";
 import { API_URL } from "@/utils/constants";
 
 const LogDisplay = ({
+  onFullscreenChange,
   logs,
 }: {
+  onFullscreenChange: (isFullscreen: boolean) => void;
   logs: {
     log_text?: string;
     system_error_exception_full?: string;
@@ -24,6 +26,7 @@ const LogDisplay = ({
           language="text"
           title="Logs"
           filename="logs"
+          onFullscreenChange={onFullscreenChange}
         />
       )}
       {logs?.system_error_exception_full && (
@@ -32,6 +35,7 @@ const LogDisplay = ({
           language="text"
           title="Logs"
           filename="error"
+          onFullscreenChange={onFullscreenChange}
         />
       )}
     </>
@@ -45,7 +49,7 @@ const getLogs = async (executionId: string) => {
   return response.json();
 };
 
-const Logs = ({ executionId }: { executionId?: string | number }) => {
+const Logs = ({ executionId, onFullscreenChange }: { executionId?: string | number, onFullscreenChange: (isFullscreen: boolean) => void }) => {
   const [logs, setLogs] = useState<{
     log_text?: string;
     system_error_exception_full?: string;
@@ -81,7 +85,7 @@ const Logs = ({ executionId }: { executionId?: string | number }) => {
   return (
     <div className="space-y-4">
       <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
-        {logs && <LogDisplay logs={logs} />}
+        {logs && <LogDisplay logs={logs} onFullscreenChange={onFullscreenChange} />}
       </div>
     </div>
   );
