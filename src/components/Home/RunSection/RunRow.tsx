@@ -15,7 +15,7 @@ import {
   fetchExecutionInfo,
   getRunStatus,
 } from "@/services/executionService";
-import { formatDate } from "@/utils/date";
+import { convertUTCToLocalTime, formatDate } from "@/utils/date";
 
 const RunRow = ({ run }: { run: PipelineRunResponse }) => {
   const navigate = useNavigate();
@@ -90,7 +90,9 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
         </HoverCard>
       </TableCell>
       <TableCell>
-        {run.created_at ? `${formatDate(run.created_at)}` : "Data not found..."}
+        {run.created_at
+          ? `${formatDate(convertUTCToLocalTime(run.created_at).toISOString())}`
+          : "Data not found..."}
       </TableCell>
       <TableCell>{run ? `${run.created_by ?? "Unknown user"}` : ""}</TableCell>
     </TableRow>
