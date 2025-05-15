@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { type ReactNode } from "react";
 
+import type { ContainerExecutionStatus } from "@/api/types.gen";
 import {
   TaskDetails,
   TaskImplementation,
@@ -49,7 +50,7 @@ interface TaskConfigurationSheetProps {
   setArguments: (args: Record<string, ArgumentType>) => void;
   onDelete?: () => void;
   readOnly?: boolean;
-  runStatus?: string;
+  runStatus?: ContainerExecutionStatus;
 }
 
 const TaskConfigurationSheet = ({
@@ -84,6 +85,9 @@ const TaskConfigurationSheet = ({
       onOpenChange(false);
     }
   };
+
+  console.log("runStatus", runStatus);
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
@@ -182,6 +186,7 @@ const TaskConfigurationSheet = ({
                 <Logs
                   executionId={taskSpec.annotations?.executionId as string}
                   onFullscreenChange={onFullscreenChange}
+                  status={runStatus}
                 />
               </TabsContent>
             )}

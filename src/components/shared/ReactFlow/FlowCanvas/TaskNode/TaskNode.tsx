@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { memo, type RefObject, useMemo, useRef, useState } from "react";
 
+import type { ContainerExecutionStatus } from "@/api/types.gen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import useComponentFromUrl from "@/hooks/useComponentFromUrl";
 import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
@@ -28,29 +29,11 @@ import type {
 
 import TaskConfigurationSheet from "./TaskConfigurationSheet";
 
-type RunStatusType =
-  | "SUCCEEDED"
-  | "FAILED"
-  | "SYSTEM_ERROR"
-  | "INVALID"
-  | "UPSTREAM_FAILED"
-  | "UPSTREAM_FAILED_OR_SKIPPED"
-  | "RUNNING"
-  | "STARTING"
-  | "PENDING"
-  | "CANCELLING"
-  | "CANCELLED"
-  | "SKIPPED"
-  | "QUEUED"
-  | "UNINITIALIZED"
-  | "WAITING_FOR_UPSTREAM"
-  | string;
-
 type StatusIndicatorProps = {
-  status: RunStatusType | undefined;
+  status?: ContainerExecutionStatus;
 };
 
-const getRunStatus = (status: RunStatusType) => {
+const getRunStatus = (status: ContainerExecutionStatus) => {
   switch (status) {
     case "SUCCEEDED":
       return {
@@ -61,15 +44,12 @@ const getRunStatus = (status: RunStatusType) => {
     case "FAILED":
     case "SYSTEM_ERROR":
     case "INVALID":
-    case "UPSTREAM_FAILED":
-    case "UPSTREAM_FAILED_OR_SKIPPED":
       return {
         style: "bg-red-700",
         text: "Failed",
         icon: <XCircleIcon className="w-2 h-2" />,
       };
     case "RUNNING":
-    case "STARTING":
       return {
         style: "bg-sky-500",
         text: "Running",
@@ -282,7 +262,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const readOnly = typedData.readOnly;
   const highlighted = typedData.highlighted;
 
-  const runStatus = taskStatusMap.get(taskId ?? "");
+  const runStatus = taskStatusMap.get(taskId ?? "") as ContainerExecutionStatus;
 
   const isCustomComponent = !taskSpec.componentRef.url; // Custom components don't have a source url
 
