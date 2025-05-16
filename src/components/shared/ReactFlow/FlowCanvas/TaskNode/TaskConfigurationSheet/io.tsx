@@ -41,12 +41,7 @@ const Io = ({ taskSpec, executionId }: IoProps) => {
             const inputArtifact = artifacts?.input_artifacts?.[input.name];
 
             return (
-              <IoCell
-                key={input.name}
-                io={input}
-                taskSpec={taskSpec}
-                artifacts={inputArtifact}
-              />
+              <IoCell key={input.name} io={input} artifacts={inputArtifact} />
             );
           })}
           {!taskSpec.componentRef.spec?.inputs?.length && (
@@ -65,7 +60,6 @@ const Io = ({ taskSpec, executionId }: IoProps) => {
               <IoCell
                 key={output.name}
                 io={output}
-                taskSpec={taskSpec}
                 artifacts={outputArtifact}
               />
             );

@@ -1,4 +1,5 @@
 import { ChevronsUpDown } from "lucide-react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 
 import {
   Collapsible,
@@ -7,19 +8,17 @@ import {
 } from "@/components/ui/collapsible";
 import { Link } from "@/components/ui/link";
 import { cn } from "@/lib/utils";
-import type { InputSpec, OutputSpec, TaskSpec } from "@/utils/componentSpec";
-import { formatBytes, formatJsonValue } from "@/utils/string";
+import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
+import { formatBytes } from "@/utils/string";
 import { transformGcsUrl } from "@/utils/URL";
 
 interface IoCellProps {
   io: InputSpec | OutputSpec;
-  taskSpec: TaskSpec;
   artifacts: any;
 }
 
-const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
-  const hasCollapsableContent =
-    !!taskSpec.arguments?.[io.name] || !!io.description;
+const IoCell = ({ io, artifacts }: IoCellProps) => {
+  const hasCollapsableContent = artifacts?.artifact_data;
 
   return (
     <Collapsible key={io.name}>
@@ -47,45 +46,40 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
             </span>
           )}
         </div>
-
-        <CollapsibleContent className="flex flex-col gap-2">
-          {io.description && (
-            <div className="flex px-3 py-0">
-              <span className="font-medium text-xs min-w-24 max-w-24">
-                Description:
-              </span>
-              <span className="font-medium text-xs text-gray-500">
-                {io.description}
-              </span>
-            </div>
-          )}
-
-          {taskSpec.arguments?.[io.name] && (
-            <div className="flex px-3 py-0">
-              <span className="font-medium text-xs min-w-24 max-w-24">
-                Default
-              </span>
-              <span className="font-mono text-xs text-gray-500">
-                {formatJsonValue(taskSpec.arguments?.[io.name])}
-              </span>
-            </div>
-          )}
-        </CollapsibleContent>
       </div>
 
       <CollapsibleContent className="flex flex-col gap-2">
         {artifacts?.artifact_data && (
-          <div className="flex flex-col gap-3 py-3 border border-t-0 rounded-b-md bg-gray-50 z-0 -mt-2">
-            <div className="flex  justify-between px-3 py-2">
-              <span className="font-medium text-sm">Artifact</span>
-            </div>
+          <div className="flex flex-col gap-3 pb-3 pt-5 border border-t-0 rounded-b-md bg-gray-50 z-0 -mt-2">
             {artifacts.artifact_data.value !== undefined && (
               <div className="flex px-3 py-0">
-                <span className="font-medium text-xs min-w-24 max-w-24">
-                  Value
-                </span>
-                <span className="font-mono text-xs text-gray-500">
-                  {artifacts.artifact_data.value || "-"}
+                <span className="flex-1">
+                  <SyntaxHighlighter
+                    language="json"
+                    wrapLongLines
+                    customStyle={{
+                      background: "transparent",
+                      margin: 0,
+                      padding: 0,
+                      wordBreak: "break-all",
+                      whiteSpace: "pre-wrap",
+                      fontFamily: "monospace",
+                      fontSize: "10px",
+                    }}
+                    className="overflow-auto max-h-[300px] rounded bg-gray-100 max-w-full font-mono!"
+                  >
+                    {(() => {
+                      const { value } = artifacts.artifact_data;
+                      if (typeof value === "string") {
+                        try {
+                          return JSON.stringify(JSON.parse(value), null, 2);
+                        } catch {
+                          return value; // fallback: show as-is if not valid JSON
+                        }
+                      }
+                      return JSON.stringify(value, null, 2);
+                    })()}
+                  </SyntaxHighlighter>
                 </span>
               </div>
             )}
@@ -102,17 +96,6 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
                 >
                   {artifacts.artifact_data.uri}
                 </Link>
-              </div>
-            )}
-
-            {artifacts.artifact_data.total_size !== undefined && (
-              <div className="flex px-3 py-0">
-                <span className="font-medium text-xs min-w-24 max-w-24">
-                  Size:
-                </span>
-                <span className="font-mono text-xs text-gray-500">
-                  {formatBytes(artifacts.artifact_data.total_size)}
-                </span>
               </div>
             )}
           </div>
