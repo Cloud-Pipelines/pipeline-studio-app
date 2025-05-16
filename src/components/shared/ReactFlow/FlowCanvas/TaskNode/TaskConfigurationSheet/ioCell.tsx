@@ -8,7 +8,11 @@ import {
 } from "@/components/ui/collapsible";
 import { Link } from "@/components/ui/link";
 import { cn } from "@/lib/utils";
-import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
+import type {
+  InputSpec,
+  OutputSpec,
+  TypeSpecType,
+} from "@/utils/componentSpec";
 import { formatBytes } from "@/utils/string";
 import { transformGcsUrl } from "@/utils/URL";
 
@@ -17,9 +21,22 @@ interface IoCellProps {
   artifacts: any;
 }
 
+const canShowInlineValue = (value: any, type: TypeSpecType | undefined) => {
+  if (!type) {
+    return false;
+  }
+  if (type === "Integer" || type === "Boolean") {
+    return true;
+  }
+  if (type === "String" && value.length < 31) {
+    return true;
+  }
+  return false;
+};
 const IoCell = ({ io, artifacts }: IoCellProps) => {
   const hasCollapsableContent =
-    artifacts?.artifact_data && io.type !== "Integer";
+    artifacts?.artifact_data &&
+    !canShowInlineValue(artifacts.artifact_data, io.type);
 
   return (
     <Collapsible key={io.name}>
@@ -28,10 +45,25 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
           <span className="font-medium text-sm">{io.name}</span>
           {io.type && (
             <span className="text-xs text-gray-500 flex items-center gap-1">
+              {artifacts.artifact_data.uri !== undefined && (
+                <>
+                  <Link
+                    download
+                    href={transformGcsUrl(artifacts?.artifact_data?.uri || "")}
+                    className="font-mono break-all text-[10px] text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    Download Artifact
+                  </Link>
+                  &bull;
+                </>
+              )}
               {artifacts?.artifact_data && (
                 <>
                   {artifacts.artifact_data.value !== undefined &&
-                    io.type === "Integer" && (
+                    canShowInlineValue(
+                      artifacts.artifact_data.value,
+                      io.type,
+                    ) && (
                       <>
                         <span className="font-mono text-[10px] text-amber-500">
                           {artifacts.artifact_data.value}
@@ -45,6 +77,7 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                   </span>
                 </>
               )}
+
               {io.type?.toString()}
               <CollapsibleTrigger
                 disabled={!hasCollapsableContent}
@@ -103,21 +136,6 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                     );
                   })()}
                 </span>
-              </div>
-            )}
-
-            {artifacts.artifact_data.uri !== undefined && (
-              <div className="flex  px-3 py-0">
-                <span className="font-medium text-xs min-w-24 max-w-24">
-                  URI:
-                </span>
-                <Link
-                  external
-                  href={transformGcsUrl(artifacts.artifact_data.uri)}
-                  className="font-mono break-all text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
-                >
-                  Download Artifact
-                </Link>
               </div>
             )}
           </div>
