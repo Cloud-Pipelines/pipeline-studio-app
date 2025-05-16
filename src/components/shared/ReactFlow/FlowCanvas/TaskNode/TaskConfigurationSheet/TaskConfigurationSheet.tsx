@@ -104,12 +104,8 @@ const TaskConfigurationSheet = ({
           </SheetDescription>
         </SheetHeader>
         <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4">
-          <Tabs defaultValue="details">
+          <Tabs defaultValue="io">
             <TabsList className="mb-2">
-              <TabsTrigger value="details" className="flex-1">
-                <InfoIcon className="h-4 w-4" />
-                Details
-              </TabsTrigger>
               <TabsTrigger value="io" className="flex-1">
                 {readOnly ? (
                   <AmphoraIcon className="w-4 h-4" />
@@ -118,6 +114,11 @@ const TaskConfigurationSheet = ({
                 )}
                 {readOnly ? "Artifacts" : "Inputs/Outputs"}
               </TabsTrigger>
+              <TabsTrigger value="details" className="flex-1">
+                <InfoIcon className="h-4 w-4" />
+                Details
+              </TabsTrigger>
+
               <TabsTrigger value="Component YAML" className="flex-1">
                 <Code className="h-4 w-4" />
                 Component YAML

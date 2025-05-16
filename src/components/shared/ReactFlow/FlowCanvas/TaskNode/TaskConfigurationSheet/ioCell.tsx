@@ -18,7 +18,8 @@ interface IoCellProps {
 }
 
 const IoCell = ({ io, artifacts }: IoCellProps) => {
-  const hasCollapsableContent = artifacts?.artifact_data;
+  const hasCollapsableContent =
+    artifacts?.artifact_data && io.type !== "Integer";
 
   return (
     <Collapsible key={io.name}>
@@ -28,9 +29,21 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
           {io.type && (
             <span className="text-xs text-gray-500 flex items-center gap-1">
               {artifacts?.artifact_data && (
-                <span className="font-mono text-[10px] text-gray-500">
-                  {formatBytes(artifacts.artifact_data.total_size)} &bull;
-                </span>
+                <>
+                  {artifacts.artifact_data.value !== undefined &&
+                    io.type === "Integer" && (
+                      <>
+                        <span className="font-mono text-[10px] text-amber-500">
+                          {artifacts.artifact_data.value}
+                        </span>
+                        &bull;
+                      </>
+                    )}
+
+                  <span className="font-mono text-[10px] text-gray-500">
+                    {formatBytes(artifacts.artifact_data.total_size)} &bull;
+                  </span>
+                </>
               )}
               {io.type?.toString()}
               <CollapsibleTrigger
