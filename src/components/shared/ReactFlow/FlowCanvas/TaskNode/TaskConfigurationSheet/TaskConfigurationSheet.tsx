@@ -152,7 +152,6 @@ const TaskConfigurationSheet = ({
               />
             </TabsContent>
             <TabsContent value="io" className="h-full">
-              <h2>Arguments</h2>
               {!readOnly && (
                 <>
                   <p className="text-sm text-muted-foreground">
