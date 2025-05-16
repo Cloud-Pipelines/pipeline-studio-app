@@ -36,7 +36,7 @@ const canShowInlineValue = (value: any, type: TypeSpecType | undefined) => {
 const IoCell = ({ io, artifacts }: IoCellProps) => {
   const hasCollapsableContent =
     artifacts?.artifact_data &&
-    !canShowInlineValue(artifacts.artifact_data, io.type);
+    !canShowInlineValue(artifacts?.artifact_data?.value, io.type);
 
   return (
     <Collapsible key={io.name}>
@@ -45,7 +45,7 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
           <span className="font-medium text-sm">{io.name}</span>
           {io.type && (
             <span className="text-xs text-gray-500 flex items-center gap-1">
-              {artifacts.artifact_data.uri !== undefined && (
+              {artifacts?.artifact_data?.uri !== undefined && (
                 <>
                   <Link
                     download
