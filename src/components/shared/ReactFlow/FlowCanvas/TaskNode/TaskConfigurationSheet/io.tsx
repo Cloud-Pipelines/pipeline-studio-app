@@ -36,7 +36,7 @@ const Io = ({ taskSpec, executionId }: IoProps) => {
     <div className="space-y-4">
       <section>
         <h3 className="text-base font-medium mb-1">Inputs</h3>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1">
           {taskSpec.componentRef.spec?.inputs?.map((input) => {
             const inputArtifact = artifacts?.input_artifacts?.[input.name];
 
@@ -57,7 +57,7 @@ const Io = ({ taskSpec, executionId }: IoProps) => {
 
       <section>
         <h3 className="text-base font-medium mb-1">Outputs</h3>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1">
           {taskSpec.componentRef.spec?.outputs?.map((output) => {
             const outputArtifact = artifacts?.output_artifacts?.[output.name];
 

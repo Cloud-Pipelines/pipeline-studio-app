@@ -27,6 +27,11 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
           <span className="font-medium text-sm">{io.name}</span>
           {io.type && (
             <span className="text-xs text-gray-500 flex items-center gap-1">
+              {artifacts?.artifact_data && (
+                <span className="font-mono text-[10px] text-gray-500">
+                  {formatBytes(artifacts.artifact_data.total_size)} &bull;
+                </span>
+              )}
               {io.type?.toString()}{" "}
               <CollapsibleTrigger
                 disabled={!hasCollapsableContent}
@@ -65,50 +70,52 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
         </CollapsibleContent>
       </div>
 
-      {artifacts?.artifact_data && (
-        <div className="flex flex-col gap-3 py-3 border border-t-0 rounded-b-md bg-gray-50 z-0 -mt-2">
-          <div className="flex items-center justify-between px-3 py-2">
-            <span className="font-medium text-sm">Artifact</span>
+      <CollapsibleContent className="flex flex-col gap-2">
+        {artifacts?.artifact_data && (
+          <div className="flex flex-col gap-3 py-3 border border-t-0 rounded-b-md bg-gray-50 z-0 -mt-2">
+            <div className="flex items-center justify-between px-3 py-2">
+              <span className="font-medium text-sm">Artifact</span>
+            </div>
+            {artifacts.artifact_data.value !== undefined && (
+              <div className="flex items-center px-3 py-0">
+                <span className="font-medium text-xs min-w-24 max-w-24">
+                  Value
+                </span>
+                <span className="font-mono text-xs text-gray-500">
+                  {artifacts.artifact_data.value || "-"}
+                </span>
+              </div>
+            )}
+
+            {artifacts.artifact_data.uri !== undefined && (
+              <div className="flex items-center px-3 py-0">
+                <span className="font-medium text-xs min-w-24 max-w-24">
+                  URI:
+                </span>
+                <a
+                  href={transformGcsUrl(artifacts.artifact_data.uri)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono break-all text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  {artifacts.artifact_data.uri || "-"}
+                </a>
+              </div>
+            )}
+
+            {artifacts.artifact_data.total_size !== undefined && (
+              <div className="flex items-center px-3 py-0">
+                <span className="font-medium text-xs min-w-24 max-w-24">
+                  Size:
+                </span>
+                <span className="font-mono text-xs text-gray-500">
+                  {formatBytes(artifacts.artifact_data.total_size)}
+                </span>
+              </div>
+            )}
           </div>
-          {artifacts.artifact_data.value !== undefined && (
-            <div className="flex items-center px-3 py-0">
-              <span className="font-medium text-xs min-w-24 max-w-24">
-                Value
-              </span>
-              <span className="font-mono text-xs text-gray-500">
-                {artifacts.artifact_data.value || "-"}
-              </span>
-            </div>
-          )}
-
-          {artifacts.artifact_data.uri !== undefined && (
-            <div className="flex items-center px-3 py-0">
-              <span className="font-medium text-xs min-w-24 max-w-24">
-                URI:
-              </span>
-              <a
-                href={transformGcsUrl(artifacts.artifact_data.uri)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono break-all text-xs text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                {artifacts.artifact_data.uri || "-"}
-              </a>
-            </div>
-          )}
-
-          {artifacts.artifact_data.total_size !== undefined && (
-            <div className="flex items-center px-3 py-0">
-              <span className="font-medium text-xs min-w-24 max-w-24">
-                Size:
-              </span>
-              <span className="font-mono text-xs text-gray-500">
-                {formatBytes(artifacts.artifact_data.total_size)}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </CollapsibleContent>
     </Collapsible>
   );
 };
