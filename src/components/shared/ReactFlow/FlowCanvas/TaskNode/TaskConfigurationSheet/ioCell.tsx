@@ -28,9 +28,12 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
           {io.type && (
             <span className="text-xs text-gray-500 flex items-center gap-1">
               {io.type?.toString()}{" "}
-              <CollapsibleTrigger disabled={!hasCollapsableContent} className="cursor-pointer">
+              <CollapsibleTrigger
+                disabled={!hasCollapsableContent}
+                className="cursor-pointer"
+              >
                 <ChevronsUpDown
-                  className={cn("w-4 h-4", { "hidden": !hasCollapsableContent })}
+                  className={cn("w-4 h-4", { hidden: !hasCollapsableContent })}
                 />
               </CollapsibleTrigger>
             </span>

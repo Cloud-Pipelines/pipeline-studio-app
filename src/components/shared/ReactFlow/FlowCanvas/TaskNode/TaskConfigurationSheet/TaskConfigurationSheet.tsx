@@ -17,7 +17,6 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -104,7 +103,7 @@ const TaskConfigurationSheet = ({
             {componentSpec.name} configuration sheet
           </SheetDescription>
         </SheetHeader>
-        <div className="flex flex-col px-4 gap-4 overflow-y-auto">
+        <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4">
           <Tabs defaultValue="details">
             <TabsList className="mb-2">
               <TabsTrigger value="details" className="flex-1">
@@ -189,16 +188,6 @@ const TaskConfigurationSheet = ({
             )}
           </Tabs>
         </div>
-        <SheetFooter>
-          <Button
-            onClick={() => onOpenChange(false)}
-            disabled={disabled}
-            variant="secondary"
-            className="w-fit"
-          >
-            Close
-          </Button>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
