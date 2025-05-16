@@ -48,11 +48,10 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
               {artifacts?.artifact_data?.uri !== undefined && (
                 <>
                   <Link
-                    download
                     href={transformGcsUrl(artifacts?.artifact_data?.uri || "")}
                     className="font-mono break-all text-[10px] text-blue-600 hover:text-blue-800 hover:underline"
                   >
-                    Download Artifact
+                    Link
                   </Link>
                   &bull;
                 </>
