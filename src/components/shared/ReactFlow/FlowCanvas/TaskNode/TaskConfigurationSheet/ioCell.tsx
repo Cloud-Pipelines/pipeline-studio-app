@@ -5,6 +5,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Link } from "@/components/ui/link";
 import { cn } from "@/lib/utils";
 import type { InputSpec, OutputSpec, TaskSpec } from "@/utils/componentSpec";
 import { formatBytes, formatJsonValue } from "@/utils/string";
@@ -23,7 +24,7 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
   return (
     <Collapsible key={io.name}>
       <div className="flex flex-col gap-3 py-3 border rounded-md relative z-10 bg-white">
-        <div className="flex items-center justify-between px-3">
+        <div className="flex justify-between px-3">
           <span className="font-medium text-sm">{io.name}</span>
           {io.type && (
             <span className="text-xs text-gray-500 flex items-center gap-1">
@@ -38,7 +39,9 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
                 className="cursor-pointer"
               >
                 <ChevronsUpDown
-                  className={cn("w-4 h-4", { hidden: !hasCollapsableContent })}
+                  className={cn("w-4 h-4 cursor-pointer", {
+                    hidden: !hasCollapsableContent,
+                  })}
                 />
               </CollapsibleTrigger>
             </span>
@@ -47,7 +50,7 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
 
         <CollapsibleContent className="flex flex-col gap-2">
           {io.description && (
-            <div className="flex items-center px-3 py-0">
+            <div className="flex px-3 py-0">
               <span className="font-medium text-xs min-w-24 max-w-24">
                 Description:
               </span>
@@ -58,7 +61,7 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
           )}
 
           {taskSpec.arguments?.[io.name] && (
-            <div className="flex items-center px-3 py-0">
+            <div className="flex px-3 py-0">
               <span className="font-medium text-xs min-w-24 max-w-24">
                 Default
               </span>
@@ -73,11 +76,11 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
       <CollapsibleContent className="flex flex-col gap-2">
         {artifacts?.artifact_data && (
           <div className="flex flex-col gap-3 py-3 border border-t-0 rounded-b-md bg-gray-50 z-0 -mt-2">
-            <div className="flex items-center justify-between px-3 py-2">
+            <div className="flex  justify-between px-3 py-2">
               <span className="font-medium text-sm">Artifact</span>
             </div>
             {artifacts.artifact_data.value !== undefined && (
-              <div className="flex items-center px-3 py-0">
+              <div className="flex px-3 py-0">
                 <span className="font-medium text-xs min-w-24 max-w-24">
                   Value
                 </span>
@@ -88,23 +91,22 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
             )}
 
             {artifacts.artifact_data.uri !== undefined && (
-              <div className="flex items-center px-3 py-0">
+              <div className="flex  px-3 py-0">
                 <span className="font-medium text-xs min-w-24 max-w-24">
                   URI:
                 </span>
-                <a
+                <Link
+                  external
                   href={transformGcsUrl(artifacts.artifact_data.uri)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono break-all text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                  className="font-mono break-all text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
                 >
-                  {artifacts.artifact_data.uri || "-"}
-                </a>
+                  {artifacts.artifact_data.uri}
+                </Link>
               </div>
             )}
 
             {artifacts.artifact_data.total_size !== undefined && (
-              <div className="flex items-center px-3 py-0">
+              <div className="flex px-3 py-0">
                 <span className="font-medium text-xs min-w-24 max-w-24">
                   Size:
                 </span>
