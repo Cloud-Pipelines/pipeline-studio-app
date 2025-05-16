@@ -51,12 +51,12 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
               <div className="flex text-xs">
                 <span className="text-gray-500 w-14 flex-shrink-0">Value:</span>
                 <span className="font-mono break-all">
-                  {JSON.stringify(artifacts.artifact_data.value)}
+                  {artifacts.artifact_data.value || "-"}
                 </span>
               </div>
             )}
 
-            {artifacts.artifact_data.uri && (
+            {artifacts.artifact_data.uri !== undefined && (
               <div className="flex text-xs">
                 <span className="text-gray-500 w-14 flex-shrink-0">URI:</span>
                 <a
@@ -65,12 +65,12 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
                   rel="noopener noreferrer"
                   className="font-mono break-all text-blue-600 hover:text-blue-800 hover:underline"
                 >
-                  {artifacts.artifact_data.uri}
+                  {artifacts.artifact_data.uri || "-"}
                 </a>
               </div>
             )}
 
-            {artifacts.artifact_data.total_size && (
+            {artifacts.artifact_data.total_size !== undefined && (
               <div className="flex text-xs">
                 <span className="text-gray-500 w-14 flex-shrink-0">Size:</span>
                 <span className="font-mono">
