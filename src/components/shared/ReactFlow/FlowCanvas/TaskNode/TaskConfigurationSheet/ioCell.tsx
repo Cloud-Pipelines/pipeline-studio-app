@@ -1,6 +1,4 @@
 import { ChevronsUpDown } from "lucide-react";
-import { Code2, FileQuestion, Hash, Text } from "lucide-react";
-import React from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 
 import {
@@ -9,12 +7,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Link } from "@/components/ui/link";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
 import { formatBytes } from "@/utils/string";
@@ -23,20 +15,6 @@ import { transformGcsUrl } from "@/utils/URL";
 interface IoCellProps {
   io: InputSpec | OutputSpec;
   artifacts: any;
-}
-
-const typeIconMap: Record<string, React.ReactNode> = {
-  string: <Text className="w-4 h-4" />,
-  number: <Hash className="w-4 h-4" />,
-  json: <Code2 className="w-4 h-4" />,
-  jsonobject: <Code2 className="w-4 h-4" />,
-  jsonarray: <Code2 className="w-4 h-4" />,
-};
-
-function getTypeIcon(type: string) {
-  if (!type) return <FileQuestion className="w-4 h-4" />;
-  const key = type.toLowerCase();
-  return typeIconMap[key] || <FileQuestion className="w-4 h-4" />;
 }
 
 const IoCell = ({ io, artifacts }: IoCellProps) => {
@@ -54,23 +32,14 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                   {formatBytes(artifacts.artifact_data.total_size)} &bull;
                 </span>
               )}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>{getTypeIcon(io.type?.toString())}</span> &bull;
-                  </TooltipTrigger>
-                  <TooltipContent>{io.type?.toString()}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {io.type?.toString()}
               <CollapsibleTrigger
                 disabled={!hasCollapsableContent}
-                className="cursor-pointer"
+                className={cn({
+                  hidden: !hasCollapsableContent,
+                })}
               >
-                <ChevronsUpDown
-                  className={cn("w-4 h-4 cursor-pointer", {
-                    hidden: !hasCollapsableContent,
-                  })}
-                />
+                <ChevronsUpDown className="w-4 h-4 cursor-pointer" />
               </CollapsibleTrigger>
             </span>
           )}
@@ -81,34 +50,45 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
         {artifacts?.artifact_data && (
           <div className="flex flex-col gap-3 pb-3 pt-5 border border-t-0 rounded-b-md bg-gray-50 z-0 -mt-2">
             {artifacts.artifact_data.value !== undefined && (
-              <div className="flex px-3 py-0">
-                <span className="flex-1">
-                  <SyntaxHighlighter
-                    language="json"
-                    wrapLongLines
-                    customStyle={{
-                      background: "transparent",
-                      margin: 0,
-                      padding: 0,
-                      wordBreak: "break-all",
-                      whiteSpace: "pre-wrap",
-                      fontFamily: "monospace",
-                      fontSize: "10px",
-                    }}
-                    className="overflow-auto max-h-[300px] rounded bg-gray-100 max-w-full font-mono!"
-                  >
-                    {(() => {
-                      const { value } = artifacts.artifact_data;
-                      if (typeof value === "string") {
-                        try {
-                          return JSON.stringify(JSON.parse(value), null, 2);
-                        } catch {
-                          return value; // fallback: show as-is if not valid JSON
-                        }
+              <div className="flex px-3 py-0 w-full">
+                <span className="flex-1 w-full">
+                  {(() => {
+                    const { value } = artifacts.artifact_data;
+                    let parsed;
+                    if (typeof value === "string") {
+                      try {
+                        parsed = JSON.parse(value);
+                      } catch {
+                        // Not JSON, treat as plain string
+                        return (
+                          <pre className="w-full font-mono text-xs whitespace-pre-line break-words">
+                            {value}
+                          </pre>
+                        );
                       }
-                      return JSON.stringify(value, null, 2);
-                    })()}
-                  </SyntaxHighlighter>
+                    } else {
+                      parsed = value;
+                    }
+                    // If we get here, parsed is a valid object/array
+                    return (
+                      <SyntaxHighlighter
+                        language="json"
+                        wrapLongLines
+                        customStyle={{
+                          background: "transparent",
+                          margin: 0,
+                          padding: 0,
+                          wordBreak: "break-word",
+                          whiteSpace: "pre-wrap",
+                          fontFamily: "monospace",
+                          fontSize: "10px",
+                        }}
+                        className="overflow-auto max-h-[300px] w-full rounded bg-gray-100 max-w-full break-words whitespace-pre-wrap"
+                      >
+                        {JSON.stringify(parsed, null, 2)}
+                      </SyntaxHighlighter>
+                    );
+                  })()}
                 </span>
               </div>
             )}
