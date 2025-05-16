@@ -1,4 +1,6 @@
 import { ChevronsUpDown } from "lucide-react";
+import { Code2, FileQuestion, Hash, Text } from "lucide-react";
+import React from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 
 import {
@@ -7,6 +9,12 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Link } from "@/components/ui/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
 import { formatBytes } from "@/utils/string";
@@ -15,6 +23,20 @@ import { transformGcsUrl } from "@/utils/URL";
 interface IoCellProps {
   io: InputSpec | OutputSpec;
   artifacts: any;
+}
+
+const typeIconMap: Record<string, React.ReactNode> = {
+  string: <Text className="w-4 h-4" />,
+  number: <Hash className="w-4 h-4" />,
+  json: <Code2 className="w-4 h-4" />,
+  jsonobject: <Code2 className="w-4 h-4" />,
+  jsonarray: <Code2 className="w-4 h-4" />,
+};
+
+function getTypeIcon(type: string) {
+  if (!type) return <FileQuestion className="w-4 h-4" />;
+  const key = type.toLowerCase();
+  return typeIconMap[key] || <FileQuestion className="w-4 h-4" />;
 }
 
 const IoCell = ({ io, artifacts }: IoCellProps) => {
@@ -32,7 +54,14 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                   {formatBytes(artifacts.artifact_data.total_size)} &bull;
                 </span>
               )}
-              {io.type?.toString()}{" "}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>{getTypeIcon(io.type?.toString())}</span> &bull;
+                  </TooltipTrigger>
+                  <TooltipContent>{io.type?.toString()}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <CollapsibleTrigger
                 disabled={!hasCollapsableContent}
                 className="cursor-pointer"
@@ -94,7 +123,7 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                   href={transformGcsUrl(artifacts.artifact_data.uri)}
                   className="font-mono break-all text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
                 >
-                  {artifacts.artifact_data.uri}
+                  Download Artifact
                 </Link>
               </div>
             )}
