@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import type { InputSpec, OutputSpec, TaskSpec } from "@/utils/componentSpec";
-import { formatBytes } from "@/utils/string";
+import { formatBytes, formatJsonValue } from "@/utils/string";
 import { transformGcsUrl } from "@/utils/URL";
 
 interface IoCellProps {
@@ -37,7 +37,7 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
         <div className="flex text-xs">
           <span className="text-gray-500 w-14 flex-shrink-0">Default:</span>
           <span className="font-mono break-all text-xs">
-            {JSON.stringify(taskSpec.arguments?.[io.name])}
+            {formatJsonValue(taskSpec.arguments?.[io.name])}
           </span>
         </div>
       )}

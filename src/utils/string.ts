@@ -6,4 +6,13 @@ const formatBytes = (bytes: number) => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
-export { formatBytes };
+const formatJsonValue = (value: string | object) => {
+  try {
+    const parsed = typeof value === "string" ? JSON.parse(value) : value;
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    return String(value);
+  }
+};
+
+export { formatBytes, formatJsonValue };
