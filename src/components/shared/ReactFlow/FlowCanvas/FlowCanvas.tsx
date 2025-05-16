@@ -580,7 +580,6 @@ const FlowCanvas = ({
     <>
       <ReactFlow
         {...rest}
-        fitView
         nodes={nodes}
         edges={edges}
         minZoom={0.01}

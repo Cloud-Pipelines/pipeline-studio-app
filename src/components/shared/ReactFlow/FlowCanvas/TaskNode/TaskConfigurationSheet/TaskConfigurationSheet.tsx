@@ -86,8 +86,6 @@ const TaskConfigurationSheet = ({
     }
   };
 
-  console.log("runStatus", runStatus);
-
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
