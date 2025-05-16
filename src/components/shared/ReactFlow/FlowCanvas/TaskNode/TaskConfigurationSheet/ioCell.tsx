@@ -87,7 +87,7 @@ const IoCell = ({ io, taskSpec, artifacts }: IoCellProps) => {
                 href={transformGcsUrl(artifacts.artifact_data.uri)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-mono break-all text-blue-600 hover:text-blue-800 hover:underline"
+                className="font-mono break-all text-xs text-blue-600 hover:text-blue-800 hover:underline"
               >
                 {artifacts.artifact_data.uri || "-"}
               </a>
