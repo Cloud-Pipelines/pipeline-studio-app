@@ -1,4 +1,5 @@
 import { Component, X } from "lucide-react";
+import { Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -147,32 +148,45 @@ const ImportComponent = () => {
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="file">Component YAML File</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      id="file"
-                      type="file"
-                      accept=".yaml"
-                      onChange={handleFileChange}
-                      disabled={isLoading || isSubmitting}
-                      ref={fileInputRef}
-                      className={selectedFileName ? "hidden" : ""}
-                    />
-                    {selectedFileName && (
-                      <div className="flex flex-1 items-center border rounded-md px-3 py-2 text-sm">
-                        <span className="flex-1 truncate">
-                          {selectedFileName}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={clearSelectedFile}
-                          className="h-6 w-6 p-0 ml-1 rounded-full"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                          <span className="sr-only">Clear file</span>
-                        </Button>
-                      </div>
-                    )}
+                    <div className="relative flex-1">
+                      <Input
+                        id="file"
+                        type="file"
+                        accept=".yaml"
+                        onChange={handleFileChange}
+                        disabled={isLoading || isSubmitting}
+                        ref={fileInputRef}
+                        className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${selectedFileName ? "hidden" : ""}`}
+                      />
+                      {!selectedFileName && (
+                        <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                          <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-600">
+                            Drop your YAML file here or click to browse
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Supports .yaml files
+                          </p>
+                        </div>
+                      )}
+                      {selectedFileName && (
+                        <div className="flex flex-1 items-center border rounded-md px-3 py-2 text-sm">
+                          <span className="flex-1 truncate max-w-[325px]">
+                            {selectedFileName}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearSelectedFile}
+                            className="h-6 w-6 p-0 ml-1 rounded-full"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            <span className="sr-only">Clear file</span>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                     {selectedFileName && (
                       <Button
                         type="button"
