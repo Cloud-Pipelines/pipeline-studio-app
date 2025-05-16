@@ -32,7 +32,7 @@ const CloneRunButtonInner = () => {
     }
   };
 
-  if (detailsLoading) {
+  if (detailsLoading || !componentSpec) {
     return (
       <button>
         <Loader2 className="w-4 h-4 animate-spin" />
