@@ -9,6 +9,8 @@ const SmoothEdge = ({
   targetY,
   sourcePosition,
   targetPosition,
+  style = {},
+  selected,
 }: EdgeProps) => {
   const [edgePath] = getBezierPath({
     sourceX,
@@ -19,23 +21,32 @@ const SmoothEdge = ({
     targetPosition,
   });
 
+  const edgeColor = selected ? "#38bdf8" : "#6b7280";
+  const markerIdSuffix = selected ? "selected" : "default";
+
   return (
     <>
       <svg style={{ height: 0 }}>
         <defs>
           <marker
-            id="end-arrow"
-            markerWidth="10"
-            markerHeight="10"
+            id={`end-arrow-${markerIdSuffix}`}
+            markerWidth="12"
+            markerHeight="12"
             refX="7"
-            refY="5"
+            refY="6"
             orient="auto"
             markerUnits="userSpaceOnUse"
           >
-            <path d="M0,0 L10,5 L0,10 Z" className="fill-gray-500" />
+            <path
+              d="M2,2 Q10,6 2,10 Q4,6 2,2"
+              fill={edgeColor}
+              stroke={edgeColor}
+              strokeWidth="1"
+              strokeLinejoin="round"
+            />
           </marker>
           <marker
-            id="start-arrow"
+            id={`start-arrow-${markerIdSuffix}`}
             markerWidth="10"
             markerHeight="10"
             refX="3"
@@ -43,16 +54,33 @@ const SmoothEdge = ({
             orient="auto"
             markerUnits="userSpaceOnUse"
           >
-            <path d="M0,0 L10,5 L0,10 Z" className="fill-gray-500" />
+            <path d="M0,0 L10,5 L0,10 Z" fill={edgeColor} />
           </marker>
         </defs>
       </svg>
+      {/* Invisible hitbox path */}
+      <path
+        d={edgePath}
+        stroke="transparent"
+        strokeWidth={20}
+        fill="none"
+        style={{ cursor: "pointer" }}
+        className="react-flow__edge-path-hitbox"
+        id={`${id}-hitbox`}
+        pointerEvents="stroke"
+      />
+      {/* Visible edge path */}
       <path
         id={id}
         d={edgePath}
-        markerEnd="url(#end-arrow)"
-        markerStart="url(#start-arrow)"
-        className="react-flow__edge-path stroke-gray-500! stroke-3! "
+        markerEnd={`url(#end-arrow-${markerIdSuffix})`}
+        markerStart={`url(#start-arrow-${markerIdSuffix})`}
+        className="react-flow__edge-path"
+        style={{
+          stroke: edgeColor,
+          strokeWidth: 4,
+          ...style,
+        }}
       />
     </>
   );
