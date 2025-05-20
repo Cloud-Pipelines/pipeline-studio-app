@@ -137,6 +137,21 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                 </span>
               </div>
             )}
+
+            {artifacts.artifact_data.uri !== undefined && (
+              <div className="flex  px-3 py-0">
+                <span className="font-medium text-xs min-w-24 max-w-24">
+                  URI:
+                </span>
+                <Link
+                  external
+                  href={transformGcsUrl(artifacts.artifact_data.uri)}
+                  className="font-mono break-all text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                >
+                  {artifacts.artifact_data.uri}
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </CollapsibleContent>
