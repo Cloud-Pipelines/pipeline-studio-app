@@ -119,12 +119,20 @@ const StatusIndicator = ({ status }: StatusIndicatorProps) => {
 type InputHandleProps = {
   input: InputSpec;
   invalidArguments: string[];
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
 };
 
-const InputHandle = ({ input, invalidArguments }: InputHandleProps) => {
-  const required = !input.optional;
+const InputHandle = ({
+  input,
+  invalidArguments,
+  onClick,
+}: InputHandleProps) => {
   const isInvalid = invalidArguments.includes(input.name);
   const missing = isInvalid ? "bg-red-700!" : "bg-gray-500!";
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    onClick?.(e);
+  };
 
   return (
     <div className="flex flex-row items-center" key={input.name}>
@@ -140,12 +148,16 @@ const InputHandle = ({ input, invalidArguments }: InputHandleProps) => {
           !h-[12px]
           transform-none!
           -translate-x-6
+          cursor-pointer
           ${missing}
           `}
+        onClick={handleClick}
       />
 
-      <div className="text-xs mr-4 text-gray-800! max-w-[250px] truncate bg-gray-200 rounded-md px-2 py-1 -translate-x-3">
-        {required && <span className="text-xs text-red-700 mr-1">*</span>}
+      <div
+        className="text-xs mr-4 text-gray-800! max-w-[250px] truncate bg-gray-200 rounded-md px-2 py-1 -translate-x-3 cursor-pointer hover:bg-gray-300"
+        onClick={handleClick}
+      >
         {input.name.replace(/_/g, " ")}
       </div>
     </div>
@@ -154,9 +166,14 @@ const InputHandle = ({ input, invalidArguments }: InputHandleProps) => {
 
 type OutputHandleProps = {
   output: OutputSpec;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
 };
 
-const OutputHandle = ({ output }: OutputHandleProps) => {
+const OutputHandle = ({ output, onClick }: OutputHandleProps) => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    onClick?.(e);
+  };
+
   return (
     <div className="flex flex-row-reverse items-center" key={output.name}>
       <Handle
@@ -164,6 +181,7 @@ const OutputHandle = ({ output }: OutputHandleProps) => {
         id={`output_${output.name}`}
         position={Position.Right}
         isConnectable={true}
+        onClick={handleClick}
         className={`
           relative!
           border-0!
@@ -172,9 +190,13 @@ const OutputHandle = ({ output }: OutputHandleProps) => {
           transform-none!
           translate-x-6
           bg-gray-500!
+          cursor-pointer
           `}
       />
-      <div className="text-xs text-gray-800! max-w-[250px] truncate bg-gray-200 rounded-md px-2 py-1 translate-x-3">
+      <div
+        className="text-xs text-gray-800! max-w-[250px] truncate bg-gray-200 cursor-pointer rounded-md px-2 py-1 translate-x-3 hover:bg-gray-300"
+        onClick={handleClick}
+      >
         {output.name.replace(/_/g, " ")}
       </div>
     </div>
@@ -190,6 +212,7 @@ type TaskNodeContentProps = {
   nodeRef: RefObject<HTMLDivElement | null>;
   onClick: () => void;
   highlighted?: boolean;
+  onIOClick: () => void;
 };
 
 const TaskNodeContent = ({
@@ -201,7 +224,15 @@ const TaskNodeContent = ({
   nodeRef,
   onClick,
   highlighted,
+  onIOClick,
 }: TaskNodeContentProps) => {
+  const handleIOClocked = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    onIOClick();
+  };
+
   return (
     <Card
       className={cn(
@@ -225,6 +256,7 @@ const TaskNodeContent = ({
                 key={input.name}
                 input={input}
                 invalidArguments={invalidArguments}
+                onClick={handleIOClocked}
               />
             ))}
           </div>
@@ -232,7 +264,11 @@ const TaskNodeContent = ({
         {outputs.length > 0 && (
           <div className="flex flex-col gap-3 p-2 bg-gray-100 border-1 border-gray-200 rounded-lg">
             {outputs.map((output) => (
-              <OutputHandle key={output.name} output={output} />
+              <OutputHandle
+                key={output.name}
+                output={output}
+                onClick={handleIOClocked}
+              />
             ))}
           </div>
         )}
@@ -243,6 +279,7 @@ const TaskNodeContent = ({
 
 const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const { taskStatusMap } = useComponentSpec();
+  const [focusedIo, setFocusedIo] = useState<boolean>(false);
 
   const [isComponentEditorOpen, setIsComponentEditorOpen] = useState(false);
   const taskId = useMemo(
@@ -310,6 +347,18 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     typedData.callbacks?.onUpgrade(mostRecentComponentRef);
   };
 
+  const handleIOClick = () => {
+    setFocusedIo(true);
+    setIsComponentEditorOpen(true);
+  };
+
+  const handleTaskConfigurationSheetOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setFocusedIo(false);
+    }
+    setIsComponentEditorOpen(isOpen);
+  };
+
   return (
     <>
       <StatusIndicator status={runStatus} />
@@ -323,6 +372,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
         nodeRef={nodeRef}
         onClick={handleClick}
         highlighted={highlighted ?? false}
+        onIOClick={handleIOClick}
       />
 
       {typedData.taskId && (
@@ -331,10 +381,11 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
             taskId={typedData.taskId}
             taskSpec={taskSpec}
             isOpen={isComponentEditorOpen}
-            onOpenChange={setIsComponentEditorOpen}
+            onOpenChange={handleTaskConfigurationSheetOpenChange}
             onDelete={handleDeleteTaskNode}
             readOnly={readOnly}
             runStatus={runStatus}
+            focusedIo={focusedIo}
             actions={[
               {
                 children: (

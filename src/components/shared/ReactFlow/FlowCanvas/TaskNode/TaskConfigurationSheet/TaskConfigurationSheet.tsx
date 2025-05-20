@@ -50,6 +50,7 @@ interface TaskConfigurationSheetProps {
   onDelete?: () => void;
   readOnly?: boolean;
   runStatus?: ContainerExecutionStatus;
+  focusedIo?: boolean;
 }
 
 const TaskConfigurationSheet = ({
@@ -64,6 +65,7 @@ const TaskConfigurationSheet = ({
   onDelete,
   readOnly = false,
   runStatus,
+  focusedIo,
 }: TaskConfigurationSheetProps) => {
   const componentSpec = taskSpec.componentRef.spec;
 
@@ -104,7 +106,7 @@ const TaskConfigurationSheet = ({
           </SheetDescription>
         </SheetHeader>
         <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4">
-          <Tabs defaultValue="io">
+          <Tabs defaultValue={focusedIo || readOnly ? "io" : "details"}>
             <TabsList className="mb-2">
               <TabsTrigger value="io" className="flex-1">
                 {readOnly ? (
@@ -167,6 +169,7 @@ const TaskConfigurationSheet = ({
               {readOnly && (
                 <Io
                   taskSpec={taskSpec}
+                  readOnly={readOnly}
                   executionId={taskSpec.annotations?.executionId as string}
                 />
               )}
