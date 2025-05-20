@@ -22,7 +22,7 @@ interface IoCellProps {
 }
 
 const canShowInlineValue = (value: any, type: TypeSpecType | undefined) => {
-  if (!type) {
+  if (!type || !value) {
     return false;
   }
   if (type === "Integer" || type === "Boolean") {
