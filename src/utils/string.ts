@@ -15,4 +15,8 @@ const formatJsonValue = (value: string | object) => {
   }
 };
 
-export { formatBytes, formatJsonValue };
+const copyToClipboard = (text: string) => {
+  navigator.clipboard.writeText(text);
+};
+
+export { copyToClipboard, formatBytes, formatJsonValue };
