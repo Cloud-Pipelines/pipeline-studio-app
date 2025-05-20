@@ -1,4 +1,5 @@
 import { ChevronsUpDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 
 import {
@@ -7,13 +8,18 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Link } from "@/components/ui/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type {
   InputSpec,
   OutputSpec,
   TypeSpecType,
 } from "@/utils/componentSpec";
-import { formatBytes } from "@/utils/string";
+import { copyToClipboard, formatBytes } from "@/utils/string";
 import { transformGcsUrl } from "@/utils/URL";
 
 interface IoCellProps {
@@ -34,15 +40,65 @@ const canShowInlineValue = (value: any, type: TypeSpecType | undefined) => {
   return false;
 };
 const IoCell = ({ io, artifacts }: IoCellProps) => {
+  const [isCopied, setIsCopied] = useState(false);
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const tooltipTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasCollapsableContent =
     artifacts?.artifact_data &&
     !canShowInlineValue(artifacts?.artifact_data?.value, io.type);
+
+  const handleTooltipOpen = (open: boolean) => {
+    // When the tooltip is closed, we need to clear the copied state
+    if (!open) {
+      if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current);
+      setIsCopied(false);
+    }
+    setIsTooltipOpen(open);
+  };
+  const handleCopy = () => {
+    copyToClipboard(io.name);
+    setIsCopied(true);
+    setIsTooltipOpen(true);
+
+    // Clear any existing timer
+    if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current);
+
+    tooltipTimerRef.current = setTimeout(() => {
+      setIsTooltipOpen(false);
+    }, 1500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current);
+    };
+  }, []);
 
   return (
     <Collapsible key={io.name}>
       <div className="flex flex-col gap-3 py-3 border rounded-md relative z-10 bg-white">
         <div className="flex justify-between px-3">
-          <span className="font-medium text-sm">{io.name}</span>
+          <Tooltip
+            delayDuration={300}
+            open={isTooltipOpen}
+            onOpenChange={handleTooltipOpen}
+          >
+            <TooltipTrigger>
+              <span
+                className="font-medium text-sm cursor-pointer hover:text-gray-500"
+                onClick={handleCopy}
+              >
+                {io.name}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent
+              arrowClassName={cn(isCopied && "bg-emerald-200 fill-emerald-200")}
+              className={cn(isCopied && "bg-emerald-200 text-emerald-800")}
+            >
+              {isCopied ? "Copied" : "Copy"}
+            </TooltipContent>
+          </Tooltip>
+
           {io.type && (
             <span className="text-xs text-gray-500 flex items-center gap-1">
               {artifacts?.artifact_data?.uri !== undefined && (
