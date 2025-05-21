@@ -64,6 +64,10 @@ details > * {
   visibility: hidden;
 }
 
+.react-flow.cursor-crosshair .react-flow__pane {
+  cursor: crosshair;
+}
+
 .dndflow .reactflow-wrapper {
   flex-grow: 1;
   height: 100%;
