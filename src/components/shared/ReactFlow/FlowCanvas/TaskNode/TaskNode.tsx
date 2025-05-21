@@ -1,15 +1,13 @@
 import type { NodeProps } from "@xyflow/react";
-import { Handle, Position } from "@xyflow/react";
+import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
 import {
-  CheckCircleIcon,
-  CircleDashedIcon,
-  CircleFadingArrowUp,
-  ClockIcon,
-  CopyIcon,
-  Loader2Icon,
-  XCircleIcon,
-} from "lucide-react";
-import { memo, type RefObject, useMemo, useRef, useState } from "react";
+  memo,
+  type MouseEvent,
+  type RefObject,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import type { ContainerExecutionStatus } from "@/api/types.gen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,189 +20,18 @@ import { inputsWithInvalidArguments } from "@/services/componentService";
 import type { TaskNodeData } from "@/types/taskNode";
 import type {
   ArgumentType,
+  ComponentSpec,
   InputSpec,
   OutputSpec,
   TaskSpec,
 } from "@/utils/componentSpec";
 
+import { InputHandle, OutputHandle } from "./Handles";
+import { StatusIndicator } from "./StatusIndicator";
 import TaskConfigurationSheet from "./TaskConfigurationSheet";
 
-type StatusIndicatorProps = {
-  status?: ContainerExecutionStatus;
-};
-
-const getRunStatus = (status: ContainerExecutionStatus) => {
-  switch (status) {
-    case "SUCCEEDED":
-      return {
-        style: "bg-emerald-500",
-        text: "Succeeded",
-        icon: <CheckCircleIcon className="w-2 h-2" />,
-      };
-    case "FAILED":
-    case "SYSTEM_ERROR":
-    case "INVALID":
-      return {
-        style: "bg-red-700",
-        text: "Failed",
-        icon: <XCircleIcon className="w-2 h-2" />,
-      };
-    case "RUNNING":
-      return {
-        style: "bg-sky-500",
-        text: "Running",
-        icon: <Loader2Icon className="w-2 h-2 animate-spin" />,
-      };
-    case "PENDING":
-      return {
-        style: "bg-yellow-500",
-        text: "Pending",
-        icon: <ClockIcon className="w-2 h-2 animate-spin duration-2000" />,
-      };
-    case "CANCELLING":
-    case "CANCELLED":
-      return {
-        style: "bg-orange-500",
-        text: status === "CANCELLING" ? "Cancelling" : "Cancelled",
-        icon: <XCircleIcon className="w-2 h-2" />,
-      };
-    case "SKIPPED":
-      return {
-        style: "bg-slate-400",
-        text: "Skipped",
-        icon: <XCircleIcon className="w-2 h-2" />,
-      };
-    case "QUEUED":
-      return {
-        style: "bg-yellow-500",
-        text: "Queued",
-        icon: <ClockIcon className="w-2 h-2 animate-spin duration-2000" />,
-      };
-    case "UNINITIALIZED":
-    case "WAITING_FOR_UPSTREAM":
-      return {
-        style: "bg-slate-500",
-        text: "Waiting for upstream",
-        icon: <ClockIcon className="w-2 h-2 animate-spin duration-2000" />,
-      };
-    default:
-      return {
-        style: "bg-slate-300",
-        text: "Unknown",
-        icon: <CircleDashedIcon className="w-2 h-2" />,
-      };
-  }
-};
-
-const StatusIndicator = ({ status }: StatusIndicatorProps) => {
-  if (!status) return null;
-
-  const { style, text, icon } = getRunStatus(status);
-
-  return (
-    <div
-      className={cn(
-        "absolute -z-1 -top-5 left-0 h-[35px] rounded-t-md px-2.5 py-1 text-[10px]",
-        style,
-      )}
-    >
-      <div className="flex items-center gap-1 font-mono text-white">
-        {icon}
-        {text}
-      </div>
-    </div>
-  );
-};
-
-type InputHandleProps = {
-  input: InputSpec;
-  invalidArguments: string[];
-  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
-};
-
-const InputHandle = ({
-  input,
-  invalidArguments,
-  onClick,
-}: InputHandleProps) => {
-  const isInvalid = invalidArguments.includes(input.name);
-  const missing = isInvalid ? "bg-red-700!" : "bg-gray-500!";
-
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    onClick?.(e);
-  };
-
-  return (
-    <div className="flex flex-row items-center" key={input.name}>
-      <Handle
-        type="target"
-        id={`input_${input.name}`}
-        position={Position.Left}
-        isConnectable={true}
-        className={`
-          relative!
-          border-0!
-          !w-[12px]
-          !h-[12px]
-          transform-none!
-          -translate-x-6
-          cursor-pointer
-          ${missing}
-          `}
-        onClick={handleClick}
-      />
-
-      <div
-        className="text-xs mr-4 text-gray-800! max-w-[250px] truncate bg-gray-200 rounded-md px-2 py-1 -translate-x-3 cursor-pointer hover:bg-gray-300"
-        onClick={handleClick}
-      >
-        {input.name.replace(/_/g, " ")}
-      </div>
-    </div>
-  );
-};
-
-type OutputHandleProps = {
-  output: OutputSpec;
-  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
-};
-
-const OutputHandle = ({ output, onClick }: OutputHandleProps) => {
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    onClick?.(e);
-  };
-
-  return (
-    <div className="flex flex-row-reverse items-center" key={output.name}>
-      <Handle
-        type="source"
-        id={`output_${output.name}`}
-        position={Position.Right}
-        isConnectable={true}
-        onClick={handleClick}
-        className={`
-          relative!
-          border-0!
-          !w-[12px]
-          !h-[12px]
-          transform-none!
-          translate-x-6
-          bg-gray-500!
-          cursor-pointer
-          `}
-      />
-      <div
-        className="text-xs text-gray-800! max-w-[250px] truncate bg-gray-200 cursor-pointer rounded-md px-2 py-1 translate-x-3 hover:bg-gray-300"
-        onClick={handleClick}
-      >
-        {output.name.replace(/_/g, " ")}
-      </div>
-    </div>
-  );
-};
-
 type TaskNodeContentProps = {
-  componentSpec: any;
+  componentSpec: ComponentSpec;
   inputs: InputSpec[];
   outputs: OutputSpec[];
   invalidArguments: string[];
@@ -226,7 +53,7 @@ const TaskNodeContent = ({
   highlighted,
   onIOClick,
 }: TaskNodeContentProps) => {
-  const handleIOClocked = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleIOClicked = (e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     e.preventDefault();
 
@@ -256,7 +83,7 @@ const TaskNodeContent = ({
                 key={input.name}
                 input={input}
                 invalidArguments={invalidArguments}
-                onClick={handleIOClocked}
+                onClick={handleIOClicked}
               />
             ))}
           </div>
@@ -267,7 +94,7 @@ const TaskNodeContent = ({
               <OutputHandle
                 key={output.name}
                 output={output}
-                onClick={handleIOClocked}
+                onClick={handleIOClicked}
               />
             ))}
           </div>
