@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type { GetArtifactsApiExecutionsIdArtifactsGetResponse } from "@/api/types.gen";
+import { cn } from "@/lib/utils";
 import type { TaskSpec } from "@/utils/componentSpec";
 import { API_URL } from "@/utils/constants";
 import { formatBytes } from "@/utils/string";
@@ -11,6 +12,7 @@ import IoCell from "./ioCell";
 interface IoProps {
   taskSpec: TaskSpec;
   executionId?: string | number;
+  readOnly?: boolean;
 }
 
 const getArtifacts = async (executionId: string) => {
@@ -25,7 +27,7 @@ const getArtifacts = async (executionId: string) => {
   return response.json() as Promise<GetArtifactsApiExecutionsIdArtifactsGetResponse>;
 };
 
-const Io = ({ taskSpec, executionId }: IoProps) => {
+const Io = ({ taskSpec, executionId, readOnly }: IoProps) => {
   const { data: artifacts, isLoading: isLoadingArtifacts } = useQuery({
     queryKey: ["artifacts", executionId],
     queryFn: () => getArtifacts(String(executionId)),
@@ -34,41 +36,50 @@ const Io = ({ taskSpec, executionId }: IoProps) => {
 
   return (
     <div className="space-y-4">
-      <section>
-        <h3 className="text-base font-medium mb-1">Inputs</h3>
-        <div className="flex flex-col gap-1">
-          {taskSpec.componentRef.spec?.inputs?.map((input) => {
-            const inputArtifact = artifacts?.input_artifacts?.[input.name];
+      <div
+        className={cn({
+          "flex gap-2 flex-col": true,
+          "flex-col-reverse": readOnly,
+        })}
+      >
+        <section>
+          <h3 className="text-base font-medium mb-1">Inputs</h3>
+          <div className="flex flex-col gap-1">
+            {taskSpec.componentRef.spec?.inputs?.map((input) => {
+              const inputArtifact = artifacts?.input_artifacts?.[input.name];
 
-            return (
-              <IoCell key={input.name} io={input} artifacts={inputArtifact} />
-            );
-          })}
-          {!taskSpec.componentRef.spec?.inputs?.length && (
-            <div className="p-2 text-xs text-gray-500">No inputs defined</div>
-          )}
-        </div>
-      </section>
+              return (
+                <IoCell key={input.name} io={input} artifacts={inputArtifact} />
+              );
+            })}
+            {!taskSpec.componentRef.spec?.inputs?.length && (
+              <div className="p-2 text-xs text-gray-500">No inputs defined</div>
+            )}
+          </div>
+        </section>
 
-      <section>
-        <h3 className="text-base font-medium mb-1">Outputs</h3>
-        <div className="flex flex-col gap-1">
-          {taskSpec.componentRef.spec?.outputs?.map((output) => {
-            const outputArtifact = artifacts?.output_artifacts?.[output.name];
+        <section>
+          <h3 className="text-base font-medium mb-1">Outputs</h3>
+          <div className="flex flex-col gap-1">
+            {taskSpec.componentRef.spec?.outputs?.map((output) => {
+              const outputArtifact = artifacts?.output_artifacts?.[output.name];
 
-            return (
-              <IoCell
-                key={output.name}
-                io={output}
-                artifacts={outputArtifact}
-              />
-            );
-          })}
-          {!taskSpec.componentRef.spec?.outputs?.length && (
-            <div className="p-2 text-xs text-gray-500">No outputs defined</div>
-          )}
-        </div>
-      </section>
+              return (
+                <IoCell
+                  key={output.name}
+                  io={output}
+                  artifacts={outputArtifact}
+                />
+              );
+            })}
+            {!taskSpec.componentRef.spec?.outputs?.length && (
+              <div className="p-2 text-xs text-gray-500">
+                No outputs defined
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
 
       {executionId && artifacts && !isLoadingArtifacts && (
         <>
