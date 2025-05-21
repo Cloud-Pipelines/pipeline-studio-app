@@ -51,7 +51,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
 
   const statusCounts = countTaskStatuses(details, state);
 
-  const clickThroughUrl = `${APP_ROUTES.RUNS}/${executionId}`;
+  const clickThroughUrl = `${APP_ROUTES.RUNS}/${run.id}/${executionId}`;
 
   const LinkProps = {
     to: clickThroughUrl,
@@ -72,7 +72,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
       <TableCell className="text-sm flex items-center gap-2">
         <StatusIcon status={getRunStatus(statusCounts)} />
         <Link {...LinkProps}>{name}</Link>
-        <span>{`#${executionId}`}</span>
+        <span>{`#${run.id}`}</span>
       </TableCell>
       <TableCell>
         <HoverCard openDelay={100}>

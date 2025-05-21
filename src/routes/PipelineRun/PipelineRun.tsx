@@ -4,6 +4,7 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { useEffect } from "react";
 
 import type {
+  GetApiPipelineRunsIdGetResponse,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
@@ -16,23 +17,28 @@ import {
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
 import { fetchExecutionState } from "@/services/executionService";
 import type { ComponentSpec } from "@/utils/componentSpec";
+import { API_URL } from "@/utils/constants";
 
 const PipelineRunHtml = ({
   detailsData,
-  id,
+  executionId,
+  runDetails,
 }: {
   detailsData: GetExecutionInfoResponse | undefined;
-  id: string;
+  executionId: string;
+  runDetails?: GetApiPipelineRunsIdGetResponse;
 }) => {
   const { setTaskStatusMap } = useComponentSpec();
 
   const { data: stateData } = useQuery<GetGraphExecutionStateResponse>({
-    queryKey: ["run_state", id],
-    queryFn: () => fetchExecutionState(id),
+    queryKey: ["run_state", executionId],
+    queryFn: () => fetchExecutionState(executionId),
     refetchInterval: 5000,
     refetchIntervalInBackground: false,
     staleTime: 1000,
   });
+
+  console.log("runDetails", runDetails);
 
   useEffect(() => {
     const taskStatusMap = buildTaskStatusMap(detailsData, stateData);
@@ -43,14 +49,32 @@ const PipelineRunHtml = ({
 };
 
 const PipelineRun = () => {
-  const { id } = runDetailRoute.useParams() as RunDetailParams;
+  const { run_id, execution_id } =
+    runDetailRoute.useParams() as RunDetailParams;
   const {
     componentSpec,
     detailsData,
     isLoading: detailsLoading,
-  } = useLoadComponentSpecAndDetailsFromId(id);
+  } = useLoadComponentSpecAndDetailsFromId(execution_id);
 
-  if (detailsLoading) {
+  const { data: runDetails, isLoading: isRunDetailsLoading } = useQuery<GetApiPipelineRunsIdGetResponse>({
+    queryKey: ["run", run_id],
+    refetchOnWindowFocus: false,
+    enabled: !!run_id,
+    queryFn: async () => {
+      const url = `${API_URL}/api/pipeline_runs/${run_id}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch pipeline runs: ${response.statusText}`,
+        );
+      }
+
+      return response.json();
+    },
+  });
+
+  if (detailsLoading || isRunDetailsLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         Loading run details...
@@ -76,15 +100,17 @@ const PipelineRun = () => {
       <div className="dndflow">
         <DndContext>
           <ReactFlowProvider>
-            <PipelineRunHtml detailsData={detailsData} id={id} />
+            <PipelineRunHtml
+              detailsData={detailsData}
+              executionId={execution_id}
+              runDetails={runDetails}
+            />
           </ReactFlowProvider>
         </DndContext>
       </div>
     </ComponentSpecProvider>
   );
 };
-
-export default PipelineRun;
 
 const buildTaskStatusMap = (
   detailsData?: GetExecutionInfoResponse,
@@ -166,3 +192,5 @@ const addExecutionIdToComponent = (
     },
   };
 };
+
+export default PipelineRun;
