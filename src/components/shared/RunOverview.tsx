@@ -87,7 +87,7 @@ const RunOverview = ({ run, config = defaultConfig }: RunOverviewProps) => {
     <div
       onClick={(e) => {
         e.stopPropagation();
-        navigate({ to: `${APP_ROUTES.RUNS}/${executionId}` });
+        navigate({ to: `${APP_ROUTES.RUNS}/${run.id}/${executionId}` });
       }}
       className="flex flex-col p-2 text-sm hover:bg-gray-50 cursor-pointer"
     >

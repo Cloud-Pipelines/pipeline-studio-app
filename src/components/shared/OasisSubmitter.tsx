@@ -195,13 +195,16 @@ const OasisSubmitter = ({
     notify(message, "error");
   };
 
-  const showSuccessNotification = (runId: number) => {
+  const showSuccessNotification = (runId: number, executionId: number) => {
     const SuccessComponent = () => (
       <div className="flex flex-col gap-3 py-2">
         <div className="flex items-center gap-2">
           <span className="font-semibold">Pipeline successfully submitted</span>
         </div>
-        <Button onClick={() => handleViewRun(runId)} className="w-full">
+        <Button
+          onClick={() => handleViewRun(runId, executionId)}
+          className="w-full"
+        >
           View Run
         </Button>
       </div>
@@ -209,9 +212,9 @@ const OasisSubmitter = ({
     notify(<SuccessComponent />, "success");
   };
 
-  const handleViewRun = (runId: number) => {
+  const handleViewRun = (runId: number, executionId: number) => {
     if (runId) {
-      navigate({ to: `${APP_ROUTES.RUNS}/${runId}` });
+      navigate({ to: `${APP_ROUTES.RUNS}/${runId}/${executionId}` });
     }
   };
 
@@ -231,7 +234,7 @@ const OasisSubmitter = ({
       setIsSubmitting(false);
       onSubmitComplete?.();
 
-      showSuccessNotification(responseData.root_execution_id);
+      showSuccessNotification(responseData.id, responseData.root_execution_id);
     },
     onError: (error) => {
       console.error("Error submitting pipeline:", error);

@@ -13,9 +13,9 @@ import { copyRunToPipeline } from "@/services/pipelineRunService";
 import { PipelineNameDialog } from "./Dialogs";
 
 const CloneRunButtonInner = () => {
-  const { id } = runDetailRoute.useParams() as RunDetailParams;
+  const { execution_id } = runDetailRoute.useParams() as RunDetailParams;
   const { componentSpec, isLoading: detailsLoading } =
-    useLoadComponentSpecAndDetailsFromId(id);
+    useLoadComponentSpecAndDetailsFromId(execution_id);
   const navigate = useNavigate();
 
   const handleClone = async (name: string) => {
