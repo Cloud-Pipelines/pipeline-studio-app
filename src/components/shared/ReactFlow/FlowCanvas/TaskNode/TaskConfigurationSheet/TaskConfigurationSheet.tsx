@@ -1,6 +1,7 @@
 import {
   AmphoraIcon,
   Code,
+  FilePenLineIcon,
   InfoIcon,
   LogsIcon,
   Parentheses,
@@ -27,10 +28,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { Annotations } from "@/types/annotations";
 import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 import { getComponentName } from "@/utils/getComponentName";
 
+import { AnnotationsEditor } from "../AnnotationsEditor/AnnotationsEditor";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
 import Io from "./io";
 import Logs from "./logs";
@@ -47,6 +50,7 @@ interface TaskConfigurationSheetProps {
   disabled?: boolean;
   onOpenChange: (isOpen: boolean) => void;
   setArguments: (args: Record<string, ArgumentType>) => void;
+  setAnnotations: (annotations: Annotations) => void;
   onDelete?: () => void;
   readOnly?: boolean;
   runStatus?: ContainerExecutionStatus;
@@ -61,6 +65,7 @@ const TaskConfigurationSheet = ({
   disabled = false,
   onOpenChange,
   setArguments,
+  setAnnotations,
   onDelete,
   readOnly = false,
   runStatus,
@@ -121,12 +126,18 @@ const TaskConfigurationSheet = ({
 
               <TabsTrigger value="Component YAML" className="flex-1">
                 <Code className="h-4 w-4" />
-                Component YAML
+                YAML
               </TabsTrigger>
               {readOnly && (
                 <TabsTrigger value="logs" className="flex-1">
                   <LogsIcon className="h-4 w-4" />
                   Logs
+                </TabsTrigger>
+              )}
+              {!readOnly && (
+                <TabsTrigger value="annotations" className="flex-1">
+                  <FilePenLineIcon className="h-4 w-4" />
+                  Annotations
                 </TabsTrigger>
               )}
             </TabsList>
@@ -184,6 +195,17 @@ const TaskConfigurationSheet = ({
                   executionId={taskSpec.annotations?.executionId as string}
                   onFullscreenChange={onFullscreenChange}
                   status={runStatus}
+                />
+              </TabsContent>
+            )}
+            {!readOnly && (
+              <TabsContent value="annotations">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Configure task annotations and custom data.
+                </p>
+                <AnnotationsEditor
+                  taskSpec={taskSpec}
+                  onApply={setAnnotations}
                 />
               </TabsContent>
             )}

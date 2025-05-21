@@ -19,6 +19,7 @@ import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
+import type { Annotations } from "@/types/annotations";
 import type { TaskNodeData } from "@/types/taskNode";
 import type {
   ArgumentType,
@@ -292,6 +293,11 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     notify("Arguments updated", "success");
   };
 
+  const handleSetAnnotations = (annotations: Annotations) => {
+    typedData.callbacks?.setAnnotations(annotations);
+    notify("Annotations updated", "success");
+  };
+
   const handleDeleteTaskNode = () => {
     typedData.callbacks?.onDelete();
   };
@@ -359,6 +365,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
               },
             ]}
             setArguments={handleSetArguments}
+            setAnnotations={handleSetAnnotations}
             disabled={!!runStatus}
           />
         </>
