@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   external?: boolean;
   download?: boolean;
+  iconClassName?: string;
 }
 
 function Link({
@@ -13,6 +14,7 @@ function Link({
   children,
   className,
   download,
+  iconClassName,
   ...props
 }: LinkProps) {
   const target = external || download ? "_blank" : undefined;
@@ -26,8 +28,8 @@ function Link({
       className={cn("items-center inline-flex", className)}
     >
       {children}
-      {external && <ExternalLink className="h-4" />}
-      {download && <DownloadIcon className="h-4" />}
+      {external && <ExternalLink className={cn("h-4", iconClassName)} />}
+      {download && <DownloadIcon className={cn("h-4", iconClassName)} />}
     </a>
   );
 }

@@ -105,7 +105,9 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                 <>
                   <Link
                     href={transformGcsUrl(artifacts?.artifact_data?.uri || "")}
-                    className="font-mono break-all text-[10px] text-blue-600 hover:text-blue-800 hover:underline"
+                    external
+                    iconClassName="h-2.5 w-2.5"
+                    className="font-mono break-all text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex gap-1"
                   >
                     Link
                   </Link>
