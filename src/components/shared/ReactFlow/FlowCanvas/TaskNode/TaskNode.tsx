@@ -25,6 +25,7 @@ import type {
   OutputSpec,
   TaskSpec,
 } from "@/utils/componentSpec";
+import { getValue } from "@/utils/string";
 
 import { InputHandle, OutputHandle } from "./Handles";
 import { StatusIndicator } from "./StatusIndicator";
@@ -40,6 +41,7 @@ type TaskNodeContentProps = {
   onClick: () => void;
   highlighted?: boolean;
   onIOClick: () => void;
+  values?: Record<string, ArgumentType>;
 };
 
 const TaskNodeContent = ({
@@ -52,6 +54,7 @@ const TaskNodeContent = ({
   onClick,
   highlighted,
   onIOClick,
+  values,
 }: TaskNodeContentProps) => {
   const handleIOClicked = (e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
@@ -84,6 +87,7 @@ const TaskNodeContent = ({
                 input={input}
                 invalidArguments={invalidArguments}
                 onClick={handleIOClicked}
+                value={getValue(values?.[input.name])}
               />
             ))}
           </div>
@@ -200,6 +204,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
         onClick={handleClick}
         highlighted={highlighted ?? false}
         onIOClick={handleIOClick}
+        values={typedData.taskSpec?.arguments}
       />
 
       {typedData.taskId && (
