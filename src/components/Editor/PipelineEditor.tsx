@@ -1,21 +1,43 @@
 import "@/styles/editor.css";
 
-import { Background, Controls, MiniMap, useStore } from "@xyflow/react";
-import { useEffect } from "react";
+import {
+  Background,
+  MiniMap,
+  type ReactFlowProps,
+  useStore,
+} from "@xyflow/react";
+import { useCallback, useEffect, useState } from "react";
 
-import { FlowCanvas, FlowSidebar } from "@/components/shared/ReactFlow";
+import {
+  FlowCanvas,
+  FlowControls,
+  FlowSidebar,
+} from "@/components/shared/ReactFlow";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { savePipelineSpecToSessionStorage } from "@/utils/storage";
 
 const GRID_SIZE = 10;
 
-// Auto-saver is extracted to its own child component since useStoreState in the parent causes infinite re-rendering
-// (each render of GraphComponentSpecFlow seems to change the Redux store).
-// This component seems to be triggered for every node movement, so even pure layout changes are saved.
-
 const PipelineEditor = () => {
   const { componentSpec } = useComponentSpec();
   const nodes = useStore((store) => store.nodes);
+
+  const [flowConfig, setFlowConfig] = useState<ReactFlowProps>({
+    snapGrid: [GRID_SIZE, GRID_SIZE],
+    snapToGrid: true,
+    panOnDrag: true,
+    selectionOnDrag: false,
+  });
+
+  const updateFlowConfig = useCallback(
+    (updatedConfig: Partial<ReactFlowProps>) => {
+      setFlowConfig((prevConfig) => ({
+        ...prevConfig,
+        ...updatedConfig,
+      }));
+    },
+    [],
+  );
 
   // Auto-save the PipelineSpec to session storage
   useEffect(() => {
@@ -29,9 +51,12 @@ const PipelineEditor = () => {
   return (
     <>
       <div className="reactflow-wrapper">
-        <FlowCanvas snapGrid={[GRID_SIZE, GRID_SIZE]} snapToGrid>
+        <FlowCanvas {...flowConfig}>
           <MiniMap position="bottom-left" pannable />
-          <Controls style={{ marginLeft: "224px", marginBottom: "36px" }} />
+          <FlowControls
+            style={{ marginLeft: "224px", marginBottom: "24px" }}
+            updateConfig={updateFlowConfig}
+          />
           <Background gap={GRID_SIZE} className="bg-slate-50!" />
         </FlowCanvas>
       </div>

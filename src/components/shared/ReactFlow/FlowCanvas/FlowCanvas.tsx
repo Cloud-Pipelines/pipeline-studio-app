@@ -18,6 +18,7 @@ import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useCopyPaste } from "@/hooks/useCopyPaste";
 import useToastNotification from "@/hooks/useToastNotification";
+import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { Annotations } from "@/types/annotations";
 import type { NodeAndTaskId } from "@/types/taskNode";
@@ -78,6 +79,29 @@ const FlowCanvas = ({
 
   const [showToolbar, setShowToolbar] = useState(false);
   const [replaceTarget, setReplaceTarget] = useState<Node | null>(null);
+  const [shiftKeyPressed, setShiftKeyPressed] = useState(false);
+
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === "Shift") {
+      setShiftKeyPressed(true);
+    }
+  }, []);
+
+  const handleKeyUp = useCallback((event: KeyboardEvent) => {
+    if (event.key === "Shift") {
+      setShiftKeyPressed(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [handleKeyDown, handleKeyUp]);
 
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>();
@@ -616,6 +640,9 @@ const FlowCanvas = ({
         nodesDraggable={!readOnly}
         nodesConnectable={!readOnly}
         connectOnClick={!readOnly}
+        className={cn(
+          (rest.selectionOnDrag || shiftKeyPressed) && "cursor-crosshair",
+        )}
       >
         {!readOnly && (
           <NodeToolbar
