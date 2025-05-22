@@ -53,6 +53,13 @@ export const copyRunToPipeline = async (
         },
       );
     }
+    // The editor now only supports left-to-right layouts direction, so we mark every cloned pipelines with this annotation.
+    // Ideally, we should have tried to properly convert the pipelines (transpose the node positions).
+    // But there are already many runs that are left-to-right but not marked as such.
+    cleanComponentSpec.metadata ??= {};
+    cleanComponentSpec.metadata.annotations ??= {};
+    cleanComponentSpec.metadata.annotations["editor.flow-direction"] ??=
+      "left-to-right";
 
     // Generate a name for the copied pipeline
     const originalName = cleanComponentSpec.name || "Unnamed Pipeline";

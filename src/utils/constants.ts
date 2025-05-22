@@ -25,6 +25,7 @@ name: ${name}
 metadata:
   annotations:
     sdk: https://cloud-pipelines.net/pipeline-editor/
+    editor.flow-direction: left-to-right
 implementation:
   graph:
     tasks: {}
