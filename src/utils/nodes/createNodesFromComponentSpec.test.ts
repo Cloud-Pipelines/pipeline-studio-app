@@ -15,6 +15,7 @@ describe("createNodesFromComponentSpec", () => {
   const mockNodeCallbacks = {
     onDelete: vi.fn(),
     setArguments: vi.fn(),
+    setAnnotations: vi.fn(),
     onDuplicate: vi.fn(),
     onUpgrade: vi.fn(),
   };

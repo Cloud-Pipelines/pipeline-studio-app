@@ -19,6 +19,7 @@ import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useCopyPaste } from "@/hooks/useCopyPaste";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import type { Annotations } from "@/types/annotations";
 import type { NodeAndTaskId } from "@/types/taskNode";
 import type {
   ArgumentType,
@@ -45,6 +46,7 @@ import { handleConnection } from "./utils/handleConnection";
 import { isPositionInNode } from "./utils/isPositionInNode";
 import { removeEdge } from "./utils/removeEdge";
 import { removeNode } from "./utils/removeNode";
+import replaceTaskAnnotationsInGraphSpec from "./utils/replaceTaskAnnotationsInGraphSpec";
 import replaceTaskArgumentsInGraphSpec from "./utils/replaceTaskArgumentsInGraphSpec";
 import { replaceTaskNode } from "./utils/replaceTaskNode";
 import { updateNodePositions } from "./utils/updateNodePosition";
@@ -166,6 +168,19 @@ const FlowCanvas = ({
     [graphSpec],
   );
 
+  const setAnnotations = useCallback(
+    (ids: NodeAndTaskId, annotations: Annotations) => {
+      const taskId = ids.taskId;
+      const newGraphSpec = replaceTaskAnnotationsInGraphSpec(
+        taskId,
+        graphSpec,
+        annotations,
+      );
+      updateGraphSpec(newGraphSpec);
+    },
+    [graphSpec],
+  );
+
   const onDuplicate = useCallback(
     (ids: NodeAndTaskId, selected = true) => {
       const nodeId = ids.nodeId;
@@ -228,6 +243,7 @@ const FlowCanvas = ({
     nodeCallbacks: {
       onDelete,
       setArguments,
+      setAnnotations,
       onDuplicate,
       onUpgrade,
     },

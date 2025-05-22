@@ -4,6 +4,8 @@ import type {
   TaskSpec,
 } from "@/utils/componentSpec";
 
+import type { Annotations } from "./annotations";
+
 export interface TaskNodeData extends Record<string, unknown> {
   taskSpec?: TaskSpec;
   taskId?: string;
@@ -23,6 +25,7 @@ export type TaskType = "task" | "input" | "output";
 /* Note: Optional callbacks will cause TypeScript to break when applying the callbacks to the Nodes. */
 export interface TaskNodeCallbacks {
   setArguments: (args: Record<string, ArgumentType>) => void;
+  setAnnotations: (annotations: Annotations) => void;
   onDelete: () => void;
   onDuplicate: (selected?: boolean) => void;
   onUpgrade: (newComponentRef: ComponentReference) => void;
