@@ -39,14 +39,14 @@ export const InputHandle = ({
         isConnectable={true}
         className={cn(
           "relative! border-0! !w-[12px] !h-[12px] transform-none! -translate-x-6 ",
-          missing,
+          missing
         )}
       />
       <div className="flex flex-row w-[250px] gap-0.5 items-center justify-between">
         <div
           className={cn(
             "-translate-x-3 min-w-0 inline-block",
-            !value ? "max-w-full" : "max-w-3/4",
+            !value ? "max-w-full" : "max-w-3/4"
           )}
         >
           <div className="text-xs text-gray-800! bg-gray-200 rounded-md px-2 py-1 hover:bg-gray-300 truncate">
@@ -57,7 +57,7 @@ export const InputHandle = ({
           <div
             className={cn(
               "max-w-1/2 min-w-0 text-xs text-gray-800! truncate inline-block text-right pr-2",
-              !hasValue && "text-gray-500!",
+              !hasValue && "text-gray-500!"
             )}
           >
             {hasValue ? value : input.default}
