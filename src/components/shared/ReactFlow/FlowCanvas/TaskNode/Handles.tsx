@@ -42,7 +42,6 @@ export const InputHandle = ({
           "relative! border-0! !w-[12px] !h-[12px] transform-none! -translate-x-6 ",
           missing,
         )}
-
       />
       <div className="flex flex-row w-[250px] gap-0.5 items-center justify-between">
         <div

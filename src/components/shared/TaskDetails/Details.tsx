@@ -19,7 +19,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useCopyToClipboard } from "@/hooks/useCopyToClip";
 import useToastNotification from "@/hooks/useToastNotification";
+import { cn } from "@/lib/utils";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import {
   convertRawUrlToDirectoryUrl,
@@ -38,6 +40,11 @@ interface TaskDetailsProps {
   hasDeletionConfirmation?: boolean;
   runStatus?: string;
   readOnly?: boolean;
+  additionalSection?: {
+    title: string;
+    component: ReactNode;
+    isCollapsed?: boolean;
+  }[];
 }
 
 const TaskDetails = ({
@@ -51,9 +58,12 @@ const TaskDetails = ({
   hasDeletionConfirmation = true,
   runStatus,
   readOnly = false,
+  additionalSection = [],
 }: TaskDetailsProps) => {
   const notify = useToastNotification();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { isCopied, isTooltipOpen, handleCopy, handleTooltipOpen } =
+    useCopyToClipboard(componentDigest);
 
   const canonicalUrl = componentSpec?.metadata?.annotations?.canonical_location;
   const pythonOriginalCode =
@@ -213,7 +223,7 @@ const TaskDetails = ({
                 </CollapsibleTrigger>
               </div>
 
-              <CollapsibleContent>
+              <CollapsibleContent className="mt-1">
                 <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
                   {componentSpec.description}
                 </div>
@@ -227,9 +237,55 @@ const TaskDetails = ({
             <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
               Digest
             </div>
-            <div className="font-mono text-xs break-all">{componentDigest}</div>
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={handleCopy}
+            >
+              <span className="font-mono text-xs truncate">
+                {componentDigest}
+              </span>
+              <Tooltip
+                delayDuration={300}
+                open={isTooltipOpen}
+                onOpenChange={handleTooltipOpen}
+              >
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    <ClipboardIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent
+                  arrowClassName={cn(
+                    isCopied && "bg-emerald-200 fill-emerald-200",
+                  )}
+                  className={cn(isCopied && "bg-emerald-200 text-emerald-800")}
+                >
+                  {isCopied ? "Copied" : "Copy Digest"}
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         )}
+        {additionalSection.map((section) => (
+          <div className="flex flex-col px-3 py-2" key={section.title}>
+            <Collapsible defaultOpen={!section.isCollapsed}>
+              <CollapsibleTrigger asChild>
+                <div className="font-medium text-sm text-gray-700 flex items-center gap-1">
+                  {section.title}
+
+                  <Button variant="ghost" size="sm">
+                    <ChevronsUpDown className="h-4 w-4" />
+                    <span className="sr-only">Toggle</span>
+                  </Button>
+                </div>
+              </CollapsibleTrigger>
+
+              <CollapsibleContent className="mt-1">
+                {section.component}
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        ))}
 
         <div className="px-3 py-2 flex flex-row gap-2" key={0}>
           <Tooltip>
