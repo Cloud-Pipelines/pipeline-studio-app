@@ -6,19 +6,18 @@ import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
 
 type InputHandleProps = {
   input: InputSpec;
-  invalidArguments: string[];
-  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
+  invalid: boolean;
   value?: string;
+  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
 };
 
 export const InputHandle = ({
   input,
-  invalidArguments,
-  onClick,
+  invalid,
   value,
+  onClick,
 }: InputHandleProps) => {
-  const isInvalid = invalidArguments.includes(input.name);
-  const missing = isInvalid ? "bg-red-700!" : "bg-gray-500!";
+  const missing = invalid ? "bg-red-700!" : "bg-gray-500!";
 
   const handleClick = (e: MouseEvent<HTMLDivElement>) => {
     onClick?.(e);
@@ -45,7 +44,10 @@ export const InputHandle = ({
       />
       <div className="flex flex-row w-[250px] gap-0.5 items-center justify-between">
         <div
-          className={`-translate-x-3 min-w-0 ${!value ? "max-w-full" : "max-w-[75%]"} inline-block`}
+          className={cn(
+            "-translate-x-3 min-w-0 inline-block",
+            !value ? "max-w-full" : "max-w-3/4",
+          )}
         >
           <div className="text-xs text-gray-800! bg-gray-200 rounded-md px-2 py-1 hover:bg-gray-300 truncate">
             {input.name.replace(/_/g, " ")}
@@ -54,7 +56,7 @@ export const InputHandle = ({
         {(hasValue || hasDefault) && (
           <div
             className={cn(
-              "max-w-[50%] min-w-0 text-xs text-gray-800! truncate inline-block text-right pr-2",
+              "max-w-1/2 min-w-0 text-xs text-gray-800! truncate inline-block text-right pr-2",
               !hasValue && "text-gray-500!",
             )}
           >
@@ -91,8 +93,8 @@ export const OutputHandle = ({ output, onClick }: OutputHandleProps) => {
           !h-[12px]
           transform-none!
           translate-x-6
-          bg-gray-500!
           cursor-pointer
+          bg-gray-500!
           `}
       />
       <div
