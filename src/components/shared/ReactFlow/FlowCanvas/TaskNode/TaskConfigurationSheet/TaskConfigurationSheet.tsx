@@ -1,6 +1,5 @@
 import {
   AmphoraIcon,
-  Code,
   FilePenLineIcon,
   InfoIcon,
   LogsIcon,
@@ -126,10 +125,6 @@ const TaskConfigurationSheet = ({
                 Details
               </TabsTrigger>
 
-              <TabsTrigger value="Component YAML" className="flex-1">
-                <Code className="h-4 w-4" />
-                YAML
-              </TabsTrigger>
               {readOnly && (
                 <TabsTrigger value="logs" className="flex-1">
                   <LogsIcon className="h-4 w-4" />
@@ -154,6 +149,20 @@ const TaskConfigurationSheet = ({
                 runStatus={runStatus}
                 hasDeletionConfirmation={false}
                 readOnly={readOnly}
+                additionalSection={[
+                  {
+                    title: "Component YAML",
+                    isCollapsed: true,
+                    component: (
+                      <TaskImplementation
+                        key="task-implementation"
+                        displayName={displayName}
+                        componentSpec={componentSpec}
+                        onFullscreenChange={onFullscreenChange}
+                      />
+                    ),
+                  },
+                ]}
                 actions={actions?.map((action) => (
                   <Tooltip key={action.tooltip}>
                     <TooltipTrigger asChild>
@@ -184,13 +193,6 @@ const TaskConfigurationSheet = ({
                   executionId={taskSpec.annotations?.executionId as string}
                 />
               )}
-            </TabsContent>
-            <TabsContent value="Component YAML" className="h-full">
-              <TaskImplementation
-                displayName={displayName}
-                componentSpec={componentSpec}
-                onFullscreenChange={onFullscreenChange}
-              />
             </TabsContent>
             {readOnly && (
               <TabsContent value="logs">
