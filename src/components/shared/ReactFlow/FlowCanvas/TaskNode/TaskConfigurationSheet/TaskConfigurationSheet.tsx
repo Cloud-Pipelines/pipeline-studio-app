@@ -119,7 +119,7 @@ const TaskConfigurationSheet = ({
                 ) : (
                   <Parentheses className="w-4 h-4" />
                 )}
-                {readOnly ? "Artifacts" : "Inputs/Outputs"}
+                {readOnly ? "Artifacts" : "Arguments"}
               </TabsTrigger>
               <TabsTrigger value="details" className="flex-1">
                 <InfoIcon className="h-4 w-4" />
