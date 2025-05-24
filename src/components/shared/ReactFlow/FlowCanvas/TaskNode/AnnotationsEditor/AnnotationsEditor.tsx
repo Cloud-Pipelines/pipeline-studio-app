@@ -6,6 +6,11 @@ import { Input } from "@/components/ui/input";
 import type { Annotations } from "@/types/annotations";
 import type { TaskSpec } from "@/utils/componentSpec";
 
+import {
+  COMPUTE_RESOURCES,
+  ComputeResourcesEditor,
+} from "./ComputeResourcesEditor";
+
 interface AnnotationsEditorProps {
   taskSpec: TaskSpec;
   onApply: (annotations: Annotations) => void;
@@ -26,6 +31,11 @@ export const AnnotationsEditor = ({
   // Track new rows separately until apply
   const [newRows, setNewRows] = useState<Array<{ key: string; value: string }>>(
     [],
+  );
+
+  const annotationsWithoutComputeResources = Object.entries(annotations).filter(
+    ([key]) =>
+      !COMPUTE_RESOURCES.some((resource) => resource.annotation === key),
   );
 
   const handleAddNewRow = () => {
@@ -77,54 +87,67 @@ export const AnnotationsEditor = ({
   };
 
   return (
-    <div className="h-auto flex flex-col gap-2 overflow-y-auto pr-4 overflow-visible">
-      {Object.entries(annotations).map(([key, value]) => (
-        <div key={key} className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground w-40 truncate">
-            {key}
-          </span>
-          <Input
-            value={value}
-            onChange={(e) => handleValueChange(key, e.target.value)}
-            className="flex-1"
-          />
-          {!UNREMOVABLE_ANNOTATIONS.includes(key) && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleRemove(key)}
-              title="Remove annotation"
-            >
-              <TrashIcon className="h-4 w-4 text-destructive" />
-            </Button>
-          )}
+    <>
+      <div className="h-auto flex flex-col gap-2 overflow-y-auto pr-4 py-2 overflow-visible">
+        <ComputeResourcesEditor
+          annotations={annotations}
+          onChange={handleValueChange}
+        />
+        <hr className="border-t border-dashed border-gray-200 my-4" />
+        <div className="h-auto flex flex-col gap-2">
+          <h3>Other Annotations</h3>
+          {annotationsWithoutComputeResources.map(([key, value]) => (
+            <div key={key} className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground w-40 truncate">
+                {key}
+              </span>
+              <Input
+                value={value}
+                onChange={(e) => handleValueChange(key, e.target.value)}
+                className="flex-1"
+              />
+              {!UNREMOVABLE_ANNOTATIONS.includes(key) && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleRemove(key)}
+                  title="Remove annotation"
+                >
+                  <TrashIcon className="h-4 w-4 text-destructive" />
+                </Button>
+              )}
+            </div>
+          ))}
+          {newRows.map((row, idx) => (
+            <div key={idx} className="flex items-center gap-2 mt-2">
+              <Input
+                placeholder="New annotation"
+                value={row.key}
+                onChange={(e) => handleNewRowChange(idx, "key", e.target.value)}
+                className="w-39 ml-1"
+                autoFocus={idx === newRows.length - 1}
+              />
+              <Input
+                placeholder="value"
+                value={row.value}
+                onChange={(e) =>
+                  handleNewRowChange(idx, "value", e.target.value)
+                }
+                className="flex-1"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleRemoveNewRow(idx)}
+                title="Remove new annotation"
+              >
+                <TrashIcon className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          ))}
         </div>
-      ))}
-      {newRows.map((row, idx) => (
-        <div key={idx} className="flex items-center gap-2 mt-2">
-          <Input
-            placeholder="New annotation"
-            value={row.key}
-            onChange={(e) => handleNewRowChange(idx, "key", e.target.value)}
-            className="w-39 ml-1"
-            autoFocus={idx === newRows.length - 1}
-          />
-          <Input
-            placeholder="value"
-            value={row.value}
-            onChange={(e) => handleNewRowChange(idx, "value", e.target.value)}
-            className="flex-1"
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleRemoveNewRow(idx)}
-            title="Remove new annotation"
-          >
-            <TrashIcon className="h-4 w-4 text-destructive" />
-          </Button>
-        </div>
-      ))}
+      </div>
+      <hr className="border-t border-dashed border-gray-200 my-4" />
       <div className="flex gap-2 justify-end mt-4">
         <Button
           onClick={handleAddNewRow}
@@ -139,6 +162,6 @@ export const AnnotationsEditor = ({
           Apply
         </Button>
       </div>
-    </div>
+    </>
   );
 };

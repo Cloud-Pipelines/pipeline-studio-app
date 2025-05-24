@@ -206,7 +206,7 @@ const TaskConfigurationSheet = ({
             {!readOnly && (
               <TabsContent value="annotations">
                 <p className="text-sm text-muted-foreground mb-2">
-                  Configure task annotations and custom data.
+                  Configure task annotations, resources and custom data.
                 </p>
                 <AnnotationsEditor
                   taskSpec={taskSpec}
