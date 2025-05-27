@@ -1,16 +1,8 @@
 import type { NodeProps } from "@xyflow/react";
 import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
-import {
-  memo,
-  type MouseEvent,
-  type RefObject,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { memo, useMemo, useRef, useState } from "react";
 
 import type { ContainerExecutionStatus } from "@/api/types.gen";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import useComponentFromUrl from "@/hooks/useComponentFromUrl";
 import { useDynamicFontSize } from "@/hooks/useDynamicFontSize";
 import useToastNotification from "@/hooks/useToastNotification";
@@ -19,95 +11,11 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
 import type { Annotations } from "@/types/annotations";
 import type { TaskNodeData } from "@/types/taskNode";
-import type {
-  ArgumentType,
-  ComponentSpec,
-  InputSpec,
-  OutputSpec,
-  TaskSpec,
-} from "@/utils/componentSpec";
-import { getValue } from "@/utils/string";
+import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 
-import { InputHandle, OutputHandle } from "./Handles";
 import { StatusIndicator } from "./StatusIndicator";
 import TaskConfigurationSheet from "./TaskConfigurationSheet";
-
-type TaskNodeContentProps = {
-  componentSpec: ComponentSpec;
-  inputs: InputSpec[];
-  outputs: OutputSpec[];
-  invalidArguments: string[];
-  selected: boolean;
-  nodeRef: RefObject<HTMLDivElement | null>;
-  onClick: () => void;
-  highlighted?: boolean;
-  onIOClick: () => void;
-  values?: Record<string, ArgumentType>;
-};
-
-const TaskNodeContent = ({
-  componentSpec,
-  inputs = [],
-  outputs = [],
-  invalidArguments,
-  selected,
-  nodeRef,
-  onClick,
-  highlighted,
-  onIOClick,
-  values,
-}: TaskNodeContentProps) => {
-  const handleIOClicked = (e: MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    onIOClick();
-  };
-
-  return (
-    <Card
-      className={cn(
-        "rounded-2xl border-gray-200 border-2 max-w-[300px] min-w-[300px] break-words p-0 drop-shadow-none gap-2",
-        selected ? "border-gray-500" : "hover:border-slate-200",
-        highlighted && "border-orange-500",
-      )}
-      ref={nodeRef}
-      onClick={onClick}
-    >
-      <CardHeader className="border-b border-slate-200 px-2 py-2.5">
-        <CardTitle className="max-w-[300px] break-words text-left text-xs text-slate-900">
-          {componentSpec.name}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-2 flex flex-col gap-2">
-        {inputs.length > 0 && (
-          <div className="flex flex-col gap-3 p-2 bg-gray-100 border-1 border-gray-200 rounded-lg">
-            {inputs.map((input) => (
-              <InputHandle
-                key={input.name}
-                input={input}
-                invalidArguments={invalidArguments}
-                onClick={handleIOClicked}
-                value={getValue(values?.[input.name])}
-              />
-            ))}
-          </div>
-        )}
-        {outputs.length > 0 && (
-          <div className="flex flex-col gap-3 p-2 bg-gray-100 border-1 border-gray-200 rounded-lg">
-            {outputs.map((output) => (
-              <OutputHandle
-                key={output.name}
-                output={output}
-                onClick={handleIOClicked}
-              />
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
+import { TaskNodeCard } from "./TaskNodeCard";
 
 const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const { taskStatusMap } = useComponentSpec();
@@ -129,7 +37,7 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const taskSpec = typedData.taskSpec as TaskSpec;
   const componentSpec = taskSpec.componentRef.spec;
   const readOnly = typedData.readOnly;
-  const highlighted = typedData.highlighted;
+  const highlighted = typedData.highlighted ?? false;
 
   const runStatus = taskStatusMap.get(taskId ?? "") as ContainerExecutionStatus;
 
@@ -200,23 +108,23 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
     <>
       <StatusIndicator status={runStatus} />
 
-      <TaskNodeContent
+      <TaskNodeCard
         componentSpec={componentSpec}
         inputs={inputs}
         outputs={outputs}
         invalidArguments={invalidArguments}
+        values={typedData.taskSpec?.arguments}
         selected={selected}
+        highlighted={highlighted}
         nodeRef={nodeRef}
         onClick={handleClick}
-        highlighted={highlighted ?? false}
         onIOClick={handleIOClick}
-        values={typedData.taskSpec?.arguments}
       />
 
-      {typedData.taskId && (
+      {taskId && (
         <>
           <TaskConfigurationSheet
-            taskId={typedData.taskId}
+            taskId={taskId}
             taskSpec={taskSpec}
             isOpen={isComponentEditorOpen}
             onOpenChange={handleTaskConfigurationSheetOpenChange}
