@@ -1,7 +1,12 @@
 import yaml from "js-yaml";
-const transformGcsUrl = (url: string) => {
+
+const transformGcsUrl_DirectoryAware = (url: string, isDirectory: boolean) => {
   if (url.startsWith("gs://")) {
-    return url.replace("gs://", "https://storage.cloud.google.com/");
+    if (isDirectory) {
+      return url.replace("gs://", "https://console.cloud.google.com/storage/browser/");
+    } else {
+      return url.replace("gs://", "https://console.cloud.google.com/storage/browser/_details/");
+    }
   }
   return url;
 };
@@ -50,5 +55,5 @@ const downloadYamlFromComponentText = (
 export {
   convertRawUrlToDirectoryUrl,
   downloadYamlFromComponentText,
-  transformGcsUrl,
+  transformGcsUrl_DirectoryAware,
 };
