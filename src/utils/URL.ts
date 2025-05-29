@@ -1,9 +1,17 @@
 import yaml from "js-yaml";
-const transformGcsUrl = (url: string) => {
-  if (url.startsWith("gs://")) {
-    return url.replace("gs://", "https://storage.cloud.google.com/");
+
+import { GOOGLE_CLOUD_STORAGE_BROWSER_URL } from "./constants";
+
+const convertGcsUrlToBrowserUrl = (
+  url: string,
+  isDirectory: boolean,
+): string => {
+  if (!url.startsWith("gs://")) {
+    return url;
   }
-  return url;
+
+  const cloudConsoleUrl = `${GOOGLE_CLOUD_STORAGE_BROWSER_URL}${isDirectory ? "" : "_details/"}`;
+  return url.replace("gs://", cloudConsoleUrl);
 };
 
 import type { ComponentSpec } from "./componentSpec";
@@ -48,7 +56,7 @@ const downloadYamlFromComponentText = (
 };
 
 export {
+  convertGcsUrlToBrowserUrl,
   convertRawUrlToDirectoryUrl,
   downloadYamlFromComponentText,
-  transformGcsUrl,
 };
