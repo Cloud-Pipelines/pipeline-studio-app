@@ -1,7 +1,5 @@
 import yaml from "js-yaml";
 
-import { GOOGLE_CLOUD_STORAGE_BROWSER_URL } from "./constants";
-
 const convertGcsUrlToBrowserUrl = (
   url: string,
   isDirectory: boolean,
@@ -10,8 +8,13 @@ const convertGcsUrlToBrowserUrl = (
     return url;
   }
 
-  const cloudConsoleUrl = `${GOOGLE_CLOUD_STORAGE_BROWSER_URL}${isDirectory ? "" : "_details/"}`;
-  return url.replace("gs://", cloudConsoleUrl);
+  if (isDirectory) {
+    return url.replace(
+      "gs://",
+      "https://console.cloud.google.com/storage/browser/",
+    );
+  }
+  return url.replace("gs://", "https://storage.cloud.google.com/");
 };
 
 import type { ComponentSpec } from "./componentSpec";
