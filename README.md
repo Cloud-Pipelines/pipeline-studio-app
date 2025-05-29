@@ -31,3 +31,9 @@ App features:
 - Import and export pipelines
 
 There are many features that I want to add, but I want to prioritize them based on your feedback.
+
+## Development
+
+### Code Formatting
+
+Code is automatically formatted on push to main/master. If formatting changes are needed, a pull request will be created automatically.
