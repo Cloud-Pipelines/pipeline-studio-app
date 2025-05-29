@@ -8,6 +8,7 @@ import type {
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
 import PipelineRunPage from "@/components/PipelineRun";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 import {
   ComponentSpecProvider,
@@ -49,6 +50,11 @@ const PipelineRun = () => {
     detailsData,
     isLoading: detailsLoading,
   } = useLoadComponentSpecAndDetailsFromId(id);
+
+  useDocumentTitle({
+    "/runs/$id": (params) =>
+      `Oasis - ${componentSpec?.name || ""} - ${params.id}`,
+  });
 
   if (detailsLoading) {
     return (
