@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { TaskSpec } from "@/utils/componentSpec";
 import { API_URL } from "@/utils/constants";
 import { formatBytes } from "@/utils/string";
-import { transformGcsUrl_DirectoryAware } from "@/utils/URL";
+import { convertGcsUrlToBrowserUrl } from "@/utils/URL";
 
 import IoCell from "./ioCell";
 
@@ -136,7 +136,7 @@ const Io = ({ taskSpec, executionId, readOnly }: IoProps) => {
                                       URI:
                                     </span>
                                     <a
-                                      href={transformGcsUrl_DirectoryAware(
+                                      href={convertGcsUrlToBrowserUrl(
                                         artifact.artifact_data.uri,
                                         artifact.artifact_data.is_dir,
                                       )}
@@ -224,7 +224,7 @@ const Io = ({ taskSpec, executionId, readOnly }: IoProps) => {
                                       URI:
                                     </span>
                                     <a
-                                      href={transformGcsUrl_DirectoryAware(
+                                      href={convertGcsUrlToBrowserUrl(
                                         artifact.artifact_data.uri,
                                         artifact.artifact_data.is_dir,
                                       )}

@@ -1,14 +1,13 @@
 import yaml from "js-yaml";
+import { GOOGLE_CLOUD_STORAGE_BROWSER_URL } from "./constants";
 
-const transformGcsUrl_DirectoryAware = (url: string, isDirectory: boolean) => {
-  if (url.startsWith("gs://")) {
-    if (isDirectory) {
-      return url.replace("gs://", "https://console.cloud.google.com/storage/browser/");
-    } else {
-      return url.replace("gs://", "https://console.cloud.google.com/storage/browser/_details/");
-    }
+const convertGcsUrlToBrowserUrl = (url: string, isDirectory: boolean): string => {
+  if (!url.startsWith("gs://")) {
+    return url;
   }
-  return url;
+
+  const cloudConsoleUrl = `${GOOGLE_CLOUD_STORAGE_BROWSER_URL}${isDirectory ? "" : "_details/"}`;
+  return url.replace("gs://", cloudConsoleUrl);
 };
 
 import type { ComponentSpec } from "./componentSpec";
@@ -55,5 +54,5 @@ const downloadYamlFromComponentText = (
 export {
   convertRawUrlToDirectoryUrl,
   downloadYamlFromComponentText,
-  transformGcsUrl_DirectoryAware,
+  convertGcsUrlToBrowserUrl,
 };
