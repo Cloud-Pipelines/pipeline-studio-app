@@ -1,7 +1,11 @@
 import yaml from "js-yaml";
+
 import { GOOGLE_CLOUD_STORAGE_BROWSER_URL } from "./constants";
 
-const convertGcsUrlToBrowserUrl = (url: string, isDirectory: boolean): string => {
+const convertGcsUrlToBrowserUrl = (
+  url: string,
+  isDirectory: boolean,
+): string => {
   if (!url.startsWith("gs://")) {
     return url;
   }
@@ -52,7 +56,7 @@ const downloadYamlFromComponentText = (
 };
 
 export {
+  convertGcsUrlToBrowserUrl,
   convertRawUrlToDirectoryUrl,
   downloadYamlFromComponentText,
-  convertGcsUrlToBrowserUrl,
 };

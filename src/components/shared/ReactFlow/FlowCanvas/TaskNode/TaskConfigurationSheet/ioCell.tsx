@@ -104,7 +104,10 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
               {artifacts?.artifact_data?.uri !== undefined && (
                 <>
                   <Link
-                    href={convertGcsUrlToBrowserUrl(artifacts?.artifact_data?.uri || "", artifacts?.artifact_data?.is_dir || false)}
+                    href={convertGcsUrlToBrowserUrl(
+                      artifacts?.artifact_data?.uri || "",
+                      artifacts?.artifact_data?.is_dir || false,
+                    )}
                     external
                     iconClassName="h-2.5 w-2.5"
                     className="font-mono break-all text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex gap-1"
@@ -203,7 +206,10 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                 </span>
                 <Link
                   external
-                  href={convertGcsUrlToBrowserUrl(artifacts.artifact_data.uri, artifacts.artifact_data.is_dir)}
+                  href={convertGcsUrlToBrowserUrl(
+                    artifacts.artifact_data.uri,
+                    artifacts.artifact_data.is_dir,
+                  )}
                   className="font-mono break-all text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
                 >
                   {artifacts.artifact_data.uri}
