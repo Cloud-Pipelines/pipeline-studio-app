@@ -92,15 +92,18 @@ const createTaskOutputEdge = (
   inputName: string,
   taskOutput: TaskOutputArgument["taskOutput"],
 ): Edge => {
-  return {
+  const newTaskOutputEdge = {
     id: `${taskOutput.taskId}_${taskOutput.outputName}-${taskId}_${inputName}`,
-    source: taskIdToNodeId(taskOutput.taskId),
+    source: taskOutput.taskId,
     sourceHandle: outputNameToNodeId(taskOutput.outputName),
     target: taskIdToNodeId(taskId),
     targetHandle: inputNameToNodeId(inputName),
     markerEnd: { type: MarkerType.Arrow },
     type: "customEdge",
   };
+
+  console.log('newTaskOutputEdge', newTaskOutputEdge)
+  return newTaskOutputEdge
 };
 
 const createGraphInputEdge = (
@@ -108,15 +111,19 @@ const createGraphInputEdge = (
   inputName: string,
   graphInput: GraphInputArgument["graphInput"],
 ): Edge => {
-  return {
+  const newGraphInputEdge = {
     id: `Input_${graphInput.inputName}-${taskId}_${inputName}`,
-    source: inputNameToNodeId(graphInput.inputName),
+    source: graphInput.inputName,
     sourceHandle: null,
     target: taskIdToNodeId(taskId),
     targetHandle: inputNameToNodeId(inputName),
     type: "customEdge",
     markerEnd: { type: MarkerType.Arrow },
   };
+
+
+  console.log('createsomethingsomething', newGraphInputEdge)
+  return newGraphInputEdge
 };
 
 const createOutputEdgesFromGraphSpec = (graphSpec: GraphSpec) => {

@@ -65,7 +65,8 @@ const TaskNodeCard = ({
             {inputs.map((input) => (
               <InputHandle
                 key={input.name}
-                input={input}
+                name={input.name}
+                defaultValue={input.default}
                 invalid={invalidArguments.includes(input.name)}
                 onClick={handleIOClicked}
                 value={getValue(values?.[input.name])}
@@ -78,7 +79,7 @@ const TaskNodeCard = ({
             {outputs.map((output) => (
               <OutputHandle
                 key={output.name}
-                output={output}
+                name={output.name}
                 onClick={handleIOClicked}
               />
             ))}
