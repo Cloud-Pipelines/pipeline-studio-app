@@ -77,78 +77,84 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
   return (
     <Collapsible key={io.name}>
       <div className="flex flex-col gap-3 py-3 border rounded-md relative z-10 bg-white">
-        <div className="flex justify-between px-3">
-          <Tooltip
-            delayDuration={300}
-            open={isTooltipOpen}
-            onOpenChange={handleTooltipOpen}
-          >
-            <TooltipTrigger>
-              <span
-                className="font-medium text-sm cursor-pointer hover:text-gray-500"
-                onClick={handleCopy}
-              >
-                {io.name}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent
-              arrowClassName={cn(isCopied && "bg-emerald-200 fill-emerald-200")}
-              className={cn(isCopied && "bg-emerald-200 text-emerald-800")}
+        <div className="flex justify-between px-3 gap-2">
+          <div className="flex-1 min-w-[33%] flex-shrink-0">
+            <Tooltip
+              delayDuration={300}
+              open={isTooltipOpen}
+              onOpenChange={handleTooltipOpen}
             >
-              {isCopied ? "Copied" : "Copy"}
-            </TooltipContent>
-          </Tooltip>
-
-          {io.type && (
-            <span className="text-xs text-gray-500 flex items-center gap-1">
-              {artifacts?.artifact_data?.uri !== undefined && (
-                <>
-                  <Link
-                    href={convertGcsUrlToBrowserUrl(
-                      artifacts?.artifact_data?.uri || "",
-                      artifacts?.artifact_data?.is_dir || false,
-                    )}
-                    external
-                    iconClassName="h-2.5 w-2.5"
-                    className="font-mono break-all text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex gap-1"
-                  >
-                    Link
-                  </Link>
-                  &bull;
-                </>
-              )}
-              {artifacts?.artifact_data && (
-                <>
-                  {artifacts.artifact_data.value !== undefined &&
-                    canShowInlineValue(
-                      artifacts.artifact_data.value,
-                      io.type,
-                    ) && (
-                      <>
-                        <span className="font-mono text-[10px] text-amber-500">
-                          {artifacts.artifact_data.value}
-                        </span>
-                        &bull;
-                      </>
-                    )}
-
-                  <span className="font-mono text-[10px] text-gray-500">
-                    {formatBytes(artifacts.artifact_data.total_size)} &bull;
-                  </span>
-                </>
-              )}
-
-              {io.type?.toString()}
-              <CollapsibleTrigger
-                disabled={!hasCollapsableContent}
-                className={cn({
-                  hidden: !hasCollapsableContent,
-                })}
+              <TooltipTrigger className="text-left">
+                <span
+                  className="font-medium text-sm cursor-pointer break-all hover:text-gray-500"
+                  onClick={handleCopy}
+                >
+                  {io.name}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent
+                arrowClassName={cn(
+                  isCopied && "bg-emerald-200 fill-emerald-200",
+                )}
+                className={cn(isCopied && "bg-emerald-200 text-emerald-800")}
               >
-                <ChevronsUpDown className="w-4 h-4 cursor-pointer" />
-              </CollapsibleTrigger>
-            </span>
-          )}
+                {isCopied ? "Copied" : "Copy"}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          <div className="flex-none flex gap-2">
+            {artifacts?.artifact_data && (
+              <span className="text-xs text-gray-500 flex items-center gap-1">
+                {artifacts?.artifact_data?.uri !== undefined && (
+                  <>
+                    <Link
+                      href={convertGcsUrlToBrowserUrl(
+                        artifacts?.artifact_data?.uri || "",
+                        artifacts?.artifact_data?.is_dir || false,
+                      )}
+                      external
+                      iconClassName="h-2.5 w-2.5"
+                      className="font-mono break-all text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex gap-1"
+                    >
+                      Link
+                    </Link>
+                    &bull;
+                  </>
+                )}
+                {artifacts?.artifact_data && (
+                  <>
+                    {artifacts.artifact_data.value !== undefined &&
+                      canShowInlineValue(
+                        artifacts.artifact_data.value,
+                        io.type,
+                      ) && (
+                        <>
+                          <span className="font-mono text-[10px] text-amber-500">
+                            {artifacts.artifact_data.value}
+                          </span>
+                          &bull;
+                        </>
+                      )}
+
+                    <span className="font-mono text-[10px] text-gray-500">
+                      {formatBytes(artifacts.artifact_data.total_size)} &bull;
+                    </span>
+                  </>
+                )}
+
+                {io.type?.toString()}
+                <CollapsibleTrigger
+                  disabled={!hasCollapsableContent}
+                  className={cn({
+                    hidden: !hasCollapsableContent,
+                  })}
+                >
+                  <ChevronsUpDown className="w-4 h-4 cursor-pointer" />
+                </CollapsibleTrigger>
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
