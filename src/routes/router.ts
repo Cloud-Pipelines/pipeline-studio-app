@@ -20,7 +20,7 @@ export const RUNS_BASE_PATH = "/runs";
 export const APP_ROUTES = {
   HOME: "/",
   PIPELINE_EDITOR: `${EDITOR_PATH}/$name`,
-  RUN_DETAIL: `${RUNS_BASE_PATH}/$id`,
+  RUN_DETAIL: `${RUNS_BASE_PATH}/$run_id/$execution_id`,
   RUNS: RUNS_BASE_PATH,
 };
 
@@ -45,7 +45,8 @@ export const editorRoute = createRoute({
 });
 
 export interface RunDetailParams {
-  id: string;
+  run_id: string;
+  execution_id: string;
 }
 
 export const runDetailRoute = createRoute({
