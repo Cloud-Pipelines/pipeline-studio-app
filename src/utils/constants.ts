@@ -1,7 +1,4 @@
 /* Environment Config */
-export const GOOGLE_CLOUD_STORAGE_BROWSER_URL =
-  "https://console.cloud.google.com/storage/browser/";
-
 export const ABOUT_URL =
   import.meta.env.VITE_ABOUT_URL || "https://cloud-pipelines.net/";
 
