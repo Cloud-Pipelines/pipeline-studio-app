@@ -8,6 +8,8 @@ export const setTaskArgument = (
   inputName: string,
   argument?: ArgumentType,
 ) => {
+
+  console.log('here?')
   const oldTaskSpec = graphSpec.tasks[taskId];
   const oldTaskSpecArguments = oldTaskSpec.arguments || {};
 

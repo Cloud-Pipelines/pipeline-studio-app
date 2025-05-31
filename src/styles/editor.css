@@ -144,3 +144,9 @@ details > * {
   margin: 0;
   padding: 0;
 }
+
+.react-flow__node-input,
+.react-flow__node-output {
+  border: none;
+  padding: 0;
+}

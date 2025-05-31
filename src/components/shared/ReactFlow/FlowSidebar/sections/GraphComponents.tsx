@@ -20,6 +20,7 @@ import {
   SearchInput,
   SearchResults,
 } from "../components";
+import IoComponentItem from "../components/IoComponentItem";
 
 const fetchUserComponents = async (): Promise<ComponentFolder> => {
   try {
@@ -109,6 +110,11 @@ const GraphComponents = () => {
             folder={userComponentsFolder}
           />
         )}
+
+        <div className="flex flex-row gap-2">
+          <IoComponentItem type="input" />
+          <IoComponentItem type="output" />
+        </div>
 
         {componentLibrary.folders.map((folder) => (
           <FolderItem key={folder.name} folder={folder} />

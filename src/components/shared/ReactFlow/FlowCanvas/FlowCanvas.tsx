@@ -36,6 +36,7 @@ import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfir
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
 import { getUpgradeConfirmationDetails } from "./ConfirmationDialogs/UpgradeComponent";
 import SmoothEdge from "./Edges/SmoothEdge";
+import IONode from "./IONode";
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
 import type { NodesAndEdges } from "./types";
@@ -54,6 +55,8 @@ import { updateNodePositions } from "./utils/updateNodePosition";
 
 const nodeTypes: Record<string, ComponentType<any>> = {
   task: TaskNode,
+  input: IONode,
+  output: IONode,
 };
 const edgeTypes: Record<string, ComponentType<any>> = {
   customEdge: SmoothEdge,
