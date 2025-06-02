@@ -1,4 +1,4 @@
-import type { NodeProps } from "@xyflow/react";
+import { type NodeProps } from "@xyflow/react";
 import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
 import { memo, useMemo, useRef, useState } from "react";
 
@@ -110,6 +110,8 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
 
       <TaskNodeCard
         componentSpec={componentSpec}
+        taskSpec={taskSpec}
+        taskId={taskId}
         inputs={inputs}
         outputs={outputs}
         invalidArguments={invalidArguments}

@@ -17,10 +17,10 @@ export const updateNodePositions = (
   }
 
   for (const node of updatedNodes) {
-    const positionAnnotation = JSON.stringify({
+    const newPosition = {
       x: node.position.x,
       y: node.position.y,
-    });
+    };
 
     if (!("graph" in newComponentSpec.implementation)) {
       throw new Error("Implementation does not contain a graph");
@@ -33,9 +33,19 @@ export const updateNodePositions = (
       if (graphSpec.tasks[taskId]) {
         const taskSpec = { ...graphSpec.tasks[taskId] };
 
+        const currentPosition = JSON.parse(
+          (taskSpec.annotations?.["editor.position"] as string) || "{}",
+        );
+        const updatedPosition = {
+          ...currentPosition,
+          ...newPosition,
+        };
+
+        const updatedPositionAnnotation = JSON.stringify(updatedPosition);
+
         taskSpec.annotations = {
           ...taskSpec.annotations,
-          "editor.position": positionAnnotation,
+          "editor.position": updatedPositionAnnotation,
         };
 
         const newGraphSpec = {
@@ -54,11 +64,22 @@ export const updateNodePositions = (
       const inputIndex = inputs.findIndex((input) => input.name === inputName);
 
       if (inputIndex >= 0) {
+        const currentPosition = JSON.parse(
+          (inputs[inputIndex].annotations?.["editor.position"] as string) ||
+            "{}",
+        );
+        const updatedPosition = {
+          ...currentPosition,
+          ...newPosition,
+        };
+
+        const updatedPositionAnnotation = JSON.stringify(updatedPosition);
+
         inputs[inputIndex] = {
           ...inputs[inputIndex],
           annotations: {
             ...inputs[inputIndex].annotations,
-            "editor.position": positionAnnotation,
+            "editor.position": updatedPositionAnnotation,
           },
         };
         newComponentSpec.inputs = inputs;
@@ -71,11 +92,22 @@ export const updateNodePositions = (
       );
 
       if (outputIndex >= 0) {
+        const currentPosition = JSON.parse(
+          (outputs[outputIndex].annotations?.["editor.position"] as string) ||
+            "{}",
+        );
+        const updatedPosition = {
+          ...currentPosition,
+          ...newPosition,
+        };
+
+        const updatedPositionAnnotation = JSON.stringify(updatedPosition);
+
         outputs[outputIndex] = {
           ...outputs[outputIndex],
           annotations: {
             ...outputs[outputIndex].annotations,
-            "editor.position": positionAnnotation,
+            "editor.position": updatedPositionAnnotation,
           },
         };
         newComponentSpec.outputs = outputs;
