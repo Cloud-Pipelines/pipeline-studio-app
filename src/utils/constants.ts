@@ -44,3 +44,13 @@ export const USER_COMPONENTS_LIST_NAME = "user_components";
 
 export const TOP_NAV_HEIGHT = 56; // px
 export const FOOTER_HEIGHT = 30; // px
+
+export enum ComponentSearchFilter {
+  NAME = "Name",
+  INPUTNAME = "Input Name",
+  INPUTTYPE = "Input Type",
+  OUTPUTNAME = "Output Name",
+  OUTPUTTYPE = "Output Type",
+}
+
+export const COMPONENT_SEARCH_FILTERS = Object.values(ComponentSearchFilter);

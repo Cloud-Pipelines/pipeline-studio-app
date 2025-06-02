@@ -19,4 +19,13 @@ export type FolderItemProps = {
 export type SearchInputProps = {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  activeFilters: string[];
+  onFiltersChange: (filters: string[]) => void;
+};
+
+export type SearchFilterProps = {
+  availableFilters: string[];
+  activeFilters: string[];
+  disableCounter?: boolean;
+  onFiltersChange: (filters: string[]) => void;
 };

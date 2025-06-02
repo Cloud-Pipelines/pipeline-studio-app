@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { type ChangeEvent, useMemo, useState } from "react";
+import { type ChangeEvent, useCallback, useMemo, useState } from "react";
 
 import {
   SidebarGroup,
@@ -10,7 +10,10 @@ import { fetchAndStoreComponentLibrary } from "@/services/componentService";
 import type { ComponentFolder } from "@/types/componentLibrary";
 import type { ComponentReference } from "@/utils/componentSpec";
 import { getAllComponentFilesFromList } from "@/utils/componentStore";
-import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
+import {
+  ComponentSearchFilter,
+  USER_COMPONENTS_LIST_NAME,
+} from "@/utils/constants";
 
 import {
   EmptyState,
@@ -20,6 +23,8 @@ import {
   SearchInput,
   SearchResults,
 } from "../components";
+
+const DEFAULT_FILTERS = [ComponentSearchFilter.NAME];
 
 const fetchUserComponents = async (): Promise<ComponentFolder> => {
   try {
@@ -58,6 +63,7 @@ const fetchUserComponents = async (): Promise<ComponentFolder> => {
 
 const GraphComponents = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchFilters, setSearchFilters] = useState<string[]>(DEFAULT_FILTERS);
 
   const {
     data: componentLibrary,
@@ -83,6 +89,13 @@ const GraphComponents = () => {
     setSearchTerm(e.target.value);
   };
 
+  const handleFiltersChange = useCallback(
+    (filters: string[]) => {
+      setSearchFilters(filters);
+    },
+    [setSearchFilters],
+  );
+
   const isLoading = isLibraryLoading || isUserComponentsLoading;
   const error = libraryError || userComponentsError;
 
@@ -93,7 +106,13 @@ const GraphComponents = () => {
 
     // If there's a search term, use the SearchResults component
     if (searchTerm.trim()) {
-      return <SearchResults searchTerm={searchTerm} />;
+      return (
+        <SearchResults
+          searchTerm={searchTerm}
+          searchFilters={searchFilters}
+          onFiltersChange={handleFiltersChange}
+        />
+      );
     }
 
     // Otherwise show the regular folder structure
@@ -115,7 +134,14 @@ const GraphComponents = () => {
         ))}
       </div>
     );
-  }, [componentLibrary, userComponentsFolder, isLoading, error, searchTerm]);
+  }, [
+    componentLibrary,
+    userComponentsFolder,
+    isLoading,
+    error,
+    searchTerm,
+    searchFilters,
+  ]);
 
   return (
     <SidebarGroup>
@@ -125,7 +151,12 @@ const GraphComponents = () => {
         </div>
       </SidebarGroupLabel>
       <SidebarGroupContent className="[&_li]:marker:hidden [&_li]:before:content-none [&_li]:list-none">
-        <SearchInput value={searchTerm} onChange={handleSearchChange} />
+        <SearchInput
+          value={searchTerm}
+          activeFilters={searchFilters}
+          onChange={handleSearchChange}
+          onFiltersChange={handleFiltersChange}
+        />
         {memoizedContent}
       </SidebarGroupContent>
     </SidebarGroup>
