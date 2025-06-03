@@ -13,6 +13,7 @@ import type { DownloadDataType } from "./cache";
 import { downloadDataWithCache } from "./cache";
 import type { ComponentReference, ComponentSpec } from "./componentSpec";
 import { isValidComponentSpec } from "./componentSpec";
+import { getIdOrTitleFromPath } from "./URL";
 
 // IndexedDB: DB and table names
 const DB_NAME = "components";
@@ -498,6 +499,63 @@ export const writeComponentToFileListFromText = async (
 ) => {
   const componentRef = await storeComponentText(componentText);
   return writeComponentRefToFile(listName, fileName, componentRef);
+};
+
+export const renameComponentFileInList = async (
+  listName: string,
+  oldFileName: string,
+  newFileName: string,
+  pathname?: string,
+) => {
+  await upgradeSingleComponentListDb(listName);
+  const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
+  const componentListDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: tableName,
+  });
+
+  // Check if the old file exists
+  let fileEntry =
+    await componentListDb.getItem<ComponentFileEntry>(oldFileName);
+  if (!fileEntry) {
+    // If the old file does not exist and a pathanme is provided, check the url for a filename
+    if (pathname) {
+      const { idOrTitle } = getIdOrTitleFromPath(pathname);
+      if (idOrTitle) {
+        fileEntry =
+          await componentListDb.getItem<ComponentFileEntry>(idOrTitle);
+      }
+      if (!fileEntry) {
+        throw new Error(
+          `Backup file "${idOrTitle}" does not exist in list "${listName}".`,
+        );
+      }
+    } else {
+      throw new Error(
+        `File "${oldFileName}" does not exist in list "${listName}".`,
+      );
+    }
+  }
+
+  // Check if the new file name is already taken
+  const existingNewFile =
+    await componentListDb.getItem<ComponentFileEntry>(newFileName);
+  if (existingNewFile) {
+    throw new Error(
+      `File "${newFileName}" already exists in list "${listName}".`,
+    );
+  }
+
+  fileEntry.componentRef.spec.name = newFileName;
+
+  // Update the file entry's name
+  const updatedFileEntry = { ...fileEntry, name: newFileName };
+
+  // Remove the old entry and add the new one
+  await componentListDb.removeItem(oldFileName);
+  await componentListDb.setItem(newFileName, updatedFileEntry);
+
+  return updatedFileEntry;
 };
 
 export const getAllComponentsFromList = async (listName: string) => {

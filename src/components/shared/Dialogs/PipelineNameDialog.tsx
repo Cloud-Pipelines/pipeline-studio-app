@@ -42,7 +42,11 @@ const PipelineNameDialog = ({
 }: PipelineNameDialogProps) => {
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState(initialName);
-  const { userPipelines, isLoadingUserPipelines } = useLoadUserPipelines();
+  const {
+    userPipelines,
+    isLoadingUserPipelines,
+    refetch: refetchUserPipelines,
+  } = useLoadUserPipelines();
 
   const handleOnChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
@@ -64,6 +68,9 @@ const PipelineNameDialog = ({
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
       setError(null);
+    } else {
+      setName(initialName);
+      refetchUserPipelines();
     }
     onOpenChange?.(open);
   };
