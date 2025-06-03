@@ -45,6 +45,7 @@ const ArgumentsEditorDialog = ({
         * [initialValue] - This is the initial value of the argument when the Editor is opened. Immutable. It is used to determine if the argument has been changed during the current editing session.
         * [inputSpec] - These are some general constants for the argument. Immutable. It is used to display the argument name and type in the UI.
         * [isRemoved] - This is used to remove unwanted arguments from the Task Spec, as specified by the user. This is essentially used in place of an "undefined" input, since React requires an empty string for controlled components.
+        * [isPrivate] - This is used to hide the value of an argument from users who are not the creator of the pipeline.
 
         * Note that "undefined" and "empty string" are treated differently in the task spec, but we can only use "empty string" in the UI due to React's rules around controlled components.
         * The difference is best seen in a required argument with a linked node:
@@ -62,6 +63,7 @@ const ArgumentsEditorDialog = ({
         initialValue: initialValue ?? "",
         inputSpec: input,
         isRemoved: initialValue === undefined,
+        isPrivate: false, // todo: find a way to bring argument privacy over to the run details without having to use the component spec
       } as ArgumentInput;
     }) ?? [];
 

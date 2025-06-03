@@ -28,7 +28,7 @@ export const ArgumentsEditor = ({
   };
 
   return (
-    <div className="h-auto flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-4">
+    <div className="h-auto flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
       {argumentData.map((argument) => (
         <ArgumentInputField
           key={argument.key}

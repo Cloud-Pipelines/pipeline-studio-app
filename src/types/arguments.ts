@@ -10,4 +10,5 @@ export type ArgumentInput = {
   initialValue: ArgumentType;
   inputSpec: InputSpec;
   isRemoved?: boolean;
+  isPrivate?: boolean;
 };

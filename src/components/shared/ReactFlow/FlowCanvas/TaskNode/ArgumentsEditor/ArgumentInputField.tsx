@@ -6,7 +6,14 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { Delete, ListRestart, PlusSquare, UndoDot } from "lucide-react";
+import {
+  Delete,
+  ListRestart,
+  Lock,
+  LockOpen,
+  PlusSquare,
+  UndoDot,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -37,6 +44,14 @@ export const ArgumentInputField = ({
   const handleInputChange = (value: string) => {
     setInputValue(value);
     setArgument({ ...argument, value, isRemoved: false });
+  };
+
+  const handleLock = () => {
+    const updatedArgument = {
+      ...argument,
+      isPrivate: !argument.isPrivate,
+    };
+    setArgument({ ...updatedArgument });
   };
 
   const handleRemove = () => {
@@ -112,6 +127,7 @@ export const ArgumentInputField = ({
           </span>
         </div>
       </div>
+
       <div className="relative w-48">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -160,7 +176,7 @@ export const ArgumentInputField = ({
         )}
       </div>
 
-      <div className="flex gap-1 items-center w-1/5 justify-end">
+      <div className="flex gap-0 items-center w-1/5 justify-end ml-4">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -203,6 +219,28 @@ export const ArgumentInputField = ({
             className={cn("z-9999", argument.isRemoved ? "invisible" : "")}
           >
             Reset to Default
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              onClick={handleLock}
+              disabled={disabled}
+              variant="ghost"
+              size="icon"
+              className={cn(argument.isPrivate && "bg-muted/50")}
+            >
+              {argument.isPrivate ? (
+                <LockOpen className="h-4 w-4" />
+              ) : (
+                <Lock className="h-4 w-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {argument.isPrivate ? "Make public" : "Make private"}
           </TooltipContent>
         </Tooltip>
       </div>
