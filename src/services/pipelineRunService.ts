@@ -42,9 +42,12 @@ export const copyRunToPipeline = async (
   }
 
   try {
-    const cleanComponentSpec = JSON.parse(JSON.stringify(componentSpec));
+    const cleanComponentSpec = structuredClone(componentSpec);
 
-    if (cleanComponentSpec.implementation?.graph?.tasks) {
+    if (
+      "graph" in cleanComponentSpec.implementation &&
+      cleanComponentSpec.implementation?.graph?.tasks
+    ) {
       Object.values(cleanComponentSpec.implementation.graph.tasks).forEach(
         (task: any) => {
           if (task.annotations && "status" in task.annotations) {
