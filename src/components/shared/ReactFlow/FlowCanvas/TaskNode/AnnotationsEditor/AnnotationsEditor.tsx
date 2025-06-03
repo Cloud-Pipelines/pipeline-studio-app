@@ -1,5 +1,5 @@
-import { PlusCircleIcon, TrashIcon } from "lucide-react";
-import { useState } from "react";
+import { AlertTriangle, PlusCircleIcon, TrashIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,8 @@ export const AnnotationsEditor = ({
   const [newRows, setNewRows] = useState<Array<{ key: string; value: string }>>(
     [],
   );
+
+  const [invalidRows, setInvalidRows] = useState<string[]>([]);
 
   const annotationsWithoutComputeResources = Object.entries(annotations).filter(
     ([key]) =>
@@ -79,12 +81,35 @@ export const AnnotationsEditor = ({
       ...annotations,
       ...Object.fromEntries(validNewRows.map((row) => [row.key, row.value])),
     };
+
+    validateJSON(merged);
+
     setAnnotations(merged);
     setNewRows([]);
     if (onApply) {
       onApply(merged);
     }
   };
+
+  const validateJSON = useCallback(
+    (annotations: Annotations) => {
+      const invalid: string[] = [];
+      for (const [key, value] of Object.entries(annotations)) {
+        try {
+          JSON.parse(value);
+        } catch {
+          invalid.push(key);
+        }
+      }
+
+      setInvalidRows(invalid);
+    },
+    [annotations, newRows],
+  );
+
+  useEffect(() => {
+    validateJSON(rawAnnotations);
+  }, [rawAnnotations, validateJSON]);
 
   return (
     <>
@@ -101,11 +126,18 @@ export const AnnotationsEditor = ({
               <span className="text-xs text-muted-foreground w-40 truncate">
                 {key}
               </span>
-              <Input
-                value={value}
-                onChange={(e) => handleValueChange(key, e.target.value)}
-                className="flex-1"
-              />
+              <div className="flex-1 relative">
+                <Input
+                  value={value}
+                  onChange={(e) => handleValueChange(key, e.target.value)}
+                />
+
+                {invalidRows.includes(key) && (
+                  <div className="flex items-center gap-1 my-1 text-xs text-warning">
+                    <AlertTriangle className="w-4 h-4" /> Invalid JSON
+                  </div>
+                )}
+              </div>
               {!UNREMOVABLE_ANNOTATIONS.includes(key) && (
                 <Button
                   variant="ghost"
