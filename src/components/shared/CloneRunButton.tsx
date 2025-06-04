@@ -3,19 +3,14 @@ import { CopyIcon, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
-import {
-  type RunDetailParams,
-  runDetailRoute,
-  RUNS_BASE_PATH,
-} from "@/routes/router";
+import { RUNS_BASE_PATH } from "@/routes/router";
 import { copyRunToPipeline } from "@/services/pipelineRunService";
 
 import { PipelineNameDialog } from "./Dialogs";
 
 const CloneRunButtonInner = () => {
-  const { id } = runDetailRoute.useParams() as RunDetailParams;
   const { componentSpec, isLoading: detailsLoading } =
-    useLoadComponentSpecAndDetailsFromId(id);
+    useLoadComponentSpecAndDetailsFromId();
   const navigate = useNavigate();
 
   const handleClone = async (name: string) => {
