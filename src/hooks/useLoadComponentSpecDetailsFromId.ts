@@ -3,27 +3,12 @@ import { useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import type { GetExecutionInfoResponse } from "@/api/types.gen";
-import { RUNS_BASE_PATH } from "@/routes/router";
 import { loadPipelineByName } from "@/services/pipelineService";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
 import { API_URL } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
-
-const getIdOrTitleFromPath = (
-  pathname: string,
-): {
-  idOrTitle?: string;
-  enableApi: boolean;
-} => {
-  const isRunPath = pathname.includes(RUNS_BASE_PATH);
-
-  const lastPathSegment = pathname.split("/").pop() || "";
-  return {
-    idOrTitle: decodeURIComponent(lastPathSegment),
-    enableApi: isRunPath,
-  };
-};
+import { getIdOrTitleFromPath } from "@/utils/URL";
 
 export const useLoadComponentSpecAndDetailsFromId = () => {
   const location = useLocation();

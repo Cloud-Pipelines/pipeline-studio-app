@@ -17,6 +17,8 @@ const convertGcsUrlToBrowserUrl = (
   return url.replace("gs://", "https://storage.cloud.google.com/");
 };
 
+import { RUNS_BASE_PATH } from "@/routes/router";
+
 import type { ComponentSpec } from "./componentSpec";
 
 const convertRawUrlToDirectoryUrl = (rawUrl: string) => {
@@ -62,4 +64,19 @@ export {
   convertGcsUrlToBrowserUrl,
   convertRawUrlToDirectoryUrl,
   downloadYamlFromComponentText,
+};
+
+export const getIdOrTitleFromPath = (
+  pathname: string,
+): {
+  idOrTitle?: string;
+  enableApi: boolean;
+} => {
+  const isRunPath = pathname.includes(RUNS_BASE_PATH);
+
+  const lastPathSegment = pathname.split("/").pop() || "";
+  return {
+    idOrTitle: decodeURIComponent(lastPathSegment),
+    enableApi: isRunPath,
+  };
 };

@@ -26,11 +26,22 @@ const useLoadUserPipelines = () => {
     }
   };
 
+  const refetch = async () => {
+    setIsLoadingUserPipelines(true);
+    try {
+      await fetchUserPipelines();
+    } catch (error) {
+      console.error("Failed to refetch user pipelines:", error);
+    } finally {
+      setIsLoadingUserPipelines(false);
+    }
+  };
+
   useEffect(() => {
     fetchUserPipelines();
   }, []);
 
-  return { userPipelines, isLoadingUserPipelines };
+  return { userPipelines, isLoadingUserPipelines, refetch };
 };
 
 export default useLoadUserPipelines;
