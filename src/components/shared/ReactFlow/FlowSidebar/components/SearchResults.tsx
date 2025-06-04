@@ -1,18 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   generateDigest,
   parseComponentData,
 } from "@/services/componentService";
 import type { ComponentSpec } from "@/utils/componentSpec";
-import { getAllComponents, getAllUserComponents } from "@/utils/localforge";
+import { ComponentSearchFilter } from "@/utils/constants";
+import {
+  getAllComponents,
+  getAllUserComponents,
+  type UserComponent,
+} from "@/utils/localforge";
 import { containsSearchTerm } from "@/utils/searchUtils";
 
 import { ComponentMarkup } from "./ComponentItem";
 
 interface SearchResultsProps {
   searchTerm: string;
+  searchFilters: string[];
+  onFiltersChange: (filters: string[]) => void;
 }
 
 interface ComponentData {
@@ -21,7 +29,11 @@ interface ComponentData {
   data: ComponentSpec;
 }
 
-const SearchResults = ({ searchTerm }: SearchResultsProps) => {
+const SearchResults = ({
+  searchTerm,
+  searchFilters,
+  onFiltersChange,
+}: SearchResultsProps) => {
   const [matchedComponents, setMatchedComponents] = useState<ComponentData[]>(
     [],
   );
@@ -41,6 +53,66 @@ const SearchResults = ({ searchTerm }: SearchResultsProps) => {
     },
   );
 
+  const handleNameFilterClick = useCallback(() => {
+    if (!searchFilters.includes(ComponentSearchFilter.NAME)) {
+      onFiltersChange([...searchFilters, ComponentSearchFilter.NAME]);
+    }
+  }, [searchFilters, onFiltersChange]);
+
+  const verifySearchFilterMatch = useCallback(
+    (component: ComponentSpec | UserComponent) => {
+      if (searchFilters.length === 0) return false;
+
+      let componentSpec: ComponentSpec | undefined;
+      if ("componentRef" in component) {
+        componentSpec = component.componentRef.spec;
+      } else {
+        componentSpec = component;
+      }
+
+      if (!componentSpec) return false;
+      const filterChecks: Record<string, () => boolean> = {
+        [ComponentSearchFilter.NAME]: () =>
+          containsSearchTerm(componentSpec.name || "", searchTerm),
+        [ComponentSearchFilter.INPUTNAME]: () => {
+          const inputNames =
+            componentSpec.inputs?.map((input) => input.name) || [];
+          const inputNamesWithSpaces = inputNames.map((n) =>
+            n.replaceAll("_", " "),
+          );
+          return (
+            containsSearchTerm(inputNames.join(" | "), searchTerm) ||
+            containsSearchTerm(inputNamesWithSpaces.join(" | "), searchTerm)
+          );
+        },
+        [ComponentSearchFilter.INPUTTYPE]: () => {
+          const inputTypes =
+            componentSpec.inputs?.map((input) => input.type) || [];
+          return containsSearchTerm(inputTypes.join(" | "), searchTerm);
+        },
+        [ComponentSearchFilter.OUTPUTNAME]: () => {
+          const outputNames =
+            componentSpec.outputs?.map((output) => output.name) || [];
+          const outputNamesWithSpaces = outputNames.map((n) =>
+            n.replaceAll("_", " "),
+          );
+          return (
+            containsSearchTerm(outputNames.join(" | "), searchTerm) ||
+            containsSearchTerm(outputNamesWithSpaces.join(" | "), searchTerm)
+          );
+        },
+        [ComponentSearchFilter.OUTPUTTYPE]: () => {
+          const outputTypes =
+            componentSpec.outputs?.map((output) => output.type) || [];
+          return containsSearchTerm(outputTypes.join(" | "), searchTerm);
+        },
+      };
+
+      return searchFilters.some((filter) => filterChecks[filter]?.() === true);
+    },
+    [searchFilters, searchTerm],
+  );
+
   useEffect(() => {
     if (!components) return;
 
@@ -49,8 +121,17 @@ const SearchResults = ({ searchTerm }: SearchResultsProps) => {
 
       for (const component of components) {
         const parsedSpec = parseComponentData(component.data);
-        if (parsedSpec && containsSearchTerm(parsedSpec.name, searchTerm)) {
+        if (!parsedSpec) continue;
+
+        const matchFound = verifySearchFilterMatch(parsedSpec);
+
+        if (matchFound) {
           const digest = await generateDigest(component.data);
+
+          if (results.some((r) => r.digest === digest)) {
+            continue;
+          }
+
           results.push({
             digest,
             url: component.url,
@@ -66,7 +147,7 @@ const SearchResults = ({ searchTerm }: SearchResultsProps) => {
     };
 
     fetchMatchedComponents();
-  }, [components, searchTerm]);
+  }, [components, verifySearchFilterMatch]);
 
   useEffect(() => {
     if (!userComponents) return;
@@ -75,7 +156,8 @@ const SearchResults = ({ searchTerm }: SearchResultsProps) => {
       const results: ComponentData[] = [];
 
       for (const userComponent of userComponents) {
-        if (containsSearchTerm(userComponent.name, searchTerm)) {
+        const matchFound = verifySearchFilterMatch(userComponent);
+        if (matchFound) {
           results.push({
             digest: userComponent.componentRef.digest || "",
             url: userComponent.componentRef.url || "",
@@ -95,16 +177,32 @@ const SearchResults = ({ searchTerm }: SearchResultsProps) => {
     };
 
     fetchMatchedUserComponents();
-  }, [userComponents, searchTerm]);
+  }, [userComponents, verifySearchFilterMatch]);
 
   if (isLoading || isLoadingUserComponents) return <div>Loading...</div>;
+
+  if (searchFilters.length === 0) {
+    return (
+      <div className="px-4 py-2 text-sm text-gray-500">
+        No search filters set.{" "}
+        <Button
+          variant="ghost"
+          onClick={handleNameFilterClick}
+          className="text-sky-500 hover:text-sky-600 focus:text-sky-600 active:text-sky-700"
+        >
+          Filter by name
+        </Button>
+      </div>
+    );
+  }
 
   const hasResults =
     matchedComponents.length > 0 || matchedUserComponents.length > 0;
   if (!hasResults) {
     return (
       <div className="px-4 py-2 text-sm text-gray-500">
-        No components matching &ldquo;{searchTerm}&rdquo;
+        No component {searchFilters.join(" or ")} matching &ldquo;{searchTerm}
+        &rdquo;
       </div>
     );
   }

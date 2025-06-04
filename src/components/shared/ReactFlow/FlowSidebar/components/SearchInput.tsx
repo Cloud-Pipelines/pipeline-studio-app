@@ -2,11 +2,19 @@ import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { type SearchInputProps } from "@/types/componentLibrary";
+import { COMPONENT_SEARCH_FILTERS } from "@/utils/constants";
 
-const SearchInput = ({ value, onChange }: SearchInputProps) => {
+import SearchFilter from "./SearchFilter";
+
+const SearchInput = ({
+  value,
+  activeFilters,
+  onChange,
+  onFiltersChange,
+}: SearchInputProps) => {
   return (
-    <div className="px-2 pb-2 pt-1">
-      <div className="relative">
+    <div className="px-2 pb-2 pt-1 flex items-center justify-between gap-2">
+      <div className="relative w-full">
         <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 pointer-events-none">
           <Search className="h-3.5 w-3.5 text-gray-400" />
         </div>
@@ -18,6 +26,12 @@ const SearchInput = ({ value, onChange }: SearchInputProps) => {
           onChange={onChange}
         />
       </div>
+      <SearchFilter
+        availableFilters={COMPONENT_SEARCH_FILTERS}
+        activeFilters={activeFilters}
+        disableCounter={value.trim() === ""}
+        onFiltersChange={onFiltersChange}
+      />
     </div>
   );
 };
