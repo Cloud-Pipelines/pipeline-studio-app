@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 import { RUNS_BASE_PATH } from "@/routes/router";
 import { copyRunToPipeline } from "@/services/pipelineRunService";
+import { removeTrailingDateFromTitle } from "@/utils/string";
 
 import { PipelineNameDialog } from "./Dialogs";
 
@@ -37,9 +38,9 @@ const CloneRunButtonInner = () => {
 
   const getInitialName = () => {
     const dateTime = new Date().toISOString();
-    return componentSpec?.name
-      ? `${componentSpec.name} (${dateTime})`
-      : `Pipeline ${dateTime}`;
+    const baseName = componentSpec?.name || "Pipeline";
+
+    return `${removeTrailingDateFromTitle(baseName)} (${dateTime})`;
   };
 
   const isSubmitDisabled = (name: string) => {

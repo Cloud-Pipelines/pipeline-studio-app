@@ -29,4 +29,17 @@ const getValue = (value: string | ArgumentType | undefined) => {
     return String(value);
   }
 };
-export { copyToClipboard, formatBytes, formatJsonValue, getValue };
+
+const removeTrailingDateFromTitle = (baseName: string) => {
+  // this regex matches a timestamp in the ISO 8601 format like (YYYY-MM-DDTHH:MM:SS.sssZ) at the very end of a string
+  const dateRegex = /\(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\)$/;
+  const nameWithoutDate = baseName.replace(dateRegex, "");
+  return nameWithoutDate.trimEnd();
+};
+export {
+  copyToClipboard,
+  formatBytes,
+  formatJsonValue,
+  getValue,
+  removeTrailingDateFromTitle,
+};
