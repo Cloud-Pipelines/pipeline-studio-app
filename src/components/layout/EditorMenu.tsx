@@ -6,12 +6,7 @@ import { EDITOR_PATH, RUNS_BASE_PATH } from "@/routes/router";
 const EditorMenu = () => {
   const location = useLocation();
   const pathname = location.pathname;
-  const experimentNameOrRunId = decodeURIComponent(
-    pathname.split("/").pop() || "",
-  );
-  const { componentSpec, isLoading } = useLoadComponentSpecAndDetailsFromId(
-    experimentNameOrRunId,
-  );
+  const { componentSpec, isLoading } = useLoadComponentSpecAndDetailsFromId();
 
   if (
     !pathname.includes(EDITOR_PATH) &&
@@ -21,10 +16,7 @@ const EditorMenu = () => {
     return null;
   }
 
-  // IF componentSpec is defined we know its a run because we loaded it from the run id
-  const title = componentSpec?.name
-    ? `${componentSpec?.name} - #${experimentNameOrRunId}`
-    : experimentNameOrRunId;
+  const title = componentSpec?.name;
 
   return <span className="text-white text-sm font-bold">{title}</span>;
 };

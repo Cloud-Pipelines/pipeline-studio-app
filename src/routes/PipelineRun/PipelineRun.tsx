@@ -49,7 +49,7 @@ const PipelineRun = () => {
     componentSpec,
     detailsData,
     isLoading: detailsLoading,
-  } = useLoadComponentSpecAndDetailsFromId(id);
+  } = useLoadComponentSpecAndDetailsFromId();
 
   useDocumentTitle({
     "/runs/$id": (params) =>
