@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { CopyIcon, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
@@ -7,14 +7,20 @@ import { RUNS_BASE_PATH } from "@/routes/router";
 import { copyRunToPipeline } from "@/services/pipelineRunService";
 import { removeTrailingDateFromTitle } from "@/utils/string";
 
-import { PipelineNameDialog } from "./Dialogs";
-
 const CloneRunButtonInner = () => {
   const { componentSpec, isLoading: detailsLoading } =
     useLoadComponentSpecAndDetailsFromId();
   const navigate = useNavigate();
 
-  const handleClone = async (name: string) => {
+  const getInitialName = () => {
+    const dateTime = new Date().toISOString();
+    const baseName = componentSpec?.name || "Pipeline";
+
+    return `${removeTrailingDateFromTitle(baseName)} (${dateTime})`;
+  };
+
+  const handleClone = async () => {
+    const name = getInitialName();
     if (!componentSpec) {
       console.error("No component spec found");
       return;
@@ -36,27 +42,10 @@ const CloneRunButtonInner = () => {
     );
   }
 
-  const getInitialName = () => {
-    const dateTime = new Date().toISOString();
-    const baseName = componentSpec?.name || "Pipeline";
-
-    return `${removeTrailingDateFromTitle(baseName)} (${dateTime})`;
-  };
-
-  const isSubmitDisabled = (name: string) => {
-    return name === componentSpec?.name;
-  };
-
   return (
-    <PipelineNameDialog
-      trigger={<Button variant="outline">Clone Pipeline</Button>}
-      title="Clone Pipeline"
-      initialName={getInitialName()}
-      onSubmit={handleClone}
-      submitButtonText="Clone Run"
-      submitButtonIcon={<CopyIcon />}
-      isSubmitDisabled={isSubmitDisabled}
-    />
+    <Button variant="outline" onClick={handleClone}>
+      Clone Pipeline
+    </Button>
   );
 };
 

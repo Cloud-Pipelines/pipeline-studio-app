@@ -10,14 +10,13 @@ import {
 } from "@/utils/constants";
 import { replaceLocalStorageWithExperimentYaml } from "@/utils/storage";
 
-import PipelineNameDialog from "./PipelineNameDialog";
-
 const randomName = () => (generate(4) as string[]).join(" ");
 
-const NewExperimentDialog = () => {
+const NewPipelineButton = () => {
   const navigate = useNavigate();
 
-  const handleCreate = async (name: string) => {
+  const handleCreate = async () => {
+    const name = randomName();
     const componentText = defaultPipelineYamlWithName(name);
     await writeComponentToFileListFromText(
       USER_PIPELINES_LIST_NAME,
@@ -34,14 +33,10 @@ const NewExperimentDialog = () => {
   };
 
   return (
-    <PipelineNameDialog
-      trigger={<Button variant="outline">New Pipeline</Button>}
-      title="New Pipeline"
-      initialName={randomName()}
-      onSubmit={handleCreate}
-      submitButtonText="Create"
-    />
+    <Button variant="outline" onClick={handleCreate}>
+      New Pipeline
+    </Button>
   );
 };
 
-export default NewExperimentDialog;
+export default NewPipelineButton;

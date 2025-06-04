@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 
 import CloneRunButton from "@/components/shared/CloneRunButton";
-import { NewExperimentDialog } from "@/components/shared/Dialogs";
 import ImportPipeline from "@/components/shared/ImportPipeline";
 
+import NewPipelineButton from "../shared/NewPipelineButton";
 import EditorMenu from "./EditorMenu";
 
 const AppMenu = () => {
@@ -23,7 +23,7 @@ const AppMenu = () => {
         <div className="flex flex-row gap-2 items-center">
           <CloneRunButton />
           <ImportPipeline />
-          <NewExperimentDialog />
+          <NewPipelineButton />
         </div>
       </div>
     </div>
