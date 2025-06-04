@@ -1,7 +1,7 @@
 import { CircleX, Terminal } from "lucide-react";
 import { type ChangeEvent, useEffect, useState } from "react";
 
-import { NewExperimentDialog } from "@/components/shared/Dialogs";
+import NewPipelineButton from "@/components/shared/NewPipelineButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,7 +73,7 @@ export const PipelineSection = () => {
     return (
       <div>
         <p>No pipelines found.</p>
-        <NewExperimentDialog />
+        <NewPipelineButton />
       </div>
     );
   }
