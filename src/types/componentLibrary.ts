@@ -1,3 +1,6 @@
+import type { LucideProps } from "lucide-react";
+import type { ForwardRefExoticComponent } from "react";
+
 import type { ComponentReference } from "@/utils/componentSpec";
 
 export type ComponentItemFromUrlProps = {
@@ -14,6 +17,7 @@ export type ComponentFolder = {
 
 export type FolderItemProps = {
   folder: ComponentFolder;
+  icon?: ForwardRefExoticComponent<Omit<LucideProps, "ref">>;
 };
 
 export type SearchInputProps = {

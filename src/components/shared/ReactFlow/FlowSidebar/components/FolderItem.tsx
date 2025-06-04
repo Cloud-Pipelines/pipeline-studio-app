@@ -1,12 +1,17 @@
-import { ChevronDown, ChevronRight, Folder } from "lucide-react";
-import { type MouseEvent, useState } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Folder,
+  type LucideProps,
+} from "lucide-react";
+import { type JSXElementConstructor, type MouseEvent, useState } from "react";
 
 import { type FolderItemProps } from "@/types/componentLibrary";
 
 import { ComponentItemFromUrl, ComponentMarkup } from "./ComponentItem";
 import UserComponentItem from "./UserComponentItem";
 
-const FolderItem = ({ folder }: FolderItemProps) => {
+const FolderItem = ({ folder, icon }: FolderItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const hasComponents = folder.components && folder.components.length > 0;
   const hasSubfolders = folder.folders && folder.folders.length > 0;
@@ -17,7 +22,9 @@ const FolderItem = ({ folder }: FolderItemProps) => {
     setIsOpen(!isOpen);
   };
 
+  const Icon = icon as JSXElementConstructor<LucideProps>;
   const chevronStyles = "h-4 w-4 text-gray-400 flex-shrink-0";
+
   return (
     <div className="w-full">
       <div
@@ -27,7 +34,11 @@ const FolderItem = ({ folder }: FolderItemProps) => {
         aria-expanded={isOpen}
         aria-label={`Folder: ${folder.name}`}
       >
-        <Folder className={chevronStyles + " mr-2"} />
+        {icon ? (
+          <Icon className={chevronStyles + " mr-2"} />
+        ) : (
+          <Folder className={chevronStyles + " mr-2"} />
+        )}
         <span className="truncate text-sm font-medium">{folder.name}</span>
         <div className="ml-auto">
           {isOpen ? (
