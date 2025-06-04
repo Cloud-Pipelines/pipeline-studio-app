@@ -6,6 +6,7 @@ import type { ArgumentInput } from "@/types/arguments";
 import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 
 import { ArgumentsEditor } from "../ArgumentsEditor";
+import { getArgumentInputs } from "./utils";
 
 interface ArgumentsSectionProps {
   taskSpec: TaskSpec;
@@ -20,19 +21,7 @@ const ArgumentsSection = ({
 }: ArgumentsSectionProps) => {
   const componentSpec = taskSpec.componentRef.spec;
 
-  const argumentInputs =
-    componentSpec?.inputs?.map((input) => {
-      const existingArgument = taskSpec.arguments?.[input.name];
-      const initialValue = existingArgument ?? input.default;
-
-      return {
-        key: input.name,
-        value: initialValue ?? "",
-        initialValue: initialValue ?? "",
-        inputSpec: input,
-        isRemoved: initialValue === undefined,
-      } as ArgumentInput;
-    }) ?? [];
+  const argumentInputs = getArgumentInputs(taskSpec);
 
   const [currentArguments, setCurrentArguments] =
     useState<ArgumentInput[]>(argumentInputs);
