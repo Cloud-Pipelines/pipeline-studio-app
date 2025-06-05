@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { LayoutGrid, Puzzle } from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo, useState } from "react";
 
 import {
@@ -6,9 +7,14 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { fetchAndStoreComponentLibrary } from "@/services/componentService";
 import type { ComponentFolder } from "@/types/componentLibrary";
-import type { ComponentReference } from "@/utils/componentSpec";
+import type {
+  ComponentReference,
+  GraphSpec,
+  TaskSpec,
+} from "@/utils/componentSpec";
 import { getAllComponentFilesFromList } from "@/utils/componentStore";
 import {
   ComponentSearchFilter,
@@ -61,9 +67,45 @@ const fetchUserComponents = async (): Promise<ComponentFolder> => {
   }
 };
 
+const fetchUsedComponents = (graphSpec: GraphSpec): ComponentFolder => {
+  if (!graphSpec || !graphSpec.tasks || typeof graphSpec.tasks !== "object") {
+    return {
+      name: "Used in Pipeline",
+      components: [],
+      folders: [],
+      isUserFolder: false,
+    };
+  }
+
+  const usedComponentsMap = new Map<string, ComponentReference>();
+
+  Object.values(graphSpec.tasks).forEach((task: TaskSpec) => {
+    const key = task.componentRef.digest;
+    if (key && !usedComponentsMap.has(key)) {
+      usedComponentsMap.set(key, {
+        ...task.componentRef,
+      });
+    }
+  });
+
+  return {
+    name: "Used in Pipeline",
+    components: Array.from(usedComponentsMap.values()),
+    folders: [],
+    isUserFolder: false,
+  };
+};
+
 const GraphComponents = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilters, setSearchFilters] = useState<string[]>(DEFAULT_FILTERS);
+
+  const { graphSpec } = useComponentSpec();
+
+  const usedComponentsFolder: ComponentFolder = useMemo(
+    () => fetchUsedComponents(graphSpec),
+    [graphSpec],
+  );
 
   const {
     data: componentLibrary,
@@ -120,12 +162,25 @@ const GraphComponents = () => {
       userComponentsFolder?.components &&
       userComponentsFolder.components.length > 0;
 
+    const hasUsedComponents =
+      usedComponentsFolder?.components &&
+      usedComponentsFolder.components.length > 0;
+
     return (
       <div>
+        {hasUsedComponents && (
+          <FolderItem
+            key="used-components-folder"
+            folder={usedComponentsFolder}
+            icon={LayoutGrid}
+          />
+        )}
+
         {hasUserComponents && (
           <FolderItem
             key="user-components-folder"
             folder={userComponentsFolder}
+            icon={Puzzle}
           />
         )}
 
@@ -137,6 +192,7 @@ const GraphComponents = () => {
   }, [
     componentLibrary,
     userComponentsFolder,
+    usedComponentsFolder,
     isLoading,
     error,
     searchTerm,
