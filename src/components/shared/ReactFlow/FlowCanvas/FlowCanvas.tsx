@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
+import useComponentUploader from "@/hooks/useComponentUploader";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useCopyPaste } from "@/hooks/useCopyPaste";
 import useToastNotification from "@/hooks/useToastNotification";
@@ -281,10 +282,20 @@ const FlowCanvas = ({
     [graphSpec, handleConnection, updateGraphSpec],
   );
 
-  /* New Tasks from the Sidebar */
+  const { handleDrop } = useComponentUploader({
+    onImportSuccess: () => {}, // TODO: Implement adding the component to the canvas
+  });
+
   const onDragOver = useCallback(
-    (event: DragEvent) => {
+    (event: DragEvent<HTMLDivElement>) => {
       event.preventDefault();
+
+      // Check if we're dragging files
+      const hasFiles = event.dataTransfer.types.includes("Files");
+      if (hasFiles) {
+        return;
+      }
+
       event.dataTransfer.dropEffect = "move";
 
       const cursorPosition = reactFlowInstance?.screenToFlowPosition({
@@ -306,8 +317,14 @@ const FlowCanvas = ({
   );
 
   const onDrop = useCallback(
-    async (event: DragEvent) => {
+    async (event: DragEvent<HTMLDivElement>) => {
       event.preventDefault();
+
+      // Handle file drops
+      if (event.dataTransfer.files.length > 0) {
+        handleDrop(event);
+        return;
+      }
 
       const { taskSpec: droppedTask, taskType } = getTaskFromEvent(event);
 
@@ -374,6 +391,7 @@ const FlowCanvas = ({
       setComponentSpec,
       updateGraphSpec,
       triggerConfirmation,
+      handleDrop,
     ],
   );
 
