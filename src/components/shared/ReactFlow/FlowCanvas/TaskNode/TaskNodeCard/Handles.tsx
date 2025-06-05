@@ -1,5 +1,10 @@
-import { Handle, Position } from "@xyflow/react";
-import type { MouseEvent } from "react";
+import { Handle, Position, useConnection } from "@xyflow/react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  useCallback,
+  useState,
+} from "react";
+import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
@@ -7,42 +12,112 @@ import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
 type InputHandleProps = {
   input: InputSpec;
   invalid: boolean;
+  nodeId: string;
   value?: string;
-  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
+  onLabelClick?: (e: ReactMouseEvent<HTMLDivElement>) => void;
+  onHandleSelectionChange?: (key: string, selected: boolean) => void;
 };
 
 export const InputHandle = ({
   input,
   invalid,
+  nodeId,
   value,
-  onClick,
+  onLabelClick,
+  onHandleSelectionChange,
 }: InputHandleProps) => {
+  const handleRef = useRef<HTMLDivElement>(null);
+  const connection = useConnection();
+
+  const [selected, setSelected] = useState(false);
+  const [active, setActive] = useState(false);
+
+  const handleId = getInputHandleId(input.name);
+
   const missing = invalid ? "bg-red-700!" : "bg-gray-500!";
-
-  const handleClick = (e: MouseEvent<HTMLDivElement>) => {
-    onClick?.(e);
-  };
-
   const hasValue = value !== undefined && value !== "" && value !== null;
   const hasDefault = input.default !== undefined && input.default !== "";
+
+  const handleHandleClick = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      setSelected(!selected);
+    },
+    [selected],
+  );
+
+  useEffect(() => {
+    if (
+      (connection.fromHandle?.id === handleId &&
+        connection.fromNode?.id === nodeId) ||
+      (connection.toHandle?.id === handleId && connection.toNode?.id === nodeId)
+    ) {
+      setActive(true);
+    } else {
+      setActive(false);
+    }
+  }, [connection]);
+
+  useEffect(() => {
+    if (onHandleSelectionChange) {
+      const key = input.name;
+      onHandleSelectionChange(key, selected);
+    }
+  }, [input, selected, onHandleSelectionChange]);
+
+  useEffect(() => {
+    if (!selected) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (handleRef.current && !handleRef.current.contains(e.target as Node)) {
+        setSelected(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside, true);
+    };
+  }, [selected]);
+
+  useEffect(() => {
+    if (!selected) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelected(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [selected]);
 
   return (
     <div className="relative w-full h-fit" key={input.name}>
       <div className="absolute -translate-x-6 flex items-center h-3 w-3">
         <Handle
+          ref={handleRef}
           type="target"
-          id={`input_${input.name}`}
+          id={handleId}
           position={Position.Left}
           isConnectable={true}
-          className={cn("border-0! h-full! w-full! transform-none!", missing)}
+          className={cn(
+            "border-0! h-full! w-full! transform-none!",
+            missing,
+            (selected || active) && "bg-blue-500!",
+          )}
+          onClick={handleHandleClick}
         />
       </div>
       <div
         className={cn(
           "flex flex-row items-center rounded-md cursor-pointer relative",
-          onClick && "hover:bg-gray-300",
+          onLabelClick && "hover:bg-gray-300",
         )}
-        onClick={handleClick}
+        onClick={onLabelClick}
       >
         <div className="flex flex-row w-full gap-0.5 items-center justify-between">
           <div
@@ -53,8 +128,9 @@ export const InputHandle = ({
           >
             <div
               className={cn(
-                "text-xs text-gray-800! bg-gray-200 rounded-md px-2 py-1 truncate",
-                onClick && "hover:bg-gray-300",
+                "text-xs text-gray-800! rounded-md px-2 py-1 truncate",
+                onLabelClick && !selected && "hover:bg-gray-300",
+                selected || active ? "bg-blue-200" : "bg-gray-200",
               )}
             >
               {input.name.replace(/_/g, " ")}
@@ -80,20 +156,91 @@ export const InputHandle = ({
 
 type OutputHandleProps = {
   output: OutputSpec;
+  nodeId: string;
   value?: string;
-  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
+  onLabelClick?: (e: ReactMouseEvent<HTMLDivElement>) => void;
+  onHandleSelectionChange?: (key: string, selected: boolean) => void;
 };
 
-export const OutputHandle = ({ output, value, onClick }: OutputHandleProps) => {
+export const OutputHandle = ({
+  output,
+  nodeId,
+  value,
+  onLabelClick,
+  onHandleSelectionChange,
+}: OutputHandleProps) => {
+  const handleRef = useRef<HTMLDivElement>(null);
+  const connection = useConnection();
+
+  const [selected, setSelected] = useState(false);
+  const [active, setActive] = useState(false);
+
+  const handleId = getOutputHandleId(output.name);
   const hasValue = value !== undefined && value !== "" && value !== null;
 
-  const handleClick = (e: MouseEvent<HTMLDivElement>) => {
-    onClick?.(e);
-  };
+  const handleHandleClick = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      setSelected(!selected);
+    },
+    [selected],
+  );
+
+  useEffect(() => {
+    if (
+      (connection.fromHandle?.id === handleId &&
+        connection.fromNode?.id === nodeId) ||
+      (connection.toHandle?.id === handleId && connection.toNode?.id === nodeId)
+    ) {
+      setActive(true);
+    } else {
+      setActive(false);
+    }
+  }, [connection]);
+
+  useEffect(() => {
+    if (onHandleSelectionChange) {
+      const key = output.name;
+      onHandleSelectionChange(key, selected);
+    }
+  }, [output, selected, onHandleSelectionChange]);
+
+  useEffect(() => {
+    if (!selected) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (handleRef.current && !handleRef.current.contains(e.target as Node)) {
+        setSelected(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside, true);
+    };
+  }, [selected]);
+
+  useEffect(() => {
+    if (!selected) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelected(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [selected]);
 
   return (
     <div className="flex items-center justify-end w-full" key={output.name}>
-      <div className="flex flex-row-reverse w-full gap-0.5 items-center justify-between">
+      <div
+        className="flex flex-row-reverse w-full gap-0.5 items-center justify-between"
+        onClick={onLabelClick}
+      >
         <div
           className={cn(
             "translate-x-3 min-w-0 inline-block",
@@ -102,8 +249,9 @@ export const OutputHandle = ({ output, value, onClick }: OutputHandleProps) => {
         >
           <div
             className={cn(
-              "text-xs text-gray-800! bg-gray-200 rounded-md px-2 py-1 truncate",
-              onClick && "hover:bg-gray-300",
+              "text-xs text-gray-800! rounded-md px-2 py-1 truncate",
+              onLabelClick && !selected && "hover:bg-gray-300",
+              selected || active ? "bg-blue-200" : "bg-gray-200",
             )}
           >
             {output.name.replace(/_/g, " ")}
@@ -116,22 +264,25 @@ export const OutputHandle = ({ output, value, onClick }: OutputHandleProps) => {
         )}
       </div>
       <Handle
+        ref={handleRef}
         type="source"
-        id={`output_${output.name}`}
+        id={handleId}
         position={Position.Right}
         isConnectable={true}
-        onClick={handleClick}
-        className={`
-          relative!
-          border-0!
-          !w-[12px]
-          !h-[12px]
-          transform-none!
-          translate-x-6
-          cursor-pointer
-          bg-gray-500!
-          `}
+        onClick={handleHandleClick}
+        className={cn(
+          "relative! border-0! !w-[12px] !h-[12px] transform-none! translate-x-6 cursor-pointer bg-gray-500!",
+          (selected || active) && "bg-blue-500!",
+        )}
       />
     </div>
   );
+};
+
+const getOutputHandleId = (outputName: string) => {
+  return `output_${outputName}`;
+};
+
+const getInputHandleId = (inputName: string) => {
+  return `input_${inputName}`;
 };

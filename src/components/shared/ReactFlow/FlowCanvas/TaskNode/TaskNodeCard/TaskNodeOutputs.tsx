@@ -65,6 +65,7 @@ export function TaskNodeOutputs({
         outputsWithTaskInput.map((output, i) => (
           <OutputHandle
             key={output.name}
+            nodeId={nodeId}
             output={output}
             value={
               outputs.length > 1 && i === 0
@@ -78,8 +79,9 @@ export function TaskNodeOutputs({
           {outputs.map((output) => (
             <OutputHandle
               key={output.name}
+              nodeId={nodeId}
               output={output}
-              onClick={handleIOClicked}
+              onLabelClick={handleIOClicked}
             />
           ))}
           {condensed && (

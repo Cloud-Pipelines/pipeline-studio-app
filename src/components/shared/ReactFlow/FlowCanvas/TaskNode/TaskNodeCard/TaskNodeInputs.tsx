@@ -1,8 +1,9 @@
 import { AlertCircle } from "lucide-react";
-import { type MouseEvent } from "react";
+import { type MouseEvent, useCallback } from "react";
 
 import { cn } from "@/lib/utils";
 import type { ArgumentType, InputSpec } from "@/utils/componentSpec";
+import { taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
 import { getValue } from "@/utils/string";
 
 import { InputHandle } from "./Handles";
@@ -10,6 +11,7 @@ import { InputHandle } from "./Handles";
 interface TaskNodeInputsProps {
   inputs: InputSpec[];
   invalidArguments: string[];
+  taskId: string;
   values?: Record<string, ArgumentType>;
   condensed: boolean;
   expanded: boolean;
@@ -20,12 +22,15 @@ interface TaskNodeInputsProps {
 export function TaskNodeInputs({
   inputs,
   invalidArguments,
+  taskId,
   values,
   condensed,
   expanded,
   onBackgroundClick,
   handleIOClicked,
 }: TaskNodeInputsProps) {
+  const nodeId = taskIdToNodeId(taskId);
+
   const inputsWithTaskOutput = inputs.filter(
     (input) =>
       values?.[input.name] &&
@@ -37,6 +42,16 @@ export function TaskNodeInputs({
   if (inputsWithTaskOutput.length === 0) {
     inputsWithTaskOutput.push(inputs[0]);
   }
+
+  const handleBackgroundClick = useCallback(
+    (e: MouseEvent) => {
+      if (condensed && onBackgroundClick) {
+        e.stopPropagation();
+        onBackgroundClick();
+      }
+    },
+    [condensed, onBackgroundClick],
+  );
 
   if (!inputs.length) return null;
 
@@ -50,15 +65,10 @@ export function TaskNodeInputs({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-3 p-2 bg-gray-100 border-1 border-gray-200 rounded-lg hover:bg-gray-200/70",
+        "flex flex-col items-center gap-3 p-2 bg-gray-100 border-1 border-gray-200 rounded-lg",
         condensed && onBackgroundClick && "hover:bg-gray-200/70 cursor-pointer",
       )}
-      onClick={(e) => {
-        if (condensed && onBackgroundClick) {
-          e.stopPropagation();
-          onBackgroundClick();
-        }
-      }}
+      onClick={handleBackgroundClick}
     >
       {condensed && !expanded ? (
         <>
@@ -67,6 +77,7 @@ export function TaskNodeInputs({
               key={input.name}
               input={input}
               invalid={invalidArguments.includes(input.name)}
+              nodeId={nodeId}
               value={
                 inputs.length > 1 && i === 0
                   ? `+${hiddenInputs} more input${hiddenInputs > 1 ? "s" : ""}`
@@ -88,7 +99,8 @@ export function TaskNodeInputs({
               key={input.name}
               input={input}
               invalid={invalidArguments.includes(input.name)}
-              onClick={handleIOClicked}
+              nodeId={nodeId}
+              onLabelClick={handleIOClicked}
               value={getValue(values?.[input.name])}
             />
           ))}

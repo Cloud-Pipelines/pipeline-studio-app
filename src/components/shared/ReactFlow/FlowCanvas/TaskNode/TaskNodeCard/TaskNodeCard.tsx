@@ -168,6 +168,7 @@ const TaskNodeCard = ({
           <TaskNodeInputs
             inputs={inputs}
             invalidArguments={invalidArguments}
+            taskId={taskId}
             values={values}
             condensed={condensed}
             expanded={expandedInputs}
