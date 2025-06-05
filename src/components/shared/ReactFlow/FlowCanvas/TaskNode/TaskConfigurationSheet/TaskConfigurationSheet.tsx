@@ -32,7 +32,7 @@ import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 import { getComponentName } from "@/utils/getComponentName";
 
-import { AnnotationsEditor } from "../AnnotationsEditor/AnnotationsEditor";
+import { AnnotationsSection } from "../AnnotationsEditor/AnnotationsSection";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
 import Io from "./io";
 import Logs from "./logs";
@@ -208,7 +208,7 @@ const TaskConfigurationSheet = ({
                 <p className="text-sm text-muted-foreground mb-2">
                   Configure task annotations, resources and custom data.
                 </p>
-                <AnnotationsEditor
+                <AnnotationsSection
                   taskSpec={taskSpec}
                   onApply={setAnnotations}
                 />
