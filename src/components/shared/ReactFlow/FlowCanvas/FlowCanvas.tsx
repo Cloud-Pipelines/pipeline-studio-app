@@ -30,6 +30,7 @@ import type {
   InputSpec,
   TaskSpec,
 } from "@/utils/componentSpec";
+import { loadComponentAsRefFromText } from "@/utils/componentStore";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
 
 import { getBulkUpdateConfirmationDetails } from "./ConfirmationDialogs/BulkUpdateConfirmationDialog";
@@ -282,8 +283,60 @@ const FlowCanvas = ({
     [graphSpec, handleConnection, updateGraphSpec],
   );
 
-  const { handleDrop } = useComponentUploader({
-    onImportSuccess: () => {}, // TODO: Implement adding the component to the canvas
+  const { handleDrop } = useComponentUploader(readOnly, {
+    onImportSuccess: async (
+      content: string,
+      dropEvent?: DragEvent<HTMLDivElement>,
+    ) => {
+      if (readOnly) return;
+
+      try {
+        // Parse the imported YAML to get the component spec
+        const componentRef = await loadComponentAsRefFromText(content);
+
+        if (!componentRef.spec) {
+          console.error("Failed to parse component spec from imported content");
+          return;
+        }
+
+        let position;
+
+        if (dropEvent && reactFlowInstance) {
+          // Use the drop position if available
+          position = getPositionFromEvent(dropEvent, reactFlowInstance);
+        } else {
+          // Fallback to center of the canvas viewport
+          const { domNode } = store.getState();
+          const boundingRect = domNode?.getBoundingClientRect();
+
+          if (boundingRect && reactFlowInstance) {
+            position = reactFlowInstance.screenToFlowPosition({
+              x: boundingRect.x + boundingRect.width / 2,
+              y: boundingRect.y + boundingRect.height / 2,
+            });
+          }
+        }
+
+        if (position) {
+          const taskSpec: TaskSpec = {
+            annotations: {},
+            componentRef: { ...componentRef },
+          };
+          const newComponentSpec = addTask(
+            "task",
+            taskSpec,
+            position,
+            componentSpec,
+          );
+
+          setComponentSpec(newComponentSpec);
+          updateReactFlow(newComponentSpec);
+        }
+      } catch (error) {
+        console.error("Failed to add imported component to canvas:", error);
+        notify("Failed to add component to canvas", "error");
+      }
+    },
   });
 
   const onDragOver = useCallback(

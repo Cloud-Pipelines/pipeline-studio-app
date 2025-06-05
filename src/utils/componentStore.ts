@@ -478,6 +478,82 @@ export const addComponentToListByUrl = async (
   );
 };
 
+/**
+ * Checks if a component with the same name and content already exists in the list
+ * @param listName - The component list name (e.g., USER_COMPONENTS_LIST_NAME)
+ * @param componentRef - The component reference to check for duplicates
+ * @returns The existing file entry if a duplicate is found, null otherwise
+ */
+export const findDuplicateComponent = async (
+  listName: string,
+  componentRef: ComponentReferenceWithSpec,
+): Promise<ComponentFileEntry | null> => {
+  try {
+    const componentFiles = await getAllComponentFilesFromList(listName);
+    const targetComponentName = componentRef.spec.name;
+
+    if (!targetComponentName) {
+      return null; // Can't check for duplicates without a name
+    }
+
+    // Look for components with the same name
+    for (const [, fileEntry] of componentFiles) {
+      const existingComponentName = fileEntry.componentRef.spec.name;
+
+      if (existingComponentName === targetComponentName) {
+        // Found a component with the same name, now check if content is identical
+        if (fileEntry.componentRef.text === componentRef.text) {
+          return fileEntry; // Exact duplicate found
+        }
+      }
+    }
+
+    return null; // No duplicate found
+  } catch (error) {
+    console.error("Error checking for duplicate component:", error);
+    return null;
+  }
+};
+
+/**
+ * Enhanced version of addComponentToListByText that checks for duplicates
+ * @param listName - The component list name
+ * @param componentText - The component YAML text
+ * @param fileName - Optional specific file name
+ * @param defaultFileName - Default file name if none provided
+ * @param allowDuplicates - Whether to allow duplicate imports (default: false)
+ * @returns Object with the file entry and a flag indicating if it was a duplicate
+ */
+export const addComponentToListByTextWithDuplicateCheck = async (
+  listName: string,
+  componentText: string | ArrayBuffer,
+  fileName?: string,
+  defaultFileName: string = "Component",
+  allowDuplicates: boolean = false,
+): Promise<ComponentFileEntry> => {
+  const componentRef = await storeComponentText(componentText);
+
+  if (!allowDuplicates) {
+    const existingComponent = await findDuplicateComponent(
+      listName,
+      componentRef,
+    );
+    if (existingComponent) {
+      return existingComponent;
+    }
+  }
+
+  // No duplicate found or duplicates are allowed, proceed with normal addition
+  const fileEntry = await addComponentRefToList(
+    listName,
+    componentRef,
+    fileName ?? componentRef.spec.name ?? defaultFileName,
+  );
+
+  return fileEntry;
+};
+
+// Keep the original function for backward compatibility
 export const addComponentToListByText = async (
   listName: string,
   componentText: string | ArrayBuffer,
