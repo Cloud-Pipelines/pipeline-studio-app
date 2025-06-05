@@ -4,12 +4,16 @@ import useImportComponent from "@/hooks/useImportComponent";
 import useToastNotification from "@/hooks/useToastNotification";
 
 interface useComponentUploaderProps {
-  onImportSuccess?: (content: string) => void;
+  onImportSuccess?: (
+    content: string,
+    dropEvent?: DragEvent<HTMLDivElement>,
+  ) => void;
 }
 
-const useComponentUploader = ({
-  onImportSuccess,
-}: useComponentUploaderProps) => {
+const useComponentUploader = (
+  readOnly = false,
+  { onImportSuccess }: useComponentUploaderProps,
+) => {
   const notify = useToastNotification();
 
   const { onImportFromFile } = useImportComponent({
@@ -21,7 +25,10 @@ const useComponentUploader = ({
     },
   });
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = async (
+    file: File,
+    dropEvent?: DragEvent<HTMLDivElement>,
+  ) => {
     if (!file.name.endsWith(".yaml")) {
       notify("Only YAML files are supported", "error");
       return;
@@ -37,7 +44,7 @@ const useComponentUploader = ({
 
       try {
         await onImportFromFile(content as string);
-        onImportSuccess?.(content as string);
+        onImportSuccess?.(content as string, dropEvent);
       } catch (error) {
         notify((error as Error).message, "error");
       }
@@ -50,9 +57,15 @@ const useComponentUploader = ({
     event.preventDefault();
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
-      handleFileUpload(files[0]);
+      handleFileUpload(files[0], event);
     }
   };
+
+  if (readOnly) {
+    return {
+      handleDrop: () => {},
+    };
+  }
 
   return {
     handleDrop,

@@ -2,13 +2,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
 import {
-  addComponentToListByText,
+  addComponentToListByTextWithDuplicateCheck,
   addComponentToListByUrl,
 } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 
 interface ImportComponentProps {
-  successCallback?: () => void;
+  successCallback?: (wasExisting?: boolean) => void;
   errorCallback?: (error: Error) => void;
 }
 
@@ -60,16 +60,16 @@ const useImportComponent = ({
           throw new Error("No file content provided");
         }
 
-        // Use the existing addComponentToListByText function
-        const componentFileEntry = await addComponentToListByText(
+        await addComponentToListByTextWithDuplicateCheck(
           USER_COMPONENTS_LIST_NAME,
           fileContent,
         );
+
         // Invalidate the userComponents query to refresh the sidebar
         queryClient.invalidateQueries({ queryKey: ["userComponents"] });
 
         successCallback?.();
-        return componentFileEntry;
+        return;
       } catch (error) {
         console.error("Error importing component from file:", error);
         errorCallback?.(new Error("Error importing component from file"));
