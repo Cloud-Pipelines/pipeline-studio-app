@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import { type ReactNode } from "react";
 
-import type { ContainerExecutionStatus } from "@/api/types.gen";
 import {
   TaskDetails,
   TaskImplementation,
@@ -27,13 +26,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Annotations } from "@/types/annotations";
-import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
-import { getComponentName } from "@/utils/getComponentName";
 
 import { AnnotationsSection } from "../AnnotationsEditor/AnnotationsSection";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
+import { useTaskNode } from "../TaskNodeProvider";
 import Io from "./io";
 import Logs from "./logs";
 
@@ -42,48 +39,25 @@ interface ButtonPropsWithTooltip extends ButtonProps {
 }
 interface TaskConfigurationSheetProps {
   trigger?: ReactNode;
-  taskId: string;
-  taskSpec: TaskSpec;
   actions?: ButtonPropsWithTooltip[];
   isOpen: boolean;
-  disabled?: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  setArguments: (args: Record<string, ArgumentType>) => void;
-  setAnnotations: (annotations: Annotations) => void;
-  onDelete?: () => void;
-  readOnly?: boolean;
-  runStatus?: ContainerExecutionStatus;
   focusedIo?: boolean;
 }
 
 const TaskConfigurationSheet = ({
   trigger,
-  taskId,
-  taskSpec,
   actions,
   isOpen,
-  disabled = false,
   onOpenChange,
-  setArguments,
-  setAnnotations,
-  onDelete,
-  readOnly = false,
-  runStatus,
   focusedIo,
 }: TaskConfigurationSheetProps) => {
-  const componentSpec = taskSpec.componentRef.spec;
+  const { name, taskSpec, taskId, state, callbacks } = useTaskNode();
 
-  if (componentSpec === undefined) {
-    console.error(
-      "ArgumentsEditor called with missing taskSpec.componentRef.spec",
-      taskSpec,
-    );
-    return null;
-  }
+  const { readOnly, runStatus } = state;
+  const disabled = !!runStatus;
 
   const sheetHeight = window.innerHeight - TOP_NAV_HEIGHT;
-
-  const displayName = getComponentName(taskSpec.componentRef);
 
   const onFullscreenChange = (isFullscreen: boolean) => {
     if (isFullscreen) {
@@ -91,12 +65,21 @@ const TaskConfigurationSheet = ({
     }
   };
 
+  const componentSpec = taskSpec.componentRef.spec;
+
+  if (!componentSpec) {
+    console.error(
+      "TaskConfigurationSheet called with missing taskSpec.componentRef.spec",
+    );
+    return null;
+  }
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="right"
-        className={`!w-[528px] !max-w-[528px] shadow-none`}
+        className="!w-[528px] !max-w-[528px] shadow-none"
         style={{
           top: TOP_NAV_HEIGHT + "px",
           height: sheetHeight + "px",
@@ -104,11 +87,12 @@ const TaskConfigurationSheet = ({
         overlay={false}
       >
         <SheetHeader className="pb-0">
-          <SheetTitle>{componentSpec.name ?? "<component>"}</SheetTitle>
+          <SheetTitle>{name}</SheetTitle>
           <SheetDescription className="hidden">
-            {componentSpec.name} configuration sheet
+            {name} configuration sheet
           </SheetDescription>
         </SheetHeader>
+
         <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4">
           <Tabs defaultValue={focusedIo || readOnly ? "io" : "details"}>
             <TabsList className="mb-2">
@@ -140,12 +124,12 @@ const TaskConfigurationSheet = ({
             </TabsList>
             <TabsContent value="details" className="h-full">
               <TaskDetails
-                displayName={displayName}
+                displayName={name}
                 componentSpec={componentSpec}
                 taskId={taskId}
                 componentDigest={taskSpec.componentRef.digest}
                 url={taskSpec.componentRef.url}
-                onDelete={onDelete}
+                onDelete={callbacks.onDelete}
                 runStatus={runStatus}
                 hasDeletionConfirmation={false}
                 readOnly={readOnly}
@@ -156,7 +140,7 @@ const TaskConfigurationSheet = ({
                     component: (
                       <TaskImplementation
                         key="task-implementation"
-                        displayName={displayName}
+                        displayName={name}
                         componentSpec={componentSpec}
                         onFullscreenChange={onFullscreenChange}
                       />
@@ -181,7 +165,7 @@ const TaskConfigurationSheet = ({
                   </p>
                   <ArgumentsSection
                     taskSpec={taskSpec}
-                    setArguments={setArguments}
+                    setArguments={callbacks.setArguments}
                     disabled={disabled}
                   />
                 </>
@@ -210,7 +194,7 @@ const TaskConfigurationSheet = ({
                 </p>
                 <AnnotationsSection
                   taskSpec={taskSpec}
-                  onApply={setAnnotations}
+                  onApply={callbacks.setAnnotations}
                 />
               </TabsContent>
             )}

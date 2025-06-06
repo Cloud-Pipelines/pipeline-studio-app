@@ -1,6 +1,6 @@
+import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
 import {
   type MouseEvent,
-  type RefObject,
   useCallback,
   useEffect,
   useRef,
@@ -9,110 +9,56 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type {
-  ArgumentType,
-  ComponentSpec,
-  InputSpec,
-  OutputSpec,
-  TaskSpec,
-} from "@/utils/componentSpec";
 
+import TaskConfigurationSheet from "../TaskConfigurationSheet";
+import { useTaskNode } from "../TaskNodeProvider";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
 
-type TaskNodeCardProps = {
-  componentSpec: ComponentSpec;
-  taskSpec: TaskSpec;
-  taskId?: string;
-  inputs: InputSpec[];
-  outputs: OutputSpec[];
-  values?: Record<string, ArgumentType>;
-  invalidArguments: string[];
-  selected: boolean;
-  highlighted?: boolean;
-  nodeRef: RefObject<HTMLDivElement | null>;
-  onClick: () => void;
-  onIOClick: () => void;
-};
+const TaskNodeCard = () => {
+  const { name, state, callbacks } = useTaskNode();
 
-const DEFAULT_DIMENSIONS = {
-  w: 300,
-  h: undefined,
-};
+  const nodeRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-const MIN_WIDTH = 150;
-const MIN_HEIGHT = 100;
+  const [isComponentEditorOpen, setIsComponentEditorOpen] = useState(false);
+  const [focusedIo, setFocusedIo] = useState<boolean>(false);
 
-type EditorPosition = {
-  x?: string;
-  y?: string;
-  width?: string;
-  height?: string;
-  w?: string;
-  h?: string;
-};
-
-const TaskNodeCard = ({
-  componentSpec,
-  taskSpec,
-  taskId = "",
-  inputs = [],
-  outputs = [],
-  values,
-  invalidArguments,
-  selected,
-  highlighted,
-  nodeRef,
-  onClick,
-  onIOClick,
-}: TaskNodeCardProps) => {
   const [scrollHeight, setScrollHeight] = useState(0);
   const [condensed, setCondensed] = useState(false);
   const [expandedInputs, setExpandedInputs] = useState(false);
   const [expandedOutputs, setExpandedOutputs] = useState(false);
 
-  const contentRef = useRef<HTMLDivElement>(null);
-  const handleIOClicked = (e: MouseEvent<HTMLDivElement>) => {
+  const { dimensions, selected, highlighted, isCustomComponent } = state;
+
+  const handleCardClick = useCallback(() => {
+    if (!isComponentEditorOpen) {
+      setIsComponentEditorOpen(true);
+    }
+  }, [isComponentEditorOpen]);
+
+  const handleIOClicked = useCallback((e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     e.preventDefault();
 
-    onIOClick();
-  };
+    setFocusedIo(true);
+    setIsComponentEditorOpen(true);
+  }, []);
 
-  let annotatedDimensions;
-  try {
-    const parsed = JSON.parse(
-      taskSpec.annotations?.["editor.position"] as string,
-    ) as EditorPosition | undefined;
+  const handleNodeDuplication = useCallback(() => {
+    callbacks.onDuplicate?.();
+    setIsComponentEditorOpen(false);
+  }, [callbacks]);
 
-    if (parsed) {
-      const width = parsed.width ?? parsed.w;
-      const height = parsed.height ?? parsed.h;
-
-      annotatedDimensions = {
-        x: !isNaN(Number(parsed.x)) ? parsed.x : undefined,
-        y: !isNaN(Number(parsed.y)) ? parsed.y : undefined,
-        width: !isNaN(Number(width)) ? width : undefined,
-        height: !isNaN(Number(height)) ? height : undefined,
-      };
-    } else {
-      annotatedDimensions = undefined;
-    }
-  } catch {
-    annotatedDimensions = undefined;
-  }
-
-  const dimensions = annotatedDimensions
-    ? {
-        w: Math.max(
-          parseInt(annotatedDimensions.width ?? "") || DEFAULT_DIMENSIONS.w,
-          MIN_WIDTH,
-        ),
-        h:
-          Math.max(parseInt(annotatedDimensions.height ?? ""), MIN_HEIGHT) ||
-          DEFAULT_DIMENSIONS.h,
+  const handleTaskConfigurationSheetOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (!isOpen) {
+        setFocusedIo(false);
       }
-    : DEFAULT_DIMENSIONS;
+      setIsComponentEditorOpen(isOpen);
+    },
+    [],
+  );
 
   const handleInputSectionClick = useCallback(() => {
     setExpandedInputs((prev) => !prev);
@@ -135,58 +81,83 @@ const TaskNodeCard = ({
   }, [scrollHeight, dimensions.h]);
 
   return (
-    <Card
-      className={cn(
-        "rounded-2xl border-gray-200 border-2 break-words p-0 drop-shadow-none gap-2",
-        selected ? "border-gray-500" : "hover:border-slate-200",
-        highlighted && "border-orange-500",
-      )}
-      style={{
-        width: dimensions.w + "px",
-        height: condensed || !dimensions.h ? "auto" : dimensions.h + "px",
-        transition: "height 0.2s",
-      }}
-      ref={nodeRef}
-      onClick={onClick}
-    >
-      <CardHeader className="border-b border-slate-200 px-2 py-2.5">
-        <CardTitle className="break-words text-left text-xs text-slate-900">
-          {componentSpec.name}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-2 flex flex-col gap-2">
-        <div
-          className="flex flex-col gap-2"
-          style={{
-            maxHeight:
-              dimensions.h && !(expandedInputs || expandedOutputs)
-                ? `${dimensions.h}px`
-                : "100%",
-          }}
-          ref={contentRef}
-        >
-          <TaskNodeInputs
-            inputs={inputs}
-            invalidArguments={invalidArguments}
-            taskId={taskId}
-            values={values}
-            condensed={condensed}
-            expanded={expandedInputs}
-            onBackgroundClick={handleInputSectionClick}
-            handleIOClicked={handleIOClicked}
-          />
+    <>
+      <Card
+        className={cn(
+          "rounded-2xl border-gray-200 border-2 break-words p-0 drop-shadow-none gap-2",
+          selected ? "border-gray-500" : "hover:border-slate-200",
+          highlighted && "border-orange-500",
+        )}
+        style={{
+          width: dimensions.w + "px",
+          height: condensed || !dimensions.h ? "auto" : dimensions.h + "px",
+          transition: "height 0.2s",
+        }}
+        ref={nodeRef}
+        onClick={handleCardClick}
+      >
+        <CardHeader className="border-b border-slate-200 px-2 py-2.5">
+          <CardTitle className="break-words text-left text-xs text-slate-900">
+            {name}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-2 flex flex-col gap-2">
+          <div
+            className="flex flex-col gap-2"
+            style={{
+              maxHeight:
+                dimensions.h && !(expandedInputs || expandedOutputs)
+                  ? `${dimensions.h}px`
+                  : "100%",
+            }}
+            ref={contentRef}
+          >
+            <TaskNodeInputs
+              condensed={condensed}
+              expanded={expandedInputs}
+              onBackgroundClick={handleInputSectionClick}
+              handleIOClicked={handleIOClicked}
+            />
 
-          <TaskNodeOutputs
-            outputs={outputs}
-            taskId={taskId}
-            condensed={condensed}
-            expanded={expandedOutputs}
-            onBackgroundClick={handleOutputSectionClick}
-            handleIOClicked={handleIOClicked}
-          />
-        </div>
-      </CardContent>
-    </Card>
+            <TaskNodeOutputs
+              condensed={condensed}
+              expanded={expandedOutputs}
+              onBackgroundClick={handleOutputSectionClick}
+              handleIOClicked={handleIOClicked}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <TaskConfigurationSheet
+        focusedIo={focusedIo}
+        isOpen={isComponentEditorOpen}
+        onOpenChange={handleTaskConfigurationSheetOpenChange}
+        actions={[
+          {
+            children: (
+              <div className="flex items-center gap-2">
+                <CopyIcon />
+              </div>
+            ),
+            variant: "secondary",
+            tooltip: "Duplicate Task",
+            onClick: handleNodeDuplication,
+          },
+          {
+            children: (
+              <div className="flex items-center gap-2">
+                <CircleFadingArrowUp />
+              </div>
+            ),
+            variant: "secondary",
+            className: cn(isCustomComponent && "hidden"), // Update button is hidden for custom components, since they don't have a source URL
+            tooltip: "Update Task from Source URL",
+            onClick: callbacks.onUpgrade,
+          },
+        ]}
+      />
+    </>
   );
 };
 

@@ -2,17 +2,13 @@ import { AlertCircle } from "lucide-react";
 import { type MouseEvent, useCallback } from "react";
 
 import { cn } from "@/lib/utils";
-import type { ArgumentType, InputSpec } from "@/utils/componentSpec";
-import { taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
+import { inputsWithInvalidArguments } from "@/services/componentService";
 import { getValue } from "@/utils/string";
 
+import { useTaskNode } from "../TaskNodeProvider";
 import { InputHandle } from "./Handles";
 
 interface TaskNodeInputsProps {
-  inputs: InputSpec[];
-  invalidArguments: string[];
-  taskId: string;
-  values?: Record<string, ArgumentType>;
   condensed: boolean;
   expanded: boolean;
   onBackgroundClick?: () => void;
@@ -20,16 +16,15 @@ interface TaskNodeInputsProps {
 }
 
 export function TaskNodeInputs({
-  inputs,
-  invalidArguments,
-  taskId,
-  values,
   condensed,
   expanded,
   onBackgroundClick,
   handleIOClicked,
 }: TaskNodeInputsProps) {
-  const nodeId = taskIdToNodeId(taskId);
+  const { inputs, taskSpec } = useTaskNode();
+
+  const values = taskSpec.arguments;
+  const invalidArguments = inputsWithInvalidArguments(inputs, taskSpec);
 
   const inputsWithTaskOutput = inputs.filter(
     (input) =>
@@ -77,9 +72,8 @@ export function TaskNodeInputs({
               key={input.name}
               input={input}
               invalid={invalidArguments.includes(input.name)}
-              nodeId={nodeId}
               value={
-                inputs.length > 1 && i === 0
+                hiddenInputs > 0 && i === 0
                   ? `+${hiddenInputs} more input${hiddenInputs > 1 ? "s" : ""}`
                   : " "
               }
@@ -99,7 +93,6 @@ export function TaskNodeInputs({
               key={input.name}
               input={input}
               invalid={invalidArguments.includes(input.name)}
-              nodeId={nodeId}
               onLabelClick={handleIOClicked}
               value={getValue(values?.[input.name])}
             />

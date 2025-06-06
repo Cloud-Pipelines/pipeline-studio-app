@@ -9,10 +9,11 @@ import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
 
+import { useTaskNode } from "../TaskNodeProvider";
+
 type InputHandleProps = {
   input: InputSpec;
   invalid: boolean;
-  nodeId: string;
   value?: string;
   onLabelClick?: (e: ReactMouseEvent<HTMLDivElement>) => void;
   onHandleSelectionChange?: (key: string, selected: boolean) => void;
@@ -21,13 +22,14 @@ type InputHandleProps = {
 export const InputHandle = ({
   input,
   invalid,
-  nodeId,
   value,
   onLabelClick,
   onHandleSelectionChange,
 }: InputHandleProps) => {
-  const handleRef = useRef<HTMLDivElement>(null);
+  const { nodeId } = useTaskNode();
   const connection = useConnection();
+
+  const handleRef = useRef<HTMLDivElement>(null);
 
   const [selected, setSelected] = useState(false);
   const [active, setActive] = useState(false);
@@ -156,7 +158,6 @@ export const InputHandle = ({
 
 type OutputHandleProps = {
   output: OutputSpec;
-  nodeId: string;
   value?: string;
   onLabelClick?: (e: ReactMouseEvent<HTMLDivElement>) => void;
   onHandleSelectionChange?: (key: string, selected: boolean) => void;
@@ -164,13 +165,14 @@ type OutputHandleProps = {
 
 export const OutputHandle = ({
   output,
-  nodeId,
   value,
   onLabelClick,
   onHandleSelectionChange,
 }: OutputHandleProps) => {
-  const handleRef = useRef<HTMLDivElement>(null);
+  const { nodeId } = useTaskNode();
   const connection = useConnection();
+
+  const handleRef = useRef<HTMLDivElement>(null);
 
   const [selected, setSelected] = useState(false);
   const [active, setActive] = useState(false);
