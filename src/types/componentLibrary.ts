@@ -1,11 +1,18 @@
 import type { LucideProps } from "lucide-react";
-import type { ForwardRefExoticComponent } from "react";
+import type { ChangeEvent, ForwardRefExoticComponent } from "react";
 
-import type { ComponentReference } from "@/utils/componentSpec";
+import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
 
 export type ComponentItemFromUrlProps = {
   url?: string;
   componentRef?: ComponentReference;
+};
+
+export type ComponentLibrary = {
+  annotations?: {
+    [k: string]: unknown;
+  };
+  folders: ComponentFolder[];
 };
 
 export type ComponentFolder = {
@@ -15,6 +22,12 @@ export type ComponentFolder = {
   isUserFolder?: boolean;
 };
 
+export type ComponentData = {
+  digest: string;
+  url: string;
+  data: ComponentSpec;
+};
+
 export type FolderItemProps = {
   folder: ComponentFolder;
   icon?: ForwardRefExoticComponent<Omit<LucideProps, "ref">>;
@@ -22,8 +35,8 @@ export type FolderItemProps = {
 
 export type SearchInputProps = {
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   activeFilters: string[];
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onFiltersChange: (filters: string[]) => void;
 };
 
@@ -33,3 +46,14 @@ export type SearchFilterProps = {
   disableCounter?: boolean;
   onFiltersChange: (filters: string[]) => void;
 };
+
+export type SearchResult = {
+  components: {
+    standard: ComponentReference[];
+    user: ComponentReference[];
+    used: ComponentReference[];
+  };
+};
+
+export const isValidComponentLibrary = (obj: object): obj is ComponentLibrary =>
+  "folders" in obj;

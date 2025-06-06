@@ -115,14 +115,11 @@ export async function clearAllComponents(): Promise<void> {
 
 // Function to fetch all components
 export async function getAllUserComponents(): Promise<UserComponent[]> {
-  console.log("getAllUserComponents");
   const userComponents: UserComponent[] = [];
 
   await userComponentStore.iterate<UserComponent, void>((value) => {
     userComponents.push(value);
   });
-
-  console.log("userComponents", userComponents);
 
   return userComponents;
 }
