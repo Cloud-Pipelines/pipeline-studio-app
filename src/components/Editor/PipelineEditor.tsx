@@ -13,6 +13,7 @@ import {
   FlowControls,
   FlowSidebar,
 } from "@/components/shared/ReactFlow";
+import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { savePipelineSpecToSessionStorage } from "@/utils/storage";
 
@@ -49,7 +50,7 @@ const PipelineEditor = () => {
   }, [componentSpec, nodes]);
 
   return (
-    <>
+    <ComponentLibraryProvider>
       <div className="reactflow-wrapper">
         <FlowCanvas {...flowConfig}>
           <MiniMap position="bottom-left" pannable />
@@ -61,7 +62,7 @@ const PipelineEditor = () => {
         </FlowCanvas>
       </div>
       <FlowSidebar />
-    </>
+    </ComponentLibraryProvider>
   );
 };
 

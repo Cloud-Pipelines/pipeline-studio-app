@@ -1,10 +1,10 @@
 import yaml from "js-yaml";
 
 import {
-  type ComponentLibraryStruct,
-  isValidComponentLibraryStruct,
-} from "@/components/shared/ReactFlow/FlowSidebar/utils/componentLibrary";
-import type { ComponentFolder } from "@/types/componentLibrary";
+  type ComponentFolder,
+  type ComponentLibrary,
+  isValidComponentLibrary,
+} from "@/types/componentLibrary";
 import { loadObjectFromYamlData } from "@/utils/cache";
 import type { ComponentSpec, InputSpec, TaskSpec } from "@/utils/componentSpec";
 import {
@@ -35,7 +35,7 @@ export const generateDigest = async (text: string): Promise<string> => {
  * Fetches the component library and stores all components in local storage
  */
 export const fetchAndStoreComponentLibrary =
-  async (): Promise<ComponentLibraryStruct> => {
+  async (): Promise<ComponentLibrary> => {
     // First check if we already have the library in local storage
     const libraryExists = await componentExistsByUrl(COMPONENT_LIBRARY_URL);
 
@@ -44,7 +44,7 @@ export const fetchAndStoreComponentLibrary =
       if (storedLibrary) {
         try {
           const parsedLibrary = JSON.parse(storedLibrary.data);
-          if (isValidComponentLibraryStruct(parsedLibrary)) {
+          if (isValidComponentLibrary(parsedLibrary)) {
             return parsedLibrary;
           }
         } catch (error) {
@@ -64,7 +64,7 @@ export const fetchAndStoreComponentLibrary =
     const arrayBuffer = await response.arrayBuffer();
     const obj = loadObjectFromYamlData(arrayBuffer);
 
-    if (!isValidComponentLibraryStruct(obj)) {
+    if (!isValidComponentLibrary(obj)) {
       throw new Error("Invalid component library structure");
     }
 
@@ -87,7 +87,7 @@ export const fetchAndStoreComponentLibrary =
  * Store all components from the library in local storage
  */
 export const storeComponentsFromLibrary = async (
-  library: ComponentLibraryStruct,
+  library: ComponentLibrary,
 ): Promise<void> => {
   const processFolder = async (folder: ComponentFolder) => {
     // Store each component in the folder

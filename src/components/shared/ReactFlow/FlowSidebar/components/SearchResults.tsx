@@ -1,185 +1,37 @@
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  generateDigest,
-  parseComponentData,
-} from "@/services/componentService";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import type { SearchResult } from "@/types/componentLibrary";
+import { componentReferenceToComponentData } from "@/utils/componentLibrary";
 import { ComponentSearchFilter } from "@/utils/constants";
-import {
-  getAllComponents,
-  getAllUserComponents,
-  type UserComponent,
-} from "@/utils/localforge";
-import { containsSearchTerm } from "@/utils/searchUtils";
 
 import { ComponentMarkup } from "./ComponentItem";
 
 interface SearchResultsProps {
-  searchTerm: string;
-  searchFilters: string[];
+  searchResult: SearchResult;
   onFiltersChange: (filters: string[]) => void;
 }
 
-interface ComponentData {
-  digest: string;
-  url: string;
-  data: ComponentSpec;
-}
-
 const SearchResults = ({
-  searchTerm,
-  searchFilters,
+  searchResult,
   onFiltersChange,
 }: SearchResultsProps) => {
-  const [matchedComponents, setMatchedComponents] = useState<ComponentData[]>(
-    [],
-  );
-  const [matchedUserComponents, setMatchedUserComponents] = useState<
-    ComponentData[]
-  >([]);
+  const { searchTerm, searchFilters } = useComponentLibrary();
 
-  const { data: components, isLoading } = useQuery({
-    queryKey: ["get-all-components"],
-    queryFn: getAllComponents,
-  });
+  const matchedComponents = searchResult.components.standard
+    .map((c) => componentReferenceToComponentData(c))
+    .filter((c) => !!c);
 
-  const { data: userComponents, isLoading: isLoadingUserComponents } = useQuery(
-    {
-      queryKey: ["get-all-user-components"],
-      queryFn: getAllUserComponents,
-    },
-  );
+  const matchedUserComponents = searchResult.components.user
+    .map((c) => componentReferenceToComponentData(c))
+    .filter((c) => !!c);
 
   const handleNameFilterClick = useCallback(() => {
     if (!searchFilters.includes(ComponentSearchFilter.NAME)) {
       onFiltersChange([...searchFilters, ComponentSearchFilter.NAME]);
     }
   }, [searchFilters, onFiltersChange]);
-
-  const verifySearchFilterMatch = useCallback(
-    (component: ComponentSpec | UserComponent) => {
-      if (searchFilters.length === 0) return false;
-
-      let componentSpec: ComponentSpec | undefined;
-      if ("componentRef" in component) {
-        componentSpec = component.componentRef.spec;
-      } else {
-        componentSpec = component;
-      }
-
-      if (!componentSpec) return false;
-      const filterChecks: Record<string, () => boolean> = {
-        [ComponentSearchFilter.NAME]: () =>
-          containsSearchTerm(componentSpec.name || "", searchTerm),
-        [ComponentSearchFilter.INPUTNAME]: () => {
-          const inputNames =
-            componentSpec.inputs?.map((input) => input.name) || [];
-          const inputNamesWithSpaces = inputNames.map((n) =>
-            n.replaceAll("_", " "),
-          );
-          return (
-            containsSearchTerm(inputNames.join(" | "), searchTerm) ||
-            containsSearchTerm(inputNamesWithSpaces.join(" | "), searchTerm)
-          );
-        },
-        [ComponentSearchFilter.INPUTTYPE]: () => {
-          const inputTypes =
-            componentSpec.inputs?.map((input) => input.type) || [];
-          return containsSearchTerm(inputTypes.join(" | "), searchTerm);
-        },
-        [ComponentSearchFilter.OUTPUTNAME]: () => {
-          const outputNames =
-            componentSpec.outputs?.map((output) => output.name) || [];
-          const outputNamesWithSpaces = outputNames.map((n) =>
-            n.replaceAll("_", " "),
-          );
-          return (
-            containsSearchTerm(outputNames.join(" | "), searchTerm) ||
-            containsSearchTerm(outputNamesWithSpaces.join(" | "), searchTerm)
-          );
-        },
-        [ComponentSearchFilter.OUTPUTTYPE]: () => {
-          const outputTypes =
-            componentSpec.outputs?.map((output) => output.type) || [];
-          return containsSearchTerm(outputTypes.join(" | "), searchTerm);
-        },
-      };
-
-      return searchFilters.some((filter) => filterChecks[filter]?.() === true);
-    },
-    [searchFilters, searchTerm],
-  );
-
-  useEffect(() => {
-    if (!components) return;
-
-    const fetchMatchedComponents = async () => {
-      const results: ComponentData[] = [];
-
-      for (const component of components) {
-        const parsedSpec = parseComponentData(component.data);
-        if (!parsedSpec) continue;
-
-        const matchFound = verifySearchFilterMatch(parsedSpec);
-
-        if (matchFound) {
-          const digest = await generateDigest(component.data);
-
-          if (results.some((r) => r.digest === digest)) {
-            continue;
-          }
-
-          results.push({
-            digest,
-            url: component.url,
-            data: {
-              ...parsedSpec,
-              name: parsedSpec.name || "Unnamed Component",
-            },
-          });
-        }
-      }
-
-      setMatchedComponents(results);
-    };
-
-    fetchMatchedComponents();
-  }, [components, verifySearchFilterMatch]);
-
-  useEffect(() => {
-    if (!userComponents) return;
-
-    const fetchMatchedUserComponents = async () => {
-      const results: ComponentData[] = [];
-
-      for (const userComponent of userComponents) {
-        const matchFound = verifySearchFilterMatch(userComponent);
-        if (matchFound) {
-          results.push({
-            digest: userComponent.componentRef.digest || "",
-            url: userComponent.componentRef.url || "",
-            data: userComponent.componentRef.spec || {
-              name: userComponent.name,
-              implementation: {
-                graph: {
-                  tasks: {},
-                },
-              },
-            },
-          });
-        }
-      }
-
-      setMatchedUserComponents(results);
-    };
-
-    fetchMatchedUserComponents();
-  }, [userComponents, verifySearchFilterMatch]);
-
-  if (isLoading || isLoadingUserComponents) return <div>Loading...</div>;
 
   if (searchFilters.length === 0) {
     return (
