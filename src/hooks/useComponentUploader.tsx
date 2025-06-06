@@ -17,8 +17,14 @@ const useComponentUploader = (
   const notify = useToastNotification();
 
   const { onImportFromFile } = useImportComponent({
-    successCallback: () => {
-      notify("Component imported successfully", "success");
+    successCallback: (hasDuplicate, fileEntry, canOverwrite) => {
+      if (canOverwrite) {
+        notify("Component already exists, but can be overwritten", "warning");
+      } else if (hasDuplicate) {
+        notify("Component already exists", "info");
+      } else {
+        notify("Component imported successfully", "success");
+      }
     },
     errorCallback: (error: Error) => {
       notify(error.message, "error");

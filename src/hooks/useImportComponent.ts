@@ -4,11 +4,12 @@ import { useCallback, useState } from "react";
 import {
   addComponentToListByTextWithDuplicateCheck,
   addComponentToListByUrl,
+  type ComponentFileEntry,
 } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 
 interface ImportComponentProps {
-  successCallback?: (wasExisting?: boolean) => void;
+  successCallback?: (hasDuplicate?: boolean, fileEntry?: ComponentFileEntry, canOverwrite?: boolean) => void;
   errorCallback?: (error: Error) => void;
 }
 
@@ -60,15 +61,18 @@ const useImportComponent = ({
           throw new Error("No file content provided");
         }
 
-        await addComponentToListByTextWithDuplicateCheck(
+        const { hasDuplicate, fileEntry, canOverwrite } = await addComponentToListByTextWithDuplicateCheck(
           USER_COMPONENTS_LIST_NAME,
           fileContent,
         );
 
+
+        console.log('canOverwrite', canOverwrite);
+
         // Invalidate the userComponents query to refresh the sidebar
         queryClient.invalidateQueries({ queryKey: ["userComponents"] });
 
-        successCallback?.();
+        successCallback?.(hasDuplicate, fileEntry, canOverwrite);
         return;
       } catch (error) {
         console.error("Error importing component from file:", error);

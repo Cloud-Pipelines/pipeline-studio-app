@@ -487,13 +487,13 @@ export const addComponentToListByUrl = async (
 export const findDuplicateComponent = async (
   listName: string,
   componentRef: ComponentReferenceWithSpec,
-): Promise<ComponentFileEntry | null> => {
+): Promise<{ fileEntry?: ComponentFileEntry; hasDuplicate: boolean; canOverwrite?: boolean }> => {
   try {
     const componentFiles = await getAllComponentFilesFromList(listName);
     const targetComponentName = componentRef.spec.name;
 
     if (!targetComponentName) {
-      return null; // Can't check for duplicates without a name
+      return { hasDuplicate: false }; // Can't check for duplicates without a name
     }
 
     // Look for components with the same name
@@ -503,15 +503,16 @@ export const findDuplicateComponent = async (
       if (existingComponentName === targetComponentName) {
         // Found a component with the same name, now check if content is identical
         if (fileEntry.componentRef.text === componentRef.text) {
-          return fileEntry; // Exact duplicate found
+          return { fileEntry, hasDuplicate: true }; // Exact duplicate are a no-op
         }
+        return { fileEntry, hasDuplicate: true, canOverwrite: true };
       }
     }
 
-    return null; // No duplicate found
+    return { hasDuplicate: false };
   } catch (error) {
     console.error("Error checking for duplicate component:", error);
-    return null;
+    return { hasDuplicate: false };
   }
 };
 
@@ -530,16 +531,21 @@ export const addComponentToListByTextWithDuplicateCheck = async (
   fileName?: string,
   defaultFileName: string = "Component",
   allowDuplicates: boolean = false,
-): Promise<ComponentFileEntry> => {
+): Promise<{ fileEntry: ComponentFileEntry; hasDuplicate: boolean; canOverwrite?: boolean }> => {
   const componentRef = await storeComponentText(componentText);
 
   if (!allowDuplicates) {
-    const existingComponent = await findDuplicateComponent(
+    const { fileEntry, hasDuplicate, canOverwrite } = await findDuplicateComponent(
       listName,
       componentRef,
     );
-    if (existingComponent) {
-      return existingComponent;
+
+    if (fileEntry && hasDuplicate) {
+      return {
+        fileEntry,
+        hasDuplicate,
+        canOverwrite,
+      };
     }
   }
 
@@ -550,7 +556,10 @@ export const addComponentToListByTextWithDuplicateCheck = async (
     fileName ?? componentRef.spec.name ?? defaultFileName,
   );
 
-  return fileEntry;
+  return {
+    fileEntry,
+    hasDuplicate: false,
+  };
 };
 
 // Keep the original function for backward compatibility
