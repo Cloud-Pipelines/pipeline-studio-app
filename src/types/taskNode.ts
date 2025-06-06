@@ -40,3 +40,5 @@ export type CallbackWithIds<K extends keyof TaskNodeCallbacks> =
 export type NodeCallbacks = {
   [K in keyof TaskNodeCallbacks]: CallbackWithIds<K>;
 };
+
+export type TaskNodeDimensions = { w: number; h: number | undefined };

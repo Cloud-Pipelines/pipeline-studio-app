@@ -2,14 +2,11 @@ import { useEdges } from "@xyflow/react";
 import { type MouseEvent, useCallback } from "react";
 
 import { cn } from "@/lib/utils";
-import type { OutputSpec } from "@/utils/componentSpec";
-import { taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
 
+import { useTaskNode } from "../TaskNodeProvider";
 import { OutputHandle } from "./Handles";
 
 type TaskNodeOutputsProps = {
-  outputs: OutputSpec[];
-  taskId: string;
   condensed: boolean;
   expanded: boolean;
   onBackgroundClick?: () => void;
@@ -17,16 +14,13 @@ type TaskNodeOutputsProps = {
 };
 
 export function TaskNodeOutputs({
-  outputs,
-  taskId,
   condensed,
   expanded,
   onBackgroundClick,
   handleIOClicked,
 }: TaskNodeOutputsProps) {
+  const { nodeId, outputs } = useTaskNode();
   const edges = useEdges();
-
-  const nodeId = taskIdToNodeId(taskId);
 
   const outputsWithTaskInput = outputs.filter((output) =>
     edges.some(
@@ -65,10 +59,9 @@ export function TaskNodeOutputs({
         outputsWithTaskInput.map((output, i) => (
           <OutputHandle
             key={output.name}
-            nodeId={nodeId}
             output={output}
             value={
-              outputs.length > 1 && i === 0
+              hiddenOutputs > 0 && i === 0
                 ? `+${hiddenOutputs} more output${hiddenOutputs > 1 ? "s" : ""}`
                 : " "
             }
@@ -79,7 +72,6 @@ export function TaskNodeOutputs({
           {outputs.map((output) => (
             <OutputHandle
               key={output.name}
-              nodeId={nodeId}
               output={output}
               onLabelClick={handleIOClicked}
             />
