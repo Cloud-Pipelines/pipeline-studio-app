@@ -1,25 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
 import { LayoutGrid, Puzzle } from "lucide-react";
-import { type ChangeEvent, useCallback, useMemo, useState } from "react";
+import { type ChangeEvent, useCallback, useMemo } from "react";
 
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
-import { useComponentSpec } from "@/providers/ComponentSpecProvider";
-import { fetchAndStoreComponentLibrary } from "@/services/componentService";
-import type { ComponentFolder } from "@/types/componentLibrary";
-import type {
-  ComponentReference,
-  GraphSpec,
-  TaskSpec,
-} from "@/utils/componentSpec";
-import { getAllComponentFilesFromList } from "@/utils/componentStore";
-import {
-  ComponentSearchFilter,
-  USER_COMPONENTS_LIST_NAME,
-} from "@/utils/constants";
+import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 
 import {
   EmptyState,
@@ -30,102 +17,19 @@ import {
   SearchResults,
 } from "../components";
 
-const DEFAULT_FILTERS = [ComponentSearchFilter.NAME];
-
-const fetchUserComponents = async (): Promise<ComponentFolder> => {
-  try {
-    const componentFiles = await getAllComponentFilesFromList(
-      USER_COMPONENTS_LIST_NAME,
-    );
-
-    const components: ComponentReference[] = [];
-
-    Array.from(componentFiles.entries()).forEach(([_, fileEntry]) => {
-      components.push({
-        ...fileEntry.componentRef,
-        name: fileEntry.name,
-      });
-    });
-
-    // Create a user components folder
-    const userComponentsFolder: ComponentFolder = {
-      name: "User Components",
-      components,
-      folders: [],
-      isUserFolder: true, // Add a flag to identify this as user components folder
-    };
-
-    return userComponentsFolder;
-  } catch (error) {
-    console.error("Error fetching user components:", error);
-    return {
-      name: "User Components",
-      components: [],
-      folders: [],
-      isUserFolder: true,
-    };
-  }
-};
-
-const fetchUsedComponents = (graphSpec: GraphSpec): ComponentFolder => {
-  if (!graphSpec || !graphSpec.tasks || typeof graphSpec.tasks !== "object") {
-    return {
-      name: "Used in Pipeline",
-      components: [],
-      folders: [],
-      isUserFolder: false,
-    };
-  }
-
-  const usedComponentsMap = new Map<string, ComponentReference>();
-
-  Object.values(graphSpec.tasks).forEach((task: TaskSpec) => {
-    const key = task.componentRef.digest;
-    if (key && !usedComponentsMap.has(key)) {
-      usedComponentsMap.set(key, {
-        ...task.componentRef,
-      });
-    }
-  });
-
-  return {
-    name: "Used in Pipeline",
-    components: Array.from(usedComponentsMap.values()),
-    folders: [],
-    isUserFolder: false,
-  };
-};
-
 const GraphComponents = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchFilters, setSearchFilters] = useState<string[]>(DEFAULT_FILTERS);
-
-  const { graphSpec } = useComponentSpec();
-
-  const usedComponentsFolder: ComponentFolder = useMemo(
-    () => fetchUsedComponents(graphSpec),
-    [graphSpec],
-  );
-
   const {
-    data: componentLibrary,
-    isLoading: isLibraryLoading,
-    error: libraryError,
-  } = useQuery({
-    queryKey: ["componentLibrary"],
-    queryFn: fetchAndStoreComponentLibrary,
-  });
-
-  const {
-    data: userComponentsFolder,
-    isLoading: isUserComponentsLoading,
-    error: userComponentsError,
-  } = useQuery({
-    queryKey: ["userComponents"],
-    queryFn: fetchUserComponents,
-    staleTime: 0,
-    refetchOnMount: "always",
-  });
+    componentLibrary,
+    userComponentsFolder,
+    usedComponentsFolder,
+    isLoading,
+    error,
+    searchTerm,
+    setSearchTerm,
+    searchFilters,
+    setSearchFilters,
+    searchResult,
+  } = useComponentLibrary();
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -138,20 +42,16 @@ const GraphComponents = () => {
     [setSearchFilters],
   );
 
-  const isLoading = isLibraryLoading || isUserComponentsLoading;
-  const error = libraryError || userComponentsError;
-
   const memoizedContent = useMemo(() => {
     if (isLoading) return <LoadingState />;
     if (error) return <ErrorState message={(error as Error).message} />;
     if (!componentLibrary) return <EmptyState />;
 
-    // If there's a search term, use the SearchResults component
-    if (searchTerm.trim()) {
+    // If there's a search result, use the SearchResults component
+    if (searchResult) {
       return (
         <SearchResults
-          searchTerm={searchTerm}
-          searchFilters={searchFilters}
+          searchResult={searchResult}
           onFiltersChange={handleFiltersChange}
         />
       );
