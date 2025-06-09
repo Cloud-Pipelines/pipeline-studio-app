@@ -38,10 +38,12 @@ type ComponentLibraryContextType = {
   searchTerm: string;
   searchFilters: string[];
   searchResult: SearchResult | null;
+  highlightSearchResults: boolean;
   refetchLibrary: () => void;
   refetchUserComponents: () => void;
   setSearchTerm: (term: string) => void;
   setSearchFilters: (filters: string[]) => void;
+  setHighlightSearchResults: (highlight: boolean) => void;
 };
 
 const ComponentLibraryContext = createContext<
@@ -58,6 +60,7 @@ export const ComponentLibraryProvider = ({
   const [componentLibrary, setComponentLibrary] = useState<ComponentLibrary>();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilters, setSearchFilters] = useState<string[]>(DEFAULT_FILTERS);
+  const [highlightSearchResults, setHighlightSearchResults] = useState(true);
 
   // Fetch main component library
   const {
@@ -168,10 +171,12 @@ export const ComponentLibraryProvider = ({
       searchTerm,
       searchFilters,
       searchResult,
+      highlightSearchResults,
       refetchLibrary,
       refetchUserComponents,
       setSearchTerm: setSearchTerm,
       setSearchFilters: setSearchFilters,
+      setHighlightSearchResults,
     }),
     [
       componentLibrary,
@@ -182,10 +187,12 @@ export const ComponentLibraryProvider = ({
       searchTerm,
       searchFilters,
       searchResult,
+      highlightSearchResults,
       refetchLibrary,
       refetchUserComponents,
       setSearchTerm,
       setSearchFilters,
+      setHighlightSearchResults,
     ],
   );
 

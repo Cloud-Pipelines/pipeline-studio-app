@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { type SearchFilterProps } from "@/types/componentLibrary";
+import { ComponentSearchFilter } from "@/utils/constants";
 
 const SearchFilter = ({
   availableFilters,
@@ -42,21 +43,45 @@ const SearchFilter = ({
         <div className="grid gap-2">
           <h4>Filter Search</h4>
           <div className="space-y-2">
-            {availableFilters.map((filter) => (
-              <div key={filter} className="flex items-center space-x-2">
-                <Checkbox
-                  id={filter}
-                  checked={activeFilters.includes(filter)}
-                  onCheckedChange={(checked: boolean) =>
-                    handleCheckboxChange(filter, !!checked)
-                  }
-                  className="hover:cursor-pointer"
-                />
-                <Label htmlFor={filter} className="font-light text-sm">
-                  {filter}
-                </Label>
-              </div>
-            ))}
+            {availableFilters.map((filter) => {
+              if (filter === ComponentSearchFilter.EXACTMATCH) return;
+
+              return (
+                <div key={filter} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={filter}
+                    checked={activeFilters.includes(filter)}
+                    onCheckedChange={(checked: boolean) =>
+                      handleCheckboxChange(filter, !!checked)
+                    }
+                    className="hover:cursor-pointer"
+                  />
+                  <Label htmlFor={filter} className="font-light text-sm">
+                    {filter}
+                  </Label>
+                </div>
+              );
+            })}
+          </div>
+          <hr />
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id={ComponentSearchFilter.EXACTMATCH}
+              checked={activeFilters.includes(ComponentSearchFilter.EXACTMATCH)}
+              onCheckedChange={(checked: boolean) =>
+                handleCheckboxChange(
+                  ComponentSearchFilter.EXACTMATCH,
+                  !!checked,
+                )
+              }
+              className="hover:cursor-pointer"
+            />
+            <Label
+              htmlFor={ComponentSearchFilter.EXACTMATCH}
+              className="font-light text-sm"
+            >
+              {ComponentSearchFilter.EXACTMATCH}
+            </Label>
           </div>
         </div>
       </PopoverContent>

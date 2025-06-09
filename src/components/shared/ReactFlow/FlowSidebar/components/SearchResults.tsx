@@ -33,7 +33,15 @@ const SearchResults = ({
     }
   }, [searchFilters, onFiltersChange]);
 
-  if (searchFilters.length === 0) {
+  const filtersWithoutExactMatch = searchFilters.filter(
+    (f) => f !== ComponentSearchFilter.EXACTMATCH,
+  );
+
+  const exactMatchFilter = searchFilters.includes(
+    ComponentSearchFilter.EXACTMATCH,
+  );
+
+  if (filtersWithoutExactMatch.length === 0) {
     return (
       <div className="px-4 py-2 text-sm text-gray-500">
         No search filters set.{" "}
@@ -53,7 +61,9 @@ const SearchResults = ({
   if (!hasResults) {
     return (
       <div className="px-4 py-2 text-sm text-gray-500">
-        No component {searchFilters.join(" or ")} matching &ldquo;{searchTerm}
+        No component {filtersWithoutExactMatch.join(" or ")}{" "}
+        {exactMatchFilter ? "exactly matches" : "contains"} &ldquo;
+        {searchTerm}
         &rdquo;
       </div>
     );

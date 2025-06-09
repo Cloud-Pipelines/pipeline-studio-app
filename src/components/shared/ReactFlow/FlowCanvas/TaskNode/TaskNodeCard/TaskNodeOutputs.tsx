@@ -2,6 +2,8 @@ import { useEdges } from "@xyflow/react";
 import { type MouseEvent, useCallback } from "react";
 
 import { cn } from "@/lib/utils";
+import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import { ComponentSearchFilter } from "@/utils/constants";
 
 import { useTaskNode } from "../TaskNodeProvider";
 import { OutputHandle } from "./Handles";
@@ -20,6 +22,7 @@ export function TaskNodeOutputs({
   handleIOClicked,
 }: TaskNodeOutputsProps) {
   const { nodeId, outputs } = useTaskNode();
+  const { setSearchTerm, setSearchFilters } = useComponentLibrary();
   const edges = useEdges();
 
   const outputsWithTaskInput = outputs.filter((output) =>
@@ -41,6 +44,25 @@ export function TaskNodeOutputs({
       }
     },
     [condensed, onBackgroundClick],
+  );
+
+  const handleSelectionChange = useCallback(
+    (outputName: string, selected: boolean) => {
+      if (selected) {
+        const output = outputs.find((o) => o.name === outputName);
+        const type = (output?.type as string | undefined) ?? "[type undefined]";
+
+        setSearchTerm(type);
+        setSearchFilters([
+          ComponentSearchFilter.INPUTTYPE,
+          ComponentSearchFilter.EXACTMATCH,
+        ]);
+      } else {
+        setSearchTerm("");
+        setSearchFilters([]);
+      }
+    },
+    [setSearchTerm, setSearchFilters],
   );
 
   if (!outputs.length) return null;
@@ -65,6 +87,7 @@ export function TaskNodeOutputs({
                 ? `+${hiddenOutputs} more output${hiddenOutputs > 1 ? "s" : ""}`
                 : " "
             }
+            onHandleSelectionChange={handleSelectionChange}
           />
         ))
       ) : (
@@ -74,6 +97,7 @@ export function TaskNodeOutputs({
               key={output.name}
               output={output}
               onLabelClick={handleIOClicked}
+              onHandleSelectionChange={handleSelectionChange}
             />
           ))}
           {condensed && (

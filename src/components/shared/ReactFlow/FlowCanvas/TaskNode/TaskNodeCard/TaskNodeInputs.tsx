@@ -2,7 +2,9 @@ import { AlertCircle } from "lucide-react";
 import { type MouseEvent, useCallback } from "react";
 
 import { cn } from "@/lib/utils";
+import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
+import { ComponentSearchFilter } from "@/utils/constants";
 import { getValue } from "@/utils/string";
 
 import { useTaskNode } from "../TaskNodeProvider";
@@ -22,6 +24,7 @@ export function TaskNodeInputs({
   handleIOClicked,
 }: TaskNodeInputsProps) {
   const { inputs, taskSpec } = useTaskNode();
+  const { setSearchTerm, setSearchFilters } = useComponentLibrary();
 
   const values = taskSpec.arguments;
   const invalidArguments = inputsWithInvalidArguments(inputs, taskSpec);
@@ -46,6 +49,25 @@ export function TaskNodeInputs({
       }
     },
     [condensed, onBackgroundClick],
+  );
+
+  const handleSelectionChange = useCallback(
+    (inputName: string, selected: boolean) => {
+      if (selected) {
+        const input = inputs.find((i) => i.name === inputName);
+        const type = input?.type as string;
+
+        setSearchTerm(type);
+        setSearchFilters([
+          ComponentSearchFilter.OUTPUTTYPE,
+          ComponentSearchFilter.EXACTMATCH,
+        ]);
+      } else {
+        setSearchTerm("");
+        setSearchFilters([]);
+      }
+    },
+    [setSearchTerm, setSearchFilters],
   );
 
   if (!inputs.length) return null;
@@ -77,6 +99,7 @@ export function TaskNodeInputs({
                   ? `+${hiddenInputs} more input${hiddenInputs > 1 ? "s" : ""}`
                   : " "
               }
+              onHandleSelectionChange={handleSelectionChange}
             />
           ))}
           {hiddenInvalidArguments.length > 0 && (
@@ -95,6 +118,7 @@ export function TaskNodeInputs({
               invalid={invalidArguments.includes(input.name)}
               onLabelClick={handleIOClicked}
               value={getValue(values?.[input.name])}
+              onHandleSelectionChange={handleSelectionChange}
             />
           ))}
           {condensed && (

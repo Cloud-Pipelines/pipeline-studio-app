@@ -51,6 +51,7 @@ export enum ComponentSearchFilter {
   INPUTTYPE = "Input Type",
   OUTPUTNAME = "Output Name",
   OUTPUTTYPE = "Output Type",
+  EXACTMATCH = "Exact Match",
 }
 
 export const COMPONENT_SEARCH_FILTERS = Object.values(ComponentSearchFilter);
