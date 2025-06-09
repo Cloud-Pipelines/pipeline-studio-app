@@ -34,10 +34,6 @@ export function TaskNodeInputs({
       "taskOutput" in (values[input.name] as object),
   );
 
-  if (inputsWithTaskOutput.length === 0) {
-    inputsWithTaskOutput.push(inputs[0]);
-  }
-
   const handleBackgroundClick = useCallback(
     (e: MouseEvent) => {
       if (condensed && onBackgroundClick) {
@@ -50,7 +46,14 @@ export function TaskNodeInputs({
 
   if (!inputs.length) return null;
 
+  if (inputsWithTaskOutput.length === 0) {
+    inputsWithTaskOutput.push(inputs[0]);
+  }
+
   const hiddenInputs = inputs.length - inputsWithTaskOutput.length;
+  if (hiddenInputs < 1) {
+    condensed = false;
+  }
 
   const hiddenInvalidArguments = invalidArguments.filter(
     (invalidArgument) =>
