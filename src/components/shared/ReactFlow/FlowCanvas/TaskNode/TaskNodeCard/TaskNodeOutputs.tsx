@@ -29,10 +29,6 @@ export function TaskNodeOutputs({
     ),
   );
 
-  if (outputsWithTaskInput.length === 0) {
-    outputsWithTaskInput.push(outputs[0]);
-  }
-
   const handleBackgroundClick = useCallback(
     (e: MouseEvent) => {
       if (condensed && onBackgroundClick) {
@@ -45,7 +41,14 @@ export function TaskNodeOutputs({
 
   if (!outputs.length) return null;
 
+  if (outputsWithTaskInput.length === 0) {
+    outputsWithTaskInput.push(outputs[0]);
+  }
+
   const hiddenOutputs = outputs.length - outputsWithTaskInput.length;
+  if (hiddenOutputs < 1) {
+    condensed = false;
+  }
 
   return (
     <div
