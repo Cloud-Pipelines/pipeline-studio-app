@@ -33,6 +33,7 @@ import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
 import { useTaskNode } from "../TaskNodeProvider";
 import Io from "./io";
 import Logs from "./logs";
+import OutputsList from "./OutputsList";
 
 interface ButtonPropsWithTooltip extends ButtonProps {
   tooltip?: string;
@@ -168,6 +169,8 @@ const TaskConfigurationSheet = ({
                     setArguments={callbacks.setArguments}
                     disabled={disabled}
                   />
+                  <hr />
+                  <OutputsList taskSpec={taskSpec} />
                 </>
               )}
               {readOnly && (
