@@ -104,7 +104,7 @@ export const ArgumentInputField = ({
             {argument.inputSpec.name.replace(/_/g, " ")}
           </Label>
           <span
-            className="text-xs text-gray-500 truncate"
+            className="text-xs text-muted-foreground truncate"
             title={typeSpecToString(argument.inputSpec.type)}
           >
             ({typeSpecToString(argument.inputSpec.type)}
@@ -131,7 +131,7 @@ export const ArgumentInputField = ({
                   "border-red-200",
                 argument.isRemoved &&
                   argument.inputSpec.optional &&
-                  "border-gray-100 text-gray-500",
+                  "border-gray-100 text-muted-foreground",
               )}
               disabled={disabled}
             />
