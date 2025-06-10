@@ -21,7 +21,7 @@ interface ArgumentsEditorDialogProps {
   taskSpec: TaskSpec;
   disabled?: boolean;
   closeEditor: () => void;
-  setArguments?: (args: Record<string, ArgumentType>) => void;
+  setArguments: (args: Record<string, ArgumentType>) => void;
   handleDelete: () => void;
   handleCopy: () => void;
 }
@@ -49,6 +49,25 @@ const ArgumentsEditorDialog = ({
     );
     return null;
   }
+
+  const handleSetArguments = (
+    updatedArguments: Record<string, ArgumentType>,
+  ) => {
+    const updatedArgumentInputs = currentArguments.map((arg) => {
+      if (updatedArguments[arg.key] !== undefined) {
+        return {
+          ...arg,
+          value: updatedArguments[arg.key],
+          isRemoved: false,
+        };
+      }
+      return {
+        ...arg,
+        isRemoved: true,
+      };
+    });
+    setCurrentArguments(updatedArgumentInputs);
+  };
 
   const handleApply = () => {
     // Filter out arguments from the spec which the user has removed.
@@ -97,8 +116,8 @@ const ArgumentsEditorDialog = ({
       ]}
     >
       <ArgumentsEditor
-        argumentData={currentArguments}
-        setArguments={setCurrentArguments}
+        taskSpec={taskSpec}
+        setArguments={handleSetArguments}
         disabled={disabled}
       />
     </DraggableDialog>

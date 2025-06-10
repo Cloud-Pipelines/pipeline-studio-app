@@ -6,8 +6,8 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { Delete, ListRestart, PlusSquare, UndoDot } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Delete, ListRestart, PlusSquare } from "lucide-react";
+import { type ChangeEvent, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,19 +24,28 @@ import type { ArgumentType, TypeSpecType } from "@/utils/componentSpec";
 export const ArgumentInputField = ({
   argument,
   disabled = false,
-  setArgument,
+  onSave,
 }: {
   argument: ArgumentInput;
   disabled?: boolean;
-  setArgument: (value: ArgumentInput) => void;
+  onSave: (argument: ArgumentInput) => void;
 }) => {
-  const [inputValue, setInputValue] = useState(getInputValue(argument));
+  const [inputValue, setInputValue] = useState(getInputValue(argument) ?? "");
 
   const undoValue = useMemo(() => argument, []);
 
-  const handleInputChange = (value: string) => {
+  const handleInputChange = (e: ChangeEvent) => {
+    const value = (e.target as HTMLInputElement).value;
     setInputValue(value);
-    setArgument({ ...argument, value, isRemoved: false });
+  };
+
+  const handleBlur = () => {
+    const updatedArgument = {
+      ...argument,
+      value: inputValue.trim(),
+    };
+
+    onSave(updatedArgument);
   };
 
   const handleRemove = () => {
@@ -53,19 +62,21 @@ export const ArgumentInputField = ({
       setInputValue(defaultValue);
     }
 
-    setArgument(updatedArgument);
+    onSave(updatedArgument);
   };
 
   const handleReset = () => {
     const defaultValue = getDefaultValue(argument);
 
     setInputValue(defaultValue);
-    setArgument({ ...argument, value: defaultValue });
+    onSave({ ...argument, value: defaultValue });
   };
 
   const handleUndo = () => {
-    setInputValue(getInputValue(undoValue));
-    setArgument({ ...undoValue });
+    if (disabled) return;
+
+    setInputValue(getInputValue(undoValue) ?? "");
+    onSave({ ...undoValue });
   };
 
   const canUndo = useMemo(
@@ -88,12 +99,19 @@ export const ArgumentInputField = ({
   return (
     <div className="flex w-full items-center justify-between gap-2 py-1">
       <div className="flex items-center gap-2 w-2/5">
-        <div
-          className={cn(
-            "bg-warning rounded-full h-1 w-1",
-            !canUndo && "invisible",
-          )}
-        />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={cn(
+                "bg-success rounded-full h-2 w-2 cursor-pointer",
+                !canUndo && "invisible",
+                disabled && "opacity-50",
+              )}
+              onClick={handleUndo}
+            />
+          </TooltipTrigger>
+          <TooltipContent className="z-9999">Recently changed</TooltipContent>
+        </Tooltip>
         <div
           className={cn("flex flex-col", argument.isRemoved && "opacity-50")}
         >
@@ -118,9 +136,8 @@ export const ArgumentInputField = ({
             <Input
               id={argument.inputSpec.name}
               value={inputValue}
-              onChange={(e) => {
-                handleInputChange(e.target.value);
-              }}
+              onChange={handleInputChange}
+              onBlur={handleBlur}
               placeholder={placeholder}
               required={!argument.inputSpec.optional}
               className={cn(
@@ -140,24 +157,6 @@ export const ArgumentInputField = ({
             <TooltipContent className="z-9999">{placeholder}</TooltipContent>
           )}
         </Tooltip>
-        {canUndo && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={handleUndo}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2"
-                disabled={disabled}
-                variant="ghost"
-                style={{
-                  paddingInline: "0.5rem",
-                }}
-              >
-                <UndoDot className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="z-9999">Undo changes</TooltipContent>
-          </Tooltip>
-        )}
       </div>
 
       <div className="flex gap-1 items-center w-1/5 justify-end">
