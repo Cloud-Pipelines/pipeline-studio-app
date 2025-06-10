@@ -15,6 +15,7 @@ type InputHandleProps = {
   input: InputSpec;
   invalid: boolean;
   value?: string;
+  highlight?: boolean;
   onLabelClick?: (e: ReactMouseEvent<HTMLDivElement>) => void;
   onHandleSelectionChange?: (key: string, selected: boolean) => void;
 };
@@ -23,6 +24,7 @@ export const InputHandle = ({
   input,
   invalid,
   value,
+  highlight,
   onLabelClick,
   onHandleSelectionChange,
 }: InputHandleProps) => {
@@ -113,6 +115,7 @@ export const InputHandle = ({
             "border-0! h-full! w-full! transform-none!",
             missing,
             (selected || active) && "bg-blue-500!",
+            highlight && "bg-green-500!",
           )}
           onClick={handleHandleClick}
         />
@@ -134,8 +137,9 @@ export const InputHandle = ({
             <div
               className={cn(
                 "text-xs text-gray-800! rounded-md px-2 py-1 truncate",
-                onLabelClick && !selected && "hover:bg-gray-300",
+                onLabelClick && !selected && !highlight && "hover:bg-gray-300",
                 selected || active ? "bg-blue-200" : "bg-gray-200",
+                highlight && "bg-green-200",
               )}
             >
               {input.name.replace(/_/g, " ")}
@@ -162,6 +166,7 @@ export const InputHandle = ({
 type OutputHandleProps = {
   output: OutputSpec;
   value?: string;
+  highlight?: boolean;
   onLabelClick?: (e: ReactMouseEvent<HTMLDivElement>) => void;
   onHandleSelectionChange?: (key: string, selected: boolean) => void;
 };
@@ -169,6 +174,7 @@ type OutputHandleProps = {
 export const OutputHandle = ({
   output,
   value,
+  highlight,
   onLabelClick,
   onHandleSelectionChange,
 }: OutputHandleProps) => {
@@ -258,8 +264,9 @@ export const OutputHandle = ({
           <div
             className={cn(
               "text-xs text-gray-800! rounded-md px-2 py-1 truncate",
-              onLabelClick && !selected && "hover:bg-gray-300",
+              onLabelClick && !selected && !highlight && "hover:bg-gray-300",
               selected || active ? "bg-blue-200" : "bg-gray-200",
+              highlight && "bg-green-200",
             )}
           >
             {output.name.replace(/_/g, " ")}
@@ -281,6 +288,7 @@ export const OutputHandle = ({
         className={cn(
           "relative! border-0! !w-[12px] !h-[12px] transform-none! translate-x-6 cursor-pointer bg-gray-500!",
           (selected || active) && "bg-blue-500!",
+          highlight && "bg-green-500!",
         )}
       />
     </div>

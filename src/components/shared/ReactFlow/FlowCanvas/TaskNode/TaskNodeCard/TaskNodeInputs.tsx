@@ -1,10 +1,14 @@
+import { useConnection } from "@xyflow/react";
 import { AlertCircle } from "lucide-react";
-import { type MouseEvent, useCallback } from "react";
+import { type MouseEvent, useCallback, useEffect } from "react";
 
 import { cn } from "@/lib/utils";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
+import type { InputSpec } from "@/utils/componentSpec";
 import { ComponentSearchFilter } from "@/utils/constants";
+import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
+import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
 import { getValue } from "@/utils/string";
 
 import { useTaskNode } from "../TaskNodeProvider";
@@ -24,7 +28,16 @@ export function TaskNodeInputs({
   handleIOClicked,
 }: TaskNodeInputsProps) {
   const { inputs, taskSpec } = useTaskNode();
-  const { setSearchTerm, setSearchFilters } = useComponentLibrary();
+  const {
+    setSearchTerm,
+    setSearchFilters,
+    searchTerm,
+    searchFilters,
+    highlightSearchResults,
+    setHighlightSearchResults,
+  } = useComponentLibrary();
+
+  const connection = useConnection();
 
   const values = taskSpec.arguments;
   const invalidArguments = inputsWithInvalidArguments(inputs, taskSpec);
@@ -35,6 +48,35 @@ export function TaskNodeInputs({
       typeof values[input.name] === "object" &&
       values[input.name] !== null &&
       "taskOutput" in (values[input.name] as object),
+  );
+
+  const resetHighlightRelatedHandles = useCallback(() => {
+    setSearchTerm("");
+    setSearchFilters([]);
+    setHighlightSearchResults(false);
+  }, [setSearchTerm, setSearchFilters, setHighlightSearchResults]);
+
+  const toggleHighlightRelatedHandles = useCallback(
+    (selected: boolean, input?: InputSpec) => {
+      if (selected && input) {
+        const type = (input.type as string) || "[type undefined]";
+
+        setSearchTerm(type);
+        setSearchFilters([
+          ComponentSearchFilter.OUTPUTTYPE,
+          ComponentSearchFilter.EXACTMATCH,
+        ]);
+        setHighlightSearchResults(true);
+      } else {
+        resetHighlightRelatedHandles();
+      }
+    },
+    [
+      setSearchTerm,
+      setSearchFilters,
+      setHighlightSearchResults,
+      resetHighlightRelatedHandles,
+    ],
   );
 
   const handleBackgroundClick = useCallback(
@@ -49,22 +91,60 @@ export function TaskNodeInputs({
 
   const handleSelectionChange = useCallback(
     (inputName: string, selected: boolean) => {
-      if (selected) {
-        const input = inputs.find((i) => i.name === inputName);
-        const type = input?.type as string;
-
-        setSearchTerm(type);
-        setSearchFilters([
-          ComponentSearchFilter.OUTPUTTYPE,
-          ComponentSearchFilter.EXACTMATCH,
-        ]);
-      } else {
-        setSearchTerm("");
-        setSearchFilters([]);
-      }
+      const input = inputs.find((i) => i.name === inputName);
+      toggleHighlightRelatedHandles(selected, input);
     },
-    [setSearchTerm, setSearchFilters],
+    [inputs, toggleHighlightRelatedHandles],
   );
+
+  const checkHighlight = useCallback(
+    (input: InputSpec) => {
+      if (
+        !highlightSearchResults ||
+        searchTerm.length < 1 ||
+        searchFilters.length < 1 ||
+        !searchFilters.includes(ComponentSearchFilter.INPUTTYPE)
+      ) {
+        return false;
+      }
+
+      const matchFound = checkArtifactMatchesSearchFilters(
+        searchTerm,
+        searchFilters,
+        input,
+      );
+
+      return matchFound;
+    },
+    [highlightSearchResults, searchTerm, searchFilters],
+  );
+
+  useEffect(() => {
+    // Highlight relevant Handles when the user drags a new connection
+    const { fromHandle, from, to, inProgress } = connection;
+
+    if (!inProgress) {
+      resetHighlightRelatedHandles();
+      return;
+    }
+
+    if (
+      from &&
+      to &&
+      Math.sqrt(Math.pow(from.x - to.x, 2) + Math.pow(from.y - to.y, 2)) < 4
+    ) {
+      // If the user has dragged the cursor less than 4px from the click origin, then assume it is a click event on the Handle
+      return;
+    }
+
+    const input = inputs.find(
+      (i) => inputNameToNodeId(i.name) === fromHandle?.id,
+    );
+
+    if (!input) return;
+
+    toggleHighlightRelatedHandles(true, input);
+  }, [connection, inputs, toggleHighlightRelatedHandles]);
 
   if (!inputs.length) return null;
 
@@ -103,6 +183,7 @@ export function TaskNodeInputs({
                   : " "
               }
               onHandleSelectionChange={handleSelectionChange}
+              highlight={checkHighlight(input)}
             />
           ))}
           {hiddenInvalidArguments.length > 0 && (
@@ -122,6 +203,7 @@ export function TaskNodeInputs({
               onLabelClick={handleIOClicked}
               value={getValue(values?.[input.name])}
               onHandleSelectionChange={handleSelectionChange}
+              highlight={checkHighlight(input)}
             />
           ))}
           {condensed && (
