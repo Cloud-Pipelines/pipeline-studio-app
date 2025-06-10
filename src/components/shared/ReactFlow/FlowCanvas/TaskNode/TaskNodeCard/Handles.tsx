@@ -71,6 +71,9 @@ export const InputHandle = ({
     if (!selected) return;
 
     const handleClickOutside = (e: MouseEvent) => {
+      const skip = skipHandleDeselect(e);
+      if (skip) return;
+
       if (handleRef.current && !handleRef.current.contains(e.target as Node)) {
         setSelected(false);
       }
@@ -211,6 +214,9 @@ export const OutputHandle = ({
     if (!selected) return;
 
     const handleClickOutside = (e: MouseEvent) => {
+      const skip = skipHandleDeselect(e);
+      if (skip) return;
+
       if (handleRef.current && !handleRef.current.contains(e.target as Node)) {
         setSelected(false);
       }
@@ -287,4 +293,19 @@ const getOutputHandleId = (outputName: string) => {
 
 const getInputHandleId = (inputName: string) => {
   return `input_${inputName}`;
+};
+
+const skipHandleDeselect = (e: MouseEvent) => {
+  let el = e.target as HTMLElement | null;
+  while (el) {
+    if (
+      el instanceof HTMLElement &&
+      (el.getAttribute("data-sidebar") === "sidebar" ||
+        el.getAttribute("role") === "dialog")
+    ) {
+      return true;
+    }
+    el = el.parentElement;
+  }
+  return false;
 };

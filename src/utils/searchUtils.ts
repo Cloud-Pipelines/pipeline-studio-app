@@ -5,7 +5,10 @@ import { ComponentSearchFilter } from "./constants";
  * Normalizes text for case-insensitive searching
  */
 export const normalizeForSearch = (text: string): string => {
-  return text.toLowerCase().trim();
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/^["]|["]$/g, "");
 };
 
 /**
@@ -15,13 +18,17 @@ export const normalizeForSearch = (text: string): string => {
 export const containsSearchTerm = (
   text: string | undefined,
   searchTerm: string,
+  exactMatch: boolean = false,
 ): boolean => {
   if (!text) return false;
 
   const normalizedText = normalizeForSearch(text);
   const normalizedSearchTerm = normalizeForSearch(searchTerm);
 
-  // Just check if the text includes the search term
+  if (exactMatch) {
+    return normalizedText === normalizedSearchTerm;
+  }
+
   return normalizedText.includes(normalizedSearchTerm);
 };
 
@@ -36,39 +43,67 @@ export function componentMatchesSearch(
 ) {
   if (!searchTerm.trim()) return false;
 
-  function checkFilter(filter: string): boolean {
-    switch (filter) {
-      case ComponentSearchFilter.NAME:
-        return containsSearchTerm(component.name, searchTerm);
+  const exactMatch = filters.includes(ComponentSearchFilter.EXACTMATCH);
+  const filterWithoutExactMatch = filters.filter(
+    (f) => f !== ComponentSearchFilter.EXACTMATCH,
+  );
 
-      case ComponentSearchFilter.INPUTNAME:
-        return (component.inputs ?? []).some(
-          (input: InputSpec) =>
-            containsSearchTerm(input.name, searchTerm) ||
-            containsSearchTerm(input.name.replaceAll("_", " "), searchTerm),
-        );
+  return filterWithoutExactMatch.some((filter) =>
+    checkSearchFilterComponent(searchTerm, filter, component, exactMatch),
+  );
+}
 
-      case ComponentSearchFilter.INPUTTYPE:
-        return (component.inputs ?? []).some((input: InputSpec) =>
-          containsSearchTerm(JSON.stringify(input.type), searchTerm),
-        );
+/**
+ * Checks if a component matches the search term
+ * based on the specific filter.
+ */
+export function checkSearchFilterComponent(
+  searchTerm: string,
+  filter: string,
+  component: ComponentSpec,
+  exactMatch: boolean = false,
+): boolean {
+  switch (filter) {
+    case ComponentSearchFilter.NAME:
+      return containsSearchTerm(component.name, searchTerm, exactMatch);
 
-      case ComponentSearchFilter.OUTPUTNAME:
-        return (component.outputs ?? []).some(
-          (output: OutputSpec) =>
-            containsSearchTerm(output.name, searchTerm) ||
-            containsSearchTerm(output.name.replaceAll("_", " "), searchTerm),
-        );
+    case ComponentSearchFilter.INPUTNAME:
+      return (component.inputs ?? []).some((input: InputSpec) =>
+        checkNameMatchesSearch(input.name, searchTerm, exactMatch),
+      );
 
-      case ComponentSearchFilter.OUTPUTTYPE:
-        return (component.outputs ?? []).some((output: OutputSpec) =>
-          containsSearchTerm(JSON.stringify(output.type), searchTerm),
-        );
+    case ComponentSearchFilter.INPUTTYPE:
+      return (component.inputs ?? []).some((input: InputSpec) =>
+        containsSearchTerm(JSON.stringify(input.type), searchTerm, exactMatch),
+      );
 
-      default:
-        return false;
-    }
+    case ComponentSearchFilter.OUTPUTNAME:
+      return (component.outputs ?? []).some((output: OutputSpec) =>
+        checkNameMatchesSearch(output.name, searchTerm, exactMatch),
+      );
+
+    case ComponentSearchFilter.OUTPUTTYPE:
+      return (component.outputs ?? []).some((output: OutputSpec) =>
+        containsSearchTerm(JSON.stringify(output.type), searchTerm, exactMatch),
+      );
+
+    default:
+      return false;
   }
+}
 
-  return filters.some((filter) => checkFilter(filter));
+/**
+ * Checks if variations of a name
+ * string matches the search term.
+ */
+function checkNameMatchesSearch(
+  name: string | undefined,
+  searchTerm: string,
+  exactMatch: boolean = false,
+): boolean {
+  if (!name) return false;
+  return (
+    containsSearchTerm(name, searchTerm, exactMatch) ||
+    containsSearchTerm(name.replaceAll("_", " "), searchTerm, exactMatch)
+  );
 }
