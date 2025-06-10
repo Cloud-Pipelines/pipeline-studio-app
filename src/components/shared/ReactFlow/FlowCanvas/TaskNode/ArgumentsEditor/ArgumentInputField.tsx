@@ -6,8 +6,14 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { Delete, ListRestart, PlusSquare } from "lucide-react";
-import { type ChangeEvent, useMemo, useState } from "react";
+import { Delete, Info, ListRestart, PlusSquare } from "lucide-react";
+import {
+  type ChangeEvent,
+  type MouseEvent,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +37,7 @@ export const ArgumentInputField = ({
   onSave: (argument: ArgumentInput) => void;
 }) => {
   const [inputValue, setInputValue] = useState(getInputValue(argument) ?? "");
+  const [showDescription, setShowDescription] = useState(false);
 
   const undoValue = useMemo(() => argument, []);
 
@@ -79,6 +86,20 @@ export const ArgumentInputField = ({
     onSave({ ...undoValue });
   };
 
+  const handleBackgroundClick = useCallback((e: MouseEvent) => {
+    // Prevent toggling description if a child input or button is clicked
+    const target = e.target as HTMLElement;
+    if (
+      target.closest("input") ||
+      target.closest("button") ||
+      target.closest("[role=button]")
+    ) {
+      return;
+    }
+    e.stopPropagation();
+    setShowDescription((prev) => !prev);
+  }, []);
+
   const canUndo = useMemo(
     () => JSON.stringify(argument) !== JSON.stringify(undoValue),
     [argument, undoValue],
@@ -97,114 +118,127 @@ export const ArgumentInputField = ({
   }, [argument]);
 
   return (
-    <div className="flex w-full items-center justify-between gap-2 py-1">
-      <div className="flex items-center gap-2 w-2/5">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div
-              className={cn(
-                "bg-success rounded-full h-2 w-2 cursor-pointer",
-                !canUndo && "invisible",
-                disabled && "opacity-50",
-              )}
-              onClick={handleUndo}
-            />
-          </TooltipTrigger>
-          <TooltipContent className="z-9999">Recently changed</TooltipContent>
-        </Tooltip>
-        <div
-          className={cn("flex flex-col", argument.isRemoved && "opacity-50")}
-        >
-          <Label
-            htmlFor={argument.inputSpec.name}
-            className="text-sm break-words"
+    <div className="relative w-full flex-col gap-2">
+      <div
+        className="flex w-full items-center justify-between gap-2 py-1 rounded-md hover:bg-secondary/40 cursor-pointer"
+        onClick={handleBackgroundClick}
+      >
+        <div className="flex items-center gap-2 w-2/5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className={cn(
+                  "bg-success rounded-full h-2 w-2 cursor-pointer",
+                  !canUndo && "invisible",
+                  disabled && "opacity-50",
+                )}
+                onClick={handleUndo}
+              />
+            </TooltipTrigger>
+            <TooltipContent className="z-9999">Recently changed</TooltipContent>
+          </Tooltip>
+          <div
+            className={cn("flex flex-col", argument.isRemoved && "opacity-50")}
           >
-            {argument.inputSpec.name.replace(/_/g, " ")}
-          </Label>
-          <span
-            className="text-xs text-muted-foreground truncate"
-            title={typeSpecToString(argument.inputSpec.type)}
-          >
-            ({typeSpecToString(argument.inputSpec.type)}
-            {!argument.inputSpec.optional ? "*" : ""})
-          </span>
+            <Label
+              htmlFor={argument.inputSpec.name}
+              className="text-sm break-words"
+            >
+              {argument.inputSpec.name.replace(/_/g, " ")}
+            </Label>
+            <span
+              className="text-xs text-muted-foreground truncate"
+              title={typeSpecToString(argument.inputSpec.type)}
+            >
+              ({typeSpecToString(argument.inputSpec.type)}
+              {!argument.inputSpec.optional ? "*" : ""})
+            </span>
+          </div>
+        </div>
+        <div className="relative w-48">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Input
+                id={argument.inputSpec.name}
+                value={inputValue}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                placeholder={placeholder}
+                required={!argument.inputSpec.optional}
+                className={cn(
+                  "flex-1",
+                  canUndo && "pr-10",
+                  argument.isRemoved &&
+                    !argument.inputSpec.optional &&
+                    "border-red-200",
+                  argument.isRemoved &&
+                    argument.inputSpec.optional &&
+                    "border-gray-100 text-muted-foreground",
+                )}
+                disabled={disabled}
+              />
+            </TooltipTrigger>
+            {placeholder && !inputValue && (
+              <TooltipContent className="z-9999">{placeholder}</TooltipContent>
+            )}
+          </Tooltip>
+        </div>
+
+        <div className="flex gap-1 items-center w-1/5 justify-end">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                onClick={handleRemove}
+                disabled={disabled}
+                variant="ghost"
+                size="icon"
+              >
+                {argument.isRemoved ? (
+                  <PlusSquare className="h-4 w-4" />
+                ) : (
+                  <Delete className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="z-9999">
+              {argument.isRemoved ? "Include Argument" : "Exclude Argument"}
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                onClick={handleReset}
+                className={cn(argument.isRemoved ? "invisible" : "")}
+                disabled={
+                  disabled ||
+                  argument.isRemoved ||
+                  argument.value === getDefaultValue(argument)
+                }
+                variant="ghost"
+                size="icon"
+              >
+                <ListRestart className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              className={cn("z-9999", argument.isRemoved ? "invisible" : "")}
+            >
+              Reset to Default
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
-      <div className="relative w-48">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Input
-              id={argument.inputSpec.name}
-              value={inputValue}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              placeholder={placeholder}
-              required={!argument.inputSpec.optional}
-              className={cn(
-                "flex-1",
-                canUndo && "pr-10",
-                argument.isRemoved &&
-                  !argument.inputSpec.optional &&
-                  "border-red-200",
-                argument.isRemoved &&
-                  argument.inputSpec.optional &&
-                  "border-gray-100 text-muted-foreground",
-              )}
-              disabled={disabled}
-            />
-          </TooltipTrigger>
-          {placeholder && !inputValue && (
-            <TooltipContent className="z-9999">{placeholder}</TooltipContent>
-          )}
-        </Tooltip>
-      </div>
-
-      <div className="flex gap-1 items-center w-1/5 justify-end">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              onClick={handleRemove}
-              disabled={disabled}
-              variant="ghost"
-              size="icon"
-            >
-              {argument.isRemoved ? (
-                <PlusSquare className="h-4 w-4" />
-              ) : (
-                <Delete className="h-4 w-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent className="z-9999">
-            {argument.isRemoved ? "Include Argument" : "Exclude Argument"}
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              onClick={handleReset}
-              className={cn(argument.isRemoved ? "invisible" : "")}
-              disabled={
-                disabled ||
-                argument.isRemoved ||
-                argument.value === getDefaultValue(argument)
-              }
-              variant="ghost"
-              size="icon"
-            >
-              <ListRestart className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent
-            className={cn("z-9999", argument.isRemoved ? "invisible" : "")}
-          >
-            Reset to Default
-          </TooltipContent>
-        </Tooltip>
-      </div>
+      {showDescription && (
+        <div className="z-50 bg-gray-50 text-secondary-foreground p-2 rounded-md w-full mb-2">
+          <p className="text-sm">
+            <Info className="h-4 w-4 inline-block mr-2" />
+            {argument.inputSpec.description ?? "No description provided."}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
