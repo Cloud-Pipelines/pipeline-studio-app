@@ -205,7 +205,6 @@ const CodeSyntaxHighlighter = ({
       fontFamily:
         'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
     }}
-    wrapLongLines={true}
     showLineNumbers={true}
     lineNumberStyle={{
       minWidth: "2.5em",
