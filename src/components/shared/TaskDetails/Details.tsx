@@ -66,8 +66,11 @@ const TaskDetails = ({
     useCopyToClipboard(componentDigest);
 
   const canonicalUrl = componentSpec?.metadata?.annotations?.canonical_location;
-  const pythonOriginalCode =
-    componentSpec?.metadata?.annotations?.original_python_code || "";
+  const pythonOriginalCode = (componentSpec?.metadata?.annotations
+    ?.original_python_code ||
+    componentSpec?.metadata?.annotations?.python_original_code) as
+    | string
+    | undefined;
 
   const stringToPythonCodeDownload = () => {
     if (!pythonOriginalCode) return;
