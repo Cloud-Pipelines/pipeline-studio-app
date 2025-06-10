@@ -277,6 +277,8 @@ const FlowCanvas = ({
 
   const onConnect = useCallback(
     (connection: Connection) => {
+      if (connection.source === connection.target) return;
+
       const updatedGraphSpec = handleConnection(graphSpec, connection);
       updateGraphSpec(updatedGraphSpec);
     },
