@@ -9,9 +9,9 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useTaskNode } from "@/providers/TaskNodeProvider";
 
 import TaskConfigurationSheet from "../TaskConfigurationSheet";
-import { useTaskNode } from "../TaskNodeProvider";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
 

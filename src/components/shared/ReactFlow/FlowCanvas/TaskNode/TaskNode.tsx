@@ -3,11 +3,11 @@ import { memo, useMemo } from "react";
 
 import type { ContainerExecutionStatus } from "@/api/types.gen";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
 import type { TaskNodeData } from "@/types/taskNode";
 
 import { StatusIndicator } from "./StatusIndicator";
 import { TaskNodeCard } from "./TaskNodeCard";
-import { TaskNodeProvider } from "./TaskNodeProvider";
 
 const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   const { taskStatusMap } = useComponentSpec();
