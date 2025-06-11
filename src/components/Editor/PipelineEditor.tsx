@@ -51,6 +51,7 @@ const PipelineEditor = () => {
 
   return (
     <ComponentLibraryProvider>
+      <FlowSidebar />
       <div className="reactflow-wrapper">
         <FlowCanvas {...flowConfig}>
           <MiniMap position="bottom-left" pannable />
@@ -61,7 +62,6 @@ const PipelineEditor = () => {
           <Background gap={GRID_SIZE} className="bg-slate-50!" />
         </FlowCanvas>
       </div>
-      <FlowSidebar />
     </ComponentLibraryProvider>
   );
 };

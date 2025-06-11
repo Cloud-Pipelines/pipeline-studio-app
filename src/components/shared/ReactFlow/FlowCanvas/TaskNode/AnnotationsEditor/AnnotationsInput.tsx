@@ -80,7 +80,7 @@ export const AnnotationsInput = ({
           config?.enableQuantity ? handleQuantitySelectChange : onChange
         }
       >
-        <SelectTrigger className={cn("w-40 min-w-fit", className)}>
+        <SelectTrigger className={cn("w-24 max-24", className)}>
           <SelectValue placeholder={"Select " + placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -143,6 +143,7 @@ export const AnnotationsInput = ({
         <QuantityInput
           annotation={config.annotation}
           annotations={annotations}
+          disabled={!getAnnotationKey(config.annotation, annotations)}
           onChange={onChange}
         />
       )}
@@ -158,10 +159,12 @@ export const AnnotationsInput = ({
 const QuantityInput = ({
   annotation,
   annotations,
+  disabled,
   onChange,
 }: {
   annotation: string;
   annotations: Annotations;
+  disabled: boolean;
   onChange: (value: string) => void;
 }) => {
   const handleValueInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -178,7 +181,8 @@ const QuantityInput = ({
         type="number"
         value={getAnnotationValue(annotation, annotations)}
         onChange={handleValueInputChange}
-        className="w-16"
+        className="w-12 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        disabled={disabled}
       />
     </div>
   );
