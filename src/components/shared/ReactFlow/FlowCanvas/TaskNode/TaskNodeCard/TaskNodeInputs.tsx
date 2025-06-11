@@ -4,6 +4,7 @@ import { type MouseEvent, useCallback, useEffect } from "react";
 
 import { cn } from "@/lib/utils";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
 import type { InputSpec } from "@/utils/componentSpec";
 import { ComponentSearchFilter } from "@/utils/constants";
@@ -11,7 +12,6 @@ import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
 import { getValue } from "@/utils/string";
 
-import { useTaskNode } from "../TaskNodeProvider";
 import { InputHandle } from "./Handles";
 
 interface TaskNodeInputsProps {

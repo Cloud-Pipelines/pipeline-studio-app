@@ -3,12 +3,12 @@ import { type MouseEvent, useCallback, useEffect } from "react";
 
 import { cn } from "@/lib/utils";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import { useTaskNode } from "@/providers/TaskNodeProvider";
 import type { OutputSpec } from "@/utils/componentSpec";
 import { ComponentSearchFilter } from "@/utils/constants";
 import { outputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
 
-import { useTaskNode } from "../TaskNodeProvider";
 import { OutputHandle } from "./Handles";
 
 type TaskNodeOutputsProps = {

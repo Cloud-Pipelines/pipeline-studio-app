@@ -26,11 +26,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 
 import { AnnotationsSection } from "../AnnotationsEditor/AnnotationsSection";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
-import { useTaskNode } from "../TaskNodeProvider";
 import Io from "./io";
 import Logs from "./logs";
 import OutputsList from "./OutputsList";
