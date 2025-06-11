@@ -91,9 +91,8 @@ export const TaskNodeProvider = ({
   const handleSetArguments = useCallback(
     (args: Record<string, ArgumentType>) => {
       data.callbacks?.setArguments(args);
-      notify("Arguments updated", "success");
     },
-    [data.callbacks, notify],
+    [data.callbacks],
   );
 
   const handleSetAnnotations = useCallback(

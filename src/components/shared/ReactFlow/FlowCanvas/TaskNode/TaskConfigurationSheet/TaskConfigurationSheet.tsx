@@ -161,9 +161,6 @@ const TaskConfigurationSheet = ({
             <TabsContent value="io" className="h-full">
               {!readOnly && (
                 <>
-                  <p className="text-sm text-muted-foreground">
-                    Configure the arguments for this task node.
-                  </p>
                   <ArgumentsSection
                     taskSpec={taskSpec}
                     setArguments={callbacks.setArguments}

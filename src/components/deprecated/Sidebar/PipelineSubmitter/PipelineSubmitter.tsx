@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import OasisSubmitter from "@/components/shared/OasisSubmitter";
 import { ArgumentsEditor } from "@/components/shared/ReactFlow/FlowCanvas/TaskNode/ArgumentsEditor";
 import type { ArgumentInput } from "@/types/arguments";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import type { ArgumentType, ComponentSpec } from "@/utils/componentSpec";
 
 import { GoogleCloudSubmitter, KubeflowPipelinesSubmitter } from "./Submitters";
 
@@ -42,6 +42,25 @@ const PipelineSubmitter = ({
     Map<string, string>
   >(new Map());
 
+  const handleSetArguments = (
+    updatedArguments: Record<string, ArgumentType>,
+  ) => {
+    const updatedArgumentInputs = pipelineArguments.map((arg) => {
+      if (updatedArguments[arg.key] !== undefined) {
+        return {
+          ...arg,
+          value: updatedArguments[arg.key],
+          isRemoved: false,
+        };
+      }
+      return {
+        ...arg,
+        isRemoved: true,
+      };
+    });
+    setPipelineArguments(updatedArgumentInputs);
+  };
+
   useEffect(() => {
     // This filtering is just for typing as the pipeline arguments can only be strings here.
     const newStringPipelineArguments = new Map(
@@ -65,8 +84,12 @@ const PipelineSubmitter = ({
         >
           <legend>Arguments</legend>
           <ArgumentsEditor
-            argumentData={pipelineArguments}
-            setArguments={setPipelineArguments}
+            taskSpec={{
+              componentRef: {
+                spec: componentSpec,
+              },
+            }}
+            setArguments={handleSetArguments}
           />
         </fieldset>
       )}

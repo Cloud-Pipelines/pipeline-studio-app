@@ -7,33 +7,44 @@
  */
 
 import type { ArgumentInput } from "@/types/arguments";
+import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 
 import { ArgumentInputField } from "./ArgumentInputField";
+import { getArgumentInputs } from "./utils";
 
 interface ArgumentsEditorProps {
-  argumentData: ArgumentInput[];
-  setArguments: (args: ArgumentInput[]) => void;
+  taskSpec: TaskSpec;
+  setArguments: (args: Record<string, ArgumentType>) => void;
   disabled?: boolean;
 }
 
 export const ArgumentsEditor = ({
-  argumentData,
+  taskSpec,
   setArguments,
   disabled = false,
 }: ArgumentsEditorProps) => {
-  const handleInputChange = (value: ArgumentInput) => {
-    setArguments(
-      argumentData.map((arg) => (arg.key === value.key ? value : arg)),
-    );
+  const argumentInputs = getArgumentInputs(taskSpec);
+
+  const handleArgumentSave = (argument: ArgumentInput) => {
+    const argumentValues = {
+      ...Object.fromEntries(
+        argumentInputs
+          .filter(({ isRemoved }) => !isRemoved)
+          .map(({ key, value }) => [key, value]),
+      ),
+      [argument.key]: argument.value,
+    };
+
+    setArguments(argumentValues);
   };
 
   return (
     <div className="h-auto flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-4">
-      {argumentData.map((argument) => (
+      {argumentInputs.map((argument) => (
         <ArgumentInputField
           key={argument.key}
           argument={argument}
-          setArgument={handleInputChange}
+          onSave={handleArgumentSave}
           disabled={disabled}
         />
       ))}
