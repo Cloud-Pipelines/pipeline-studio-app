@@ -9,7 +9,7 @@ import type { TaskNodeData } from "@/types/taskNode";
 import { StatusIndicator } from "./StatusIndicator";
 import { TaskNodeCard } from "./TaskNodeCard";
 
-const ComponentTaskNode = ({ data, selected }: NodeProps) => {
+const TaskNode = ({ data, selected }: NodeProps) => {
   const { taskStatusMap } = useComponentSpec();
 
   const typedData = useMemo(() => data as TaskNodeData, [data]);
@@ -30,4 +30,4 @@ const ComponentTaskNode = ({ data, selected }: NodeProps) => {
   );
 };
 
-export default memo(ComponentTaskNode);
+export default memo(TaskNode);

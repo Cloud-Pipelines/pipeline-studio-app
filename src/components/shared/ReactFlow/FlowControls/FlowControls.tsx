@@ -4,7 +4,11 @@ import {
   Controls,
   type ReactFlowProps,
 } from "@xyflow/react";
-import { SquareDashedMousePointerIcon } from "lucide-react";
+import {
+  LockKeyhole,
+  LockKeyholeOpen,
+  SquareDashedMousePointerIcon,
+} from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -18,6 +22,7 @@ export default function FlowControls({
   ...props
 }: FlowControlsProps) {
   const [multiSelectActive, setMultiSelectActive] = useState(false);
+  const [lockActive, setLockActive] = useState(true);
 
   const onClickMultiSelect = useCallback(() => {
     updateConfig({
@@ -27,13 +32,32 @@ export default function FlowControls({
     setMultiSelectActive(!multiSelectActive);
   }, [multiSelectActive, updateConfig]);
 
+  const handleLockChange = useCallback(() => {
+    updateConfig({
+      nodesDraggable: lockActive,
+    });
+    setLockActive(!lockActive);
+  }, [lockActive, updateConfig]);
+
   return (
     <Controls {...props}>
+      {!props.showInteractive && (
+        <ControlButton
+          onClick={handleLockChange}
+          className={cn(lockActive && "bg-gray-100!")}
+        >
+          {lockActive ? (
+            <LockKeyhole className="fill-none! -scale-x-120 scale-y-120" />
+          ) : (
+            <LockKeyholeOpen className="fill-none! -scale-x-120 scale-y-120" />
+          )}
+        </ControlButton>
+      )}
       <ControlButton
         onClick={onClickMultiSelect}
         className={cn(multiSelectActive && "bg-gray-100!")}
       >
-        <SquareDashedMousePointerIcon />
+        <SquareDashedMousePointerIcon className="scale-120" />
       </ControlButton>
     </Controls>
   );

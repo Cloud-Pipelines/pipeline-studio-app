@@ -1,4 +1,4 @@
-import { Component, X } from "lucide-react";
+import { PackagePlus, X } from "lucide-react";
 import { Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useImportComponent from "@/hooks/useImportComponent";
 import useToastNotification from "@/hooks/useToastNotification";
@@ -118,16 +117,11 @@ const ImportComponent = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <SidebarMenuItem>
-        <DialogTrigger asChild>
-          <div className="w-full">
-            <SidebarMenuButton className="cursor-pointer w-full">
-              <Component />
-              <span className="font-normal text-xs">Import Component</span>
-            </SidebarMenuButton>
-          </div>
-        </DialogTrigger>
-      </SidebarMenuItem>
+      <DialogTrigger asChild>
+        <Button className="w-fit" variant="ghost">
+          <PackagePlus className="w-4 h-4" />
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Import Component</DialogTitle>

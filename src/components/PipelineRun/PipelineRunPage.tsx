@@ -34,6 +34,7 @@ const PipelineRunPage = () => {
           <FlowControls
             style={{ marginLeft: "224px", marginBottom: "24px" }}
             updateConfig={updateFlowConfig}
+            showInteractive={false}
           />
           <Background gap={GRID_SIZE} className="bg-slate-50!" />
         </FlowCanvas>

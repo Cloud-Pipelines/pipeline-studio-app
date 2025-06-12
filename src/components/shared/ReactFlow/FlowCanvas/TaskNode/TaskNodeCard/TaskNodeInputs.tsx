@@ -27,7 +27,7 @@ export function TaskNodeInputs({
   onBackgroundClick,
   handleIOClicked,
 }: TaskNodeInputsProps) {
-  const { inputs, taskSpec } = useTaskNode();
+  const { inputs, taskSpec, state } = useTaskNode();
   const {
     setSearchTerm,
     setSearchFilters,
@@ -91,10 +91,12 @@ export function TaskNodeInputs({
 
   const handleSelectionChange = useCallback(
     (inputName: string, selected: boolean) => {
+      if (state.readOnly) return;
+
       const input = inputs.find((i) => i.name === inputName);
       toggleHighlightRelatedHandles(selected, input);
     },
-    [inputs, toggleHighlightRelatedHandles],
+    [inputs, state, toggleHighlightRelatedHandles],
   );
 
   const checkHighlight = useCallback(
