@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
@@ -72,16 +73,57 @@ export const FullscreenProvider = ({ children }: FullscreenProviderProps) => {
   }, []);
 
   const closeFullscreen = useCallback(() => {
-    setIsAnyFullscreen(false);
-    setCurrentContent(null);
+    if (window.history.state?.codeViewerFullscreen) {
+      window.history.back();
+    } else {
+      setIsAnyFullscreen(false);
+      setCurrentContent(null);
+    }
   }, []);
 
-  const value = {
-    isAnyFullscreen,
-    openFullscreen,
-    closeFullscreen,
-    currentContent,
-  };
+  useEffect(() => {
+    if (!isAnyFullscreen) return;
+
+    // Escape key handler
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeFullscreen();
+    };
+
+    // Popstate handler
+    const handlePopState = () => {
+      if (!window.history.state?.codeViewerFullscreen) {
+        closeFullscreen();
+      }
+    };
+
+    // Prevent background scroll
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    // Push state if not already set
+    if (!window.history.state?.codeViewerFullscreen) {
+      window.history.pushState({ codeViewerFullscreen: true }, "");
+    }
+
+    window.addEventListener("keydown", handleEscapeKey);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleEscapeKey);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [isAnyFullscreen, closeFullscreen]);
+
+  const value = useMemo(
+    () => ({
+      isAnyFullscreen,
+      openFullscreen,
+      closeFullscreen,
+      currentContent,
+    }),
+    [isAnyFullscreen, openFullscreen, closeFullscreen, currentContent],
+  );
 
   return (
     <FullscreenContext.Provider value={value}>
@@ -136,22 +178,6 @@ const CodeViewer = ({
 
 const FullscreenView = ({ content, onClose }: FullscreenViewProps) => {
   const { code, language, title } = content;
-
-  useEffect(() => {
-    const handleEscapeKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    window.addEventListener("keydown", handleEscapeKey);
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-      window.removeEventListener("keydown", handleEscapeKey);
-    };
-  }, [onClose]);
 
   return createPortal(
     <div
