@@ -562,6 +562,79 @@ export const addComponentToListByTextWithDuplicateCheck = async (
   };
 };
 
+/**
+ * Replaces an existing component with a new one (overwrites)
+ */
+export const replaceComponentInList = async (
+  listName: string,
+  componentText: string | ArrayBuffer,
+  existingFileName: string,
+): Promise<ComponentFileEntry> => {
+  const componentRef = await storeComponentText(componentText);
+  return writeComponentRefToFile(listName, existingFileName, componentRef);
+};
+
+/**
+ * Adds a component with a new name (renamed)
+ */
+export const addComponentWithNewName = async (
+  listName: string,
+  componentText: string | ArrayBuffer,
+  newName: string,
+): Promise<ComponentFileEntry> => {
+  const componentRef = await storeComponentText(componentText);
+  // Update the component spec name to match the new name
+  const updatedComponentRef = {
+    ...componentRef,
+    spec: {
+      ...componentRef.spec,
+      name: newName,
+    },
+  };
+  return addComponentRefToList(listName, updatedComponentRef, newName);
+};
+
+/**
+ * Adds a component allowing duplicates (keep both) with version identifier
+ */
+export const addComponentAllowingDuplicates = async (
+  listName: string,
+  componentText: string | ArrayBuffer,
+  defaultFileName: string = "Component",
+): Promise<ComponentFileEntry> => {
+  const componentRef = await storeComponentText(componentText);
+  const originalName = componentRef.spec.name ?? defaultFileName;
+
+  // Get existing components to find version conflicts
+  const componentFiles = await getAllComponentFilesFromList(listName);
+  const existingNames = new Set<string>();
+
+  // Collect all existing names including versioned ones
+  for (const [fileName] of componentFiles) {
+    existingNames.add(fileName);
+  }
+
+  // Generate a unique name with version identifier (digest prefix)
+  const digestPrefix = componentRef.digest.substring(0, 8);
+  let versionedName = `${originalName} (${digestPrefix})`;
+
+  // If that's also taken, use the makeNameUniqueByAddingIndex approach
+  if (existingNames.has(versionedName)) {
+    versionedName = makeNameUniqueByAddingIndex(versionedName, existingNames);
+  }
+
+  // Update the component spec name to include the version
+  const updatedComponentRef = {
+    ...componentRef,
+    spec: {
+      ...componentRef.spec,
+      name: versionedName,
+    },
+  };
+
+  return addComponentRefToList(listName, updatedComponentRef, versionedName);
+};
+
 // Keep the original function for backward compatibility
 export const addComponentToListByText = async (
   listName: string,

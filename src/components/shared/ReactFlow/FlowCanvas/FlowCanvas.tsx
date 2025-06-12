@@ -285,7 +285,7 @@ const FlowCanvas = ({
     [graphSpec, handleConnection, updateGraphSpec],
   );
 
-  const { handleDrop } = useComponentUploader(readOnly, {
+  const { handleDrop, renderDuplicateDialog } = useComponentUploader(readOnly, {
     onImportSuccess: async (
       content: string,
       dropEvent?: DragEvent<HTMLDivElement>,
@@ -740,6 +740,7 @@ const FlowCanvas = ({
           onCancel={() => confirmationHandlers?.onCancel()}
         />
       )}
+      {renderDuplicateDialog()}
     </>
   );
 };

@@ -2,20 +2,25 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
 import {
+  addComponentAllowingDuplicates,
   addComponentToListByTextWithDuplicateCheck,
   addComponentToListByUrl,
+  addComponentWithNewName,
   type ComponentFileEntry,
+  replaceComponentInList,
 } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 
 interface ImportComponentProps {
   successCallback?: (hasDuplicate?: boolean, fileEntry?: ComponentFileEntry, canOverwrite?: boolean) => void;
   errorCallback?: (error: Error) => void;
+  duplicateCallback?: (componentName: string, fileEntry: ComponentFileEntry) => void;
 }
 
 const useImportComponent = ({
   successCallback,
   errorCallback,
+  duplicateCallback,
 }: ImportComponentProps) => {
   const [url, setUrl] = useState("");
   const [shouldFetch, setShouldFetch] = useState(false);
@@ -23,6 +28,7 @@ const useImportComponent = ({
     null,
   );
   const [shouldProcessFile, setShouldProcessFile] = useState(false);
+  const [isDuplicateResolution, setIsDuplicateResolution] = useState(false);
   const queryClient = useQueryClient();
 
   const { isLoading: isLoadingUrl } = useQuery({
@@ -66,13 +72,22 @@ const useImportComponent = ({
           fileContent,
         );
 
-
         console.log('canOverwrite', canOverwrite);
 
-        // Invalidate the userComponents query to refresh the sidebar
-        queryClient.invalidateQueries({ queryKey: ["userComponents"] });
+        // If there's a duplicate and we can overwrite, trigger the duplicate callback
+        if (hasDuplicate && canOverwrite && fileEntry && duplicateCallback) {
+          const componentName = fileEntry.componentRef.spec.name || "Unknown Component";
+          setIsDuplicateResolution(true);
+          duplicateCallback(componentName, fileEntry);
+          return; // Don't proceed with normal flow, wait for user decision
+        }
 
-        successCallback?.(hasDuplicate, fileEntry, canOverwrite);
+        // Only proceed with normal flow if we're not in duplicate resolution mode
+        if (!isDuplicateResolution) {
+          // Invalidate the userComponents query to refresh the sidebar
+          queryClient.invalidateQueries({ queryKey: ["userComponents"] });
+          successCallback?.(hasDuplicate, fileEntry, canOverwrite);
+        }
         return;
       } catch (error) {
         console.error("Error importing component from file:", error);
@@ -97,12 +112,65 @@ const useImportComponent = ({
     setShouldProcessFile(true);
   }, []);
 
+  const handleDuplicateAction = useCallback(async (
+    action: "replace" | "rename" | "keep-both" | "cancel",
+    originalContent: string | ArrayBuffer,
+    existingFileEntry: ComponentFileEntry,
+    newName?: string
+  ) => {
+    try {
+      let savedFileEntry: ComponentFileEntry;
+
+      switch (action) {
+        case "replace":
+          savedFileEntry = await replaceComponentInList(
+            USER_COMPONENTS_LIST_NAME,
+            originalContent,
+            existingFileEntry.name
+          );
+          break;
+        case "rename":
+          if (!newName) throw new Error("New name is required for rename action");
+          savedFileEntry = await addComponentWithNewName(
+            USER_COMPONENTS_LIST_NAME,
+            originalContent,
+            newName
+          );
+          break;
+        case "keep-both":
+          savedFileEntry = await addComponentAllowingDuplicates(
+            USER_COMPONENTS_LIST_NAME,
+            originalContent
+          );
+          break;
+        case "cancel":
+          setIsDuplicateResolution(false);
+          return; // Do nothing, just exit
+        default:
+          throw new Error(`Unknown action: ${action}`);
+      }
+
+      // Invalidate the userComponents query to refresh the sidebar
+      queryClient.invalidateQueries({ queryKey: ["userComponents"] });
+
+      // Reset the duplicate resolution flag
+      setIsDuplicateResolution(false);
+
+      // Return the saved file entry so the uploader can use the correct content
+      return savedFileEntry;
+    } catch (error) {
+      console.error("Error handling duplicate action:", error);
+      errorCallback?.(error as Error);
+    }
+  }, [queryClient, successCallback, errorCallback]);
+
   const isLoading = isLoadingUrl || isLoadingFile;
 
   return {
     isLoading,
     onImportFromUrl,
     onImportFromFile,
+    handleDuplicateAction,
   };
 };
 

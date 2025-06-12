@@ -2,6 +2,7 @@ import { Component, X } from "lucide-react";
 import { Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 
+import ComponentDuplicateDialog, { type DuplicateAction } from "@/components/shared/Dialogs/ComponentDuplicateDialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,6 +20,7 @@ import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useImportComponent from "@/hooks/useImportComponent";
 import useToastNotification from "@/hooks/useToastNotification";
+import type { ComponentFileEntry } from "@/utils/componentStore";
 
 enum TabType {
   URL = "URL",
@@ -36,8 +38,19 @@ const ImportComponent = () => {
   );
   const [selectedFileName, setSelectedFileName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [duplicateDialogState, setDuplicateDialogState] = useState<{
+    isOpen: boolean;
+    componentName: string;
+    originalContent: string | ArrayBuffer | null;
+    existingFileEntry: ComponentFileEntry | null;
+  }>({
+    isOpen: false,
+    componentName: "",
+    originalContent: null,
+    existingFileEntry: null,
+  });
 
-  const { onImportFromUrl, onImportFromFile, isLoading } = useImportComponent({
+  const { onImportFromUrl, onImportFromFile, isLoading, handleDuplicateAction } = useImportComponent({
     successCallback: () => {
       setIsOpen(false);
       setUrl("");
@@ -50,7 +63,53 @@ const ImportComponent = () => {
       notify(error.message, "error");
       setIsSubmitting(false);
     },
+    duplicateCallback: (componentName: string, fileEntry: ComponentFileEntry) => {
+      setDuplicateDialogState({
+        isOpen: true,
+        componentName,
+        originalContent: selectedFile,
+        existingFileEntry: fileEntry,
+      });
+      setIsSubmitting(false);
+    },
   });
+
+  const handleDuplicateDialogAction = async (action: DuplicateAction, newName?: string) => {
+    const { originalContent, existingFileEntry } = duplicateDialogState;
+
+    if (!existingFileEntry || !originalContent) {
+      notify("Error: Missing file entry or content information", "error");
+      return;
+    }
+
+    setDuplicateDialogState(prev => ({ ...prev, isOpen: false }));
+
+    if (action === "cancel") {
+      return;
+    }
+
+    try {
+      await handleDuplicateAction(action, originalContent, existingFileEntry, newName);
+
+      // Reset form state
+      setIsOpen(false);
+      setUrl("");
+      setSelectedFile(null);
+      setSelectedFileName("");
+      setIsSubmitting(false);
+
+      // Show success notification
+      const actionMessages = {
+        replace: "Component replaced successfully",
+        rename: `Component renamed to "${newName}" and imported successfully`,
+        "keep-both": "Component imported with version identifier (both versions kept)"
+      };
+      notify(actionMessages[action], "success");
+    } catch (error) {
+      notify((error as Error).message, "error");
+      setIsSubmitting(false);
+    }
+  };
 
   const handleTabChange = (value: TabType) => {
     setTab(value);
@@ -240,6 +299,11 @@ const ImportComponent = () => {
           </Button>
         </DialogFooter>
       </DialogContent>
+      <ComponentDuplicateDialog
+        isOpen={duplicateDialogState.isOpen}
+        componentName={duplicateDialogState.componentName}
+        onAction={handleDuplicateDialogAction}
+      />
     </Dialog>
   );
 };

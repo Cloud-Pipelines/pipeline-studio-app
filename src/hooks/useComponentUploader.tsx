@@ -1,7 +1,9 @@
-import { type DragEvent } from "react";
+import { type DragEvent, useState } from "react";
 
+import ComponentDuplicateDialog, { type DuplicateAction } from "@/components/shared/Dialogs/ComponentDuplicateDialog";
 import useImportComponent from "@/hooks/useImportComponent";
 import useToastNotification from "@/hooks/useToastNotification";
+import type { ComponentFileEntry } from "@/utils/componentStore";
 
 interface useComponentUploaderProps {
   onImportSuccess?: (
@@ -15,9 +17,21 @@ const useComponentUploader = (
   { onImportSuccess }: useComponentUploaderProps,
 ) => {
   const notify = useToastNotification();
+  const [duplicateDialogState, setDuplicateDialogState] = useState<{
+    isOpen: boolean;
+    componentName: string;
+    originalContent: string;
+    existingFileEntry: ComponentFileEntry | null;
+    dropEvent?: DragEvent<HTMLDivElement>;
+  }>({
+    isOpen: false,
+    componentName: "",
+    originalContent: "",
+    existingFileEntry: null,
+  });
 
-  const { onImportFromFile } = useImportComponent({
-    successCallback: (hasDuplicate, fileEntry, canOverwrite) => {
+  const { onImportFromFile, handleDuplicateAction } = useImportComponent({
+    successCallback: (hasDuplicate, _fileEntry, canOverwrite) => {
       if (canOverwrite) {
         notify("Component already exists, but can be overwritten", "warning");
       } else if (hasDuplicate) {
@@ -29,7 +43,49 @@ const useComponentUploader = (
     errorCallback: (error: Error) => {
       notify(error.message, "error");
     },
+    duplicateCallback: (componentName: string, fileEntry: ComponentFileEntry) => {
+      setDuplicateDialogState(prev => ({
+        ...prev,
+        isOpen: true,
+        componentName,
+        existingFileEntry: fileEntry,
+      }));
+    },
   });
+
+  const handleDuplicateDialogAction = async (action: DuplicateAction, newName?: string) => {
+    const { originalContent, existingFileEntry } = duplicateDialogState;
+
+    if (!existingFileEntry) {
+      notify("Error: Missing file entry information", "error");
+      return;
+    }
+
+    setDuplicateDialogState(prev => ({ ...prev, isOpen: false }));
+
+    if (action === "cancel") {
+      return;
+    }
+
+                try {
+      const savedFileEntry = await handleDuplicateAction(action, originalContent, existingFileEntry, newName);
+
+      // Use the content from the saved file entry (which has the correct name/version)
+      if (savedFileEntry) {
+        onImportSuccess?.(savedFileEntry.componentRef.text, duplicateDialogState.dropEvent);
+      }
+
+      // Show success notification
+      const actionMessages = {
+        replace: "Component replaced successfully",
+        rename: `Component renamed to "${newName}" and imported successfully`,
+        "keep-both": "Component imported with version identifier (both versions kept)"
+      };
+      notify(actionMessages[action], "success");
+    } catch (error) {
+      notify((error as Error).message, "error");
+    }
+  };
 
   const handleFileUpload = async (
     file: File,
@@ -47,6 +103,13 @@ const useComponentUploader = (
         notify("Failed to read file", "error");
         return;
       }
+
+      // Store the content and drop event for potential duplicate handling
+      setDuplicateDialogState(prev => ({
+        ...prev,
+        originalContent: content as string,
+        dropEvent,
+      }));
 
       try {
         await onImportFromFile(content as string);
@@ -67,14 +130,24 @@ const useComponentUploader = (
     }
   };
 
+  const renderDuplicateDialog = () => (
+    <ComponentDuplicateDialog
+      isOpen={duplicateDialogState.isOpen}
+      componentName={duplicateDialogState.componentName}
+      onAction={handleDuplicateDialogAction}
+    />
+  );
+
   if (readOnly) {
     return {
       handleDrop: () => {},
+      renderDuplicateDialog,
     };
   }
 
   return {
     handleDrop,
+    renderDuplicateDialog,
   };
 };
 
