@@ -123,7 +123,7 @@ const ImportComponent = () => {
           <div className="w-full">
             <SidebarMenuButton className="cursor-pointer w-full">
               <Component />
-              <span className="font-normal">Import Component</span>
+              <span className="font-normal text-xs">Import Component</span>
             </SidebarMenuButton>
           </div>
         </DialogTrigger>

@@ -80,7 +80,7 @@ const TaskConfigurationSheet = ({
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="right"
-        className="!w-[528px] !max-w-[528px] shadow-none"
+        className="!w-[512px] !max-w-[512px] shadow-none"
         style={{
           top: TOP_NAV_HEIGHT + "px",
           height: sheetHeight + "px",
