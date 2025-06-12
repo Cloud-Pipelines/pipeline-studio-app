@@ -9,6 +9,7 @@ export interface Component {
   id: string;
   url: string;
   data: string; // Component data as string
+  favorited?: boolean; // Optional field for favorited status
   createdAt: number;
   updatedAt: number;
 }

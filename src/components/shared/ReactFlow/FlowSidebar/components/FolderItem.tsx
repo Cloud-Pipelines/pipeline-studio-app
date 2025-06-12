@@ -4,18 +4,26 @@ import {
   Folder,
   type LucideProps,
 } from "lucide-react";
-import { type JSXElementConstructor, type MouseEvent, useState } from "react";
+import {
+  type JSXElementConstructor,
+  type MouseEvent,
+  useCallback,
+  useState,
+} from "react";
 
+import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import { type FolderItemProps } from "@/types/componentLibrary";
+import type { ComponentReference } from "@/utils/componentSpec";
 
 import { ComponentItemFromUrl, ComponentMarkup } from "./ComponentItem";
-import UserComponentItem from "./UserComponentItem";
 
 const FolderItem = ({ folder, icon }: FolderItemProps) => {
+  const { setComponentFavorite } = useComponentLibrary();
+
   const [isOpen, setIsOpen] = useState(false);
+
   const hasComponents = folder.components && folder.components.length > 0;
   const hasSubfolders = folder.folders && folder.folders.length > 0;
-  const isUserFolder = !!folder.isUserFolder;
 
   const toggle = (e: MouseEvent) => {
     e.stopPropagation();
@@ -24,6 +32,13 @@ const FolderItem = ({ folder, icon }: FolderItemProps) => {
 
   const Icon = icon as JSXElementConstructor<LucideProps>;
   const chevronStyles = "h-4 w-4 text-gray-400 flex-shrink-0";
+
+  const handleFavorite = useCallback(
+    (component: ComponentReference) => {
+      setComponentFavorite(component, !component.favorited);
+    },
+    [setComponentFavorite],
+  );
 
   return (
     <div className="w-full">
@@ -55,36 +70,24 @@ const FolderItem = ({ folder, icon }: FolderItemProps) => {
             <div>
               {folder.components.map((component) => {
                 const key = `${folder.name}-component-${component.name || component?.spec?.name || component.url}`;
-                // if the component has a spec or is a user component, render the appropriate component
-                // otherwise, render using URL
+                // If the component has a spec render the component, otherwise, render using URL
                 if (component.spec) {
-                  if (isUserFolder && component.spec.name) {
-                    return (
-                      <UserComponentItem
-                        key={key}
-                        url={component.url || ""}
-                        fileName={component.name || ""}
-                        componentSpec={component.spec}
-                        componentDigest={component.digest || ""}
-                        componentText={component.text || ""}
-                        displayName={component.spec.name || ""}
-                      />
-                    );
-                  }
-
                   return (
                     <ComponentMarkup
                       key={key}
-                      url={component.url || ""}
-                      componentSpec={component.spec}
-                      componentDigest={component.digest || ""}
-                      componentText={component.text || ""}
-                      displayName={component.spec.name || ""}
+                      component={component}
+                      onFavorite={() => handleFavorite(component)}
                     />
                   );
                 }
 
-                return <ComponentItemFromUrl key={key} url={component.url} />;
+                return (
+                  <ComponentItemFromUrl
+                    key={key}
+                    url={component.url}
+                    onFavorite={() => handleFavorite(component)}
+                  />
+                );
               })}
             </div>
           )}

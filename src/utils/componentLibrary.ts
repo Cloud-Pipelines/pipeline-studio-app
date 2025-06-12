@@ -76,6 +76,48 @@ export const fetchUsedComponents = (graphSpec: GraphSpec): ComponentFolder => {
   };
 };
 
+export const fetchFavoriteComponents = (
+  componentLibrary: ComponentLibrary | undefined,
+  userComponents: ComponentFolder | undefined,
+): ComponentFolder => {
+  const favoritesFolder = {
+    name: "My Components",
+    components: [] as ComponentReference[],
+    folders: [],
+    isUserFolder: false,
+  };
+
+  if (!componentLibrary || !componentLibrary.folders) {
+    return favoritesFolder;
+  }
+
+  const uniqueLibraryComponents = filterToUniqueByDigest(
+    flattenFolders(componentLibrary),
+  );
+
+  uniqueLibraryComponents.forEach((component) => {
+    if (component?.favorited) {
+      favoritesFolder.components.push(component);
+    }
+  });
+
+  if (!userComponents) {
+    return favoritesFolder;
+  }
+
+  const uniqueUserComponents = filterToUniqueByDigest(
+    flattenFolders(userComponents),
+  );
+
+  uniqueUserComponents.forEach((component) => {
+    if (component?.favorited) {
+      favoritesFolder.components.push(component);
+    }
+  });
+
+  return favoritesFolder;
+};
+
 export async function populateComponentRefsFromUrls<
   T extends ComponentLibrary | ComponentFolder,
 >(libraryOrFolder: T): Promise<T> {
@@ -92,6 +134,7 @@ export async function populateComponentRefsFromUrls<
           spec: parsed || ref.spec,
           digest: digest || ref.digest,
           text: stored.data,
+          favorited: stored.favorited || ref.favorited || false,
         };
       }
     }

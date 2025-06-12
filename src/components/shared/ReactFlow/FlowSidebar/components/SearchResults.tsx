@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import type { SearchResult } from "@/types/componentLibrary";
-import { componentReferenceToComponentData } from "@/utils/componentLibrary";
+import type { ComponentReference } from "@/utils/componentSpec";
 import { ComponentSearchFilter } from "@/utils/constants";
 
 import { ComponentMarkup } from "./ComponentItem";
@@ -17,21 +17,25 @@ const SearchResults = ({
   searchResult,
   onFiltersChange,
 }: SearchResultsProps) => {
-  const { searchTerm, searchFilters } = useComponentLibrary();
+  const { searchTerm, searchFilters, setComponentFavorite } =
+    useComponentLibrary();
 
-  const matchedComponents = searchResult.components.standard
-    .map((c) => componentReferenceToComponentData(c))
-    .filter((c) => !!c);
+  const matchedComponents = searchResult.components.standard;
 
-  const matchedUserComponents = searchResult.components.user
-    .map((c) => componentReferenceToComponentData(c))
-    .filter((c) => !!c);
+  const matchedUserComponents = searchResult.components.user;
 
   const handleNameFilterClick = useCallback(() => {
     if (!searchFilters.includes(ComponentSearchFilter.NAME)) {
       onFiltersChange([...searchFilters, ComponentSearchFilter.NAME]);
     }
   }, [searchFilters, onFiltersChange]);
+
+  const handleFavorite = useCallback(
+    (component: ComponentReference) => {
+      setComponentFavorite(component, !component.favorited);
+    },
+    [setComponentFavorite],
+  );
 
   const filtersWithoutExactMatch = searchFilters.filter(
     (f) => f !== ComponentSearchFilter.EXACTMATCH,
@@ -43,7 +47,7 @@ const SearchResults = ({
 
   if (filtersWithoutExactMatch.length === 0) {
     return (
-      <div className="px-4 py-2 text-sm text-gray-500">
+      <div className="px-4 py-2 text-sm text-gray-500 flex flex-col items-center">
         No search filters set.{" "}
         <Button
           variant="ghost"
@@ -89,11 +93,8 @@ const SearchResults = ({
             {matchedUserComponents.map((component, index) => (
               <ComponentMarkup
                 key={`user-${index}`}
-                url={component.url}
-                componentSpec={component.data}
-                componentDigest={component.digest}
-                componentText={JSON.stringify(component.data)}
-                displayName={component.data.name!}
+                component={component}
+                onFavorite={() => handleFavorite(component)}
               />
             ))}
           </>
@@ -111,11 +112,8 @@ const SearchResults = ({
             {matchedComponents.map((component, index) => (
               <ComponentMarkup
                 key={`lib-${index}`}
-                url={component.url}
-                componentSpec={component.data}
-                componentDigest={component.digest}
-                componentText={JSON.stringify(component.data)}
-                displayName={component.data.name!}
+                component={component}
+                onFavorite={() => handleFavorite(component)}
               />
             ))}
           </>

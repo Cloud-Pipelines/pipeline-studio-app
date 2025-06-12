@@ -449,6 +449,27 @@ const writeComponentRefToFile = async (
   return fileEntry;
 };
 
+export const updateComponentRefInList = async (
+  listName: string,
+  componentRef: ComponentReferenceWithSpec,
+  fileName: string,
+) => {
+  await upgradeSingleComponentListDb(listName);
+  const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
+  const componentListDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: tableName,
+  });
+  const existingFile =
+    await componentListDb.getItem<ComponentFileEntry>(fileName);
+  if (existingFile === null) {
+    throw new Error(
+      `Cannot update component "${fileName}" in list "${listName}" because it does not exist.`,
+    );
+  }
+  return writeComponentRefToFile(listName, fileName, componentRef);
+};
+
 const addComponentRefToList = async (
   listName: string,
   componentRef: ComponentReferenceWithSpec,
@@ -469,8 +490,17 @@ export const addComponentToListByUrl = async (
   listName: string,
   url: string,
   defaultFileName: string = "Component",
+  additionalData?: {
+    [K: string]: any;
+  },
 ) => {
   const componentRef = await storeComponentFromUrl(url);
+
+  if (additionalData) {
+    // Merge additional data into the component reference
+    Object.assign(componentRef, additionalData);
+  }
+
   return addComponentRefToList(
     listName,
     componentRef,
@@ -530,8 +560,16 @@ export const addComponentToListByTextWithDuplicateCheck = async (
   fileName?: string,
   defaultFileName: string = "Component",
   allowDuplicates: boolean = false,
+  additionalData?: {
+    [K: string]: any;
+  },
 ): Promise<ComponentFileEntry> => {
   const componentRef = await storeComponentText(componentText);
+
+  if (additionalData) {
+    // Merge additional data into the component reference
+    Object.assign(componentRef, additionalData);
+  }
 
   if (!allowDuplicates) {
     const existingComponent = await findDuplicateComponent(
@@ -539,7 +577,11 @@ export const addComponentToListByTextWithDuplicateCheck = async (
       componentRef,
     );
     if (existingComponent) {
-      return existingComponent;
+      return updateComponentRefInList(
+        listName,
+        componentRef,
+        existingComponent.name,
+      );
     }
   }
 
@@ -566,6 +608,22 @@ export const addComponentToListByText = async (
     componentRef,
     fileName ?? componentRef.spec.name ?? defaultFileName,
   );
+};
+
+export const updateComponentInListByText = async (
+  listName: string,
+  componentText: string | ArrayBuffer,
+  fileName: string,
+  additionalData?: {
+    [K: string]: any;
+  },
+) => {
+  const componentRef = await storeComponentText(componentText);
+  if (additionalData) {
+    // Merge additional data into the component reference
+    Object.assign(componentRef, additionalData);
+  }
+  return updateComponentRefInList(listName, componentRef, fileName);
 };
 
 export const writeComponentToFileListFromText = async (
