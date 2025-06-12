@@ -10,16 +10,24 @@ const OutputsList = ({ taskSpec }: OutputsListProps) => {
   const outputs = componentSpec?.outputs;
 
   const outputsMarkup = outputs?.map((output) => (
-    <div key={output.name} className="flex items-center justify-between p-2">
-      <span className="text-sm">{output.name}</span>
-      <span className="text-xs max-w-3/4 truncate" title={output.description}>
-        {output.description}
+    <div key={output.name} className="flex items-center p-2">
+      <span className="text-sm">
+        {output.name}
+        {output.type && (
+          <span className="text-xs text-muted-foreground italic">
+            {" "}
+            ({output.type as string})
+          </span>
+        )}
+        {output.description && (
+          <span
+            className="text-xs max-w-3/4 truncate"
+            title={output.description}
+          >
+            : {output.description}
+          </span>
+        )}
       </span>
-      {output.type && (
-        <span className="text-xs text-muted-foreground italic">
-          {output.type as string}
-        </span>
-      )}
     </div>
   ));
 
