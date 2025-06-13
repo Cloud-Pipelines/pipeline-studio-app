@@ -12,10 +12,9 @@ const OutputsList = ({ taskSpec }: OutputsListProps) => {
   const outputsMarkup = outputs?.map((output) => (
     <div key={output.name} className="flex items-center p-2">
       <span className="text-sm">
-        {output.name}
+        <span className="font-medium">{output.name}</span>
         {output.type && (
           <span className="text-xs text-muted-foreground italic">
-            {" "}
             ({output.type as string})
           </span>
         )}

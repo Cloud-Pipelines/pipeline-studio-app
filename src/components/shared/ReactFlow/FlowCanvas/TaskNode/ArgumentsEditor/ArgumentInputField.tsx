@@ -6,7 +6,13 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { Delete, Info, ListRestart, PlusSquare } from "lucide-react";
+import {
+  Delete,
+  HelpCircle,
+  Info,
+  ListRestart,
+  PlusSquare,
+} from "lucide-react";
 import {
   type ChangeEvent,
   type MouseEvent,
@@ -123,37 +129,54 @@ export const ArgumentInputField = ({
         className="flex w-full items-center justify-between gap-2 py-1 rounded-md hover:bg-secondary/40 cursor-pointer"
         onClick={handleBackgroundClick}
       >
-        <div className="flex items-center gap-2 w-2/5">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div
-                className={cn(
-                  "bg-success rounded-full h-2 w-2 cursor-pointer",
-                  !canUndo && "invisible",
-                  disabled && "opacity-50",
-                )}
-                onClick={handleUndo}
-              />
-            </TooltipTrigger>
-            <TooltipContent className="z-9999">Recently changed</TooltipContent>
-          </Tooltip>
-          <div
-            className={cn("flex flex-col", argument.isRemoved && "opacity-50")}
-          >
-            <Label
-              htmlFor={argument.inputSpec.name}
-              className="text-sm break-words"
+        <div className="flex items-center gap-2 justify-between w-2/5 pr-2">
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className={cn(
+                    "bg-success rounded-full h-2 w-2 cursor-pointer",
+                    !canUndo && "invisible",
+                    disabled && "opacity-50",
+                  )}
+                  onClick={handleUndo}
+                />
+              </TooltipTrigger>
+              <TooltipContent className="z-9999">
+                Recently changed
+              </TooltipContent>
+            </Tooltip>
+            <div
+              className={cn(
+                "flex flex-col",
+                argument.isRemoved && "opacity-50",
+              )}
             >
-              {argument.inputSpec.name.replace(/_/g, " ")}
-            </Label>
-            <span
-              className="text-xs text-muted-foreground truncate"
-              title={typeSpecToString(argument.inputSpec.type)}
-            >
-              ({typeSpecToString(argument.inputSpec.type)}
-              {!argument.inputSpec.optional ? "*" : ""})
-            </span>
+              <Label
+                htmlFor={argument.inputSpec.name}
+                className="text-sm break-words"
+              >
+                {argument.inputSpec.name.replace(/_/g, " ")}
+              </Label>
+              <span
+                className="text-xs text-muted-foreground truncate"
+                title={typeSpecToString(argument.inputSpec.type)}
+              >
+                ({typeSpecToString(argument.inputSpec.type)}
+                {!argument.inputSpec.optional ? "*" : ""})
+              </span>
+            </div>
           </div>
+          {argument.inputSpec.hint && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-4 h-4" />
+              </TooltipTrigger>
+              <TooltipContent className="z-9999">
+                {argument.inputSpec.hint}
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
         <div className="relative w-48">
           <Tooltip>
