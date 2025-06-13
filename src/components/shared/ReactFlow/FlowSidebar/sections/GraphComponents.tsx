@@ -6,12 +6,18 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
 } from "@/components/ui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 
 import {
   EmptyState,
   ErrorState,
   FolderItem,
+  ImportComponent,
   LoadingState,
   SearchInput,
   SearchResults,
@@ -102,8 +108,16 @@ const GraphComponents = () => {
   return (
     <SidebarGroup>
       <SidebarGroupLabel asChild>
-        <div className="flex items-center">
+        <div className="flex items-center justify-between gap-2">
           <span className="font-medium text-sm">Components</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <ImportComponent />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top">Add component</TooltipContent>
+          </Tooltip>
         </div>
       </SidebarGroupLabel>
       <SidebarGroupContent className="[&_li]:marker:hidden [&_li]:before:content-none [&_li]:list-none">
@@ -113,6 +127,7 @@ const GraphComponents = () => {
           onChange={handleSearchChange}
           onFiltersChange={handleFiltersChange}
         />
+
         {memoizedContent}
       </SidebarGroupContent>
     </SidebarGroup>

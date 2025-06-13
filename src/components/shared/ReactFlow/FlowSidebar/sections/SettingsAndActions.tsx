@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@xyflow/react";
-import { FileDown, Import, Save, SaveAll } from "lucide-react";
+import { CloudUpload, FolderDown, Save, SaveAll } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
 import { PipelineNameDialog } from "@/components/shared/Dialogs";
@@ -14,14 +14,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/routes/router";
 import { useSavePipeline } from "@/services/pipelineService";
 import { componentSpecToYaml } from "@/utils/componentStore";
 import { updateComponentSpecFromNodes } from "@/utils/nodes/updateComponentSpecFromNodes";
-
-import { ImportComponent } from "../components";
 
 const SettingsAndActions = () => {
   const { componentSpec } = useComponentSpec();
@@ -90,25 +93,35 @@ const SettingsAndActions = () => {
     <SidebarGroup className="pb-0">
       <SidebarGroupLabel asChild>
         <div className="flex items-center">
-          <span className="font-medium text-sm">Settings & Actions</span>
+          <span className="font-medium text-sm">Pipeline Actions</span>
         </div>
       </SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
+        <SidebarMenu className="flex-row gap-2 text-foreground/75">
           <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={handleSavePipeline}
-              className="cursor-pointer"
-            >
-              <Save />
-              <span className="font-normal text-xs">Save</span>
-            </SidebarMenuButton>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarMenuButton
+                  onClick={handleSavePipeline}
+                  className="cursor-pointer"
+                >
+                  <Save className="w-5! h-5!" strokeWidth={1.5} />
+                </SidebarMenuButton>
+              </TooltipTrigger>
+              <TooltipContent side="top">Save Pipeline</TooltipContent>
+            </Tooltip>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <PipelineNameDialog
               trigger={
-                <SidebarMenuButton className="cursor-pointer">
-                  <SaveAll />
-                  <span className="font-normal text-xs">Save as</span>
-                </SidebarMenuButton>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SidebarMenuButton className="cursor-pointer">
+                      <SaveAll className="w-5! h-5!" strokeWidth={1.5} />
+                    </SidebarMenuButton>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Save-as Pipeline</TooltipContent>
+                </Tooltip>
               }
               title="Save Pipeline As"
               description="Enter a name for your pipeline"
@@ -119,34 +132,40 @@ const SettingsAndActions = () => {
             />
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="cursor-pointer">
-              <a
-                href={URL.createObjectURL(componentTextBlob)}
-                download={filename}
-              >
-                <FileDown />
-                <span className="font-normal text-xs">Export Pipeline</span>
-              </a>
-            </SidebarMenuButton>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarMenuButton asChild className="cursor-pointer">
+                  <a
+                    href={URL.createObjectURL(componentTextBlob)}
+                    download={filename}
+                  >
+                    <CloudUpload className="w-5! h-5!" strokeWidth={1.5} />
+                  </a>
+                </SidebarMenuButton>
+              </TooltipTrigger>
+              <TooltipContent side="top">Export Pipeline</TooltipContent>
+            </Tooltip>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <ImportPipeline
               triggerComponent={
-                <SidebarMenuButton asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-start px-2!"
-                  >
-                    <Import />
-                    <span className="font-normal text-xs">Import Pipeline</span>
-                  </Button>
-                </SidebarMenuButton>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SidebarMenuButton asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="w-full justify-start px-2!"
+                      >
+                        <FolderDown className="w-5! h-5!" strokeWidth={1.5} />
+                      </Button>
+                    </SidebarMenuButton>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Import Pipeline</TooltipContent>
+                </Tooltip>
               }
             />
           </SidebarMenuItem>
-
-          <ImportComponent />
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

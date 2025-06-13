@@ -28,6 +28,7 @@ const PipelineEditor = () => {
     snapToGrid: true,
     panOnDrag: true,
     selectionOnDrag: false,
+    nodesDraggable: true,
   });
 
   const updateFlowConfig = useCallback(
@@ -58,6 +59,7 @@ const PipelineEditor = () => {
           <FlowControls
             style={{ marginLeft: "224px", marginBottom: "24px" }}
             updateConfig={updateFlowConfig}
+            showInteractive
           />
           <Background gap={GRID_SIZE} className="bg-slate-50!" />
         </FlowCanvas>

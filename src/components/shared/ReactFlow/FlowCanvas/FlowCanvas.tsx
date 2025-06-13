@@ -63,6 +63,7 @@ const edgeTypes: Record<string, ComponentType<any>> = {
 
 const FlowCanvas = ({
   readOnly,
+  nodesConnectable,
   children,
   ...rest
 }: ReactFlowProps & { readOnly?: boolean }) => {
@@ -585,6 +586,19 @@ const FlowCanvas = ({
     setShowToolbar(true);
   }, []);
 
+  /* This useEffect handles the scenario where cmd+click is used to select multiple nodes.
+   * It is currently disabled because ReactFlow does not render the selection box when
+   * multiple nodes are selected in this way. This leaves the toolbar orphaned.
+   * If this behavior is fixed in ReactFlow, we can re-enable this effect.
+   */
+  // useEffect(() => {
+  //   if (selectedNodes.length > 1 && !showToolbar) {
+  //     setShowToolbar(true);
+  //   } else if (selectedNodes.length <= 1 && showToolbar) {
+  //     setShowToolbar(false);
+  //   }
+  // }, [selectedNodes, showToolbar]);
+
   const updateReactFlow = useCallback(
     (newComponentSpec: ComponentSpec) => {
       const newNodes = createNodesFromComponentSpec(newComponentSpec, nodeData);
@@ -710,36 +724,32 @@ const FlowCanvas = ({
         deleteKeyCode={["Delete", "Backspace"]}
         onSelectionChange={handleSelectionChange}
         onSelectionEnd={handleSelectionEnd}
-        nodesDraggable={!readOnly}
-        nodesConnectable={!readOnly}
+        nodesConnectable={readOnly ? false : nodesConnectable}
         connectOnClick={!readOnly}
         className={cn(
           (rest.selectionOnDrag || shiftKeyPressed) && "cursor-crosshair",
         )}
       >
-        {!readOnly && (
-          <NodeToolbar
-            nodeId={selectedNodes.map((node) => node.id)}
-            isVisible={showToolbar}
-            offset={0}
-            align="end"
-          >
-            <SelectionToolbar
-              onDelete={onRemoveNodes}
-              onDuplicate={onDuplicateNodes}
-              onUpgrade={onUpgradeNodes}
-            />
-          </NodeToolbar>
-        )}
+        <NodeToolbar
+          nodeId={selectedNodes.map((node) => node.id)}
+          isVisible={showToolbar}
+          offset={0}
+          align="end"
+        >
+          <SelectionToolbar
+            onDelete={!readOnly ? onRemoveNodes : undefined}
+            onDuplicate={!readOnly ? onDuplicateNodes : undefined}
+            onCopy={!readOnly ? undefined : onCopy}
+            onUpgrade={!readOnly ? onUpgradeNodes : undefined}
+          />
+        </NodeToolbar>
         {children}
       </ReactFlow>
-      {!readOnly && (
-        <ConfirmationDialog
-          {...confirmationProps}
-          onConfirm={() => confirmationHandlers?.onConfirm()}
-          onCancel={() => confirmationHandlers?.onCancel()}
-        />
-      )}
+      <ConfirmationDialog
+        {...confirmationProps}
+        onConfirm={() => confirmationHandlers?.onConfirm()}
+        onCancel={() => confirmationHandlers?.onCancel()}
+      />
     </>
   );
 };

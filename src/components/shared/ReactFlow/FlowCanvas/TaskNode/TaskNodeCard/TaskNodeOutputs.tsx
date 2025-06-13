@@ -24,7 +24,7 @@ export function TaskNodeOutputs({
   onBackgroundClick,
   handleIOClicked,
 }: TaskNodeOutputsProps) {
-  const { nodeId, outputs } = useTaskNode();
+  const { nodeId, outputs, state } = useTaskNode();
   const {
     setSearchTerm,
     setSearchFilters,
@@ -85,10 +85,12 @@ export function TaskNodeOutputs({
 
   const handleSelectionChange = useCallback(
     (outputName: string, selected: boolean) => {
+      if (state.readOnly) return;
+
       const output = outputs.find((o) => o.name === outputName);
       toggleHighlightRelatedHandles(selected, output);
     },
-    [outputs, toggleHighlightRelatedHandles],
+    [outputs, state, toggleHighlightRelatedHandles],
   );
 
   const checkHighlight = useCallback(
