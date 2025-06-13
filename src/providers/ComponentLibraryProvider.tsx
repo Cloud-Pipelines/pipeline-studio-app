@@ -29,16 +29,11 @@ import {
   updateComponentInListByText,
   updateComponentRefInList,
 } from "@/utils/componentStore";
-import {
-  ComponentSearchFilter,
-  USER_COMPONENTS_LIST_NAME,
-} from "@/utils/constants";
+import { DEFAULT_FILTERS, USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 import { getComponentByUrl, saveComponent } from "@/utils/localforge";
 import { componentMatchesSearch } from "@/utils/searchUtils";
 
 import { useComponentSpec } from "./ComponentSpecProvider";
-
-const DEFAULT_FILTERS = [ComponentSearchFilter.NAME];
 
 type ComponentLibraryContextType = {
   componentLibrary: ComponentLibrary | undefined;
@@ -289,7 +284,7 @@ export const ComponentLibraryProvider = ({
     if (searchTerm.trim() === "") {
       setSearchFilters(DEFAULT_FILTERS);
     }
-  }, [searchTerm, searchFilters]);
+  }, [searchTerm]);
 
   useEffect(() => {
     if (!rawComponentLibrary) {
