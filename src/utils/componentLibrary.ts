@@ -29,7 +29,7 @@ export const fetchUserComponents = async (): Promise<ComponentFolder> => {
     });
 
     const userComponentsFolder: ComponentFolder = {
-      name: "User Components",
+      name: "My Components",
       components,
       folders: [],
       isUserFolder: true, // Add a flag to identify this as user components folder
@@ -37,9 +37,9 @@ export const fetchUserComponents = async (): Promise<ComponentFolder> => {
 
     return userComponentsFolder;
   } catch (error) {
-    console.error("Error fetching user components:", error);
+    console.error("Error fetching my components:", error);
     return {
-      name: "User Components",
+      name: "My Components",
       components: [],
       folders: [],
       isUserFolder: true,
