@@ -27,7 +27,6 @@ export interface InputSpec extends InputOutputSpec {
   name: string;
   type?: TypeSpecType;
   description?: string;
-  hint?: string;
   default?: string;
   optional?: boolean;
   annotations?: {
