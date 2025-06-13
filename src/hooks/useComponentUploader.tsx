@@ -1,7 +1,14 @@
-import { type DragEvent } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { type DragEvent, useState } from "react";
 
 import useImportComponent from "@/hooks/useImportComponent";
 import useToastNotification from "@/hooks/useToastNotification";
+import {
+  type ExistingAndNewComponent,
+  getExistingAndNewUserComponent,
+} from "@/services/componentService";
+import { addComponentToListByTextWithDuplicateCheck } from "@/utils/componentStore";
+import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 
 interface useComponentUploaderProps {
   onImportSuccess?: (
@@ -14,7 +21,11 @@ const useComponentUploader = (
   readOnly = false,
   { onImportSuccess }: useComponentUploaderProps,
 ) => {
+  const [existingAndNewComponent, setExistingAndNewComponent] = useState<
+    ExistingAndNewComponent | undefined
+  >(undefined);
   const notify = useToastNotification();
+  const queryClient = useQueryClient();
 
   const { onImportFromFile } = useImportComponent({
     successCallback: () => {
@@ -43,8 +54,23 @@ const useComponentUploader = (
       }
 
       try {
-        await onImportFromFile(content as string);
-        onImportSuccess?.(content as string, dropEvent);
+        const { existingComponent, newComponent } =
+          await getExistingAndNewUserComponent(content);
+
+        if (!existingComponent && newComponent) {
+          await onImportFromFile(content as string);
+          onImportSuccess?.(content as string, dropEvent);
+        } else if (existingComponent && newComponent) {
+          setExistingAndNewComponent({
+            existingComponent,
+            newComponent,
+          });
+        } else if (!newComponent) {
+          notify(
+            "There was an error importing the component. Please try again.",
+            "error",
+          );
+        }
       } catch (error) {
         notify((error as Error).message, "error");
       }
@@ -61,14 +87,39 @@ const useComponentUploader = (
     }
   };
 
+  const handleCancelUpload = () => {
+    setExistingAndNewComponent(undefined);
+  };
+
+  const handleImportComponent = async (content: string) => {
+    await addComponentToListByTextWithDuplicateCheck(
+      USER_COMPONENTS_LIST_NAME,
+      content,
+      undefined,
+      "Imported Component",
+      true,
+      { favorited: true },
+    );
+    onImportSuccess?.(content);
+    // Invalidate the userComponents query to refresh the sidebar
+    queryClient.invalidateQueries({ queryKey: ["userComponents"] });
+    handleCancelUpload();
+  };
+
   if (readOnly) {
     return {
       handleDrop: () => {},
+      existingAndNewComponent: undefined,
+      handleCancelUpload,
+      handleImportComponent,
     };
   }
 
   return {
     handleDrop,
+    existingAndNewComponent,
+    handleCancelUpload,
+    handleImportComponent,
   };
 };
 

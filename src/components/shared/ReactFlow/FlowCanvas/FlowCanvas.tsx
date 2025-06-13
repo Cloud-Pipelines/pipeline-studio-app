@@ -33,6 +33,7 @@ import type {
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
 
+import ComponentDuplicateDialog from "../../Dialogs/ComponentDuplicateDialog";
 import { getBulkUpdateConfirmationDetails } from "./ConfirmationDialogs/BulkUpdateConfirmationDialog";
 import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfirmation";
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
@@ -286,7 +287,12 @@ const FlowCanvas = ({
     [graphSpec, handleConnection, updateGraphSpec],
   );
 
-  const { handleDrop } = useComponentUploader(readOnly, {
+  const {
+    handleDrop,
+    existingAndNewComponent,
+    handleCancelUpload,
+    handleImportComponent,
+  } = useComponentUploader(readOnly, {
     onImportSuccess: async (
       content: string,
       dropEvent?: DragEvent<HTMLDivElement>,
@@ -749,6 +755,12 @@ const FlowCanvas = ({
         {...confirmationProps}
         onConfirm={() => confirmationHandlers?.onConfirm()}
         onCancel={() => confirmationHandlers?.onCancel()}
+      />
+      <ComponentDuplicateDialog
+        existingComponent={existingAndNewComponent?.existingComponent}
+        newComponent={existingAndNewComponent?.newComponent}
+        setClose={handleCancelUpload}
+        handleImportComponent={handleImportComponent}
       />
     </>
   );

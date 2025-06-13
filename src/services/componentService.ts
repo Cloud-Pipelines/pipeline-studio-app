@@ -11,11 +11,18 @@ import {
   type Component,
   componentExistsByUrl,
   getAllComponents,
+  getAllUserComponents,
   getComponentByUrl,
   saveComponent,
+  type UserComponent,
 } from "@/utils/localforge";
 
 const COMPONENT_LIBRARY_URL = "/component_library.yaml";
+
+export interface ExistingAndNewComponent {
+  existingComponent: UserComponent | undefined;
+  newComponent: ComponentSpec | undefined;
+}
 
 /**
  * Generate a digest for a component
@@ -192,6 +199,32 @@ export const parseComponentData = (data: string): ComponentSpec | null => {
     console.error("Error parsing component data:", error);
     return null;
   }
+};
+
+export const getExistingAndNewUserComponent = async (
+  componentData: string | ArrayBuffer,
+): Promise<ExistingAndNewComponent> => {
+  const allUserComponents = await getAllUserComponents();
+
+  const newDigest = await generateDigest(componentData as string);
+  const component = parseComponentData(componentData as string);
+  const existingComponent = allUserComponents.find((userComponent) => {
+    const existingDigest = userComponent.componentRef.digest;
+
+    return (
+      existingDigest !== newDigest && userComponent?.name === component?.name
+    );
+  });
+  if (!existingComponent || !component) {
+    return {
+      existingComponent: undefined,
+      newComponent: component ?? undefined,
+    };
+  }
+  return {
+    existingComponent,
+    newComponent: component,
+  };
 };
 
 export const inputsWithInvalidArguments = (
