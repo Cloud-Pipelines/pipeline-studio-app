@@ -42,6 +42,7 @@ import { getUpgradeConfirmationDetails } from "./ConfirmationDialogs/UpgradeComp
 import SmoothEdge from "./Edges/SmoothEdge";
 import HintNode from "./GhostNode/HintNode";
 import SelectionToolbar from "./SelectionToolbar";
+import TabIndicator from "./TabIndicator/TabIndicator";
 import TaskNode from "./TaskNode/TaskNode";
 import type { NodesAndEdges } from "./types";
 import addTask from "./utils/addTask";
@@ -761,6 +762,7 @@ const FlowCanvas = ({
             onUpgrade={!readOnly ? onUpgradeNodes : undefined}
           />
         </NodeToolbar>
+        <TabIndicator />
         {children}
       </ReactFlow>
       <ConfirmationDialog
