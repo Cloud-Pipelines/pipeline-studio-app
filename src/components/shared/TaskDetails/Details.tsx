@@ -72,6 +72,31 @@ const TaskDetails = ({
     | string
     | undefined;
 
+  if (!url) {
+    // Try reconstruct the url from componentSpec.metadata.annotations
+    const annotations = componentSpec?.metadata?.annotations || {};
+    const {
+      git_remote_url,
+      git_remote_sha,
+      git_relative_dir,
+      component_yaml_path,
+    } = annotations;
+
+    if (
+      git_remote_url &&
+      git_remote_sha &&
+      git_relative_dir &&
+      component_yaml_path
+    ) {
+      url = `https://raw.githubusercontent.com/${(git_remote_url as string)
+        .replace(/^https:\/\/github\.com\//, "")
+        .replace(
+          /\.git$/,
+          "",
+        )}/${git_remote_sha}/${git_relative_dir}/${component_yaml_path}`;
+    }
+  }
+
   const stringToPythonCodeDownload = () => {
     if (!pythonOriginalCode) return;
 
@@ -178,7 +203,7 @@ const TaskDetails = ({
                     rel="noopener noreferrer"
                     className="text-sky-500 hover:underline flex items-center gap-1"
                   >
-                    View component.yaml on GitHub
+                    View directory on GitHub
                     <ExternalLink className="size-3 flex-shrink-0" />
                   </a>
                 </div>
