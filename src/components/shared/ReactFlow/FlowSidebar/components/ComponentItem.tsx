@@ -1,14 +1,16 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { File } from "lucide-react";
 import type { DragEvent } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
-import {
-  ComponentDetailsDialog,
-  ConfirmationDialog,
-} from "@/components/shared/Dialogs";
-import { FavoriteStar } from "@/components/shared/FavoriteStar";
+import { ComponentDetailsDialog } from "@/components/shared/Dialogs";
+import { ComponentFavoriteToggle } from "@/components/shared/FavoriteComponentToggle";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import useComponentFromUrl from "@/hooks/useComponentFromUrl";
 import { cn } from "@/lib/utils";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
@@ -23,19 +25,15 @@ interface ComponentMarkupProps {
   component: ComponentReference;
   isLoading?: boolean;
   error?: string | null;
-  onFavorite?: () => void;
 }
 
 const ComponentMarkup = ({
   component,
   isLoading,
   error,
-  onFavorite,
 }: ComponentMarkupProps) => {
   const { checkIfUserComponent } = useComponentLibrary();
   const queryClient = useQueryClient();
-
-  const [isOpen, setIsOpen] = useState(false);
 
   const { name: fileName, spec, digest, url } = component;
 
@@ -86,84 +84,58 @@ const ComponentMarkup = ({
     }
   }, [fileName, queryClient]);
 
-  /* Confirmation Dialog handlers */
-  const openConfirmationDialog = useCallback(() => {
-    setIsOpen(true);
-  }, []);
-
-  const handleCancel = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
-  const handleConfirm = useCallback(() => {
-    handleDelete();
-    setIsOpen(false);
-  }, [handleDelete]);
-
   return (
-    <>
-      <SidebarMenuItem
-        className={cn(
-          "pl-2 py-1.5",
-          error
-            ? "cursor-not-allowed opacity-60"
-            : "cursor-grab hover:bg-gray-100 active:bg-gray-200",
-        )}
-        draggable={!error && !isLoading}
-        onDragStart={onDragStart}
-      >
-        <div className="flex items-center gap-2">
-          {isLoading ? (
-            <span className="text-gray-400 truncate text-sm">Loading...</span>
-          ) : error ? (
-            <span className="truncate text-xs text-red-500">
-              Error loading component
-            </span>
-          ) : (
-            <div className="flex-1 flex">
-              <div className="flex gap-2 w-full items-center">
-                <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                <div className="flex flex-col w-[144px]">
-                  <span className="truncate text-xs text-gray-800">
-                    {displayName}
-                  </span>
-                  <span className="truncate text-[10px] text-gray-500 max-w-[100px] font-mono">
-                    Ver: {digest}
-                  </span>
+    <Tooltip delayDuration={500}>
+      <TooltipTrigger asChild>
+        <SidebarMenuItem
+          className={cn(
+            "pl-2 py-1.5",
+            error
+              ? "cursor-not-allowed opacity-60"
+              : "cursor-grab hover:bg-gray-100 active:bg-gray-200",
+          )}
+          draggable={!error && !isLoading}
+          onDragStart={onDragStart}
+        >
+          <div className="flex items-center gap-2">
+            {isLoading ? (
+              <span className="text-gray-400 truncate text-sm">Loading...</span>
+            ) : error ? (
+              <span className="truncate text-xs text-red-500">
+                Error loading component
+              </span>
+            ) : (
+              <div className="flex-1 flex">
+                <div className="flex gap-2 w-full items-center">
+                  <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <div className="flex flex-col w-[144px]">
+                    <span className="truncate text-xs text-gray-800">
+                      {displayName}
+                    </span>
+                    <span className="truncate text-[10px] text-gray-500 max-w-[100px] font-mono">
+                      Ver: {digest}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex align-items justify-end mr-[15px] h-full">
+                  <ComponentFavoriteToggle component={component} />
+                  <ComponentDetailsDialog
+                    displayName={displayName}
+                    component={component}
+                    onDelete={isUserComponent ? handleDelete : undefined}
+                  />
                 </div>
               </div>
-              <div className="flex align-items justify-end mr-[15px] h-full">
-                <FavoriteStar
-                  active={component.favorited}
-                  onClick={
-                    isUserComponent ? openConfirmationDialog : onFavorite
-                  }
-                />
-                <ComponentDetailsDialog
-                  displayName={displayName}
-                  component={component}
-                  onDelete={isUserComponent ? handleDelete : undefined}
-                />
-                <ConfirmationDialog
-                  isOpen={isOpen}
-                  title="Delete custom component?"
-                  description={`"${displayName}" is a custom user component. Unstarring it will remove it from your library. This action cannot be undone.`}
-                  onConfirm={handleConfirm}
-                  onCancel={handleCancel}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </SidebarMenuItem>
-    </>
+            )}
+          </div>
+        </SidebarMenuItem>
+      </TooltipTrigger>
+      <TooltipContent side="right">{displayName}</TooltipContent>
+    </Tooltip>
   );
 };
 
-const ComponentItemFromUrl = ({
-  url,
-  onFavorite,
-}: ComponentItemFromUrlProps) => {
+const ComponentItemFromUrl = ({ url }: ComponentItemFromUrlProps) => {
   if (!url) return null;
 
   const { isLoading, error, componentRef } = useComponentFromUrl(url);
@@ -177,7 +149,6 @@ const ComponentItemFromUrl = ({
       component={componentRef}
       isLoading={isLoading}
       error={error}
-      onFavorite={onFavorite}
     />
   );
 };

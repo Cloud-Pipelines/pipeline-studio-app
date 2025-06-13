@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { type ReactNode } from "react";
 
-import { FavoriteStar } from "@/components/shared/FavoriteStar";
+import { ComponentFavoriteToggle } from "@/components/shared/FavoriteComponentToggle";
 import {
   TaskDetails,
   TaskImplementation,
@@ -27,7 +27,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 
@@ -56,7 +55,6 @@ const TaskConfigurationSheet = ({
   focusedIo,
 }: TaskConfigurationSheetProps) => {
   const { name, taskSpec, taskId, state, callbacks } = useTaskNode();
-  const { checkIfFavorited, setComponentFavorite } = useComponentLibrary();
 
   const { readOnly, runStatus } = state;
   const disabled = !!runStatus;
@@ -67,21 +65,6 @@ const TaskConfigurationSheet = ({
     if (isFullscreen) {
       onOpenChange(false);
     }
-  };
-
-  const handleFavorite = () => {
-    if (!taskSpec.componentRef) {
-      console.error(
-        "TaskConfigurationSheet called with missing taskSpec.componentRef",
-      );
-      return;
-    }
-
-    // Note: the taskSpec componentRef does not have knowledge of favourited state, so we use the checkIfFavorited utility to directly check the component library instead
-    setComponentFavorite(
-      taskSpec.componentRef,
-      !checkIfFavorited(taskSpec.componentRef),
-    );
   };
 
   const componentSpec = taskSpec.componentRef.spec;
@@ -107,11 +90,7 @@ const TaskConfigurationSheet = ({
       >
         <SheetHeader className="pb-0">
           <SheetTitle className="flex items-center gap-2">
-            {name}{" "}
-            <FavoriteStar
-              active={checkIfFavorited(taskSpec.componentRef)}
-              onClick={handleFavorite}
-            />
+            {name} <ComponentFavoriteToggle component={taskSpec.componentRef} />
           </SheetTitle>
           <SheetDescription className="hidden">
             {name} configuration sheet

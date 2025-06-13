@@ -289,7 +289,7 @@ export const ComponentLibraryProvider = ({
     if (searchTerm.trim() === "") {
       setSearchFilters(DEFAULT_FILTERS);
     }
-  }, [searchTerm]);
+  }, [searchTerm, searchFilters]);
 
   useEffect(() => {
     if (!rawComponentLibrary) {
@@ -328,8 +328,8 @@ export const ComponentLibraryProvider = ({
       highlightSearchResults,
       refetchLibrary,
       refetchUserComponents,
-      setSearchTerm: setSearchTerm,
-      setSearchFilters: setSearchFilters,
+      setSearchTerm,
+      setSearchFilters,
       setHighlightSearchResults,
       setComponentFavorite,
       checkIfFavorited,

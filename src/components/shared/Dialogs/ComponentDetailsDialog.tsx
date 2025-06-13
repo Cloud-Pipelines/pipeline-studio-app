@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ComponentReference } from "@/utils/componentSpec";
 
 import InfoIconButton from "../Buttons/InfoIconButton";
+import { ComponentFavoriteToggle } from "../FavoriteComponentToggle";
 import { TaskDetails, TaskImplementation, TaskIO } from "../TaskDetails";
 
 interface ComponentDetailsProps {
@@ -67,8 +68,9 @@ const ComponentDetails = ({
         aria-label={`${displayName} component details`}
       >
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between mr-5">
+          <DialogTitle className="flex items-center gap-2 mr-5">
             <span>{displayName}</span>
+            <ComponentFavoriteToggle component={component} />
           </DialogTitle>
         </DialogHeader>
 

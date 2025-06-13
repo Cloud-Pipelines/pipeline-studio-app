@@ -6,7 +6,6 @@ import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
 export type ComponentItemFromUrlProps = {
   url?: string;
   componentRef?: ComponentReference;
-  onFavorite?: () => void;
 };
 
 export type ComponentLibrary = {

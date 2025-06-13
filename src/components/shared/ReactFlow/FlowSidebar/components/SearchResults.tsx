@@ -3,7 +3,6 @@ import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import type { SearchResult } from "@/types/componentLibrary";
-import type { ComponentReference } from "@/utils/componentSpec";
 import { ComponentSearchFilter } from "@/utils/constants";
 
 import { ComponentMarkup } from "./ComponentItem";
@@ -17,8 +16,7 @@ const SearchResults = ({
   searchResult,
   onFiltersChange,
 }: SearchResultsProps) => {
-  const { searchTerm, searchFilters, setComponentFavorite } =
-    useComponentLibrary();
+  const { searchTerm, searchFilters } = useComponentLibrary();
 
   const matchedComponents = searchResult.components.standard;
 
@@ -29,13 +27,6 @@ const SearchResults = ({
       onFiltersChange([...searchFilters, ComponentSearchFilter.NAME]);
     }
   }, [searchFilters, onFiltersChange]);
-
-  const handleFavorite = useCallback(
-    (component: ComponentReference) => {
-      setComponentFavorite(component, !component.favorited);
-    },
-    [setComponentFavorite],
-  );
 
   const filtersWithoutExactMatch = searchFilters.filter(
     (f) => f !== ComponentSearchFilter.EXACTMATCH,
@@ -91,11 +82,7 @@ const SearchResults = ({
             )}
             {/* User component results */}
             {matchedUserComponents.map((component, index) => (
-              <ComponentMarkup
-                key={`user-${index}`}
-                component={component}
-                onFavorite={() => handleFavorite(component)}
-              />
+              <ComponentMarkup key={`user-${index}`} component={component} />
             ))}
           </>
         )}
@@ -110,11 +97,7 @@ const SearchResults = ({
             )}
             {/* Library component results */}
             {matchedComponents.map((component, index) => (
-              <ComponentMarkup
-                key={`lib-${index}`}
-                component={component}
-                onFavorite={() => handleFavorite(component)}
-              />
+              <ComponentMarkup key={`lib-${index}`} component={component} />
             ))}
           </>
         )}
