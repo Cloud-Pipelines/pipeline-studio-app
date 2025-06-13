@@ -11,10 +11,10 @@ export const useHintNode = ({ key, hint }: { key: string; hint: string }) => {
   const connectionTo = useConnection((connection) => connection.to);
   const connectionToHandle = useConnection((connection) => connection.toHandle);
   const connectionFromHandle = useConnection(
-    (connection) => connection.fromHandle,
+    (connection) => connection.fromHandle
   );
   const connectionInProgress = useConnection(
-    (connection) => connection.inProgress,
+    (connection) => connection.inProgress
   );
 
   const { searchResult } = useComponentLibrary();
@@ -24,17 +24,17 @@ export const useHintNode = ({ key, hint }: { key: string; hint: string }) => {
       searchResult &&
       (searchResult.components.standard.length > 0 ||
         searchResult.components.user.length > 0),
-    [searchResult],
+    [searchResult]
   );
 
   const isOverValidTarget = useMemo(
     () => connectionInProgress && connectionToHandle !== null,
-    [connectionInProgress, connectionToHandle],
+    [connectionInProgress, connectionToHandle]
   );
 
   const shouldShowHint = useMemo(
     () => connectionInProgress && hasResults && !isOverValidTarget,
-    [connectionInProgress, hasResults, isOverValidTarget],
+    [connectionInProgress, hasResults, isOverValidTarget]
   );
 
   const hintNode = useMemo((): Node<HintNodeData> | null => {
