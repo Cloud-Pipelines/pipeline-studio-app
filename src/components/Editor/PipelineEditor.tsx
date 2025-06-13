@@ -4,7 +4,7 @@ import {
   Background,
   MiniMap,
   type ReactFlowProps,
-  useStore,
+  useStoreApi,
 } from "@xyflow/react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -30,7 +30,7 @@ const GRID_SIZE = 10;
 
 const PipelineEditor = () => {
   const { componentSpec, isLoading } = useComponentSpec();
-  const nodes = useStore((store) => store.nodes);
+  const store = useStoreApi();
 
   const [flowConfig, setFlowConfig] = useState<ReactFlowProps>({
     snapGrid: [GRID_SIZE, GRID_SIZE],
@@ -54,10 +54,14 @@ const PipelineEditor = () => {
   useEffect(() => {
     // Fixing issue where a React error would cause all node positions to be recorded as undefined (`!<tag:yaml.org,2002:js/undefined>`)
     // nodes should never be undefined in normal situation.
-    if (nodes !== undefined && nodes.length > 0) {
-      savePipelineSpecToSessionStorage(componentSpec, nodes);
+    const currentNodes = store
+      .getState()
+      .nodes.filter((node) => node.type === "task");
+
+    if (currentNodes !== undefined && currentNodes.length > 0) {
+      savePipelineSpecToSessionStorage(componentSpec, currentNodes);
     }
-  }, [componentSpec, nodes]);
+  }, [componentSpec]);
 
   return (
     <ContextPanelProvider

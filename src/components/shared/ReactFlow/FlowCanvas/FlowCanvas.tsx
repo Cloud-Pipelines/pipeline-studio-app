@@ -18,6 +18,7 @@ import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useComponentUploader from "@/hooks/useComponentUploader";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useCopyPaste } from "@/hooks/useCopyPaste";
+import { useHintNode } from "@/hooks/useHintNode";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
@@ -39,6 +40,7 @@ import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfir
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
 import { getUpgradeConfirmationDetails } from "./ConfirmationDialogs/UpgradeComponent";
 import SmoothEdge from "./Edges/SmoothEdge";
+import HintNode from "./GhostNode/HintNode";
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
 import type { NodesAndEdges } from "./types";
@@ -57,6 +59,7 @@ import { updateNodePositions } from "./utils/updateNodePosition";
 
 const nodeTypes: Record<string, ComponentType<any>> = {
   task: TaskNode,
+  hint: HintNode,
 };
 const edgeTypes: Record<string, ComponentType<any>> = {
   customEdge: SmoothEdge,
@@ -72,6 +75,15 @@ const FlowCanvas = ({
     useComponentSpec();
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+
+  const tabHintNode = useHintNode({
+    key: "TAB",
+    hint: "cycle valid components",
+  });
+
+  const allNodes = useMemo(() => {
+    return tabHintNode ? [...nodes, tabHintNode] : nodes;
+  }, [nodes, tabHintNode]);
 
   const {
     handlers: confirmationHandlers,
@@ -141,7 +153,7 @@ const FlowCanvas = ({
   );
 
   const selectedNodes = useMemo(
-    () => nodes.filter((node) => node.selected),
+    () => nodes.filter((node) => node.selected && node.type === "task"),
     [nodes],
   );
   const selectedEdges = useMemo(
@@ -717,7 +729,7 @@ const FlowCanvas = ({
     <>
       <ReactFlow
         {...rest}
-        nodes={nodes}
+        nodes={allNodes}
         edges={edges}
         minZoom={0.01}
         maxZoom={3}
