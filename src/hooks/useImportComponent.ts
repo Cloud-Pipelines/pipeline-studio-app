@@ -33,6 +33,8 @@ const useImportComponent = ({
         const componentFileEntry = await addComponentToListByUrl(
           USER_COMPONENTS_LIST_NAME,
           url,
+          "Imported Component",
+          { favorited: true }, // User Components are Favorited by default
         );
         // Invalidate the userComponents query to refresh the sidebar
         queryClient.invalidateQueries({ queryKey: ["userComponents"] });
@@ -60,16 +62,21 @@ const useImportComponent = ({
           throw new Error("No file content provided");
         }
 
-        await addComponentToListByTextWithDuplicateCheck(
-          USER_COMPONENTS_LIST_NAME,
-          fileContent,
-        );
+        const componentFileEntry =
+          await addComponentToListByTextWithDuplicateCheck(
+            USER_COMPONENTS_LIST_NAME,
+            fileContent,
+            undefined,
+            "Imported Component",
+            false,
+            { favorited: true }, // User Components are Favorited by default
+          );
 
         // Invalidate the userComponents query to refresh the sidebar
         queryClient.invalidateQueries({ queryKey: ["userComponents"] });
 
         successCallback?.();
-        return;
+        return componentFileEntry;
       } catch (error) {
         console.error("Error importing component from file:", error);
         errorCallback?.(new Error("Error importing component from file"));

@@ -11,17 +11,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import type { ComponentReference } from "@/utils/componentSpec";
 
 import InfoIconButton from "../Buttons/InfoIconButton";
 import { TaskDetails, TaskImplementation, TaskIO } from "../TaskDetails";
 
 interface ComponentDetailsProps {
-  url: string;
+  component: ComponentReference;
   displayName: string;
-  componentSpec: ComponentSpec;
-  componentDigest: string;
-  componentText: string;
   trigger?: ReactNode;
   actions?: ReactNode[];
   onClose?: () => void;
@@ -29,10 +26,8 @@ interface ComponentDetailsProps {
 }
 
 const ComponentDetails = ({
-  url,
+  component,
   displayName,
-  componentSpec,
-  componentDigest,
   trigger,
   actions = [],
   onClose,
@@ -40,6 +35,8 @@ const ComponentDetails = ({
 }: ComponentDetailsProps) => {
   // Get global fullscreen state
   const { isAnyFullscreen } = useFullscreen();
+
+  const { url, spec: componentSpec, digest: componentDigest } = component;
 
   const dialogTriggerButton = trigger || <InfoIconButton />;
 
@@ -75,47 +72,57 @@ const ComponentDetails = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="details" className="mt-4 flex flex-col">
-          <TabsList className="w-full mb-4">
-            <TabsTrigger value="details" className="flex-1">
-              <InfoIcon className="h-4 w-4" />
-              Details
-            </TabsTrigger>
-            <TabsTrigger value="io" className="flex-1">
-              <ListFilter className="h-4 w-4" />
-              Inputs/Outputs
-            </TabsTrigger>
-            <TabsTrigger value="implementation" className="flex-1">
-              <Code className="h-4 w-4" />
-              Implementation
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="overflow-hidden h-[40vh]">
-            <TabsContent value="details" className="h-full">
-              <TaskDetails
-                displayName={displayName}
-                componentSpec={componentSpec}
-                componentDigest={componentDigest}
-                url={url}
-                actions={actions}
-                onDelete={onDelete}
-              />
-            </TabsContent>
-
-            <TabsContent value="io" className="h-full">
-              <TaskIO componentSpec={componentSpec} />
-            </TabsContent>
-
-            <TabsContent value="implementation" className="h-full">
-              <TaskImplementation
-                displayName={displayName}
-                componentSpec={componentSpec}
-                onFullscreenChange={onFullscreenChange}
-              />
-            </TabsContent>
+        {!componentSpec && (
+          <div className="flex items-center justify-center h-full">
+            <span className="text-gray-500">
+              Component specification not found.
+            </span>
           </div>
-        </Tabs>
+        )}
+
+        {componentSpec && (
+          <Tabs defaultValue="details" className="mt-4 flex flex-col">
+            <TabsList className="w-full mb-4">
+              <TabsTrigger value="details" className="flex-1">
+                <InfoIcon className="h-4 w-4" />
+                Details
+              </TabsTrigger>
+              <TabsTrigger value="io" className="flex-1">
+                <ListFilter className="h-4 w-4" />
+                Inputs/Outputs
+              </TabsTrigger>
+              <TabsTrigger value="implementation" className="flex-1">
+                <Code className="h-4 w-4" />
+                Implementation
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="overflow-hidden h-[40vh]">
+              <TabsContent value="details" className="h-full">
+                <TaskDetails
+                  displayName={displayName}
+                  componentSpec={componentSpec}
+                  componentDigest={componentDigest}
+                  url={url}
+                  actions={actions}
+                  onDelete={onDelete}
+                />
+              </TabsContent>
+
+              <TabsContent value="io" className="h-full">
+                <TaskIO componentSpec={componentSpec} />
+              </TabsContent>
+
+              <TabsContent value="implementation" className="h-full">
+                <TaskImplementation
+                  displayName={displayName}
+                  componentSpec={componentSpec}
+                  onFullscreenChange={onFullscreenChange}
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+        )}
       </DialogContent>
     </Dialog>
   );

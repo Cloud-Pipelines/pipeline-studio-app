@@ -175,6 +175,7 @@ export interface ComponentReference {
   // and have better support for text compared to binary data.
   // Not yet in the standard.
   text?: string;
+  favorited?: boolean;
 }
 /**
  * Represents the component argument value that comes from the graph component input.

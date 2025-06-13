@@ -26,8 +26,8 @@ import {
 const GraphComponents = () => {
   const {
     componentLibrary,
-    userComponentsFolder,
     usedComponentsFolder,
+    favoritesFolder,
     isLoading,
     error,
     searchTerm,
@@ -64,13 +64,12 @@ const GraphComponents = () => {
     }
 
     // Otherwise show the regular folder structure
-    const hasUserComponents =
-      userComponentsFolder?.components &&
-      userComponentsFolder.components.length > 0;
-
     const hasUsedComponents =
       usedComponentsFolder?.components &&
       usedComponentsFolder.components.length > 0;
+
+    const hasFavouriteComponents =
+      favoritesFolder?.components && favoritesFolder.components.length > 0;
 
     return (
       <div>
@@ -82,10 +81,10 @@ const GraphComponents = () => {
           />
         )}
 
-        {hasUserComponents && (
+        {hasFavouriteComponents && (
           <FolderItem
-            key="user-components-folder"
-            folder={userComponentsFolder}
+            key="my-components-folder"
+            folder={favoritesFolder}
             icon={Puzzle}
           />
         )}
@@ -97,8 +96,8 @@ const GraphComponents = () => {
     );
   }, [
     componentLibrary,
-    userComponentsFolder,
     usedComponentsFolder,
+    favoritesFolder,
     isLoading,
     error,
     searchTerm,
