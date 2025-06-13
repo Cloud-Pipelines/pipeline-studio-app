@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useStore } from "@xyflow/react";
+import { useStoreApi } from "@xyflow/react";
 import { CloudUpload, FolderDown, Save, SaveAll } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
@@ -31,7 +31,8 @@ const SettingsAndActions = () => {
   const { savePipeline } = useSavePipeline(componentSpec);
   const notify = useToastNotification();
   const navigate = useNavigate();
-  const nodes = useStore((store) => store.nodes);
+  const store = useStoreApi();
+  const nodes = store.getState().nodes.filter((node) => node.type === "task");
 
   const notifyPipelineSaved = (name: string) => {
     notify(`Pipeline saved as "${name}"`, "success");
