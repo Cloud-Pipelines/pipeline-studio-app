@@ -46,6 +46,7 @@ export const ArgumentInputField = ({
   const [showDescription, setShowDescription] = useState(false);
 
   const undoValue = useMemo(() => argument, []);
+  const hint = argument.inputSpec.annotations?.hint as string | undefined;
 
   const handleInputChange = (e: ChangeEvent) => {
     const value = (e.target as HTMLInputElement).value;
@@ -167,14 +168,12 @@ export const ArgumentInputField = ({
               </span>
             </div>
           </div>
-          {argument.inputSpec.hint && (
+          {!!hint && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <HelpCircle className="w-4 h-4" />
               </TooltipTrigger>
-              <TooltipContent className="z-9999">
-                {argument.inputSpec.hint}
-              </TooltipContent>
+              <TooltipContent className="z-9999">{hint}</TooltipContent>
             </Tooltip>
           )}
         </div>
