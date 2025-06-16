@@ -25,6 +25,7 @@ type TaskNodeState = Readonly<{
   selected: boolean;
   highlighted: boolean;
   readOnly: boolean;
+  disabled: boolean;
   runStatus?: ContainerExecutionStatus;
   isCustomComponent: boolean;
   dimensions: TaskNodeDimensions;
@@ -122,10 +123,11 @@ export const TaskNodeProvider = ({
 
   const state = useMemo(
     (): TaskNodeState => ({
-      selected,
-      highlighted: !!data.highlighted,
-      readOnly: !!data.readOnly,
-      runStatus: runStatus,
+      selected: selected && !data.isGhost,
+      highlighted: !!data.highlighted && !data.isGhost,
+      readOnly: !!data.readOnly || !!data.isGhost,
+      runStatus: data.isGhost ? undefined : runStatus,
+      disabled: data.isGhost ?? false,
       isCustomComponent,
       dimensions,
     }),
@@ -133,6 +135,7 @@ export const TaskNodeProvider = ({
       selected,
       data.highlighted,
       data.readOnly,
+      data.isGhost,
       runStatus,
       isCustomComponent,
       dimensions,

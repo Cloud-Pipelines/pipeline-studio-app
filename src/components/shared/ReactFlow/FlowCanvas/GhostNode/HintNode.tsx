@@ -30,7 +30,7 @@ const HintNode = ({ data }: NodeProps) => {
     <div
       className={cn(
         "flex items-center gap-2 opacity-90 select-none pointer-events-none",
-        typedData.side === "left" ? "-translate-x-full" : ""
+        typedData.side === "left" ? "-translate-x-full" : "",
       )}
       style={{
         transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,

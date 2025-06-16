@@ -10,9 +10,10 @@ export interface TaskNodeData extends Record<string, unknown> {
   taskSpec?: TaskSpec;
   taskId?: string;
   readOnly?: boolean;
+  isGhost?: boolean;
   highlighted?: boolean;
   callbacks?: TaskNodeCallbacks;
-  nodeCallbacks: NodeCallbacks;
+  nodeCallbacks?: NodeCallbacks;
 }
 
 export type NodeAndTaskId = {
