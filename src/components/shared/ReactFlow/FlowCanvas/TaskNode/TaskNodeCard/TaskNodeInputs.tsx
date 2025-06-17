@@ -1,13 +1,13 @@
 import { useConnection } from "@xyflow/react";
 import { AlertCircle } from "lucide-react";
-import { type MouseEvent, useCallback, useEffect } from "react";
+import { type MouseEvent, useCallback, useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
 import type { InputSpec } from "@/utils/componentSpec";
-import { ComponentSearchFilter } from "@/utils/constants";
+import { ComponentSearchFilter, DEFAULT_FILTERS } from "@/utils/constants";
 import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
 import { getValue } from "@/utils/string";
@@ -39,6 +39,8 @@ export function TaskNodeInputs({
 
   const connection = useConnection();
 
+  const [isDragging, setIsDragging] = useState(false);
+
   const values = taskSpec.arguments;
   const invalidArguments = inputsWithInvalidArguments(inputs, taskSpec);
 
@@ -52,7 +54,7 @@ export function TaskNodeInputs({
 
   const resetHighlightRelatedHandles = useCallback(() => {
     setSearchTerm("");
-    setSearchFilters([]);
+    setSearchFilters(DEFAULT_FILTERS);
     setHighlightSearchResults(false);
   }, [setSearchTerm, setSearchFilters, setHighlightSearchResults]);
 
@@ -127,6 +129,11 @@ export function TaskNodeInputs({
 
     if (!inProgress) {
       resetHighlightRelatedHandles();
+      setIsDragging(false);
+      return;
+    }
+
+    if (isDragging) {
       return;
     }
 
@@ -136,6 +143,7 @@ export function TaskNodeInputs({
       Math.sqrt(Math.pow(from.x - to.x, 2) + Math.pow(from.y - to.y, 2)) < 4
     ) {
       // If the user has dragged the cursor less than 4px from the click origin, then assume it is a click event on the Handle
+      setIsDragging(false);
       return;
     }
 
@@ -146,7 +154,8 @@ export function TaskNodeInputs({
     if (!input) return;
 
     toggleHighlightRelatedHandles(true, input);
-  }, [connection, inputs, toggleHighlightRelatedHandles]);
+    setIsDragging(true);
+  }, [connection, inputs, isDragging, toggleHighlightRelatedHandles]);
 
   if (!inputs.length) return null;
 
