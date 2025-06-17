@@ -28,7 +28,11 @@ export const InputHandle = ({
   onHandleSelectionChange,
 }: InputHandleProps) => {
   const { nodeId } = useTaskNode();
-  const connection = useConnection();
+
+  const fromHandle = useConnection((connection) => connection.fromHandle?.id);
+  const toHandle = useConnection((connection) => connection.toHandle?.id);
+  const fromNode = useConnection((connection) => connection.fromNode?.id);
+  const toNode = useConnection((connection) => connection.toNode?.id);
 
   const handleRef = useRef<HTMLDivElement>(null);
 
@@ -51,15 +55,14 @@ export const InputHandle = ({
 
   useEffect(() => {
     if (
-      (connection.fromHandle?.id === handleId &&
-        connection.fromNode?.id === nodeId) ||
-      (connection.toHandle?.id === handleId && connection.toNode?.id === nodeId)
+      (fromHandle === handleId && fromNode === nodeId) ||
+      (toHandle === handleId && toNode === nodeId)
     ) {
       setActive(true);
     } else {
       setActive(false);
     }
-  }, [connection]);
+  }, [fromHandle, fromNode, toHandle, toNode, handleId, nodeId]);
 
   useEffect(() => {
     if (onHandleSelectionChange) {
@@ -178,7 +181,11 @@ export const OutputHandle = ({
   onHandleSelectionChange,
 }: OutputHandleProps) => {
   const { nodeId } = useTaskNode();
-  const connection = useConnection();
+
+  const fromHandle = useConnection((connection) => connection.fromHandle?.id);
+  const toHandle = useConnection((connection) => connection.toHandle?.id);
+  const fromNode = useConnection((connection) => connection.fromNode?.id);
+  const toNode = useConnection((connection) => connection.toNode?.id);
 
   const handleRef = useRef<HTMLDivElement>(null);
 
@@ -198,15 +205,14 @@ export const OutputHandle = ({
 
   useEffect(() => {
     if (
-      (connection.fromHandle?.id === handleId &&
-        connection.fromNode?.id === nodeId) ||
-      (connection.toHandle?.id === handleId && connection.toNode?.id === nodeId)
+      (fromHandle === handleId && fromNode === nodeId) ||
+      (toHandle === handleId && toNode === nodeId)
     ) {
       setActive(true);
     } else {
       setActive(false);
     }
-  }, [connection]);
+  }, [fromHandle, fromNode, toHandle, toNode, handleId, nodeId]);
 
   useEffect(() => {
     if (onHandleSelectionChange) {
