@@ -220,7 +220,6 @@ const CodeSyntaxHighlighter = ({
   <SyntaxHighlighter
     language={language}
     style={oneDark}
-    className="hide-scrollbar"
     customStyle={{
       margin: 0,
       padding,
