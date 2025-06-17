@@ -36,8 +36,42 @@ const removeTrailingDateFromTitle = (baseName: string) => {
   const nameWithoutDate = baseName.replace(dateRegex, "");
   return nameWithoutDate.trimEnd();
 };
+
+// Lists an array of strings up to a given number of elements and then truncates to "and [number] others".
+// Includes smart formatting of the list & pluralization.
+function createStringList(
+  list: string[],
+  elementsToList: number,
+  elementLabel: string,
+): string {
+  if (list.length === 0) return "";
+  if (list.length === 1) return `"${list[0]}"`;
+
+  const shown = list.slice(0, elementsToList);
+  const remaining = list.length - shown.length;
+
+  const quoted = shown.map((item) => `"${item}"`);
+  const lastItem = quoted.pop();
+
+  if (shown.length === 0) {
+    return list.length + " " + elementLabel + (list.length > 1 ? "s" : "");
+  }
+
+  if (remaining === 0) {
+    return quoted.join(", ") + " & " + lastItem;
+  }
+
+  return (
+    quoted.join(", ") +
+    (shown.length > 1 ? ", " : "") +
+    lastItem +
+    ` and ${remaining} other ${elementLabel}${remaining > 1 ? "s" : ""}`
+  );
+}
+
 export {
   copyToClipboard,
+  createStringList,
   formatBytes,
   formatJsonValue,
   getValue,
