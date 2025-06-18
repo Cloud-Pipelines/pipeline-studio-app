@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   copyToClipboard,
+  createStringList,
   formatBytes,
   formatJsonValue,
   getValue,
@@ -116,5 +117,61 @@ describe("removeTrailingDateFromTitle", () => {
 
   it("handles empty string", () => {
     expect(removeTrailingDateFromTitle("")).toBe("");
+  });
+});
+
+describe("createStringList", () => {
+  const fruits = ["apple", "banana", "cherry", "mango", "strawberry"];
+  const label = "fruit";
+
+  it("returns empty string for empty list", () => {
+    expect(createStringList([], 3, label)).toBe("");
+  });
+
+  it("returns single quoted item for list of one", () => {
+    expect(createStringList([fruits[0]], 3, label)).toBe('"apple"');
+  });
+
+  it("returns quoted items joined with & for list within elementsToList", () => {
+    expect(createStringList(fruits.slice(0, 2), 2, label)).toBe(
+      '"apple" & "banana"',
+    );
+    expect(createStringList(fruits.slice(0, 3), 3, label)).toBe(
+      '"apple", "banana" & "cherry"',
+    );
+  });
+
+  it("returns quoted items (without &) and 'and N other(s)' for list longer than elementsToList", () => {
+    expect(createStringList(fruits, 2, label)).toBe(
+      '"apple", "banana" and 3 other fruits',
+    );
+    expect(createStringList(fruits, 3, label)).toBe(
+      '"apple", "banana", "cherry" and 2 other fruits',
+    );
+    expect(createStringList(fruits, 4, label)).toBe(
+      '"apple", "banana", "cherry", "mango" and 1 other fruit',
+    );
+  });
+
+  it("handles pluralization of elementLabel", () => {
+    expect(createStringList(fruits, 1, label)).toBe(
+      '"apple" and 4 other fruits',
+    );
+    expect(createStringList(fruits.slice(0, 2), 1, label)).toBe(
+      '"apple" and 1 other fruit',
+    );
+  });
+
+  it("returns correct string when elementsToList is 0", () => {
+    expect(createStringList(fruits, 0, label)).toBe("5 fruits");
+  });
+
+  it("returns correct string when elementsToList is greater than list length", () => {
+    expect(createStringList(fruits.slice(0, 2), 5, label)).toBe(
+      '"apple" & "banana"',
+    );
+    expect(createStringList(fruits, 10, label)).toBe(
+      '"apple", "banana", "cherry", "mango" & "strawberry"',
+    );
   });
 });

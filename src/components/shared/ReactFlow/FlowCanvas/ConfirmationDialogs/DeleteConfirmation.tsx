@@ -1,3 +1,5 @@
+import { createStringList } from "@/utils/string";
+
 import type { NodesAndEdges } from "../types";
 import { thisCannotBeUndone } from "./shared";
 
@@ -31,17 +33,15 @@ export function getDeleteConfirmationDetails(deletedElements: NodesAndEdges) {
 
     const multiDeleteTitle = `Delete Nodes?`;
 
+    const deletedNodeList = createStringList(
+      deletedNodes.map((node) => node.id),
+      2,
+      "node",
+    );
+
     const multiDeleteDesc = (
       <div className="text-sm">
-        <p>{`
-          Deleting
-          ${deletedNodes
-            .map((node) => {
-              return `'${node.id}'`;
-            })
-            .join(
-              ", ",
-            )} will also remove all connections to and from these nodes.`}</p>
+        <p>{`Deleting ${deletedNodeList} will also remove all connections to and from these nodes.`}</p>
         <br />
         {thisCannotBeUndone}
       </div>
