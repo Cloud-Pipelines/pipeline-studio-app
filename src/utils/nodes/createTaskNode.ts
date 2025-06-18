@@ -18,7 +18,7 @@ export const createTaskNode = (
 
   // Inject the taskId and nodeId into the callbacks
   const nodeCallbacks = nodeData.nodeCallbacks;
-  const dynamicCallbacks = generateDynamicNodeCallbacks(nodeCallbacks, nodeId);
+  const dynamicCallbacks = generateDynamicNodeCallbacks(nodeId, nodeCallbacks);
 
   return {
     id: nodeId,

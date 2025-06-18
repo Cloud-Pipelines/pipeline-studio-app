@@ -32,7 +32,7 @@ const ComponentMarkup = ({
   isLoading,
   error,
 }: ComponentMarkupProps) => {
-  const { checkIfUserComponent } = useComponentLibrary();
+  const { checkIfUserComponent, checkIfHighlighted } = useComponentLibrary();
   const queryClient = useQueryClient();
 
   const { name: fileName, spec, digest, url } = component;
@@ -93,6 +93,7 @@ const ComponentMarkup = ({
             error
               ? "cursor-not-allowed opacity-60"
               : "cursor-grab hover:bg-gray-100 active:bg-gray-200",
+            checkIfHighlighted(component) && "bg-orange-100",
           )}
           draggable={!error && !isLoading}
           onDragStart={onDragStart}
