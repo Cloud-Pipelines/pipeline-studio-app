@@ -12,6 +12,7 @@
 
 - [ ] Bug fix
 - [ ] New feature
+- [ ] Improvement
 - [ ] Breaking change
 - [ ] Documentation update
 
