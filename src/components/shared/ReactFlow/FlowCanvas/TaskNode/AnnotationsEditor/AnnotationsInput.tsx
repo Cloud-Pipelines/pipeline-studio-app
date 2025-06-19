@@ -26,7 +26,7 @@ interface AnnotationsInputProps {
 }
 
 export const AnnotationsInput = ({
-  value,
+  value = "",
   config,
   annotations,
   deletable = false,
