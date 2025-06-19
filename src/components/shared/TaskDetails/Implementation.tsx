@@ -7,7 +7,7 @@ import { getComponentFilename } from "@/utils/getComponentFilename";
 interface TaskImplementationProps {
   displayName: string;
   componentSpec: ComponentSpec;
-  onFullscreenChange: (isFullscreen: boolean) => void;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 const TaskImplementation = ({

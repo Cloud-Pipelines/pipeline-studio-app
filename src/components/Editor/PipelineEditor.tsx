@@ -13,9 +13,17 @@ import {
   FlowControls,
   FlowSidebar,
 } from "@/components/shared/ReactFlow";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 import { savePipelineSpecToSessionStorage } from "@/utils/storage";
+
+import { ContextPanel } from "../shared/ContextPanel/ContextPanel";
 
 const GRID_SIZE = 10;
 
@@ -51,21 +59,31 @@ const PipelineEditor = () => {
   }, [componentSpec, nodes]);
 
   return (
-    <ComponentLibraryProvider>
-      <FlowSidebar />
-      <div className="reactflow-wrapper">
-        <FlowCanvas {...flowConfig}>
-          <MiniMap position="bottom-left" pannable />
-          <FlowControls
-            style={{ marginLeft: "224px", marginBottom: "24px" }}
-            config={flowConfig}
-            updateConfig={updateFlowConfig}
-            showInteractive
-          />
-          <Background gap={GRID_SIZE} className="bg-slate-50!" />
-        </FlowCanvas>
-      </div>
-    </ComponentLibraryProvider>
+    <ContextPanelProvider>
+      <ComponentLibraryProvider>
+        <FlowSidebar />
+        <ResizablePanelGroup direction="horizontal">
+          <ResizablePanel>
+            <div className="reactflow-wrapper">
+              <FlowCanvas {...flowConfig}>
+                <MiniMap position="bottom-left" pannable />
+                <FlowControls
+                  className="ml-[224px]! mb-[24px]!"
+                  config={flowConfig}
+                  updateConfig={updateFlowConfig}
+                  showInteractive
+                />
+                <Background gap={GRID_SIZE} className="bg-slate-50!" />
+              </FlowCanvas>
+            </div>
+          </ResizablePanel>
+          <ResizableHandle />
+          <ResizablePanel defaultSize={30} minSize={10} maxSize={50}>
+            <ContextPanel />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </ComponentLibraryProvider>
+    </ContextPanelProvider>
   );
 };
 
