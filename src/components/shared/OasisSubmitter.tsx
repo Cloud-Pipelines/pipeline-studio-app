@@ -314,10 +314,15 @@ const OasisSubmitter = ({
   };
 
   return (
-    <SidebarMenuButton asChild>
+    <SidebarMenuButton
+      asChild
+      tooltip="Submit Run"
+      forceTooltip
+      tooltipPosition="right"
+    >
       <Button
         onClick={handleSubmit}
-        className="w-full justify-start px-2! mb-2"
+        className="w-full justify-start"
         variant="ghost"
         disabled={isButtonDisabled}
       >

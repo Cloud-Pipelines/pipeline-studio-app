@@ -24,7 +24,11 @@ enum TabType {
   File = "File",
 }
 
-const ImportComponent = () => {
+const ImportComponent = ({
+  triggerComponent,
+}: {
+  triggerComponent?: React.ReactNode;
+}) => {
   const notify = useToastNotification();
   const [url, setUrl] = useState("");
   const [tab, setTab] = useState<TabType>(TabType.File);
@@ -115,13 +119,16 @@ const ImportComponent = () => {
     (tab === TabType.URL && !url) ||
     (tab === TabType.File && !selectedFile);
 
+  const ButtonComponent = triggerComponent ? (
+    triggerComponent
+  ) : (
+    <Button className="w-fit" variant="ghost">
+      <PackagePlus className="w-4 h-4" />
+    </Button>
+  );
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button className="w-fit" variant="ghost">
-          <PackagePlus className="w-4 h-4" />
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{ButtonComponent}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Import Component</DialogTitle>

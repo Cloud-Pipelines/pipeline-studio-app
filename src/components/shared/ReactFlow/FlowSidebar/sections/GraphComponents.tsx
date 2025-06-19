@@ -1,10 +1,11 @@
-import { LayoutGrid, Puzzle } from "lucide-react";
+import { LayoutGrid, PackagePlus, Puzzle } from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo } from "react";
 
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import {
   Tooltip,
@@ -23,7 +24,7 @@ import {
   SearchResults,
 } from "../components";
 
-const GraphComponents = () => {
+const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
   const {
     componentLibrary,
     usedComponentsFolder,
@@ -104,11 +105,34 @@ const GraphComponents = () => {
     searchFilters,
   ]);
 
+  if (!isOpen) {
+    return (
+      <>
+        <hr />
+        <SidebarGroup className="my-2! pt-0">
+          <SidebarGroupContent>
+            <SidebarMenuButton
+              tooltip="Add Component"
+              forceTooltip
+              tooltipPosition={isOpen ? "top" : "right"}
+              className="cursor-pointer"
+            >
+              <ImportComponent
+                triggerComponent={
+                  <PackagePlus className="w-4 h-4" strokeWidth={1.5} />
+                }
+              />
+            </SidebarMenuButton>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </>
+    );
+  }
   return (
     <SidebarGroup>
-      <SidebarGroupLabel asChild>
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-medium text-sm">Components</span>
+      <SidebarGroupLabel>
+        <div className="flex items-center justify-between gap-2 w-full">
+          <div>Components</div>
           <Tooltip>
             <TooltipTrigger asChild>
               <span>
