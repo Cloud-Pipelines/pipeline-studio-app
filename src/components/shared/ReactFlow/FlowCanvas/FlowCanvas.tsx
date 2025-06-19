@@ -1,5 +1,6 @@
 import {
   type Connection,
+  type FinalConnectionState,
   type Node,
   type NodeChange,
   NodeToolbar,
@@ -35,6 +36,7 @@ import type {
 } from "@/utils/componentSpec";
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
 import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
+import { createTaskNode } from "@/utils/nodes/createTaskNode";
 
 import ComponentDuplicateDialog from "../../Dialogs/ComponentDuplicateDialog";
 import { getBulkUpdateConfirmationDetails } from "./ConfirmationDialogs/BulkUpdateConfirmationDialog";
@@ -47,6 +49,7 @@ import HintNode from "./GhostNode/HintNode";
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
 import type { NodesAndEdges } from "./types";
+import { addAndConnectNode } from "./utils/addAndConnectNode";
 import addTask from "./utils/addTask";
 import { duplicateNodes } from "./utils/duplicateNodes";
 import { getPositionFromEvent } from "./utils/getPositionFromEvent";
@@ -320,6 +323,64 @@ const FlowCanvas = ({
       updateGraphSpec(updatedGraphSpec);
     },
     [graphSpec, handleConnection, updateGraphSpec],
+  );
+
+  const onConnectEnd = useCallback(
+    (_e: MouseEvent | TouchEvent, connectionState: FinalConnectionState) => {
+      if (connectionState.isValid) {
+        // Valid connections are handled by onConnect
+        return;
+      }
+
+      const ghostNode = reactFlowInstance
+        ?.getNodes()
+        .find((node) => node.type === "ghost");
+
+      if (!ghostNode) {
+        return;
+      }
+
+      const { componentRef } = ghostNode.data as {
+        componentRef: ComponentReference;
+      };
+
+      const position = connectionState.to;
+      if (!position) return;
+
+      const fromHandle = connectionState.fromHandle;
+
+      const { componentSpec: updatedComponentSpec, taskId } = addAndConnectNode(
+        {
+          componentRef,
+          fromHandle,
+          position,
+          componentSpec,
+        },
+      );
+
+      // try suppress missing node errors in console. somewhere along the way I introduced the error below when adding new nodes (in general; not just here)
+      // this reduces the number of "Error preparing pipeline for export: Error: The nodes array does not have task node" errors to 3
+      // todo - investigate and fix this!
+      if (taskId && "graph" in updatedComponentSpec.implementation) {
+        const taskSpec =
+          updatedComponentSpec.implementation.graph.tasks[taskId];
+        if (taskSpec) {
+          const newNode = createTaskNode([taskId, taskSpec], nodeData);
+          updateOrAddNodes({
+            newNodes: [newNode],
+          });
+        }
+      }
+
+      setComponentSpec(updatedComponentSpec);
+    },
+    [
+      reactFlowInstance,
+      componentSpec,
+      nodeData,
+      setComponentSpec,
+      updateOrAddNodes,
+    ],
   );
 
   const {
@@ -757,6 +818,7 @@ const FlowCanvas = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onConnect={onConnect}
+        onConnectEnd={onConnectEnd}
         onDragOver={onDragOver}
         onDrop={onDrop}
         onBeforeDelete={handleBeforeDelete}
