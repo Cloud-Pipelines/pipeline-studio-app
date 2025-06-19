@@ -34,6 +34,7 @@ const useImportComponent = ({
           USER_COMPONENTS_LIST_NAME,
           url,
           "Imported Component",
+          true,
           { favorited: true }, // User Components are Favorited by default
         );
         // Invalidate the userComponents query to refresh the sidebar

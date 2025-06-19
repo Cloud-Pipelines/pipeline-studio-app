@@ -25,11 +25,16 @@ import {
 } from "@/utils/componentLibrary";
 import type { ComponentReference } from "@/utils/componentSpec";
 import {
+  addComponentToListByTextWithDuplicateCheck,
+  addComponentToListByUrl,
   type ComponentReferenceWithSpec,
+  deleteComponentFileFromList,
   updateComponentInListByText,
   updateComponentRefInList,
+  writeComponentRefToFile,
 } from "@/utils/componentStore";
 import { DEFAULT_FILTERS, USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
+import { getComponentName } from "@/utils/getComponentName";
 import { getComponentByUrl, saveComponent } from "@/utils/localforge";
 import { componentMatchesSearch } from "@/utils/searchUtils";
 
@@ -46,6 +51,8 @@ type ComponentLibraryContextType = {
   searchFilters: string[];
   searchResult: SearchResult | null;
   highlightSearchResults: boolean;
+  addToComponentLibrary: (component: ComponentReference) => void;
+  removeFromComponentLibrary: (component: ComponentReference) => void;
   refetchLibrary: () => void;
   refetchUserComponents: () => void;
   setSearchTerm: (term: string) => void;
@@ -57,6 +64,7 @@ type ComponentLibraryContextType = {
   ) => void;
   checkIfFavorited: (component: ComponentReference) => boolean;
   checkIfUserComponent: (component: ComponentReference) => boolean;
+  checkLibraryContainsComponent: (component: ComponentReference) => boolean;
 };
 
 const ComponentLibraryContext = createContext<
@@ -137,6 +145,7 @@ export const ComponentLibraryProvider = ({
   const setComponentFavorite = useCallback(
     async (component: ComponentReference, favorited: boolean) => {
       // Update via filename (User Components)
+      const name = getComponentName(component);
       if (!component.url) {
         component.favorited = favorited;
 
@@ -144,7 +153,7 @@ export const ComponentLibraryProvider = ({
           await updateComponentRefInList(
             USER_COMPONENTS_LIST_NAME,
             component as ComponentReferenceWithSpec,
-            component.name ?? component.spec.name ?? "Unnamed Component",
+            name,
           ).then(async () => {
             await refreshUserComponents();
           });
@@ -152,14 +161,14 @@ export const ComponentLibraryProvider = ({
           await updateComponentInListByText(
             USER_COMPONENTS_LIST_NAME,
             component.text,
-            component.name ?? "Unnamed Component",
+            name,
             { favorited },
           ).then(async () => {
             await refreshUserComponents();
           });
         } else {
           console.warn(
-            `Component "${component.name}" does not have spec or text, cannot favorite.`,
+            `Component "${name}" does not have spec or text, cannot favorite.`,
           );
         }
 
@@ -230,6 +239,21 @@ export const ComponentLibraryProvider = ({
     [userComponentsFolder],
   );
 
+  const checkLibraryContainsComponent = useCallback(
+    (component: ComponentReference) => {
+      if (!componentLibrary) return false;
+
+      if (checkIfUserComponent(component)) return true;
+
+      const uniqueComponents = filterToUniqueByDigest(
+        flattenFolders(componentLibrary),
+      );
+
+      return uniqueComponents.some((c) => c.digest === component.digest);
+    },
+    [componentLibrary, checkIfUserComponent],
+  );
+
   const searchComponentLibrary = useCallback(
     (search: string, filters: string[]) => {
       if (!search.trim()) return null;
@@ -273,6 +297,73 @@ export const ComponentLibraryProvider = ({
       return result;
     },
     [componentLibrary, userComponentsFolder, usedComponentsFolder],
+  );
+
+  const addToComponentLibrary = useCallback(
+    async (component: ComponentReference) => {
+      const name = getComponentName(component);
+      if (!component.url) {
+        component.favorited = true;
+
+        if (component.spec) {
+          await writeComponentRefToFile(
+            USER_COMPONENTS_LIST_NAME,
+            name,
+            component as ComponentReferenceWithSpec,
+          ).then(async () => {
+            await refreshUserComponents();
+          });
+        } else if (component.text) {
+          await addComponentToListByTextWithDuplicateCheck(
+            USER_COMPONENTS_LIST_NAME,
+            component.text,
+            name,
+            "Component",
+            false,
+            { favorited: true },
+          ).then(async () => {
+            await refreshUserComponents();
+          });
+        } else {
+          console.warn(
+            `Component "${name}" does not have spec or text, cannot favorite.`,
+          );
+        }
+
+        return;
+      }
+
+      await addComponentToListByUrl(
+        USER_COMPONENTS_LIST_NAME,
+        component.url,
+        name,
+        false,
+        {
+          favorited: true,
+        },
+      ).then(async () => {
+        await refreshComponentLibrary();
+        await refreshUserComponents();
+      });
+    },
+    [refreshComponentLibrary, refreshUserComponents],
+  );
+
+  const removeFromComponentLibrary = useCallback(
+    async (component: ComponentReference) => {
+      const name = getComponentName(component);
+      try {
+        await deleteComponentFileFromList(USER_COMPONENTS_LIST_NAME, name).then(
+          async () => {
+            await refreshComponentLibrary();
+            await refreshUserComponents();
+          },
+        );
+      } catch (error) {
+        console.error("Error deleting component:", error);
+      }
+    },
+    [refreshComponentLibrary, refreshUserComponents],
   );
 
   const searchResult = useMemo(
@@ -321,6 +412,8 @@ export const ComponentLibraryProvider = ({
       searchFilters,
       searchResult,
       highlightSearchResults,
+      addToComponentLibrary,
+      removeFromComponentLibrary,
       refetchLibrary,
       refetchUserComponents,
       setSearchTerm,
@@ -329,6 +422,7 @@ export const ComponentLibraryProvider = ({
       setComponentFavorite,
       checkIfFavorited,
       checkIfUserComponent,
+      checkLibraryContainsComponent,
     }),
     [
       componentLibrary,
@@ -341,6 +435,8 @@ export const ComponentLibraryProvider = ({
       searchFilters,
       searchResult,
       highlightSearchResults,
+      addToComponentLibrary,
+      removeFromComponentLibrary,
       refetchLibrary,
       refetchUserComponents,
       setSearchTerm,
@@ -349,6 +445,7 @@ export const ComponentLibraryProvider = ({
       setComponentFavorite,
       checkIfFavorited,
       checkIfUserComponent,
+      checkLibraryContainsComponent,
     ],
   );
 
