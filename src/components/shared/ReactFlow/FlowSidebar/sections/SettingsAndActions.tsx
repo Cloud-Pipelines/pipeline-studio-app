@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { PipelineNameDialog } from "@/components/shared/Dialogs";
 import ImportPipeline from "@/components/shared/ImportPipeline";
-import { Button } from "@/components/ui/button";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -14,19 +13,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import useToastNotification from "@/hooks/useToastNotification";
+import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/routes/router";
 import { useSavePipeline } from "@/services/pipelineService";
 import { componentSpecToYaml } from "@/utils/componentStore";
 import { updateComponentSpecFromNodes } from "@/utils/nodes/updateComponentSpecFromNodes";
 
-const SettingsAndActions = () => {
+const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
   const { componentSpec } = useComponentSpec();
   const { savePipeline } = useSavePipeline(componentSpec);
   const notify = useToastNotification();
@@ -89,39 +84,40 @@ const SettingsAndActions = () => {
     ? `${componentSpec.name}.pipeline.component.yaml`
     : "pipeline.component.yaml";
 
+  const tooltipPosition = isOpen ? "top" : "right";
   return (
-    <SidebarGroup className="pb-0">
-      <SidebarGroupLabel asChild>
-        <div className="flex items-center">
-          <span className="font-medium text-sm">Pipeline Actions</span>
-        </div>
-      </SidebarGroupLabel>
+    <SidebarGroup>
+      <SidebarGroupLabel>Pipeline Actions</SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu className="flex-row gap-2 text-foreground/75">
+        <SidebarMenu
+          className={cn({
+            "gap-2 text-foreground/75": true,
+            "flex-row": isOpen,
+            "flex-col": !isOpen,
+          })}
+        >
           <SidebarMenuItem>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <SidebarMenuButton
-                  onClick={handleSavePipeline}
-                  className="cursor-pointer"
-                >
-                  <Save className="w-5! h-5!" strokeWidth={1.5} />
-                </SidebarMenuButton>
-              </TooltipTrigger>
-              <TooltipContent side="top">Save Pipeline</TooltipContent>
-            </Tooltip>
+            <SidebarMenuButton
+              tooltip="Save Pipeline"
+              forceTooltip
+              tooltipPosition={tooltipPosition}
+              onClick={handleSavePipeline}
+              className="cursor-pointer"
+            >
+              <Save className="w-5! h-5!" strokeWidth={1.5} />
+            </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <PipelineNameDialog
               trigger={
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SidebarMenuButton className="cursor-pointer">
-                      <SaveAll className="w-5! h-5!" strokeWidth={1.5} />
-                    </SidebarMenuButton>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">Save-as Pipeline</TooltipContent>
-                </Tooltip>
+                <SidebarMenuButton
+                  tooltip="Save Pipeline As"
+                  forceTooltip
+                  tooltipPosition={tooltipPosition}
+                  className="cursor-pointer"
+                >
+                  <SaveAll className="w-5! h-5!" strokeWidth={1.5} />
+                </SidebarMenuButton>
               }
               title="Save Pipeline As"
               description="Enter a name for your pipeline"
@@ -132,37 +128,33 @@ const SettingsAndActions = () => {
             />
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <SidebarMenuButton asChild className="cursor-pointer">
-                  <a
-                    href={URL.createObjectURL(componentTextBlob)}
-                    download={filename}
-                  >
-                    <CloudUpload className="w-5! h-5!" strokeWidth={1.5} />
-                  </a>
-                </SidebarMenuButton>
-              </TooltipTrigger>
-              <TooltipContent side="top">Export Pipeline</TooltipContent>
-            </Tooltip>
+            <SidebarMenuButton
+              tooltip="Export Pipeline"
+              forceTooltip
+              tooltipPosition={tooltipPosition}
+              asChild
+              className="cursor-pointer"
+            >
+              <a
+                href={URL.createObjectURL(componentTextBlob)}
+                download={filename}
+              >
+                <CloudUpload className="w-5! h-5!" strokeWidth={1.5} />
+              </a>
+            </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <ImportPipeline
               triggerComponent={
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SidebarMenuButton asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="w-full justify-start px-2!"
-                      >
-                        <FolderDown className="w-5! h-5!" strokeWidth={1.5} />
-                      </Button>
-                    </SidebarMenuButton>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">Import Pipeline</TooltipContent>
-                </Tooltip>
+                <SidebarMenuButton
+                  tooltip="Import Pipeline"
+                  forceTooltip
+                  tooltipPosition={tooltipPosition}
+                  className="cursor-pointer"
+                  asChild={!isOpen}
+                >
+                  <FolderDown className="w-5! h-5!" strokeWidth={1.5} />
+                </SidebarMenuButton>
               }
             />
           </SidebarMenuItem>

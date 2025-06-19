@@ -14,7 +14,7 @@ import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
-const RunsAndSubmission = () => {
+const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
   const { componentSpec } = useComponentSpec();
 
   const { pipelineRuns, refetch } = useLoadPipelineRuns(
@@ -43,13 +43,27 @@ const RunsAndSubmission = () => {
   const runBoxStyle =
     pipelineRuns.length > 4 ? `h-[165px]` : `h-[${pipelineRuns.length * 50}px]`;
 
+  if (!isOpen) {
+    return (
+      <>
+        <hr />
+        <SidebarGroupContent className="mx-2! my-2!">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <OasisSubmitter
+                componentSpec={componentSpec}
+                onSubmitComplete={refetch}
+              />
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </>
+    );
+  }
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel asChild>
-        <div className="flex items-center">
-          <span className="font-medium text-sm">Runs & Submissions</span>
-        </div>
-      </SidebarGroupLabel>
+      <SidebarGroupLabel>Runs & Submissions</SidebarGroupLabel>
 
       <SidebarGroupContent>
         <SidebarMenu>
@@ -62,7 +76,12 @@ const RunsAndSubmission = () => {
         </SidebarMenu>
       </SidebarGroupContent>
 
-      <SidebarGroupContent>
+      <SidebarGroupContent
+        className={cn({
+          hidden: !isOpen,
+          "mt-2": true,
+        })}
+      >
         <SidebarMenu>
           <SidebarMenuItem>
             <ScrollArea
