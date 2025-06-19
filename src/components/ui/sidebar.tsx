@@ -510,8 +510,6 @@ function SidebarMenuButton({
   const Comp = asChild ? Slot : "button";
   const { isMobile, state } = useSidebar();
 
-  console.log("state", state);
-
   const button = (
     <Comp
       data-slot="sidebar-menu-button"
