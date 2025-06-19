@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@xyflow/react";
-import { CloudUpload, FolderDown, Save, SaveAll } from "lucide-react";
+import { FileDownIcon, FileUpIcon, Save, SaveAll } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
 import { PipelineNameDialog } from "@/components/shared/Dialogs";
@@ -139,7 +139,7 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
                 href={URL.createObjectURL(componentTextBlob)}
                 download={filename}
               >
-                <CloudUpload className="w-5! h-5!" strokeWidth={1.5} />
+                <FileDownIcon className="w-5! h-5!" strokeWidth={1.5} />
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -153,7 +153,7 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
                   className="cursor-pointer"
                   asChild={!isOpen}
                 >
-                  <FolderDown className="w-5! h-5!" strokeWidth={1.5} />
+                  <FileUpIcon className="w-5! h-5!" strokeWidth={1.5} />
                 </SidebarMenuButton>
               }
             />
