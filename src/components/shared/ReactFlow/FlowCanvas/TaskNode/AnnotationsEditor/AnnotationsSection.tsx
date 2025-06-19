@@ -49,8 +49,8 @@ export const AnnotationsSection = ({
   };
 
   const handleValueChange = (key: string, value: string | undefined) => {
-    if (value === undefined) {
-      // If value is undefined, remove the annotation
+    if (value === undefined || value === "") {
+      // If value is empty or undefined, remove the annotation
       handleRemove(key);
       return;
     }
