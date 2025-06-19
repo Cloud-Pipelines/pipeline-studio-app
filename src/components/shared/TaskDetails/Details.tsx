@@ -72,6 +72,34 @@ const TaskDetails = ({
     | string
     | undefined;
 
+  let reconstructedUrl;
+  if (!url) {
+    // Try reconstruct the url from componentSpec.metadata.annotations
+    const annotations = componentSpec?.metadata?.annotations || {};
+    const {
+      git_remote_url,
+      git_remote_sha,
+      git_relative_dir,
+      component_yaml_path,
+    } = annotations;
+
+    if (
+      git_remote_url &&
+      git_remote_sha &&
+      git_relative_dir &&
+      component_yaml_path
+    ) {
+      reconstructedUrl = `https://raw.githubusercontent.com/${(
+        git_remote_url as string
+      )
+        .replace(/^https:\/\/github\.com\//, "")
+        .replace(
+          /\.git$/,
+          "",
+        )}/${git_remote_sha}/${git_relative_dir}/${component_yaml_path}`;
+    }
+  }
+
   const stringToPythonCodeDownload = () => {
     if (!pythonOriginalCode) return;
 
@@ -153,65 +181,7 @@ const TaskDetails = ({
           </div>
         )}
 
-        {(url || canonicalUrl) && (
-          <div className="flex flex-col px-3 py-2">
-            <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
-              URL
-            </div>
-            {url && (
-              <>
-                <div className="text-sm break-all">
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sky-500 hover:underline flex items-center gap-1"
-                  >
-                    View raw component.yaml
-                    <ExternalLink className="size-3 flex-shrink-0" />
-                  </a>
-                </div>
-                <div className="text-sm break-all">
-                  <a
-                    href={convertRawUrlToDirectoryUrl(url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sky-500 hover:underline flex items-center gap-1"
-                  >
-                    View component.yaml on GitHub
-                    <ExternalLink className="size-3 flex-shrink-0" />
-                  </a>
-                </div>
-              </>
-            )}
-            {canonicalUrl && (
-              <>
-                <div className="text-sm break-all">
-                  <a
-                    href={canonicalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sky-500 hover:underline flex items-center gap-1"
-                  >
-                    View raw canonical URL
-                    <ExternalLink className="size-3 flex-shrink-0" />
-                  </a>
-                </div>
-                <div className="text-sm break-all">
-                  <a
-                    href={convertRawUrlToDirectoryUrl(canonicalUrl)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sky-500 hover:underline flex items-center gap-1"
-                  >
-                    View canonical URL on GitHub
-                    <ExternalLink className="size-3 flex-shrink-0" />
-                  </a>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+        <LinkBlock url={url ?? reconstructedUrl} canonicalUrl={canonicalUrl} />
 
         {componentSpec?.description && (
           <div className="flex flex-col px-3 py-2">
@@ -348,3 +318,73 @@ const TaskDetails = ({
 };
 
 export default TaskDetails;
+
+function LinkBlock({
+  url,
+  canonicalUrl,
+}: {
+  url?: string;
+  canonicalUrl?: string;
+}) {
+  if (!url && !canonicalUrl) return null;
+
+  return (
+    <div className="flex flex-col px-3 py-2">
+      <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
+        URL
+      </div>
+      {url && (
+        <>
+          <div className="text-sm break-all">
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sky-500 hover:underline flex items-center gap-1"
+            >
+              View raw component.yaml
+              <ExternalLink className="size-3 flex-shrink-0" />
+            </a>
+          </div>
+          <div className="text-sm break-all">
+            <a
+              href={convertRawUrlToDirectoryUrl(url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sky-500 hover:underline flex items-center gap-1"
+            >
+              View directory on GitHub
+              <ExternalLink className="size-3 flex-shrink-0" />
+            </a>
+          </div>
+        </>
+      )}
+      {canonicalUrl && (
+        <>
+          <div className="text-sm break-all">
+            <a
+              href={canonicalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sky-500 hover:underline flex items-center gap-1"
+            >
+              View raw canonical URL
+              <ExternalLink className="size-3 flex-shrink-0" />
+            </a>
+          </div>
+          <div className="text-sm break-all">
+            <a
+              href={convertRawUrlToDirectoryUrl(canonicalUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sky-500 hover:underline flex items-center gap-1"
+            >
+              View canonical URL on GitHub
+              <ExternalLink className="size-3 flex-shrink-0" />
+            </a>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

@@ -412,7 +412,7 @@ const makeNameUniqueByAddingIndex = (
   return finalName;
 };
 
-const writeComponentRefToFile = async (
+export const writeComponentRefToFile = async (
   listName: string,
   fileName: string,
   componentRef: ComponentReferenceWithSpec,
@@ -490,6 +490,7 @@ export const addComponentToListByUrl = async (
   listName: string,
   url: string,
   defaultFileName: string = "Component",
+  allowDuplicates: boolean = false,
   additionalData?: {
     [K: string]: any;
   },
@@ -501,10 +502,18 @@ export const addComponentToListByUrl = async (
     Object.assign(componentRef, additionalData);
   }
 
-  return addComponentRefToList(
+  if (allowDuplicates) {
+    return addComponentRefToList(
+      listName,
+      componentRef,
+      componentRef.spec.name ?? defaultFileName,
+    );
+  }
+
+  return writeComponentRefToFile(
     listName,
-    componentRef,
     componentRef.spec.name ?? defaultFileName,
+    componentRef,
   );
 };
 
@@ -745,6 +754,7 @@ export const deleteComponentFileFromList = async (
     name: DB_NAME,
     storeName: tableName,
   });
+
   return componentListDb.removeItem(fileName);
 };
 

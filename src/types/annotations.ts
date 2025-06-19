@@ -9,6 +9,7 @@ export type AnnotationConfig = {
   annotation: string;
   label: string;
   unit?: string;
+  append?: string;
   options?: AnnotationOption[];
   enableQuantity?: boolean;
   type?: "string" | "number" | "boolean";

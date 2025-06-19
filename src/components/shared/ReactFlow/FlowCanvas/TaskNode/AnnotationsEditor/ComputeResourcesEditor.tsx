@@ -29,6 +29,7 @@ export const COMPUTE_RESOURCES: AnnotationConfig[] = [
     label: "Memory",
     unit: "GiB",
     type: "number",
+    append: "Gi",
   },
   {
     annotation: "cloud-pipelines.net/launchers/generic/resources.accelerators",
@@ -66,10 +67,22 @@ export const ComputeResourcesEditor = ({
           </span>
 
           <AnnotationsInput
-            value={annotations[resource.annotation]}
+            value={
+              resource.append && annotations[resource.annotation]
+                ? annotations[resource.annotation].replace(
+                    new RegExp(`${resource.append}$`),
+                    "",
+                  )
+                : annotations[resource.annotation]
+            }
             config={resource}
             onChange={(newValue) =>
-              handleValueChange(resource.annotation, newValue)
+              handleValueChange(
+                resource.annotation,
+                resource.append && newValue
+                  ? `${newValue}${resource.append}`
+                  : newValue,
+              )
             }
             annotations={annotations}
           />
