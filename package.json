@@ -64,7 +64,7 @@
     "@tanstack/router-devtools": "^1.104.3",
     "@types/gapi": "^0.0.39",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@xyflow/react": "^12.4.3",
+    "@xyflow/react": "^12.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
