@@ -78,7 +78,7 @@ const PipelineRun = () => {
   );
 
   return (
-    <ComponentSpecProvider spec={componentSpecWithExecutionIds}>
+    <ComponentSpecProvider spec={componentSpecWithExecutionIds} runId={id}>
       <div className="dndflow">
         <DndContext>
           <ReactFlowProvider>
