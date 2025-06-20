@@ -1,5 +1,6 @@
 import {
   ABOUT_URL,
+  BOTTOM_FOOTER_HEIGHT,
   GIT_COMMIT,
   GIT_REPO_URL,
   GIVE_FEEDBACK_URL,
@@ -8,7 +9,10 @@ import {
 
 function AppFooter() {
   return (
-    <footer className="footer w-full h-[30px] p-1 text-center bg-gray-50">
+    <footer
+      className="footer w-full p-1 text-center bg-gray-50"
+      style={{ height: `${BOTTOM_FOOTER_HEIGHT}px` }}
+    >
       <div className="inline-block">
         <a
           href={ABOUT_URL}
