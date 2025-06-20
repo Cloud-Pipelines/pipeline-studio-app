@@ -45,7 +45,7 @@ type TaskNodeProviderProps = {
   runStatus?: ContainerExecutionStatus;
 };
 
-type TaskNodeContextType = {
+export type TaskNodeContextType = {
   taskSpec: TaskSpec;
   taskId: string;
   nodeId: string;

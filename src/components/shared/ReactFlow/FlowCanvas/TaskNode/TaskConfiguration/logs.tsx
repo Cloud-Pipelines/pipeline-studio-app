@@ -9,7 +9,7 @@ const LogDisplay = ({
   onFullscreenChange,
   logs,
 }: {
-  onFullscreenChange: (isFullscreen: boolean) => void;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
   logs: {
     log_text?: string;
     system_error_exception_full?: string;
@@ -74,7 +74,7 @@ const Logs = ({
   status,
 }: {
   executionId?: string | number;
-  onFullscreenChange: (isFullscreen: boolean) => void;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
   status?: ContainerExecutionStatus;
 }) => {
   const [isLogging, setIsLogging] = useState(!!executionId);
