@@ -24,11 +24,12 @@ import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 import { savePipelineSpecToSessionStorage } from "@/utils/storage";
 
 import { ContextPanel } from "../shared/ContextPanel/ContextPanel";
+import PipelineDetails from "./PipelineDetails";
 
 const GRID_SIZE = 10;
 
 const PipelineEditor = () => {
-  const { componentSpec } = useComponentSpec();
+  const { componentSpec, isLoading } = useComponentSpec();
   const nodes = useStore((store) => store.nodes);
 
   const [flowConfig, setFlowConfig] = useState<ReactFlowProps>({
@@ -59,7 +60,11 @@ const PipelineEditor = () => {
   }, [componentSpec, nodes]);
 
   return (
-    <ContextPanelProvider>
+    <ContextPanelProvider
+      defaultContent={
+        <PipelineDetails componentSpec={componentSpec} isLoading={isLoading} />
+      }
+    >
       <ComponentLibraryProvider>
         <FlowSidebar />
         <ResizablePanelGroup direction="horizontal">

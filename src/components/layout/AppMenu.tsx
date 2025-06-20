@@ -2,11 +2,14 @@ import { Link } from "@tanstack/react-router";
 
 import CloneRunButton from "@/components/shared/CloneRunButton";
 import ImportPipeline from "@/components/shared/ImportPipeline";
+import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 
 import NewPipelineButton from "../shared/NewPipelineButton";
-import EditorMenu from "./EditorMenu";
 
 const AppMenu = () => {
+  const { componentSpec } = useLoadComponentSpecAndDetailsFromId();
+  const title = componentSpec?.name;
+
   return (
     <div className="w-full bg-stone-900 p-2">
       <div className="flex justify-between items-center w-3/4 mx-auto">
@@ -18,7 +21,7 @@ const AppMenu = () => {
               className="w-10 h-10 filter invert cursor-pointer"
             />
           </Link>
-          <EditorMenu />
+          <span className="text-white text-sm font-bold">{title}</span>
         </div>
         <div className="flex flex-row gap-2 items-center">
           <CloneRunButton />

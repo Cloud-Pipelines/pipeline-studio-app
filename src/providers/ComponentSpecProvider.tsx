@@ -42,6 +42,7 @@ interface ComponentSpecContextType {
   saveComponentSpec: (name: string) => Promise<void>;
   taskStatusMap: Map<string, string>;
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
+  runId?: string;
 }
 
 const ComponentSpecContext = createContext<
@@ -49,23 +50,21 @@ const ComponentSpecContext = createContext<
 >(undefined);
 
 export const ComponentSpecProvider = ({
-  experimentName,
   spec,
-  initialTaskStatusMap,
   readOnly = false,
+  runId,
   children,
 }: {
-  experimentName?: string;
   spec?: ComponentSpec;
-  initialTaskStatusMap?: Map<string, string>;
   readOnly?: boolean;
+  runId?: string;
   children: ReactNode;
 }) => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
     spec ?? EMPTY_GRAPH_COMPONENT_SPEC,
   );
   const [taskStatusMap, setTaskStatusMap] = useState<Map<string, string>>(
-    initialTaskStatusMap ?? new Map(),
+    new Map(),
   );
   const [originalComponentSpec, setOriginalComponentSpec] =
     useState<ComponentSpec>(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
@@ -92,7 +91,7 @@ export const ComponentSpecProvider = ({
         setOriginalComponentSpec(componentSpec);
       }
 
-      const name = newName ?? experimentName;
+      const name = newName ?? componentSpec.name;
       if (!name) return;
 
       const result = await loadPipelineByName(name);
@@ -106,7 +105,7 @@ export const ComponentSpecProvider = ({
       setOriginalComponentSpec(preparedComponentRef);
       setIsLoading(false);
     },
-    [experimentName],
+    [componentSpec],
   );
 
   const refetch = useCallback(() => {
@@ -144,10 +143,6 @@ export const ComponentSpecProvider = ({
   }, []);
 
   useEffect(() => {
-    loadPipeline();
-  }, [loadPipeline]);
-
-  useEffect(() => {
     if (componentSpec !== originalComponentSpec) {
       setIsDirty(true);
     } else {
@@ -155,21 +150,44 @@ export const ComponentSpecProvider = ({
     }
   }, [componentSpec, originalComponentSpec, setIsDirty]);
 
+  useEffect(() => {
+    setComponentSpec(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
+    setOriginalComponentSpec(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
+    setIsDirty(false);
+    setIsLoading(false);
+  }, [spec]);
+
+  const value = useMemo(
+    () => ({
+      componentSpec,
+      setComponentSpec,
+      isDirty,
+      graphSpec,
+      isLoading,
+      refetch,
+      updateGraphSpec,
+      saveComponentSpec,
+      taskStatusMap,
+      setTaskStatusMap,
+      runId,
+    }),
+    [
+      componentSpec,
+      setComponentSpec,
+      isDirty,
+      graphSpec,
+      isLoading,
+      refetch,
+      updateGraphSpec,
+      saveComponentSpec,
+      taskStatusMap,
+      setTaskStatusMap,
+      runId,
+    ],
+  );
+
   return (
-    <ComponentSpecContext.Provider
-      value={{
-        componentSpec,
-        setComponentSpec,
-        isDirty,
-        graphSpec,
-        isLoading,
-        refetch,
-        updateGraphSpec,
-        saveComponentSpec,
-        taskStatusMap,
-        setTaskStatusMap,
-      }}
-    >
+    <ComponentSpecContext.Provider value={value}>
       {children}
     </ComponentSpecContext.Provider>
   );

@@ -1,18 +1,17 @@
 import "@/styles/editor.css";
 
 import { DndContext } from "@dnd-kit/core";
-import { useLocation } from "@tanstack/react-router";
 import { ReactFlowProvider } from "@xyflow/react";
 
 import PipelineEditor from "@/components/Editor/PipelineEditor";
+import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
 
 const Editor = () => {
-  const location = useLocation();
-  const experimentName = location.pathname.split("/").pop() || "";
+  const { componentSpec } = useLoadComponentSpecAndDetailsFromId();
 
   return (
-    <ComponentSpecProvider experimentName={experimentName}>
+    <ComponentSpecProvider spec={componentSpec}>
       <div className="dndflow">
         <DndContext>
           <ReactFlowProvider>

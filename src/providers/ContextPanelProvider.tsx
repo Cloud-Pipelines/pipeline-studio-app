@@ -1,4 +1,10 @@
-import { createContext, type ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 type ContextPanelContextType = {
   content: ReactNode;
@@ -40,6 +46,10 @@ export const ContextPanelProvider = ({
       setKey(DEFAULT_KEY);
     }
   };
+
+  useEffect(() => {
+    setContentState(defaultContent);
+  }, [defaultContent]);
 
   return (
     <ContextPanelContext.Provider
