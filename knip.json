@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignore": ["src/api/**", "node_modules/**", "src/components/ui/**"],
+  "ignoreDependencies": [
+    "@radix-ui/react-accordion",
+    "@tanstack/react-query-devtools",
+    "tailwindcss",
+    "tailwindcss-animate",
+    "@typescript-eslint/eslint-plugin",
+    "@typescript-eslint/parser",
+    "react-scripts"
+  ]
+}

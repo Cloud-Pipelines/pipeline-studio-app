@@ -29,9 +29,9 @@ const COMPONENT_FEED_URLS_LOCAL_STORAGE_KEY =
   "ComponentSearch/component_feed_urls";
 
 const GITHUB_SEARCH_LOCATIONS_DEFAULT_VALUE: string[] = [
-  /* 
+  /*
     GitHub Search integration is currently not functioning.
-    Leaving this array empty will skip Github search and avoid any errors. 
+    Leaving this array empty will skip Github search and avoid any errors.
   */
   // "repo:Ark-kun/pipeline_components path:components",
 ];
@@ -124,7 +124,7 @@ class StringArraySettingBackedByLocalStorage extends SettingBackedByLocalStorage
   }
 }
 
-export interface MutableAppSettings {
+interface MutableAppSettings {
   componentLibraryUrl: Setting<string>;
   pipelineLibraryUrl: Setting<string>;
   defaultPipelineUrl: Setting<string>;
@@ -160,7 +160,7 @@ class AppSettingsBackedByLocalStorage implements MutableAppSettings {
   );
 }
 
-export interface AppSettings {
+interface AppSettings {
   componentLibraryUrl: string;
   pipelineLibraryUrl: string;
   defaultPipelineUrl: string;
@@ -169,11 +169,8 @@ export interface AppSettings {
   googleCloudOAuthClientId: string;
 }
 
-export const getMutableAppSettings = (): MutableAppSettings =>
-  new AppSettingsBackedByLocalStorage();
-
 export const getAppSettings = (): AppSettings => {
-  const mutableAppSettings = getMutableAppSettings();
+  const mutableAppSettings = new AppSettingsBackedByLocalStorage();
   return {
     componentLibraryUrl: mutableAppSettings.componentLibraryUrl.value,
     pipelineLibraryUrl: mutableAppSettings.pipelineLibraryUrl.value,

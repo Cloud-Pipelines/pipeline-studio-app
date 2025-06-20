@@ -16,7 +16,7 @@ const defaultTitles: TitleConfig = {
  * @param title The new title to set
  * @param suffix Optional suffix to append to the title
  */
-export function setDocumentTitle(title: string, suffix?: string) {
+function setDocumentTitle(title: string, suffix?: string) {
   document.title = suffix ? `${title} ${suffix}` : title;
 }
 

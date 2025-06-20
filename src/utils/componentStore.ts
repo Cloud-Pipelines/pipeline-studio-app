@@ -33,7 +33,7 @@ export interface ComponentReferenceWithSpec extends ComponentReference {
   text: string;
 }
 
-export interface ComponentReferenceWithSpecPlusData {
+interface ComponentReferenceWithSpecPlusData {
   componentRef: ComponentReferenceWithSpec;
   data: ArrayBuffer;
 }
@@ -99,7 +99,7 @@ export const loadComponentAsRefFromText = async (
   return componentRef;
 };
 
-export const loadComponentFromUrlAsRef = async (
+const loadComponentFromUrlAsRef = async (
   url: string,
   downloadData: DownloadDataType = downloadDataWithCache,
 ): Promise<ComponentReferenceWithSpec> => {
@@ -179,61 +179,7 @@ export const fullyLoadComponentRefFromUrl = async (
   return newComponentRef;
 };
 
-export const fullyLoadComponentRef = async (
-  componentRef: ComponentReference,
-  downloadData: DownloadDataType = downloadDataWithCache,
-  recursive: boolean = true,
-): Promise<ComponentReferenceWithSpec> => {
-  let newComponentRef: ComponentReferenceWithSpec;
-  if (componentRef.spec === undefined) {
-    if (componentRef.text !== undefined) {
-      const loadedComponentRef = await loadComponentAsRefFromText(
-        componentRef.text,
-      );
-      newComponentRef = {
-        ...componentRef,
-        spec: loadedComponentRef.spec,
-        digest: loadedComponentRef.digest,
-        text: loadedComponentRef.text,
-      };
-    } else {
-      if (componentRef.url !== undefined) {
-        const loadedComponentRef = await loadComponentFromUrlAsRef(
-          componentRef.url,
-          downloadData,
-        );
-        newComponentRef = {
-          ...componentRef,
-          spec: loadedComponentRef.spec,
-          digest: loadedComponentRef.digest,
-          text: loadedComponentRef.text,
-        };
-      } else {
-        throw Error(
-          `The component reference cannot be materialized since it has no information: ${componentRef}`,
-        );
-      }
-    }
-  } else {
-    console.warn("Regenerating component text from spec. Avoid this.");
-    const componentText = componentSpecToYaml(componentRef.spec);
-    const componentDigest = await calculateHashDigestHex(componentText);
-    newComponentRef = {
-      ...componentRef,
-      spec: componentRef.spec,
-      digest: componentDigest,
-      text: componentText,
-    };
-  }
-  if (recursive) {
-    preloadComponentReferences(newComponentRef.spec, downloadData);
-  }
-  return newComponentRef;
-};
-
-export const storeComponentText = async (
-  componentText: string | ArrayBuffer,
-) => {
+const storeComponentText = async (componentText: string | ArrayBuffer) => {
   const componentBytes =
     typeof componentText === "string"
       ? new TextEncoder().encode(componentText)
@@ -249,60 +195,7 @@ export const storeComponentText = async (
   return componentRef;
 };
 
-export const getAllComponentsAsRefs = async () => {
-  const digestToDataDb = localForage.createInstance({
-    name: DB_NAME,
-    storeName: DIGEST_TO_DATA_DB_TABLE_NAME,
-  });
-
-  // TODO: Rewrite as async generator
-  const digestToComponentData = new Map<string, ArrayBuffer>();
-  await digestToDataDb.iterate<ArrayBuffer, void>((data, digest) => {
-    digestToComponentData.set(digest, data);
-  });
-
-  const digestToComponentRef = new Map<string, ComponentReferenceWithSpec>(
-    await Promise.all(
-      Array.from(digestToComponentData.entries()).map(
-        async ([digest, data]) =>
-          [digest, await loadComponentAsRefFromText(data)] as const,
-      ),
-    ),
-  );
-
-  await addCanonicalUrlsToComponentReferences(digestToComponentRef);
-
-  const componentRefs = Array.from(digestToComponentRef.values());
-  return componentRefs;
-};
-
-const addCanonicalUrlsToComponentReferences = async (
-  digestToComponentRef: Map<string, ComponentReference>,
-) => {
-  const digestToCanonicalUrlDb = localForage.createInstance({
-    name: DB_NAME,
-    storeName: DIGEST_TO_CANONICAL_URL_DB_TABLE_NAME,
-  });
-  await digestToCanonicalUrlDb.iterate<string, void>((url, digest) => {
-    const componentRef = digestToComponentRef.get(digest);
-    if (componentRef === undefined) {
-      console.error(
-        `Component db corrupted: Component with url ${url} and digest ${digest} has no content in the DB.`,
-      );
-    } else {
-      componentRef.url = url;
-    }
-  });
-};
-
-export const searchComponentsByName = async (name: string) => {
-  const componentRefs = await getAllComponentsAsRefs();
-  return componentRefs.filter(
-    (ref) => ref.spec.name?.toLowerCase().includes(name.toLowerCase()) ?? false,
-  );
-};
-
-export const storeComponentFromUrl = async (
+const storeComponentFromUrl = async (
   url: string,
   setUrlAsCanonical = false,
 ): Promise<ComponentReferenceWithSpec> => {
@@ -517,13 +410,7 @@ export const addComponentToListByUrl = async (
   );
 };
 
-/**
- * Checks if a component with the same name and content already exists in the list
- * @param listName - The component list name (e.g., USER_COMPONENTS_LIST_NAME)
- * @param componentRef - The component reference to check for duplicates
- * @returns The existing file entry if a duplicate is found, null otherwise
- */
-export const findDuplicateComponent = async (
+const findDuplicateComponent = async (
   listName: string,
   componentRef: ComponentReferenceWithSpec,
 ): Promise<ComponentFileEntry | null> => {
@@ -602,21 +489,6 @@ export const addComponentToListByTextWithDuplicateCheck = async (
   );
 
   return fileEntry;
-};
-
-// Keep the original function for backward compatibility
-export const addComponentToListByText = async (
-  listName: string,
-  componentText: string | ArrayBuffer,
-  fileName?: string,
-  defaultFileName: string = "Component",
-) => {
-  const componentRef = await storeComponentText(componentText);
-  return addComponentRefToList(
-    listName,
-    componentRef,
-    fileName ?? componentRef.spec.name ?? defaultFileName,
-  );
 };
 
 export const updateComponentInListByText = async (
@@ -701,20 +573,6 @@ export const renameComponentFileInList = async (
   return updatedFileEntry;
 };
 
-export const getAllComponentsFromList = async (listName: string) => {
-  await upgradeSingleComponentListDb(listName);
-  const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
-  const componentListDb = localForage.createInstance({
-    name: DB_NAME,
-    storeName: tableName,
-  });
-  const componentRefs: ComponentReferenceWithSpec[] = [];
-  await componentListDb.iterate<ComponentFileEntry, void>((fileEntry) => {
-    componentRefs.push(fileEntry.componentRef);
-  });
-  return componentRefs;
-};
-
 export const getAllComponentFilesFromList = async (listName: string) => {
   await upgradeSingleComponentListDb(listName);
   const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
@@ -756,21 +614,6 @@ export const deleteComponentFileFromList = async (
   });
 
   return componentListDb.removeItem(fileName);
-};
-
-export const unsafeWriteFilesToList = async (
-  listName: string,
-  files: ComponentFileEntry[],
-) => {
-  await upgradeSingleComponentListDb(listName);
-  const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
-  const componentListDb = localForage.createInstance({
-    name: DB_NAME,
-    storeName: tableName,
-  });
-  for (const file of files) {
-    await componentListDb.setItem(file.name, file);
-  }
 };
 
 export const componentSpecToYaml = (componentSpec: ComponentSpec) => {

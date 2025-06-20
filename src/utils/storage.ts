@@ -7,7 +7,6 @@
  */
 
 import { type Node } from "@xyflow/react";
-import yaml from "js-yaml";
 
 import type { ComponentSpec } from "./componentSpec";
 import { componentSpecToYaml } from "./componentStore";
@@ -42,23 +41,4 @@ export const savePipelineSpecToSessionStorage = (
       console.error(err);
     }
   }
-};
-
-export const loadPipelineSpecFromSessionStorage = () => {
-  try {
-    const componentText = window.sessionStorage.getItem(
-      SAVED_COMPONENT_SPEC_KEY,
-    );
-    if (componentText !== null) {
-      const loadedYaml = yaml.load(componentText);
-      if (loadedYaml !== null && typeof loadedYaml === "object") {
-        //TODO: Validate that the spec is valid
-        const savedComponentSpec = loadedYaml as ComponentSpec;
-        return savedComponentSpec;
-      }
-    }
-  } catch (err) {
-    console.error(err);
-  }
-  return undefined;
 };

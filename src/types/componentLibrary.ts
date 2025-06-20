@@ -1,7 +1,7 @@
 import type { LucideProps } from "lucide-react";
 import type { ChangeEvent, ForwardRefExoticComponent } from "react";
 
-import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
+import type { ComponentReference } from "@/utils/componentSpec";
 
 export type ComponentItemFromUrlProps = {
   url?: string;
@@ -20,12 +20,6 @@ export type ComponentFolder = {
   components?: ComponentReference[];
   folders?: ComponentFolder[];
   isUserFolder?: boolean;
-};
-
-export type ComponentData = {
-  digest: string;
-  url: string;
-  data: ComponentSpec;
 };
 
 export type FolderItemProps = {

@@ -6,13 +6,12 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-export type MySchema = ComponentSpec;
 export type TypeSpecType =
   | string
   | {
       [k: string]: TypeSpecType;
     };
-export interface InputOutputSpec {
+interface InputOutputSpec {
   name: string;
   type?: TypeSpecType;
   description?: string;
@@ -47,7 +46,7 @@ export interface OutputSpec extends InputOutputSpec {
 /**
  * Represents the command-line argument placeholder that will be replaced at run-time by the input argument value.
  */
-export interface InputValuePlaceholder {
+interface InputValuePlaceholder {
   /**
    * Name of the input.
    */
@@ -56,7 +55,7 @@ export interface InputValuePlaceholder {
 /**
  * Represents the command-line argument placeholder that will be replaced at run-time by a local file path pointing to a file containing the input argument value.
  */
-export interface InputPathPlaceholder {
+interface InputPathPlaceholder {
   /**
    * Name of the input.
    */
@@ -65,13 +64,13 @@ export interface InputPathPlaceholder {
 /**
  * Represents the command-line argument placeholder that will be replaced at run-time by a local file path pointing to a file where the program should write its output data.
  */
-export interface OutputPathPlaceholder {
+interface OutputPathPlaceholder {
   /**
    * Name of the output.
    */
   outputPath: string;
 }
-export type StringOrPlaceholder =
+type StringOrPlaceholder =
   | string
   | InputValuePlaceholder
   | InputPathPlaceholder
@@ -81,7 +80,7 @@ export type StringOrPlaceholder =
 /**
  * Represents the command-line argument placeholder that will be replaced at run-time by the concatenated values of its items.
  */
-export interface ConcatPlaceholder {
+interface ConcatPlaceholder {
   /**
    * Items to concatenate
    */
@@ -90,29 +89,29 @@ export interface ConcatPlaceholder {
 /**
  * Represents the command-line argument placeholder that will be replaced at run-time by a boolean value specifying whether the caller has passed an argument for the specified optional input.
  */
-export interface IsPresentPlaceholder {
+interface IsPresentPlaceholder {
   /**
    * Name of the input.
    */
   isPresent: string;
 }
-export type IfConditionArgumentType =
+type IfConditionArgumentType =
   | IsPresentPlaceholder
   | boolean
   | string
   | InputValuePlaceholder;
-export type ListOfStringsOrPlaceholders = StringOrPlaceholder[];
+type ListOfStringsOrPlaceholders = StringOrPlaceholder[];
 /**
  * Represents the command-line argument placeholder that will be replaced at run-time by a boolean value specifying whether the caller has passed an argument for the specified optional input.
  */
-export interface IfPlaceholder {
+interface IfPlaceholder {
   if: {
     cond: IfConditionArgumentType;
     then: ListOfStringsOrPlaceholders;
     else?: ListOfStringsOrPlaceholders;
   };
 }
-export interface ContainerSpec {
+interface ContainerSpec {
   /**
    * Docker image name.
    */
@@ -135,10 +134,10 @@ export interface ContainerSpec {
 /**
  * Represents the container component implementation.
  */
-export interface ContainerImplementation {
+interface ContainerImplementation {
   container: ContainerSpec;
 }
-export type ImplementationType = ContainerImplementation | GraphImplementation;
+type ImplementationType = ContainerImplementation | GraphImplementation;
 export interface MetadataSpec {
   annotations?: {
     [k: string]: unknown;
@@ -207,21 +206,21 @@ export type ArgumentType = string | GraphInputArgument | TaskOutputArgument;
 /**
  * Pair of operands for a binary operation.
  */
-export interface TwoArgumentOperands {
+interface TwoArgumentOperands {
   op1: ArgumentType;
   op2: ArgumentType;
 }
 /**
  * Pair of operands for a binary logical operation.
  */
-export interface TwoLogicalOperands {
+interface TwoLogicalOperands {
   op1: PredicateType;
   op2: PredicateType;
 }
 /**
  * Optional configuration that specifies how the task should be executed. Can be used to set some platform-specific options.
  */
-export type PredicateType =
+type PredicateType =
   | {
       "==": TwoArgumentOperands;
     }
@@ -253,17 +252,17 @@ export type PredicateType =
 /**
  * Optional configuration that specifies how the task should be retried if it fails.
  */
-export interface RetryStrategySpec {
+interface RetryStrategySpec {
   maxRetries?: number;
 }
 /**
  * Optional configuration that specifies how the task execution may be skipped if the output data exist in cache.
  */
-export interface CachingStrategySpec {
+interface CachingStrategySpec {
   maxCacheStaleness?: string;
 }
 
-export interface ExecutionOptionsSpec {
+interface ExecutionOptionsSpec {
   retryStrategy?: RetryStrategySpec;
   cachingStrategy?: CachingStrategySpec;
 }
@@ -302,10 +301,6 @@ export interface GraphImplementation {
 // Type guards
 export const isValidComponentSpec = (obj: any): obj is ComponentSpec =>
   typeof obj === "object" && "implementation" in obj;
-
-export const isContainerImplementation = (
-  implementation: ImplementationType,
-): implementation is ContainerImplementation => "container" in implementation;
 
 export const isGraphImplementation = (
   implementation: ImplementationType,

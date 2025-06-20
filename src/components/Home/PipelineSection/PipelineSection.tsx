@@ -23,7 +23,7 @@ import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 import PipelineRow from "./PipelineRow";
 
-export type Pipelines = Map<string, ComponentFileEntry>;
+type Pipelines = Map<string, ComponentFileEntry>;
 
 export const PipelineSection = () => {
   const [pipelines, setPipelines] = useState<Pipelines>(new Map());

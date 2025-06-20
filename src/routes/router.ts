@@ -28,13 +28,13 @@ const rootRoute = createRootRoute({
   component: RootLayout,
 });
 
-export const indexRoute = createRoute({
+const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: APP_ROUTES.HOME,
   component: Home,
 });
 
-export const editorRoute = createRoute({
+const editorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: APP_ROUTES.PIPELINE_EDITOR,
   component: Editor,
