@@ -43,7 +43,7 @@ const LogDisplay = ({
   );
 };
 
-export const isStatusActivelyLogging = (
+const isStatusActivelyLogging = (
   status?: ContainerExecutionStatus,
 ): boolean => {
   if (!status) {

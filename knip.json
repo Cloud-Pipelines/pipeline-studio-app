@@ -1,10 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "ignore": [
-    "src/api/**",
-    "node_modules/**",
-    "src/components/ui/**"
-  ],
+  "ignore": ["src/api/**", "node_modules/**", "src/components/ui/**"],
   "ignoreDependencies": [
     "@radix-ui/react-accordion",
     "@tanstack/react-query-devtools",
@@ -13,6 +9,5 @@
     "@typescript-eslint/eslint-plugin",
     "@typescript-eslint/parser",
     "react-scripts"
-
   ]
 }

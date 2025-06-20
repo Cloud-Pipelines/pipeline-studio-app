@@ -124,7 +124,7 @@ class StringArraySettingBackedByLocalStorage extends SettingBackedByLocalStorage
   }
 }
 
-export interface MutableAppSettings {
+interface MutableAppSettings {
   componentLibraryUrl: Setting<string>;
   pipelineLibraryUrl: Setting<string>;
   defaultPipelineUrl: Setting<string>;
@@ -160,7 +160,7 @@ class AppSettingsBackedByLocalStorage implements MutableAppSettings {
   );
 }
 
-export interface AppSettings {
+interface AppSettings {
   componentLibraryUrl: string;
   pipelineLibraryUrl: string;
   defaultPipelineUrl: string;

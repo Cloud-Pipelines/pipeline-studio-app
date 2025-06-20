@@ -15,7 +15,7 @@ interface AnnotationsEditorProps {
   onRemoveNewRow: (idx: number) => void;
 }
 
-export const COMMON_ANNOTATIONS: AnnotationConfig[] = [
+const COMMON_ANNOTATIONS: AnnotationConfig[] = [
   {
     annotation: "editor.position",
     label: "Node position",

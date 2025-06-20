@@ -91,7 +91,7 @@ export const fetchAndStoreComponentLibrary =
 /**
  * Store all components from the library in local storage
  */
-export const storeComponentsFromLibrary = async (
+const storeComponentsFromLibrary = async (
   library: ComponentLibrary,
 ): Promise<void> => {
   const processFolder = async (folder: ComponentFolder) => {

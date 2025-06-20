@@ -5,7 +5,7 @@ import { USER_COMPONENTS_LIST_NAME } from "./constants";
 
 const FILE_STORE_DB_TABLE_NAME_PREFIX = "file_store_";
 // Define the Component interface
-export interface Component {
+interface Component {
   id: string;
   url: string;
   data: string; // Component data as string
@@ -63,7 +63,7 @@ export async function componentExistsByUrl(url: string): Promise<boolean> {
 }
 
 // Function to get a component by ID
-export async function getComponentById(id: string): Promise<Component | null> {
+async function getComponentById(id: string): Promise<Component | null> {
   return componentStore.getItem<Component>(id);
 }
 
@@ -75,32 +75,6 @@ export async function getComponentByUrl(
   if (!componentId) return null;
 
   return getComponentById(componentId);
-}
-
-// Function to fetch all components
-export async function getAllComponents(): Promise<Component[]> {
-  const components: Component[] = [];
-
-  await componentStore.iterate<Component, void>((value) => {
-    components.push(value);
-  });
-
-  return components;
-}
-
-// Function to delete a component
-export async function deleteComponent(id: string): Promise<void> {
-  const component = await getComponentById(id);
-  if (!component) return;
-
-  await componentUrlStore.removeItem(component.url);
-  await componentStore.removeItem(id);
-}
-
-// Function to clear all components data
-export async function clearAllComponents(): Promise<void> {
-  await componentStore.clear();
-  await componentUrlStore.clear();
 }
 
 // Function to fetch all components

@@ -1,8 +1,8 @@
 {
-  "name": "pipeline-editor",
+  "name": "oasis-app",
   "homepage": "https://cloud-pipelines.net/pipeline-editor",
   "version": "0.1.0",
-  "description": "Cloud Pipelines Editor is a web app that allows the users to build and run Machine Learning pipelines using drag and drop without having to set up development environment.",
+  "description": "Oasis is a web app that allows the users to build and run Machine Learning pipelines using drag and drop without having to set up development environment.",
   "keywords": [
     "ML",
     "AI",
