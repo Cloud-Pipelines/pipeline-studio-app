@@ -58,6 +58,7 @@ const PipelineEditor = () => {
           <MiniMap position="bottom-left" pannable />
           <FlowControls
             style={{ marginLeft: "224px", marginBottom: "24px" }}
+            config={flowConfig}
             updateConfig={updateFlowConfig}
             showInteractive
           />

@@ -52,11 +52,13 @@ export const ComponentSpecProvider = ({
   experimentName,
   spec,
   initialTaskStatusMap,
+  readOnly = false,
   children,
 }: {
   experimentName?: string;
   spec?: ComponentSpec;
   initialTaskStatusMap?: Map<string, string>;
+  readOnly?: boolean;
   children: ReactNode;
 }) => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
@@ -113,6 +115,10 @@ export const ComponentSpecProvider = ({
 
   const saveComponentSpec = useCallback(
     async (name: string) => {
+      if (readOnly) {
+        return;
+      }
+
       componentSpec.name = name;
 
       const componentText = componentSpecToYaml(componentSpec);
