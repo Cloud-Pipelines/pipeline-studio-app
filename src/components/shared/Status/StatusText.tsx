@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import type { TaskStatusCounts } from "@/services/executionService";
 
 const StatusText = ({
@@ -8,7 +9,12 @@ const StatusText = ({
   shorthand?: boolean;
 }) => {
   return (
-    <div className="text-xs text-gray-500 mt-1">
+    <div
+      className={cn(
+        "text-xs text-gray-500 items-center",
+        !shorthand && "flex gap-2",
+      )}
+    >
       {Object.entries(statusCounts).map(([key, count]) => {
         if (key === "total") return;
 
@@ -39,7 +45,7 @@ const StatusText = ({
           );
         }
         return (
-          <span key={key} className="flex items-center gap-1">
+          <span key={key} className="flex items-center">
             <span className={statusColor}>
               {count} {statusText.trim()}
             </span>
