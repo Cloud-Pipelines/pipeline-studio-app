@@ -14,15 +14,17 @@ import { useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface FlowControlsProps extends ControlProps {
+  config: ReactFlowProps;
   updateConfig: (config: Partial<ReactFlowProps>) => void;
 }
 
 export default function FlowControls({
+  config,
   updateConfig,
   ...props
 }: FlowControlsProps) {
   const [multiSelectActive, setMultiSelectActive] = useState(false);
-  const [lockActive, setLockActive] = useState(true);
+  const [lockActive, setLockActive] = useState(!config.nodesDraggable);
 
   const onClickMultiSelect = useCallback(() => {
     updateConfig({

@@ -516,6 +516,10 @@ const FlowCanvas = ({
   };
 
   const handleBeforeDelete = async (params: NodesAndEdges) => {
+    if (readOnly) {
+      return false;
+    }
+
     if (params.nodes.length === 0 && params.edges.length === 0) {
       return false;
     }
