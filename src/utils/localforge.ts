@@ -88,17 +88,6 @@ export async function getAllComponents(): Promise<Component[]> {
   return components;
 }
 
-// Function to fetch all existing component URLs
-export async function getAllComponentUrls(): Promise<Record<string, string>> {
-  const urls: Record<string, string> = {};
-
-  await componentUrlStore.iterate<string, void>((componentId, url) => {
-    urls[url] = componentId;
-  });
-
-  return urls;
-}
-
 // Function to delete a component
 export async function deleteComponent(id: string): Promise<void> {
   const component = await getComponentById(id);

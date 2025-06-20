@@ -8,9 +8,7 @@ import {
 import { loadObjectFromYamlData } from "@/utils/cache";
 import type { ComponentSpec, InputSpec, TaskSpec } from "@/utils/componentSpec";
 import {
-  type Component,
   componentExistsByUrl,
-  getAllComponents,
   getAllUserComponents,
   getComponentByUrl,
   saveComponent,
@@ -180,13 +178,6 @@ export const fetchAndStoreComponent = async (
     console.error(`Error fetching component at ${url}:`, error);
     return null;
   }
-};
-
-/**
- * Get all stored components from local storage
- */
-export const getAllStoredComponents = async (): Promise<Component[]> => {
-  return getAllComponents();
 };
 
 /**

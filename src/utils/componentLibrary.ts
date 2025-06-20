@@ -3,7 +3,6 @@ import {
   parseComponentData,
 } from "@/services/componentService";
 import type {
-  ComponentData,
   ComponentFolder,
   ComponentLibrary,
 } from "@/types/componentLibrary";
@@ -176,30 +175,6 @@ export function flattenFolders(
     });
   }
   return components;
-}
-
-export function componentReferenceToComponentData(
-  componentRef: ComponentReference,
-): ComponentData | null {
-  if (!componentRef || !componentRef.spec) return null;
-
-  const digest = componentRef.digest;
-
-  if (!digest) {
-    console.error(
-      `Component reference: ${componentRef.name}, does not have a valid digest. Cannot convert to ComponentData.`,
-    );
-    return null;
-  }
-
-  return {
-    digest,
-    url: componentRef.url || "",
-    data: {
-      ...componentRef.spec,
-      name: componentRef.spec.name || componentRef.name || "Unnamed Component",
-    },
-  };
 }
 
 export const filterToUniqueByDigest = (components: ComponentReference[]) => {

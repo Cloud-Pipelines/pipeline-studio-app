@@ -57,7 +57,7 @@ export function componentMatchesSearch(
  * Checks if a component matches the search term
  * based on the specific filter.
  */
-export function checkSearchFilterComponent(
+function checkSearchFilterComponent(
   searchTerm: string,
   filter: string,
   component: ComponentSpec,

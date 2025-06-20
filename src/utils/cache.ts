@@ -48,20 +48,6 @@ export type DownloadDataType = <T>(
   transformer: (buffer: ArrayBuffer) => T,
 ) => Promise<T>;
 
-export async function downloadData<T>(
-  url: string,
-  transformer: (buffer: ArrayBuffer) => T,
-): Promise<T> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(
-      `Network response was not OK: ${response.status}: ${response.statusText}`,
-    );
-  }
-  const result = transformer(await response.arrayBuffer());
-  return result;
-}
-
 const IMMUTABLE_URL_REGEXPS = [
   /^https:\/\/raw.githubusercontent.com\/[-A-Za-z_]+\/[-A-Za-z_]+\/[0-9a-fA-f]{40}\/.*/,
   /^https:\/\/gitlab.com\/([-A-Za-z_]+\/){2,}-\/raw\/[0-9a-fA-f]{40}\/.*/,
@@ -79,14 +65,6 @@ export async function downloadDataWithCache<T>(
 
 function loadTextFromData(buffer: ArrayBuffer): string {
   return new TextDecoder().decode(buffer);
-}
-
-export function loadObjectFromJsonData(buffer: ArrayBuffer): object {
-  const obj = JSON.parse(loadTextFromData(buffer));
-  if (typeof obj === "object" && obj !== undefined && obj !== null) {
-    return obj;
-  }
-  throw Error(`Expected a JSON-encoded object, but got "${typeof obj}"`);
 }
 
 export function loadObjectFromYamlData(buffer: ArrayBuffer): object {
