@@ -38,8 +38,8 @@ export const editorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: APP_ROUTES.PIPELINE_EDITOR,
   component: Editor,
-  beforeLoad: ({ params, search }) => {
-    const name = params._splat || (search as { name?: string }).name || "";
+  beforeLoad: ({ search }) => {
+    const name = (search as { name?: string }).name || "";
     return { name };
   },
 });
