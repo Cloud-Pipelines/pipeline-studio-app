@@ -23,7 +23,7 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 import { savePipelineSpecToSessionStorage } from "@/utils/storage";
 
-import { ContextPanel } from "../shared/ContextPanel/ContextPanel";
+import { CollapsibleContextPanel } from "../shared/ContextPanel/CollapsibleContextPanel";
 import PipelineDetails from "./PipelineDetails";
 
 const GRID_SIZE = 10;
@@ -83,9 +83,7 @@ const PipelineEditor = () => {
             </div>
           </ResizablePanel>
           <ResizableHandle />
-          <ResizablePanel defaultSize={30} minSize={10} maxSize={50}>
-            <ContextPanel />
-          </ResizablePanel>
+          <CollapsibleContextPanel />
         </ResizablePanelGroup>
       </ComponentLibraryProvider>
     </ContextPanelProvider>
