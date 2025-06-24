@@ -6,12 +6,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import useToastNotification from "@/hooks/useToastNotification";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import type { ComponentSpec, TypeSpecType } from "@/utils/componentSpec";
 import { getComponentFileFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 import RunOverview from "../shared/RunOverview";
 import { TaskImplementation } from "../shared/TaskDetails";
+import { InputValueEditor } from "./InputValueEditor";
 import RenamePipeline from "./RenamePipeline";
 
 type PipelineDetailsProps = {
@@ -23,6 +25,7 @@ const PipelineDetails = ({
   componentSpec,
   isLoading,
 }: PipelineDetailsProps) => {
+  const { setComponentSpec } = useComponentSpec();
   const { pipelineRuns } = useLoadPipelineRuns(componentSpec.name || "");
   const notify = useToastNotification();
 
@@ -98,8 +101,36 @@ const PipelineDetails = ({
     );
   }
 
-  // Helper for annotations
   const annotations = componentSpec.metadata?.annotations || {};
+  const handleInputValueChange = (inputName: string, value: string) => {
+    if (!componentSpec.inputs) return;
+
+    const updatedInputs = componentSpec.inputs.map((input) =>
+      input.name === inputName ? { ...input, value } : input,
+    );
+
+    const updatedComponentSpec = {
+      ...componentSpec,
+      inputs: updatedInputs,
+    };
+
+    setComponentSpec(updatedComponentSpec);
+  };
+
+  const handleInputTypeChange = (inputName: string, type: TypeSpecType) => {
+    if (!componentSpec.inputs) return;
+
+    const updatedInputs = componentSpec.inputs.map((input) =>
+      input.name === inputName ? { ...input, type } : input,
+    );
+
+    const updatedComponentSpec = {
+      ...componentSpec,
+      inputs: updatedInputs,
+    };
+
+    setComponentSpec(updatedComponentSpec);
+  };
 
   return (
     <div className="p-2 flex flex-col gap-6">
@@ -187,29 +218,21 @@ const PipelineDetails = ({
       {/* Artifacts (Inputs & Outputs) */}
       <div>
         <h3 className="text-md font-medium mb-1">Artifacts</h3>
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-col">
           <div className="flex-1">
             <h4 className="text-sm font-semibold mb-1">Inputs</h4>
             {componentSpec.inputs && componentSpec.inputs.length > 0 ? (
-              <ul className="list-disc list-inside text-sm text-secondary-foreground">
+              <div className="flex flex-col gap-4">
                 {componentSpec.inputs.map((input) => (
-                  <li key={input.name}>
-                    <span className="font-semibold">{input.name}</span>
-                    {input.type && (
-                      <span className="ml-2 text-muted-foreground">
-                        (
-                        {typeof input.type === "string" ? input.type : "object"}
-                        )
-                      </span>
-                    )}
-                    {input.description && (
-                      <div className="text-xs text-secondary-foreground ml-4">
-                        {input.description}
-                      </div>
-                    )}
-                  </li>
+                  <InputValueEditor
+                    key={input.name}
+                    input={input}
+                    value={input.value || ""}
+                    onChange={handleInputValueChange}
+                    onTypeChange={handleInputTypeChange}
+                  />
                 ))}
-              </ul>
+              </div>
             ) : (
               <div className="text-xs text-muted-foreground">No inputs</div>
             )}

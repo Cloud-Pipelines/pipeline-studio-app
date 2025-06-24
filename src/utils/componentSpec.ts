@@ -28,6 +28,7 @@ export interface InputSpec extends InputOutputSpec {
   description?: string;
   default?: string;
   optional?: boolean;
+  value?: string;
   annotations?: {
     [k: string]: unknown;
   };
@@ -305,3 +306,26 @@ export const isValidComponentSpec = (obj: any): obj is ComponentSpec =>
 export const isGraphImplementation = (
   implementation: ImplementationType,
 ): implementation is GraphImplementation => "graph" in implementation;
+
+/**
+ * Generates arguments object from component spec inputs that have values
+ * @param componentSpec - The component specification containing inputs
+ * @returns Object with input names as keys and their values as values
+ */
+export const generateArgumentsFromInputs = (
+  componentSpec: ComponentSpec,
+): Record<string, string> => {
+  const args: Record<string, string> = {};
+
+  if (!componentSpec.inputs) {
+    return args;
+  }
+
+  for (const input of componentSpec.inputs) {
+    if (input.value !== undefined && input.value !== null) {
+      args[input.name] = input.value;
+    }
+  }
+
+  return args;
+};
