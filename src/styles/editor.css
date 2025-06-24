@@ -144,3 +144,19 @@ details > * {
   margin: 0;
   padding: 0;
 }
+
+/* Input and output nodes reset styles */
+.react-flow__node-input,
+.react-flow__node-output,
+.react-flow__node-input:hover,
+.react-flow__node-output:hover {
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none !important;
+  text-align: left;
+  width: auto;
+  height: auto;
+  min-width: 100px;
+}
