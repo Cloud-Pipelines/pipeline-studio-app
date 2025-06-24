@@ -42,6 +42,7 @@ const canShowInlineValue = (value: any, type: TypeSpecType | undefined) => {
 const IoCell = ({ io, artifacts }: IoCellProps) => {
   const [isCopied, setIsCopied] = useState(false);
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const [copyType, setCopyType] = useState<"Name" | "Value">();
   const tooltipTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasCollapsableContent =
     artifacts?.artifact_data &&
@@ -55,8 +56,8 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
     }
     setIsTooltipOpen(open);
   };
-  const handleCopy = () => {
-    copyToClipboard(io.name);
+  const handleCopy = (value: string) => {
+    copyToClipboard(value);
     setIsCopied(true);
     setIsTooltipOpen(true);
 
@@ -65,7 +66,18 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
 
     tooltipTimerRef.current = setTimeout(() => {
       setIsTooltipOpen(false);
+      setCopyType(undefined);
     }, 1500);
+  };
+
+  const handleCopyName = () => {
+    handleCopy(io.name);
+    setCopyType("Name");
+  };
+
+  const handleCopyValue = () => {
+    handleCopy(artifacts?.artifact_data?.value);
+    setCopyType("Value");
   };
 
   useEffect(() => {
@@ -86,8 +98,8 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
             >
               <TooltipTrigger className="text-left">
                 <span
-                  className="font-medium text-sm cursor-pointer break-all hover:text-gray-500"
-                  onClick={handleCopy}
+                  className="font-medium text-sm cursor-copy break-all hover:text-gray-500"
+                  onClick={handleCopyName}
                 >
                   {io.name}
                 </span>
@@ -98,7 +110,7 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                 )}
                 className={cn(isCopied && "bg-emerald-200 text-emerald-800")}
               >
-                {isCopied ? "Copied" : "Copy"}
+                {isCopied ? `${copyType} copied` : `Copy`}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -163,7 +175,10 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
           <div className="flex flex-col gap-3 pb-3 pt-5 border border-t-0 rounded-b-md bg-gray-50 z-0 -mt-2">
             {artifacts.artifact_data.value !== undefined && (
               <div className="flex px-3 py-0 w-full">
-                <span className="flex-1 w-full">
+                <span
+                  className="flex-1 w-full cursor-copy"
+                  onClick={handleCopyValue}
+                >
                   {(() => {
                     const { value } = artifacts.artifact_data;
                     let parsed;
