@@ -3,11 +3,12 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { StatusBar, StatusIcon, StatusText } from "@/components/shared/Status/";
+import { useExecutionStatusQuery } from "@/hooks/useExecutionStatusQuery";
+import { cn } from "@/lib/utils";
 import { APP_ROUTES } from "@/routes/router";
 import {
   countTaskStatuses,
   fetchExecutionInfo,
-  fetchExecutionStatus,
   getRunStatus,
 } from "@/services/executionService";
 import { fetchPipelineRunById } from "@/services/pipelineRunService";
@@ -22,8 +23,10 @@ interface RunOverviewProps {
     showExecutionId?: boolean;
     showCreatedAt?: boolean;
     showTaskStatusBar?: boolean;
-    showStatusCounts?: boolean;
+    showStatusCounts?: "shorthand" | "full" | "none";
+    showAuthor?: boolean;
   };
+  className?: string;
 }
 
 const defaultConfig = {
@@ -32,16 +35,22 @@ const defaultConfig = {
   showExecutionId: true,
   showCreatedAt: true,
   showTaskStatusBar: true,
-  showStatusCounts: true,
+  showStatusCounts: undefined,
+  showAuthor: false,
 };
 
-const RunOverview = ({ run, config = defaultConfig }: RunOverviewProps) => {
+const RunOverview = ({
+  run,
+  config = defaultConfig,
+  className = "",
+}: RunOverviewProps) => {
   const navigate = useNavigate();
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
   const [loadingMetadata, setLoadingMetadata] = useState(true);
 
   const executionId = `${run.root_execution_id}`;
+  const { data: status } = useExecutionStatusQuery(executionId);
 
   const { data, isLoading, error } = fetchExecutionInfo(executionId);
   const { details, state } = data;
@@ -53,14 +62,14 @@ const RunOverview = ({ run, config = defaultConfig }: RunOverviewProps) => {
 
       const runData = res as PipelineRun;
 
-      runData.status = await fetchExecutionStatus(`${res.root_execution_id}`);
+      runData.status = status;
 
       setMetadata(runData);
       setLoadingMetadata(false);
     };
 
     fetchData();
-  }, [run]);
+  }, [run.id, status]);
 
   if (isLoading || loadingMetadata) {
     return (
@@ -89,7 +98,10 @@ const RunOverview = ({ run, config = defaultConfig }: RunOverviewProps) => {
         e.stopPropagation();
         navigate({ to: `${APP_ROUTES.RUNS}/${executionId}` });
       }}
-      className="flex flex-col p-2 text-sm hover:bg-gray-50 cursor-pointer"
+      className={cn(
+        "flex flex-col p-2 text-sm hover:bg-gray-50 cursor-pointer",
+        className,
+      )}
     >
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
@@ -101,14 +113,29 @@ const RunOverview = ({ run, config = defaultConfig }: RunOverviewProps) => {
             </div>
           )}
           {config?.showCreatedAt && metadata?.created_at && (
-            <>
+            <div className="flex items-center gap-2">
               <span>•</span>
-              <span className="text-gray-500 text-xs">{`${formatDate(metadata?.created_at || "")}`}</span>
-            </>
+              <span className="text-gray-500 text-xs">{`${formatDate(metadata.created_at || "")}`}</span>
+            </div>
+          )}
+          {config?.showAuthor && metadata?.created_by && (
+            <div className="flex items-center gap-1">
+              <span className="mr-1">•</span>
+              <span className="text-xs">Initiated by</span>
+              <span className="text-gray-500 text-xs max-w-32 truncate">
+                {metadata.created_by}
+              </span>
+            </div>
           )}
         </div>
-        {config?.showStatusCounts && (
-          <StatusText statusCounts={statusCounts} shorthand />
+        {config?.showStatusCounts && config.showStatusCounts !== "none" && (
+          <StatusText
+            statusCounts={statusCounts}
+            shorthand={
+              config.showStatusCounts === "shorthand" ||
+              (config.showAuthor && !!metadata?.created_by)
+            }
+          />
         )}
       </div>
 

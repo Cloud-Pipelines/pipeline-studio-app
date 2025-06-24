@@ -1,4 +1,5 @@
 import yaml from "js-yaml";
+import { useMemo } from "react";
 
 import CodeViewer from "@/components/shared/CodeViewer";
 import type { ComponentSpec } from "@/utils/componentSpec";
@@ -17,15 +18,19 @@ const TaskImplementation = ({
 }: TaskImplementationProps) => {
   const filename = getComponentFilename(componentSpec);
 
+  const code = useMemo(() => {
+    return yaml.dump(componentSpec, {
+      lineWidth: 80,
+      noRefs: true,
+      indent: 2,
+    });
+  }, [componentSpec]);
+
   return (
     <>
       {componentSpec?.implementation ? (
         <CodeViewer
-          code={yaml.dump(componentSpec, {
-            lineWidth: 80,
-            noRefs: true,
-            indent: 2,
-          })}
+          code={code}
           language="yaml"
           title={`${displayName} Implementation (read-only)`}
           filename={filename}

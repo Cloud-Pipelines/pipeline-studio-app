@@ -150,6 +150,18 @@ const CodeViewer = ({
     onFullscreenChange(true);
   }, [code, language, title, openFullscreen, onFullscreenChange]);
 
+  const syntaxHighlighter = useMemo(
+    () => (
+      <CodeSyntaxHighlighter
+        code={code}
+        language={language}
+        height="calc(100% - 48px)"
+        fontSize="0.75rem"
+      />
+    ),
+    [code, language],
+  );
+
   return (
     <div className="border rounded-md h-full overflow-hidden hide-scrollbar bg-slate-900">
       <div className="flex justify-between items-center p-2 sticky top-0 z-10 bg-slate-800">
@@ -166,12 +178,7 @@ const CodeViewer = ({
           <Maximize2 className="size-4" />
         </Button>
       </div>
-      <CodeSyntaxHighlighter
-        code={code}
-        language={language}
-        height="calc(100% - 48px)"
-        fontSize="0.75rem"
-      />
+      {syntaxHighlighter}
     </div>
   );
 };

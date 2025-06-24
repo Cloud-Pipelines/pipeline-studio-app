@@ -33,7 +33,7 @@ const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
             showExecutionId: false,
             showCreatedAt: true,
             showTaskStatusBar: true,
-            showStatusCounts: true,
+            showStatusCounts: "shorthand",
           }}
         />
       )),
