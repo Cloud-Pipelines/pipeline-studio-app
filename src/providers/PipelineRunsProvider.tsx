@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
+import { getArgumentsFromInputs } from "@/components/shared/ReactFlow/FlowCanvas/utils/getArgumentsFromInputs";
 import {
   countTaskStatuses,
   fetchExecutionDetails,
@@ -22,7 +23,10 @@ import {
   savePipelineRun,
 } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
-import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
+import {
+  type ComponentReference,
+  type ComponentSpec,
+} from "@/utils/componentSpec";
 
 type PipelineRunsContextType = {
   runs: PipelineRun[];
@@ -127,11 +131,14 @@ export const PipelineRunsProvider = ({
             options?.onError?.(error as Error);
           },
         );
+        const argumentsFromInputs = getArgumentsFromInputs(fullyLoadedSpec);
+
         const payload = {
           root_task: {
             componentRef: {
               spec: fullyLoadedSpec,
             },
+            ...(argumentsFromInputs ? { arguments: argumentsFromInputs } : {}),
           },
         };
 

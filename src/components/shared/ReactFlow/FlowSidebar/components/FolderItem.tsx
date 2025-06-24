@@ -4,7 +4,12 @@ import {
   Folder,
   type LucideProps,
 } from "lucide-react";
-import { type JSXElementConstructor, type MouseEvent, useState } from "react";
+import {
+  isValidElement,
+  type JSXElementConstructor,
+  type MouseEvent,
+  useState,
+} from "react";
 
 import { type FolderItemProps } from "@/types/componentLibrary";
 
@@ -52,13 +57,16 @@ const FolderItem = ({ folder, icon }: FolderItemProps) => {
         <div className="pl-3">
           {hasComponents && folder.components && (
             <div>
-              {folder.components.map((component) => {
-                const key = `${folder.name}-component-${component.name || component?.spec?.name || component.url}`;
+              {folder.components.map((component, idx) => {
+                // If the component is a valid React element, render it directly (for special folders)
+                if (isValidElement(component)) {
+                  return component;
+                }
+                const key = `${folder.name}-component-${component.name || component?.spec?.name || component.url || idx}`;
                 // If the component has a spec render the component, otherwise, render using URL
                 if (component.spec) {
                   return <ComponentMarkup key={key} component={component} />;
                 }
-
                 return <ComponentItemFromUrl key={key} url={component.url} />;
               })}
             </div>
