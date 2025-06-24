@@ -11,7 +11,7 @@ import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 
-import { ContextPanel } from "../shared/ContextPanel/ContextPanel";
+import { CollapsibleContextPanel } from "../shared/ContextPanel/CollapsibleContextPanel";
 import RunDetails from "./RunDetails";
 
 const GRID_SIZE = 10;
@@ -56,9 +56,7 @@ const PipelineRunPage = () => {
             </div>
           </ResizablePanel>
           <ResizableHandle />
-          <ResizablePanel defaultSize={30} minSize={10} maxSize={50}>
-            <ContextPanel />
-          </ResizablePanel>
+          <CollapsibleContextPanel />
         </ResizablePanelGroup>
       </ComponentLibraryProvider>
     </ContextPanelProvider>
