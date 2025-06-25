@@ -62,7 +62,7 @@ export const ComputeResourcesEditor = ({
       <h3>Compute Resources</h3>
       {COMPUTE_RESOURCES.map((resource) => (
         <div key={resource.annotation} className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground w-40 truncate">
+          <span className="text-xs text-muted-foreground min-w-24 truncate">
             {resource.label} {resource.unit && `(${resource.unit})`}
           </span>
 
