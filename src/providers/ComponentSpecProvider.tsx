@@ -42,7 +42,6 @@ interface ComponentSpecContextType {
   saveComponentSpec: (name: string) => Promise<void>;
   taskStatusMap: Map<string, string>;
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
-  runId?: string;
 }
 
 const ComponentSpecContext = createContext<
@@ -52,12 +51,10 @@ const ComponentSpecContext = createContext<
 export const ComponentSpecProvider = ({
   spec,
   readOnly = false,
-  runId,
   children,
 }: {
   spec?: ComponentSpec;
   readOnly?: boolean;
-  runId?: string;
   children: ReactNode;
 }) => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
@@ -169,7 +166,6 @@ export const ComponentSpecProvider = ({
       saveComponentSpec,
       taskStatusMap,
       setTaskStatusMap,
-      runId,
     }),
     [
       componentSpec,
@@ -182,7 +178,6 @@ export const ComponentSpecProvider = ({
       saveComponentSpec,
       taskStatusMap,
       setTaskStatusMap,
-      runId,
     ],
   );
 
