@@ -15,6 +15,7 @@ describe("InputValueEditor", () => {
 
   const mockOnChange = vi.fn();
   const mockOnTypeChange = vi.fn();
+  const mockOnNameChange = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -27,12 +28,15 @@ describe("InputValueEditor", () => {
         value=""
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
       />,
     );
 
-    expect(screen.getByLabelText("TestInput")).toBeDefined();
+    // The first input is for the name, the second is for the value
+    const nameInputs = screen.getAllByRole("textbox");
+    expect((nameInputs[0] as HTMLInputElement).value).toBe("TestInput");
     expect(screen.getByText("Type:")).toBeDefined();
-    expect(screen.getByText("String")).toBeDefined();
+    expect(screen.getByText("Text")).toBeDefined();
   });
 
   it("displays input description", () => {
@@ -42,6 +46,7 @@ describe("InputValueEditor", () => {
         value=""
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
       />,
     );
 
@@ -55,14 +60,31 @@ describe("InputValueEditor", () => {
         value=""
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
       />,
     );
 
-    const input = screen.getByLabelText("TestInput");
-    fireEvent.change(input, { target: { value: "new value" } });
-    fireEvent.blur(input);
-
+    // The second input is for the value
+    const valueInput = screen.getAllByRole("textbox")[1] as HTMLInputElement;
+    fireEvent.change(valueInput, { target: { value: "new value" } });
+    fireEvent.blur(valueInput);
     expect(mockOnChange).toHaveBeenCalledWith("TestInput", "new value");
+  });
+
+  it("calls onNameChange when input name changes", () => {
+    render(
+      <InputValueEditor
+        input={mockInput}
+        value=""
+        onChange={mockOnChange}
+        onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
+      />,
+    );
+    const nameInput = screen.getAllByRole("textbox")[0] as HTMLInputElement;
+    fireEvent.change(nameInput, { target: { value: "NewName" } });
+    fireEvent.blur(nameInput);
+    expect(mockOnNameChange).toHaveBeenCalledWith("NewName", "TestInput");
   });
 
   it("calls onTypeChange when type selector changes", () => {
@@ -72,6 +94,7 @@ describe("InputValueEditor", () => {
         value=""
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
       />,
     );
 
@@ -91,11 +114,13 @@ describe("InputValueEditor", () => {
         value=""
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
       />,
     );
 
-    const input = screen.getByLabelText("NumberInput");
-    expect(input.getAttribute("type")).toBe("number");
+    // For number input, use role 'spinbutton' (ARIA role for <input type="number">)
+    const valueInput = screen.getByRole("spinbutton") as HTMLInputElement;
+    expect(valueInput.getAttribute("type")).toBe("number");
   });
 
   it("displays current value", () => {
@@ -105,11 +130,12 @@ describe("InputValueEditor", () => {
         value="current value"
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
       />,
     );
 
-    const input = screen.getByLabelText("TestInput");
-    expect(input.getAttribute("value")).toBe("current value");
+    const valueInput = screen.getAllByRole("textbox")[1] as HTMLInputElement;
+    expect(valueInput.getAttribute("value")).toBe("current value");
   });
 
   it("shows placeholder when no default value", () => {
@@ -124,11 +150,14 @@ describe("InputValueEditor", () => {
         value=""
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
       />,
     );
 
-    const input = screen.getByLabelText("NoDefaultInput");
-    expect(input.getAttribute("placeholder")).toBe("Enter NoDefaultInput...");
+    const valueInput = screen.getAllByRole("textbox")[1] as HTMLInputElement;
+    expect(valueInput.getAttribute("placeholder")).toBe(
+      "Enter NoDefaultInput...",
+    );
   });
 
   it("shows default value as placeholder when available", () => {
@@ -138,11 +167,12 @@ describe("InputValueEditor", () => {
         value=""
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
       />,
     );
 
-    const input = screen.getByLabelText("TestInput");
-    expect(input.getAttribute("placeholder")).toBe("default value");
+    const valueInput = screen.getAllByRole("textbox")[1] as HTMLInputElement;
+    expect(valueInput.getAttribute("placeholder")).toBe("default value");
   });
 
   it("maps type variations correctly", () => {
@@ -157,10 +187,11 @@ describe("InputValueEditor", () => {
         value=""
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
       />,
     );
 
-    expect(screen.getByText("Integer")).toBeDefined();
+    expect(screen.getByText("Number")).toBeDefined();
   });
 
   it("hides type selector when showTypeSelector is false", () => {
@@ -170,6 +201,7 @@ describe("InputValueEditor", () => {
         value=""
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
+        onNameChange={mockOnNameChange}
         showTypeSelector={false}
       />,
     );
@@ -179,7 +211,12 @@ describe("InputValueEditor", () => {
 
   it("hides type selector when onTypeChange is not provided", () => {
     render(
-      <InputValueEditor input={mockInput} value="" onChange={mockOnChange} />,
+      <InputValueEditor
+        input={mockInput}
+        value=""
+        onChange={mockOnChange}
+        onNameChange={mockOnNameChange}
+      />,
     );
 
     expect(screen.queryByText("Type:")).toBeNull();

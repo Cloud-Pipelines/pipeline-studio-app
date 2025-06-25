@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,6 +11,12 @@ import {
 import type { InputSpec, TypeSpecType } from "@/utils/componentSpec";
 
 const COMMON_TYPES = ["String", "Number", "Boolean", "DateTime"] as const;
+const COMMON_TYPES_MAP = {
+  String: "Text",
+  Number: "Number",
+  Boolean: "Checkbox",
+  DateTime: "Date & Time",
+} as const;
 
 type CommonType = (typeof COMMON_TYPES)[number];
 
@@ -20,6 +25,7 @@ interface InputValueEditorProps {
   value: string;
   onChange: (inputName: string, value: string) => void;
   onTypeChange?: (inputName: string, type: TypeSpecType) => void;
+  onNameChange?: (newName: string, oldName: string) => void;
   disabled?: boolean;
   showTypeSelector?: boolean;
 }
@@ -29,10 +35,12 @@ export const InputValueEditor = ({
   value,
   onChange,
   onTypeChange,
+  onNameChange,
   disabled = false,
   showTypeSelector = true,
 }: InputValueEditorProps) => {
   const [inputValue, setInputValue] = useState(value);
+  const [inputName, setInputName] = useState(input.name);
 
   // Update local state when prop value changes
   useEffect(() => {
@@ -44,8 +52,19 @@ export const InputValueEditor = ({
     setInputValue(newValue);
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInputName(newValue);
+  };
+
   const handleBlur = () => {
     onChange(input.name, inputValue);
+  };
+
+  const handleNameBlur = () => {
+    if (onNameChange) {
+      onNameChange(inputName, input.name);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -102,13 +121,13 @@ export const InputValueEditor = ({
         return "DateTime";
       case "array":
       case "list":
-        return "Array";
+        return "String";
       case "object":
       case "dict":
       case "map":
-        return "Object";
+        return "String";
       case "file":
-        return "File";
+        return "String";
       case "directory":
       case "dir":
         return "String";
@@ -128,9 +147,14 @@ export const InputValueEditor = ({
   return (
     <div className="flex flex-col gap-2 p-3 border border-gray-200 rounded-lg">
       <div className="flex items-center justify-between">
-        <Label htmlFor={`input-${input.name}`} className="text-sm font-medium">
-          {input.name}
-        </Label>
+        <Input
+          type="text"
+          value={inputName}
+          onChange={handleNameChange}
+          onBlur={handleNameBlur}
+          onKeyDown={handleKeyDown}
+          className="text-sm"
+        />
         {showTypeSelector && onTypeChange && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500">Type:</span>
@@ -141,7 +165,7 @@ export const InputValueEditor = ({
               <SelectContent>
                 {COMMON_TYPES.map((type) => (
                   <SelectItem key={type} value={type} className="text-xs">
-                    {type}
+                    {COMMON_TYPES_MAP[type]}
                   </SelectItem>
                 ))}
               </SelectContent>

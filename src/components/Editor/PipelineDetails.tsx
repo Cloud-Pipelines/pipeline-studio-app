@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
+import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { ComponentSpec, TypeSpecType } from "@/utils/componentSpec";
+import { renameInput } from "@/utils/componentSpec";
 import { getComponentFileFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
@@ -28,6 +30,9 @@ const PipelineDetails = ({
   const { setComponentSpec } = useComponentSpec();
   const { pipelineRuns } = useLoadPipelineRuns(componentSpec.name || "");
   const notify = useToastNotification();
+  const { edges } = useComponentSpecToEdges(componentSpec);
+
+  console.log("edges", edges);
 
   // State for file metadata
   const [fileMeta, setFileMeta] = useState<{
@@ -114,6 +119,13 @@ const PipelineDetails = ({
       inputs: updatedInputs,
     };
 
+    setComponentSpec(updatedComponentSpec);
+  };
+
+  const handleInputNameChange = (newName: string, oldName: string) => {
+    if (!componentSpec.inputs) return;
+
+    const updatedComponentSpec = renameInput(componentSpec, oldName, newName);
     setComponentSpec(updatedComponentSpec);
   };
 
@@ -230,6 +242,7 @@ const PipelineDetails = ({
                     value={input.value || ""}
                     onChange={handleInputValueChange}
                     onTypeChange={handleInputTypeChange}
+                    onNameChange={handleInputNameChange}
                   />
                 ))}
               </div>

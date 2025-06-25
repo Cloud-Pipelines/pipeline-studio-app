@@ -2,11 +2,13 @@ import { Handle, Position } from "@xyflow/react";
 import { memo } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
 interface IONodeProps {
   type: "input" | "output";
   data: {
     label: string;
+    value?: string;
   };
 }
 
@@ -17,6 +19,22 @@ const IONode = ({ type, data }: IONodeProps) => {
 
   const borderColor =
     type === "input" ? "border-blue-500" : "border-violet-500";
+
+  const { graphSpec } = useComponentSpec();
+
+  // For output nodes, get the connected value from graphSpec.outputValues
+  let outputConnectedValue: string | undefined = undefined;
+  if (type === "output" && graphSpec?.outputValues) {
+    const outputName = data.label;
+    const outputValue = graphSpec.outputValues[outputName];
+    if (
+      outputValue &&
+      typeof outputValue === "object" &&
+      "taskOutput" in outputValue
+    ) {
+      outputConnectedValue = outputValue.taskOutput.outputName;
+    }
+  }
 
   return (
     <Card
@@ -29,6 +47,16 @@ const IONode = ({ type, data }: IONodeProps) => {
       </CardHeader>
       <CardContent className="p-2 flex flex-col gap-2">
         <div className="flex flex-col gap-3 p-2 bg-gray-100 border-1 border-gray-200 rounded-lg">
+          {type === "input" && data.value && (
+            <div className="text-xs text-slate-700">
+              <span className="font-bold">Value:</span> {data.value}
+            </div>
+          )}
+          {type === "output" && outputConnectedValue && (
+            <div className="text-xs text-slate-700">
+              <span className="font-bold">Value:</span> {outputConnectedValue}
+            </div>
+          )}
           <Handle id={handleId} type={handleType} position={handlePosition} />
         </div>
       </CardContent>

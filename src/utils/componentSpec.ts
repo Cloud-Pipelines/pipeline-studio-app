@@ -329,3 +329,54 @@ export const generateArgumentsFromInputs = (
 
   return args;
 };
+
+/**
+ * Renames an input in a component spec, updating both the inputs array
+ * and all graph spec references that use the old input name.
+ */
+export const renameInput = (
+  componentSpec: ComponentSpec,
+  oldName: string,
+  newName: string,
+): ComponentSpec => {
+  // Update the inputs array
+  const updatedInputs = componentSpec.inputs?.map((input) =>
+    input.name === oldName ? { ...input, name: newName } : input,
+  );
+
+  const updatedComponentSpec = {
+    ...componentSpec,
+    inputs: updatedInputs,
+  };
+
+  // Update graph spec if it exists
+  if ("graph" in updatedComponentSpec.implementation) {
+    const graphSpec = updatedComponentSpec.implementation.graph;
+    const updatedGraphSpec = { ...graphSpec };
+
+    // Update all task arguments that reference the old input name
+    Object.keys(updatedGraphSpec.tasks).forEach((taskId) => {
+      const task = updatedGraphSpec.tasks[taskId];
+      if (task.arguments) {
+        Object.keys(task.arguments).forEach((inputName) => {
+          const argument = task.arguments![inputName];
+          if (typeof argument !== "string" && "graphInput" in argument) {
+            if (argument.graphInput.inputName === oldName) {
+              task.arguments![inputName] = {
+                ...argument,
+                graphInput: {
+                  ...argument.graphInput,
+                  inputName: newName,
+                },
+              };
+            }
+          }
+        });
+      }
+    });
+
+    updatedComponentSpec.implementation.graph = updatedGraphSpec;
+  }
+
+  return updatedComponentSpec;
+};

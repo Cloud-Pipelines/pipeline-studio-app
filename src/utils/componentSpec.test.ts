@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   type ComponentSpec,
   generateArgumentsFromInputs,
+  isGraphImplementation,
+  renameInput,
 } from "./componentSpec";
 
 describe("generateArgumentsFromInputs", () => {
@@ -178,5 +180,104 @@ describe("generateArgumentsFromInputs", () => {
       Name: "Test Pipeline",
       Count: "42",
     });
+  });
+});
+
+describe("renameInput", () => {
+  it("should rename an input and update all graph spec references", () => {
+    const componentSpec: ComponentSpec = {
+      name: "Test Component",
+      inputs: [
+        { name: "oldInput", type: "String" },
+        { name: "otherInput", type: "Integer" },
+      ],
+      outputs: [],
+      implementation: {
+        graph: {
+          tasks: {
+            task1: {
+              componentRef: {
+                spec: {
+                  name: "Task1",
+                  inputs: [{ name: "input1" }],
+                  outputs: [],
+                  implementation: { graph: { tasks: {} } },
+                },
+              },
+              arguments: {
+                input1: {
+                  graphInput: {
+                    inputName: "oldInput",
+                  },
+                },
+              },
+            },
+            task2: {
+              componentRef: {
+                spec: {
+                  name: "Task2",
+                  inputs: [{ name: "input1" }],
+                  outputs: [],
+                  implementation: { graph: { tasks: {} } },
+                },
+              },
+              arguments: {
+                input1: {
+                  graphInput: {
+                    inputName: "otherInput",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const result = renameInput(componentSpec, "oldInput", "newInput");
+
+    // Check that the input name was updated
+    expect(result.inputs).toEqual([
+      { name: "newInput", type: "String" },
+      { name: "otherInput", type: "Integer" },
+    ]);
+
+    // Check that the graph spec references were updated
+    if (isGraphImplementation(result.implementation)) {
+      expect(result.implementation.graph.tasks.task1.arguments?.input1).toEqual(
+        {
+          graphInput: {
+            inputName: "newInput",
+          },
+        },
+      );
+
+      // Check that other references were not affected
+      expect(result.implementation.graph.tasks.task2.arguments?.input1).toEqual(
+        {
+          graphInput: {
+            inputName: "otherInput",
+          },
+        },
+      );
+    }
+  });
+
+  it("should handle component specs without graph implementation", () => {
+    const componentSpec: ComponentSpec = {
+      name: "Test Component",
+      inputs: [{ name: "oldInput", type: "String" }],
+      outputs: [],
+      implementation: {
+        container: {
+          image: "alpine",
+          command: ["echo", "hello"],
+        },
+      },
+    };
+
+    const result = renameInput(componentSpec, "oldInput", "newInput");
+
+    expect(result.inputs).toEqual([{ name: "newInput", type: "String" }]);
   });
 });
