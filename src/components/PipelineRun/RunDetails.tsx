@@ -2,11 +2,6 @@ import { Frown, Videotape } from "lucide-react";
 
 import { Spinner } from "@/components/ui/spinner";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   countTaskStatuses,
   fetchExecutionInfo,
   getRunStatus,
@@ -47,21 +42,12 @@ export const RunDetails = ({ runId = "" }: RunDetailsProps) => {
 
   return (
     <div className="p-2">
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex items-center gap-2 mb-8 max-w-[90%]">
         <Videotape className="w-6 h-6 text-gray-500" />
         <h2 className="text-lg font-semibold">
           {componentSpec.name ?? "Unnamed Pipeline"}
         </h2>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <StatusIcon status={runStatus} />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <span>{`Run ${runStatus.toLowerCase()}`}</span>
-          </TooltipContent>
-        </Tooltip>
+        <StatusIcon status={runStatus} tooltip />
       </div>
       <div className="flex flex-col gap-4 px-2">
         {componentSpec.description && (

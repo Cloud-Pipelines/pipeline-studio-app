@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import { ComponentFavoriteToggle } from "@/components/shared/FavoriteComponentToggle";
+import { StatusIcon } from "@/components/shared/Status";
 import {
   TaskDetails,
   TaskImplementation,
@@ -58,6 +59,7 @@ const TaskConfiguration = ({
     <div>
       <div className="flex items-center gap-2 px-2 pb-2 font-semibold text-lg">
         {name} <ComponentFavoriteToggle component={taskSpec.componentRef} />
+        {runStatus && <StatusIcon status={runStatus} tooltip label="task" />}
       </div>
 
       <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4">
