@@ -1,4 +1,4 @@
-import { LayoutGrid, PackagePlus, Puzzle } from "lucide-react";
+import { Folder,LayoutGrid, PackagePlus, Puzzle } from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo } from "react";
 
 import {
@@ -23,6 +23,7 @@ import {
   SearchInput,
   SearchResults,
 } from "../components";
+import { IONodeSidebarItem } from "../components/ComponentItem";
 
 const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
   const {
@@ -81,7 +82,6 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
             icon={LayoutGrid}
           />
         )}
-
         {hasFavouriteComponents && (
           <FolderItem
             key="my-components-folder"
@@ -89,7 +89,19 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
             icon={Puzzle}
           />
         )}
-
+        {/* Special folder for Input/Output nodes, after My Components */}
+        <FolderItem
+          key="special-folder"
+          folder={{
+            name: "Special",
+            components: [
+              <IONodeSidebarItem key="input" nodeType="input" />,
+              <IONodeSidebarItem key="output" nodeType="output" />,
+            ],
+            folders: [],
+          }}
+          icon={Folder}
+        />
         {componentLibrary.folders.map((folder) => (
           <FolderItem key={folder.name} folder={folder} />
         ))}

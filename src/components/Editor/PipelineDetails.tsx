@@ -30,9 +30,8 @@ const PipelineDetails = ({
   const { setComponentSpec } = useComponentSpec();
   const { pipelineRuns } = useLoadPipelineRuns(componentSpec.name || "");
   const notify = useToastNotification();
-  const { edges } = useComponentSpecToEdges(componentSpec);
 
-  console.log("edges", edges);
+
 
   // State for file metadata
   const [fileMeta, setFileMeta] = useState<{

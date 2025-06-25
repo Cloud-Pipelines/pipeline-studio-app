@@ -145,49 +145,52 @@ export const InputValueEditor = ({
   const currentType = getCurrentType();
 
   return (
-    <div className="flex flex-col gap-2 p-3 border border-gray-200 rounded-lg">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-3 p-4 border border-gray-200 rounded-lg bg-white">
+      <div className="flex gap-4">
+        <div className="flex-1 flex flex-col">
+          <label htmlFor={`input-name-${input.name}`} className="text-xs text-muted-foreground mb-1">Name</label>
+          <Input
+            id={`input-name-${input.name}`}
+            type="text"
+            value={inputName}
+            onChange={handleNameChange}
+            onBlur={handleNameBlur}
+            onKeyDown={handleKeyDown}
+            className="text-sm"
+          />
+        </div>
+        <div className="w-36 flex flex-col">
+          <label htmlFor={`input-type-${input.name}`} className="text-xs text-muted-foreground mb-1">Type</label>
+          <Select value={currentType} onValueChange={handleTypeChange}>
+            <SelectTrigger id={`input-type-${input.name}`} className="h-9 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {COMMON_TYPES.map((type) => (
+                <SelectItem key={type} value={type} className="text-xs">
+                  {COMMON_TYPES_MAP[type]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="flex flex-col">
+        <label htmlFor={`input-value-${input.name}`} className="text-xs text-muted-foreground mb-1">Value</label>
         <Input
-          type="text"
-          value={inputName}
-          onChange={handleNameChange}
-          onBlur={handleNameBlur}
+          id={`input-value-${input.name}`}
+          type={inputType}
+          value={inputValue}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
           onKeyDown={handleKeyDown}
+          placeholder={input.default || `Enter ${input.name}...`}
+          disabled={disabled}
           className="text-sm"
         />
-        {showTypeSelector && onTypeChange && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">Type:</span>
-            <Select value={currentType} onValueChange={handleTypeChange}>
-              <SelectTrigger className="w-32 h-7 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {COMMON_TYPES.map((type) => (
-                  <SelectItem key={type} value={type} className="text-xs">
-                    {COMMON_TYPES_MAP[type]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
       </div>
-
-      <Input
-        id={`input-${input.name}`}
-        type={inputType}
-        value={inputValue}
-        onChange={handleInputChange}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        placeholder={input.default || `Enter ${input.name}...`}
-        disabled={disabled}
-        className="text-sm"
-      />
-
       {input.description && (
-        <div className="text-xs text-gray-500">{input.description}</div>
+        <div className="text-xs text-gray-500 mt-1">{input.description}</div>
       )}
     </div>
   );
