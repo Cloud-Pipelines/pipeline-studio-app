@@ -130,7 +130,7 @@ export const ArgumentInputField = ({
         className="flex w-full items-center justify-between gap-2 py-1 rounded-md hover:bg-secondary/40 cursor-pointer"
         onClick={handleBackgroundClick}
       >
-        <div className="flex items-center gap-2 justify-between w-2/5 pr-2">
+        <div className="flex items-center gap-2 justify-between w-40 pr-2">
           <div className="flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -177,7 +177,8 @@ export const ArgumentInputField = ({
             </Tooltip>
           )}
         </div>
-        <div className="relative w-48">
+
+        <div className="relative min-w-24 grow">
           <Tooltip>
             <TooltipTrigger asChild>
               <Input
@@ -206,7 +207,7 @@ export const ArgumentInputField = ({
           </Tooltip>
         </div>
 
-        <div className="flex gap-1 items-center w-1/5 justify-end">
+        <div className="flex gap-1 items-center w-24 justify-end">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

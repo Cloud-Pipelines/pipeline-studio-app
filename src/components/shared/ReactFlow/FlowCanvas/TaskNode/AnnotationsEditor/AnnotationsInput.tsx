@@ -80,7 +80,7 @@ export const AnnotationsInput = ({
           config?.enableQuantity ? handleQuantitySelectChange : onChange
         }
       >
-        <SelectTrigger className={cn("w-24 max-24", className)}>
+        <SelectTrigger className={cn("min-w-24 grow", className)}>
           <SelectValue placeholder={"Select " + placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -125,7 +125,7 @@ export const AnnotationsInput = ({
               : validateChange
           }
           autoFocus={autoFocus}
-          className={className}
+          className={cn("min-w-16", className)}
         />
         {isInvalid && (
           <div className="flex items-center gap-1 my-1 text-xs text-warning">
@@ -137,7 +137,7 @@ export const AnnotationsInput = ({
   }
 
   return (
-    <div className="flex items-center gap-2 w-1/2">
+    <div className="flex items-center gap-2 grow flex-wrap">
       {inputElement}
       {config?.enableQuantity && (
         <QuantityInput
@@ -175,13 +175,13 @@ const QuantityInput = ({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 max-w-1/3">
       <span>x</span>
       <Input
         type="number"
         value={getAnnotationValue(annotation, annotations)}
         onChange={handleValueInputChange}
-        className="w-12 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="min-w-8 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         disabled={disabled}
       />
     </div>

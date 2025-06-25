@@ -14,7 +14,7 @@ const OutputsList = ({ taskSpec }: OutputsListProps) => {
       <span className="text-sm">
         <span className="font-medium">{output.name}</span>
         {output.type && (
-          <span className="text-xs text-muted-foreground italic">
+          <span className="text-xs text-muted-foreground italic ml-1">
             ({output.type as string})
           </span>
         )}
