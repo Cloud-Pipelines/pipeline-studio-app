@@ -1,5 +1,14 @@
-import { Frown, Videotape } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  CirclePause,
+  CircleSlash,
+  CopyPlus,
+  Frown,
+  Network,
+  RefreshCcw,
+  Videotape,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -13,10 +22,15 @@ import {
   fetchExecutionInfo,
   getRunStatus,
 } from "@/services/executionService";
-import { fetchPipelineRunById } from "@/services/pipelineRunService";
+import {
+  copyRunToPipeline,
+  fetchPipelineRunById,
+} from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
 import type { ComponentSpec } from "@/utils/componentSpec";
+import { removeTrailingDateFromTitle } from "@/utils/string";
 
+import TooltipButton from "../shared/Buttons/TooltipButton";
 import { StatusBar, StatusIcon, StatusText } from "../shared/Status";
 import { TaskImplementation } from "../shared/TaskDetails";
 
@@ -25,9 +39,11 @@ type RunDetailsProps = {
 };
 
 export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
-  const [metadata, setMetadata] = useState<PipelineRun | null>(null);
+  const navigate = useNavigate();
 
   const { data: status } = useExecutionStatusQuery(executionId);
+
+  const [metadata, setMetadata] = useState<PipelineRun | null>(null);
 
   const { data, isLoading, error } = fetchExecutionInfo(executionId);
   const { details, state } = data;
@@ -38,6 +54,36 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
     | ComponentSpec
     | null
     | undefined;
+
+  const getInitialName = useCallback(() => {
+    const dateTime = new Date().toISOString();
+    const baseName = componentSpec?.name || "Pipeline";
+
+    return `${removeTrailingDateFromTitle(baseName)} (${dateTime})`;
+  }, [componentSpec]);
+
+  const handleInspect = useCallback(() => {
+    if (!componentSpec) {
+      console.error("No componentSpec available for inspection");
+      return;
+    }
+    navigate({ to: `/editor/${componentSpec.name}` });
+  }, [componentSpec, navigate]);
+
+  const handleClone = useCallback(async () => {
+    const name = getInitialName();
+    if (!componentSpec) {
+      console.error("No component spec found");
+      return;
+    }
+
+    const result = await copyRunToPipeline(componentSpec, name);
+    if (result?.url) {
+      navigate({ to: result.url });
+    } else {
+      console.error("Failed to copy run to pipeline");
+    }
+  }, [componentSpec, navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,6 +175,52 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
           </div>
         </div>
       )}
+
+      <div>
+        <div className="flex gap-2">
+          <TooltipButton
+            variant="outline"
+            onClick={handleInspect}
+            tooltip="Inspect pipeline"
+          >
+            <Network className="w-4 h-4 rotate-270" />
+          </TooltipButton>
+          <TooltipButton
+            variant="outline"
+            onClick={handleClone}
+            tooltip="Clone pipeline"
+          >
+            <CopyPlus className="w-4 h-4" />
+          </TooltipButton>
+          <TooltipButton
+            variant="outline"
+            onClick={() => {
+              console.log("Pause run action clicked");
+            }}
+            tooltip="Pause run"
+          >
+            <CirclePause className="w-4 h-4" />
+          </TooltipButton>
+          <TooltipButton
+            variant="outline"
+            onClick={() => {
+              console.log("Cancel run action clicked");
+            }}
+            tooltip="Cancel run"
+          >
+            <CircleSlash className="w-4 h-4" />
+          </TooltipButton>
+          <TooltipButton
+            variant="outline"
+            onClick={() => {
+              console.log("Rerun action clicked");
+            }}
+            tooltip="Rerun pipeline"
+          >
+            <RefreshCcw className="w-4 h-4" />
+          </TooltipButton>
+        </div>
+      </div>
 
       {componentSpec.description && (
         <div>
