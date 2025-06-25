@@ -20,16 +20,16 @@ import type { ComponentSpec } from "@/utils/componentSpec";
 
 const PipelineRunHtml = ({
   detailsData,
-  id,
+  rootExecutionId,
 }: {
   detailsData: GetExecutionInfoResponse | undefined;
-  id: string;
+  rootExecutionId: string;
 }) => {
   const { setTaskStatusMap } = useComponentSpec();
 
   const { data: stateData } = useQuery<GetGraphExecutionStateResponse>({
-    queryKey: ["run_state", id],
-    queryFn: () => fetchExecutionState(id),
+    queryKey: ["run_state", rootExecutionId],
+    queryFn: () => fetchExecutionState(rootExecutionId),
     refetchInterval: 5000,
     refetchIntervalInBackground: false,
     staleTime: 1000,
@@ -40,11 +40,11 @@ const PipelineRunHtml = ({
     setTaskStatusMap(taskStatusMap);
   }, [stateData]);
 
-  return <PipelineRunPage />;
+  return <PipelineRunPage rootExecutionId={rootExecutionId} />;
 };
 
 const PipelineRun = () => {
-  const { id } = runDetailRoute.useParams() as RunDetailParams;
+  const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
   const {
     componentSpec,
     detailsData,
@@ -78,11 +78,14 @@ const PipelineRun = () => {
   );
 
   return (
-    <ComponentSpecProvider spec={componentSpecWithExecutionIds} runId={id}>
+    <ComponentSpecProvider spec={componentSpecWithExecutionIds}>
       <div className="dndflow">
         <DndContext>
           <ReactFlowProvider>
-            <PipelineRunHtml detailsData={detailsData} id={id} />
+            <PipelineRunHtml
+              detailsData={detailsData}
+              rootExecutionId={rootExecutionId}
+            />
           </ReactFlowProvider>
         </DndContext>
       </div>

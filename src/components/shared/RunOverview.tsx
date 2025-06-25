@@ -106,12 +106,14 @@ const RunOverview = ({
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           {config?.showName && <span>{run.pipeline_name}</span>}
-          {config?.showExecutionId && (
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
+            {config?.showStatus && (
               <StatusIcon status={getRunStatus(statusCounts)} />
+            )}
+            {config?.showExecutionId && (
               <div className="text-xs">{`#${executionId}`}</div>
-            </div>
-          )}
+            )}
+          </div>
           {config?.showCreatedAt && metadata?.created_at && (
             <div className="flex items-center gap-2">
               <span>•</span>
