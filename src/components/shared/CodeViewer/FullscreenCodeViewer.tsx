@@ -1,4 +1,4 @@
-import { Maximize2, X } from "lucide-react";
+import { X } from "lucide-react";
 import {
   createContext,
   type ReactNode,
@@ -9,10 +9,11 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import { Button } from "@/components/ui/button";
+
+import CodeSyntaxHighlighter from "./CodeSyntaxHighlighter";
+
 interface CodeContent {
   code: string;
   language: string;
@@ -30,25 +31,9 @@ interface FullscreenProviderProps {
   children: ReactNode;
 }
 
-interface CodeViewerProps {
-  code: string;
-  language?: string;
-  title?: string;
-  filename?: string;
-  onFullscreenChange?: (isFullscreen: boolean) => void;
-}
-
 interface FullscreenViewProps {
   content: CodeContent;
   onClose: () => void;
-}
-
-interface CodeSyntaxHighlighterProps {
-  code: string;
-  language: string;
-  height?: string;
-  fontSize?: string;
-  padding?: string;
 }
 
 // Context
@@ -135,54 +120,6 @@ export const FullscreenProvider = ({ children }: FullscreenProviderProps) => {
   );
 };
 
-// Components
-const CodeViewer = ({
-  code,
-  language = "yaml",
-  title = "Code Implementation",
-  filename = "",
-  onFullscreenChange = () => {},
-}: CodeViewerProps) => {
-  const { openFullscreen } = useFullscreen();
-
-  const handleEnterFullscreen = useCallback(() => {
-    openFullscreen({ code, language, title });
-    onFullscreenChange(true);
-  }, [code, language, title, openFullscreen, onFullscreenChange]);
-
-  const syntaxHighlighter = useMemo(
-    () => (
-      <CodeSyntaxHighlighter
-        code={code}
-        language={language}
-        height="calc(100% - 48px)"
-        fontSize="0.75rem"
-      />
-    ),
-    [code, language],
-  );
-
-  return (
-    <div className="border rounded-md h-full overflow-hidden hide-scrollbar bg-slate-900">
-      <div className="flex justify-between items-center p-2 sticky top-0 z-10 bg-slate-800">
-        <h3 className="text-secondary font-medium ml-2">
-          {filename} <span className="text-sm">(Read Only)</span>
-        </h3>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleEnterFullscreen}
-          className="text-gray-300 hover:text-slate-800"
-          title="View fullscreen"
-        >
-          <Maximize2 className="size-4" />
-        </Button>
-      </div>
-      {syntaxHighlighter}
-    </div>
-  );
-};
-
 const FullscreenView = ({ content, onClose }: FullscreenViewProps) => {
   const { code, language, title } = content;
 
@@ -216,45 +153,3 @@ const FullscreenView = ({ content, onClose }: FullscreenViewProps) => {
     document.body,
   );
 };
-
-const CodeSyntaxHighlighter = ({
-  code,
-  language,
-  height = "100%",
-  fontSize = "0.875rem",
-  padding = "1rem",
-}: CodeSyntaxHighlighterProps) => (
-  <SyntaxHighlighter
-    language={language}
-    style={oneDark}
-    customStyle={{
-      margin: 0,
-      padding,
-      fontSize,
-      backgroundColor: "transparent",
-      height,
-      overflow: "auto",
-      fontFamily:
-        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-    }}
-    showLineNumbers={true}
-    lineNumberStyle={{
-      minWidth: "2.5em",
-      paddingRight: "1em",
-      color: "rgba(156, 163, 175, 0.5)",
-      textAlign: "right",
-    }}
-    codeTagProps={{
-      style: {
-        display: "inline-block",
-        width: "100%",
-        wordBreak: "break-word",
-        whiteSpace: "pre-wrap",
-      },
-    }}
-  >
-    {code}
-  </SyntaxHighlighter>
-);
-
-export default CodeViewer;

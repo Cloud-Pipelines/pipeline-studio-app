@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import type { ContainerExecutionStatus } from "@/api/types.gen";
-import CodeViewer from "@/components/shared/CodeViewer";
+import { CodeViewer } from "@/components/shared/CodeViewer";
 import { API_URL } from "@/utils/constants";
 
 const LogDisplay = ({
