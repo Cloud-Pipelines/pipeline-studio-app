@@ -48,7 +48,9 @@ export const ContextPanelProvider = ({
   };
 
   useEffect(() => {
-    setContentState(defaultContent);
+    if (key === DEFAULT_KEY) {
+      setContentState(defaultContent);
+    }
   }, [defaultContent]);
 
   return (
