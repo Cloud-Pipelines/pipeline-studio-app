@@ -159,6 +159,7 @@ export type GetExecutionInfoResponse = {
     id: string;
     task_spec: TaskSpecOutput;
     parent_execution_id?: string | null;
+    pipeline_run_id?: string | null;
     child_task_execution_ids: {
         [key: string]: string;
     };

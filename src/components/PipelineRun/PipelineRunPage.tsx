@@ -8,7 +8,6 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
-import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 
 import { CollapsibleContextPanel } from "../shared/ContextPanel/CollapsibleContextPanel";
@@ -16,9 +15,7 @@ import RunDetails from "./RunDetails";
 
 const GRID_SIZE = 10;
 
-const PipelineRunPage = () => {
-  const { runId } = useComponentSpec();
-
+const PipelineRunPage = ({ rootExecutionId }: { rootExecutionId: string }) => {
   const [flowConfig, setFlowConfig] = useState<ReactFlowProps>({
     snapGrid: [GRID_SIZE, GRID_SIZE],
     snapToGrid: true,
@@ -38,7 +35,9 @@ const PipelineRunPage = () => {
   );
 
   return (
-    <ContextPanelProvider defaultContent={<RunDetails runId={runId} />}>
+    <ContextPanelProvider
+      defaultContent={<RunDetails executionId={rootExecutionId} />}
+    >
       <ComponentLibraryProvider>
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel>
