@@ -2,8 +2,8 @@ import { useMemo } from "react";
 
 import type { TaskNodeDimensions } from "@/types/taskNode";
 import type { TaskSpec } from "@/utils/componentSpec";
+import { DEFAULT_NODE_DIMENSIONS } from "@/utils/constants";
 
-const DEFAULT_DIMENSIONS = { w: 300, h: undefined };
 const MIN_WIDTH = 150;
 const MIN_HEIGHT = 100;
 
@@ -43,13 +43,14 @@ export function useTaskNodeDimensions(taskSpec: TaskSpec): TaskNodeDimensions {
     return annotatedDimensions
       ? {
           w: Math.max(
-            parseInt(annotatedDimensions.width ?? "") || DEFAULT_DIMENSIONS.w,
+            parseInt(annotatedDimensions.width ?? "") ||
+              DEFAULT_NODE_DIMENSIONS.w,
             MIN_WIDTH,
           ),
           h:
             Math.max(parseInt(annotatedDimensions.height ?? ""), MIN_HEIGHT) ||
-            DEFAULT_DIMENSIONS.h,
+            DEFAULT_NODE_DIMENSIONS.h,
         }
-      : DEFAULT_DIMENSIONS;
+      : DEFAULT_NODE_DIMENSIONS;
   }, [taskSpec]);
 }

@@ -1,5 +1,6 @@
 import {
   type Connection,
+  type FinalConnectionState,
   type Node,
   type NodeChange,
   NodeToolbar,
@@ -12,7 +13,7 @@ import {
   useStoreApi,
 } from "@xyflow/react";
 import type { ComponentType, DragEvent } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
@@ -47,6 +48,7 @@ import HintNode from "./GhostNode/HintNode";
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
 import type { NodesAndEdges } from "./types";
+import { addAndConnectNode } from "./utils/addAndConnectNode";
 import addTask from "./utils/addTask";
 import { duplicateNodes } from "./utils/duplicateNodes";
 import { getPositionFromEvent } from "./utils/getPositionFromEvent";
@@ -85,7 +87,7 @@ const FlowCanvas = ({
 
   const tabHintNode = useHintNode({
     key: "TAB",
-    hint: "cycle valid components",
+    hint: "cycle compatible components",
   });
 
   const allNodes = useMemo(() => {
@@ -104,6 +106,8 @@ const FlowCanvas = ({
   } = useConfirmationDialog();
 
   const notify = useToastNotification();
+
+  const latestFlowPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const [showToolbar, setShowToolbar] = useState(false);
   const [replaceTarget, setReplaceTarget] = useState<Node | null>(null);
@@ -321,6 +325,79 @@ const FlowCanvas = ({
     },
     [graphSpec, handleConnection, updateGraphSpec],
   );
+
+  const onConnectEnd = useCallback(
+    (_e: MouseEvent | TouchEvent, connectionState: FinalConnectionState) => {
+      if (connectionState.isValid) {
+        // Valid connections are handled by onConnect
+        return;
+      }
+
+      const ghostNode = reactFlowInstance
+        ?.getNodes()
+        .find((node) => node.type === "ghost");
+
+      if (!ghostNode) {
+        return;
+      }
+
+      const { componentRef } = ghostNode.data as {
+        componentRef: ComponentReference;
+      };
+
+      const position = latestFlowPosRef.current;
+      if (!position) return;
+
+      let newComponentSpec = { ...componentSpec };
+      const fromHandle = connectionState.fromHandle;
+
+      const existingInputEdge = reactFlowInstance
+        ?.getEdges()
+        .find(
+          (edge) =>
+            edge.target === fromHandle?.nodeId &&
+            edge.targetHandle === fromHandle.id,
+        );
+
+      if (existingInputEdge) {
+        newComponentSpec = removeEdge(existingInputEdge, newComponentSpec);
+      }
+
+      const updatedComponentSpec = addAndConnectNode({
+        componentRef,
+        fromHandle,
+        position,
+        componentSpec: newComponentSpec,
+      });
+
+      setComponentSpec(updatedComponentSpec);
+    },
+    [
+      reactFlowInstance,
+      componentSpec,
+      nodeData,
+      setComponentSpec,
+      updateOrAddNodes,
+    ],
+  );
+
+  useEffect(() => {
+    function handleMouseMove(event: MouseEvent) {
+      if (isConnecting && reactFlowInstance) {
+        const flowPos = reactFlowInstance.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
+        latestFlowPosRef.current = flowPos;
+      }
+    }
+    if (isConnecting) {
+      window.addEventListener("mousemove", handleMouseMove);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [isConnecting, reactFlowInstance]);
 
   const {
     handleDrop,
@@ -761,6 +838,7 @@ const FlowCanvas = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onConnect={onConnect}
+        onConnectEnd={onConnectEnd}
         onDragOver={onDragOver}
         onDrop={onDrop}
         onBeforeDelete={handleBeforeDelete}
