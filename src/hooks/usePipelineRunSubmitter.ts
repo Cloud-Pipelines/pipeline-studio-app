@@ -58,12 +58,14 @@ export function usePipelineRunSubmitter(
           options?.onError?.(error as Error);
         },
       );
+      const argumentsFromInputs = generateArgumentsFromInputs(fullyLoadedSpec);
+
       const payload = {
         root_task: {
           componentRef: {
             spec: fullyLoadedSpec,
           },
-          arguments: generateArgumentsFromInputs(fullyLoadedSpec),
+          ...(argumentsFromInputs ? { arguments: argumentsFromInputs } : {}),
         },
       };
       createPipeline(payload as BodyCreateApiPipelineRunsPost);

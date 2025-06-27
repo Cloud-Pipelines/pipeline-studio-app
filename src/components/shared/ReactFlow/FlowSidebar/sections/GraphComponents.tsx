@@ -1,4 +1,4 @@
-import { Folder,LayoutGrid, PackagePlus, Puzzle } from "lucide-react";
+import { Folder, LayoutGrid, PackagePlus, Puzzle } from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo } from "react";
 
 import {
@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import type { UIComponentFolder } from "@/types/componentLibrary";
 
 import {
   EmptyState,
@@ -89,17 +90,18 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
             icon={Puzzle}
           />
         )}
-        {/* Special folder for Input/Output nodes, after My Components */}
         <FolderItem
           key="special-folder"
-          folder={{
-            name: "Special",
-            components: [
-              <IONodeSidebarItem key="input" nodeType="input" />,
-              <IONodeSidebarItem key="output" nodeType="output" />,
-            ],
-            folders: [],
-          }}
+          folder={
+            {
+              name: "Special",
+              components: [
+                <IONodeSidebarItem key="input" nodeType="input" />,
+                <IONodeSidebarItem key="output" nodeType="output" />,
+              ],
+              folders: [],
+            } as UIComponentFolder
+          }
           icon={Folder}
         />
         {componentLibrary.folders.map((folder) => (

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
-import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
@@ -15,7 +14,7 @@ import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 import RunOverview from "../shared/RunOverview";
 import { TaskImplementation } from "../shared/TaskDetails";
-import { InputValueEditor } from "./InputValueEditor";
+import { InputValueEditor } from "./InputValueEditor/InputValueEditor";
 import RenamePipeline from "./RenamePipeline";
 
 type PipelineDetailsProps = {
@@ -30,8 +29,6 @@ const PipelineDetails = ({
   const { setComponentSpec } = useComponentSpec();
   const { pipelineRuns } = useLoadPipelineRuns(componentSpec.name || "");
   const notify = useToastNotification();
-
-
 
   // State for file metadata
   const [fileMeta, setFileMeta] = useState<{
@@ -106,6 +103,7 @@ const PipelineDetails = ({
   }
 
   const annotations = componentSpec.metadata?.annotations || {};
+
   const handleInputValueChange = (inputName: string, value: string) => {
     if (!componentSpec.inputs) return;
 
@@ -121,7 +119,7 @@ const PipelineDetails = ({
     setComponentSpec(updatedComponentSpec);
   };
 
-  const handleInputNameChange = (newName: string, oldName: string) => {
+  const handleInputNameChange = (oldName: string, newName: string) => {
     if (!componentSpec.inputs) return;
 
     const updatedComponentSpec = renameInput(componentSpec, oldName, newName);
@@ -238,8 +236,7 @@ const PipelineDetails = ({
                   <InputValueEditor
                     key={input.name}
                     input={input}
-                    value={input.value || ""}
-                    onChange={handleInputValueChange}
+                    onValueChange={handleInputValueChange}
                     onTypeChange={handleInputTypeChange}
                     onNameChange={handleInputNameChange}
                   />
