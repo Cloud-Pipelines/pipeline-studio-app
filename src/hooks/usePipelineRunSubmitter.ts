@@ -5,7 +5,11 @@ import { useState } from "react";
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
 import { createPipelineRun } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
-import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
+import {
+  type ComponentReference,
+  type ComponentSpec,
+  generateArgumentsFromInputs,
+} from "@/utils/componentSpec";
 
 export function usePipelineRunSubmitter(
   componentSpec?: ComponentSpec,
@@ -59,6 +63,7 @@ export function usePipelineRunSubmitter(
           componentRef: {
             spec: fullyLoadedSpec,
           },
+          arguments: generateArgumentsFromInputs(fullyLoadedSpec),
         },
       };
       createPipeline(payload as BodyCreateApiPipelineRunsPost);

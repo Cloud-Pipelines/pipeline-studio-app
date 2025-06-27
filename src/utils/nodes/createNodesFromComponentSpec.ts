@@ -34,7 +34,7 @@ const createInputNodes = (componentSpec: ComponentSpec) => {
 
     return {
       id: `input_${inputSpec.name}`,
-      data: { label: inputSpec.name },
+      data: { label: inputSpec.name, value: inputSpec.value },
       position: position,
       type: "input",
     } as Node;

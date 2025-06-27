@@ -28,6 +28,7 @@ export interface InputSpec extends InputOutputSpec {
   description?: string;
   default?: string;
   optional?: boolean;
+  value?: string;
   annotations?: {
     [k: string]: unknown;
   };
@@ -305,3 +306,77 @@ export const isValidComponentSpec = (obj: any): obj is ComponentSpec =>
 export const isGraphImplementation = (
   implementation: ImplementationType,
 ): implementation is GraphImplementation => "graph" in implementation;
+
+/**
+ * Generates arguments object from component spec inputs that have values
+ * @param componentSpec - The component specification containing inputs
+ * @returns Object with input names as keys and their values as values
+ */
+export const generateArgumentsFromInputs = (
+  componentSpec: ComponentSpec,
+): Record<string, string> => {
+  const args: Record<string, string> = {};
+
+  if (!componentSpec.inputs) {
+    return args;
+  }
+
+  for (const input of componentSpec.inputs) {
+    if (input.value !== undefined && input.value !== null) {
+      args[input.name] = input.value;
+    }
+  }
+
+  return args;
+};
+
+/**
+ * Renames an input in a component spec, updating both the inputs array
+ * and all graph spec references that use the old input name.
+ */
+export const renameInput = (
+  componentSpec: ComponentSpec,
+  oldName: string,
+  newName: string,
+): ComponentSpec => {
+  // Update the inputs array
+  const updatedInputs = componentSpec.inputs?.map((input) =>
+    input.name === oldName ? { ...input, name: newName } : input,
+  );
+
+  const updatedComponentSpec = {
+    ...componentSpec,
+    inputs: updatedInputs,
+  };
+
+  // Update graph spec if it exists
+  if ("graph" in updatedComponentSpec.implementation) {
+    const graphSpec = updatedComponentSpec.implementation.graph;
+    const updatedGraphSpec = { ...graphSpec };
+
+    // Update all task arguments that reference the old input name
+    Object.keys(updatedGraphSpec.tasks).forEach((taskId) => {
+      const task = updatedGraphSpec.tasks[taskId];
+      if (task.arguments) {
+        Object.keys(task.arguments).forEach((inputName) => {
+          const argument = task.arguments![inputName];
+          if (typeof argument !== "string" && "graphInput" in argument) {
+            if (argument.graphInput.inputName === oldName) {
+              task.arguments![inputName] = {
+                ...argument,
+                graphInput: {
+                  ...argument.graphInput,
+                  inputName: newName,
+                },
+              };
+            }
+          }
+        });
+      }
+    });
+
+    updatedComponentSpec.implementation.graph = updatedGraphSpec;
+  }
+
+  return updatedComponentSpec;
+};
