@@ -7,6 +7,7 @@ import {
   ReactFlow,
   type ReactFlowInstance,
   type ReactFlowProps,
+  useConnection,
   useNodesState,
   useStoreApi,
 } from "@xyflow/react";
@@ -18,6 +19,7 @@ import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useComponentUploader from "@/hooks/useComponentUploader";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useCopyPaste } from "@/hooks/useCopyPaste";
+import { useGhostNode } from "@/hooks/useGhostNode";
 import { useHintNode } from "@/hooks/useHintNode";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
@@ -40,6 +42,7 @@ import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfir
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
 import { getUpgradeConfirmationDetails } from "./ConfirmationDialogs/UpgradeComponent";
 import SmoothEdge from "./Edges/SmoothEdge";
+import GhostNode from "./GhostNode/GhostNode";
 import HintNode from "./GhostNode/HintNode";
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
@@ -60,6 +63,7 @@ import { updateNodePositions } from "./utils/updateNodePosition";
 const nodeTypes: Record<string, ComponentType<any>> = {
   task: TaskNode,
   hint: HintNode,
+  ghost: GhostNode,
 };
 const edgeTypes: Record<string, ComponentType<any>> = {
   customEdge: SmoothEdge,
@@ -76,14 +80,22 @@ const FlowCanvas = ({
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 
+  const isConnecting = useConnection((connection) => connection.inProgress);
+  const { ghostNode, handleTabCycle } = useGhostNode();
+
   const tabHintNode = useHintNode({
     key: "TAB",
     hint: "cycle valid components",
   });
 
   const allNodes = useMemo(() => {
-    return tabHintNode ? [...nodes, tabHintNode] : nodes;
-  }, [nodes, tabHintNode]);
+    if (ghostNode) {
+      return [...nodes, ghostNode];
+    } else if (tabHintNode) {
+      return [...nodes, tabHintNode];
+    }
+    return nodes;
+  }, [nodes, ghostNode, tabHintNode]);
 
   const {
     handlers: confirmationHandlers,
@@ -97,11 +109,22 @@ const FlowCanvas = ({
   const [replaceTarget, setReplaceTarget] = useState<Node | null>(null);
   const [shiftKeyPressed, setShiftKeyPressed] = useState(false);
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.key === "Shift") {
-      setShiftKeyPressed(true);
-    }
-  }, []);
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Shift") {
+        setShiftKeyPressed(true);
+      }
+
+      if (event.key === "Tab") {
+        const direction = event.shiftKey ? "back" : "forward";
+        const handled = handleTabCycle(direction);
+        if (handled) {
+          event.preventDefault();
+        }
+      }
+    },
+    [handleTabCycle],
+  );
 
   const handleKeyUp = useCallback((event: KeyboardEvent) => {
     if (event.key === "Shift") {
@@ -749,7 +772,8 @@ const FlowCanvas = ({
         nodesConnectable={readOnly ? false : nodesConnectable}
         connectOnClick={!readOnly}
         className={cn(
-          (rest.selectionOnDrag || shiftKeyPressed) && "cursor-crosshair",
+          (rest.selectionOnDrag || (shiftKeyPressed && !isConnecting)) &&
+            "cursor-crosshair",
         )}
       >
         <NodeToolbar

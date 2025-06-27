@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/tooltip";
 import useComponentFromUrl from "@/hooks/useComponentFromUrl";
 import { cn } from "@/lib/utils";
+import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import { EMPTY_GRAPH_COMPONENT_SPEC } from "@/providers/ComponentSpecProvider";
 import { type ComponentItemFromUrlProps } from "@/types/componentLibrary";
 import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
@@ -28,6 +29,8 @@ const ComponentMarkup = ({
   isLoading,
   error,
 }: ComponentMarkupProps) => {
+  const { checkIfHighlighted } = useComponentLibrary();
+
   const { spec, digest, url } = component;
 
   const displayName = useMemo(
@@ -68,6 +71,7 @@ const ComponentMarkup = ({
             error
               ? "cursor-not-allowed opacity-60"
               : "cursor-grab hover:bg-gray-100 active:bg-gray-200",
+            checkIfHighlighted(component) && "bg-orange-100",
           )}
           draggable={!error && !isLoading}
           onDragStart={onDragStart}

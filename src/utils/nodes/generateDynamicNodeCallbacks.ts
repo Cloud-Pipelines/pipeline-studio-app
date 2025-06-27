@@ -12,9 +12,13 @@ type ExcludeNodeAndTaskId<T> = T extends [NodeAndTaskId, ...infer Rest]
 
 // Utility function that adds the taskId and nodeId to the callbacks as the first argument
 export const generateDynamicNodeCallbacks = (
-  nodeCallbacks: NodeCallbacks,
   nodeId: string,
+  nodeCallbacks?: NodeCallbacks,
 ): NodeCallbacks => {
+  if (!nodeCallbacks) {
+    return {} as NodeCallbacks;
+  }
+
   const taskId = nodeIdToTaskId(nodeId);
   return Object.fromEntries(
     (Object.keys(nodeCallbacks) as (keyof NodeCallbacks)[]).map(
