@@ -1,7 +1,7 @@
 import yaml from "js-yaml";
 import { useMemo } from "react";
 
-import CodeViewer from "@/components/shared/CodeViewer";
+import { CodeViewer } from "@/components/shared/CodeViewer";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { getComponentFilename } from "@/utils/getComponentFilename";
 
@@ -26,22 +26,22 @@ const TaskImplementation = ({
     });
   }, [componentSpec]);
 
+  if (!componentSpec?.implementation) {
+    return (
+      <div className="text-sm text-gray-500 p-4 border rounded-md">
+        No implementation code found for this component.
+      </div>
+    );
+  }
+
   return (
-    <>
-      {componentSpec?.implementation ? (
-        <CodeViewer
-          code={code}
-          language="yaml"
-          title={`${displayName} Implementation (read-only)`}
-          filename={filename}
-          onFullscreenChange={onFullscreenChange}
-        />
-      ) : (
-        <div className="text-sm text-gray-500 p-4 border rounded-md">
-          No implementation code found for this component.
-        </div>
-      )}
-    </>
+    <CodeViewer
+      code={code}
+      language="yaml"
+      title={`${displayName} Implementation (read-only)`}
+      filename={filename}
+      onFullscreenChange={onFullscreenChange}
+    />
   );
 };
 
