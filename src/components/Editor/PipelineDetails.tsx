@@ -104,7 +104,7 @@ const PipelineDetails = ({
   return (
     <div className="p-2 flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 max-w-[90%]">
         <Network className="w-6 h-6 text-secondary-foreground rotate-270 min-w-6 min-h-6" />
         <h2 className="text-lg font-semibold">
           {componentSpec.name ?? "Unnamed Pipeline"}
