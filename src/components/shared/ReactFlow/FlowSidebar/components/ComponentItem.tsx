@@ -136,24 +136,24 @@ export const IONodeSidebarItem = ({ nodeType }: IONodeSidebarItemProps) => {
     (event: DragEvent) => {
       event.dataTransfer.setData(
         "application/reactflow",
-        JSON.stringify({ [nodeType]: null })
+        JSON.stringify({ [nodeType]: null }),
       );
       event.dataTransfer.setData(
         "DragStart.offset",
         JSON.stringify({
           offsetX: event.nativeEvent.offsetX,
           offsetY: event.nativeEvent.offsetY,
-        })
+        }),
       );
       event.dataTransfer.effectAllowed = "move";
     },
-    [nodeType]
+    [nodeType],
   );
 
   return (
     <SidebarMenuItem
       className={cn(
-        "pl-2 py-1.5 cursor-grab hover:bg-gray-100 active:bg-gray-200"
+        "pl-2 py-1.5 cursor-grab hover:bg-gray-100 active:bg-gray-200",
       )}
       draggable
       onDragStart={onDragStart}

@@ -4,7 +4,12 @@ import {
   Folder,
   type LucideProps,
 } from "lucide-react";
-import { isValidElement,type JSXElementConstructor, type MouseEvent, useState } from "react";
+import {
+  isValidElement,
+  type JSXElementConstructor,
+  type MouseEvent,
+  useState,
+} from "react";
 
 import { type FolderItemProps } from "@/types/componentLibrary";
 

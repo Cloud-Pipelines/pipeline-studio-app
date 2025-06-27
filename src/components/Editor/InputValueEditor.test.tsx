@@ -202,7 +202,6 @@ describe("InputValueEditor", () => {
         onChange={mockOnChange}
         onTypeChange={mockOnTypeChange}
         onNameChange={mockOnNameChange}
-        showTypeSelector={false}
       />,
     );
 

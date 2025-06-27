@@ -27,7 +27,6 @@ interface InputValueEditorProps {
   onTypeChange?: (inputName: string, type: TypeSpecType) => void;
   onNameChange?: (newName: string, oldName: string) => void;
   disabled?: boolean;
-  showTypeSelector?: boolean;
 }
 
 export const InputValueEditor = ({
@@ -37,7 +36,6 @@ export const InputValueEditor = ({
   onTypeChange,
   onNameChange,
   disabled = false,
-  showTypeSelector = true,
 }: InputValueEditorProps) => {
   const [inputValue, setInputValue] = useState(value);
   const [inputName, setInputName] = useState(input.name);
@@ -148,7 +146,12 @@ export const InputValueEditor = ({
     <div className="flex flex-col gap-3 p-4 border border-gray-200 rounded-lg bg-white">
       <div className="flex gap-4">
         <div className="flex-1 flex flex-col">
-          <label htmlFor={`input-name-${input.name}`} className="text-xs text-muted-foreground mb-1">Name</label>
+          <label
+            htmlFor={`input-name-${input.name}`}
+            className="text-xs text-muted-foreground mb-1"
+          >
+            Name
+          </label>
           <Input
             id={`input-name-${input.name}`}
             type="text"
@@ -160,9 +163,17 @@ export const InputValueEditor = ({
           />
         </div>
         <div className="w-36 flex flex-col">
-          <label htmlFor={`input-type-${input.name}`} className="text-xs text-muted-foreground mb-1">Type</label>
+          <label
+            htmlFor={`input-type-${input.name}`}
+            className="text-xs text-muted-foreground mb-1"
+          >
+            Type
+          </label>
           <Select value={currentType} onValueChange={handleTypeChange}>
-            <SelectTrigger id={`input-type-${input.name}`} className="h-9 text-xs">
+            <SelectTrigger
+              id={`input-type-${input.name}`}
+              className="h-9 text-xs"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -176,7 +187,12 @@ export const InputValueEditor = ({
         </div>
       </div>
       <div className="flex flex-col">
-        <label htmlFor={`input-value-${input.name}`} className="text-xs text-muted-foreground mb-1">Value</label>
+        <label
+          htmlFor={`input-value-${input.name}`}
+          className="text-xs text-muted-foreground mb-1"
+        >
+          Value
+        </label>
         <Input
           id={`input-value-${input.name}`}
           type={inputType}

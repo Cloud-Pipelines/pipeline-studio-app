@@ -1,4 +1,4 @@
-import { Folder,LayoutGrid, PackagePlus, Puzzle } from "lucide-react";
+import { Folder, LayoutGrid, PackagePlus, Puzzle } from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo } from "react";
 
 import {
@@ -23,7 +23,7 @@ import {
   SearchInput,
   SearchResults,
 } from "../components";
-import { IONodeSidebarItem } from "../components/ComponentItem";
+// import { IONodeSidebarItem } from "../components/ComponentItem";
 
 const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
   const {
@@ -95,8 +95,8 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
           folder={{
             name: "Special",
             components: [
-              <IONodeSidebarItem key="input" nodeType="input" />,
-              <IONodeSidebarItem key="output" nodeType="output" />,
+              // <IONodeSidebarItem key="input" nodeType="input" />,
+              // <IONodeSidebarItem key="output" nodeType="output" />,
             ],
             folders: [],
           }}

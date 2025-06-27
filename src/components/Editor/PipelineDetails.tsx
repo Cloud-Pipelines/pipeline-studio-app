@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
-import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
@@ -30,8 +29,6 @@ const PipelineDetails = ({
   const { setComponentSpec } = useComponentSpec();
   const { pipelineRuns } = useLoadPipelineRuns(componentSpec.name || "");
   const notify = useToastNotification();
-
-
 
   // State for file metadata
   const [fileMeta, setFileMeta] = useState<{
