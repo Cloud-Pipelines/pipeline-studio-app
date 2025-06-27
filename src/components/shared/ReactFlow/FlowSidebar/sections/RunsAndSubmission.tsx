@@ -1,8 +1,5 @@
-import { useMemo } from "react";
-
-import OasisSubmitter from "@/components/shared/OasisSubmitter";
-import RunOverview from "@/components/shared/RunOverview";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import GoogleCloudSubmissionDialog from "@/components/shared/Submitters/GoogleCloud/GoogleCloudSubmissionDialog";
+import OasisSubmitter from "@/components/shared/Submitters/Oasis/OasisSubmitter";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -17,31 +14,7 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
   const { componentSpec } = useComponentSpec();
 
-  const { pipelineRuns, refetch } = useLoadPipelineRuns(
-    componentSpec.name || "",
-  );
-
-  const runOverviews = useMemo(
-    () =>
-      pipelineRuns.map((run) => (
-        <RunOverview
-          key={run.id}
-          run={run}
-          config={{
-            showStatus: true,
-            showName: false,
-            showExecutionId: false,
-            showCreatedAt: true,
-            showTaskStatusBar: true,
-            showStatusCounts: "shorthand",
-          }}
-        />
-      )),
-    [pipelineRuns],
-  );
-
-  const runBoxStyle =
-    pipelineRuns.length > 4 ? `h-[165px]` : `h-[${pipelineRuns.length * 50}px]`;
+  const { refetch } = useLoadPipelineRuns(componentSpec.name || "");
 
   if (!isOpen) {
     return (
@@ -55,6 +28,9 @@ const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
                 onSubmitComplete={refetch}
               />
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <GoogleCloudSubmissionDialog componentSpec={componentSpec} />
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
       </>
@@ -64,7 +40,6 @@ const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Runs & Submissions</SidebarGroupLabel>
-
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -84,15 +59,7 @@ const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
       >
         <SidebarMenu>
           <SidebarMenuItem>
-            <ScrollArea
-              className={cn(
-                "bg-gray-100 border rounded-sm",
-                runBoxStyle,
-                runOverviews.length === 0 ? "hidden" : "",
-              )}
-            >
-              <div className="flex flex-col">{runOverviews}</div>
-            </ScrollArea>
+            <GoogleCloudSubmissionDialog componentSpec={componentSpec} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>

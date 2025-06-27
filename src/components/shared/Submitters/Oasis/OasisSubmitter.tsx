@@ -126,7 +126,7 @@ const OasisSubmitter = ({
   return (
     <SidebarMenuButton
       asChild
-      tooltip="Submit Run"
+      tooltip="Submit to Shopify Oasis"
       forceTooltip
       tooltipPosition="right"
     >
