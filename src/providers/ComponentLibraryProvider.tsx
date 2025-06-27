@@ -53,11 +53,13 @@ type ComponentLibraryContextType = {
   highlightSearchResults: boolean;
   addToComponentLibrary: (component: ComponentReference) => void;
   removeFromComponentLibrary: (component: ComponentReference) => void;
+  highlightedComponentDigest: string | null;
   refetchLibrary: () => void;
   refetchUserComponents: () => void;
   setSearchTerm: (term: string) => void;
   setSearchFilters: (filters: string[]) => void;
   setHighlightSearchResults: (highlight: boolean) => void;
+  setHighlightedComponentDigest: (digest: string | null) => void;
   setComponentFavorite: (
     component: ComponentReference,
     favorited: boolean,
@@ -65,6 +67,7 @@ type ComponentLibraryContextType = {
   checkIfFavorited: (component: ComponentReference) => boolean;
   checkIfUserComponent: (component: ComponentReference) => boolean;
   checkLibraryContainsComponent: (component: ComponentReference) => boolean;
+  checkIfHighlighted: (component: ComponentReference) => boolean;
 };
 
 const ComponentLibraryContext = createContext<
@@ -84,6 +87,9 @@ export const ComponentLibraryProvider = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [searchFilters, setSearchFilters] = useState<string[]>(DEFAULT_FILTERS);
   const [highlightSearchResults, setHighlightSearchResults] = useState(true);
+  const [highlightedComponentDigest, setHighlightedComponentDigest] = useState<
+    string | null
+  >(null);
 
   // Fetch main component library
   const {
@@ -254,6 +260,13 @@ export const ComponentLibraryProvider = ({
     [componentLibrary, checkIfUserComponent],
   );
 
+  const checkIfHighlighted = useCallback(
+    (component: ComponentReference) => {
+      return component.digest === highlightedComponentDigest;
+    },
+    [highlightedComponentDigest],
+  );
+
   const searchComponentLibrary = useCallback(
     (search: string, filters: string[]) => {
       if (!search.trim()) return null;
@@ -414,15 +427,18 @@ export const ComponentLibraryProvider = ({
       highlightSearchResults,
       addToComponentLibrary,
       removeFromComponentLibrary,
+      highlightedComponentDigest,
       refetchLibrary,
       refetchUserComponents,
       setSearchTerm,
       setSearchFilters,
       setHighlightSearchResults,
+      setHighlightedComponentDigest,
       setComponentFavorite,
       checkIfFavorited,
       checkIfUserComponent,
       checkLibraryContainsComponent,
+      checkIfHighlighted,
     }),
     [
       componentLibrary,
@@ -437,15 +453,18 @@ export const ComponentLibraryProvider = ({
       highlightSearchResults,
       addToComponentLibrary,
       removeFromComponentLibrary,
+      highlightedComponentDigest,
       refetchLibrary,
       refetchUserComponents,
       setSearchTerm,
       setSearchFilters,
       setHighlightSearchResults,
+      setHighlightedComponentDigest,
       setComponentFavorite,
       checkIfFavorited,
       checkIfUserComponent,
       checkLibraryContainsComponent,
+      checkIfHighlighted,
     ],
   );
 
