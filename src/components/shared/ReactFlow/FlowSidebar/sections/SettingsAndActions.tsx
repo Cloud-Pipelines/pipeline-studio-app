@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useStore } from "@xyflow/react";
+import { useStoreApi } from "@xyflow/react";
 import { FileDownIcon, FileUpIcon, Save, SaveAll } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
@@ -26,7 +26,8 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
   const { savePipeline } = useSavePipeline(componentSpec);
   const notify = useToastNotification();
   const navigate = useNavigate();
-  const nodes = useStore((store) => store.nodes);
+  const store = useStoreApi();
+  const nodes = store.getState().nodes.filter((node) => node.type === "task");
 
   const notifyPipelineSaved = (name: string) => {
     notify(`Pipeline saved as "${name}"`, "success");
@@ -60,7 +61,14 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
 
   const componentText = useMemo(() => {
     try {
-      if (!componentSpecRef.current || !nodes.length) {
+      if (
+        !componentSpecRef.current ||
+        !nodes.length ||
+        !("graph" in componentSpecRef.current.implementation) ||
+        !componentSpecRef.current?.implementation?.graph?.tasks ||
+        Object.keys(componentSpecRef.current?.implementation?.graph?.tasks)
+          .length !== nodes.length
+      ) {
         return "";
       }
 
