@@ -10,20 +10,18 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { usePipelineRuns } from "@/providers/PipelineRunsProvider";
 
 const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
   const { componentSpec } = useComponentSpec();
 
-  const { pipelineRuns, refetch } = useLoadPipelineRuns(
-    componentSpec.name || "",
-  );
+  const { runs } = usePipelineRuns();
 
   const runOverviews = useMemo(
     () =>
-      pipelineRuns.map((run) => (
+      runs.map((run) => (
         <RunOverview
           key={run.id}
           run={run}
@@ -37,11 +35,11 @@ const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
           }}
         />
       )),
-    [pipelineRuns],
+    [runs],
   );
 
   const runBoxStyle =
-    pipelineRuns.length > 4 ? `h-[165px]` : `h-[${pipelineRuns.length * 50}px]`;
+    runs.length > 4 ? `h-[165px]` : `h-[${runs.length * 50}px]`;
 
   if (!isOpen) {
     return (
@@ -50,10 +48,7 @@ const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
         <SidebarGroupContent className="mx-2! my-2!">
           <SidebarMenu>
             <SidebarMenuItem>
-              <OasisSubmitter
-                componentSpec={componentSpec}
-                onSubmitComplete={refetch}
-              />
+              <OasisSubmitter componentSpec={componentSpec} />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
@@ -68,10 +63,7 @@ const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <OasisSubmitter
-              componentSpec={componentSpec}
-              onSubmitComplete={refetch}
-            />
+            <OasisSubmitter componentSpec={componentSpec} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>

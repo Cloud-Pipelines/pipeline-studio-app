@@ -5,8 +5,8 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import useCooldownTimer from "@/hooks/useCooldownTimer";
-import { usePipelineRunSubmitter } from "@/hooks/usePipelineRunSubmitter";
 import useToastNotification from "@/hooks/useToastNotification";
+import { usePipelineRuns } from "@/providers/PipelineRunsProvider";
 import { APP_ROUTES } from "@/routes/router";
 import type { PipelineRun } from "@/types/pipelineRun";
 import type { ComponentSpec } from "@/utils/componentSpec";
@@ -20,6 +20,8 @@ const OasisSubmitter = ({
   componentSpec,
   onSubmitComplete,
 }: OasisSubmitterProps) => {
+  const { submit, isSubmitting } = usePipelineRuns();
+
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const { cooldownTime, setCooldownTime } = useCooldownTimer(0);
   const notify = useToastNotification();
@@ -83,18 +85,15 @@ const OasisSubmitter = ({
     [handleError, setCooldownTime],
   );
 
-  const { submitPipelineRun, isSubmitting } = usePipelineRunSubmitter(
-    componentSpec,
-    {
-      onSuccess,
-      onError,
-    },
-  );
-
   const handleSubmit = useCallback(async () => {
+    if (!componentSpec) {
+      handleError("No pipeline to submit");
+      return;
+    }
+
     setSubmitSuccess(null);
-    submitPipelineRun();
-  }, [handleError, submitPipelineRun]);
+    submit(componentSpec, { onSuccess, onError });
+  }, [handleError, submit, componentSpec, onSuccess, onError]);
 
   const getButtonText = () => {
     if (cooldownTime > 0) {

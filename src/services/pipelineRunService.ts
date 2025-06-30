@@ -9,7 +9,12 @@ import {
   getComponentFileFromList,
   writeComponentToFileListFromText,
 } from "@/utils/componentStore";
-import { API_URL, USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import {
+  API_URL,
+  DB_NAME,
+  PIPELINE_RUNS_STORE_NAME,
+  USER_PIPELINES_LIST_NAME,
+} from "@/utils/constants";
 
 export const createPipelineRun = async (
   payload: BodyCreateApiPipelineRunsPost,
@@ -27,6 +32,34 @@ export const createPipelineRun = async (
   }
 
   return response.json();
+};
+
+export const savePipelineRun = async (
+  responseData: {
+    id: number;
+    root_execution_id: number;
+    created_at: string;
+    created_by: string;
+  },
+  pipelineName: string,
+  pipelineDigest?: string,
+): Promise<PipelineRun> => {
+  const pipelineRunsDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: PIPELINE_RUNS_STORE_NAME,
+  });
+
+  const pipelineRun: PipelineRun = {
+    id: responseData.id,
+    root_execution_id: responseData.root_execution_id,
+    created_at: responseData.created_at,
+    created_by: responseData.created_by,
+    pipeline_name: pipelineName || "Untitled Pipeline",
+    pipeline_digest: pipelineDigest,
+  };
+
+  await pipelineRunsDb.setItem(String(responseData.id), pipelineRun);
+  return pipelineRun;
 };
 
 export const copyRunToPipeline = async (
