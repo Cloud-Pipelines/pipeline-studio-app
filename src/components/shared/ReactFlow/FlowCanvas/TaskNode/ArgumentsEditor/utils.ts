@@ -29,7 +29,7 @@ export const getArgumentInputs = (taskSpec: TaskSpec) => {
         value: initialValue ?? "",
         initialValue: initialValue ?? "",
         inputSpec: input,
-        isRemoved: initialValue === undefined,
+        isRemoved: !existingArgument,
       } as ArgumentInput;
     }) ?? [];
 

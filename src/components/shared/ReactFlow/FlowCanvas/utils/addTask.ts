@@ -39,24 +39,37 @@ const addTask = (
       return newComponentSpec;
     }
 
+    const taskArguments = taskSpec.componentRef.spec?.inputs?.reduce(
+      (acc, input) => {
+        if (input.default) {
+          acc[input.name] = input.default;
+        }
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
     const mergedAnnotations = {
       ...taskSpec.annotations,
       ...positionAnnotations,
     };
-    taskSpec.annotations = mergedAnnotations;
-    const taskSpecWithAnnotation: TaskSpec = {
+
+    const updatedTaskSpec: TaskSpec = {
       ...taskSpec,
       annotations: mergedAnnotations,
+      arguments: taskArguments ?? {},
     };
+
     const taskId = getUniqueTaskName(
       graphSpec,
       taskSpec.componentRef.spec?.name ?? "Task",
     );
+
     const newGraphSpec: GraphSpec = {
       ...graphSpec,
       tasks: {
         ...graphSpec.tasks,
-        [taskId]: taskSpecWithAnnotation,
+        [taskId]: updatedTaskSpec,
       },
     };
 
