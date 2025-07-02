@@ -158,3 +158,15 @@ export const fetchPipelineRunById = async (runId: string) => {
     return null;
   }
 };
+
+export const cancelPipelineRun = async (runId: string) => {
+  const response = await fetch(`${API_URL}/api/pipeline_runs/${runId}/cancel`, { 
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to cancel pipeline run");
+  }
+
+  // endpoint returns nothing
+};

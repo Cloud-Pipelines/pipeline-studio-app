@@ -98,22 +98,27 @@ export interface TaskStatusCounts {
   running: number;
   waiting: number;
   skipped: number;
+  cancelled: number;
 }
 
 /**
  * Determine the overall run status based on the task statuses.
  */
-const STATUS = {
+export const STATUS = {
   FAILED: "FAILED",
   RUNNING: "RUNNING",
   SUCCEEDED: "SUCCEEDED",
   WAITING: "WAITING",
+  CANCELLED: "CANCELLED",
   UNKNOWN: "UNKNOWN",
 } as const;
 
 export const getRunStatus = (statusData: TaskStatusCounts) => {
   if (statusData.failed > 0) {
     return STATUS.FAILED;
+  }
+  if (statusData.cancelled > 0) {
+    return STATUS.CANCELLED;
   }
   if (statusData.running > 0) {
     return STATUS.RUNNING;
@@ -138,7 +143,8 @@ export const countTaskStatuses = (
     failed = 0,
     running = 0,
     waiting = 0,
-    skipped = 0;
+    skipped = 0,
+    cancelled = 0;
 
   if (
     details.child_task_execution_ids &&
@@ -170,6 +176,9 @@ export const countTaskStatuses = (
           case "STARTING":
             running++;
             break;
+          case "CANCELLED":
+            cancelled++;
+            break;
           default:
             waiting++;
             break;
@@ -180,6 +189,6 @@ export const countTaskStatuses = (
     });
   }
 
-  const total = succeeded + failed + running + waiting + skipped;
-  return { total, succeeded, failed, running, waiting, skipped };
+  const total = succeeded + failed + running + waiting + skipped + cancelled;
+  return { total, succeeded, failed, running, waiting, skipped, cancelled };
 };

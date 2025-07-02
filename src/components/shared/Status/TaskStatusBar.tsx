@@ -11,7 +11,7 @@ const TaskStatusBar = ({
     );
   }
 
-  const { total, succeeded, failed, running, waiting, skipped } = statusCounts;
+  const { total, succeeded, failed, running, waiting, skipped, cancelled } = statusCounts;
 
   // Calculate percentages for each segment
   const successWidth = `${(succeeded / total) * 100}%`;
@@ -19,6 +19,7 @@ const TaskStatusBar = ({
   const runningWidth = `${(running / total) * 100}%`;
   const waitingWidth = `${(waiting / total) * 100}%`;
   const skippedWidth = `${(skipped / total) * 100}%`;
+  const cancelledWidth = `${(cancelled / total) * 100}%`;
 
   return (
     <div className="flex h-2 w-full rounded overflow-hidden bg-gray-200">
@@ -36,6 +37,9 @@ const TaskStatusBar = ({
       )}
       {skipped > 0 && (
         <div className="bg-gray-800" style={{ width: skippedWidth }}></div>
+      )}
+      {cancelled > 0 && (
+        <div className="bg-orange-500" style={{ width: cancelledWidth }}></div>
       )}
     </div>
   );

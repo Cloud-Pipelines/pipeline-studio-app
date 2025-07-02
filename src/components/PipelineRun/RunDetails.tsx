@@ -7,6 +7,7 @@ import {
   countTaskStatuses,
   fetchExecutionInfo,
   getRunStatus,
+  STATUS,
 } from "@/services/executionService";
 import { fetchPipelineRunById } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
@@ -14,6 +15,7 @@ import type { ComponentSpec } from "@/utils/componentSpec";
 
 import { StatusBar, StatusIcon, StatusText } from "../shared/Status";
 import { TaskImplementation } from "../shared/TaskDetails";
+import { CancelPipelineRunButton } from "./components/CancelPipelineRunButton";
 
 type RunDetailsProps = {
   executionId?: string;
@@ -67,6 +69,8 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
   const statusCounts = countTaskStatuses(details, state);
   const runStatus = getRunStatus(statusCounts);
 
+  const isRunning = runStatus === STATUS.RUNNING || runStatus === STATUS.WAITING;
+
   const annotations = componentSpec.metadata?.annotations || {};
 
   return (
@@ -77,6 +81,7 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
           {componentSpec.name ?? "Unnamed Pipeline"}
         </h2>
         <StatusIcon status={runStatus} tooltip />
+
       </div>
 
       {metadata && (
@@ -131,6 +136,8 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
           <StatusBar statusCounts={statusCounts} />
         </div>
       </div>
+
+      {isRunning && <CancelPipelineRunButton runId={runId}/>}
 
       {Object.keys(annotations).length > 0 && (
         <div>
