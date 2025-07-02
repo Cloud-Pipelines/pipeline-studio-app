@@ -102,7 +102,7 @@ const PipelineDetails = ({
   const annotations = componentSpec.metadata?.annotations || {};
 
   return (
-    <div className="p-2 flex flex-col gap-6">
+    <div className="p-2 flex flex-col gap-6 h-full">
       {/* Header */}
       <div className="flex items-center gap-2 max-w-[90%]">
         <Network className="w-6 h-6 text-secondary-foreground rotate-270 min-w-6 min-h-6" />
@@ -260,11 +260,11 @@ const PipelineDetails = ({
       </div>
 
       {/* Pipeline YAML */}
-      <div className="flex flex-col">
+      <div className="flex flex-col h-full">
         <div className="font-medium text-md flex items-center gap-1 cursor-pointer">
           Pipeline YAML
         </div>
-        <div className="mt-1 max-h-[512px] overflow-y-auto">
+        <div className="mt-1 h-full min-h-0 flex-1">
           <TaskImplementation
             displayName={componentSpec.name ?? "Pipeline"}
             componentSpec={componentSpec}
