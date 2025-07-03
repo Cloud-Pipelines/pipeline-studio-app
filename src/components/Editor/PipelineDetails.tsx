@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
-import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import useToastNotification from "@/hooks/useToastNotification";
+import { usePipelineRuns } from "@/providers/PipelineRunsProvider";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { getComponentFileFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
@@ -23,7 +23,7 @@ const PipelineDetails = ({
   componentSpec,
   isLoading,
 }: PipelineDetailsProps) => {
-  const { pipelineRuns } = useLoadPipelineRuns(componentSpec.name || "");
+  const { runs } = usePipelineRuns();
   const notify = useToastNotification();
 
   // State for file metadata
@@ -58,8 +58,8 @@ const PipelineDetails = ({
 
   const runOverviews = useMemo(
     () =>
-      pipelineRuns.map((run) => (
-        <a key={run.id} href={`/runs/${run.id}`} tabIndex={0}>
+      runs.map((run) => (
+        <a key={run.id} href={`/runs/${run.root_execution_id}`} tabIndex={0}>
           <RunOverview
             run={run}
             config={{
@@ -75,7 +75,7 @@ const PipelineDetails = ({
           />
         </a>
       )),
-    [pipelineRuns],
+    [runs],
   );
 
   if (!componentSpec) {
@@ -250,7 +250,7 @@ const PipelineDetails = ({
         <h3 className="text-md font-medium mb-1">
           Recent Executions ({runOverviews.length} total)
         </h3>
-        {pipelineRuns.length === 0 ? (
+        {runs.length === 0 ? (
           <div className="text-xs text-muted-foreground">No runs yet.</div>
         ) : (
           <ScrollArea className="h-48 bg-gray-100 border border-gray-300 rounded p-2">
