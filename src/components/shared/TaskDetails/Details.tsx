@@ -89,14 +89,14 @@ const TaskDetails = ({
       git_relative_dir &&
       component_yaml_path
     ) {
-      reconstructedUrl = `https://raw.githubusercontent.com/${(
+      reconstructedUrl = `https://github.com/${(
         git_remote_url as string
       )
         .replace(/^https:\/\/github\.com\//, "")
         .replace(
           /\.git$/,
           "",
-        )}/${git_remote_sha}/${git_relative_dir}/${component_yaml_path}`;
+        )}/blob/${git_remote_sha}/${git_relative_dir}/${component_yaml_path}`;
     }
   }
 
