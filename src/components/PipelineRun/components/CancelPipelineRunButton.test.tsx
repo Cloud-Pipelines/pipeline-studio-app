@@ -65,10 +65,12 @@ describe("<CancelPipelineRunButton/>", () => {
       await act(() => fireEvent.click(button));
 
       // assert
-      expect(screen.getByText("Confirm run cancellation")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Cancel run" }),
+      ).toBeInTheDocument();
       expect(
         screen.getByText(
-          "The run will be scheduled for cancellation, and this action cannot be undone.",
+          "The run will be scheduled for cancellation. This action cannot be undone.",
         ),
       ).toBeInTheDocument();
     });
@@ -80,14 +82,16 @@ describe("<CancelPipelineRunButton/>", () => {
 
       // act
       await act(() => fireEvent.click(button));
-      expect(screen.getByText("Confirm run cancellation")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Cancel run" }),
+      ).toBeInTheDocument();
 
-      const cancelButton = screen.getByText("Cancel");
+      const cancelButton = screen.getByRole("button", { name: "Cancel" });
       await act(() => fireEvent.click(cancelButton));
 
       // assert
       expect(
-        screen.queryByText("Confirm run cancellation"),
+        screen.queryByRole("heading", { name: "Cancel run" }),
       ).not.toBeInTheDocument();
     });
   });

@@ -7,7 +7,7 @@ import {
   countTaskStatuses,
   fetchExecutionInfo,
   getRunStatus,
-  STATUS,
+  isStatusInProgress,
 } from "@/services/executionService";
 import { fetchPipelineRunById } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
@@ -69,8 +69,7 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
   const statusCounts = countTaskStatuses(details, state);
   const runStatus = getRunStatus(statusCounts);
 
-  const isRunning =
-    runStatus === STATUS.RUNNING || runStatus === STATUS.WAITING;
+  const isInProgress = isStatusInProgress(runStatus);
 
   const annotations = componentSpec.metadata?.annotations || {};
 
@@ -137,7 +136,7 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
         </div>
       </div>
 
-      {isRunning && <CancelPipelineRunButton runId={runId} />}
+      {isInProgress && <CancelPipelineRunButton runId={runId} />}
 
       {Object.keys(annotations).length > 0 && (
         <div>

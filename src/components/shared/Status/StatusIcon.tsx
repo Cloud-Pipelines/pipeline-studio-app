@@ -64,6 +64,8 @@ const Icon = ({ status }: { status?: string }) => {
       return <CircleEllipsis className="w-4 h-4 text-gray-500" />;
     case "SKIPPED":
       return <CircleMinus className="w-4 h-4 text-gray-500" />;
+    case "CANCELLED":
+      return <CircleX className="w-4 h-4 text-orange-500" />;
     default:
       return <CircleHelp className="w-4 h-4 text-orange-500" />;
   }

@@ -132,6 +132,10 @@ export const getRunStatus = (statusData: TaskStatusCounts) => {
   return STATUS.UNKNOWN;
 };
 
+export const isStatusInProgress = (status: string) => {
+  return status === STATUS.RUNNING || status === STATUS.WAITING;
+};
+
 /**
  * Count task statuses from API response
  */

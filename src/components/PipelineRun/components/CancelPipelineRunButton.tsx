@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { CircleStopIcon } from "lucide-react";
+import { CircleX } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
@@ -33,7 +33,7 @@ export const CancelPipelineRunButton = ({
     },
   });
 
-  const handleConfirm = useCallback(async () => {
+  const handleConfirm = useCallback(() => {
     setIsOpen(false);
 
     if (!runId) {
@@ -72,15 +72,15 @@ export const CancelPipelineRunButton = ({
           <Spinner className="mr-2" />
         ) : (
           <div className="flex items-center gap-2">
-            <CircleStopIcon className="w-4 h-4" /> Cancel run
+            <CircleX className="w-4 h-4" /> Cancel run
           </div>
         )}
       </Button>
 
       <ConfirmationDialog
         isOpen={isOpen}
-        title="Confirm run cancellation"
-        description="The run will be scheduled for cancellation, and this action cannot be undone."
+        title="Cancel run"
+        description="The run will be scheduled for cancellation. This action cannot be undone."
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />
