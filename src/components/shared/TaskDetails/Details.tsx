@@ -24,7 +24,7 @@ import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import {
-  convertRawUrlToDirectoryUrl,
+  convertGithubUrlToDirectoryUrl,
   downloadYamlFromComponentText,
 } from "@/utils/URL";
 import copyToYaml from "@/utils/yaml";
@@ -89,14 +89,12 @@ const TaskDetails = ({
       git_relative_dir &&
       component_yaml_path
     ) {
-      reconstructedUrl = `https://raw.githubusercontent.com/${(
-        git_remote_url as string
-      )
+      reconstructedUrl = `https://github.com/${(git_remote_url as string)
         .replace(/^https:\/\/github\.com\//, "")
         .replace(
           /\.git$/,
           "",
-        )}/${git_remote_sha}/${git_relative_dir}/${component_yaml_path}`;
+        )}/blob/${git_remote_sha}/${git_relative_dir}/${component_yaml_path}`;
     }
   }
 
@@ -181,7 +179,10 @@ const TaskDetails = ({
           </div>
         )}
 
-        <LinkBlock url={url ?? reconstructedUrl} canonicalUrl={canonicalUrl} />
+        <LinkBlock
+          url={url && url.length > 0 ? url : reconstructedUrl}
+          canonicalUrl={canonicalUrl}
+        />
 
         {componentSpec?.description && (
           <div className="flex flex-col px-3 py-2">
@@ -348,7 +349,7 @@ function LinkBlock({
           </div>
           <div className="text-sm break-all">
             <a
-              href={convertRawUrlToDirectoryUrl(url)}
+              href={convertGithubUrlToDirectoryUrl(url)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sky-500 hover:underline flex items-center gap-1"
@@ -374,7 +375,7 @@ function LinkBlock({
           </div>
           <div className="text-sm break-all">
             <a
-              href={convertRawUrlToDirectoryUrl(canonicalUrl)}
+              href={convertGithubUrlToDirectoryUrl(canonicalUrl)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sky-500 hover:underline flex items-center gap-1"

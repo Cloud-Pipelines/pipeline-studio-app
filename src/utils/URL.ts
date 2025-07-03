@@ -1,5 +1,9 @@
 import yaml from "js-yaml";
 
+import { RUNS_BASE_PATH } from "@/routes/router";
+
+import type { ComponentSpec } from "./componentSpec";
+
 const convertGcsUrlToBrowserUrl = (
   url: string,
   isDirectory: boolean,
@@ -17,10 +21,6 @@ const convertGcsUrlToBrowserUrl = (
   return url.replace("gs://", "https://storage.cloud.google.com/");
 };
 
-import { RUNS_BASE_PATH } from "@/routes/router";
-
-import type { ComponentSpec } from "./componentSpec";
-
 const convertRawUrlToDirectoryUrl = (rawUrl: string) => {
   const urlPattern =
     /^https:\/\/raw.githubusercontent.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/;
@@ -37,6 +37,34 @@ const convertRawUrlToDirectoryUrl = (rawUrl: string) => {
     return directoryUrl;
   } else {
     throw new Error("Invalid GitHub raw URL");
+  }
+};
+
+const convertWebUrlToDirectoryUrl = (webUrl: string) => {
+  const urlPattern =
+    /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/;
+  const match = webUrl.match(urlPattern);
+
+  if (match) {
+    const user = match[1];
+    const repo = match[2];
+    const commitHash = match[3];
+    const filePath = match[4];
+    const directoryPath = filePath.substring(0, filePath.lastIndexOf("/"));
+
+    return `https://github.com/${user}/${repo}/tree/${commitHash}/${directoryPath}`;
+  } else {
+    throw new Error("Invalid GitHub web URL");
+  }
+};
+
+const convertGithubUrlToDirectoryUrl = (url: string) => {
+  if (url.startsWith("https://raw.githubusercontent.com/")) {
+    return convertRawUrlToDirectoryUrl(url);
+  } else if (url.startsWith("https://github.com/") && url.includes("/blob/")) {
+    return convertWebUrlToDirectoryUrl(url);
+  } else {
+    throw new Error("Unsupported GitHub URL format");
   }
 };
 
@@ -60,13 +88,7 @@ const downloadYamlFromComponentText = (
   URL.revokeObjectURL(url);
 };
 
-export {
-  convertGcsUrlToBrowserUrl,
-  convertRawUrlToDirectoryUrl,
-  downloadYamlFromComponentText,
-};
-
-export const getIdOrTitleFromPath = (
+const getIdOrTitleFromPath = (
   pathname: string,
 ): {
   idOrTitle?: string;
@@ -79,4 +101,11 @@ export const getIdOrTitleFromPath = (
     idOrTitle: decodeURIComponent(lastPathSegment),
     enableApi: isRunPath,
   };
+};
+
+export {
+  convertGcsUrlToBrowserUrl,
+  convertGithubUrlToDirectoryUrl,
+  downloadYamlFromComponentText,
+  getIdOrTitleFromPath,
 };
