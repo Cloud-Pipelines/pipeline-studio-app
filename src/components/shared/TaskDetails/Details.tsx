@@ -140,7 +140,7 @@ const TaskDetails = ({
 
   return (
     <div className="h-full overflow-auto hide-scrollbar">
-      <div className="border rounded-md divide-y w-full">
+      <div className="border rounded-md divide-y w-full h-full">
         <div className="flex flex-col px-3 py-2">
           <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
             Name
@@ -253,7 +253,7 @@ const TaskDetails = ({
                 </div>
               </CollapsibleTrigger>
 
-              <CollapsibleContent className="mt-1">
+              <CollapsibleContent className="mt-1 min-h-0 flex-1 h-full">
                 {section.component}
               </CollapsibleContent>
             </Collapsible>

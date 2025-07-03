@@ -56,14 +56,17 @@ const TaskConfiguration = ({
   }
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-2 pb-2 font-semibold text-lg">
         {name} <ComponentFavoriteToggle component={taskSpec.componentRef} />
         {runStatus && <StatusIcon status={runStatus} tooltip label="task" />}
       </div>
 
-      <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4">
-        <Tabs defaultValue={focusedIo || readOnly ? "io" : "details"}>
+      <div className="flex flex-col px-4 gap-4 pb-4 h-full">
+        <Tabs
+          defaultValue={focusedIo || readOnly ? "io" : "details"}
+          className="h-full"
+        >
           <TabsList className="mb-2">
             <TabsTrigger value="io" className="flex-1">
               {readOnly ? (
@@ -107,11 +110,13 @@ const TaskConfiguration = ({
                   title: "Component YAML",
                   isCollapsed: true,
                   component: (
-                    <TaskImplementation
-                      key="task-implementation"
-                      displayName={name}
-                      componentSpec={componentSpec}
-                    />
+                    <div className="h-[512px]">
+                      <TaskImplementation
+                        key="task-implementation"
+                        displayName={name}
+                        componentSpec={componentSpec}
+                      />
+                    </div>
                   ),
                 },
               ]}
@@ -146,7 +151,7 @@ const TaskConfiguration = ({
             )}
           </TabsContent>
           {readOnly && (
-            <TabsContent value="logs">
+            <TabsContent value="logs" className="h-full">
               <Logs
                 executionId={taskSpec.annotations?.executionId as string}
                 status={runStatus}
