@@ -1,6 +1,10 @@
-import { describe, expect,it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { getRunStatus, STATUS, type TaskStatusCounts } from "./executionService";
+import {
+  getRunStatus,
+  STATUS,
+  type TaskStatusCounts,
+} from "./executionService";
 
 describe("getRunStatus()", () => {
   it("should return CANCELLED when there are cancelled tasks", () => {
@@ -156,4 +160,4 @@ describe("getRunStatus()", () => {
 
     expect(getRunStatus(statusData)).toBe(STATUS.WAITING);
   });
-}); 
+});

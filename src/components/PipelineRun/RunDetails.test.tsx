@@ -1,9 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {screen} from '@testing-library/dom'
+import { screen } from "@testing-library/dom";
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import type { GetExecutionInfoResponse, GetGraphExecutionStateResponse } from "@/api/types.gen";
+import type {
+  GetExecutionInfoResponse,
+  GetGraphExecutionStateResponse,
+} from "@/api/types.gen";
 import { useExecutionStatusQuery } from "@/hooks/useExecutionStatusQuery";
 import * as executionService from "@/services/executionService";
 import * as pipelineRunService from "@/services/pipelineRunService";
@@ -12,22 +15,21 @@ import { RunDetails } from "./RunDetails";
 
 // Mock the hooks and services
 vi.mock("@/hooks/useExecutionStatusQuery");
-vi.mock("@/services/executionService",  async (importOriginal) => {
-    return {
-      ...await importOriginal(),
-      fetchExecutionInfo: vi.fn(),
-    }
-  });
+vi.mock("@/services/executionService", async (importOriginal) => {
+  return {
+    ...(await importOriginal()),
+    fetchExecutionInfo: vi.fn(),
+  };
+});
 vi.mock("@/services/pipelineRunService");
 
-
 describe("<RunDetails/>", () => {
-  const queryClient  = new QueryClient({
+  const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
       mutations: { retry: false },
     },
-  });;
+  });
 
   const mockExecutionDetails: GetExecutionInfoResponse = {
     id: "test-execution-id",
@@ -48,22 +50,22 @@ describe("<RunDetails/>", () => {
       },
     },
     child_task_execution_ids: {
-      "task1": "execution1",
-      "task2": "execution2",
+      task1: "execution1",
+      task2: "execution2",
     },
   };
 
   const mockRunningExecutionState: GetGraphExecutionStateResponse = {
     child_execution_status_stats: {
-      "execution1": { "SUCCEEDED": 1 },
-      "execution2": { "RUNNING": 1 },
+      execution1: { SUCCEEDED: 1 },
+      execution2: { RUNNING: 1 },
     },
   };
 
   const mockCancelledExecutionState: GetGraphExecutionStateResponse = {
     child_execution_status_stats: {
-      "execution1": { "SUCCEEDED": 1 },
-      "execution2": { "CANCELLED": 1 },
+      execution1: { SUCCEEDED: 1 },
+      execution2: { CANCELLED: 1 },
     },
   };
 
@@ -77,7 +79,6 @@ describe("<RunDetails/>", () => {
   };
 
   beforeEach(() => {
-
     // Reset all mocks
     vi.clearAllMocks();
 
@@ -88,54 +89,56 @@ describe("<RunDetails/>", () => {
     } as any);
 
     // Mock pipelineRunService
-    vi.mocked(pipelineRunService.fetchPipelineRunById).mockResolvedValue(mockPipelineRun);
+    vi.mocked(pipelineRunService.fetchPipelineRunById).mockResolvedValue(
+      mockPipelineRun,
+    );
   });
 
   const renderWithQueryClient = (component: React.ReactElement) => {
     return render(
       <QueryClientProvider client={queryClient}>
         {component}
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   };
 
   describe("Cancel Pipeline Run Button", () => {
     test("should render cancel button when status is RUNNING", async () => {
-        // arrange
-        vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
-            data: {
-                details: mockExecutionDetails,
-                state: mockRunningExecutionState,
-            },
-            isLoading: false,
-            error: null,
-        });
-    
-        // act
-        renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
-    
-        // assert
-        const cancelButton = screen.getByTestId('cancel-pipeline-run-button');
-        expect(cancelButton).toBeInTheDocument();
+      // arrange
+      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
+        },
+        isLoading: false,
+        error: null,
       });
-    
-      test("should NOT render cancel button when status is not RUNNING", async () => {
-        // arrange
-        vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
-            data: {
-                details: mockExecutionDetails,
-                state: mockCancelledExecutionState,
-            },
-            isLoading: false,
-            error: null,
-          });
-    
-        // act
-        renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
-    
-        // assert
-        const cancelButton = screen.queryByTestId('cancel-pipeline-run-button');
-        expect(cancelButton).not.toBeInTheDocument();
+
+      // act
+      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+
+      // assert
+      const cancelButton = screen.getByTestId("cancel-pipeline-run-button");
+      expect(cancelButton).toBeInTheDocument();
+    });
+
+    test("should NOT render cancel button when status is not RUNNING", async () => {
+      // arrange
+      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockCancelledExecutionState,
+        },
+        isLoading: false,
+        error: null,
       });
+
+      // act
+      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+
+      // assert
+      const cancelButton = screen.queryByTestId("cancel-pipeline-run-button");
+      expect(cancelButton).not.toBeInTheDocument();
+    });
   });
 });

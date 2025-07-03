@@ -160,7 +160,7 @@ export const fetchPipelineRunById = async (runId: string) => {
 };
 
 export const cancelPipelineRun = async (runId: string) => {
-  const response = await fetch(`${API_URL}/api/pipeline_runs/${runId}/cancel`, { 
+  const response = await fetch(`${API_URL}/api/pipeline_runs/${runId}/cancel`, {
     method: "POST",
   });
 

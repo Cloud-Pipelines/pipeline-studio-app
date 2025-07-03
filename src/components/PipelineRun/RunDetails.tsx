@@ -69,7 +69,8 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
   const statusCounts = countTaskStatuses(details, state);
   const runStatus = getRunStatus(statusCounts);
 
-  const isRunning = runStatus === STATUS.RUNNING || runStatus === STATUS.WAITING;
+  const isRunning =
+    runStatus === STATUS.RUNNING || runStatus === STATUS.WAITING;
 
   const annotations = componentSpec.metadata?.annotations || {};
 
@@ -81,7 +82,6 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
           {componentSpec.name ?? "Unnamed Pipeline"}
         </h2>
         <StatusIcon status={runStatus} tooltip />
-
       </div>
 
       {metadata && (
@@ -137,7 +137,7 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
         </div>
       </div>
 
-      {isRunning && <CancelPipelineRunButton runId={runId}/>}
+      {isRunning && <CancelPipelineRunButton runId={runId} />}
 
       {Object.keys(annotations).length > 0 && (
         <div>

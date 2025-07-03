@@ -11,7 +11,8 @@ const TaskStatusBar = ({
     );
   }
 
-  const { total, succeeded, failed, running, waiting, skipped, cancelled } = statusCounts;
+  const { total, succeeded, failed, running, waiting, skipped, cancelled } =
+    statusCounts;
 
   // Calculate percentages for each segment
   const successWidth = `${(succeeded / total) * 100}%`;
