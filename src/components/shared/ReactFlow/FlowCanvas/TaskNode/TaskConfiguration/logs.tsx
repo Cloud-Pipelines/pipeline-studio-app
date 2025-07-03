@@ -117,8 +117,8 @@ const Logs = ({
     return <div>Loading...</div>;
   }
   return (
-    <div className="space-y-4">
-      <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
+    <div className="space-y-4 h-full">
+      <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg h-full min-h-0 flex-1">
         {logs && (
           <LogDisplay logs={logs} onFullscreenChange={onFullscreenChange} />
         )}
