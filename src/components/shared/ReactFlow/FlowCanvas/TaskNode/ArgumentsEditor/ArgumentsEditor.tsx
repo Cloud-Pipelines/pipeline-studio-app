@@ -32,8 +32,13 @@ export const ArgumentsEditor = ({
           .filter(({ isRemoved }) => !isRemoved)
           .map(({ key, value }) => [key, value]),
       ),
-      [argument.key]: argument.value,
     };
+
+    if (argument.isRemoved) {
+      delete argumentValues[argument.key];
+    } else {
+      argumentValues[argument.key] = argument.value;
+    }
 
     setArguments(argumentValues);
   };

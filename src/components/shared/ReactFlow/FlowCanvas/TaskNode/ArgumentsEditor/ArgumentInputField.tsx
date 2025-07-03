@@ -65,6 +65,7 @@ export const ArgumentInputField = ({
   const handleRemove = () => {
     const updatedArgument = {
       ...argument,
+      value: inputValue.trim(),
       isRemoved: !argument.isRemoved,
     };
 
