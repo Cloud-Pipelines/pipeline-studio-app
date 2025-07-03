@@ -114,11 +114,11 @@ export const STATUS = {
 } as const;
 
 export const getRunStatus = (statusData: TaskStatusCounts) => {
-  if (statusData.failed > 0) {
-    return STATUS.FAILED;
-  }
   if (statusData.cancelled > 0) {
     return STATUS.CANCELLED;
+  }
+  if (statusData.failed > 0) {
+    return STATUS.FAILED;
   }
   if (statusData.running > 0) {
     return STATUS.RUNNING;
