@@ -26,7 +26,7 @@ const StatusText = ({
           running: "text-blue-500",
           skipped: "text-gray-800",
           waiting: "text-gray-500",
-          cancelled: "text-orange-500",
+          cancelled: "text-gray-800",
         };
         const statusText = shorthand
           ? `${key[0]}`
