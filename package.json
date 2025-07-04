@@ -58,7 +58,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@tailwindcss/vite": "^4.1.10",
     "@tanstack/react-query": "^5.80.10",
-    "@tanstack/react-query-devtools": "^5.81.2",
+    "@tanstack/react-query-devtools": "^5.81.5",
     "@tanstack/react-router": "^1.121.34",
     "@tanstack/router-devtools": "^1.121.34",
     "@types/react-syntax-highlighter": "^15.5.13",
