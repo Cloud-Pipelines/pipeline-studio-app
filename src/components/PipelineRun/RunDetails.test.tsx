@@ -8,12 +8,19 @@ import type {
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
 import { useExecutionStatusQuery } from "@/hooks/useExecutionStatusQuery";
+import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
 import * as executionService from "@/services/executionService";
 import * as pipelineRunService from "@/services/pipelineRunService";
 
 import { RunDetails } from "./RunDetails";
 
 // Mock the hooks and services
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+  return {
+    ...(await importOriginal()),
+    useNavigate: () => vi.fn(),
+  };
+});
 vi.mock("@/hooks/useExecutionStatusQuery");
 vi.mock("@/services/executionService", async (importOriginal) => {
   return {
@@ -97,10 +104,54 @@ describe("<RunDetails/>", () => {
   const renderWithQueryClient = (component: React.ReactElement) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        {component}
+        <PipelineRunsProvider pipelineName={mockPipelineRun.pipeline_name}>
+          {component}
+        </PipelineRunsProvider>
       </QueryClientProvider>,
     );
   };
+
+  describe("Inspect Pipeline Button", () => {
+    test("should render inspect button", async () => {
+      // arrange
+      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
+        },
+        isLoading: false,
+        error: null,
+      });
+
+      // act
+      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+
+      // assert
+      const inspect = screen.getByTestId("inspect-pipeline-button");
+      expect(inspect).toBeInTheDocument();
+    });
+  });
+
+  describe("Clone Pipeline Button", () => {
+    test("should render clone button", async () => {
+      // arrange
+      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
+        },
+        isLoading: false,
+        error: null,
+      });
+
+      // act
+      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+
+      // assert
+      const cloneButton = screen.getByTestId("clone-pipeline-run-button");
+      expect(cloneButton).toBeInTheDocument();
+    });
+  });
 
   describe("Cancel Pipeline Run Button", () => {
     test("should render cancel button when status is RUNNING", async () => {
@@ -139,6 +190,46 @@ describe("<RunDetails/>", () => {
       // assert
       const cancelButton = screen.queryByTestId("cancel-pipeline-run-button");
       expect(cancelButton).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Rerun Pipeline Run Button", () => {
+    test("should render rerun button when status is CANCELLED", async () => {
+      // arrange
+      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockCancelledExecutionState,
+        },
+        isLoading: false,
+        error: null,
+      });
+
+      // act
+      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+
+      // assert
+      const rerunButton = screen.getByTestId("rerun-pipeline-button");
+      expect(rerunButton).toBeInTheDocument();
+    });
+
+    test("should NOT render rerun button when status is RUNNING", async () => {
+      // arrange
+      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
+        },
+        isLoading: false,
+        error: null,
+      });
+
+      // act
+      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+
+      // assert
+      const rerunButton = screen.queryByTestId("rerun-pipeline-button");
+      expect(rerunButton).not.toBeInTheDocument();
     });
   });
 });

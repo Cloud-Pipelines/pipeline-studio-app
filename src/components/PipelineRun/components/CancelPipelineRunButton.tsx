@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import { CircleX } from "lucide-react";
+import { CircleSlash, CircleX } from "lucide-react";
 import { useCallback, useState } from "react";
 
+import TooltipButton from "@/components/shared/Buttons/TooltipButton";
 import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
-import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cancelPipelineRun } from "@/services/pipelineRunService";
@@ -57,14 +57,19 @@ export const CancelPipelineRunButton = ({
   }, []);
 
   if (isSuccess) {
-    return <Button disabled>Cancelled</Button>;
+    return (
+      <TooltipButton disabled tooltip="Run cancelled">
+        <CircleSlash className="w-4 h-4" />
+      </TooltipButton>
+    );
   }
 
   return (
     <>
-      <Button
+      <TooltipButton
         variant="destructive"
         onClick={onClick}
+        tooltip="Cancel run"
         disabled={isPending}
         data-testid="cancel-pipeline-run-button"
       >
@@ -72,10 +77,10 @@ export const CancelPipelineRunButton = ({
           <Spinner className="mr-2" />
         ) : (
           <div className="flex items-center gap-2">
-            <CircleX className="w-4 h-4" /> Cancel run
+            <CircleX className="w-4 h-4" />
           </div>
         )}
-      </Button>
+      </TooltipButton>
 
       <ConfirmationDialog
         isOpen={isOpen}
