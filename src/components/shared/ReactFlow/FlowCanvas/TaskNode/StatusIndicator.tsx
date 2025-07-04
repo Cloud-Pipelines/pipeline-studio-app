@@ -64,7 +64,7 @@ const getRunStatus = (status: ContainerExecutionStatus) => {
     case "CANCELLING":
     case "CANCELLED":
       return {
-        style: "bg-orange-500",
+        style: "bg-gray-800",
         text: status === "CANCELLING" ? "Cancelling" : "Cancelled",
         icon: <XCircleIcon className="w-2 h-2" />,
       };
