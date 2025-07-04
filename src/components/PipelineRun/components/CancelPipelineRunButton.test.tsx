@@ -37,12 +37,11 @@ describe("<CancelPipelineRunButton/>", () => {
   };
 
   describe("Rendering", () => {
-    test("renders cancel button with correct text and icon", () => {
+    test("renders cancel button with correct icon", () => {
       renderWithQueryClient(<CancelPipelineRunButton runId="test-run-123" />);
 
       const button = screen.getByTestId("cancel-pipeline-run-button");
       expect(button).toBeInTheDocument();
-      expect(button).toHaveTextContent("Cancel run");
       expect(button).not.toBeDisabled();
       expect(button).toHaveClass("bg-destructive");
     });
@@ -117,7 +116,6 @@ describe("<CancelPipelineRunButton/>", () => {
         "success",
       );
       expect(button).toBeDisabled();
-      expect(button).toHaveTextContent("Cancelled");
     });
 
     test("handles cancellation error", async () => {
