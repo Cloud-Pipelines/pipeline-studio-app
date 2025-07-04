@@ -91,13 +91,14 @@ const FlowCanvas = ({
   });
 
   const allNodes = useMemo(() => {
+    if (readOnly) return nodes;
     if (ghostNode) {
       return [...nodes, ghostNode];
     } else if (tabHintNode) {
       return [...nodes, tabHintNode];
     }
     return nodes;
-  }, [nodes, ghostNode, tabHintNode]);
+  }, [readOnly, nodes, ghostNode, tabHintNode]);
 
   const {
     handlers: confirmationHandlers,

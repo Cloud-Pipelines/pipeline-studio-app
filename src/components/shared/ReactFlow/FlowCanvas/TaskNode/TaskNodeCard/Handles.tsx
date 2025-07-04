@@ -27,7 +27,7 @@ export const InputHandle = ({
   onLabelClick,
   onHandleSelectionChange,
 }: InputHandleProps) => {
-  const { nodeId } = useTaskNode();
+  const { nodeId, state } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
   const toHandle = useConnection((connection) => connection.toHandle?.id);
@@ -118,6 +118,7 @@ export const InputHandle = ({
             missing,
             (selected || active) && "bg-blue-500!",
             highlight && "bg-green-500!",
+            state.readOnly && "cursor-pointer!",
           )}
           onClick={handleHandleClick}
         />
@@ -180,7 +181,7 @@ export const OutputHandle = ({
   onLabelClick,
   onHandleSelectionChange,
 }: OutputHandleProps) => {
-  const { nodeId } = useTaskNode();
+  const { nodeId, state } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
   const toHandle = useConnection((connection) => connection.toHandle?.id);
@@ -294,6 +295,7 @@ export const OutputHandle = ({
           "relative! border-0! !w-[12px] !h-[12px] transform-none! translate-x-6 cursor-pointer bg-gray-500!",
           (selected || active) && "bg-blue-500!",
           highlight && "bg-green-500!",
+          state.readOnly && "cursor-pointer!",
         )}
       />
     </div>
