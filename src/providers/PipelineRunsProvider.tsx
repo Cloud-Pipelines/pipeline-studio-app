@@ -17,7 +17,11 @@ import {
   savePipelineRun,
 } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
-import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
+import {
+  type ComponentReference,
+  type ComponentSpec,
+  generateArgumentsFromInputs,
+} from "@/utils/componentSpec";
 
 type PipelineRunsContextType = {
   runs: PipelineRun[];
@@ -93,11 +97,15 @@ export const PipelineRunsProvider = ({
             options?.onError?.(error as Error);
           },
         );
+        const argumentsFromInputs =
+          generateArgumentsFromInputs(fullyLoadedSpec);
+
         const payload = {
           root_task: {
             componentRef: {
               spec: fullyLoadedSpec,
             },
+            ...(argumentsFromInputs ? { arguments: argumentsFromInputs } : {}),
           },
         };
 

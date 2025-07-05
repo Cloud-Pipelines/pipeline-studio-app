@@ -25,6 +25,7 @@ import { useHintNode } from "@/hooks/useHintNode";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { useContextPanel } from "@/providers/ContextPanelProvider";
 import type { Annotations } from "@/types/annotations";
 import type { NodeAndTaskId } from "@/types/taskNode";
 import type {
@@ -45,6 +46,7 @@ import { getUpgradeConfirmationDetails } from "./ConfirmationDialogs/UpgradeComp
 import SmoothEdge from "./Edges/SmoothEdge";
 import GhostNode from "./GhostNode/GhostNode";
 import HintNode from "./GhostNode/HintNode";
+import IONode from "./IONode/IONode";
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
 import type { NodesAndEdges } from "./types";
@@ -66,6 +68,8 @@ const nodeTypes: Record<string, ComponentType<any>> = {
   task: TaskNode,
   hint: HintNode,
   ghost: GhostNode,
+  input: IONode,
+  output: IONode,
 };
 const edgeTypes: Record<string, ComponentType<any>> = {
   customEdge: SmoothEdge,
@@ -77,6 +81,7 @@ const FlowCanvas = ({
   children,
   ...rest
 }: ReactFlowProps & { readOnly?: boolean }) => {
+  const { clearContent } = useContextPanel();
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
@@ -826,6 +831,13 @@ const FlowCanvas = ({
     onPaste,
   });
 
+  const onPaneClick = useCallback(() => {
+    setNodes((prevNodes) =>
+      prevNodes.map((node) => ({ ...node, selected: false })),
+    );
+    clearContent();
+  }, [setNodes]);
+
   return (
     <>
       <ReactFlow
@@ -844,6 +856,7 @@ const FlowCanvas = ({
         onDrop={onDrop}
         onBeforeDelete={handleBeforeDelete}
         onDelete={onElementsRemove}
+        onPaneClick={onPaneClick}
         onInit={onInit}
         deleteKeyCode={["Delete", "Backspace"]}
         onSelectionChange={handleSelectionChange}

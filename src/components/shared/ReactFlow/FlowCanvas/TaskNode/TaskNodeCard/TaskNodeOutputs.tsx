@@ -15,14 +15,12 @@ type TaskNodeOutputsProps = {
   condensed: boolean;
   expanded: boolean;
   onBackgroundClick?: () => void;
-  handleIOClicked: (e: MouseEvent<HTMLDivElement>) => void;
 };
 
 export function TaskNodeOutputs({
   condensed,
   expanded,
   onBackgroundClick,
-  handleIOClicked,
 }: TaskNodeOutputsProps) {
   const { nodeId, outputs, state } = useTaskNode();
   const {
@@ -190,7 +188,6 @@ export function TaskNodeOutputs({
             <OutputHandle
               key={output.name}
               output={output}
-              onLabelClick={handleIOClicked}
               onHandleSelectionChange={handleSelectionChange}
               highlight={checkHighlight(output)}
             />

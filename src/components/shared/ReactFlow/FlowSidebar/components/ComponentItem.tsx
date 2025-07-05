@@ -131,4 +131,45 @@ const ComponentItemFromUrl = ({ url }: ComponentItemFromUrlProps) => {
   );
 };
 
+interface IONodeSidebarItemProps {
+  nodeType: "input" | "output";
+}
+
+export const IONodeSidebarItem = ({ nodeType }: IONodeSidebarItemProps) => {
+  const onDragStart = useCallback(
+    (event: DragEvent) => {
+      event.dataTransfer.setData(
+        "application/reactflow",
+        JSON.stringify({ [nodeType]: null }),
+      );
+      event.dataTransfer.setData(
+        "DragStart.offset",
+        JSON.stringify({
+          offsetX: event.nativeEvent.offsetX,
+          offsetY: event.nativeEvent.offsetY,
+        }),
+      );
+      event.dataTransfer.effectAllowed = "move";
+    },
+    [nodeType],
+  );
+
+  return (
+    <SidebarMenuItem
+      className={cn(
+        "pl-2 py-1.5 cursor-grab hover:bg-gray-100 active:bg-gray-200",
+      )}
+      draggable
+      onDragStart={onDragStart}
+    >
+      <div className="flex items-center gap-2">
+        <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
+        <span className="truncate text-xs text-gray-800">
+          {nodeType === "input" ? "Input Node" : "Output Node"}
+        </span>
+      </div>
+    </SidebarMenuItem>
+  );
+};
+
 export { ComponentItemFromUrl, ComponentMarkup };

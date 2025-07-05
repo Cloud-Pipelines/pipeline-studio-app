@@ -28,6 +28,7 @@ export interface InputSpec extends InputOutputSpec {
   description?: string;
   default?: string;
   optional?: boolean;
+  value?: string;
   annotations?: {
     [k: string]: unknown;
   };
@@ -305,3 +306,169 @@ export const isValidComponentSpec = (obj: any): obj is ComponentSpec =>
 export const isGraphImplementation = (
   implementation: ImplementationType,
 ): implementation is GraphImplementation => "graph" in implementation;
+
+/**
+ * Generates arguments object from component spec inputs that have values
+ * @param componentSpec - The component specification containing inputs
+ * @returns Object with input names as keys and their values as values
+ */
+export const generateArgumentsFromInputs = (
+  componentSpec: ComponentSpec,
+): Record<string, string> => {
+  const args: Record<string, string> = {};
+
+  if (!componentSpec.inputs) {
+    return args;
+  }
+
+  for (const input of componentSpec.inputs) {
+    if (input.value !== undefined && input.value !== null) {
+      args[input.name] = input.value;
+    }
+  }
+
+  return args;
+};
+
+/**
+ * Type guard to check if argument is a GraphInputArgument
+ */
+const isGraphInputArgument = (
+  argument: ArgumentType,
+): argument is GraphInputArgument => {
+  return typeof argument !== "string" && "graphInput" in argument;
+};
+
+/**
+ * Updates a single task's arguments to use the new input name
+ */
+const updateTaskArguments = (
+  task: TaskSpec,
+  oldName: string,
+  newName: string,
+): TaskSpec => {
+  if (!task.arguments) return task;
+
+  const updatedArguments = { ...task.arguments };
+
+  Object.entries(updatedArguments).forEach(([inputName, argument]) => {
+    if (
+      isGraphInputArgument(argument) &&
+      argument.graphInput.inputName === oldName
+    ) {
+      updatedArguments[inputName] = {
+        ...argument,
+        graphInput: {
+          ...argument.graphInput,
+          inputName: newName,
+        },
+      };
+    }
+  });
+
+  return { ...task, arguments: updatedArguments };
+};
+
+/**
+ * Updates all tasks in a graph spec to use the new input name
+ */
+const updateGraphTasks = (
+  graphSpec: GraphSpec,
+  oldName: string,
+  newName: string,
+): GraphSpec => {
+  const updatedTasks = { ...graphSpec.tasks };
+
+  Object.keys(updatedTasks).forEach((taskId) => {
+    updatedTasks[taskId] = updateTaskArguments(
+      updatedTasks[taskId],
+      oldName,
+      newName,
+    );
+  });
+
+  return { ...graphSpec, tasks: updatedTasks };
+};
+
+/**
+ * Renames an input in a component spec, updating both the inputs array
+ * and all graph spec references that use the old input name.
+ */
+export const renameInput = (
+  componentSpec: ComponentSpec,
+  oldName: string,
+  newName: string,
+): ComponentSpec => {
+  const updatedInputs = componentSpec.inputs?.map((input) =>
+    input.name === oldName ? { ...input, name: newName } : input,
+  );
+
+  const updatedComponentSpec = {
+    ...componentSpec,
+    inputs: updatedInputs,
+  };
+
+  // Update graph spec if it exists
+  if ("graph" in updatedComponentSpec.implementation) {
+    const graphSpec = updatedComponentSpec.implementation.graph;
+    const updatedGraphSpec = updateGraphTasks(graphSpec, oldName, newName);
+    updatedComponentSpec.implementation.graph = updatedGraphSpec;
+  }
+
+  return updatedComponentSpec;
+};
+
+/**
+ * Updates a graph spec's output values to use the new output name
+ */
+const updateGraphOutputValues = (
+  graphSpec: GraphSpec,
+  oldName: string,
+  newName: string,
+): GraphSpec => {
+  if (!graphSpec.outputValues) return graphSpec;
+
+  const updatedOutputValues = { ...graphSpec.outputValues };
+
+  // Update the output value key
+  if (updatedOutputValues[oldName]) {
+    updatedOutputValues[newName] = updatedOutputValues[oldName];
+    delete updatedOutputValues[oldName];
+  }
+
+  return { ...graphSpec, outputValues: updatedOutputValues };
+};
+
+/**
+ * Renames an output in a component spec, updating both the outputs array
+ * and all graph spec references that use the old output name.
+ */
+export const renameOutput = (
+  componentSpec: ComponentSpec,
+  oldName: string,
+  newName: string,
+  newType?: string,
+): ComponentSpec => {
+  const type = newType ? { type: newType } : {};
+  const updatedOutputs = componentSpec.outputs?.map((output) =>
+    output.name === oldName ? { ...output, name: newName, ...type } : output,
+  );
+
+  const updatedComponentSpec = {
+    ...componentSpec,
+    outputs: updatedOutputs,
+  };
+
+  // Update graph spec if it exists
+  if ("graph" in updatedComponentSpec.implementation && oldName !== newName) {
+    const graphSpec = updatedComponentSpec.implementation.graph;
+    const updatedGraphSpec = updateGraphOutputValues(
+      graphSpec,
+      oldName,
+      newName,
+    );
+    updatedComponentSpec.implementation.graph = updatedGraphSpec;
+  }
+
+  return updatedComponentSpec;
+};

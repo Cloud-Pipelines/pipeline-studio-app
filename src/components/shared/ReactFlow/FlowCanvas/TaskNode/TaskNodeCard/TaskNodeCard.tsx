@@ -1,13 +1,5 @@
-import { useReactFlow } from "@xyflow/react";
 import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
-import {
-  type MouseEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -20,14 +12,10 @@ import { TaskNodeOutputs } from "./TaskNodeOutputs";
 
 const TaskNodeCard = () => {
   const taskNode = useTaskNode();
-  const reactFlowInstance = useReactFlow();
-  const { setContent, clearContent } = useContextPanel();
+  const { setContent } = useContextPanel();
 
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-
-  const [focusedIo, setFocusedIo] = useState<boolean>(false);
-
   const [scrollHeight, setScrollHeight] = useState(0);
   const [condensed, setCondensed] = useState(false);
   const [expandedInputs, setExpandedInputs] = useState(false);
@@ -40,7 +28,7 @@ const TaskNodeCard = () => {
     () => (
       <TaskConfiguration
         taskNode={taskNode}
-        focusedIo={focusedIo}
+        key={nodeId}
         actions={[
           {
             children: (
@@ -66,28 +54,14 @@ const TaskNodeCard = () => {
         ]}
       />
     ),
-    [taskNode, callbacks, isCustomComponent, focusedIo],
+    [taskNode, callbacks, isCustomComponent],
   );
 
-  const focusNode = useCallback(() => {
-    reactFlowInstance.setNodes((nodes) =>
-      nodes.map((node) => ({
-        ...node,
-        selected: node.id === nodeId,
-      })),
-    );
-  }, [reactFlowInstance, nodeId]);
-
-  const handleIOClicked = useCallback(
-    (e: MouseEvent<HTMLDivElement>) => {
-      e.stopPropagation();
-      e.preventDefault();
-
-      setFocusedIo(true);
-      focusNode();
-    },
-    [reactFlowInstance, nodeId, focusNode],
-  );
+  useEffect(() => {
+    if (selected) {
+      setContent(taskConfigMarkup);
+    }
+  }, [taskConfigMarkup, selected, setContent]);
 
   const handleInputSectionClick = useCallback(() => {
     setExpandedInputs((prev) => !prev);
@@ -108,14 +82,6 @@ const TaskNodeCard = () => {
       setCondensed(scrollHeight > dimensions.h);
     }
   }, [scrollHeight, dimensions.h]);
-
-  useEffect(() => {
-    if (selected) {
-      setContent(taskConfigMarkup, nodeId);
-    } else {
-      clearContent(nodeId);
-    }
-  }, [taskConfigMarkup, selected, nodeId, setContent, clearContent]);
 
   return (
     <Card
@@ -150,14 +116,12 @@ const TaskNodeCard = () => {
             condensed={condensed}
             expanded={expandedInputs}
             onBackgroundClick={handleInputSectionClick}
-            handleIOClicked={handleIOClicked}
           />
 
           <TaskNodeOutputs
             condensed={condensed}
             expanded={expandedOutputs}
             onBackgroundClick={handleOutputSectionClick}
-            handleIOClicked={handleIOClicked}
           />
         </div>
       </CardContent>

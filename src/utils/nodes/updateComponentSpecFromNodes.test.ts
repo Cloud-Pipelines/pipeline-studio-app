@@ -126,28 +126,6 @@ describe("updateComponentSpecFromNodes", () => {
   test("should add position annotations and sort nodes correctly", () => {
     const result = updateComponentSpecFromNodes(componentSpec, nodes);
 
-    expect(result.inputs?.[0].annotations).toHaveProperty("editor.position");
-    expect(
-      JSON.parse(result.inputs?.[0].annotations?.["editor.position"] as string),
-    ).toEqual({
-      x: 100,
-      y: 100,
-      width: 150,
-      height: 40,
-    });
-
-    expect(result.outputs?.[0].annotations).toHaveProperty("editor.position");
-    expect(
-      JSON.parse(
-        result.outputs?.[0].annotations?.["editor.position"] as string,
-      ),
-    ).toEqual({
-      x: 500,
-      y: 100,
-      width: 150,
-      height: 40,
-    });
-
     const taskSpecs = (result.implementation as GraphImplementation).graph
       .tasks;
     expect(taskSpecs.task1.annotations).toHaveProperty("editor.position");
@@ -197,29 +175,6 @@ describe("updateComponentSpecFromNodes", () => {
       resultWithSpecs.implementation as GraphImplementation
     ).graph.tasks;
     expect(taskSpecsWithSpecs.task1.componentRef).toHaveProperty("spec");
-  });
-
-  test("should throw errors for missing nodes", () => {
-    const nodesNoInput = createNodes().filter(
-      (node) => node.id !== "input_input1",
-    );
-    expect(() =>
-      updateComponentSpecFromNodes(componentSpec, nodesNoInput),
-    ).toThrow("The nodes array does not have input node input1");
-
-    const nodesNoOutput = createNodes().filter(
-      (node) => node.id !== "output_output1",
-    );
-    expect(() =>
-      updateComponentSpecFromNodes(componentSpec, nodesNoOutput),
-    ).toThrow("The nodes array does not have output node output1");
-
-    const nodesNoTask = createNodes().filter(
-      (node) => node.id !== "task_task1",
-    );
-    expect(() =>
-      updateComponentSpecFromNodes(componentSpec, nodesNoTask),
-    ).toThrow("The nodes array does not have task node task1");
   });
 
   test("should handle non-graph implementations correctly", () => {

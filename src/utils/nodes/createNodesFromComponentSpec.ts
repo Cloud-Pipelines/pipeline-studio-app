@@ -34,7 +34,12 @@ const createInputNodes = (componentSpec: ComponentSpec) => {
 
     return {
       id: `input_${inputSpec.name}`,
-      data: { label: inputSpec.name },
+      data: {
+        label: inputSpec.name,
+        value: inputSpec.value,
+        default: inputSpec.default,
+        type: inputSpec.type,
+      },
       position: position,
       type: "input",
     } as Node;
@@ -47,7 +52,7 @@ const createOutputNodes = (componentSpec: ComponentSpec) => {
 
     return {
       id: `output_${outputSpec.name}`,
-      data: { label: outputSpec.name },
+      data: { label: outputSpec.name, type: outputSpec.type },
       position: position,
       type: "output",
     } as Node;
