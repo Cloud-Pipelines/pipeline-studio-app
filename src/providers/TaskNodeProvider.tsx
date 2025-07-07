@@ -26,6 +26,7 @@ type TaskNodeState = Readonly<{
   highlighted: boolean;
   readOnly: boolean;
   disabled: boolean;
+  connectable: boolean;
   runStatus?: ContainerExecutionStatus;
   isCustomComponent: boolean;
   dimensions: TaskNodeDimensions;
@@ -126,6 +127,7 @@ export const TaskNodeProvider = ({
       selected: selected && !data.isGhost,
       highlighted: !!data.highlighted && !data.isGhost,
       readOnly: !!data.readOnly || !!data.isGhost,
+      connectable: !!data.connectable,
       runStatus: data.isGhost ? undefined : runStatus,
       disabled: data.isGhost ?? false,
       isCustomComponent,

@@ -307,6 +307,7 @@ const FlowCanvas = ({
   );
 
   const nodeData = {
+    connectable: !readOnly && !!nodesConnectable,
     readOnly,
     nodeCallbacks: {
       onDelete,
@@ -708,19 +709,6 @@ const FlowCanvas = ({
   const handleSelectionEnd = useCallback(() => {
     setShowToolbar(true);
   }, []);
-
-  /* This useEffect handles the scenario where cmd+click is used to select multiple nodes.
-   * It is currently disabled because ReactFlow does not render the selection box when
-   * multiple nodes are selected in this way. This leaves the toolbar orphaned.
-   * If this behavior is fixed in ReactFlow, we can re-enable this effect.
-   */
-  // useEffect(() => {
-  //   if (selectedNodes.length > 1 && !showToolbar) {
-  //     setShowToolbar(true);
-  //   } else if (selectedNodes.length <= 1 && showToolbar) {
-  //     setShowToolbar(false);
-  //   }
-  // }, [selectedNodes, showToolbar]);
 
   const updateReactFlow = useCallback(
     (newComponentSpec: ComponentSpec) => {

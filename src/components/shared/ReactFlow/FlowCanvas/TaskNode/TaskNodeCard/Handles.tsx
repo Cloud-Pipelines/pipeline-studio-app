@@ -118,7 +118,7 @@ export const InputHandle = ({
             missing,
             (selected || active) && "bg-blue-500!",
             highlight && "bg-green-500!",
-            state.readOnly && "cursor-pointer!",
+            !state.connectable && "cursor-pointer!",
           )}
           onClick={handleHandleClick}
         />

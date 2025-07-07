@@ -85,7 +85,7 @@ const PipelineEditor = () => {
                     className="ml-[224px]! mb-[24px]!"
                     config={flowConfig}
                     updateConfig={updateFlowConfig}
-                    showInteractive
+                    showInteractive={false}
                   />
                   <Background gap={GRID_SIZE} className="bg-slate-50!" />
                 </FlowCanvas>
