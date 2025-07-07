@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  getRunStatus,
-  STATUS,
-  type TaskStatusCounts,
-} from "./executionService";
+import type { TaskStatusCounts } from "@/types/pipelineRun";
+
+import { getRunStatus, STATUS } from "./executionService";
 
 describe("getRunStatus()", () => {
   it("should return CANCELLED when there are cancelled tasks", () => {
