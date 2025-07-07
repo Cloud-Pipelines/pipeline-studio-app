@@ -13,6 +13,7 @@
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Improvement
+- [ ] Cleanup/Refactor
 - [ ] Breaking change
 - [ ] Documentation update
 
