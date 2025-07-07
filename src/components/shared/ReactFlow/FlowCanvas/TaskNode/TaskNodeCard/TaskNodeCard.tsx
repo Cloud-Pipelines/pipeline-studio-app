@@ -111,9 +111,9 @@ const TaskNodeCard = () => {
 
   useEffect(() => {
     if (selected) {
-      setContent(taskConfigMarkup, nodeId);
+      setContent(taskConfigMarkup);
     } else {
-      clearContent(nodeId);
+      clearContent();
     }
   }, [taskConfigMarkup, selected, nodeId, setContent, clearContent]);
 
