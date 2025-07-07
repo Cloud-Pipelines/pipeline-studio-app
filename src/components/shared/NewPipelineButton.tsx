@@ -8,7 +8,6 @@ import {
   defaultPipelineYamlWithName,
   USER_PIPELINES_LIST_NAME,
 } from "@/utils/constants";
-import { replaceLocalStorageWithExperimentYaml } from "@/utils/storage";
 
 const randomName = () => (generate(4) as string[]).join(" ");
 
@@ -23,8 +22,6 @@ const NewPipelineButton = () => {
       name,
       componentText,
     );
-
-    replaceLocalStorageWithExperimentYaml(componentText);
 
     navigate({
       to: `${EDITOR_PATH}/${name}`,
