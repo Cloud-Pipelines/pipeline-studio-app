@@ -10,7 +10,12 @@ import {
 } from "react";
 
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
-import { fetchExecutionStatus } from "@/services/executionService";
+import {
+  countTaskStatuses,
+  fetchExecutionDetails,
+  fetchExecutionState,
+  getRunStatus,
+} from "@/services/executionService";
 import {
   createPipelineRun,
   fetchPipelineRuns,
@@ -21,7 +26,7 @@ import type { ComponentReference, ComponentSpec } from "@/utils/componentSpec";
 
 type PipelineRunsContextType = {
   runs: PipelineRun[];
-  latestRun: PipelineRun | null;
+  recentRuns: PipelineRun[];
   isLoading: boolean;
   isSubmitting: boolean;
   error: string | null;
@@ -33,11 +38,14 @@ type PipelineRunsContextType = {
       onError: (error: Error | string) => void;
     },
   ) => Promise<void>;
+  setRecentRunsCount: (count: number) => void;
 };
 
 const PipelineRunsContext = createContext<PipelineRunsContextType | undefined>(
   undefined,
 );
+
+const DEFAULT_RECENT_RUNS = 4;
 
 export const PipelineRunsProvider = ({
   pipelineName,
@@ -47,7 +55,9 @@ export const PipelineRunsProvider = ({
   children: ReactNode;
 }) => {
   const [runs, setRuns] = useState<PipelineRun[]>([]);
-  const [latestRun, setLatestRun] = useState<PipelineRun | null>(null);
+  const [recentRuns, setRecentRuns] = useState<PipelineRun[]>([]);
+  const [recentRunsCount, setRecentRunsCount] = useState(DEFAULT_RECENT_RUNS);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,15 +67,39 @@ export const PipelineRunsProvider = ({
     setError(null);
     try {
       const res = await fetchPipelineRuns(pipelineName);
-      let latest: PipelineRun | null = null;
-      if (res?.latestRun) {
-        latest = res.latestRun as PipelineRun;
-        latest.status = await fetchExecutionStatus(
-          latest.root_execution_id.toString(),
-        );
+
+      if (!res || !res.runs) {
+        setRuns([]);
+        setRecentRuns([]);
+        setIsLoading(false);
+        return;
       }
-      setRuns(res?.runs || []);
-      setLatestRun(latest);
+
+      const recent = res.runs.slice(0, recentRunsCount).map(async (run) => {
+        try {
+          const state = await fetchExecutionState(
+            run.root_execution_id.toString(),
+          );
+
+          const details = await fetchExecutionDetails(
+            run.root_execution_id.toString(),
+          );
+
+          if (details && state) {
+            run.statusCounts = countTaskStatuses(details, state);
+            run.status = getRunStatus(run.statusCounts);
+          }
+
+          return run;
+        } catch (e) {
+          console.error(`Error fetching details for Run ${run.id}:`, e);
+          return run;
+        }
+      });
+
+      setRecentRuns((await Promise.all(recent)) as PipelineRun[]);
+
+      setRuns(res.runs);
       setIsLoading(false);
     } catch (e) {
       setIsLoading(false);
@@ -132,14 +166,15 @@ export const PipelineRunsProvider = ({
   const value = useMemo(
     () => ({
       runs,
-      latestRun,
+      recentRuns,
       isLoading,
       isSubmitting,
       error,
       refetch,
       submit,
+      setRecentRunsCount,
     }),
-    [runs, latestRun, isLoading, error, refetch, submit],
+    [runs, recentRuns, isLoading, error, refetch, submit, setRecentRunsCount],
   );
 
   return (

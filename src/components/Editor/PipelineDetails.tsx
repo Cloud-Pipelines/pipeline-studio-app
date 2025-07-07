@@ -1,17 +1,15 @@
 import { Frown, Network } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import useToastNotification from "@/hooks/useToastNotification";
-import { usePipelineRuns } from "@/providers/PipelineRunsProvider";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { getComponentFileFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
-import RunOverview from "../shared/RunOverview";
 import { TaskImplementation } from "../shared/TaskDetails";
+import RecentExecutions from "./components/RecentExecutions";
 import RenamePipeline from "./RenamePipeline";
 
 type PipelineDetailsProps = {
@@ -23,7 +21,6 @@ const PipelineDetails = ({
   componentSpec,
   isLoading,
 }: PipelineDetailsProps) => {
-  const { runs } = usePipelineRuns();
   const notify = useToastNotification();
 
   // State for file metadata
@@ -55,28 +52,6 @@ const PipelineDetails = ({
     };
     fetchMeta();
   }, [componentSpec?.name]);
-
-  const runOverviews = useMemo(
-    () =>
-      runs.map((run) => (
-        <a key={run.id} href={`/runs/${run.root_execution_id}`} tabIndex={0}>
-          <RunOverview
-            run={run}
-            config={{
-              showStatus: true,
-              showName: false,
-              showExecutionId: true,
-              showCreatedAt: true,
-              showTaskStatusBar: false,
-              showStatusCounts: "full",
-              showAuthor: true,
-            }}
-            className="rounded-sm"
-          />
-        </a>
-      )),
-    [runs],
-  );
 
   if (!componentSpec) {
     return (
@@ -246,18 +221,7 @@ const PipelineDetails = ({
       </div>
 
       {/* Recent Executions */}
-      <div>
-        <h3 className="text-md font-medium mb-1">
-          Recent Executions ({runOverviews.length} total)
-        </h3>
-        {runs.length === 0 ? (
-          <div className="text-xs text-muted-foreground">No runs yet.</div>
-        ) : (
-          <ScrollArea className="h-48 bg-gray-100 border border-gray-300 rounded p-2">
-            {runOverviews}
-          </ScrollArea>
-        )}
-      </div>
+      <RecentExecutions />
 
       {/* Pipeline YAML */}
       <div className="flex flex-col h-full">

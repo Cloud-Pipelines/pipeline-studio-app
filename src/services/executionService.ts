@@ -4,6 +4,7 @@ import type {
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
+import type { TaskStatusCounts } from "@/types/pipelineRun";
 import { API_URL } from "@/utils/constants";
 
 export const fetchExecutionState = async (executionId: string) => {
@@ -16,19 +17,21 @@ export const fetchExecutionState = async (executionId: string) => {
   return response.json();
 };
 
-export const fetchExecutionInfo = (executionId: string) => {
-  const fetchDetails = async (): Promise<GetExecutionInfoResponse> => {
-    const response = await fetch(
-      `${API_URL}/api/executions/${executionId}/details`,
+export const fetchExecutionDetails = async (
+  executionId: string,
+): Promise<GetExecutionInfoResponse> => {
+  const response = await fetch(
+    `${API_URL}/api/executions/${executionId}/details`,
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch execution details: ${response.statusText}`,
     );
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch execution details: ${response.statusText}`,
-      );
-    }
-    return response.json();
-  };
+  }
+  return response.json();
+};
 
+export const fetchExecutionInfo = (executionId: string) => {
   const {
     data: details,
     isLoading: isDetailsLoading,
@@ -36,7 +39,7 @@ export const fetchExecutionInfo = (executionId: string) => {
   } = useQuery<GetExecutionInfoResponse>({
     queryKey: ["pipeline-run-details", executionId],
     refetchOnWindowFocus: false,
-    queryFn: fetchDetails,
+    queryFn: () => fetchExecutionDetails(executionId),
   });
 
   const {
@@ -90,16 +93,6 @@ export const fetchExecutionStatus = async (executionId: string) => {
     );
   }
 };
-
-export interface TaskStatusCounts {
-  total: number;
-  succeeded: number;
-  failed: number;
-  running: number;
-  waiting: number;
-  skipped: number;
-  cancelled: number;
-}
 
 /**
  * Determine the overall run status based on the task statuses.

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { TaskStatusCounts } from "@/services/executionService";
+import type { TaskStatusCounts } from "@/types/pipelineRun";
 
 const StatusText = ({
   statusCounts,

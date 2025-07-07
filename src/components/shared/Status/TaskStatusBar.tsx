@@ -1,4 +1,4 @@
-import type { TaskStatusCounts } from "@/services/executionService";
+import type { TaskStatusCounts } from "@/types/pipelineRun";
 
 const getSegmentStyle = (width: string, hatched: boolean = false) =>
   hatched
