@@ -19,7 +19,6 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/routes/router";
 import { useSavePipeline } from "@/services/pipelineService";
 import { componentSpecToYaml } from "@/utils/componentStore";
-import { updateComponentSpecFromNodes } from "@/utils/nodes/updateComponentSpecFromNodes";
 
 const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
   const { componentSpec } = useComponentSpec();
@@ -71,14 +70,7 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
       ) {
         return "";
       }
-
-      const cleanedSpec = updateComponentSpecFromNodes(
-        componentSpecRef.current,
-        nodes,
-        false,
-        true,
-      );
-      return componentSpecToYaml(cleanedSpec);
+      return componentSpecToYaml(componentSpecRef.current);
     } catch (err) {
       console.error("Error preparing pipeline for export:", err);
       return componentSpecRef.current
