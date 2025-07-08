@@ -13,8 +13,12 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { Spinner } from "@/components/ui/spinner";
 import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
-import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import {
+  EMPTY_GRAPH_COMPONENT_SPEC,
+  useComponentSpec,
+} from "@/providers/ComponentSpecProvider";
 import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
 
@@ -44,13 +48,22 @@ const PipelineEditor = () => {
     [],
   );
 
+  // If the pipeline is loading or the component spec is empty, show a loading spinner
+  if (isLoading || componentSpec === EMPTY_GRAPH_COMPONENT_SPEC) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center">
+        <Spinner className="mr-2 w-10 h-10" />
+        <p className="text-secondary-foreground">Loading pipeline...</p>
+      </div>
+    );
+  }
+
   return (
     <PipelineRunsProvider pipelineName={componentSpec.name || ""}>
       <ContextPanelProvider
         defaultContent={
           <PipelineDetails
             componentSpec={componentSpec}
-            isLoading={isLoading}
           />
         }
       >

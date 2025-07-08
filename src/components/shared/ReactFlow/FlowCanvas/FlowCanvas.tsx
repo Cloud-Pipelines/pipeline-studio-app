@@ -25,6 +25,7 @@ import { useHintNode } from "@/hooks/useHintNode";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { useContextPanel } from "@/providers/ContextPanelProvider";
 import type { Annotations } from "@/types/annotations";
 import type { NodeAndTaskId } from "@/types/taskNode";
 import type {
@@ -77,6 +78,7 @@ const FlowCanvas = ({
   children,
   ...rest
 }: ReactFlowProps & { readOnly?: boolean }) => {
+  const { clearContent } = useContextPanel();
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
@@ -814,6 +816,10 @@ const FlowCanvas = ({
     onPaste,
   });
 
+  const onPaneClick = () => {
+    clearContent();
+  };
+
   return (
     <>
       <ReactFlow
@@ -830,6 +836,7 @@ const FlowCanvas = ({
         onConnectEnd={onConnectEnd}
         onDragOver={onDragOver}
         onDrop={onDrop}
+        onPaneClick={onPaneClick}
         onBeforeDelete={handleBeforeDelete}
         onDelete={onElementsRemove}
         onInit={onInit}

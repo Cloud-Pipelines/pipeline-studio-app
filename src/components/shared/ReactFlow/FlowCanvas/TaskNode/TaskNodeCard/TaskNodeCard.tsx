@@ -12,7 +12,7 @@ import { TaskNodeOutputs } from "./TaskNodeOutputs";
 
 const TaskNodeCard = () => {
   const taskNode = useTaskNode();
-  const { setContent, clearContent } = useContextPanel();
+  const { setContent } = useContextPanel();
 
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -22,7 +22,7 @@ const TaskNodeCard = () => {
   const [expandedInputs, setExpandedInputs] = useState(false);
   const [expandedOutputs, setExpandedOutputs] = useState(false);
 
-  const { name, state, callbacks, nodeId } = taskNode;
+  const { name, state, callbacks } = taskNode;
   const { dimensions, selected, highlighted, isCustomComponent } = state;
 
   const taskConfigMarkup = useMemo(
@@ -79,11 +79,9 @@ const TaskNodeCard = () => {
 
   useEffect(() => {
     if (selected) {
-      setContent(taskConfigMarkup, nodeId);
-    } else {
-      clearContent(nodeId);
+      setContent(taskConfigMarkup);
     }
-  }, [taskConfigMarkup, selected, nodeId, setContent, clearContent]);
+  }, [selected, taskConfigMarkup]);
 
   return (
     <Card
