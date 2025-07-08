@@ -18,14 +18,12 @@ interface TaskNodeInputsProps {
   condensed: boolean;
   expanded: boolean;
   onBackgroundClick?: () => void;
-  handleIOClicked: (e: MouseEvent<HTMLDivElement>) => void;
 }
 
 export function TaskNodeInputs({
   condensed,
   expanded,
   onBackgroundClick,
-  handleIOClicked,
 }: TaskNodeInputsProps) {
   const { inputs, taskSpec, state } = useTaskNode();
   const {
@@ -211,7 +209,6 @@ export function TaskNodeInputs({
               key={input.name}
               input={input}
               invalid={invalidArguments.includes(input.name)}
-              onLabelClick={handleIOClicked}
               value={getValue(values?.[input.name])}
               onHandleSelectionChange={handleSelectionChange}
               highlight={checkHighlight(input)}

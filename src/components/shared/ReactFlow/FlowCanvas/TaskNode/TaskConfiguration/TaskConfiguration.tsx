@@ -33,14 +33,9 @@ interface ButtonPropsWithTooltip extends ButtonProps {
 interface TaskConfigurationProps {
   taskNode: TaskNodeContextType;
   actions?: ButtonPropsWithTooltip[];
-  focusedIo?: boolean;
 }
 
-const TaskConfiguration = ({
-  taskNode,
-  actions,
-  focusedIo,
-}: TaskConfigurationProps) => {
+const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
   const { name, taskSpec, taskId, state, callbacks } = taskNode;
 
   const { readOnly, runStatus } = state;
@@ -62,11 +57,8 @@ const TaskConfiguration = ({
         {runStatus && <StatusIcon status={runStatus} tooltip label="task" />}
       </div>
 
-      <div className="flex flex-col px-4 gap-4 pb-4 h-full">
-        <Tabs
-          defaultValue={focusedIo || readOnly ? "io" : "details"}
-          className="h-full"
-        >
+      <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4">
+        <Tabs defaultValue="io">
           <TabsList className="mb-2">
             <TabsTrigger value="io" className="flex-1">
               {readOnly ? (
