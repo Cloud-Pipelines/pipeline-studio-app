@@ -37,11 +37,10 @@ export const generateDigest = async (text: string): Promise<string> => {
 };
 
 /**
- * Fetches the component library and stores all components in local storage
+ * Fetches the component library from local storage
  */
-export const fetchAndStoreComponentLibrary =
-  async (): Promise<ComponentLibrary> => {
-    // First check if we already have the library in local storage
+const loadComponentLibraryFromLocalStorage =
+  async (): Promise<ComponentLibrary | null> => {
     const libraryExists = await componentExistsByUrl(COMPONENT_LIBRARY_URL);
 
     if (libraryExists) {
@@ -58,9 +57,24 @@ export const fetchAndStoreComponentLibrary =
       }
     }
 
-    // If not in storage or invalid, fetch from the URL
+    return null;
+  };
+
+/**
+ * Fetches the component library and stores all components in local storage
+ */
+export const fetchAndStoreComponentLibrary =
+  async (): Promise<ComponentLibrary> => {
+    // Try fetch from the URL
     const response = await fetch(COMPONENT_LIBRARY_URL);
     if (!response.ok) {
+      // Fallback to local storage
+      await loadComponentLibraryFromLocalStorage().then((library) => {
+        if (library) {
+          return library;
+        }
+      });
+
       throw new Error(
         `Failed to load component library: ${response.statusText}`,
       );
@@ -70,6 +84,13 @@ export const fetchAndStoreComponentLibrary =
     const obj = loadObjectFromYamlData(arrayBuffer);
 
     if (!isValidComponentLibrary(obj)) {
+      // Fallback to local storage
+      await loadComponentLibraryFromLocalStorage().then((library) => {
+        if (library) {
+          return library;
+        }
+      });
+
       throw new Error("Invalid component library structure");
     }
 
