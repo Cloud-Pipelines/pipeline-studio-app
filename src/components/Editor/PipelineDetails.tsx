@@ -1,8 +1,7 @@
-import { Frown, Network } from "lucide-react";
+import { Network } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import useToastNotification from "@/hooks/useToastNotification";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { getComponentFileFromList } from "@/utils/componentStore";
@@ -14,13 +13,9 @@ import RenamePipeline from "./RenamePipeline";
 
 type PipelineDetailsProps = {
   componentSpec: ComponentSpec;
-  isLoading?: boolean;
 };
 
-const PipelineDetails = ({
-  componentSpec,
-  isLoading,
-}: PipelineDetailsProps) => {
+const PipelineDetails = ({ componentSpec }: PipelineDetailsProps) => {
   const notify = useToastNotification();
 
   // State for file metadata
@@ -52,26 +47,6 @@ const PipelineDetails = ({
     };
     fetchMeta();
   }, [componentSpec?.name]);
-
-  if (!componentSpec) {
-    return (
-      <div className="flex flex-col gap-8 items-center justify-center h-full">
-        <Frown className="w-12 h-12 text-secondary-foreground" />
-        <div className="text-secondary-foreground">
-          Error loading pipeline details.
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Spinner className="mr-2" />
-        <p className="text-secondary-foreground">Loading pipeline details...</p>
-      </div>
-    );
-  }
 
   // Helper for annotations
   const annotations = componentSpec.metadata?.annotations || {};
