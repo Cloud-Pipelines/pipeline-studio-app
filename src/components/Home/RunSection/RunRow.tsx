@@ -1,14 +1,21 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { type MouseEvent } from "react";
+import { type MouseEvent, useCallback } from "react";
 
 import type { PipelineRunResponse } from "@/api/types.gen";
 import { StatusBar, StatusIcon, StatusText } from "@/components/shared/Status";
+import { Button } from "@/components/ui/button";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { TableCell, TableRow } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import useToastNotification from "@/hooks/useToastNotification";
 import { APP_ROUTES } from "@/routes/router";
 import {
   countTaskStatuses,
@@ -19,6 +26,7 @@ import { convertUTCToLocalTime, formatDate } from "@/utils/date";
 
 const RunRow = ({ run }: { run: PipelineRunResponse }) => {
   const navigate = useNavigate();
+  const notify = useToastNotification();
 
   const executionId = `${run.root_execution_id}`;
 
@@ -26,6 +34,19 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
   const { details, state } = data;
 
   const name = details?.task_spec?.componentRef?.spec?.name;
+
+  const createdBy = run.created_by ?? "Unknown user";
+  const truncatedCreatedBy = truncateMiddle(createdBy);
+  const isTruncated = createdBy !== truncatedCreatedBy;
+
+  const handleCopy = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(createdBy);
+      notify(`"${createdBy}" copied to clipboard`, "success");
+    },
+    [createdBy],
+  );
 
   if (isLoading) {
     return (
@@ -61,6 +82,26 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
     },
   };
 
+  const createdByButton = (
+    <Button
+      className="truncate underline"
+      onClick={handleCopy}
+      tabIndex={0}
+      variant="ghost"
+    >
+      {truncatedCreatedBy}
+    </Button>
+  );
+
+  const createdByButtonWithTooltip = (
+    <Tooltip>
+      <TooltipTrigger asChild>{createdByButton}</TooltipTrigger>
+      <TooltipContent>
+        <span>{createdBy}</span>
+      </TooltipContent>
+    </Tooltip>
+  );
+
   return (
     <TableRow
       onClick={(e) => {
@@ -94,9 +135,17 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
           ? `${formatDate(convertUTCToLocalTime(run.created_at).toISOString())}`
           : "Data not found..."}
       </TableCell>
-      <TableCell>{run ? `${run.created_by ?? "Unknown user"}` : ""}</TableCell>
+      <TableCell>
+        {isTruncated ? createdByButtonWithTooltip : createdByButton}
+      </TableCell>
     </TableRow>
   );
 };
 
 export default RunRow;
+
+function truncateMiddle(str: string, maxLength = 28) {
+  if (!str || str.length <= maxLength) return str;
+  const keep = Math.floor((maxLength - 3) / 2);
+  return str.slice(0, keep) + "..." + str.slice(-keep);
+}
