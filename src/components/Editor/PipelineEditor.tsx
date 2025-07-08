@@ -61,11 +61,7 @@ const PipelineEditor = () => {
   return (
     <PipelineRunsProvider pipelineName={componentSpec.name || ""}>
       <ContextPanelProvider
-        defaultContent={
-          <PipelineDetails
-            componentSpec={componentSpec}
-          />
-        }
+        defaultContent={<PipelineDetails componentSpec={componentSpec} />}
       >
         <ComponentLibraryProvider>
           <FlowSidebar />

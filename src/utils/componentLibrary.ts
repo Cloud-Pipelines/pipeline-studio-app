@@ -10,7 +10,7 @@ import type {
 import type { ComponentReference, GraphSpec, TaskSpec } from "./componentSpec";
 import { getAllComponentFilesFromList } from "./componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "./constants";
-import { getComponentByUrl } from "./localforge";
+import { getComponentByUrl } from "./localforage";
 
 export const fetchUserComponents = async (): Promise<ComponentFolder> => {
   try {

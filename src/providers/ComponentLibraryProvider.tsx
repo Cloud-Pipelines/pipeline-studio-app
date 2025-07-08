@@ -35,7 +35,7 @@ import {
 } from "@/utils/componentStore";
 import { DEFAULT_FILTERS, USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 import { getComponentName } from "@/utils/getComponentName";
-import { getComponentByUrl, saveComponent } from "@/utils/localforge";
+import { getComponentByUrl, saveComponent } from "@/utils/localforage";
 import { componentMatchesSearch } from "@/utils/searchUtils";
 
 import { useComponentSpec } from "./ComponentSpecProvider";

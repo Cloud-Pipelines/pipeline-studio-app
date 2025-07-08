@@ -16,7 +16,7 @@ import { generateDigest } from "@/services/componentService";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { deleteComponentFileFromList } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
-import type { UserComponent } from "@/utils/localforge";
+import type { UserComponent } from "@/utils/localforage";
 
 const ComponentDuplicateDialog = ({
   existingComponent,

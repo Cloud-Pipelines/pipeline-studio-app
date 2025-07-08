@@ -6,7 +6,7 @@ import {
   parseComponentData,
 } from "@/services/componentService";
 import type { ComponentSpec } from "@/utils/componentSpec";
-import { getComponentByUrl } from "@/utils/localforge";
+import { getComponentByUrl } from "@/utils/localforage";
 
 const useComponentFromUrl = (url?: string) => {
   const [isLoading, setIsLoading] = useState(true);
