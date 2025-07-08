@@ -2,11 +2,11 @@ import { Frown, Videotape } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
-import { useExecutionStatusQuery } from "@/hooks/useExecutionStatusQuery";
 import {
   countTaskStatuses,
   fetchExecutionInfo,
   getRunStatus,
+  isStatusComplete,
   isStatusInProgress,
 } from "@/services/executionService";
 import { fetchPipelineRunById } from "@/services/pipelineRunService";
@@ -16,6 +16,9 @@ import type { ComponentSpec } from "@/utils/componentSpec";
 import { StatusBar, StatusIcon, StatusText } from "../shared/Status";
 import { TaskImplementation } from "../shared/TaskDetails";
 import { CancelPipelineRunButton } from "./components/CancelPipelineRunButton";
+import { ClonePipelineButton } from "./components/ClonePipelineButton";
+import { InspectPipelineButton } from "./components/InspectPipelineButton";
+import { RerunPipelineButton } from "./components/RerunPipelineButton";
 
 type RunDetailsProps = {
   executionId?: string;
@@ -24,31 +27,34 @@ type RunDetailsProps = {
 export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
 
-  const { data: status } = useExecutionStatusQuery(executionId);
-
   const { data, isLoading, error } = fetchExecutionInfo(executionId);
   const { details, state } = data;
 
   const runId = details?.pipeline_run_id;
 
-  const componentSpec = details?.task_spec?.componentRef?.spec;
+  const untypedComponentSpec = details?.task_spec?.componentRef?.spec;
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetchPipelineRunById(`${runId}`);
-      if (!res) return;
+      if (!runId) {
+        setMetadata(null);
+        return;
+      }
 
-      const runData = res as PipelineRun;
+      const res = await fetchPipelineRunById(runId);
 
-      runData.status = status;
+      if (!res) {
+        setMetadata(null);
+        return;
+      }
 
-      setMetadata(runData);
+      setMetadata(res);
     };
 
     fetchData();
-  }, [runId, status]);
+  }, [runId]);
 
-  if (error || !details || !state || !componentSpec) {
+  if (error || !details || !state || !untypedComponentSpec) {
     return (
       <div className="flex flex-col gap-8 items-center justify-center h-full">
         <Frown className="w-12 h-12 text-gray-500" />
@@ -66,10 +72,13 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
     );
   }
 
+  const componentSpec = untypedComponentSpec as ComponentSpec;
+
   const statusCounts = countTaskStatuses(details, state);
   const runStatus = getRunStatus(statusCounts);
 
   const isInProgress = isStatusInProgress(runStatus);
+  const isComplete = isStatusComplete(runStatus);
 
   const annotations = componentSpec.metadata?.annotations || {};
 
@@ -117,6 +126,15 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
         </div>
       )}
 
+      <div>
+        <div className="flex gap-2">
+          <InspectPipelineButton pipelineName={componentSpec.name} />
+          <ClonePipelineButton componentSpec={componentSpec} />
+          {isInProgress && <CancelPipelineRunButton runId={runId} />}
+          {isComplete && <RerunPipelineButton componentSpec={componentSpec} />}
+        </div>
+      </div>
+
       {componentSpec.description && (
         <div>
           <h3 className="text-md font-medium mb-1">Description</h3>
@@ -128,15 +146,13 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
 
       <div>
         <div className="flex gap-2">
-          <h3 className="text-md font-medium">Status: {status} </h3>
+          <h3 className="text-md font-medium">Status: {runStatus} </h3>
           <StatusText statusCounts={statusCounts} />
         </div>
         <div className="flex flex-col gap-2">
           <StatusBar statusCounts={statusCounts} />
         </div>
       </div>
-
-      {isInProgress && <CancelPipelineRunButton runId={runId} />}
 
       {Object.keys(annotations).length > 0 && (
         <div>
@@ -220,7 +236,7 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
           <div className="mt-1 h-full min-h-0 flex-1">
             <TaskImplementation
               displayName={componentSpec.name ?? "Pipeline"}
-              componentSpec={componentSpec as ComponentSpec}
+              componentSpec={componentSpec}
             />
           </div>
         </div>
@@ -228,5 +244,3 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
     </div>
   );
 };
-
-export default RunDetails;

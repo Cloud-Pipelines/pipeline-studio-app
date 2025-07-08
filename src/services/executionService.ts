@@ -129,6 +129,14 @@ export const isStatusInProgress = (status: string) => {
   return status === STATUS.RUNNING || status === STATUS.WAITING;
 };
 
+export const isStatusComplete = (status: string) => {
+  return (
+    status === STATUS.SUCCEEDED ||
+    status === STATUS.FAILED ||
+    status === STATUS.CANCELLED
+  );
+};
+
 /**
  * Count task statuses from API response
  */
