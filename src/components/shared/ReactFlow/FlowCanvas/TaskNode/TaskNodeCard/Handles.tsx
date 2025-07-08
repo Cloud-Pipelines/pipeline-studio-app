@@ -128,7 +128,6 @@ export const InputHandle = ({
           "flex flex-row items-center rounded-md cursor-pointer relative",
           onLabelClick && "hover:bg-gray-300",
         )}
-        onClick={onLabelClick}
       >
         <div className="flex flex-row w-full gap-0.5 items-center justify-between">
           <div
