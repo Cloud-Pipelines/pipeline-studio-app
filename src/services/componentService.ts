@@ -13,7 +13,7 @@ import {
   getComponentByUrl,
   saveComponent,
   type UserComponent,
-} from "@/utils/localforge";
+} from "@/utils/localforage";
 
 const COMPONENT_LIBRARY_URL = "/component_library.yaml";
 

@@ -41,9 +41,7 @@ const PipelineRunPage = ({ rootExecutionId }: { rootExecutionId: string }) => {
   return (
     <PipelineRunsProvider pipelineName={componentSpec.name || ""}>
       <ContextPanelProvider
-        defaultContent={
-          <RunDetails executionId={rootExecutionId} />
-        }
+        defaultContent={<RunDetails executionId={rootExecutionId} />}
       >
         <ComponentLibraryProvider>
           <ResizablePanelGroup direction="horizontal">
