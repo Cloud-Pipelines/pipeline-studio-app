@@ -17,12 +17,10 @@ import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/routes/router";
-import { useSavePipeline } from "@/services/pipelineService";
 import { componentSpecToYaml } from "@/utils/componentStore";
 
 const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
-  const { componentSpec } = useComponentSpec();
-  const { savePipeline } = useSavePipeline(componentSpec);
+  const { componentSpec, saveComponentSpec } = useComponentSpec();
   const notify = useToastNotification();
   const navigate = useNavigate();
   const store = useStoreApi();
@@ -33,12 +31,13 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
   };
 
   const handleSavePipeline = async () => {
-    await savePipeline();
-    notifyPipelineSaved(componentSpec?.name ?? "Untitled Pipeline");
+    const name = componentSpec?.name ?? "Untitled Pipeline";
+    await saveComponentSpec(name);
+    notifyPipelineSaved(name);
   };
 
   const handleSavePipelineAs = async (name: string) => {
-    await savePipeline(name);
+    await saveComponentSpec(name);
     notifyPipelineSaved(name);
 
     navigate({

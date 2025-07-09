@@ -40,6 +40,7 @@ interface ComponentSpecContextType {
   refetch: () => void;
   updateGraphSpec: (newGraphSpec: GraphSpec) => void;
   saveComponentSpec: (name: string) => Promise<void>;
+  resetComponentSpec: () => void;
   taskStatusMap: Map<string, string>;
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
 }
@@ -125,9 +126,18 @@ export const ComponentSpecProvider = ({
       );
 
       setOriginalComponentSpec(componentSpec);
+
+      refetch();
     },
-    [componentSpec],
+    [componentSpec, refetch, readOnly],
   );
+
+  const resetComponentSpec = useCallback(() => {
+    setComponentSpec(originalComponentSpec);
+    setIsDirty(false);
+
+    refetch();
+  }, [originalComponentSpec]);
 
   const updateGraphSpec = useCallback((newGraphSpec: GraphSpec) => {
     setComponentSpec((prevSpec) => ({
@@ -164,6 +174,7 @@ export const ComponentSpecProvider = ({
       refetch,
       updateGraphSpec,
       saveComponentSpec,
+      resetComponentSpec,
       taskStatusMap,
       setTaskStatusMap,
     }),
@@ -176,6 +187,7 @@ export const ComponentSpecProvider = ({
       refetch,
       updateGraphSpec,
       saveComponentSpec,
+      resetComponentSpec,
       taskStatusMap,
       setTaskStatusMap,
     ],
