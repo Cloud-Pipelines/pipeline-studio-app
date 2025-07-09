@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 
+import { useAutoSave } from "@/hooks/useAutoSave";
 import { loadPipelineByName } from "@/services/pipelineService";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
@@ -115,18 +116,28 @@ export const ComponentSpecProvider = ({
         return;
       }
 
-      componentSpec.name = name;
+      const specWithName = { ...componentSpec, name };
 
-      const componentText = componentSpecToYaml(componentSpec);
+      const componentText = componentSpecToYaml(specWithName);
       await writeComponentToFileListFromText(
         USER_PIPELINES_LIST_NAME,
         name,
         componentText,
       );
 
-      setOriginalComponentSpec(componentSpec);
+      setOriginalComponentSpec(specWithName);
     },
     [componentSpec],
+  );
+
+  useAutoSave(
+    (spec) => {
+      if (spec.name) {
+        saveComponentSpec(spec.name);
+      }
+    },
+    componentSpec,
+    isDirty && !!componentSpec.name,
   );
 
   const updateGraphSpec = useCallback((newGraphSpec: GraphSpec) => {

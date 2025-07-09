@@ -22,13 +22,14 @@ const TaskNodeCard = () => {
   const [expandedInputs, setExpandedInputs] = useState(false);
   const [expandedOutputs, setExpandedOutputs] = useState(false);
 
-  const { name, state, callbacks } = taskNode;
+  const { name, state, callbacks, nodeId } = taskNode;
   const { dimensions, selected, highlighted, isCustomComponent } = state;
 
   const taskConfigMarkup = useMemo(
     () => (
       <TaskConfiguration
         taskNode={taskNode}
+        key={nodeId}
         actions={[
           {
             children: (
@@ -54,7 +55,7 @@ const TaskNodeCard = () => {
         ]}
       />
     ),
-    [taskNode, callbacks, isCustomComponent],
+    [nodeId, callbacks.onDuplicate, callbacks.onUpgrade, isCustomComponent],
   );
 
   const handleInputSectionClick = useCallback(() => {
@@ -81,7 +82,7 @@ const TaskNodeCard = () => {
     if (selected) {
       setContent(taskConfigMarkup);
     }
-  }, [selected, taskConfigMarkup]);
+  }, [selected, setContent, taskConfigMarkup]);
 
   return (
     <Card
