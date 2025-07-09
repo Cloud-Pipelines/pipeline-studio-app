@@ -57,7 +57,10 @@ export async function saveComponent(component: Component): Promise<Component> {
   };
 
   await componentStore.setItem(component.id, updatedComponent);
-  await componentUrlStore.setItem(component.url, component.id);
+
+  if (component.url.trim() !== "") {
+    await componentUrlStore.setItem(component.url, component.id);
+  }
 
   return updatedComponent;
 }

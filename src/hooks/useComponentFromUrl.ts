@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
-  fetchAndStoreComponent,
+  fetchAndStoreComponentByUrl,
   generateDigest,
   parseComponentData,
 } from "@/services/componentService";
@@ -51,7 +51,7 @@ const useComponentFromUrl = (url?: string) => {
         }
 
         // If component doesn't exist in storage or parsing failed, fetch and store it
-        const spec = await fetchAndStoreComponent(url);
+        const spec = await fetchAndStoreComponentByUrl(url);
         if (signal.aborted) return;
 
         if (spec) {
