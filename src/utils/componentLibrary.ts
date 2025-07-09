@@ -117,13 +117,29 @@ export const fetchFavoriteComponents = (
   return favoritesFolder;
 };
 
-export async function populateComponentRefsFromUrls<
+export async function populateComponentRefs<
   T extends ComponentLibrary | ComponentFolder,
 >(libraryOrFolder: T): Promise<T> {
   async function populateRef(
     ref: ComponentReference,
   ): Promise<ComponentReference> {
-    if ((!ref.spec || !ref.digest || !ref.text) && ref.url) {
+    if (ref.spec) {
+      return ref;
+    }
+
+    // if there is no spec, fallback to text
+    if (ref.text) {
+      const parsed = parseComponentData(ref.text);
+      const digest = await generateDigest(ref.text);
+      return {
+        ...ref,
+        spec: parsed || ref.spec,
+        digest: digest || ref.digest,
+      };
+    }
+
+    // if there is no text, try to fetch by URL
+    if (ref.url) {
       const stored = await getComponentByUrl(ref.url);
       if (stored && stored.data) {
         const parsed = parseComponentData(stored.data);
@@ -137,6 +153,7 @@ export async function populateComponentRefsFromUrls<
         };
       }
     }
+
     return ref;
   }
 
@@ -151,7 +168,7 @@ export async function populateComponentRefsFromUrls<
     "folders" in libraryOrFolder && Array.isArray(libraryOrFolder.folders)
       ? await Promise.all(
           libraryOrFolder.folders.map((folder) =>
-            populateComponentRefsFromUrls(folder),
+            populateComponentRefs(folder),
           ),
         )
       : [];

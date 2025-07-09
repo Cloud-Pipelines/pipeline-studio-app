@@ -21,7 +21,7 @@ import {
   fetchUserComponents,
   filterToUniqueByDigest,
   flattenFolders,
-  populateComponentRefsFromUrls,
+  populateComponentRefs,
 } from "@/utils/componentLibrary";
 import type { ComponentReference } from "@/utils/componentSpec";
 import {
@@ -132,7 +132,7 @@ export const ComponentLibraryProvider = ({
     const { data: updatedLibrary } = await refetchLibrary();
 
     if (updatedLibrary) {
-      populateComponentRefsFromUrls(updatedLibrary).then((result) => {
+      populateComponentRefs(updatedLibrary).then((result) => {
         setComponentLibrary(result);
       });
     }
@@ -142,7 +142,7 @@ export const ComponentLibraryProvider = ({
     const { data: updatedUserComponents } = await refetchUserComponents();
 
     if (updatedUserComponents) {
-      populateComponentRefsFromUrls(updatedUserComponents).then((result) => {
+      populateComponentRefs(updatedUserComponents).then((result) => {
         setUserComponentsFolder(result);
       });
     }
@@ -395,7 +395,7 @@ export const ComponentLibraryProvider = ({
       setComponentLibrary(undefined);
       return;
     }
-    populateComponentRefsFromUrls(rawComponentLibrary).then((result) => {
+    populateComponentRefs(rawComponentLibrary).then((result) => {
       setComponentLibrary(result);
     });
   }, [rawComponentLibrary]);
@@ -405,7 +405,7 @@ export const ComponentLibraryProvider = ({
       setUserComponentsFolder(undefined);
       return;
     }
-    populateComponentRefsFromUrls(rawUserComponentsFolder).then((result) => {
+    populateComponentRefs(rawUserComponentsFolder).then((result) => {
       setUserComponentsFolder(result);
     });
   }, [rawUserComponentsFolder]);
