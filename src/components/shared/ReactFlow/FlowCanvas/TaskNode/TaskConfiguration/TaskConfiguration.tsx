@@ -57,8 +57,8 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
         {runStatus && <StatusIcon status={runStatus} tooltip label="task" />}
       </div>
 
-      <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4">
-        <Tabs defaultValue="io">
+      <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4 h-full">
+        <Tabs defaultValue="io" className="h-full">
           <TabsList className="mb-2">
             <TabsTrigger value="io" className="flex-1">
               {readOnly ? (
