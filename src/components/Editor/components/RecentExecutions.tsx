@@ -35,11 +35,11 @@ const RecentExecutions = () => {
   if (isLoading) {
     return (
       <div>
-        <h3 className="text-md font-medium mb-1">Recent Executions</h3>
+        <h3 className="text-md font-medium mb-1">Recent Pipeline Runs</h3>
         <div className="h-48 bg-gray-100 border border-gray-300 rounded p-2 flex items-center justify-center">
           <Spinner className="mr-2" />
           <p className="text-secondary-foreground">
-            Loading recent executions...
+            Loading recent pipeline runs...
           </p>
         </div>
       </div>
@@ -49,7 +49,7 @@ const RecentExecutions = () => {
   if (error) {
     return (
       <div>
-        <h3 className="text-md font-medium mb-1">Recent Executions</h3>
+        <h3 className="text-md font-medium mb-1">Recent Pipeline Runs</h3>
         <div className="h-48 bg-gray-100 border border-gray-300 rounded p-2 flex items-center justify-center">
           <p className="text-destructive">{error}</p>
         </div>
@@ -59,7 +59,7 @@ const RecentExecutions = () => {
 
   return (
     <div>
-      <h3 className="text-md font-medium mb-1">Recent Executions</h3>
+      <h3 className="text-md font-medium mb-1">Recent Pipeline Runs</h3>
       {recentRuns.length === 0 ? (
         <div className="text-xs text-muted-foreground">No runs yet.</div>
       ) : (
@@ -67,7 +67,7 @@ const RecentExecutions = () => {
           {runOverviews}
           {remainingRuns > 0 && (
             <div className="mt-2 text-xs text-muted-foreground w.full text-center">
-              +{remainingRuns} more executions
+              +{remainingRuns} more runs
             </div>
           )}
         </ScrollArea>
