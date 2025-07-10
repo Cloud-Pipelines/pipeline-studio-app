@@ -60,9 +60,7 @@ const PipelineEditor = () => {
 
   return (
     <PipelineRunsProvider pipelineName={componentSpec.name || ""}>
-      <ContextPanelProvider
-        defaultContent={<PipelineDetails componentSpec={componentSpec} />}
-      >
+      <ContextPanelProvider defaultContent={<PipelineDetails />}>
         <ComponentLibraryProvider>
           <FlowSidebar />
           <ResizablePanelGroup direction="horizontal">

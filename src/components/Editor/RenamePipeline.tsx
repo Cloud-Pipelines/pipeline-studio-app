@@ -3,18 +3,15 @@ import { Edit3 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import useToastNotification from "@/hooks/useToastNotification";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { APP_ROUTES } from "@/routes/router";
-import type { ComponentSpec } from "@/utils/componentSpec";
 import { renameComponentFileInList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 import { PipelineNameDialog } from "../shared/Dialogs";
 
-type RenamePipelineProps = {
-  componentSpec: ComponentSpec;
-};
-
-export const RenamePipeline = ({ componentSpec }: RenamePipelineProps) => {
+export const RenamePipeline = () => {
+  const { componentSpec } = useComponentSpec();
   const notify = useToastNotification();
   const navigate = useNavigate();
 
