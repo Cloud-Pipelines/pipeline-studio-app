@@ -44,6 +44,9 @@ export const ArgumentInputField = ({
 }) => {
   const [inputValue, setInputValue] = useState(getInputValue(argument) ?? "");
   const [showDescription, setShowDescription] = useState(false);
+  const [lastSubmittedValue, setLastSubmittedValue] = useState<string>(
+    getInputValue(argument) ?? "",
+  );
 
   const undoValue = useMemo(() => argument, []);
   const hint = argument.inputSpec.annotations?.hint as string | undefined;
@@ -54,12 +57,16 @@ export const ArgumentInputField = ({
   };
 
   const handleBlur = () => {
+    const value = inputValue.trim();
+
     const updatedArgument = {
       ...argument,
-      value: inputValue.trim(),
+      value,
+      isRemoved: value === lastSubmittedValue ? argument.isRemoved : false,
     };
 
     onSave(updatedArgument);
+    setLastSubmittedValue(value);
   };
 
   const handleRemove = () => {
@@ -87,7 +94,9 @@ export const ArgumentInputField = ({
     onSave({ ...argument, value: defaultValue });
   };
 
-  const handleUndo = () => {
+  const handleUndo = (e: MouseEvent) => {
+    e.stopPropagation();
+
     if (disabled) return;
 
     setInputValue(getInputValue(undoValue) ?? "");
@@ -128,7 +137,7 @@ export const ArgumentInputField = ({
   return (
     <div className="relative w-full flex-col gap-2">
       <div
-        className="flex w-full items-center justify-between gap-2 py-1 rounded-md hover:bg-secondary/40 cursor-pointer"
+        className="flex w-full items-center justify-between gap-2 py-1 rounded-md hover:bg-secondary/70 cursor-pointer"
         onClick={handleBackgroundClick}
       >
         <div className="flex items-center gap-2 justify-between w-40 pr-2">
@@ -198,6 +207,7 @@ export const ArgumentInputField = ({
                   argument.isRemoved &&
                     argument.inputSpec.optional &&
                     "border-gray-100 text-muted-foreground",
+                  argument.isRemoved && "opacity-50 focus:opacity-100",
                 )}
                 disabled={disabled}
               />

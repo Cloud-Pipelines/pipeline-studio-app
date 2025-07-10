@@ -42,7 +42,7 @@ export const InputHandle = ({
   const handleId = getInputHandleId(input.name);
 
   const missing = invalid ? "bg-red-700!" : "bg-gray-500!";
-  const hasValue = value !== undefined && value !== "" && value !== null;
+  const hasValue = value !== undefined && value !== null;
   const hasDefault = input.default !== undefined && input.default !== "";
 
   const handleHandleClick = useCallback(
@@ -142,6 +142,7 @@ export const InputHandle = ({
                 onLabelClick && !selected && !highlight && "hover:bg-gray-300",
                 selected || active ? "bg-blue-200" : "bg-gray-200",
                 highlight && "bg-green-200",
+                !hasValue && hasDefault && "opacity-50 italic",
               )}
             >
               {input.name.replace(/_/g, " ")}
@@ -152,7 +153,7 @@ export const InputHandle = ({
               <div
                 className={cn(
                   "text-xs text-gray-800! truncate inline-block text-right pr-2",
-                  !hasValue && "text-gray-500!",
+                  !hasValue && "text-gray-400! italic",
                 )}
               >
                 {hasValue ? value : input.default}
