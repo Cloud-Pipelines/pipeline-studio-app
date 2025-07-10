@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { loadPipelineByName } from "@/services/pipelineService";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
@@ -43,6 +44,10 @@ interface ComponentSpecContextType {
   saveComponentSpec: (name: string) => Promise<void>;
   taskStatusMap: Map<string, string>;
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 const ComponentSpecContext = createContext<
@@ -61,6 +66,7 @@ export const ComponentSpecProvider = ({
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
     spec ?? EMPTY_GRAPH_COMPONENT_SPEC,
   );
+
   const [taskStatusMap, setTaskStatusMap] = useState<Map<string, string>>(
     new Map(),
   );
@@ -69,6 +75,15 @@ export const ComponentSpecProvider = ({
 
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Initialize undo/redo functionality
+  const {
+    saveVersion,
+    undo: undoAction,
+    redo: redoAction,
+    canUndo,
+    canRedo,
+  } = useUndoRedo(50);
 
   const graphSpec = useMemo(() => {
     if (
@@ -126,13 +141,14 @@ export const ComponentSpecProvider = ({
       );
 
       setOriginalComponentSpec(specWithName);
+      setComponentSpec(specWithName);
     },
     [componentSpec],
   );
 
   useAutoSave(
     (spec) => {
-      if (spec.name) {
+      if (spec.name && isDirty) {
         saveComponentSpec(spec.name);
       }
     },
@@ -140,15 +156,37 @@ export const ComponentSpecProvider = ({
     isDirty && !!componentSpec.name,
   );
 
-  const updateGraphSpec = useCallback((newGraphSpec: GraphSpec) => {
-    setComponentSpec((prevSpec) => ({
-      ...prevSpec,
-      implementation: {
-        ...prevSpec.implementation,
-        graph: newGraphSpec,
-      },
-    }));
-  }, []);
+  // Undo/Redo functions
+  const handleUndo = useCallback(() => {
+    const previousVersion = undoAction();
+    if (previousVersion) {
+      setComponentSpec(previousVersion);
+      setOriginalComponentSpec(previousVersion);
+      setIsDirty(false);
+    }
+  }, [undoAction]);
+
+  const handleRedo = useCallback(() => {
+    const nextVersion = redoAction();
+    if (nextVersion) {
+      setComponentSpec(nextVersion);
+      setOriginalComponentSpec(nextVersion);
+      setIsDirty(false);
+    }
+  }, [redoAction]);
+
+  const updateGraphSpec = useCallback(
+    (newGraphSpec: GraphSpec) => {
+      handleSetComponentSpec({
+        ...componentSpec,
+        implementation: {
+          ...componentSpec.implementation,
+          graph: newGraphSpec,
+        },
+      });
+    },
+    [componentSpec, saveVersion],
+  );
 
   useEffect(() => {
     if (componentSpec !== originalComponentSpec) {
@@ -159,16 +197,49 @@ export const ComponentSpecProvider = ({
   }, [componentSpec, originalComponentSpec, setIsDirty]);
 
   useEffect(() => {
-    setComponentSpec(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
-    setOriginalComponentSpec(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
+    const initialSpec = spec ?? EMPTY_GRAPH_COMPONENT_SPEC;
+    handleSetComponentSpec(initialSpec);
+    setOriginalComponentSpec(initialSpec);
     setIsDirty(false);
     setIsLoading(false);
   }, [spec]);
 
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "z") {
+        event.preventDefault();
+        if (event.shiftKey) {
+          // Cmd/Ctrl + Shift + Z = Redo
+          handleRedo();
+        } else {
+          // Cmd/Ctrl + Z = Undo
+          handleUndo();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleUndo, handleRedo]);
+
+  const handleSetComponentSpec = (spec: ComponentSpec) => {
+    // const isDifferent = JSON.stringify(spec) !== JSON.stringify(componentSpec);
+    const isDefault = JSON.stringify(componentSpec) === JSON.stringify(EMPTY_GRAPH_COMPONENT_SPEC);
+
+    const shouldSaveVersion = !isDefault;
+
+    if (shouldSaveVersion) {
+      saveVersion(componentSpec);
+    }
+
+    setComponentSpec(spec);
+  };
+
   const value = useMemo(
     () => ({
       componentSpec,
-      setComponentSpec,
+      setComponentSpec: handleSetComponentSpec,
       isDirty,
       graphSpec,
       isLoading,
@@ -177,6 +248,10 @@ export const ComponentSpecProvider = ({
       saveComponentSpec,
       taskStatusMap,
       setTaskStatusMap,
+      undo: handleUndo,
+      redo: handleRedo,
+      canUndo: canUndo(),
+      canRedo: canRedo(),
     }),
     [
       componentSpec,
@@ -189,6 +264,10 @@ export const ComponentSpecProvider = ({
       saveComponentSpec,
       taskStatusMap,
       setTaskStatusMap,
+      handleUndo,
+      handleRedo,
+      canUndo,
+      canRedo,
     ],
   );
 
