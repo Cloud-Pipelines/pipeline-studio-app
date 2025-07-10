@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import useToastNotification from "@/hooks/useToastNotification";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { getComponentFileFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
@@ -11,11 +11,8 @@ import { TaskImplementation } from "../shared/TaskDetails";
 import RecentExecutions from "./components/RecentExecutions";
 import RenamePipeline from "./RenamePipeline";
 
-type PipelineDetailsProps = {
-  componentSpec: ComponentSpec;
-};
-
-const PipelineDetails = ({ componentSpec }: PipelineDetailsProps) => {
+const PipelineDetails = () => {
+  const { componentSpec } = useComponentSpec();
   const notify = useToastNotification();
 
   // State for file metadata
@@ -59,7 +56,7 @@ const PipelineDetails = ({ componentSpec }: PipelineDetailsProps) => {
         <h2 className="text-lg font-semibold">
           {componentSpec.name ?? "Unnamed Pipeline"}
         </h2>
-        <RenamePipeline componentSpec={componentSpec} />
+        <RenamePipeline />
       </div>
 
       {/* General Metadata */}
