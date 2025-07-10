@@ -70,7 +70,7 @@ interface OutputPathPlaceholder {
    */
   outputPath: string;
 }
-type StringOrPlaceholder =
+export type StringOrPlaceholder =
   | string
   | InputValuePlaceholder
   | InputPathPlaceholder
@@ -301,6 +301,10 @@ export interface GraphImplementation {
 // Type guards
 export const isValidComponentSpec = (obj: any): obj is ComponentSpec =>
   typeof obj === "object" && "implementation" in obj;
+
+export const isContainerImplementation = (
+  implementation: ImplementationType,
+): implementation is ContainerImplementation => "container" in implementation;
 
 export const isGraphImplementation = (
   implementation: ImplementationType,
