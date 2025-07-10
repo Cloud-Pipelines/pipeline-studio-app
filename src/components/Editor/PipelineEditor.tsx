@@ -23,6 +23,7 @@ import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
 
 import { CollapsibleContextPanel } from "../shared/ContextPanel/CollapsibleContextPanel";
+import { UndoRedoDebug } from "../shared/UndoRedoDebug";
 import PipelineDetails from "./PipelineDetails";
 
 const GRID_SIZE = 10;
@@ -85,6 +86,7 @@ const PipelineEditor = () => {
           </ResizablePanelGroup>
         </ComponentLibraryProvider>
       </ContextPanelProvider>
+      <UndoRedoDebug />
     </PipelineRunsProvider>
   );
 };
