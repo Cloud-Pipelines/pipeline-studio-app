@@ -50,7 +50,7 @@ describe("<CancelPipelineRunButton/>", () => {
       renderWithQueryClient(<CancelPipelineRunButton runId={null} />);
 
       const button = screen.getByTestId("cancel-pipeline-run-button");
-      expect(button).toBeInTheDocument();
+      expect(button).toBeDefined();
     });
   });
 
@@ -64,14 +64,12 @@ describe("<CancelPipelineRunButton/>", () => {
       await act(() => fireEvent.click(button));
 
       // assert
-      expect(
-        screen.getByRole("heading", { name: "Cancel run" }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Cancel run" })).toBeDefined();
       expect(
         screen.getByText(
           "The run will be scheduled for cancellation. This action cannot be undone.",
         ),
-      ).toBeInTheDocument();
+      ).toBeDefined();
     });
 
     test("closes confirmation dialog when cancel is clicked", async () => {
@@ -81,17 +79,13 @@ describe("<CancelPipelineRunButton/>", () => {
 
       // act
       await act(() => fireEvent.click(button));
-      expect(
-        screen.getByRole("heading", { name: "Cancel run" }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Cancel run" })).toBeDefined();
 
       const cancelButton = screen.getByRole("button", { name: "Cancel" });
       await act(() => fireEvent.click(cancelButton));
 
       // assert
-      expect(
-        screen.queryByRole("heading", { name: "Cancel run" }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "Cancel run" })).toBeNull();
     });
   });
 

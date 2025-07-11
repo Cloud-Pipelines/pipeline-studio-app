@@ -46,6 +46,7 @@ import { getUpgradeConfirmationDetails } from "./ConfirmationDialogs/UpgradeComp
 import SmoothEdge from "./Edges/SmoothEdge";
 import GhostNode from "./GhostNode/GhostNode";
 import HintNode from "./GhostNode/HintNode";
+import IONode from "./IONode/IONode";
 import SelectionToolbar from "./SelectionToolbar";
 import TaskNode from "./TaskNode/TaskNode";
 import type { NodesAndEdges } from "./types";
@@ -67,6 +68,8 @@ const nodeTypes: Record<string, ComponentType<any>> = {
   task: TaskNode,
   hint: HintNode,
   ghost: GhostNode,
+  input: IONode,
+  output: IONode,
 };
 const edgeTypes: Record<string, ComponentType<any>> = {
   customEdge: SmoothEdge,

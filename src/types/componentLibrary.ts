@@ -1,5 +1,9 @@
 import type { LucideProps } from "lucide-react";
-import type { ChangeEvent, ForwardRefExoticComponent } from "react";
+import type {
+  ChangeEvent,
+  ForwardRefExoticComponent,
+  ReactElement,
+} from "react";
 
 import type { ComponentReference } from "@/utils/componentSpec";
 
@@ -22,8 +26,16 @@ export type ComponentFolder = {
   isUserFolder?: boolean;
 };
 
+// Special type for UI components that can include React elements
+export type UIComponentFolder = {
+  name: string;
+  components?: (ComponentReference | ReactElement)[];
+  folders?: UIComponentFolder[];
+  isUserFolder?: boolean;
+};
+
 export type FolderItemProps = {
-  folder: ComponentFolder;
+  folder: UIComponentFolder;
   icon?: ForwardRefExoticComponent<Omit<LucideProps, "ref">>;
 };
 

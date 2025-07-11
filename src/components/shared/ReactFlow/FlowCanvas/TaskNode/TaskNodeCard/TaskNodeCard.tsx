@@ -58,6 +58,12 @@ const TaskNodeCard = () => {
     [nodeId, callbacks.onDuplicate, callbacks.onUpgrade, isCustomComponent],
   );
 
+  useEffect(() => {
+    if (selected) {
+      setContent(taskConfigMarkup);
+    }
+  }, [selected, taskConfigMarkup]);
+
   const handleInputSectionClick = useCallback(() => {
     setExpandedInputs((prev) => !prev);
   }, []);

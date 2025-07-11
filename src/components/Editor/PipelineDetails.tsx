@@ -1,19 +1,49 @@
-import { Network } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useReactFlow } from "@xyflow/react";
+import { Frown, Network } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
+import { getOutputConnectedDetails } from "@/components/shared/ReactFlow/FlowCanvas/utils/getOutputConnectedDetails";
 import { Button } from "@/components/ui/button";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { useContextPanel } from "@/providers/ContextPanelProvider";
+import {
+  type InputSpec,
+  type OutputSpec,
+  type TypeSpecType,
+} from "@/utils/componentSpec";
 import { getComponentFileFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import { deselectAllNodes } from "@/utils/flowUtils";
 
 import { TaskImplementation } from "../shared/TaskDetails";
 import RecentExecutions from "./components/RecentExecutions";
+import { InputValueEditor } from "./InputValueEditor/InputValueEditor";
+import { OutputNameEditor } from "./OutputNameEditor";
 import RenamePipeline from "./RenamePipeline";
 
 const PipelineDetails = () => {
-  const { componentSpec } = useComponentSpec();
+  const { setNodes } = useReactFlow();
+
+  const { setContent, clearContent } = useContextPanel();
+  const { componentSpec, graphSpec } = useComponentSpec();
+
   const notify = useToastNotification();
+
+  // Utility function to convert TypeSpecType to string
+  const typeSpecToString = (typeSpec?: TypeSpecType): string => {
+    if (typeSpec === undefined) {
+      return "Any";
+    }
+    if (typeof typeSpec === "string") {
+      return typeSpec;
+    }
+    return JSON.stringify(typeSpec);
+  };
+
+  const handleCancel = () => {
+    deselectNode();
+  };
 
   // State for file metadata
   const [fileMeta, setFileMeta] = useState<{
@@ -22,6 +52,11 @@ const PipelineDetails = () => {
     createdBy?: string;
     digest?: string;
   }>({});
+
+  const deselectNode = useCallback(() => {
+    setNodes(deselectAllNodes);
+    clearContent();
+  }, [setNodes]);
 
   // Fetch file metadata on mount or when componentSpec.name changes
   useEffect(() => {
@@ -45,7 +80,44 @@ const PipelineDetails = () => {
     fetchMeta();
   }, [componentSpec?.name]);
 
-  // Helper for annotations
+  const handleInputEdit = (input: InputSpec) => {
+    setContent(
+      <InputValueEditor
+        key={input.name}
+        input={input}
+        onSave={deselectNode}
+        onCancel={handleCancel}
+      />,
+    );
+  };
+
+  const handleOutputEdit = (output: OutputSpec) => {
+    const outputConnectedDetails = getOutputConnectedDetails(
+      graphSpec,
+      output.name,
+    );
+    setContent(
+      <OutputNameEditor
+        connectedDetails={outputConnectedDetails}
+        key={output.name}
+        output={output}
+        onSave={deselectNode}
+        onCancel={handleCancel}
+      />,
+    );
+  };
+
+  if (!componentSpec) {
+    return (
+      <div className="flex flex-col gap-8 items-center justify-center h-full">
+        <Frown className="w-12 h-12 text-secondary-foreground" />
+        <div className="text-secondary-foreground">
+          Error loading pipeline details.
+        </div>
+      </div>
+    );
+  }
+
   const annotations = componentSpec.metadata?.annotations || {};
 
   return (
@@ -134,29 +206,39 @@ const PipelineDetails = () => {
       {/* Artifacts (Inputs & Outputs) */}
       <div>
         <h3 className="text-md font-medium mb-1">Artifacts</h3>
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-col">
           <div className="flex-1">
             <h4 className="text-sm font-semibold mb-1">Inputs</h4>
             {componentSpec.inputs && componentSpec.inputs.length > 0 ? (
-              <ul className="list-disc list-inside text-sm text-secondary-foreground">
-                {componentSpec.inputs.map((input) => (
-                  <li key={input.name}>
-                    <span className="font-semibold">{input.name}</span>
-                    {input.type && (
-                      <span className="ml-2 text-muted-foreground">
-                        (
-                        {typeof input.type === "string" ? input.type : "object"}
-                        )
-                      </span>
-                    )}
-                    {input.description && (
-                      <div className="text-xs text-secondary-foreground ml-4">
-                        {input.description}
+              <div className="flex flex-col">
+                {componentSpec.inputs.map((input) => {
+                  return (
+                    <div
+                      className="flex flex-row justify-between even:bg-white odd:bg-gray-100 gap-1 px-2 py-0 rounded-xs items-center"
+                      key={input.name}
+                    >
+                      <div className="text-xs flex-1 truncate max-w-[200px]">
+                        <span className="font-semibold">{input.name}:</span>{" "}
+                        {input.value || input.default || "No value"}
                       </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
+
+                      <div className="text-xs flex-1 font-mono truncate max-w-[100px]">
+                        <span className="font-semibold">Type:</span>{" "}
+                        {typeSpecToString(input?.type)}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-xs text-muted-foreground cursor-pointer hover:bg-transparent"
+                        size="sm"
+                        onClick={() => handleInputEdit(input)}
+                      >
+                        Edit
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
               <div className="text-xs text-muted-foreground">No inputs</div>
             )}
@@ -164,27 +246,39 @@ const PipelineDetails = () => {
           <div className="flex-1">
             <h4 className="text-sm font-semibold mb-1">Outputs</h4>
             {componentSpec.outputs && componentSpec.outputs.length > 0 ? (
-              <ul className="list-disc list-inside text-sm text-secondary-foreground">
+              <div className="flex flex-col">
                 {componentSpec.outputs.map((output) => (
-                  <li key={output.name}>
-                    <span className="font-semibold">{output.name}</span>
-                    {output.type && (
-                      <span className="ml-2 text-muted-foreground">
-                        (
-                        {typeof output.type === "string"
-                          ? output.type
-                          : "object"}
-                        )
-                      </span>
-                    )}
-                    {output.description && (
-                      <div className="text-xs text-secondary-foreground ml-4">
-                        {output.description}
-                      </div>
-                    )}
-                  </li>
+                  <div
+                    className="flex flex-row justify-between even:bg-white odd:bg-gray-100 gap-1 px-2 py-0 rounded-xs items-center"
+                    key={output.name}
+                  >
+                    <div className="text-xs flex-1 truncate max-w-[200px]">
+                      <span className="font-semibold">{output.name}:</span>{" "}
+                      {
+                        getOutputConnectedDetails(graphSpec, output.name)
+                          .outputName
+                      }
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-semibold">Type:</span>{" "}
+                      {typeSpecToString(
+                        getOutputConnectedDetails(graphSpec, output.name)
+                          .outputType,
+                      )}
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-xs text-muted-foreground cursor-pointer hover:bg-transparent"
+                      size="sm"
+                      onClick={() => handleOutputEdit(output)}
+                    >
+                      Edit
+                    </Button>
+                  </div>
                 ))}
-              </ul>
+              </div>
             ) : (
               <div className="text-xs text-muted-foreground">No outputs</div>
             )}

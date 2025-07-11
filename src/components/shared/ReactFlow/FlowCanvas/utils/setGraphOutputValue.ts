@@ -5,11 +5,20 @@ export const setGraphOutputValue = (
   outputName: string,
   outputValue?: TaskOutputArgument,
 ) => {
-  const nonNullOutputObject = outputValue ? { [outputName]: outputValue } : {};
-  const newGraphOutputValues = {
-    ...graphSpec.outputValues,
-    ...nonNullOutputObject,
-  };
+  let newGraphOutputValues;
+
+  if (outputValue) {
+    newGraphOutputValues = {
+      ...graphSpec.outputValues,
+      [outputName]: outputValue,
+    };
+  } else {
+    // Remove the output value (for edge deletion)
+    const { [outputName]: removed, ...remaining } =
+      graphSpec.outputValues || {};
+    newGraphOutputValues = remaining;
+  }
+
   const newGraphSpec = { ...graphSpec, outputValues: newGraphOutputValues };
 
   return newGraphSpec;
