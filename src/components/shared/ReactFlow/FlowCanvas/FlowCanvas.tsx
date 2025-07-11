@@ -36,7 +36,7 @@ import type {
   TaskSpec,
 } from "@/utils/componentSpec";
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
-import { createNodesFromComponentSpec } from "@/utils/nodes/createNodesFromComponentSpec";
+import createNodesFromComponentSpec from "@/utils/nodes/createNodesFromComponentSpec";
 
 import ComponentDuplicateDialog from "../../Dialogs/ComponentDuplicateDialog";
 import { getBulkUpdateConfirmationDetails } from "./ConfirmationDialogs/BulkUpdateConfirmationDialog";

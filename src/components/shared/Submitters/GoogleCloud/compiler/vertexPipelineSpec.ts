@@ -18,7 +18,7 @@ export interface PipelineJob {
 }
 
 // The runtime config of a PipelineJob.
-export interface RuntimeConfig {
+interface RuntimeConfig {
   // The runtime parameters of the PipelineJob. The parameters will be
   // passed into [PipelineJob.pipeline_spec][] to replace the placeholders
   // at runtime.
@@ -70,7 +70,7 @@ export interface ComponentSpec {
 }
 
 // A DAG contains multiple tasks.
-export interface DagSpec {
+interface DagSpec {
   // The tasks inside the dag.
   tasks: { [k: string]: PipelineTaskSpec };
 
@@ -79,7 +79,7 @@ export interface DagSpec {
 }
 
 // Definition of the output artifacts and parameters of the DAG component.
-export interface DagOutputsSpec {
+interface DagOutputsSpec {
   // Name to the output artifact channel of the DAG.
   artifacts?: { [k: string]: DagOutputArtifactSpec };
 
@@ -88,7 +88,7 @@ export interface DagOutputsSpec {
 }
 
 // Selects a defined output artifact from a sub task of the DAG.
-export interface ArtifactSelectorSpec {
+interface ArtifactSelectorSpec {
   // The name of the sub task which produces the output that matches with
   // the `output_artifact_key`.
   producerSubtask: string;
@@ -106,7 +106,7 @@ export interface DagOutputArtifactSpec {
 }
 
 // Selects a defined output parameter from a sub task of the DAG.
-export interface ParameterSelectorSpec {
+interface ParameterSelectorSpec {
   // The name of the sub task which produces the output that matches with
   // the `output_parameter_key`.
   producerSubtask: string;
@@ -116,13 +116,8 @@ export interface ParameterSelectorSpec {
 }
 
 // Aggregate output parameters from sub tasks into a list object.
-export interface ParameterSelectorsSpec {
+interface ParameterSelectorsSpec {
   parameterSelectors: ParameterSelectorSpec[];
-}
-
-// Aggregates output parameters from sub tasks into a map object.
-export interface MapParameterSelectorsSpec {
-  mappedParameters: { [k: string]: ParameterSelectorSpec };
 }
 
 // We support four ways to fan-in output parameters from sub tasks to the DAG
@@ -132,7 +127,7 @@ export interface MapParameterSelectorsSpec {
 // (some might be skipped) but allows only one of the output being generated.
 // 3. Expose a list of outputs from multiple tasks (e.g. iterator flow).
 // 4. Expose the aggregation of output parameters as a name-value map.
-export type DagOutputParameterSpec =
+type DagOutputParameterSpec =
   // Returns the sub-task parameter as a DAG parameter.  The selected
   // parameter must have the same type as the DAG parameter type.
   | { valueFromParameter: ParameterSelectorSpec }
@@ -169,22 +164,14 @@ export interface ComponentOutputsSpec {
   parameters?: { [k: string]: OutputParameterSpec };
 }
 
-// Definition of an artifact output.
-export interface OutputArtifactSpec {
-  artifactType: ArtifactTypeSchema;
-
-  // Properties of the Artifact.
-  metadata?: { [k: string]: any };
-}
-
 // Definition of a parameter output.
-export interface OutputParameterSpec {
+interface OutputParameterSpec {
   type: PrimitiveTypeEnum;
 }
 
 // The spec of task inputs.
 //export interface TaskInputsSpec {
-export interface TaskArgumentsSpec {
+interface TaskArgumentsSpec {
   // A map of input parameters which are small values, stored by the system and
   // can be queried.
   parameters?: { [k: string]: ParameterArgumentSpec };
@@ -201,7 +188,7 @@ export type ArtifactArgumentSpec =
   // Pass the input artifact from parent component input artifact.
   | { componentInputArtifact: string };
 
-export interface TaskOutputArtifactSpec {
+interface TaskOutputArtifactSpec {
   // The name of the upstream task which produces the output that matches
   // with the `output_artifact_key`.
   producerTask: string;
@@ -256,7 +243,7 @@ export interface ParameterArgumentSpec {
 }
 
 // Represents an upstream task's output parameter.
-export interface TaskOutputParameterSpec {
+interface TaskOutputParameterSpec {
   // The name of the upstream task which produces the output parameter that
   // matches with the `output_parameter_key`.
   producerTask: string;
@@ -268,28 +255,13 @@ export interface TaskOutputParameterSpec {
 // Represents an upstream task's final status. The field can only be set if
 // the schema version is `2.0.0`. The resolved input parameter will be a
 // json payload in string type.
-export interface TaskFinalStatus {
+interface TaskFinalStatus {
   // The name of the upsteram task where the final status is coming from.
   producerTask: string;
 }
 
-// The spec of task outputs.
-export interface TaskOutputsSpec {
-  // A map of output parameters which are small values, stored by the system and
-  // can be queried. The output key is used
-  // by [TaskInputsSpec.InputParameterSpec][] of the downstream task to specify
-  // the data dependency. The same key will also be used by
-  // [ExecutorInput.Inputs][] to reference the output parameter.
-  parameters?: { [k: string]: OutputParameterSpec };
-  // A map of output artifacts. Keyed by output key. The output key is used
-  // by [TaskInputsSpec.InputArtifactSpec][] of the downstream task to specify
-  // the data dependency. The same key will also be used by
-  // [ExecutorInput.Inputs][] to reference the output artifact.
-  artifacts?: { [k: string]: OutputArtifactSpec };
-}
-
 // The specification of a task output artifact.
-export interface OutputArtifactSpec {
+interface OutputArtifactSpec {
   // The type of the artifact.
   artifactType: ArtifactTypeSchema;
 
@@ -300,17 +272,13 @@ export interface OutputArtifactSpec {
   // The custom properties of the artifact, which are determined either at
   // compile-time, or at pipeline submission time through runtime parameters
   customProperties?: { [k: string]: ValueOrRuntimeParameter };
-}
 
-// Specification for output parameters produced by the task.
-export interface OutputParameterSpec {
-  // Required field. The type of the output parameter.
-  type: PrimitiveTypeEnum;
+  // Properties of the Artifact.
+  metadata?: { [k: string]: any };
 }
 
 // Represent primitive types.
 export enum PrimitiveTypeEnum {
-  PRIMITIVE_TYPE_UNSPECIFIED = "PRIMITIVE_TYPE_UNSPECIFIED",
   INT = "INT",
   DOUBLE = "DOUBLE",
   STRING = "STRING",
@@ -366,14 +334,14 @@ export interface PipelineTaskSpec {
   //}
 }
 
-export interface CachingOptions {
+interface CachingOptions {
   // Whether or not to enable cache for this task. Defaults to false.
   enableCache: boolean;
 }
 
 // Trigger policy defines how the task gets triggered. If a task is not
 // triggered, it will run into SKIPPED state.
-export interface TriggerPolicy {
+interface TriggerPolicy {
   // An expression which will be evaluated into a boolean value. True to
   // trigger the task to run. The expression follows the language of
   // [CEL Spec][https://github.com/google/cel-spec]. It can access the data
@@ -410,7 +378,7 @@ enum TriggerStrategy {
 
 // The spec of an artifact iterator. It supports fan-out a workflow from a list
 // of artifacts.
-export interface ArtifactIteratorSpec {
+interface ArtifactIteratorSpec {
   // The items to iterate.
   items: ArtifactItemsSpec;
   // The name of the input artifact channel which has the artifact item from the
@@ -421,14 +389,14 @@ export interface ArtifactIteratorSpec {
 // items to iterate. The iterator will create a sub-task for each item of
 // the collection and pass the item as a new input artifact channel as
 // specified by [item_input][].
-export interface ArtifactItemsSpec {
+interface ArtifactItemsSpec {
   // The name of the input artifact.
   inputArtifact: string;
 }
 
 // The spec of a parameter iterator. It supports fan-out a workflow from a
 // string parameter which contains a JSON array.
-export interface ParameterIteratorSpec {
+interface ParameterIteratorSpec {
   // The items to iterate.
   items: ParameterItemsSpec;
   // The name of the input parameter which has the item value from the
@@ -437,7 +405,7 @@ export interface ParameterIteratorSpec {
 }
 
 // Specifies the spec to describe the parameter items to iterate.
-export type ParameterItemsSpec =
+type ParameterItemsSpec =
   // Specifies where to get the collection of items to iterate. The iterator
   // will create a sub-task for each item of the collection and pass the item
   // as a new input parameter as specified by [item_input][].
@@ -448,14 +416,14 @@ export type ParameterItemsSpec =
   // as a JSON array.
   | { input_parameter: string };
 
-export interface ComponentRef {
+interface ComponentRef {
   // The name of a component. Refer to the key of the
   // [PipelineSpec.components][] map.
   name: string;
 }
 
 // Basic info of a pipeline.
-export interface PipelineInfo {
+interface PipelineInfo {
   // Required field. The name of the pipeline.
   // The name will be used to create or find pipeline context in MLMD.
   name: string;
@@ -481,7 +449,7 @@ export type ArtifactTypeSchema =
   | { instanceSchema: string };
 
 // The basic info of a task.
-export interface PipelineTaskInfo {
+interface PipelineTaskInfo {
   // The unique name of the task within the pipeline definition. This name
   // will be used in downstream tasks to indicate task and data dependencies.
   // <Alexey Volkov>: This ^^^ does not seem to be true. This name seems to be used only as display name.
@@ -492,7 +460,7 @@ export interface PipelineTaskInfo {
 // ValueOrRuntimeParameter instance can be either a field value that is
 // determined during compilation time, or a runtime parameter which will be
 // determined during runtime.
-export type ValueOrRuntimeParameter =
+type ValueOrRuntimeParameter =
   // Constant value which is determined in compile time.
   | { constantValue: MlmdValue }
   // The runtime parameter refers to the parent component input parameter.
@@ -511,7 +479,7 @@ export type MlmdValue =
 
 // The definition of the deployment config of the pipeline. It contains the
 // the platform specific executor configs for KFP OSS.
-export interface PipelineDeploymentConfig {
+interface PipelineDeploymentConfig {
   // Map from executor label to executor spec.
   executors: { [k: string]: ExecutorSpec };
 }
@@ -520,7 +488,7 @@ export interface PipelineDeploymentConfig {
 // The string fields of the message support string based placeholder contract
 // defined in [ExecutorInput](). The output of the container follows the
 // contract of [ExecutorOutput]().
-export interface PipelineContainerSpec {
+interface PipelineContainerSpec {
   // The image uri of the container.
   image: string;
   // The main entrypoint commands of the container to run. If not provided,
@@ -541,7 +509,7 @@ export interface PipelineContainerSpec {
 // The specification on the resource requirements of a container execution.
 // This can include specification of vCPU, memory requirements, as well as
 // accelerator types and counts.
-export interface ResourceSpec {
+interface ResourceSpec {
   // The limit of the number of vCPU cores. This container execution needs
   // at most cpu_limit vCPU to run.
   cpuLimit: number;
@@ -555,7 +523,7 @@ export interface ResourceSpec {
 
 // Environment variables to be passed to the container.
 // Represents an environment variable present in a container.
-export interface EnvVar {
+interface EnvVar {
   // Name of the environment variable. Must be a valid C identifier. It can
   // be composed of characters such as uppercase, lowercase characters,
   // underscore, digits, but the leading character should be either a
@@ -584,7 +552,7 @@ export type ExecutorSpec =
 //| { custom_job: AIPlatformCustomJobSpec };
 
 // The specification on the accelerators being attached to this container.
-export interface AcceleratorConfig {
+interface AcceleratorConfig {
   // The type of accelerators.
   type: string;
   // The number of accelerators.

@@ -6,13 +6,13 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type InputSpec } from "@/utils/componentSpec";
 import { checkInputConnectionToRequiredFields } from "@/utils/inputConnectionUtils";
 
-import { checkNameCollision } from "./FormFields";
 import {
   NameField,
   OptionalField,
   TextField,
   TypeField,
 } from "./FormFields/FormFields";
+import { checkNameCollision } from "./FormFields/utils";
 
 interface InputValueEditorProps {
   input: InputSpec;

@@ -34,7 +34,7 @@
     "typecheck": "tsc --noEmit",
     "gh-pages": "vite build --base \"\" && tsc && gh-pages -d dist",
     "lint:fix": "eslint src --config eslint.config.js --fix",
-    "validate": "npm run format && npm run lint:fix && npm run typecheck",
+    "validate": "npm run format && npm run lint:fix && npm run typecheck && npm run knip",
     "validate:test": "npm run validate && npm run test",
     "generate-api": "npx @hey-api/openapi-ts -i http://localhost:8000/openapi.json -o src/api -c @hey-api/client-fetch",
     "knip": "knip"

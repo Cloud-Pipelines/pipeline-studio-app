@@ -6,7 +6,7 @@ import { extractPositionFromAnnotations } from "@/utils/nodes/extractPositionFro
 
 import { createTaskNode } from "./createTaskNode";
 
-export const createNodesFromComponentSpec = (
+const createNodesFromComponentSpec = (
   componentSpec: ComponentSpec,
   nodeData: TaskNodeData,
 ): Node[] => {

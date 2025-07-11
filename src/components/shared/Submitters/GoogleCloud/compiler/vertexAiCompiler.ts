@@ -823,21 +823,12 @@ const buildVertexTaskSpecFromTaskSpec = (
       parameters: vertexTaskParameterArguments,
       artifacts: vertexTaskArtifactArguments,
     },
-    // dependent_tasks: [],
     cachingOptions: {
       enableCache: true,
     },
     componentRef: {
       name: vertexComponentId,
     },
-    // triggerPolicy: {
-    //     condition: "...",
-    //     strategy: "ALL_UPSTREAM_TASKS_SUCCEEDED",
-    // },
-    // iterator: {
-    //     artifactIterator: {...},
-    //     parameterIterator: {...},
-    // },
   };
 
   return vertexTaskSpec;
@@ -856,7 +847,7 @@ const makeNameUniqueByAddingIndex = (
   return finalName;
 };
 
-export const buildVertexPipelineSpecFromGraphComponentSpec = (
+const buildVertexPipelineSpecFromGraphComponentSpec = (
   componentSpec: ComponentSpec,
   pipelineContextName = "pipeline",
 ) => {
