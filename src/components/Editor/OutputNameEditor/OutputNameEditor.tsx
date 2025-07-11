@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type OutputSpec } from "@/utils/componentSpec";
 
-import { checkNameCollision } from "../InputValueEditor/FormFields";
 import {
   NameField,
   TypeField,
 } from "../InputValueEditor/FormFields/FormFields";
+import { checkNameCollision } from "../InputValueEditor/FormFields/utils";
 
 interface OutputNameEditorProps {
   output: OutputSpec;

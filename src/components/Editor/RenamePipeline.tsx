@@ -10,7 +10,7 @@ import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
 import { PipelineNameDialog } from "../shared/Dialogs";
 
-export const RenamePipeline = () => {
+const RenamePipeline = () => {
   const { componentSpec } = useComponentSpec();
   const notify = useToastNotification();
   const navigate = useNavigate();
