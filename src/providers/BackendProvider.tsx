@@ -13,9 +13,11 @@ import useToastNotification from "@/hooks/useToastNotification";
 type BackendContextType = {
   available: boolean;
   backendUrl: string;
+  isConfiguredFromEnv: boolean;
   ping: () => Promise<boolean>;
   setBackendUrl: (url: string) => void;
   resetBackendUrl: () => void;
+  toggleEnvConfig: () => void;
 };
 
 const BackendContext = createContext<BackendContextType | undefined>(undefined);
@@ -31,6 +33,9 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
     );
   });
   const [available, setAvailable] = useState(false);
+  const [isConfiguredFromEnv, setIsConfiguredFromEnv] = useState(
+    backendUrl === import.meta.env.VITE_BACKEND_API_URL,
+  );
 
   const handleSetBackendUrl = useCallback((url: string) => {
     setBackendUrl(url);
@@ -74,6 +79,15 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
     [backendUrl],
   );
 
+  const toggleEnvConfig = useCallback(() => {
+    setIsConfiguredFromEnv((prev) => !prev);
+    if (isConfiguredFromEnv) {
+      resetBackendUrl();
+    } else {
+      handleSetBackendUrl(import.meta.env.VITE_BACKEND_API_URL || "");
+    }
+  }, [isConfiguredFromEnv, handleSetBackendUrl, resetBackendUrl]);
+
   useEffect(() => {
     ping(false);
   }, [backendUrl]);
@@ -82,11 +96,21 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       available,
       backendUrl,
+      isConfiguredFromEnv,
       ping,
       setBackendUrl: handleSetBackendUrl,
       resetBackendUrl,
+      toggleEnvConfig,
     }),
-    [available, backendUrl, ping, handleSetBackendUrl, resetBackendUrl],
+    [
+      available,
+      backendUrl,
+      isConfiguredFromEnv,
+      ping,
+      handleSetBackendUrl,
+      resetBackendUrl,
+      toggleEnvConfig,
+    ],
   );
 
   return (

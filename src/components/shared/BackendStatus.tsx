@@ -1,4 +1,5 @@
 import { Database } from "lucide-react";
+import { useCallback, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,8 +10,16 @@ import {
 import { cn } from "@/lib/utils";
 import { useBackend } from "@/providers/BackendProvider";
 
+import BackendConfigurationDialog from "./Dialogs/BackendConfigurationDialog";
+
 const BackendStatus = () => {
-  const { available, backendUrl, ping } = useBackend();
+  const { available, backendUrl } = useBackend();
+
+  const [open, setOpen] = useState(false);
+
+  const handleOpen = useCallback(() => {
+    setOpen(true);
+  }, []);
 
   const hideBackendUrl = backendUrl === import.meta.env.VITE_BACKEND_API_URL;
   const backendAvailableString = hideBackendUrl
@@ -18,11 +27,11 @@ const BackendStatus = () => {
     : `Connected to ${backendUrl}`;
 
   return (
-    <div className="flex items-center">
+    <>
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            onClick={ping}
+            onClick={handleOpen}
             className="bg-none hover:opacity-80"
             size="icon"
           >
@@ -41,7 +50,9 @@ const BackendStatus = () => {
           {available ? backendAvailableString : "Backend unavailable"}
         </TooltipContent>
       </Tooltip>
-    </div>
+
+      <BackendConfigurationDialog open={open} setOpen={setOpen} />
+    </>
   );
 };
 
