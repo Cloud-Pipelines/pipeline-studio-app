@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
+import { AuthorizedUserProfile } from "../../GitHubAuth/AuthorizedUserProfile";
+import { GitHubAuthButton } from "../../GitHubAuth/GitHubAuthButton";
 import GraphComponents from "./sections/GraphComponents";
 import RunsAndSubmission from "./sections/RunsAndSubmission";
 import SettingsAndActions from "./sections/SettingsAndActions";
@@ -33,6 +35,10 @@ const FlowSidebar = () => {
         collapsible="icon"
       >
         <SidebarContent className="gap-0! m-0! p-0!">
+          <div className="p-4 max-w-md">
+            <GitHubAuthButton />
+            <AuthorizedUserProfile />
+          </div>
           <SettingsAndActions isOpen={isOpen} />
           <RunsAndSubmission isOpen={isOpen} />
           <GraphComponents isOpen={isOpen} />
