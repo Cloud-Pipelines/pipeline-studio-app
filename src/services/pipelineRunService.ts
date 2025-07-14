@@ -18,11 +18,17 @@ import {
 
 export const createPipelineRun = async (
   payload: BodyCreateApiPipelineRunsPost,
+  authorizationToken?: string,
 ) => {
+  const authorizationHeader = authorizationToken
+    ? { Authorization: `Bearer ${authorizationToken}` }
+    : undefined;
+
   const response = await fetch(`${API_URL}/api/pipeline_runs/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...authorizationHeader,
     },
     body: JSON.stringify(payload),
   });

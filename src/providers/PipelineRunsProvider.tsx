@@ -6,10 +6,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
+import { GitHubAuthFlowBackdrop } from "@/components/shared/GitHubAuth/GitHubAuthFlowBackdrop";
+import { useAuthLocalStorage } from "@/components/shared/GitHubAuth/useAuthLocalStorage";
+import { useAwaitAuthorization } from "@/components/shared/GitHubAuth/useAwaitAuthorization";
 import { getArgumentsFromInputs } from "@/components/shared/ReactFlow/FlowCanvas/utils/getArgumentsFromInputs";
 import {
   countTaskStatuses,
@@ -58,6 +62,15 @@ export const PipelineRunsProvider = ({
   pipelineName: string;
   children: ReactNode;
 }) => {
+  const {
+    awaitAuthorization,
+    isAuthorized,
+    isPopupOpen,
+    closePopup,
+    bringPopupToFront,
+  } = useAwaitAuthorization();
+  const { getToken } = useAuthLocalStorage();
+
   const [runs, setRuns] = useState<PipelineRun[]>([]);
   const [recentRuns, setRecentRuns] = useState<PipelineRun[]>([]);
   const [recentRunsCount, setRecentRunsCount] = useState(DEFAULT_RECENT_RUNS);
@@ -65,6 +78,8 @@ export const PipelineRunsProvider = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const authorizationToken = useRef<string | undefined>(getToken());
 
   const refetch = useCallback(async () => {
     setIsLoading(true);
@@ -121,7 +136,12 @@ export const PipelineRunsProvider = ({
     ) => {
       setIsSubmitting(true);
       setError(null);
+
       try {
+        if (!isAuthorized) {
+          authorizationToken.current = await awaitAuthorization();
+        }
+
         const specCopy = structuredClone(componentSpec);
         const componentCache = new Map<string, ComponentSpec>();
         const fullyLoadedSpec = await processComponentSpec(
@@ -144,6 +164,7 @@ export const PipelineRunsProvider = ({
 
         const responseData = await createPipelineRun(
           payload as BodyCreateApiPipelineRunsPost,
+          authorizationToken.current,
         );
 
         if (responseData.id) {
@@ -163,7 +184,7 @@ export const PipelineRunsProvider = ({
         options?.onError?.(e as Error);
       }
     },
-    [pipelineName, refetch],
+    [pipelineName, refetch, isAuthorized, awaitAuthorization],
   );
 
   useEffect(() => {
@@ -187,6 +208,11 @@ export const PipelineRunsProvider = ({
   return (
     <PipelineRunsContext.Provider value={value}>
       {children}
+      <GitHubAuthFlowBackdrop
+        isOpen={isPopupOpen}
+        onClose={closePopup}
+        onClick={bringPopupToFront}
+      />
     </PipelineRunsContext.Provider>
   );
 };
