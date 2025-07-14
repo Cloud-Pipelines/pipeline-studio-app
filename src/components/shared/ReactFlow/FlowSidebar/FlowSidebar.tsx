@@ -9,17 +9,26 @@ import { cn } from "@/lib/utils";
 
 import { AuthorizedUserProfile } from "../../GitHubAuth/AuthorizedUserProfile";
 import { GitHubAuthButton } from "../../GitHubAuth/GitHubAuthButton";
+import { isAuthorizationRequired } from "../../GitHubAuth/helpers";
 import GraphComponents from "./sections/GraphComponents";
 import RunsAndSubmission from "./sections/RunsAndSubmission";
 import SettingsAndActions from "./sections/SettingsAndActions";
 
 const FlowSidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
+  const requiresAuthorization = isAuthorizationRequired();
 
   const sidebarTriggerClasses = cn(
     "absolute top-[65px] z-1 transition-all duration-300 bg-white rounded-r-md shadow-md p-0.5 pr-1",
     isOpen ? "left-[255px]" : "left-[47px]",
   );
+
+  const authorizationSectionMarkup = requiresAuthorization ? (
+    <div className="p-4 max-w-md">
+      <GitHubAuthButton />
+      <AuthorizedUserProfile />
+    </div>
+  ) : null;
 
   return (
     <>
@@ -35,10 +44,7 @@ const FlowSidebar = () => {
         collapsible="icon"
       >
         <SidebarContent className="gap-0! m-0! p-0!">
-          <div className="p-4 max-w-md">
-            <GitHubAuthButton />
-            <AuthorizedUserProfile />
-          </div>
+          {authorizationSectionMarkup}
           <SettingsAndActions isOpen={isOpen} />
           <RunsAndSubmission isOpen={isOpen} />
           <GraphComponents isOpen={isOpen} />

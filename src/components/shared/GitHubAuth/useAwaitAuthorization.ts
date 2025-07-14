@@ -3,7 +3,7 @@ import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 import useToastNotification from "@/hooks/useToastNotification";
 
 import { convertJWTToJWTPayload, isAuthorizationRequired } from "./helpers";
-import type { GithubAuthResponse } from "./types";
+import type { OasisAuthResponse } from "./types";
 import { useAuthLocalStorage } from "./useAuthLocalStorage";
 import { useGitHubAuthPopup } from "./useGitHubAuthPopup";
 
@@ -42,7 +42,7 @@ export function useAwaitAuthorization() {
   );
 
   const onSuccess = useCallback(
-    (response: GithubAuthResponse) => {
+    (response: OasisAuthResponse) => {
       notify(`Authorization successful!`, "success");
 
       const jwtPayload = convertJWTToJWTPayload(response.token);

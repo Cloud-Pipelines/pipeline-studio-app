@@ -44,13 +44,13 @@ type PipelineRunsContextType = {
     options: {
       onSuccess: (data: PipelineRun) => void;
       onError: (error: Error | string) => void;
-    }
+    },
   ) => Promise<void>;
   setRecentRunsCount: (count: number) => void;
 };
 
 const PipelineRunsContext = createContext<PipelineRunsContextType | undefined>(
-  undefined
+  undefined,
 );
 
 const DEFAULT_RECENT_RUNS = 4;
@@ -97,11 +97,11 @@ export const PipelineRunsProvider = ({
       const recent = res.runs.slice(0, recentRunsCount).map(async (run) => {
         try {
           const state = await fetchExecutionState(
-            run.root_execution_id.toString()
+            run.root_execution_id.toString(),
           );
 
           const details = await fetchExecutionDetails(
-            run.root_execution_id.toString()
+            run.root_execution_id.toString(),
           );
 
           if (details && state) {
@@ -132,7 +132,7 @@ export const PipelineRunsProvider = ({
       options?: {
         onSuccess?: (data: PipelineRun) => void;
         onError?: (error: Error | string) => void;
-      }
+      },
     ) => {
       setIsSubmitting(true);
       setError(null);
@@ -149,7 +149,7 @@ export const PipelineRunsProvider = ({
           componentCache,
           (_taskId, error) => {
             options?.onError?.(error as Error);
-          }
+          },
         );
         const argumentsFromInputs = getArgumentsFromInputs(fullyLoadedSpec);
 
@@ -164,14 +164,14 @@ export const PipelineRunsProvider = ({
 
         const responseData = await createPipelineRun(
           payload as BodyCreateApiPipelineRunsPost,
-          authorizationToken.current
+          authorizationToken.current,
         );
 
         if (responseData.id) {
           await savePipelineRun(
             responseData,
             pipelineName,
-            componentSpec.metadata?.annotations?.digest as string | undefined
+            componentSpec.metadata?.annotations?.digest as string | undefined,
           );
         }
         await refetch();
@@ -184,7 +184,7 @@ export const PipelineRunsProvider = ({
         options?.onError?.(e as Error);
       }
     },
-    [pipelineName, refetch, isAuthorized, awaitAuthorization]
+    [pipelineName, refetch, isAuthorized, awaitAuthorization],
   );
 
   useEffect(() => {
@@ -202,7 +202,7 @@ export const PipelineRunsProvider = ({
       submit,
       setRecentRunsCount,
     }),
-    [runs, recentRuns, isLoading, error, refetch, submit, setRecentRunsCount]
+    [runs, recentRuns, isLoading, error, refetch, submit, setRecentRunsCount],
   );
 
   return (
@@ -257,7 +257,7 @@ const parseComponentYaml = (text: string): ComponentSpec => {
 const processComponentSpec = async (
   spec: ComponentSpec,
   componentCache: Map<string, ComponentSpec> = new Map(),
-  onError?: (taskId: string, error: unknown) => void
+  onError?: (taskId: string, error: unknown) => void,
 ): Promise<ComponentSpec> => {
   if (!spec || !spec.implementation || !("graph" in spec.implementation)) {
     return spec;
@@ -295,7 +295,7 @@ const processComponentSpec = async (
 
         if (!response.ok) {
           throw new Error(
-            `Failed to fetch component: ${response.statusText} (${response.status})`
+            `Failed to fetch component: ${response.statusText} (${response.status})`,
           );
         }
 
@@ -317,7 +317,7 @@ const processComponentSpec = async (
         } catch (yamlError: unknown) {
           console.error(
             `Error parsing component YAML for ${taskId}:`,
-            yamlError
+            yamlError,
           );
           const errorMessage =
             yamlError instanceof Error
@@ -338,7 +338,7 @@ const processComponentSpec = async (
       await processComponentSpec(
         task.componentRef.spec,
         componentCache,
-        onError
+        onError,
       );
     }
   }

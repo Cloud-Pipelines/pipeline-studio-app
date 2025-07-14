@@ -24,11 +24,7 @@ export function AuthorizedUserProfile() {
     localTokenStorage.clear();
   }, [localTokenStorage]);
 
-  if (!token) {
-    return null;
-  }
-
-  if (!profile) {
+  if (!token || !profile) {
     return null;
   }
 

@@ -1,4 +1,4 @@
-export interface TypedStorage<
+interface TypedStorage<
   TKeys extends string,
   TMapping extends Record<TKeys, unknown>,
 > {

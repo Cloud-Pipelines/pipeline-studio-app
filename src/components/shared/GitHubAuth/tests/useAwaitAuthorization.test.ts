@@ -52,7 +52,7 @@ describe("useAwaitAuthorization()", () => {
     // Mock notification
     mockNotify = vi.fn();
     const mockUseToastNotification = vi.mocked(
-      (await import("@/hooks/useToastNotification")).default
+      (await import("@/hooks/useToastNotification")).default,
     );
     mockUseToastNotification.mockReturnValue(mockNotify);
 
@@ -66,7 +66,7 @@ describe("useAwaitAuthorization()", () => {
     };
 
     mockUseAuthLocalStorage = vi.mocked(
-      (await import("../useAuthLocalStorage")).useAuthLocalStorage
+      (await import("../useAuthLocalStorage")).useAuthLocalStorage,
     );
     mockUseAuthLocalStorage.mockReturnValue(mockAuthStorage);
 
@@ -80,7 +80,7 @@ describe("useAwaitAuthorization()", () => {
     };
 
     mockUseGitHubAuthPopup = vi.mocked(
-      (await import("../useGitHubAuthPopup")).useGitHubAuthPopup
+      (await import("../useGitHubAuthPopup")).useGitHubAuthPopup,
     );
     mockUseGitHubAuthPopup.mockReturnValue(mockPopupHandlers);
   });
@@ -190,7 +190,7 @@ describe("useAwaitAuthorization()", () => {
 
       expect(mockNotify).toHaveBeenCalledWith(
         "Authorization successful!",
-        "success"
+        "success",
       );
       expect(mockAuthStorage.setJWT).toHaveBeenCalledWith(expectedJWT);
     });
@@ -230,7 +230,7 @@ describe("useAwaitAuthorization()", () => {
       expect(promiseRejected).toBe(true);
       expect(mockNotify).toHaveBeenCalledWith(
         `Authorization error: ${errorMessage}`,
-        "error"
+        "error",
       );
       expect(mockAuthStorage.clear).toHaveBeenCalled();
     });

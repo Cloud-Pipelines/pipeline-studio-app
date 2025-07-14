@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { APP_ROUTES } from "@/routes/router";
 import { API_URL } from "@/utils/constants";
 
-import type { GithubAuthResponse } from "./types";
+import type { OasisAuthResponse } from "./types";
 
 const POPUP_WIDTH = 600;
 const POPUP_HEIGHT = 700;
@@ -22,8 +22,8 @@ function buildAuthUrl() {
 }
 
 function centerPopupOnDocument() {
-  const screenWidth = window.innerWidth;
-  const screenHeight = window.innerHeight;
+  const screenWidth = window.screen.width;
+  const screenHeight = window.screen.height;
   const left = (screenWidth - POPUP_WIDTH) / 2;
   const top = (screenHeight - POPUP_HEIGHT) / 2;
 
@@ -48,11 +48,11 @@ async function exchangeCodeForToken(code: string) {
     throw new Error("Failed to exchange code for token");
   }
 
-  return (await response.json()) as GithubAuthResponse;
+  return (await response.json()) as OasisAuthResponse;
 }
 
 interface GithubAuthFlowPopupOptions {
-  onSuccess: (response: GithubAuthResponse) => void;
+  onSuccess: (response: OasisAuthResponse) => void;
   onError: (error: string) => void;
   onClose?: () => void;
 }

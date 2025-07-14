@@ -9,7 +9,7 @@ import {
   vi,
 } from "vitest";
 
-import type { GithubAuthResponse } from "../types";
+import type { OasisAuthResponse } from "../types";
 import { useGitHubAuthPopup } from "../useGitHubAuthPopup";
 
 describe("useGitHubAuthPopup()", () => {
@@ -46,15 +46,13 @@ describe("useGitHubAuthPopup()", () => {
     global.fetch = mockFetch;
 
     // Mock window properties
-    Object.defineProperty(window, "innerWidth", {
+    Object.defineProperty(window, "screen", {
       writable: true,
       configurable: true,
-      value: 1024,
-    });
-    Object.defineProperty(window, "innerHeight", {
-      writable: true,
-      configurable: true,
-      value: 768,
+      value: {
+        width: 1024,
+        height: 768,
+      },
     });
     Object.defineProperty(window, "location", {
       writable: true,
@@ -81,7 +79,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -91,7 +89,7 @@ describe("useGitHubAuthPopup()", () => {
       expect(window.open).toHaveBeenCalledWith(
         expect.stringContaining("https://github.com/login/oauth/authorize"),
         "github-auth",
-        "width=600,height=700,left=212,top=34,scrollbars=yes,resizable=yes"
+        "width=600,height=700,left=212,top=34,scrollbars=yes,resizable=yes",
       );
       expect(result.current.isPopupOpen).toBe(true);
       expect(result.current.isLoading).toBe(true);
@@ -104,7 +102,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -130,7 +128,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -138,7 +136,7 @@ describe("useGitHubAuthPopup()", () => {
       });
 
       expect(mockOnError).toHaveBeenCalledWith(
-        "Failed to open popup window. Please check your popup blocker settings."
+        "Failed to open popup window. Please check your popup blocker settings.",
       );
       expect(result.current.isLoading).toBe(false);
     });
@@ -149,7 +147,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -160,7 +158,7 @@ describe("useGitHubAuthPopup()", () => {
       expectedUrl.searchParams.set("client_id", "test-client-id");
       expectedUrl.searchParams.set(
         "redirect_uri",
-        "https://example.com/authorize/github"
+        "https://example.com/authorize/github",
       );
       expectedUrl.searchParams.set("scope", "read:user");
       expectedUrl.searchParams.set("state", "");
@@ -168,7 +166,7 @@ describe("useGitHubAuthPopup()", () => {
       expect(window.open).toHaveBeenCalledWith(
         expect.stringContaining(expectedUrl.toString()),
         "github-auth",
-        "width=600,height=700,left=212,top=34,scrollbars=yes,resizable=yes"
+        "width=600,height=700,left=212,top=34,scrollbars=yes,resizable=yes",
       );
     });
   });
@@ -180,7 +178,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -205,7 +203,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -227,7 +225,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       mockPopup.closed = true;
@@ -242,14 +240,9 @@ describe("useGitHubAuthPopup()", () => {
 
   describe("OAuth flow", () => {
     it("should handle successful authorization", async () => {
-      const mockResponse: GithubAuthResponse = {
-        userData: {
-          login: "testuser",
-          id: 123,
-          avatar_url: "https://example.com/avatar.png",
-        } as any,
+      const mockResponse: OasisAuthResponse = {
         token: "test-token",
-        tokenType: "bearer",
+        token_type: "JWT",
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -262,7 +255,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -282,8 +275,8 @@ describe("useGitHubAuthPopup()", () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining(
-          "/api/auth/github/callback?code=test-code&state="
-        )
+          "/api/auth/github/callback?code=test-code&state=",
+        ),
       );
       expect(mockOnSuccess).toHaveBeenCalledWith(mockResponse);
     });
@@ -294,7 +287,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -325,7 +318,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -344,7 +337,7 @@ describe("useGitHubAuthPopup()", () => {
       });
 
       expect(mockOnError).toHaveBeenCalledWith(
-        "Failed to exchange code for token"
+        "Failed to exchange code for token",
       );
     });
 
@@ -354,7 +347,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -379,7 +372,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -409,7 +402,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -432,7 +425,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -454,7 +447,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       // Simulate ESC key press when popup is not open
@@ -474,7 +467,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -494,7 +487,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {
@@ -513,11 +506,11 @@ describe("useGitHubAuthPopup()", () => {
 
     it("should not position popup below zero", () => {
       // Mock small screen
-      Object.defineProperty(window, "innerWidth", {
-        value: 400,
-      });
-      Object.defineProperty(window, "innerHeight", {
-        value: 500,
+      Object.defineProperty(window, "screen", {
+        value: {
+          width: 400,
+          height: 500,
+        },
       });
 
       const { result } = renderHook(() =>
@@ -525,7 +518,7 @@ describe("useGitHubAuthPopup()", () => {
           onSuccess: mockOnSuccess,
           onError: mockOnError,
           onClose: mockOnClose,
-        })
+        }),
       );
 
       act(() => {

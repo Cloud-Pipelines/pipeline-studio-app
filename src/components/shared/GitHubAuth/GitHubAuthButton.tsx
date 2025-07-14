@@ -1,3 +1,4 @@
+import { Github } from "lucide-react";
 import { useCallback } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
@@ -39,11 +40,7 @@ export function GitHubAuthButton() {
           </>
         ) : (
           <>
-            <img
-              src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-              alt="GitHub"
-              className="w-4 h-4"
-            />
+            <Github className="w-4 h-4" />
             Sign in with GitHub
           </>
         )}
