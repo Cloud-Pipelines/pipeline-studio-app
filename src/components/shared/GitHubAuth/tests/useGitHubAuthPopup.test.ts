@@ -12,6 +12,14 @@ import {
 import type { OasisAuthResponse } from "../types";
 import { useGitHubAuthPopup } from "../useGitHubAuthPopup";
 
+vi.mock("@/utils/constants", async (importOriginal) => ({
+  ...(await importOriginal()),
+  API_URL: "https://api.example.com",
+  APP_ROUTES: {
+    GITHUB_AUTH_CALLBACK: "/authorize/github",
+  },
+}));
+
 describe("useGitHubAuthPopup()", () => {
   let mockPopup: any;
   let mockOnSuccess: Mock;
