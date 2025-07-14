@@ -1,6 +1,3 @@
-vi.stubEnv("VITE_GITHUB_CLIENT_ID", "test-client-id");
-vi.stubEnv("VITE_BACKEND_API_URL", "https://api.example.com");
-
 import { act, renderHook } from "@testing-library/react";
 import {
   afterEach,
@@ -15,13 +12,13 @@ import {
 import type { OasisAuthResponse } from "../types";
 import { useGitHubAuthPopup } from "../useGitHubAuthPopup";
 
-// vi.mock("@/utils/constants", async (importOriginal) => ({
-//   ...(await importOriginal()),
-//   API_URL: "https://api.example.com",
-//   APP_ROUTES: {
-//     GITHUB_AUTH_CALLBACK: "/authorize/github",
-//   },
-// }));
+vi.mock("@/utils/constants", async (importOriginal) => ({
+  ...(await importOriginal()),
+  API_URL: "https://api.example.com",
+  APP_ROUTES: {
+    GITHUB_AUTH_CALLBACK: "/authorize/github",
+  },
+}));
 
 describe("useGitHubAuthPopup()", () => {
   let mockPopup: any;
@@ -33,6 +30,9 @@ describe("useGitHubAuthPopup()", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+
+    vi.stubEnv("VITE_GITHUB_CLIENT_ID", "test-client-id");
+    vi.stubEnv("VITE_BACKEND_API_URL", "https://api.example.com");
 
     // Mock popup window
     mockPopup = {
