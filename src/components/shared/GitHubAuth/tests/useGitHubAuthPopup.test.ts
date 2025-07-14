@@ -270,7 +270,7 @@ describe("useGitHubAuthPopup()", () => {
       };
 
       await act(async () => {
-        vi.advanceTimersByTime(1001);
+        await vi.runOnlyPendingTimersAsync();
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
