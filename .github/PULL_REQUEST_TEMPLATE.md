@@ -28,7 +28,7 @@
 
 <!-- Include any screenshots that might help explain the changes or provide visual context -->
 
-## Test Instruction
+## Test Instructions
 
 <!-- Detail steps and prerequisites for testing the changes in this PR -->
 
