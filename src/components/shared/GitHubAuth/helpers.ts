@@ -1,7 +1,8 @@
 import type { JWTPayload } from "./types";
+import { REQUIRE_AUTHORIZATION } from "@/utils/constants";
 
 export function isAuthorizationRequired() {
-  return import.meta.env.VITE_REQUIRE_AUTHORIZATION === "true";
+  return REQUIRE_AUTHORIZATION === "true";
 }
 
 export function readJWT(token: string) {
