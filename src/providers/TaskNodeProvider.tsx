@@ -1,3 +1,4 @@
+import { useReactFlow } from "@xyflow/react";
 import {
   createContext,
   type ReactNode,
@@ -56,6 +57,7 @@ export type TaskNodeContextType = {
   name: string;
   state: TaskNodeState;
   callbacks: TaskNodeCallbacks;
+  select: () => void;
 };
 
 const TaskNodeContext = createContext<TaskNodeContextType | undefined>(
@@ -69,6 +71,7 @@ export const TaskNodeProvider = ({
   runStatus,
 }: TaskNodeProviderProps) => {
   const notify = useToastNotification();
+  const reactFlowInstance = useReactFlow();
 
   const taskSpec = data.taskSpec ?? ({} as TaskSpec);
   const taskId = data.taskId as string;
@@ -122,6 +125,14 @@ export const TaskNodeProvider = ({
     data.callbacks?.onUpgrade(mostRecentComponentRef);
   }, [data.callbacks, isOutdated, mostRecentComponentRef, notify]);
 
+  const select = useCallback(() => {
+    reactFlowInstance.setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === nodeId ? { ...node, selected: true } : node,
+      ),
+    );
+  }, [nodeId, reactFlowInstance]);
+
   const state = useMemo(
     (): TaskNodeState => ({
       selected: selected && !data.isGhost,
@@ -171,8 +182,9 @@ export const TaskNodeProvider = ({
       name,
       state,
       callbacks,
+      select,
     }),
-    [taskSpec, taskId, nodeId, inputs, outputs, name, state, callbacks],
+    [taskSpec, taskId, nodeId, inputs, outputs, name, state, callbacks, select],
   );
 
   return (
