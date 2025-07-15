@@ -5,7 +5,7 @@ import { API_URL } from "@/utils/constants";
 
 import type { OasisAuthResponse } from "./types";
 
-import { GITHUB_CLIENT_ID } from "@/utils/constants";
+import { get_github_client_id } from "@/utils/constants";
 
 const POPUP_WIDTH = 600;
 const POPUP_HEIGHT = 700;
@@ -14,7 +14,7 @@ function buildAuthUrl() {
   const redirect_uri = new URL("/authorize/github", window.location.origin);
 
   const authUrl = new URL("https://github.com/login/oauth/authorize");
-  authUrl.searchParams.set("client_id", GITHUB_CLIENT_ID);
+  authUrl.searchParams.set("client_id", get_github_client_id());
   authUrl.searchParams.set("redirect_uri", redirect_uri.toString());
   authUrl.searchParams.set("scope", "read:user");
   authUrl.searchParams.set("state", crypto.randomUUID());
