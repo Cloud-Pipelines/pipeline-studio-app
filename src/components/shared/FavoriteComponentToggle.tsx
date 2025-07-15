@@ -73,7 +73,7 @@ export const ComponentFavoriteToggle = ({
     }
 
     handleDelete();
-  }, [isInLibrary, addToComponentLibrary, handleDelete]);
+  }, [component, isInLibrary, addToComponentLibrary, handleDelete]);
 
   return (
     <>

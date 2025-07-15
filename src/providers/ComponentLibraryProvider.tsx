@@ -34,7 +34,6 @@ import {
   writeComponentRefToFile,
 } from "@/utils/componentStore";
 import { DEFAULT_FILTERS, USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
-import { getComponentName } from "@/utils/getComponentName";
 import { getComponentByUrl, saveComponent } from "@/utils/localforage";
 import { componentMatchesSearch } from "@/utils/searchUtils";
 
@@ -151,15 +150,14 @@ export const ComponentLibraryProvider = ({
   const setComponentFavorite = useCallback(
     async (component: ComponentReference, favorited: boolean) => {
       // Update via filename (User Components)
-      const name = getComponentName(component);
-      if (!component.url) {
+      if (!component.url && component.name) {
         component.favorited = favorited;
 
         if (component.spec) {
           await updateComponentRefInList(
             USER_COMPONENTS_LIST_NAME,
             component as ComponentReferenceWithSpec,
-            name,
+            component.name,
           ).then(async () => {
             await refreshUserComponents();
           });
@@ -167,17 +165,26 @@ export const ComponentLibraryProvider = ({
           await updateComponentInListByText(
             USER_COMPONENTS_LIST_NAME,
             component.text,
-            name,
+            component.name,
             { favorited },
           ).then(async () => {
             await refreshUserComponents();
           });
         } else {
           console.warn(
-            `Component "${name}" does not have spec or text, cannot favorite.`,
+            `Component "${
+              component.name
+            }" does not have spec or text, cannot favorite.`,
           );
         }
 
+        return;
+      }
+
+      if (!component.url) {
+        console.warn(
+          `Component "${component.name}" does not have a url, cannot favorite.`,
+        );
         return;
       }
 
@@ -314,32 +321,31 @@ export const ComponentLibraryProvider = ({
 
   const addToComponentLibrary = useCallback(
     async (component: ComponentReference) => {
-      const name = getComponentName(component);
       if (!component.url) {
         component.favorited = true;
 
-        if (component.spec) {
-          await writeComponentRefToFile(
-            USER_COMPONENTS_LIST_NAME,
-            name,
-            component as ComponentReferenceWithSpec,
-          ).then(async () => {
-            await refreshUserComponents();
-          });
-        } else if (component.text) {
+        if (component.text) {
           await addComponentToListByTextWithDuplicateCheck(
             USER_COMPONENTS_LIST_NAME,
             component.text,
-            name,
+            component.name,
             "Component",
             false,
             { favorited: true },
           ).then(async () => {
             await refreshUserComponents();
           });
+        } else if (component.spec && component.name) {
+          await writeComponentRefToFile(
+            USER_COMPONENTS_LIST_NAME,
+            component.name,
+            component as ComponentReferenceWithSpec,
+          ).then(async () => {
+            await refreshUserComponents();
+          });
         } else {
           console.warn(
-            `Component "${name}" does not have spec or text, cannot favorite.`,
+            `Component "${component.name}" does not have spec or text, cannot favorite.`,
           );
         }
 
@@ -349,7 +355,7 @@ export const ComponentLibraryProvider = ({
       await addComponentToListByUrl(
         USER_COMPONENTS_LIST_NAME,
         component.url,
-        name,
+        component.name,
         false,
         {
           favorited: true,
@@ -364,14 +370,20 @@ export const ComponentLibraryProvider = ({
 
   const removeFromComponentLibrary = useCallback(
     async (component: ComponentReference) => {
-      const name = getComponentName(component);
       try {
-        await deleteComponentFileFromList(USER_COMPONENTS_LIST_NAME, name).then(
-          async () => {
+        if (component.name) {
+          await deleteComponentFileFromList(
+            USER_COMPONENTS_LIST_NAME,
+            component.name,
+          ).then(async () => {
             await refreshComponentLibrary();
             await refreshUserComponents();
-          },
-        );
+          });
+        } else {
+          console.error(
+            `Error deleting component: Component ${component.digest} does not have a name.`,
+          );
+        }
       } catch (error) {
         console.error("Error deleting component:", error);
       }
