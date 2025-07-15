@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { APP_ROUTES } from "@/routes/router";
-import { API_URL } from "@/utils/constants";
+import { API_URL, GITHUB_CLIENT_ID } from "@/utils/constants";
 
 import type { OasisAuthResponse } from "./types";
 
@@ -9,7 +9,7 @@ const POPUP_WIDTH = 600;
 const POPUP_HEIGHT = 700;
 
 function buildAuthUrl() {
-  const client_id = import.meta.env.VITE_GITHUB_CLIENT_ID;
+  const client_id = GITHUB_CLIENT_ID;
   const redirect_uri = new URL("/authorize/github", window.location.origin);
 
   const authUrl = new URL("https://github.com/login/oauth/authorize");

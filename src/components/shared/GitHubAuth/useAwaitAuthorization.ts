@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 
 import useToastNotification from "@/hooks/useToastNotification";
+import { REQUIRE_AUTHORIZATION } from "@/utils/constants";
 
-import { convertJWTToJWTPayload, isAuthorizationRequired } from "./helpers";
+import { convertJWTToJWTPayload } from "./helpers";
 import type { OasisAuthResponse } from "./types";
 import { useAuthLocalStorage } from "./useAuthLocalStorage";
 import { useGitHubAuthPopup } from "./useGitHubAuthPopup";
@@ -37,8 +38,8 @@ export function useAwaitAuthorization() {
   );
 
   const isAuthorized = useMemo(
-    () => !isAuthorizationRequired() || !!token,
-    [token],
+    () => !REQUIRE_AUTHORIZATION || !!token,
+    [REQUIRE_AUTHORIZATION, token],
   );
 
   const onSuccess = useCallback(

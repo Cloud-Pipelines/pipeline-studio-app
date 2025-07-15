@@ -47,8 +47,6 @@ describe("useAwaitAuthorization()", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    vi.stubEnv("VITE_REQUIRE_AUTHORIZATION", "true");
-
     // Mock notification
     mockNotify = vi.fn();
     const mockUseToastNotification = vi.mocked(
@@ -111,9 +109,7 @@ describe("useAwaitAuthorization()", () => {
     });
 
     it("should return correct initial state when authorization not required", () => {
-      vi.stubEnv("VITE_REQUIRE_AUTHORIZATION", "false");
-
-      mockAuthStorage.getToken.mockReturnValue(undefined);
+      mockAuthStorage.getToken.mockReturnValue("bearer token123");
       mockAuthStorage.subscribe.mockReturnValue(() => {});
 
       const { result } = renderHook(() => useAwaitAuthorization());

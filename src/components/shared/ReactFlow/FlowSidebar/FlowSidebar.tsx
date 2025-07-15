@@ -6,10 +6,10 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { REQUIRE_AUTHORIZATION } from "@/utils/constants";
 
 import { AuthorizedUserProfile } from "../../GitHubAuth/AuthorizedUserProfile";
 import { GitHubAuthButton } from "../../GitHubAuth/GitHubAuthButton";
-import { isAuthorizationRequired } from "../../GitHubAuth/helpers";
 import { useAwaitAuthorization } from "../../GitHubAuth/useAwaitAuthorization";
 import GraphComponents from "./sections/GraphComponents";
 import RunsAndSubmission from "./sections/RunsAndSubmission";
@@ -19,14 +19,13 @@ const FlowSidebar = () => {
   const { isAuthorized } = useAwaitAuthorization();
 
   const [isOpen, setIsOpen] = useState(true);
-  const requiresAuthorization = isAuthorizationRequired();
 
   const sidebarTriggerClasses = cn(
     "absolute top-[65px] z-1 transition-all duration-300 bg-white rounded-r-md shadow-md p-0.5 pr-1",
     isOpen ? "left-[255px]" : "left-[47px]",
   );
 
-  const authorizationSectionMarkup = requiresAuthorization ? (
+  const authorizationSectionMarkup = REQUIRE_AUTHORIZATION ? (
     <div className="p-4 max-w-md">
       {!isAuthorized && <GitHubAuthButton />}
       {isAuthorized && <AuthorizedUserProfile />}

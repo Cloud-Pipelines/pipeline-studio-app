@@ -1,9 +1,5 @@
 import type { JWTPayload } from "./types";
 
-export function isAuthorizationRequired() {
-  return import.meta.env.VITE_REQUIRE_AUTHORIZATION === "true";
-}
-
 export function readJWT(token: string) {
   const base64Url = token.split(".")[1];
   const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");

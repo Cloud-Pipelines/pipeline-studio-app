@@ -12,7 +12,6 @@ import {
 
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
 import { GitHubAuthFlowBackdrop } from "@/components/shared/GitHubAuth/GitHubAuthFlowBackdrop";
-import { isAuthorizationRequired } from "@/components/shared/GitHubAuth/helpers";
 import { useAuthLocalStorage } from "@/components/shared/GitHubAuth/useAuthLocalStorage";
 import { useAwaitAuthorization } from "@/components/shared/GitHubAuth/useAwaitAuthorization";
 import { getArgumentsFromInputs } from "@/components/shared/ReactFlow/FlowCanvas/utils/getArgumentsFromInputs";
@@ -32,6 +31,7 @@ import {
   type ComponentReference,
   type ComponentSpec,
 } from "@/utils/componentSpec";
+import { REQUIRE_AUTHORIZATION } from "@/utils/constants";
 
 type PipelineRunsContextType = {
   runs: PipelineRun[];
@@ -139,8 +139,7 @@ export const PipelineRunsProvider = ({
       setError(null);
 
       try {
-        const authorizationRequired = isAuthorizationRequired();
-        if (authorizationRequired && !isAuthorized) {
+        if (REQUIRE_AUTHORIZATION && !isAuthorized) {
           authorizationToken.current = await awaitAuthorization();
         }
 
@@ -166,7 +165,7 @@ export const PipelineRunsProvider = ({
 
         const responseData = await createPipelineRun(
           payload as BodyCreateApiPipelineRunsPost,
-          authorizationRequired ? authorizationToken.current : undefined,
+          REQUIRE_AUTHORIZATION ? authorizationToken.current : undefined,
         );
 
         if (responseData.id) {
@@ -186,13 +185,7 @@ export const PipelineRunsProvider = ({
         options?.onError?.(e as Error);
       }
     },
-    [
-      pipelineName,
-      refetch,
-      isAuthorized,
-      awaitAuthorization,
-      isAuthorizationRequired,
-    ],
+    [pipelineName, refetch, isAuthorized, awaitAuthorization],
   );
 
   useEffect(() => {
