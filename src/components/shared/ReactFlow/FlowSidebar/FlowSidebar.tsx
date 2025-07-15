@@ -10,11 +10,14 @@ import { cn } from "@/lib/utils";
 import { AuthorizedUserProfile } from "../../GitHubAuth/AuthorizedUserProfile";
 import { GitHubAuthButton } from "../../GitHubAuth/GitHubAuthButton";
 import { isAuthorizationRequired } from "../../GitHubAuth/helpers";
+import { useAwaitAuthorization } from "../../GitHubAuth/useAwaitAuthorization";
 import GraphComponents from "./sections/GraphComponents";
 import RunsAndSubmission from "./sections/RunsAndSubmission";
 import SettingsAndActions from "./sections/SettingsAndActions";
 
 const FlowSidebar = () => {
+  const { isAuthorized } = useAwaitAuthorization();
+
   const [isOpen, setIsOpen] = useState(true);
   const requiresAuthorization = isAuthorizationRequired();
 
@@ -25,8 +28,8 @@ const FlowSidebar = () => {
 
   const authorizationSectionMarkup = requiresAuthorization ? (
     <div className="p-4 max-w-md">
-      <GitHubAuthButton />
-      <AuthorizedUserProfile />
+      {!isAuthorized && <GitHubAuthButton />}
+      {isAuthorized && <AuthorizedUserProfile />}
     </div>
   ) : null;
 

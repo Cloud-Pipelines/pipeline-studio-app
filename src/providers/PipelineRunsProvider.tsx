@@ -12,6 +12,7 @@ import {
 
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
 import { GitHubAuthFlowBackdrop } from "@/components/shared/GitHubAuth/GitHubAuthFlowBackdrop";
+import { isAuthorizationRequired } from "@/components/shared/GitHubAuth/helpers";
 import { useAuthLocalStorage } from "@/components/shared/GitHubAuth/useAuthLocalStorage";
 import { useAwaitAuthorization } from "@/components/shared/GitHubAuth/useAwaitAuthorization";
 import { getArgumentsFromInputs } from "@/components/shared/ReactFlow/FlowCanvas/utils/getArgumentsFromInputs";
@@ -138,7 +139,8 @@ export const PipelineRunsProvider = ({
       setError(null);
 
       try {
-        if (!isAuthorized) {
+        const authorizationRequired = isAuthorizationRequired();
+        if (authorizationRequired && !isAuthorized) {
           authorizationToken.current = await awaitAuthorization();
         }
 
@@ -164,7 +166,7 @@ export const PipelineRunsProvider = ({
 
         const responseData = await createPipelineRun(
           payload as BodyCreateApiPipelineRunsPost,
-          authorizationToken.current,
+          authorizationRequired ? authorizationToken.current : undefined,
         );
 
         if (responseData.id) {
@@ -184,7 +186,13 @@ export const PipelineRunsProvider = ({
         options?.onError?.(e as Error);
       }
     },
-    [pipelineName, refetch, isAuthorized, awaitAuthorization],
+    [
+      pipelineName,
+      refetch,
+      isAuthorized,
+      awaitAuthorization,
+      isAuthorizationRequired,
+    ],
   );
 
   useEffect(() => {

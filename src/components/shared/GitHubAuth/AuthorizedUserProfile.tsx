@@ -29,33 +29,32 @@ export function AuthorizedUserProfile() {
   }
 
   return (
-    <div className="flex items-center space-x-3">
-      <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-        <img
-          src={profile.avatar_url}
-          alt={`${profile.login} avatar`}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            // Fallback to a default avatar if image fails to load
-            e.currentTarget.src = `https://github.com/identicons/${profile.login}.png`;
-          }}
-        />
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-3">
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+          <img
+            src={profile.avatar_url}
+            alt={`${profile.login} avatar`}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback to a default avatar if image fails to load
+              e.currentTarget.src = `https://github.com/identicons/${profile.login}.png`;
+            }}
+          />
+        </div>
+        <span className="text-sm font-medium text-gray-700 truncate">
+          {profile.login}
+        </span>
       </div>
-      <span className="text-sm font-medium text-gray-700 truncate">
-        {profile.login}
-      </span>
 
-      <div className="ml-auto">
-        <TooltipButton
-          variant="outline"
-          className="size-2"
-          size="icon"
-          onClick={handleLogout}
-          tooltip="Logout"
-        >
-          <LogOutIcon className="w-2 h-2" />
-        </TooltipButton>
-      </div>
+      <TooltipButton
+        variant="ghost"
+        size="icon"
+        onClick={handleLogout}
+        tooltip="Logout"
+      >
+        <LogOutIcon className="w-2 h-2" />
+      </TooltipButton>
     </div>
   );
 }
