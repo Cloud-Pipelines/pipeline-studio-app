@@ -12,7 +12,7 @@ import { TaskNodeOutputs } from "./TaskNodeOutputs";
 
 const TaskNodeCard = () => {
   const taskNode = useTaskNode();
-  const { setContent } = useContextPanel();
+  const { setContent, clearContent } = useContextPanel();
 
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -61,6 +61,8 @@ const TaskNodeCard = () => {
   useEffect(() => {
     if (selected) {
       setContent(taskConfigMarkup);
+    } else {
+      clearContent();
     }
   }, [selected, taskConfigMarkup]);
 

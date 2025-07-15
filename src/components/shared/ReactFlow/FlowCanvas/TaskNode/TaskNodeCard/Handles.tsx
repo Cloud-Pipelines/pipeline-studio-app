@@ -53,6 +53,16 @@ export const InputHandle = ({
     [selected],
   );
 
+  const handleLabelClick = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onLabelClick?.(e);
+      setSelected(!selected);
+    },
+    [onLabelClick, selected],
+  );
+
   useEffect(() => {
     if (
       (fromHandle === handleId && fromNode === nodeId) ||
@@ -118,7 +128,7 @@ export const InputHandle = ({
             missing,
             (selected || active) && "bg-blue-500!",
             highlight && "bg-green-500!",
-            !state.connectable && "cursor-pointer!",
+            state.readOnly && "cursor-pointer!",
           )}
           onClick={handleHandleClick}
         />
@@ -126,7 +136,6 @@ export const InputHandle = ({
       <div
         className={cn(
           "flex flex-row items-center rounded-md cursor-pointer relative",
-          onLabelClick && "hover:bg-gray-300",
         )}
       >
         <div className="flex flex-row w-full gap-0.5 items-center justify-between">
@@ -144,6 +153,7 @@ export const InputHandle = ({
                 highlight && "bg-green-200",
                 !hasValue && hasDefault && "opacity-50 italic",
               )}
+              onClick={handleLabelClick}
             >
               {input.name.replace(/_/g, " ")}
             </div>
@@ -204,6 +214,16 @@ export const OutputHandle = ({
     [selected],
   );
 
+  const handleLabelClick = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onLabelClick?.(e);
+      setSelected(!selected);
+    },
+    [onLabelClick, selected],
+  );
+
   useEffect(() => {
     if (
       (fromHandle === handleId && fromNode === nodeId) ||
@@ -256,11 +276,11 @@ export const OutputHandle = ({
   }, [selected]);
 
   return (
-    <div className="flex items-center justify-end w-full" key={output.name}>
-      <div
-        className="flex flex-row-reverse w-full gap-0.5 items-center justify-between"
-        onClick={onLabelClick}
-      >
+    <div
+      className="flex items-center justify-end w-full cursor-pointer"
+      key={output.name}
+    >
+      <div className="flex flex-row-reverse w-full gap-0.5 items-center justify-between">
         <div
           className={cn(
             "translate-x-3 min-w-0 inline-block",
@@ -274,6 +294,7 @@ export const OutputHandle = ({
               selected || active ? "bg-blue-200" : "bg-gray-200",
               highlight && "bg-green-200",
             )}
+            onClick={handleLabelClick}
           >
             {output.name.replace(/_/g, " ")}
           </div>

@@ -22,7 +22,7 @@ export function TaskNodeOutputs({
   expanded,
   onBackgroundClick,
 }: TaskNodeOutputsProps) {
-  const { nodeId, outputs, state } = useTaskNode();
+  const { nodeId, outputs, state, select } = useTaskNode();
   const {
     setSearchTerm,
     setSearchFilters,
@@ -115,6 +115,14 @@ export function TaskNodeOutputs({
     [highlightSearchResults, searchTerm, searchFilters],
   );
 
+  const handleLabelClick = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      select();
+    },
+    [select],
+  );
+
   useEffect(() => {
     // Highlight relevant Handles when the user drags a new connection
     const { fromHandle, from, to, inProgress } = connection;
@@ -180,6 +188,7 @@ export function TaskNodeOutputs({
             }
             onHandleSelectionChange={handleSelectionChange}
             highlight={checkHighlight(output)}
+            onLabelClick={handleLabelClick}
           />
         ))
       ) : (
@@ -190,6 +199,7 @@ export function TaskNodeOutputs({
               output={output}
               onHandleSelectionChange={handleSelectionChange}
               highlight={checkHighlight(output)}
+              onLabelClick={handleLabelClick}
             />
           ))}
           {condensed && (

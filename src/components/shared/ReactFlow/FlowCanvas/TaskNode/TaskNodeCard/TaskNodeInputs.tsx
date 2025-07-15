@@ -25,7 +25,7 @@ export function TaskNodeInputs({
   expanded,
   onBackgroundClick,
 }: TaskNodeInputsProps) {
-  const { inputs, taskSpec, state } = useTaskNode();
+  const { inputs, taskSpec, state, select } = useTaskNode();
   const {
     setSearchTerm,
     setSearchFilters,
@@ -121,6 +121,14 @@ export function TaskNodeInputs({
     [highlightSearchResults, searchTerm, searchFilters],
   );
 
+  const handleLabelClick = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      select();
+    },
+    [select],
+  );
+
   useEffect(() => {
     // Highlight relevant Handles when the user drags a new connection
     const { fromHandle, from, to, inProgress } = connection;
@@ -193,6 +201,7 @@ export function TaskNodeInputs({
               }
               onHandleSelectionChange={handleSelectionChange}
               highlight={checkHighlight(input)}
+              onLabelClick={handleLabelClick}
             />
           ))}
           {hiddenInvalidArguments.length > 0 && (
@@ -212,6 +221,7 @@ export function TaskNodeInputs({
               value={getValue(values?.[input.name])}
               onHandleSelectionChange={handleSelectionChange}
               highlight={checkHighlight(input)}
+              onLabelClick={handleLabelClick}
             />
           ))}
           {condensed && (
