@@ -37,7 +37,10 @@ async function exchangeCodeForToken(code: string) {
   const state = crypto.randomUUID();
   const oauthExchangeRoute = "/api/auth/github/callback";
 
-  const oasisUserUrl = new URL(`${API_URL}${oauthExchangeRoute}`);
+  const oasisUserUrl = new URL(
+    `${API_URL}${oauthExchangeRoute}`,
+    window.location.origin,
+  );
 
   oasisUserUrl.searchParams.set("code", code);
   oasisUserUrl.searchParams.set("state", state);
