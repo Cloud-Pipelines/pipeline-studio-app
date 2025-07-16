@@ -21,11 +21,13 @@ import type { UserComponent } from "@/utils/localforage";
 const ComponentDuplicateDialog = ({
   existingComponent,
   newComponent,
+  newComponentDigest,
   setClose,
   handleImportComponent,
 }: {
   existingComponent?: UserComponent;
   newComponent?: ComponentSpec;
+  newComponentDigest?: string;
   setClose: () => void;
   handleImportComponent: (content: string) => Promise<void>;
 }) => {
@@ -44,10 +46,25 @@ const ComponentDuplicateDialog = ({
     if (newComponent && newComponent?.name) {
       setNewName(newComponent?.name);
     }
+
+    if (newComponentDigest) {
+      setNewDigest(newComponentDigest);
+      return;
+    }
+
     generateNewDigest();
   }, [existingComponent, newComponent]);
 
   const generateNewDigestOnBlur = useCallback(async () => {
+    if (
+      newComponent &&
+      newComponentDigest &&
+      newName.trim() === newComponent.name?.trim()
+    ) {
+      setNewDigest(newComponentDigest);
+      return;
+    }
+
     if (newComponent && newName) {
       const digest = await generateDigest(
         yaml.dump({
@@ -117,13 +134,13 @@ const ComponentDuplicateDialog = ({
           <div className="text-sm font-medium">Existing Component</div>
           <Label className="text-xs font-medium">Name</Label>
           <Input
-            value={existingComponent?.name}
+            value={existingComponent?.name ?? ""}
             readOnly
             className="text-xs text-gray-500 bg-gray-100 cursor-not-allowed"
           />
           <Label className="text-xs font-medium">Digest</Label>
           <Input
-            value={existingComponent?.componentRef.digest}
+            value={existingComponent?.componentRef.digest ?? ""}
             readOnly
             className="text-xs text-gray-500 bg-gray-100 cursor-not-allowed"
           />
