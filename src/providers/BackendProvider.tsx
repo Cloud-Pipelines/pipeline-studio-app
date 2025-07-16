@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import useToastNotification from "@/hooks/useToastNotification";
+import { getBackendUrlFromEnv } from "@/utils/URL";
 
 type BackendContextType = {
   available: boolean;
@@ -23,13 +24,15 @@ const BackendContext = createContext<BackendContextType | undefined>(undefined);
 export const BackendProvider = ({ children }: { children: ReactNode }) => {
   const notify = useToastNotification();
 
-  const [backendUrl, setBackendUrl] = useState(() => {
-    return (
-      localStorage.getItem("backendUrl") ||
-      import.meta.env.VITE_BACKEND_API_URL ||
-      ""
-    );
-  });
+  const backendUrlFromEnv = useMemo(() => getBackendUrlFromEnv(), []);
+  const backendUrlFromLocalStorage = useMemo(
+    () => localStorage.getItem("backendUrl"),
+    [],
+  );
+
+  const [backendUrl, setBackendUrl] = useState(
+    backendUrlFromLocalStorage ?? backendUrlFromEnv,
+  );
   const [available, setAvailable] = useState(false);
 
   const handleSetBackendUrl = useCallback((url: string) => {
@@ -38,9 +41,9 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const resetBackendUrl = useCallback(() => {
-    setBackendUrl(import.meta.env.VITE_BACKEND_API_URL || "");
+    setBackendUrl(backendUrlFromEnv);
     localStorage.removeItem("backendUrl");
-  }, []);
+  }, [backendUrlFromEnv]);
 
   const ping = useCallback(
     (notification = true) => {

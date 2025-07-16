@@ -103,9 +103,15 @@ const getIdOrTitleFromPath = (
   };
 };
 
+const getBackendUrlFromEnv = () => {
+  const url = import.meta.env.VITE_BACKEND_API_URL;
+  return url || "";
+};
+
 export {
   convertGcsUrlToBrowserUrl,
   convertGithubUrlToDirectoryUrl,
   downloadYamlFromComponentText,
+  getBackendUrlFromEnv,
   getIdOrTitleFromPath,
 };
