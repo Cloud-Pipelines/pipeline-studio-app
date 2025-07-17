@@ -9,14 +9,26 @@ import {
 } from "react";
 
 import useToastNotification from "@/hooks/useToastNotification";
+import {
+  getUseEnv,
+  getUserBackendUrl,
+  setUseEnv as setUseEnvInLocalStorage,
+  setUserBackendUrl as setUserBackendUrlInLocalStorage,
+} from "@/utils/localforage";
 import { getBackendUrlFromEnv } from "@/utils/URL";
+import { normalizeUrl } from "@/utils/URL";
 
 type BackendContextType = {
   available: boolean;
   backendUrl: string;
-  ping: () => Promise<boolean>;
+  isConfiguredFromEnv: boolean;
+  setEnvConfig: (useEnv: boolean) => void;
   setBackendUrl: (url: string) => void;
-  resetBackendUrl: () => void;
+  ping: (args: {
+    url?: string;
+    notifyResult?: boolean;
+    saveAvailability?: boolean;
+  }) => Promise<boolean>;
 };
 
 const BackendContext = createContext<BackendContextType | undefined>(undefined);
@@ -25,52 +37,52 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
   const notify = useToastNotification();
 
   const backendUrlFromEnv = useMemo(() => getBackendUrlFromEnv(), []);
-  const backendUrlFromLocalStorage = useMemo(
-    () => localStorage.getItem("backendUrl"),
-    [],
-  );
 
-  const [backendUrl, setBackendUrl] = useState(
-    backendUrlFromLocalStorage ?? backendUrlFromEnv,
-  );
+  const [userBackendUrl, setUserBackendUrl] = useState("");
+  const [useEnv, setUseEnv] = useState(true);
   const [available, setAvailable] = useState(false);
 
-  const handleSetBackendUrl = useCallback((url: string) => {
-    setBackendUrl(url);
-    localStorage.setItem("backendUrl", url);
+  const backendUrl = useEnv ? backendUrlFromEnv : userBackendUrl;
+
+  const setBackendUrl = useCallback(async (url: string) => {
+    const normalized = normalizeUrl(url);
+    setUserBackendUrl(normalized);
+    await setUserBackendUrlInLocalStorage(normalized);
   }, []);
 
-  const resetBackendUrl = useCallback(() => {
-    setBackendUrl(backendUrlFromEnv);
-    localStorage.removeItem("backendUrl");
-  }, [backendUrlFromEnv]);
+  const setEnvConfig = useCallback(async (flag: boolean) => {
+    await setUseEnvInLocalStorage(flag);
+    setUseEnv(flag);
+  }, []);
 
   const ping = useCallback(
-    (notification = true) => {
-      if (!backendUrl) {
-        if (notification) {
-          notify("Backend is not configured", "error");
-        }
-        setAvailable(false);
+    ({
+      url = backendUrl,
+      notifyResult = true,
+      saveAvailability = true,
+    }: {
+      url?: string;
+      notifyResult?: boolean;
+      saveAvailability?: boolean;
+    }) => {
+      const normalizedUrl = normalizeUrl(url);
+      if (!normalizedUrl) {
+        if (notifyResult) notify("Backend is not configured", "error");
+        if (saveAvailability) setAvailable(false);
         return Promise.resolve(false);
       }
-      return fetch(`${backendUrl}/services/ping`)
+      return fetch(`${normalizedUrl}/services/ping`)
         .then((res) => {
-          if (notification) {
-            if (res.ok) {
-              notify("Backend available", "success");
-            } else {
-              notify(`Backend unavailable: ${res.statusText}`, "error");
-            }
+          if (notifyResult) {
+            if (res.ok) notify("Backend available", "success");
+            else notify(`Backend unavailable: ${res.statusText}`, "error");
           }
-          setAvailable(res.ok);
+          if (saveAvailability) setAvailable(res.ok);
           return res.ok;
         })
         .catch(() => {
-          if (notification) {
-            notify("Backend unavailable", "error");
-          }
-          setAvailable(false);
+          if (notifyResult) notify("Backend unavailable", "error");
+          if (saveAvailability) setAvailable(false);
           return false;
         });
     },
@@ -78,18 +90,30 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
   );
 
   useEffect(() => {
-    ping(false);
+    ping({ notifyResult: false });
   }, [backendUrl]);
+
+  useEffect(() => {
+    const getSettings = async () => {
+      const url = await getUserBackendUrl();
+      setUserBackendUrl(url || "");
+
+      const flag = await getUseEnv();
+      setUseEnv(flag === true);
+    };
+    getSettings();
+  }, []);
 
   const contextValue = useMemo(
     () => ({
       available,
       backendUrl,
+      isConfiguredFromEnv: useEnv,
+      setEnvConfig,
+      setBackendUrl,
       ping,
-      setBackendUrl: handleSetBackendUrl,
-      resetBackendUrl,
     }),
-    [available, backendUrl, ping, handleSetBackendUrl, resetBackendUrl],
+    [available, backendUrl, useEnv, setEnvConfig, setBackendUrl, ping],
   );
 
   return (
@@ -101,9 +125,6 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
 
 export const useBackend = () => {
   const ctx = useContext(BackendContext);
-  if (!ctx)
-    throw new Error(
-      "useBackend must be used within a ComponentLibraryProvider",
-    );
+  if (!ctx) throw new Error("useBackend must be used within a BackendProvider");
   return ctx;
 };
