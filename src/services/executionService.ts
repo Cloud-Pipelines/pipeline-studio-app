@@ -31,7 +31,10 @@ export const fetchExecutionDetails = async (
   return response.json();
 };
 
-export const fetchExecutionInfo = (executionId: string) => {
+export const fetchExecutionInfo = (
+  executionId: string,
+  poll: boolean = false,
+) => {
   const {
     data: details,
     isLoading: isDetailsLoading,
@@ -40,6 +43,7 @@ export const fetchExecutionInfo = (executionId: string) => {
     queryKey: ["pipeline-run-details", executionId],
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionDetails(executionId),
+    refetchInterval: poll ? 5000 : false,
   });
 
   const {
@@ -50,6 +54,7 @@ export const fetchExecutionInfo = (executionId: string) => {
     queryKey: ["pipeline-run-state", executionId],
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionState(executionId),
+    refetchInterval: poll ? 5000 : false,
   });
 
   const isLoading = isDetailsLoading || isStateLoading;
@@ -125,11 +130,11 @@ export const getRunStatus = (statusData: TaskStatusCounts) => {
   return STATUS.UNKNOWN;
 };
 
-export const isStatusInProgress = (status: string) => {
+export const isStatusInProgress = (status: string = "") => {
   return status === STATUS.RUNNING || status === STATUS.WAITING;
 };
 
-export const isStatusComplete = (status: string) => {
+export const isStatusComplete = (status: string = "") => {
   return (
     status === STATUS.SUCCEEDED ||
     status === STATUS.FAILED ||
