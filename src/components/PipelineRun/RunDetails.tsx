@@ -2,6 +2,7 @@ import { Frown, Videotape } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import {
   countTaskStatuses,
   fetchExecutionInfo,
@@ -11,7 +12,6 @@ import {
 } from "@/services/executionService";
 import { fetchPipelineRunById } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
-import type { ComponentSpec } from "@/utils/componentSpec";
 
 import { StatusBar, StatusIcon, StatusText } from "../shared/Status";
 import { TaskImplementation } from "../shared/TaskDetails";
@@ -26,13 +26,22 @@ type RunDetailsProps = {
 
 export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
+  const [isPolling, setIsPolling] = useState(true);
+  const { componentSpec } = useComponentSpec();
 
-  const { data, isLoading, error } = fetchExecutionInfo(executionId);
+  const { data, isLoading, error } = fetchExecutionInfo(executionId, isPolling);
   const { details, state } = data;
-
   const runId = details?.pipeline_run_id;
 
-  const untypedComponentSpec = details?.task_spec?.componentRef?.spec;
+  useEffect(() => {
+    if (details && state) {
+      const statusCounts = countTaskStatuses(details, state);
+      const runStatus = getRunStatus(statusCounts);
+      if (isStatusComplete(runStatus)) {
+        setIsPolling(false);
+      }
+    }
+  }, [details, state]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,7 +63,7 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
     fetchData();
   }, [runId]);
 
-  if (error || !details || !state || !untypedComponentSpec) {
+  if (error || !details || !state || !componentSpec) {
     return (
       <div className="flex flex-col gap-8 items-center justify-center h-full">
         <Frown className="w-12 h-12 text-gray-500" />
@@ -72,11 +81,8 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
     );
   }
 
-  const componentSpec = untypedComponentSpec as ComponentSpec;
-
   const statusCounts = countTaskStatuses(details, state);
   const runStatus = getRunStatus(statusCounts);
-
   const isInProgress = isStatusInProgress(runStatus);
   const isComplete = isStatusComplete(runStatus);
 
@@ -146,7 +152,7 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
 
       <div>
         <div className="flex gap-2">
-          <h3 className="text-md font-medium">Status: {runStatus} </h3>
+          <h3 className="text-md font-medium">Status: {runStatus}</h3>
           <StatusText statusCounts={statusCounts} />
         </div>
         <div className="flex flex-col gap-2">

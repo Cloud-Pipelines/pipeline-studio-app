@@ -8,9 +8,11 @@ import type {
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
 import { useExecutionStatusQuery } from "@/hooks/useExecutionStatusQuery";
+import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
 import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
 import * as executionService from "@/services/executionService";
 import * as pipelineRunService from "@/services/pipelineRunService";
+import type { ComponentSpec } from "@/utils/componentSpec";
 
 import { RunDetails } from "./RunDetails";
 
@@ -76,6 +78,25 @@ describe("<RunDetails/>", () => {
     },
   };
 
+  const mockComponentSpec: ComponentSpec = {
+    name: "Test Pipeline",
+    description: "Test pipeline description",
+    metadata: {
+      annotations: {
+        "test-annotation": "test-value",
+      },
+    },
+    inputs: [],
+    outputs: [],
+    implementation: {
+      container: {
+        image: "test-image",
+        command: ["test-command"],
+        args: ["test-arg"],
+      },
+    },
+  };
+
   const mockPipelineRun = {
     id: 123,
     root_execution_id: 456,
@@ -103,11 +124,13 @@ describe("<RunDetails/>", () => {
 
   const renderWithQueryClient = (component: React.ReactElement) => {
     return render(
-      <QueryClientProvider client={queryClient}>
-        <PipelineRunsProvider pipelineName={mockPipelineRun.pipeline_name}>
-          {component}
-        </PipelineRunsProvider>
-      </QueryClientProvider>,
+      <ComponentSpecProvider spec={mockComponentSpec}>
+        <QueryClientProvider client={queryClient}>
+          <PipelineRunsProvider pipelineName={mockPipelineRun.pipeline_name}>
+            {component}
+          </PipelineRunsProvider>
+        </QueryClientProvider>
+      </ComponentSpecProvider>,
     );
   };
 
