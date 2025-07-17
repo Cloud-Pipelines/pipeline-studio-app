@@ -108,10 +108,23 @@ const getBackendUrlFromEnv = () => {
   return url || "";
 };
 
+const normalizeUrl = (url: string) => {
+  if (url.trim() === "") {
+    return "";
+  }
+
+  let normalizedUrl = url.trim();
+  if (!/^https?:\/\//i.test(normalizedUrl)) {
+    normalizedUrl = "http://" + normalizedUrl;
+  }
+  return normalizedUrl;
+};
+
 export {
   convertGcsUrlToBrowserUrl,
   convertGithubUrlToDirectoryUrl,
   downloadYamlFromComponentText,
   getBackendUrlFromEnv,
   getIdOrTitleFromPath,
+  normalizeUrl,
 };

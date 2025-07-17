@@ -41,6 +41,12 @@ const userComponentStore = localforage.createInstance({
   description: "Store for user component data",
 });
 
+const settingsStore = localforage.createInstance({
+  name: "oasis-app",
+  storeName: "settings",
+  description: "Store for application settings",
+});
+
 // Function to save a component
 export async function saveComponent(component: Component): Promise<Component> {
   const now = Date.now();
@@ -87,3 +93,16 @@ export async function getAllUserComponents(): Promise<UserComponent[]> {
 
   return userComponents;
 }
+
+// App Settings
+export const getUserBackendUrl = async () => {
+  return (await settingsStore.getItem<string>("userBackendUrl")) ?? "";
+};
+export const setUserBackendUrl = (url: string) =>
+  settingsStore.setItem("userBackendUrl", url);
+
+export const getUseEnv = async () => {
+  return (await settingsStore.getItem<boolean>("useEnv")) ?? true;
+};
+export const setUseEnv = (flag: boolean) =>
+  settingsStore.setItem("useEnv", flag);
