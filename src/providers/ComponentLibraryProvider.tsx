@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 
+import ComponentDuplicateDialog from "@/components/shared/Dialogs/ComponentDuplicateDialog";
 import { fetchAndStoreComponentLibrary } from "@/services/componentService";
 import type {
   ComponentFolder,
@@ -25,17 +26,20 @@ import {
 } from "@/utils/componentLibrary";
 import type { ComponentReference } from "@/utils/componentSpec";
 import {
-  addComponentToListByTextWithDuplicateCheck,
-  addComponentToListByUrl,
   type ComponentReferenceWithSpec,
   deleteComponentFileFromList,
+  importComponent,
   updateComponentInListByText,
   updateComponentRefInList,
-  writeComponentRefToFile,
 } from "@/utils/componentStore";
 import { DEFAULT_FILTERS, USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 import { getComponentName } from "@/utils/getComponentName";
-import { getComponentByUrl, saveComponent } from "@/utils/localforage";
+import {
+  getComponentByUrl,
+  getUserComponentByName,
+  saveComponent,
+  type UserComponent,
+} from "@/utils/localforage";
 import { componentMatchesSearch } from "@/utils/searchUtils";
 
 import { useComponentSpec } from "./ComponentSpecProvider";
@@ -51,9 +55,9 @@ type ComponentLibraryContextType = {
   searchFilters: string[];
   searchResult: SearchResult | null;
   highlightSearchResults: boolean;
+  highlightedComponentDigest: string | null;
   addToComponentLibrary: (component: ComponentReference) => void;
   removeFromComponentLibrary: (component: ComponentReference) => void;
-  highlightedComponentDigest: string | null;
   refetchLibrary: () => void;
   refetchUserComponents: () => void;
   setSearchTerm: (term: string) => void;
@@ -90,6 +94,12 @@ export const ComponentLibraryProvider = ({
   const [highlightedComponentDigest, setHighlightedComponentDigest] = useState<
     string | null
   >(null);
+
+  const [existingComponent, setExistingComponent] =
+    useState<UserComponent | null>(null);
+  const [newComponent, setNewComponent] = useState<ComponentReference | null>(
+    null,
+  );
 
   // Fetch main component library
   const {
@@ -151,15 +161,14 @@ export const ComponentLibraryProvider = ({
   const setComponentFavorite = useCallback(
     async (component: ComponentReference, favorited: boolean) => {
       // Update via filename (User Components)
-      const name = getComponentName(component);
-      if (!component.url) {
+      if (!component.url && component.name) {
         component.favorited = favorited;
 
         if (component.spec) {
           await updateComponentRefInList(
             USER_COMPONENTS_LIST_NAME,
             component as ComponentReferenceWithSpec,
-            name,
+            component.name,
           ).then(async () => {
             await refreshUserComponents();
           });
@@ -167,17 +176,26 @@ export const ComponentLibraryProvider = ({
           await updateComponentInListByText(
             USER_COMPONENTS_LIST_NAME,
             component.text,
-            name,
+            component.name,
             { favorited },
           ).then(async () => {
             await refreshUserComponents();
           });
         } else {
           console.warn(
-            `Component "${name}" does not have spec or text, cannot favorite.`,
+            `Component "${
+              component.name
+            }" does not have spec or text, cannot favorite.`,
           );
         }
 
+        return;
+      }
+
+      if (!component.url) {
+        console.warn(
+          `Component "${component.name}" does not have a url, cannot favorite.`,
+        );
         return;
       }
 
@@ -312,72 +330,90 @@ export const ComponentLibraryProvider = ({
     [componentLibrary, userComponentsFolder, usedComponentsFolder],
   );
 
+  const handleImportComponent = useCallback(
+    async (yamlString: string) => {
+      const component = { ...newComponent, text: yamlString };
+
+      await importComponent(component)
+        .then(async () => {
+          await refreshComponentLibrary();
+          await refreshUserComponents();
+          setNewComponent(null);
+          setExistingComponent(null);
+        })
+        .catch((error) => {
+          console.error("Error importing component:", error);
+        });
+    },
+    [
+      refreshUserComponents,
+      refreshComponentLibrary,
+      importComponent,
+      newComponent,
+    ],
+  );
+
   const addToComponentLibrary = useCallback(
     async (component: ComponentReference) => {
-      const name = getComponentName(component);
-      if (!component.url) {
-        component.favorited = true;
+      const duplicate = userComponentsFolder
+        ? flattenFolders(userComponentsFolder).find(
+            (c) => getComponentName(c) === getComponentName(component),
+          )
+        : undefined;
 
-        if (component.spec) {
-          await writeComponentRefToFile(
-            USER_COMPONENTS_LIST_NAME,
-            name,
-            component as ComponentReferenceWithSpec,
-          ).then(async () => {
-            await refreshUserComponents();
-          });
-        } else if (component.text) {
-          await addComponentToListByTextWithDuplicateCheck(
-            USER_COMPONENTS_LIST_NAME,
-            component.text,
-            name,
-            "Component",
-            false,
-            { favorited: true },
-          ).then(async () => {
-            await refreshUserComponents();
-          });
-        } else {
-          console.warn(
-            `Component "${name}" does not have spec or text, cannot favorite.`,
-          );
-        }
-
+      if (duplicate?.name) {
+        const existingUserComponent = await getUserComponentByName(
+          duplicate.name,
+        );
+        setExistingComponent(existingUserComponent);
+        setNewComponent(component);
         return;
       }
 
-      await addComponentToListByUrl(
-        USER_COMPONENTS_LIST_NAME,
-        component.url,
-        name,
-        false,
-        {
-          favorited: true,
-        },
-      ).then(async () => {
-        await refreshComponentLibrary();
-        await refreshUserComponents();
-      });
+      await importComponent(component)
+        .then(async () => {
+          await refreshComponentLibrary();
+          await refreshUserComponents();
+        })
+        .catch((error) => {
+          console.error("Error adding component to library:", error);
+        });
     },
-    [refreshComponentLibrary, refreshUserComponents],
+    [
+      userComponentsFolder,
+      refreshComponentLibrary,
+      refreshUserComponents,
+      importComponent,
+    ],
   );
 
   const removeFromComponentLibrary = useCallback(
     async (component: ComponentReference) => {
-      const name = getComponentName(component);
       try {
-        await deleteComponentFileFromList(USER_COMPONENTS_LIST_NAME, name).then(
-          async () => {
+        if (component.name) {
+          await deleteComponentFileFromList(
+            USER_COMPONENTS_LIST_NAME,
+            component.name,
+          ).then(async () => {
             await refreshComponentLibrary();
             await refreshUserComponents();
-          },
-        );
+          });
+        } else {
+          console.error(
+            `Error deleting component: Component ${component.digest} does not have a name.`,
+          );
+        }
       } catch (error) {
         console.error("Error deleting component:", error);
       }
     },
     [refreshComponentLibrary, refreshUserComponents],
   );
+
+  const handleCloseDuplicationDialog = useCallback(() => {
+    setExistingComponent(null);
+    setNewComponent(null);
+  }, []);
 
   const searchResult = useMemo(
     () => searchComponentLibrary(searchTerm, searchFilters),
@@ -425,9 +461,9 @@ export const ComponentLibraryProvider = ({
       searchFilters,
       searchResult,
       highlightSearchResults,
+      highlightedComponentDigest,
       addToComponentLibrary,
       removeFromComponentLibrary,
-      highlightedComponentDigest,
       refetchLibrary,
       refetchUserComponents,
       setSearchTerm,
@@ -451,9 +487,9 @@ export const ComponentLibraryProvider = ({
       searchFilters,
       searchResult,
       highlightSearchResults,
+      highlightedComponentDigest,
       addToComponentLibrary,
       removeFromComponentLibrary,
-      highlightedComponentDigest,
       refetchLibrary,
       refetchUserComponents,
       setSearchTerm,
@@ -471,6 +507,13 @@ export const ComponentLibraryProvider = ({
   return (
     <ComponentLibraryContext.Provider value={value}>
       {children}
+      <ComponentDuplicateDialog
+        existingComponent={existingComponent ?? undefined}
+        newComponent={newComponent?.spec}
+        newComponentDigest={newComponent?.digest}
+        setClose={handleCloseDuplicationDialog}
+        handleImportComponent={handleImportComponent}
+      />
     </ComponentLibraryContext.Provider>
   );
 };

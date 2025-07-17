@@ -13,6 +13,7 @@ import type { DownloadDataType } from "./cache";
 import { downloadDataWithCache } from "./cache";
 import type { ComponentReference, ComponentSpec } from "./componentSpec";
 import { isValidComponentSpec } from "./componentSpec";
+import { USER_COMPONENTS_LIST_NAME } from "./constants";
 import { getIdOrTitleFromPath } from "./URL";
 
 // IndexedDB: DB and table names
@@ -305,7 +306,7 @@ const makeNameUniqueByAddingIndex = (
   return finalName;
 };
 
-export const writeComponentRefToFile = async (
+const writeComponentRefToFile = async (
   listName: string,
   fileName: string,
   componentRef: ComponentReferenceWithSpec,
@@ -744,4 +745,43 @@ const upgradeSingleComponentListDb = async (listName: string) => {
       `componentStore: Upgraded the component list DB ${listName} to version ${listFormatVersion}`,
     );
   }
+};
+
+export const importComponent = async (component: ComponentReference) => {
+  if (!component.url) {
+    component.favorited = true;
+
+    if (component.spec && component.name) {
+      return await writeComponentRefToFile(
+        USER_COMPONENTS_LIST_NAME,
+        component.name,
+        component as ComponentReferenceWithSpec,
+      );
+    } else if (component.text) {
+      return await addComponentToListByTextWithDuplicateCheck(
+        USER_COMPONENTS_LIST_NAME,
+        component.text,
+        component.name,
+        "Component",
+        false,
+        { favorited: true },
+      );
+    } else {
+      console.warn(
+        `Component "${component.name}" does not have spec or text, cannot favorite.`,
+      );
+    }
+
+    return;
+  }
+
+  return await addComponentToListByUrl(
+    USER_COMPONENTS_LIST_NAME,
+    component.url,
+    component.name,
+    false,
+    {
+      favorited: true,
+    },
+  );
 };
