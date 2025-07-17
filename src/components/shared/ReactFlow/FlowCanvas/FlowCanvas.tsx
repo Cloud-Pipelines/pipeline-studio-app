@@ -643,9 +643,15 @@ const FlowCanvas = ({
       return false;
     }
 
+    // Skip confirmation if Shift key is pressed
+    if (shiftKeyPressed) {
+      return true;
+    }
+
     const confirmed = await triggerConfirmation(
       getDeleteConfirmationDetails(params),
     );
+
     return confirmed;
   };
 
