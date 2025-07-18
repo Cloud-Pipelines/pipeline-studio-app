@@ -35,7 +35,6 @@ export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
 interface ComponentSpecContextType {
   componentSpec: ComponentSpec;
   setComponentSpec: (spec: ComponentSpec) => void;
-  isDirty: boolean;
   graphSpec: GraphSpec;
   isLoading: boolean;
   refetch: () => void;
@@ -64,10 +63,7 @@ export const ComponentSpecProvider = ({
   const [taskStatusMap, setTaskStatusMap] = useState<Map<string, string>>(
     new Map(),
   );
-  const [originalComponentSpec, setOriginalComponentSpec] =
-    useState<ComponentSpec>(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
 
-  const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const graphSpec = useMemo(() => {
@@ -86,7 +82,6 @@ export const ComponentSpecProvider = ({
     async (newName?: string) => {
       if (componentSpec) {
         setComponentSpec(componentSpec);
-        setOriginalComponentSpec(componentSpec);
       }
 
       const name = newName ?? componentSpec.name;
@@ -100,7 +95,6 @@ export const ComponentSpecProvider = ({
       );
 
       setComponentSpec(preparedComponentRef);
-      setOriginalComponentSpec(preparedComponentRef);
       setIsLoading(false);
     },
     [componentSpec],
@@ -124,21 +118,15 @@ export const ComponentSpecProvider = ({
         name,
         componentText,
       );
-
-      setOriginalComponentSpec(specWithName);
     },
     [componentSpec],
   );
 
-  useAutoSave(
-    (spec) => {
-      if (spec.name) {
-        saveComponentSpec(spec.name);
-      }
-    },
-    componentSpec,
-    isDirty && !!componentSpec.name,
-  );
+  useAutoSave((spec) => {
+    if (spec.name) {
+      saveComponentSpec(spec.name);
+    }
+  }, componentSpec);
 
   const updateGraphSpec = useCallback((newGraphSpec: GraphSpec) => {
     setComponentSpec((prevSpec) => ({
@@ -151,43 +139,31 @@ export const ComponentSpecProvider = ({
   }, []);
 
   useEffect(() => {
-    if (componentSpec !== originalComponentSpec) {
-      setIsDirty(true);
-    } else {
-      setIsDirty(false);
-    }
-  }, [componentSpec, originalComponentSpec, setIsDirty]);
-
-  useEffect(() => {
     setComponentSpec(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
-    setOriginalComponentSpec(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
-    setIsDirty(false);
     setIsLoading(false);
   }, [spec]);
 
   const value = useMemo(
     () => ({
       componentSpec,
-      setComponentSpec,
-      isDirty,
       graphSpec,
+      taskStatusMap,
       isLoading,
       refetch,
-      updateGraphSpec,
+      setComponentSpec,
       saveComponentSpec,
-      taskStatusMap,
+      updateGraphSpec,
       setTaskStatusMap,
     }),
     [
       componentSpec,
-      setComponentSpec,
-      isDirty,
       graphSpec,
+      taskStatusMap,
       isLoading,
       refetch,
-      updateGraphSpec,
+      setComponentSpec,
       saveComponentSpec,
-      taskStatusMap,
+      updateGraphSpec,
       setTaskStatusMap,
     ],
   );
