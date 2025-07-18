@@ -1,10 +1,15 @@
 import { downloadDataWithCache } from "@/utils/cache";
-import { isGraphImplementation } from "@/utils/componentSpec";
+import {
+  type ComponentSpec,
+  isGraphImplementation,
+} from "@/utils/componentSpec";
 import {
   type ComponentReferenceWithSpec,
   loadComponentAsRefFromText,
   preloadComponentReferences,
 } from "@/utils/componentStore";
+
+const preparedComponentCache = new Map<string, ComponentSpec>();
 
 const loadInlineComponentRefs = async (tasks: Record<string, any>) => {
   for (const taskId in tasks) {
@@ -31,6 +36,12 @@ const loadInlineComponentRefs = async (tasks: Record<string, any>) => {
 export const prepareComponentRefForEditor = async (
   ref: ComponentReferenceWithSpec,
 ) => {
+  const cacheKey = ref.digest;
+
+  if (preparedComponentCache.has(cacheKey)) {
+    return preparedComponentCache.get(cacheKey);
+  }
+
   const safeSpec = structuredClone(ref.spec);
 
   if (
@@ -50,5 +61,9 @@ export const prepareComponentRefForEditor = async (
     safeSpec,
     downloadDataWithCache,
   );
+
+  // Cache the result to avoid generating new spec objects in thew future if the same spec is used again
+  preparedComponentCache.set(cacheKey, componentSpec);
+
   return componentSpec;
 };

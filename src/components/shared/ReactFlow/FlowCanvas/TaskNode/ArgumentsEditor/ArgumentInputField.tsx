@@ -6,6 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import equal from "fast-deep-equal";
 import {
   Delete,
   HelpCircle,
@@ -17,6 +18,7 @@ import {
   type ChangeEvent,
   type MouseEvent,
   useCallback,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -118,7 +120,7 @@ export const ArgumentInputField = ({
   }, []);
 
   const canUndo = useMemo(
-    () => JSON.stringify(argument) !== JSON.stringify(undoValue),
+    () => !equal(argument, undoValue),
     [argument, undoValue],
   );
 
@@ -132,6 +134,14 @@ export const ArgumentInputField = ({
     }
 
     return getPlaceholder(argument.value);
+  }, [argument]);
+
+  useEffect(() => {
+    const value = getInputValue(argument);
+    if (value) {
+      setInputValue(value);
+      setLastSubmittedValue(value);
+    }
   }, [argument]);
 
   return (

@@ -9,8 +9,12 @@ import {
 } from "react";
 
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
 import { loadPipelineByName } from "@/services/pipelineService";
-import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import {
+  AUTOSAVE_DEBOUNCE_TIME_MS,
+  USER_PIPELINES_LIST_NAME,
+} from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 
 import type {
@@ -42,6 +46,7 @@ interface ComponentSpecContextType {
   saveComponentSpec: (name: string) => Promise<void>;
   taskStatusMap: Map<string, string>;
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
+  undoRedo: UndoRedo;
 }
 
 const ComponentSpecContext = createContext<
@@ -64,7 +69,8 @@ export const ComponentSpecProvider = ({
     new Map(),
   );
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!!spec);
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
 
   const graphSpec = useMemo(() => {
     if (
@@ -77,6 +83,8 @@ export const ComponentSpecProvider = ({
     return (EMPTY_GRAPH_COMPONENT_SPEC.implementation as GraphImplementation)
       .graph;
   }, [componentSpec]);
+
+  const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
 
   const loadPipeline = useCallback(
     async (newName?: string) => {
@@ -93,6 +101,11 @@ export const ComponentSpecProvider = ({
       const preparedComponentRef = await prepareComponentRefForEditor(
         result.experiment.componentRef as ComponentReferenceWithSpec,
       );
+
+      if (!preparedComponentRef) {
+        console.error("Failed to prepare component reference for editor");
+        return;
+      }
 
       setComponentSpec(preparedComponentRef);
       setIsLoading(false);
@@ -119,14 +132,8 @@ export const ComponentSpecProvider = ({
         componentText,
       );
     },
-    [componentSpec],
+    [componentSpec, readOnly],
   );
-
-  useAutoSave((spec) => {
-    if (spec.name) {
-      saveComponentSpec(spec.name);
-    }
-  }, componentSpec);
 
   const updateGraphSpec = useCallback((newGraphSpec: GraphSpec) => {
     setComponentSpec((prevSpec) => ({
@@ -138,9 +145,35 @@ export const ComponentSpecProvider = ({
     }));
   }, []);
 
+  const shouldAutoSave =
+    !isLoading && !readOnly && !!componentSpec.name && hasInitiallyLoaded;
+
+  useAutoSave(
+    (spec) => {
+      if (spec.name) {
+        saveComponentSpec(spec.name);
+      }
+    },
+    componentSpec,
+    AUTOSAVE_DEBOUNCE_TIME_MS,
+    shouldAutoSave,
+  );
+
   useEffect(() => {
-    setComponentSpec(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
-    setIsLoading(false);
+    if (spec) {
+      setIsLoading(true);
+      setComponentSpec(spec);
+      undoRedo.clearHistory();
+      setIsLoading(false);
+
+      // When the provider is loaded with a spec the value goes from null -> empty_graph_spec -> full_spec.
+      // Due to this the update from empty_graph_spec to full_spec get detected as a change by the autosaver, triggering an autosave on load.
+      // This timeout avoids that by delaying the initial load completion to allow state updates to settle.
+      // This is a temporary workaround and the deeper issue should be investigated later.
+      setTimeout(() => {
+        setHasInitiallyLoaded(true);
+      }, AUTOSAVE_DEBOUNCE_TIME_MS);
+    }
   }, [spec]);
 
   const value = useMemo(
@@ -154,6 +187,7 @@ export const ComponentSpecProvider = ({
       saveComponentSpec,
       updateGraphSpec,
       setTaskStatusMap,
+      undoRedo,
     }),
     [
       componentSpec,
@@ -165,6 +199,7 @@ export const ComponentSpecProvider = ({
       saveComponentSpec,
       updateGraphSpec,
       setTaskStatusMap,
+      undoRedo,
     ],
   );
 
