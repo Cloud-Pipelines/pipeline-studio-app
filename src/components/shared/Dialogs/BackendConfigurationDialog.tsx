@@ -71,6 +71,7 @@ const BackendConfigurationDialog = ({
   const handleConfirm = useCallback(() => {
     setEnvConfig(isEnvConfig);
     setBackendUrl(inputBackendUrl);
+    setInputBackendUrl(inputBackendUrl.trim());
     setInputBackendTestResult(null);
     setOpen(false);
   }, [isEnvConfig, inputBackendUrl, setEnvConfig, setBackendUrl, setOpen]);
@@ -91,7 +92,7 @@ const BackendConfigurationDialog = ({
   }, [isConfiguredFromEnv, backendUrl, setInputBackendUrl]);
 
   const hasBackendConfigured =
-    !!inputBackendUrl || (isEnvConfig && hasEnvConfig);
+    !!inputBackendUrl.trim() || (isEnvConfig && hasEnvConfig);
   const confirmButtonText = hasBackendConfigured
     ? "Confirm"
     : "Continue without backend";
@@ -206,7 +207,7 @@ const BackendConfigurationDialog = ({
                   </Button>
                 </div>
               </div>
-              {!inputBackendUrl && (
+              {!inputBackendUrl.trim() && (
                 <div className="flex items-center gap-2">
                   <AlertCircle className="inline-block text-red-500 h-4 w-4" />
                   <p className="text-red-500 text-sm">

@@ -13,7 +13,8 @@ import { useBackend } from "@/providers/BackendProvider";
 import BackendConfigurationDialog from "./Dialogs/BackendConfigurationDialog";
 
 const BackendStatus = () => {
-  const { available, backendUrl } = useBackend();
+  const { available, backendUrl, isConfiguredFromEnv, configured } =
+    useBackend();
 
   const [open, setOpen] = useState(false);
 
@@ -21,10 +22,15 @@ const BackendStatus = () => {
     setOpen(true);
   }, []);
 
-  const hideBackendUrl = backendUrl === import.meta.env.VITE_BACKEND_API_URL;
-  const backendAvailableString = hideBackendUrl
+  const backendAvailableString = isConfiguredFromEnv
     ? "Backend available"
     : `Connected to ${backendUrl}`;
+  const backendNotAvailableString = configured
+    ? "Backend unavailable"
+    : "Backend not configured";
+
+  const configuredStatusColor = available ? "bg-green-500" : "bg-red-500";
+  const notConfiguredStatusColor = "bg-yellow-500";
 
   return (
     <>
@@ -40,14 +46,14 @@ const BackendStatus = () => {
               <span
                 className={cn(
                   "absolute -bottom-0.25 -right-0.25 w-2 h-2 rounded-full border-1 border-slate-900",
-                  available ? "bg-green-500" : "bg-red-500",
+                  configured ? configuredStatusColor : notConfiguredStatusColor,
                 )}
               />
             </div>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {available ? backendAvailableString : "Backend unavailable"}
+          {available ? backendAvailableString : backendNotAvailableString}
         </TooltipContent>
       </Tooltip>
 

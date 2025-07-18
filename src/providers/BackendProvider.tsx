@@ -19,6 +19,7 @@ import { getBackendUrlFromEnv } from "@/utils/URL";
 import { normalizeUrl } from "@/utils/URL";
 
 type BackendContextType = {
+  configured: boolean;
   available: boolean;
   backendUrl: string;
   isConfiguredFromEnv: boolean;
@@ -43,6 +44,8 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
   const [available, setAvailable] = useState(false);
 
   const backendUrl = useEnv ? backendUrlFromEnv : userBackendUrl;
+
+  const configured = !!backendUrl.trim();
 
   const setBackendUrl = useCallback(async (url: string) => {
     const normalized = normalizeUrl(url);
@@ -96,7 +99,7 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const getSettings = async () => {
       const url = await getUserBackendUrl();
-      setUserBackendUrl(url || "");
+      setUserBackendUrl(url);
 
       const flag = await getUseEnv();
       setUseEnv(flag === true);
@@ -106,6 +109,7 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
 
   const contextValue = useMemo(
     () => ({
+      configured,
       available,
       backendUrl,
       isConfiguredFromEnv: useEnv,
@@ -113,7 +117,15 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
       setBackendUrl,
       ping,
     }),
-    [available, backendUrl, useEnv, setEnvConfig, setBackendUrl, ping],
+    [
+      configured,
+      available,
+      backendUrl,
+      useEnv,
+      setEnvConfig,
+      setBackendUrl,
+      ping,
+    ],
   );
 
   return (

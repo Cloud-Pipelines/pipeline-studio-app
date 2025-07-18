@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { ListPipelineJobsResponse } from "@/api/types.gen";
+import { InfoBox } from "@/components/shared/InfoBox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
@@ -14,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { API_URL } from "@/utils/constants";
+import { useBackend } from "@/providers/BackendProvider";
 
 import RunRow from "./RunRow";
 
@@ -23,6 +24,8 @@ const CREATED_BY_ME_FILTER = "created_by:me";
 const FILTER_QUERY_PARAM = "?filter=";
 
 export const RunSection = () => {
+  const { backendUrl, configured, available } = useBackend();
+
   const [useCreatedByMe, setUseCreatedByMe] = useState(false);
   const [pageToken, setPageToken] = useState<string | undefined>();
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
@@ -31,26 +34,36 @@ export const RunSection = () => {
     ? FILTER_QUERY_PARAM + CREATED_BY_ME_FILTER
     : "";
 
-  const { data, isLoading, refetch } = useQuery<ListPipelineJobsResponse>({
-    queryKey: ["runs", pageToken],
-    refetchOnWindowFocus: false,
-    queryFn: async () => {
-      const pageTokenParam = pageToken ? `?page_token=${pageToken}` : "";
-      const url = `${API_URL}/api/pipeline_runs/${pageTokenParam}${filter}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch pipeline runs: ${response.statusText}`,
-        );
-      }
+  const { data, isLoading, isFetching, error, refetch } =
+    useQuery<ListPipelineJobsResponse>({
+      queryKey: ["runs", pageToken],
+      refetchOnWindowFocus: false,
+      queryFn: async () => {
+        const pageTokenParam = pageToken ? `?page_token=${pageToken}` : "";
+        const url = `${backendUrl}/api/pipeline_runs/${pageTokenParam}${filter}`;
 
-      return response.json();
-    },
-  });
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(
+              `Failed to fetch pipeline runs: ${response.statusText}`,
+            );
+          }
+
+          return response.json();
+        } catch (error) {
+          if (error instanceof Error) {
+            throw new Error(error.message);
+          } else {
+            throw new Error("An unknown error occurred");
+          }
+        }
+      },
+    });
 
   useEffect(() => {
     refetch();
-  }, [useCreatedByMe, refetch]);
+  }, [backendUrl, useCreatedByMe, refetch]);
 
   const handleFilterChange = (value: boolean) => {
     setUseCreatedByMe(value);
@@ -71,11 +84,38 @@ export const RunSection = () => {
     setPageToken(previousToken);
   };
 
-  if (isLoading) {
+  if (!configured) {
+    return (
+      <InfoBox title="Backend not configured" variant="warning">
+        Configure a backend to create and view runs.
+      </InfoBox>
+    );
+  }
+
+  if (isLoading || isFetching) {
     return (
       <div className="flex gap-2 items-center">
         <Spinner /> Loading...
       </div>
+    );
+  }
+
+  if (error) {
+    const backendNotConfigured = "The backend is not configured.";
+    const backendUnavailable =
+      "The configured backend is currently unavailable.";
+    const backendAvailableString = "The configured backend is available.";
+    const backendStatusString = configured
+      ? available
+        ? backendAvailableString
+        : backendUnavailable
+      : backendNotConfigured;
+
+    return (
+      <InfoBox title="Error loading runs" variant="error">
+        <div className="mb-2">{error.message}</div>
+        <div className="text-black italic">{backendStatusString}</div>
+      </InfoBox>
     );
   }
 
