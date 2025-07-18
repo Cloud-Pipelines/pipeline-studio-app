@@ -1,32 +1,47 @@
+import equal from "fast-deep-equal";
 import { useEffect, useRef } from "react";
+
+import { deepClone } from "@/utils/deepClone";
 
 export const useAutoSave = <T>(
   saveFunction: (data: T) => Promise<void> | void,
   data: T,
-  isDirty: boolean,
+  debounceMs: number = 2000,
 ) => {
-  const saveFunctionRef = useRef(saveFunction);
-  const dataRef = useRef(data);
-  const isDirtyRef = useRef(isDirty);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedDataRef = useRef<T>(data);
+  const hasSavedRef = useRef(false);
+
+  const isDirty = !equal(data, lastSavedDataRef.current);
 
   useEffect(() => {
-    saveFunctionRef.current = saveFunction;
-  }, [saveFunction]);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
 
-  useEffect(() => {
-    dataRef.current = data;
-  }, [data]);
+    if (isDirty) {
+      timeoutRef.current = setTimeout(async () => {
+        try {
+          await saveFunction(data);
+          lastSavedDataRef.current = deepClone(data);
+          hasSavedRef.current = true;
+        } catch (error) {
+          console.error("Auto-save failed:", error);
+        }
+      }, debounceMs);
+    }
 
-  useEffect(() => {
-    isDirtyRef.current = isDirty;
-  }, [isDirty]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (isDirtyRef.current) {
-        saveFunctionRef.current(dataRef.current);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    };
+  }, [data, isDirty, saveFunction, debounceMs]);
+
+  useEffect(() => {
+    if (!isDirty) {
+      lastSavedDataRef.current = deepClone(data);
+      hasSavedRef.current = false;
+    }
+  }, [isDirty, data]);
 };
