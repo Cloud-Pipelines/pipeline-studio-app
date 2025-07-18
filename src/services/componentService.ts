@@ -1,12 +1,18 @@
 import yaml from "js-yaml";
 
+import { COMPONENT_LIBRARY_FILE } from "@/appSettings";
 import {
   type ComponentFolder,
   type ComponentLibrary,
   isValidComponentLibrary,
 } from "@/types/componentLibrary";
 import { loadObjectFromYamlData } from "@/utils/cache";
-import type { ComponentSpec, InputSpec, TaskSpec } from "@/utils/componentSpec";
+import type {
+  ComponentReference,
+  ComponentSpec,
+  InputSpec,
+  TaskSpec,
+} from "@/utils/componentSpec";
 import {
   componentExistsByUrl,
   getAllUserComponents,
@@ -15,12 +21,12 @@ import {
   type UserComponent,
 } from "@/utils/localforage";
 
-const COMPONENT_LIBRARY_URL = "/component_library.yaml";
-
 export interface ExistingAndNewComponent {
   existingComponent: UserComponent | undefined;
   newComponent: ComponentSpec | undefined;
 }
+
+const COMPONENT_LIBRARY_URL = "/" + COMPONENT_LIBRARY_FILE;
 
 /**
  * Generate a digest for a component
@@ -118,9 +124,7 @@ const storeComponentsFromLibrary = async (
   const processFolder = async (folder: ComponentFolder) => {
     // Store each component in the folder
     for (const component of folder.components || []) {
-      if (component.url) {
-        await fetchAndStoreComponent(component.url);
-      }
+      await fetchAndStoreComponent(component);
     }
 
     // Process subfolders recursively
@@ -138,10 +142,14 @@ const storeComponentsFromLibrary = async (
 /**
  * Fetch and store a single component by URL
  */
-export const fetchAndStoreComponent = async (
+export const fetchAndStoreComponentByUrl = async (
   url: string,
 ): Promise<ComponentSpec | null> => {
   try {
+    const id = `component-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const createdAt = Date.now();
+    const updatedAt = Date.now();
+
     // Check if component already exists in storage
     const exists = await componentExistsByUrl(url);
     if (exists) {
@@ -173,11 +181,11 @@ export const fetchAndStoreComponent = async (
 
       // Store the component
       await saveComponent({
-        id: `component-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        id,
         url,
         data: text,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        createdAt,
+        updatedAt,
       });
 
       return componentSpec;
@@ -186,17 +194,93 @@ export const fetchAndStoreComponent = async (
 
       // Still store the raw data even if parsing failed
       await saveComponent({
-        id: `component-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        id,
         url,
         data: text,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        createdAt,
+        updatedAt,
       });
 
       return null;
     }
   } catch (error) {
     console.error(`Error fetching component at ${url}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Fetch and store a single component by text, URL or spec (in that order).
+ * Returns the populated ComponentSpec or null.
+ */
+export const fetchAndStoreComponent = async (
+  component: ComponentReference,
+): Promise<ComponentSpec | null> => {
+  try {
+    const id = `component-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const createdAt = Date.now();
+    const updatedAt = Date.now();
+
+    let spec: ComponentSpec | null | undefined = component.spec;
+    let text: string | undefined = component.text;
+    let digest: string | undefined = component.digest;
+
+    // If spec is missing, try to get it from text
+    if (!spec && text) {
+      try {
+        spec = yaml.load(text) as ComponentSpec;
+      } catch (error) {
+        console.error("Error parsing component text:", error);
+        spec = null;
+      }
+    }
+
+    // If text is missing, try to get it from URL
+    if (!text && component.url) {
+      const storedComponent = await getComponentByUrl(component.url);
+      if (storedComponent) {
+        text = storedComponent.data;
+      } else {
+        const response = await fetch(component.url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch component: ${response.statusText}`);
+        }
+        text = await response.text();
+      }
+      // Try to parse spec from fetched text if still missing
+      if (!spec && text) {
+        try {
+          spec = yaml.load(text) as ComponentSpec;
+        } catch (error) {
+          console.error("Error parsing component text from URL:", error);
+          spec = null;
+        }
+      }
+    }
+
+    // If both text and URL are missing, but spec exists, serialize spec to text
+    if (!text && spec) {
+      console.warn("Component text not found. Serializing spec to text.");
+      text = yaml.dump(spec);
+    }
+
+    if (!digest && text) {
+      digest = await generateDigest(text);
+    }
+
+    if (text) {
+      await saveComponent({
+        id,
+        url: component.url ?? "",
+        data: text,
+        createdAt,
+        updatedAt,
+      });
+    }
+
+    return spec ?? null;
+  } catch (error) {
+    console.error(`Error in fetchAndStoreComponent:`, error);
     return null;
   }
 };

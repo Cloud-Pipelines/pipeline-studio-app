@@ -8,7 +8,10 @@ import type {
 } from "@/types/componentLibrary";
 
 import type { ComponentReference, GraphSpec, TaskSpec } from "./componentSpec";
-import { getAllComponentFilesFromList } from "./componentStore";
+import {
+  componentSpecToYaml,
+  getAllComponentFilesFromList,
+} from "./componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "./constants";
 import { getComponentByUrl } from "./localforage";
 
@@ -124,7 +127,9 @@ export async function populateComponentRefs<
     ref: ComponentReference,
   ): Promise<ComponentReference> {
     if (ref.spec) {
-      return ref;
+      const text = componentSpecToYaml(ref.spec);
+      const digest = await generateDigest(text);
+      return { ...ref, text, digest };
     }
 
     // if there is no spec, fallback to text
