@@ -59,3 +59,5 @@ export enum ComponentSearchFilter {
 export const COMPONENT_SEARCH_FILTERS = Object.values(ComponentSearchFilter);
 
 export const DEFAULT_FILTERS = [ComponentSearchFilter.NAME];
+
+export const AUTOSAVE_DEBOUNCE_TIME = 2000; // ms

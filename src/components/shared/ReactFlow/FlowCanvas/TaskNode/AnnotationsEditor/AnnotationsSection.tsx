@@ -1,5 +1,5 @@
 import { PlusCircleIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { Annotations } from "@/types/annotations";
@@ -82,6 +82,10 @@ export const AnnotationsSection = ({
       onApply(merged);
     }
   };
+
+  useEffect(() => {
+    setAnnotations(rawAnnotations);
+  }, [rawAnnotations]);
 
   return (
     <>
