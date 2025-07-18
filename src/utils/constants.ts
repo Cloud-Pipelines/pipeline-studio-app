@@ -59,3 +59,14 @@ export enum ComponentSearchFilter {
 export const COMPONENT_SEARCH_FILTERS = Object.values(ComponentSearchFilter);
 
 export const DEFAULT_FILTERS = [ComponentSearchFilter.NAME];
+
+export const REQUIRE_AUTHORIZATION = import.meta.env.VITE_REQUIRE_AUTHORIZATION;
+export const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
+
+export function get_github_client_id() {
+  return GITHUB_CLIENT_ID;
+}
+
+export function get_require_authorization() {
+  return REQUIRE_AUTHORIZATION;
+}
