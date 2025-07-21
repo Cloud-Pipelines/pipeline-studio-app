@@ -110,7 +110,7 @@ const BackendConfigurationDialog = ({
         </DialogHeader>
 
         <DialogDescription aria-label="Configure backend">
-          <span>Attach the Oasis frontend to a valid backend.</span>
+          <span>Attach the Oasis frontend to a custom backend.</span>
         </DialogDescription>
 
         <div className="flex flex-col gap-4">

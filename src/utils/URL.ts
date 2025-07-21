@@ -3,6 +3,7 @@ import yaml from "js-yaml";
 import { RUNS_BASE_PATH } from "@/routes/router";
 
 import type { ComponentSpec } from "./componentSpec";
+import { API_URL } from "./constants";
 
 const convertGcsUrlToBrowserUrl = (
   url: string,
@@ -104,8 +105,7 @@ const getIdOrTitleFromPath = (
 };
 
 const getBackendUrlFromEnv = () => {
-  const url = import.meta.env.VITE_BACKEND_API_URL;
-  return url || "";
+  return API_URL;
 };
 
 const normalizeUrl = (url: string) => {
