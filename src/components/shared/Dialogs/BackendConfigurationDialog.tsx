@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useBackend } from "@/providers/BackendProvider";
+import { API_URL } from "@/utils/constants";
 
 import { InfoBox } from "../InfoBox";
 
@@ -31,6 +32,12 @@ const BackendConfigurationDialog = ({
   open,
   setOpen,
 }: BackendConfigurationDialogProps) => {
+  console.log("=== BackendConfigurationDialog DEBUG ===");
+  console.log("API_URL:", API_URL);
+  console.log("API_URL length:", API_URL.length);
+  console.log("API_URL type:", typeof API_URL);
+  console.log("hasEnvConfig:", !!API_URL);
+
   const {
     backendUrl,
     available,
@@ -48,7 +55,7 @@ const BackendConfigurationDialog = ({
   >(null);
   const [isEnvConfig, setIsEnvConfig] = useState(isConfiguredFromEnv);
 
-  const hasEnvConfig = !!import.meta.env.VITE_BACKEND_API_URL;
+  const hasEnvConfig = !!API_URL;
 
   const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setInputBackendUrl(e.target.value);

@@ -9,13 +9,13 @@ import {
 } from "react";
 
 import useToastNotification from "@/hooks/useToastNotification";
+import { API_URL } from "@/utils/constants";
 import {
   getUseEnv,
   getUserBackendUrl,
   setUseEnv as setUseEnvInLocalStorage,
   setUserBackendUrl as setUserBackendUrlInLocalStorage,
 } from "@/utils/localforage";
-import { getBackendUrlFromEnv } from "@/utils/URL";
 import { normalizeUrl } from "@/utils/URL";
 
 type BackendContextType = {
@@ -37,7 +37,7 @@ const BackendContext = createContext<BackendContextType | undefined>(undefined);
 export const BackendProvider = ({ children }: { children: ReactNode }) => {
   const notify = useToastNotification();
 
-  const backendUrlFromEnv = useMemo(() => getBackendUrlFromEnv(), []);
+  const backendUrlFromEnv = API_URL;
 
   const [userBackendUrl, setUserBackendUrl] = useState("");
   const [useEnv, setUseEnv] = useState(true);
