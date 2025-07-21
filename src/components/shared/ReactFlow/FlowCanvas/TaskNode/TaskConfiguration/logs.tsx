@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 
 import type { ContainerExecutionStatus } from "@/api/types.gen";
 import { CodeViewer } from "@/components/shared/CodeViewer";
-import { API_URL } from "@/utils/constants";
+import { InfoBox } from "@/components/shared/InfoBox";
+import { Spinner } from "@/components/ui/spinner";
+import { useBackend } from "@/providers/BackendProvider";
+import { getBackendStatusString } from "@/utils/backend";
 
 const LogDisplay = ({
   onFullscreenChange,
@@ -61,9 +64,9 @@ const isStatusActivelyLogging = (
   }
 };
 
-const getLogs = async (executionId: string) => {
+const getLogs = async (executionId: string, backendUrl: string) => {
   const response = await fetch(
-    `${API_URL}/api/executions/${executionId}/container_log`,
+    `${backendUrl}/api/executions/${executionId}/container_log`,
   );
   return response.json();
 };
@@ -77,18 +80,16 @@ const Logs = ({
   onFullscreenChange?: (isFullscreen: boolean) => void;
   status?: ContainerExecutionStatus;
 }) => {
+  const { backendUrl, configured, available } = useBackend();
+
   const [isLogging, setIsLogging] = useState(!!executionId);
   const [logs, setLogs] = useState<{
     log_text?: string;
     system_error_exception_full?: string;
   }>();
-  const {
-    data,
-    isLoading: isLoadingLogs,
-    error,
-  } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["logs", executionId],
-    queryFn: () => getLogs(String(executionId)),
+    queryFn: () => getLogs(String(executionId), backendUrl),
     enabled: isLogging,
     refetchInterval: 1000,
     refetchIntervalInBackground: false,
@@ -113,9 +114,36 @@ const Logs = ({
     }
   }, [data, error]);
 
-  if (isLoadingLogs && !logs) {
-    return <div>Loading...</div>;
+  useEffect(() => {
+    refetch();
+  }, [backendUrl, refetch]);
+
+  if (!configured) {
+    return (
+      <InfoBox title="Backend not configured" variant="warning">
+        Configure a backend to view execution logs.
+      </InfoBox>
+    );
   }
+
+  if (isLoading || isFetching) {
+    return (
+      <div className="flex gap-2 items-center">
+        <Spinner /> Loading Logs...
+      </div>
+    );
+  }
+
+  if (error) {
+    const backendStatusString = getBackendStatusString(configured, available);
+    return (
+      <InfoBox title="Error loading logs" variant="error">
+        <div className="mb-2">{error.message}</div>
+        <div className="text-black italic">{backendStatusString}</div>
+      </InfoBox>
+    );
+  }
+
   return (
     <div className="space-y-4 h-full">
       <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg h-full min-h-0 flex-1">

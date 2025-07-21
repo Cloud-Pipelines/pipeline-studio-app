@@ -1,9 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import type { GetArtifactsApiExecutionsIdArtifactsGetResponse } from "@/api/types.gen";
+import { InfoBox } from "@/components/shared/InfoBox";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { useBackend } from "@/providers/BackendProvider";
+import { getBackendStatusString } from "@/utils/backend";
 import type { TaskSpec } from "@/utils/componentSpec";
-import { API_URL } from "@/utils/constants";
 import { formatBytes } from "@/utils/string";
 import { convertGcsUrlToBrowserUrl } from "@/utils/URL";
 
@@ -15,10 +19,10 @@ interface IoProps {
   readOnly?: boolean;
 }
 
-const getArtifacts = async (executionId: string) => {
+const getArtifacts = async (executionId: string, backendUrl: string) => {
   if (!executionId) return null;
   const response = await fetch(
-    `${API_URL}/api/executions/${executionId}/artifacts`,
+    `${backendUrl}/api/executions/${executionId}/artifacts`,
   );
 
   if (!response.ok) {
@@ -28,11 +32,50 @@ const getArtifacts = async (executionId: string) => {
 };
 
 const Io = ({ taskSpec, executionId, readOnly }: IoProps) => {
-  const { data: artifacts, isLoading: isLoadingArtifacts } = useQuery({
+  const { backendUrl, configured, available } = useBackend();
+
+  const {
+    data: artifacts,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["artifacts", executionId],
-    queryFn: () => getArtifacts(String(executionId)),
+    queryFn: () => getArtifacts(String(executionId), backendUrl),
     enabled: !!executionId,
   });
+
+  useEffect(() => {
+    refetch();
+  }, [backendUrl, refetch]);
+
+  if (!configured) {
+    return (
+      <InfoBox title="Backend not configured" variant="warning">
+        Configure a backend to view execution artifacts.
+      </InfoBox>
+    );
+  }
+
+  if (isLoading || isFetching) {
+    return (
+      <div className="flex gap-2 items-center">
+        <Spinner /> Loading Artifacts...
+      </div>
+    );
+  }
+
+  if (error) {
+    const backendStatusString = getBackendStatusString(configured, available);
+
+    return (
+      <InfoBox title="Error loading artifacts" variant="error">
+        <div className="mb-2">{error.message}</div>
+        <div className="text-black italic">{backendStatusString}</div>
+      </InfoBox>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -81,7 +124,7 @@ const Io = ({ taskSpec, executionId, readOnly }: IoProps) => {
         </section>
       </div>
 
-      {executionId && artifacts && !isLoadingArtifacts && (
+      {executionId && artifacts && (
         <>
           {artifacts.input_artifacts &&
             Object.keys(artifacts.input_artifacts).length > 0 && (
