@@ -32,18 +32,14 @@ const BackendConfigurationDialog = ({
   open,
   setOpen,
 }: BackendConfigurationDialogProps) => {
-  console.log("=== BackendConfigurationDialog DEBUG ===");
-  console.log("API_URL:", API_URL);
-  console.log("API_URL length:", API_URL.length);
-  console.log("API_URL type:", typeof API_URL);
-  console.log("hasEnvConfig:", !!API_URL);
-
   const {
     backendUrl,
     available,
     isConfiguredFromEnv,
+    isConfiguredFromRelativePath,
     ping,
     setEnvConfig,
+    setRelativePathConfig,
     setBackendUrl,
   } = useBackend();
 
@@ -54,8 +50,12 @@ const BackendConfigurationDialog = ({
     boolean | null
   >(null);
   const [isEnvConfig, setIsEnvConfig] = useState(isConfiguredFromEnv);
+  const [isRelativePathConfig, setIsRelativePathConfig] = useState(
+    isConfiguredFromRelativePath,
+  );
 
   const hasEnvConfig = !!API_URL;
+  const showRelativePathOption = !API_URL;
 
   const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setInputBackendUrl(e.target.value);
@@ -75,31 +75,51 @@ const BackendConfigurationDialog = ({
     setInputBackendTestResult(result);
   }, [inputBackendUrl, ping]);
 
+  const handleEnvSwitch = useCallback((checked: boolean) => {
+    setIsEnvConfig(checked);
+    if (checked) setIsRelativePathConfig(false);
+  }, []);
+
   const handleConfirm = useCallback(() => {
     setEnvConfig(isEnvConfig);
+    setRelativePathConfig(isRelativePathConfig);
     setBackendUrl(inputBackendUrl);
     setInputBackendUrl(inputBackendUrl.trim());
     setInputBackendTestResult(null);
     setOpen(false);
-  }, [isEnvConfig, inputBackendUrl, setEnvConfig, setBackendUrl, setOpen]);
+  }, [
+    isEnvConfig,
+    isRelativePathConfig,
+    inputBackendUrl,
+    setEnvConfig,
+    setRelativePathConfig,
+    setBackendUrl,
+    setOpen,
+  ]);
 
   const handleClose = useCallback(() => {
     setIsEnvConfig(isConfiguredFromEnv);
+    setIsRelativePathConfig(isConfiguredFromRelativePath);
     setInputBackendUrl("");
     setInputBackendTestResult(null);
     setOpen(false);
-  }, [isConfiguredFromEnv, setOpen]);
+  }, [isConfiguredFromEnv, isConfiguredFromRelativePath, setOpen]);
 
   useEffect(() => {
     setIsEnvConfig(isConfiguredFromEnv);
-  }, [isConfiguredFromEnv, setIsEnvConfig]);
+    setIsRelativePathConfig(isConfiguredFromRelativePath);
+  }, [isConfiguredFromEnv, isConfiguredFromRelativePath]);
 
   useEffect(() => {
-    setInputBackendUrl(isConfiguredFromEnv ? "" : backendUrl);
-  }, [isConfiguredFromEnv, backendUrl, setInputBackendUrl]);
+    setInputBackendUrl(
+      isConfiguredFromEnv || isConfiguredFromRelativePath ? "" : backendUrl,
+    );
+  }, [isConfiguredFromEnv, isConfiguredFromRelativePath, backendUrl]);
 
   const hasBackendConfigured =
-    !!inputBackendUrl.trim() || (isEnvConfig && hasEnvConfig);
+    !!inputBackendUrl.trim() ||
+    (isEnvConfig && hasEnvConfig) ||
+    isRelativePathConfig;
   const confirmButtonText = hasBackendConfigured
     ? "Confirm"
     : "Continue without backend";
@@ -140,7 +160,9 @@ const BackendConfigurationDialog = ({
                   ? "Configured from .env"
                   : backendUrl.length > 0
                     ? `Configured to ${backendUrl}`
-                    : "No backend configured"}
+                    : isConfiguredFromRelativePath
+                      ? "Configured relative to host domain"
+                      : "No backend configured"}
               </TooltipContent>
             </Tooltip>
             <Button onClick={handleRefresh} size="icon" variant="ghost">
@@ -156,7 +178,7 @@ const BackendConfigurationDialog = ({
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={isEnvConfig}
-                    onCheckedChange={setIsEnvConfig}
+                    onCheckedChange={handleEnvSwitch}
                   />
                   Use backend url configuration from environment file.
                 </div>
@@ -164,7 +186,32 @@ const BackendConfigurationDialog = ({
             </>
           )}
 
-          {!(isEnvConfig && hasEnvConfig) && (
+          {showRelativePathOption && (
+            <>
+              <hr />
+              <div className="flex flex-col gap-2">
+                <p className="font-semibold">Use same-domain backend</p>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={isRelativePathConfig}
+                    onCheckedChange={(checked) => {
+                      setIsRelativePathConfig(checked);
+                      if (checked) setIsEnvConfig(false);
+                    }}
+                  />
+                  Use backend configuration relative to the current domain.
+                </div>
+                {isRelativePathConfig && (
+                  <p className="italic font-light text-xs">
+                    Backend requests will be made to {window.location.origin}
+                    /api.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+
+          {!(isEnvConfig && hasEnvConfig) && !isRelativePathConfig && (
             <>
               <hr />
               <InfoBox title="Manual Configuration">

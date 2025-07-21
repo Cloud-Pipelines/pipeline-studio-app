@@ -13,8 +13,10 @@ import { API_URL } from "@/utils/constants";
 import {
   getUseEnv,
   getUserBackendUrl,
+  getUseRelativePath,
   setUseEnv as setUseEnvInLocalStorage,
   setUserBackendUrl as setUserBackendUrlInLocalStorage,
+  setUseRelativePath as setUseRelativePathInLocalStorage,
 } from "@/utils/localforage";
 import { normalizeUrl } from "@/utils/URL";
 
@@ -23,7 +25,9 @@ type BackendContextType = {
   available: boolean;
   backendUrl: string;
   isConfiguredFromEnv: boolean;
+  isConfiguredFromRelativePath: boolean;
   setEnvConfig: (useEnv: boolean) => void;
+  setRelativePathConfig: (useRelativePath: boolean) => void;
   setBackendUrl: (url: string) => void;
   ping: (args: {
     url?: string;
@@ -41,11 +45,19 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
 
   const [userBackendUrl, setUserBackendUrl] = useState("");
   const [useEnv, setUseEnv] = useState(true);
+  const [useRelativePath, setUseRelativePath] = useState(false);
   const [available, setAvailable] = useState(false);
 
-  const backendUrl = useEnv ? backendUrlFromEnv : userBackendUrl;
+  let backendUrl = "";
+  if (useEnv && backendUrlFromEnv) {
+    backendUrl = backendUrlFromEnv;
+  } else if (useRelativePath) {
+    backendUrl = "";
+  } else {
+    backendUrl = userBackendUrl;
+  }
 
-  const configured = !!backendUrl.trim();
+  const configured = !!backendUrl.trim() || useRelativePath;
 
   const setBackendUrl = useCallback(async (url: string) => {
     const normalized = normalizeUrl(url);
@@ -56,6 +68,19 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
   const setEnvConfig = useCallback(async (flag: boolean) => {
     await setUseEnvInLocalStorage(flag);
     setUseEnv(flag);
+    if (flag) {
+      setUseRelativePath(false);
+      await setUseRelativePathInLocalStorage(false);
+    }
+  }, []);
+
+  const setRelativePathConfig = useCallback(async (flag: boolean) => {
+    await setUseRelativePathInLocalStorage(flag);
+    setUseRelativePath(flag);
+    if (flag) {
+      setUseEnv(false);
+      await setUseEnvInLocalStorage(false);
+    }
   }, []);
 
   const ping = useCallback(
@@ -101,8 +126,11 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
       const url = await getUserBackendUrl();
       setUserBackendUrl(url);
 
-      const flag = await getUseEnv();
-      setUseEnv(flag === true);
+      const envFlag = await getUseEnv();
+      const relativeFlag = await getUseRelativePath();
+
+      setUseEnv(envFlag === true);
+      setUseRelativePath(relativeFlag === true && !backendUrlFromEnv);
     };
     getSettings();
   }, []);
@@ -112,8 +140,10 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
       configured,
       available,
       backendUrl,
-      isConfiguredFromEnv: useEnv,
+      isConfiguredFromEnv: useEnv && !!backendUrlFromEnv,
+      isConfiguredFromRelativePath: useRelativePath,
       setEnvConfig,
+      setRelativePathConfig,
       setBackendUrl,
       ping,
     }),
@@ -122,7 +152,10 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
       available,
       backendUrl,
       useEnv,
+      useRelativePath,
+      backendUrlFromEnv,
       setEnvConfig,
+      setRelativePathConfig,
       setBackendUrl,
       ping,
     ],

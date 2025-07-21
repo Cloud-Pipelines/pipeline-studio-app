@@ -112,3 +112,10 @@ export const getUseEnv = async () => {
 };
 export const setUseEnv = (flag: boolean) =>
   settingsStore.setItem("useEnv", flag);
+
+export const getUseRelativePath = async () => {
+  return (await settingsStore.getItem<boolean>("useRelativePath")) ?? true;
+};
+
+export const setUseRelativePath = (flag: boolean) =>
+  settingsStore.setItem("useRelativePath", flag);
