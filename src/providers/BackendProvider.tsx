@@ -52,7 +52,7 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
   if (useEnv && backendUrlFromEnv) {
     backendUrl = backendUrlFromEnv;
   } else if (useRelativePath) {
-    backendUrl = "";
+    backendUrl = window.location.origin;
   } else {
     backendUrl = userBackendUrl;
   }
