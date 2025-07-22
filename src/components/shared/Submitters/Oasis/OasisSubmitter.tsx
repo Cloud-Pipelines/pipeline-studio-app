@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import useCooldownTimer from "@/hooks/useCooldownTimer";
 import useToastNotification from "@/hooks/useToastNotification";
+import { cn } from "@/lib/utils";
+import { useBackend } from "@/providers/BackendProvider";
 import { usePipelineRuns } from "@/providers/PipelineRunsProvider";
 import { APP_ROUTES } from "@/routes/router";
 import type { PipelineRun } from "@/types/pipelineRun";
@@ -20,6 +22,7 @@ const OasisSubmitter = ({
   componentSpec,
   onSubmitComplete,
 }: OasisSubmitterProps) => {
+  const { configured, available } = useBackend();
   const { submit, isSubmitting } = usePipelineRuns();
 
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
@@ -133,10 +136,20 @@ const OasisSubmitter = ({
         onClick={handleSubmit}
         className="w-full justify-start"
         variant="ghost"
-        disabled={isButtonDisabled}
+        disabled={isButtonDisabled || !available}
       >
         {getButtonIcon()}
         <span className="font-normal text-xs">{getButtonText()}</span>
+        {!available && (
+          <div
+            className={cn(
+              "text-xs font-light -ml-1",
+              configured ? "text-red-700" : "text-yellow-700",
+            )}
+          >
+            {`(backend ${configured ? "unavailable" : "unconfigured"})`}
+          </div>
+        )}
       </Button>
     </SidebarMenuButton>
   );

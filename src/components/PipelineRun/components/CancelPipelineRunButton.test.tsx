@@ -1,9 +1,16 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { screen } from "@testing-library/dom";
-import { act, fireEvent, render, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import useToastNotification from "@/hooks/useToastNotification";
+import { useBackend } from "@/providers/BackendProvider";
 import * as pipelineRunService from "@/services/pipelineRunService";
 
 import { CancelPipelineRunButton } from "./CancelPipelineRunButton";
@@ -11,6 +18,7 @@ import { CancelPipelineRunButton } from "./CancelPipelineRunButton";
 // Mock the services and hooks
 vi.mock("@/services/pipelineRunService");
 vi.mock("@/hooks/useToastNotification");
+vi.mock("@/providers/BackendProvider");
 
 describe("<CancelPipelineRunButton/>", () => {
   const queryClient = new QueryClient({
@@ -26,6 +34,24 @@ describe("<CancelPipelineRunButton/>", () => {
     vi.clearAllMocks();
 
     vi.mocked(useToastNotification).mockReturnValue(mockNotify);
+
+    vi.mocked(useBackend).mockReturnValue({
+      configured: true,
+      available: true,
+      backendUrl: "http://localhost:8000",
+      isConfiguredFromEnv: false,
+      isConfiguredFromRelativePath: false,
+      setEnvConfig: vi.fn(),
+      setRelativePathConfig: vi.fn(),
+      setBackendUrl: vi.fn(),
+      ping: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
+    queryClient.clear();
+    return new Promise((resolve) => setTimeout(resolve, 0));
   });
 
   const renderWithQueryClient = (component: React.ReactElement) => {
@@ -104,7 +130,10 @@ describe("<CancelPipelineRunButton/>", () => {
       await act(() => fireEvent.click(confirmButton));
 
       // assert
-      expect(cancelPipelineRun).toHaveBeenCalledWith("test-run-123");
+      expect(cancelPipelineRun).toHaveBeenCalledWith(
+        "test-run-123",
+        "http://localhost:8000",
+      );
       expect(mockNotify).toHaveBeenCalledWith(
         "Pipeline run test-run-123 cancelled",
         "success",

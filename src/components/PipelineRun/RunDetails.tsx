@@ -2,6 +2,7 @@ import { Frown, Videotape } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
+import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import {
   countTaskStatuses,
@@ -13,6 +14,7 @@ import {
 import { fetchPipelineRunById } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
 
+import { InfoBox } from "../shared/InfoBox";
 import { StatusBar, StatusIcon, StatusText } from "../shared/Status";
 import { TaskImplementation } from "../shared/TaskDetails";
 import { CancelPipelineRunButton } from "./components/CancelPipelineRunButton";
@@ -25,13 +27,23 @@ type RunDetailsProps = {
 };
 
 export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
+  const { backendUrl, configured } = useBackend();
+
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
   const [isPolling, setIsPolling] = useState(true);
   const { componentSpec } = useComponentSpec();
 
-  const { data, isLoading, error } = fetchExecutionInfo(executionId, isPolling);
+  const { data, isLoading, error, refetch } = fetchExecutionInfo(
+    executionId,
+    backendUrl,
+    isPolling,
+  );
   const { details, state } = data;
   const runId = details?.pipeline_run_id;
+
+  useEffect(() => {
+    refetch();
+  }, [backendUrl, executionId, refetch]);
 
   useEffect(() => {
     if (details && state) {
@@ -78,6 +90,14 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
         <Spinner className="mr-2" />
         <p className="text-gray-500">Loading run details...</p>
       </div>
+    );
+  }
+
+  if (!configured) {
+    return (
+      <InfoBox title="Backend not configured" variant="warning">
+        Configure a backend to view execution artifacts.
+      </InfoBox>
     );
   }
 

@@ -3,15 +3,16 @@ import { useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import type { GetExecutionInfoResponse } from "@/api/types.gen";
+import { fetchExecutionDetails } from "@/services/executionService";
 import { loadPipelineByName } from "@/services/pipelineService";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
-import { API_URL } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 import { getIdOrTitleFromPath } from "@/utils/URL";
 
-export const useLoadComponentSpecAndDetailsFromId = () => {
+export const useLoadComponentSpecAndDetailsFromId = (backendUrl: string) => {
   const location = useLocation();
+
   const pathname = location.pathname;
   const { idOrTitle, enableApi } = getIdOrTitleFromPath(pathname);
   const [componentSpec, setComponentSpec] = useState<
@@ -20,22 +21,21 @@ export const useLoadComponentSpecAndDetailsFromId = () => {
   const [isLoadingPipeline, setIsLoadingPipeline] = useState(false);
 
   // Query for run details if we have an ID
-  const { data: detailsData, isLoading: detailsLoading } =
-    useQuery<GetExecutionInfoResponse>({
-      queryKey: ["run_details", idOrTitle],
-      queryFn: async () => {
-        const response = await fetch(
-          `${API_URL}/api/executions/${idOrTitle}/details`,
-        );
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch execution details: ${response.statusText}`,
-          );
-        }
-        return response.json();
-      },
-      enabled: enableApi,
-    });
+  const {
+    data: detailsData,
+    isLoading: detailsLoading,
+    refetch: refetchDetails,
+    error: detailsError,
+  } = useQuery<GetExecutionInfoResponse>({
+    queryKey: ["run_details", idOrTitle],
+    queryFn: async () =>
+      await fetchExecutionDetails(String(idOrTitle), backendUrl),
+    enabled: enableApi,
+  });
+
+  useEffect(() => {
+    refetchDetails();
+  }, [backendUrl, refetchDetails]);
 
   // Load pipeline from local storage if we're in the editor
   useEffect(() => {
@@ -109,5 +109,6 @@ export const useLoadComponentSpecAndDetailsFromId = () => {
     componentSpec,
     detailsData,
     isLoading: detailsLoading || isLoadingPipeline,
+    error: detailsError,
   };
 };

@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import useToastNotification from "@/hooks/useToastNotification";
+import { useBackend } from "@/providers/BackendProvider";
 import { APP_ROUTES } from "@/routes/router";
 import {
   countTaskStatuses,
@@ -25,12 +26,17 @@ import {
 import { convertUTCToLocalTime, formatDate } from "@/utils/date";
 
 const RunRow = ({ run }: { run: PipelineRunResponse }) => {
+  const { backendUrl } = useBackend();
+
   const navigate = useNavigate();
   const notify = useToastNotification();
 
   const executionId = `${run.root_execution_id}`;
 
-  const { data, isLoading, error } = fetchExecutionInfo(executionId);
+  const { data, isLoading, error } = fetchExecutionInfo(
+    executionId,
+    backendUrl,
+  );
   const { details, state } = data;
 
   const name = details?.task_spec?.componentRef?.spec?.name;

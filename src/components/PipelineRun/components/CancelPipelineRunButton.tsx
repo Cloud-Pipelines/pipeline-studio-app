@@ -6,6 +6,7 @@ import TooltipButton from "@/components/shared/Buttons/TooltipButton";
 import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
 import { Spinner } from "@/components/ui/spinner";
 import useToastNotification from "@/hooks/useToastNotification";
+import { useBackend } from "@/providers/BackendProvider";
 import { cancelPipelineRun } from "@/services/pipelineRunService";
 
 interface CancelPipelineRunButtonProps {
@@ -15,6 +16,7 @@ interface CancelPipelineRunButtonProps {
 export const CancelPipelineRunButton = ({
   runId,
 }: CancelPipelineRunButtonProps) => {
+  const { backendUrl, available } = useBackend();
   const notify = useToastNotification();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +26,7 @@ export const CancelPipelineRunButton = ({
     isPending,
     isSuccess,
   } = useMutation({
-    mutationFn: cancelPipelineRun,
+    mutationFn: (runId: string) => cancelPipelineRun(runId, backendUrl),
     onSuccess: () => {
       notify(`Pipeline run ${runId} cancelled`, "success");
     },
@@ -41,12 +43,17 @@ export const CancelPipelineRunButton = ({
       return;
     }
 
+    if (!available) {
+      notify(`Backend is not available. Cannot cancel run.`, "warning");
+      return;
+    }
+
     try {
       cancelPipeline(runId);
     } catch (error) {
       notify(`Error cancelling run: ${error}`, "error");
     }
-  }, [runId]);
+  }, [runId, available]);
 
   const onClick = useCallback(() => {
     setIsOpen(true);
@@ -70,7 +77,7 @@ export const CancelPipelineRunButton = ({
         variant="destructive"
         onClick={onClick}
         tooltip="Cancel run"
-        disabled={isPending}
+        disabled={isPending || !available}
         data-testid="cancel-pipeline-run-button"
       >
         {isPending ? (

@@ -4,11 +4,11 @@ import { DndContext } from "@dnd-kit/core";
 import { ReactFlowProvider } from "@xyflow/react";
 
 import PipelineEditor from "@/components/Editor/PipelineEditor";
-import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
+import { useLoadComponentSpecFromId } from "@/hooks/useLoadComponentSpecFromId";
 import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
 
 const Editor = () => {
-  const { componentSpec } = useLoadComponentSpecAndDetailsFromId();
+  const { componentSpec } = useLoadComponentSpecFromId();
 
   return (
     <ComponentSpecProvider spec={componentSpec}>

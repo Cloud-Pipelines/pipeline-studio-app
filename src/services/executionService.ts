@@ -5,11 +5,13 @@ import type {
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
 import type { TaskStatusCounts } from "@/types/pipelineRun";
-import { API_URL } from "@/utils/constants";
 
-export const fetchExecutionState = async (executionId: string) => {
+export const fetchExecutionState = async (
+  executionId: string,
+  backendUrl: string,
+) => {
   const response = await fetch(
-    `${API_URL}/api/executions/${executionId}/state`,
+    `${backendUrl}/api/executions/${executionId}/state`,
   );
   if (!response.ok) {
     throw new Error(`Failed to fetch execution state: ${response.statusText}`);
@@ -19,9 +21,10 @@ export const fetchExecutionState = async (executionId: string) => {
 
 export const fetchExecutionDetails = async (
   executionId: string,
+  backendUrl: string,
 ): Promise<GetExecutionInfoResponse> => {
   const response = await fetch(
-    `${API_URL}/api/executions/${executionId}/details`,
+    `${backendUrl}/api/executions/${executionId}/details`,
   );
   if (!response.ok) {
     throw new Error(
@@ -33,41 +36,55 @@ export const fetchExecutionDetails = async (
 
 export const fetchExecutionInfo = (
   executionId: string,
+  backendUrl: string,
   poll: boolean = false,
 ) => {
   const {
     data: details,
     isLoading: isDetailsLoading,
+    isFetching: isDetailsFetching,
     error: detailsError,
+    refetch: refetchDetails,
   } = useQuery<GetExecutionInfoResponse>({
     queryKey: ["pipeline-run-details", executionId],
     refetchOnWindowFocus: false,
-    queryFn: () => fetchExecutionDetails(executionId),
+    queryFn: () => fetchExecutionDetails(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
   });
 
   const {
     data: state,
     isLoading: isStateLoading,
+    isFetching: isStateFetching,
     error: stateError,
+    refetch: refetchState,
   } = useQuery<GetGraphExecutionStateResponse>({
     queryKey: ["pipeline-run-state", executionId],
     refetchOnWindowFocus: false,
-    queryFn: () => fetchExecutionState(executionId),
+    queryFn: () => fetchExecutionState(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
   });
 
   const isLoading = isDetailsLoading || isStateLoading;
+  const isFetching = isDetailsFetching || isStateFetching;
   const error = detailsError || stateError;
   const data = { state, details };
 
-  return { data, isLoading, error };
+  const refetch = () => {
+    refetchDetails();
+    refetchState();
+  };
+
+  return { data, isLoading, isFetching, error, refetch };
 };
 
-export const fetchExecutionStatus = async (executionId: string) => {
+export const fetchExecutionStatus = async (
+  executionId: string,
+  backendUrl: string,
+) => {
   try {
     const response = await fetch(
-      `${API_URL}/api/executions/${executionId}/details`,
+      `${backendUrl}/api/executions/${executionId}/details`,
     );
     if (!response.ok) {
       throw new Error(
@@ -77,7 +94,7 @@ export const fetchExecutionStatus = async (executionId: string) => {
     const details: GetExecutionInfoResponse = await response.json();
 
     const stateResponse = await fetch(
-      `${API_URL}/api/executions/${executionId}/state`,
+      `${backendUrl}/api/executions/${executionId}/state`,
     );
     if (!stateResponse.ok) {
       throw new Error(
