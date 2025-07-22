@@ -18,6 +18,9 @@ vi.mock("@/utils/constants", async (importOriginal) => ({
   APP_ROUTES: {
     GITHUB_AUTH_CALLBACK: "/authorize/github",
   },
+  // It's not possible to mock constants.
+  // VITE_GITHUB_CLIENT_ID: "test-client-id",
+  get_github_client_id: () => "test-client-id",
 }));
 
 describe("useGitHubAuthPopup()", () => {
@@ -31,7 +34,6 @@ describe("useGitHubAuthPopup()", () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
 
-    vi.stubEnv("VITE_GITHUB_CLIENT_ID", "test-client-id");
     vi.stubEnv("VITE_BACKEND_API_URL", "https://api.example.com");
 
     // Mock popup window
