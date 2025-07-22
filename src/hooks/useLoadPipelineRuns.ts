@@ -4,7 +4,7 @@ import { fetchExecutionStatus } from "@/services/executionService";
 import { fetchPipelineRuns } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
 
-const useLoadPipelineRuns = (pipelineName: string) => {
+const useLoadPipelineRuns = (pipelineName: string, backendUrl: string) => {
   const [pipelineRuns, setPipelineRuns] = useState<PipelineRun[]>([]);
   const [latestRun, setLatestRun] = useState<PipelineRun | null>(null);
 
@@ -20,6 +20,7 @@ const useLoadPipelineRuns = (pipelineName: string) => {
 
       latestRun.status = await fetchExecutionStatus(
         `${latestRun.root_execution_id}`,
+        backendUrl,
       );
 
       setLatestRun(latestRun);

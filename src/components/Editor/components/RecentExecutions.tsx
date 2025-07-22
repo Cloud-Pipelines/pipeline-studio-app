@@ -1,12 +1,15 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
+import { InfoBox } from "@/components/shared/InfoBox";
 import RunOverview from "@/components/shared/RunOverview";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
+import { useBackend } from "@/providers/BackendProvider";
 import { usePipelineRuns } from "@/providers/PipelineRunsProvider";
 
 const RecentExecutions = () => {
-  const { runs, recentRuns, isLoading, error } = usePipelineRuns();
+  const { backendUrl, configured, available } = useBackend();
+  const { runs, recentRuns, isLoading, error, refetch } = usePipelineRuns();
 
   const runOverviews = useMemo(
     () =>
@@ -32,6 +35,10 @@ const RecentExecutions = () => {
 
   const remainingRuns = runs.length - recentRuns.length;
 
+  useEffect(() => {
+    refetch();
+  }, [backendUrl, refetch]);
+
   if (isLoading) {
     return (
       <div>
@@ -53,6 +60,28 @@ const RecentExecutions = () => {
         <div className="h-48 bg-gray-100 border border-gray-300 rounded p-2 flex items-center justify-center">
           <p className="text-destructive">{error}</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!configured) {
+    return (
+      <div>
+        <h3 className="text-md font-medium mb-1">Recent Pipeline Runs</h3>
+        <InfoBox title="Backend not configured" variant="warning">
+          Configure a backend to view recent pipeline runs.
+        </InfoBox>
+      </div>
+    );
+  }
+
+  if (!available) {
+    return (
+      <div>
+        <h3 className="text-md font-medium mb-1">Recent Pipeline Runs</h3>
+        <InfoBox title="Backend not available" variant="error">
+          The configured backend is unavailable.
+        </InfoBox>
       </div>
     );
   }

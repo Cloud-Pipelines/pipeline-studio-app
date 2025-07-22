@@ -2,14 +2,16 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 import { RUNS_BASE_PATH } from "@/routes/router";
 import { copyRunToPipeline } from "@/services/pipelineRunService";
+import type { ComponentSpec } from "@/utils/componentSpec";
 import { removeTrailingDateFromTitle } from "@/utils/string";
 
-const CloneRunButtonInner = () => {
-  const { componentSpec, isLoading: detailsLoading } =
-    useLoadComponentSpecAndDetailsFromId();
+const CloneRunButtonInner = ({
+  componentSpec,
+}: {
+  componentSpec?: ComponentSpec;
+}) => {
   const navigate = useNavigate();
 
   const getInitialName = () => {
@@ -34,7 +36,7 @@ const CloneRunButtonInner = () => {
     }
   };
 
-  if (detailsLoading || !componentSpec) {
+  if (!componentSpec) {
     return (
       <button>
         <Loader2 className="w-4 h-4 animate-spin" />
@@ -49,7 +51,7 @@ const CloneRunButtonInner = () => {
   );
 };
 
-const CloneRunButton = () => {
+const CloneRunButton = ({ spec }: { spec?: ComponentSpec }) => {
   const location = useLocation();
 
   const isRunDetailRoute = location.pathname.includes(RUNS_BASE_PATH);
@@ -57,7 +59,7 @@ const CloneRunButton = () => {
   if (!isRunDetailRoute) {
     return null;
   }
-  return <CloneRunButtonInner />;
+  return <CloneRunButtonInner componentSpec={spec} />;
 };
 
 export default CloneRunButton;

@@ -14,6 +14,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TableCell, TableRow } from "@/components/ui/table";
 import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
+import { useBackend } from "@/providers/BackendProvider";
 import { EDITOR_PATH } from "@/routes/router";
 import { deletePipeline } from "@/services/pipelineService";
 import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
@@ -32,9 +33,13 @@ const PipelineRow = ({
   modificationTime,
   onDelete,
 }: PipelineRowProps) => {
+  const { backendUrl } = useBackend();
   const navigate = useNavigate();
 
-  const { pipelineRuns, latestRun } = useLoadPipelineRuns(name || "");
+  const { pipelineRuns, latestRun } = useLoadPipelineRuns(
+    name || "",
+    backendUrl,
+  );
 
   const handleRowClick = useCallback(
     (e: MouseEvent) => {

@@ -2,14 +2,14 @@ import { Link } from "@tanstack/react-router";
 
 import CloneRunButton from "@/components/shared/CloneRunButton";
 import ImportPipeline from "@/components/shared/ImportPipeline";
-import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
+import { useLoadComponentSpecFromId } from "@/hooks/useLoadComponentSpecFromId";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 
 import BackendStatus from "../shared/BackendStatus";
 import NewPipelineButton from "../shared/NewPipelineButton";
 
 const AppMenu = () => {
-  const { componentSpec } = useLoadComponentSpecAndDetailsFromId();
+  const { componentSpec } = useLoadComponentSpecFromId();
   const title = componentSpec?.name;
 
   return (
@@ -30,7 +30,7 @@ const AppMenu = () => {
         </div>
         <div className="flex flex-row gap-32 items-center">
           <div className="flex flex-row gap-2 items-center">
-            <CloneRunButton />
+            <CloneRunButton spec={componentSpec} />
             <ImportPipeline />
             <NewPipelineButton />
           </div>

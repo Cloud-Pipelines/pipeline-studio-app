@@ -33,6 +33,8 @@ import {
   type ComponentSpec,
 } from "@/utils/componentSpec";
 
+import { useBackend } from "./BackendProvider";
+
 type PipelineRunsContextType = {
   runs: PipelineRun[];
   recentRuns: PipelineRun[];
@@ -72,6 +74,8 @@ export const PipelineRunsProvider = ({
   } = useAwaitAuthorization();
   const { getToken } = useAuthLocalStorage();
 
+  const { backendUrl, configured, available } = useBackend();
+
   const [runs, setRuns] = useState<PipelineRun[]>([]);
   const [recentRuns, setRecentRuns] = useState<PipelineRun[]>([]);
   const [recentRunsCount, setRecentRunsCount] = useState(DEFAULT_RECENT_RUNS);
@@ -83,6 +87,13 @@ export const PipelineRunsProvider = ({
   const authorizationToken = useRef<string | undefined>(getToken());
 
   const refetch = useCallback(async () => {
+    if (!configured || !available) {
+      setRuns([]);
+      setRecentRuns([]);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
@@ -99,10 +110,12 @@ export const PipelineRunsProvider = ({
         try {
           const state = await fetchExecutionState(
             run.root_execution_id.toString(),
+            backendUrl,
           );
 
           const details = await fetchExecutionDetails(
             run.root_execution_id.toString(),
+            backendUrl,
           );
 
           if (details && state) {
@@ -125,7 +138,7 @@ export const PipelineRunsProvider = ({
       setIsLoading(false);
       setError((e as Error).message);
     }
-  }, [pipelineName]);
+  }, [pipelineName, backendUrl, configured, available, recentRunsCount]);
 
   const submit = useCallback(
     async (
@@ -166,6 +179,7 @@ export const PipelineRunsProvider = ({
 
         const responseData = await createPipelineRun(
           payload as BodyCreateApiPipelineRunsPost,
+          backendUrl,
           authorizationRequired ? authorizationToken.current : undefined,
         );
 
@@ -188,6 +202,7 @@ export const PipelineRunsProvider = ({
     },
     [
       pipelineName,
+      backendUrl,
       refetch,
       isAuthorized,
       awaitAuthorization,
@@ -197,7 +212,7 @@ export const PipelineRunsProvider = ({
 
   useEffect(() => {
     if (pipelineName) refetch();
-  }, [pipelineName, refetch]);
+  }, [pipelineName, backendUrl, refetch]);
 
   const value = useMemo(
     () => ({

@@ -10,7 +10,6 @@ import {
   writeComponentToFileListFromText,
 } from "@/utils/componentStore";
 import {
-  API_URL,
   DB_NAME,
   PIPELINE_RUNS_STORE_NAME,
   USER_PIPELINES_LIST_NAME,
@@ -18,13 +17,14 @@ import {
 
 export const createPipelineRun = async (
   payload: BodyCreateApiPipelineRunsPost,
+  backendUrl: string,
   authorizationToken?: string,
 ) => {
   const authorizationHeader = authorizationToken
     ? { Authorization: `Bearer ${authorizationToken}` }
     : undefined;
 
-  const response = await fetch(`${API_URL}/api/pipeline_runs/`, {
+  const response = await fetch(`${backendUrl}/api/pipeline_runs/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -198,10 +198,13 @@ export const fetchPipelineRunById = async (runId: string) => {
   }
 };
 
-export const cancelPipelineRun = async (runId: string) => {
-  const response = await fetch(`${API_URL}/api/pipeline_runs/${runId}/cancel`, {
-    method: "POST",
-  });
+export const cancelPipelineRun = async (runId: string, backendUrl: string) => {
+  const response = await fetch(
+    `${backendUrl}/api/pipeline_runs/${runId}/cancel`,
+    {
+      method: "POST",
+    },
+  );
 
   if (!response.ok) {
     throw new Error("Failed to cancel pipeline run");
