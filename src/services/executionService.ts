@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 
 import type {
   GetExecutionInfoResponse,
@@ -70,10 +71,10 @@ export const fetchExecutionInfo = (
   const error = detailsError || stateError;
   const data = { state, details };
 
-  const refetch = () => {
+  const refetch = useCallback(() => {
     refetchDetails();
     refetchState();
-  };
+  }, [refetchDetails, refetchState]);
 
   return { data, isLoading, isFetching, error, refetch };
 };
