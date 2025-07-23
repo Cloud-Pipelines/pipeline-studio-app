@@ -1,5 +1,9 @@
 import type { ArgumentInput } from "@/types/arguments";
-import type { TaskSpec } from "@/utils/componentSpec";
+import type {
+  ArgumentType,
+  TaskSpec,
+  TypeSpecType,
+} from "@/utils/componentSpec";
 
 export const getArgumentInputs = (taskSpec: TaskSpec) => {
   const componentSpec = taskSpec.componentRef.spec;
@@ -34,4 +38,46 @@ export const getArgumentInputs = (taskSpec: TaskSpec) => {
     }) ?? [];
 
   return argumentInputs;
+};
+
+export const typeSpecToString = (typeSpec?: TypeSpecType): string => {
+  if (typeSpec === undefined) {
+    return "Any";
+  }
+  if (typeof typeSpec === "string") {
+    return typeSpec;
+  }
+  return JSON.stringify(typeSpec);
+};
+
+export const getPlaceholder = (argument: ArgumentType) => {
+  if (typeof argument === "string" || !argument) {
+    return "";
+  }
+
+  if (argument && "taskOutput" in argument) {
+    return `<from task ${argument.taskOutput.taskId} / ${argument.taskOutput.outputName}>`;
+  }
+  if (argument && "graphInput" in argument) {
+    return `<from graph input ${argument.graphInput.inputName}>`;
+  }
+  return "<reference>";
+};
+
+export const getInputValue = (argumentInput: ArgumentInput) => {
+  const argument = argumentInput.value;
+
+  if (argument === undefined) {
+    return argumentInput.inputSpec.default;
+  }
+
+  if (typeof argument === "string") {
+    return argument;
+  }
+
+  return "";
+};
+
+export const getDefaultValue = (argumentInput: ArgumentInput) => {
+  return argumentInput.inputSpec.default ?? "";
 };
