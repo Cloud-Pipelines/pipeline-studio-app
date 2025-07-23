@@ -19,7 +19,10 @@ export const useLoadComponentSpecFromId = () => {
 
   useEffect(() => {
     const loadPipelineFromStorage = async () => {
-      if (!idOrTitle) return;
+      if (!idOrTitle) {
+        setComponentSpec(undefined);
+        return;
+      }
 
       setIsLoadingPipeline(true);
       try {
