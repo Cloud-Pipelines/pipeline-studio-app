@@ -536,14 +536,13 @@ export const renameComponentFileInList = async (
   if (!fileEntry) {
     // If the old file does not exist and a pathanme is provided, check the url for a filename
     if (pathname) {
-      const { idOrTitle } = getIdOrTitleFromPath(pathname);
-      if (idOrTitle) {
-        fileEntry =
-          await componentListDb.getItem<ComponentFileEntry>(idOrTitle);
+      const { title } = getIdOrTitleFromPath(pathname);
+      if (title) {
+        fileEntry = await componentListDb.getItem<ComponentFileEntry>(title);
       }
       if (!fileEntry) {
         throw new Error(
-          `Backup file "${idOrTitle}" does not exist in list "${listName}".`,
+          `Backup file "${title}" does not exist in list "${listName}".`,
         );
       }
     } else {

@@ -2,14 +2,16 @@ import { Link } from "@tanstack/react-router";
 
 import CloneRunButton from "@/components/shared/CloneRunButton";
 import ImportPipeline from "@/components/shared/ImportPipeline";
-import { useLoadComponentSpecFromId } from "@/hooks/useLoadComponentSpecFromId";
+import { useLoadComponentSpecFromPath } from "@/hooks/useLoadComponentSpecFromPath";
+import { useBackend } from "@/providers/BackendProvider";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 
 import BackendStatus from "../shared/BackendStatus";
 import NewPipelineButton from "../shared/NewPipelineButton";
 
 const AppMenu = () => {
-  const { componentSpec } = useLoadComponentSpecFromId();
+  const { backendUrl } = useBackend();
+  const { componentSpec } = useLoadComponentSpecFromPath(backendUrl);
   const title = componentSpec?.name;
 
   return (

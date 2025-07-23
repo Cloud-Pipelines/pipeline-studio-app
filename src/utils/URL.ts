@@ -91,15 +91,22 @@ const downloadYamlFromComponentText = (
 const getIdOrTitleFromPath = (
   pathname: string,
 ): {
-  idOrTitle?: string;
-  enableApi: boolean;
+  id?: string;
+  title?: string;
 } => {
   const isRunPath = pathname.includes(RUNS_BASE_PATH);
 
   const lastPathSegment = pathname.split("/").pop() || "";
+  const isId = lastPathSegment.match(/^[0-9a-fA-F]{20}$/) || isRunPath;
+  const decodedSegment = decodeURIComponent(lastPathSegment);
+
+  if (decodedSegment === "") {
+    return { id: undefined, title: undefined };
+  }
+
   return {
-    idOrTitle: decodeURIComponent(lastPathSegment),
-    enableApi: isRunPath,
+    id: isId ? decodedSegment : undefined,
+    title: isId ? undefined : decodedSegment,
   };
 };
 

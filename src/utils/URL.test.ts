@@ -105,36 +105,35 @@ describe("convertGithubUrlToDirectoryUrl", () => {
   });
 });
 
-// getIdOrTitleFromPath tests
 describe("getIdOrTitleFromPath", () => {
-  it("returns last path segment and enableApi true if RUNS_BASE_PATH is present", () => {
+  it("returns last path segment as id if RUNS_BASE_PATH is present", () => {
     const path = "/foo/bar/runs/123";
-    // mock RUNS_BASE_PATH to "/runs"
     vi.mock("@/routes/router", () => ({
       RUNS_BASE_PATH: "/runs",
     }));
-    const { idOrTitle, enableApi } = getIdOrTitleFromPath(path);
-    expect(idOrTitle).toBe("123");
-    expect(enableApi).toBe(true);
+    const { id, title } = getIdOrTitleFromPath(path);
+    expect(id).toBe("123");
+    expect(title).toBe(undefined);
   });
 
-  it("returns last path segment and enableApi false if RUNS_BASE_PATH is not present", () => {
+  it("returns last path segment as title if RUNS_BASE_PATH is not present", () => {
     const path = "/foo/bar/other/456";
-    const { idOrTitle, enableApi } = getIdOrTitleFromPath(path);
-    expect(idOrTitle).toBe("456");
-    expect(enableApi).toBe(false);
+    const { id, title } = getIdOrTitleFromPath(path);
+    expect(id).toBe(undefined);
+    expect(title).toBe("456");
   });
 
   it("decodes URI components", () => {
     const path = "/foo/bar/runs/some%20id";
-    const { idOrTitle } = getIdOrTitleFromPath(path);
-    expect(idOrTitle).toBe("some id");
+    const { id } = getIdOrTitleFromPath(path);
+    expect(id).toBe("some id");
   });
 
-  it("returns empty string if path ends with slash", () => {
+  it("returns undefined if path ends with slash", () => {
     const path = "/foo/bar/runs/";
-    const { idOrTitle } = getIdOrTitleFromPath(path);
-    expect(idOrTitle).toBe("");
+    const { id, title } = getIdOrTitleFromPath(path);
+    expect(id).toBe(undefined);
+    expect(title).toBe(undefined);
   });
 });
 

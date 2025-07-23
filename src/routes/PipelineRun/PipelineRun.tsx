@@ -1,5 +1,4 @@
 import { DndContext } from "@dnd-kit/core";
-import { useQuery } from "@tanstack/react-query";
 import { ReactFlowProvider } from "@xyflow/react";
 import { useEffect } from "react";
 
@@ -11,58 +10,38 @@ import PipelineRunPage from "@/components/PipelineRun";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { Spinner } from "@/components/ui/spinner";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { useLoadComponentSpecAndDetailsFromId } from "@/hooks/useLoadComponentSpecDetailsFromId";
 import { useBackend } from "@/providers/BackendProvider";
 import {
   ComponentSpecProvider,
   useComponentSpec,
 } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
-import { fetchExecutionState } from "@/services/executionService";
+import { fetchExecutionInfo } from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
-const PipelineRunHtml = ({
-  detailsData,
-  rootExecutionId,
-}: {
-  detailsData: GetExecutionInfoResponse | undefined;
-  rootExecutionId: string;
-}) => {
+const PipelineRun = () => {
   const { backendUrl, configured, available } = useBackend();
-  const { setTaskStatusMap } = useComponentSpec();
+  const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
 
-  const {
-    data: stateData,
-    isLoading,
-    refetch,
-    error,
-  } = useQuery<GetGraphExecutionStateResponse>({
-    queryKey: ["run_state", rootExecutionId],
-    queryFn: () => fetchExecutionState(rootExecutionId, backendUrl),
-    refetchInterval: available ? 5000 : false,
-    refetchIntervalInBackground: false,
-    staleTime: 1000,
+  const { data, isLoading, error, refetch } = fetchExecutionInfo(
+    rootExecutionId,
+    backendUrl,
+    false,
+  );
+
+  const { details, state } = data;
+
+  const componentSpec = details?.task_spec.componentRef.spec;
+
+  useDocumentTitle({
+    "/runs/$id": (params) =>
+      `Oasis - ${componentSpec?.name || ""} - ${params.id}`,
   });
 
   useEffect(() => {
     refetch();
   }, [backendUrl, refetch]);
-
-  useEffect(() => {
-    const taskStatusMap = buildTaskStatusMap(detailsData, stateData);
-    setTaskStatusMap(taskStatusMap);
-  }, [stateData]);
-
-  if (!configured) {
-    return (
-      <div className="flex items-center justify-center h-full w-full">
-        <InfoBox title="Backend not configured" variant="warning">
-          Configure a backend to view this pipeline run.
-        </InfoBox>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
@@ -72,41 +51,12 @@ const PipelineRunHtml = ({
     );
   }
 
-  if (error) {
-    const backendStatusString = getBackendStatusString(configured, available);
+  if (!configured) {
     return (
-      <div className="flex items-center justify-center h-full w-full gap-2">
-        <InfoBox title="Error loading pipeline run" variant="error">
-          <div className="mb-2">{error.message}</div>
-          <div className="text-black italic">{backendStatusString}</div>
+      <div className="flex items-center justify-center h-full w-full">
+        <InfoBox title="Backend not configured" variant="warning">
+          Configure a backend to view this pipeline run.
         </InfoBox>
-      </div>
-    );
-  }
-
-  return <PipelineRunPage rootExecutionId={rootExecutionId} />;
-};
-
-const PipelineRun = () => {
-  const { backendUrl, configured, available } = useBackend();
-
-  const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
-  const {
-    componentSpec,
-    detailsData,
-    isLoading: detailsLoading,
-    error,
-  } = useLoadComponentSpecAndDetailsFromId(backendUrl);
-
-  useDocumentTitle({
-    "/runs/$id": (params) =>
-      `Oasis - ${componentSpec?.name || ""} - ${params.id}`,
-  });
-
-  if (detailsLoading) {
-    return (
-      <div className="flex items-center justify-center h-full w-full gap-2">
-        <Spinner /> Loading Pipeline Run...
       </div>
     );
   }
@@ -132,8 +82,8 @@ const PipelineRun = () => {
   }
 
   const componentSpecWithExecutionIds = addExecutionIdToComponent(
-    componentSpec,
-    detailsData,
+    componentSpec as ComponentSpec,
+    details,
   );
 
   return (
@@ -141,15 +91,35 @@ const PipelineRun = () => {
       <div className="dndflow">
         <DndContext>
           <ReactFlowProvider>
-            <PipelineRunHtml
-              detailsData={detailsData}
+            <PipelineRunContent
               rootExecutionId={rootExecutionId}
+              details={details}
+              state={state}
             />
           </ReactFlowProvider>
         </DndContext>
       </div>
     </ComponentSpecProvider>
   );
+};
+
+const PipelineRunContent = ({
+  rootExecutionId,
+  details,
+  state,
+}: {
+  rootExecutionId: string;
+  details?: GetExecutionInfoResponse;
+  state?: GetGraphExecutionStateResponse;
+}) => {
+  const { setTaskStatusMap } = useComponentSpec();
+
+  useEffect(() => {
+    const taskStatusMap = buildTaskStatusMap(details, state);
+    setTaskStatusMap(taskStatusMap);
+  }, [details, state, setTaskStatusMap]);
+
+  return <PipelineRunPage rootExecutionId={rootExecutionId} />;
 };
 
 export default PipelineRun;
