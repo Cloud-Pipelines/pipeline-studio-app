@@ -61,6 +61,7 @@ const TaskDetails = ({
   additionalSection = [],
 }: TaskDetailsProps) => {
   const notify = useToastNotification();
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { isCopied, isTooltipOpen, handleCopy, handleTooltipOpen } =
     useCopyToClipboard(componentDigest);
@@ -124,7 +125,7 @@ const TaskDetails = ({
     );
   };
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (confirmDelete || !hasDeletionConfirmation) {
       try {
         onDelete?.();
@@ -291,6 +292,7 @@ const TaskDetails = ({
             </TooltipTrigger>
             <TooltipContent>Copy YAML</TooltipContent>
           </Tooltip>
+
           {!readOnly && actions}
 
           {onDelete && !readOnly && (

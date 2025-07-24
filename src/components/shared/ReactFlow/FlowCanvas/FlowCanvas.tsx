@@ -202,30 +202,61 @@ const FlowCanvas = ({
     [selectedNodes, selectedEdges],
   );
 
+  // Workaround for nodes state being stale in task node callbacks
+  const getNodeById = useCallback((id: string) => {
+    let node: Node | undefined;
+    setNodes((currentNodes) => {
+      node = currentNodes.find((n) => n.id === id);
+      return currentNodes;
+    });
+    return node;
+  }, []);
+
+  const onElementsRemove = useCallback(
+    (params: NodesAndEdges) => {
+      let updatedComponentSpec = { ...componentSpec };
+
+      for (const edge of params.edges) {
+        updatedComponentSpec = removeEdge(edge, updatedComponentSpec);
+      }
+      for (const node of params.nodes) {
+        updatedComponentSpec = removeNode(node, updatedComponentSpec);
+      }
+
+      setComponentSpec(updatedComponentSpec);
+    },
+    [componentSpec, setComponentSpec],
+  );
+
   const onDelete = useCallback(
     async (ids: NodeAndTaskId) => {
       const nodeId = ids.nodeId;
-      const node = nodes.find((n) => n.id === nodeId);
+
+      const nodeToDelete = getNodeById(nodeId);
+
+      if (!nodeToDelete) {
+        console.warn(`Node with id ${nodeId} not found.`);
+        return;
+      }
+
       const edgesToRemove = edges.filter(
         (edge) => edge.source === nodeId || edge.target === nodeId,
       );
 
-      if (node) {
-        const params = {
-          nodes: [node],
-          edges: edgesToRemove,
-        } as NodesAndEdges;
+      const params = {
+        nodes: [nodeToDelete],
+        edges: edgesToRemove,
+      } as NodesAndEdges;
 
-        const confirmed = await triggerConfirmation(
-          getDeleteConfirmationDetails(params),
-        );
+      const confirmed = await triggerConfirmation(
+        getDeleteConfirmationDetails(params),
+      );
 
-        if (confirmed) {
-          onElementsRemove(params);
-        }
+      if (confirmed) {
+        onElementsRemove(params);
       }
     },
-    [nodes, edges, componentSpec, setComponentSpec, triggerConfirmation],
+    [edges, triggerConfirmation, onElementsRemove, getNodeById],
   );
 
   const setArguments = useCallback(
@@ -238,7 +269,7 @@ const FlowCanvas = ({
       );
       updateGraphSpec(newGraphSpec);
     },
-    [graphSpec],
+    [graphSpec, updateGraphSpec],
   );
 
   const setAnnotations = useCallback(
@@ -251,15 +282,18 @@ const FlowCanvas = ({
       );
       updateGraphSpec(newGraphSpec);
     },
-    [graphSpec],
+    [graphSpec, updateGraphSpec],
   );
 
   const onDuplicate = useCallback(
     (ids: NodeAndTaskId, selected = true) => {
       const nodeId = ids.nodeId;
-      const node = nodes.find((n) => n.id === nodeId);
+      const node = getNodeById(nodeId);
 
-      if (!node) return;
+      if (!node) {
+        console.warn(`Node with id ${nodeId} not found.`);
+        return;
+      }
 
       const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
         graphSpec,
@@ -274,15 +308,18 @@ const FlowCanvas = ({
         newNodes,
       });
     },
-    [graphSpec, nodes, updateGraphSpec, updateOrAddNodes],
+    [graphSpec, getNodeById, updateGraphSpec, updateOrAddNodes],
   );
 
   const onUpgrade = useCallback(
     async (ids: NodeAndTaskId, newComponentRef: ComponentReference) => {
       const nodeId = ids.nodeId;
-      const node = nodes.find((n) => n.id === nodeId);
+      const node = getNodeById(nodeId);
 
-      if (!node) return;
+      if (!node) {
+        console.warn(`Node with id ${nodeId} not found.`);
+        return;
+      }
 
       const { updatedGraphSpec, lostInputs } = replaceTaskNode(
         node,
@@ -308,20 +345,31 @@ const FlowCanvas = ({
         notify("Component updated", "success");
       }
     },
-    [graphSpec, nodes, updateGraphSpec],
+    [graphSpec, getNodeById, updateGraphSpec, triggerConfirmation, notify],
   );
 
-  const nodeData = {
-    connectable: !readOnly && !!nodesConnectable,
-    readOnly,
-    nodeCallbacks: {
+  const nodeData = useMemo(
+    () => ({
+      connectable: !readOnly && !!nodesConnectable,
+      readOnly,
+      nodeCallbacks: {
+        onDelete,
+        setArguments,
+        setAnnotations,
+        onDuplicate,
+        onUpgrade,
+      },
+    }),
+    [
+      readOnly,
+      nodesConnectable,
       onDelete,
       setArguments,
       setAnnotations,
       onDuplicate,
       onUpgrade,
-    },
-  };
+    ],
+  );
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -574,22 +622,6 @@ const FlowCanvas = ({
       triggerConfirmation,
       handleDrop,
     ],
-  );
-
-  const onElementsRemove = useCallback(
-    (params: NodesAndEdges) => {
-      let updatedComponentSpec = { ...componentSpec };
-
-      for (const edge of params.edges) {
-        updatedComponentSpec = removeEdge(edge, updatedComponentSpec);
-      }
-      for (const node of params.nodes) {
-        updatedComponentSpec = removeNode(node, updatedComponentSpec);
-      }
-
-      setComponentSpec(updatedComponentSpec);
-    },
-    [componentSpec, setComponentSpec],
   );
 
   const onRemoveNodes = useCallback(async () => {
