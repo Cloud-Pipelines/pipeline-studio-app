@@ -87,11 +87,11 @@ const Logs = ({
     log_text?: string;
     system_error_exception_full?: string;
   }>();
-  const { data, isLoading, isFetching, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["logs", executionId],
     queryFn: () => getLogs(String(executionId), backendUrl),
     enabled: isLogging,
-    refetchInterval: 1000,
+    refetchInterval: 5000,
     refetchIntervalInBackground: false,
   });
 
@@ -126,7 +126,7 @@ const Logs = ({
     );
   }
 
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
       <div className="flex gap-2 items-center">
         <Spinner /> Loading Logs...
