@@ -110,13 +110,13 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
       </div>
     );
   }, [
-    componentLibrary,
-    usedComponentsFolder,
-    favoritesFolder,
     isLoading,
     error,
-    searchTerm,
-    searchFilters,
+    componentLibrary,
+    searchResult,
+    usedComponentsFolder,
+    favoritesFolder,
+    handleFiltersChange,
   ]);
 
   if (!isOpen) {

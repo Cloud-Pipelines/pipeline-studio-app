@@ -60,14 +60,7 @@ export const useHintNode = ({ key, hint }: { key: string; hint: string }) => {
       focusable: false,
       zIndex: 1000,
     };
-  }, [
-    shouldShowHint,
-    connectionTo?.x,
-    connectionTo?.y,
-    connectionFromHandle,
-    key,
-    hint,
-  ]);
+  }, [shouldShowHint, connectionTo, connectionFromHandle?.id, key, hint]);
 
   return hintNode;
 };

@@ -56,7 +56,7 @@ const PipelineDetails = () => {
   const deselectNode = useCallback(() => {
     setNodes(deselectAllNodes);
     clearContent();
-  }, [setNodes]);
+  }, [setNodes, clearContent]);
 
   // Fetch file metadata on mount or when componentSpec.name changes
   useEffect(() => {

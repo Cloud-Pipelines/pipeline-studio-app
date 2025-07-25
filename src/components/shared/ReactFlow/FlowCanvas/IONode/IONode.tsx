@@ -55,7 +55,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const deselectNode = useCallback(() => {
     setNodes(deselectAllNodes);
     clearContent();
-  }, [setNodes]);
+  }, [clearContent, setNodes]);
 
   useEffect(() => {
     if (selected) {
@@ -88,7 +88,16 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
         );
       }
     }
-  }, [selected]);
+  }, [
+    deselectNode,
+    graphSpec,
+    input,
+    isPipelineEditor,
+    output,
+    selected,
+    setContent,
+    type,
+  ]);
 
   const {
     outputName: outputConnectedValue,

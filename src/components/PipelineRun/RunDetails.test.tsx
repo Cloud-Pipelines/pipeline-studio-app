@@ -28,7 +28,7 @@ vi.mock("@/hooks/useExecutionStatusQuery");
 vi.mock("@/services/executionService", async (importOriginal) => {
   return {
     ...(await importOriginal()),
-    fetchExecutionInfo: vi.fn(),
+    useFetchExecutionInfo: vi.fn(),
   };
 });
 vi.mock("@/services/pipelineRunService");
@@ -120,7 +120,7 @@ describe("<RunDetails/>", () => {
 
     // Mock pipelineRunService
     vi.mocked(pipelineRunService.fetchPipelineRunById).mockResolvedValue(
-      mockPipelineRun,
+      mockPipelineRun
     );
 
     vi.mocked(useBackend).mockReturnValue({
@@ -150,14 +150,14 @@ describe("<RunDetails/>", () => {
             {component}
           </PipelineRunsProvider>
         </QueryClientProvider>
-      </ComponentSpecProvider>,
+      </ComponentSpecProvider>
     );
   };
 
   describe("Inspect Pipeline Button", () => {
     test("should render inspect button", async () => {
       // arrange
-      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
         data: {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
@@ -180,7 +180,7 @@ describe("<RunDetails/>", () => {
   describe("Clone Pipeline Button", () => {
     test("should render clone button", async () => {
       // arrange
-      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
         data: {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
@@ -203,7 +203,7 @@ describe("<RunDetails/>", () => {
   describe("Cancel Pipeline Run Button", () => {
     test("should render cancel button when status is RUNNING", async () => {
       // arrange
-      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
         data: {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
@@ -224,7 +224,7 @@ describe("<RunDetails/>", () => {
 
     test("should NOT render cancel button when status is not RUNNING", async () => {
       // arrange
-      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
         data: {
           details: mockExecutionDetails,
           state: mockCancelledExecutionState,
@@ -247,7 +247,7 @@ describe("<RunDetails/>", () => {
   describe("Rerun Pipeline Run Button", () => {
     test("should render rerun button when status is CANCELLED", async () => {
       // arrange
-      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
         data: {
           details: mockExecutionDetails,
           state: mockCancelledExecutionState,
@@ -268,7 +268,7 @@ describe("<RunDetails/>", () => {
 
     test("should NOT render rerun button when status is RUNNING", async () => {
       // arrange
-      vi.mocked(executionService.fetchExecutionInfo).mockReturnValue({
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
         data: {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,

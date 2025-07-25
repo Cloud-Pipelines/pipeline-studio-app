@@ -75,7 +75,7 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
     };
 
     loadPipelineFromStorage();
-  }, [id, title]);
+  }, [backendUrl, id, isRunPath, title]);
 
   return {
     componentSpec,

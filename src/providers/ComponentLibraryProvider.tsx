@@ -345,12 +345,7 @@ export const ComponentLibraryProvider = ({
           console.error("Error importing component:", error);
         });
     },
-    [
-      refreshUserComponents,
-      refreshComponentLibrary,
-      importComponent,
-      newComponent,
-    ],
+    [refreshUserComponents, refreshComponentLibrary, newComponent],
   );
 
   const addToComponentLibrary = useCallback(
@@ -379,12 +374,7 @@ export const ComponentLibraryProvider = ({
           console.error("Error adding component to library:", error);
         });
     },
-    [
-      userComponentsFolder,
-      refreshComponentLibrary,
-      refreshUserComponents,
-      importComponent,
-    ],
+    [userComponentsFolder, refreshComponentLibrary, refreshUserComponents],
   );
 
   const removeFromComponentLibrary = useCallback(

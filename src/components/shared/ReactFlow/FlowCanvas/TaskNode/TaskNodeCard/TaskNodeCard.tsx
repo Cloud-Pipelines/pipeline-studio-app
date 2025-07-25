@@ -55,7 +55,13 @@ const TaskNodeCard = () => {
         ]}
       />
     ),
-    [nodeId, callbacks.onDuplicate, callbacks.onUpgrade, isCustomComponent],
+    [
+      taskNode,
+      nodeId,
+      callbacks.onDuplicate,
+      callbacks.onUpgrade,
+      isCustomComponent,
+    ],
   );
 
   useEffect(() => {
@@ -64,7 +70,7 @@ const TaskNodeCard = () => {
     } else {
       clearContent();
     }
-  }, [selected, taskConfigMarkup]);
+  }, [clearContent, selected, setContent, taskConfigMarkup]);
 
   const handleInputSectionClick = useCallback(() => {
     setExpandedInputs((prev) => !prev);

@@ -20,8 +20,8 @@ import { useBackend } from "@/providers/BackendProvider";
 import { APP_ROUTES } from "@/routes/router";
 import {
   countTaskStatuses,
-  fetchExecutionInfo,
   getRunStatus,
+  useFetchExecutionInfo,
 } from "@/services/executionService";
 import { convertUTCToLocalTime, formatDate } from "@/utils/date";
 
@@ -33,7 +33,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
 
   const executionId = `${run.root_execution_id}`;
 
-  const { data, isLoading, error } = fetchExecutionInfo(
+  const { data, isLoading, error } = useFetchExecutionInfo(
     executionId,
     backendUrl,
   );
@@ -51,7 +51,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
       navigator.clipboard.writeText(createdBy);
       notify(`"${createdBy}" copied to clipboard`, "success");
     },
-    [createdBy],
+    [createdBy, notify],
   );
 
   if (isLoading) {

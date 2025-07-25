@@ -200,14 +200,7 @@ export const PipelineRunsProvider = ({
         options?.onError?.(e as Error);
       }
     },
-    [
-      pipelineName,
-      backendUrl,
-      refetch,
-      isAuthorized,
-      awaitAuthorization,
-      isAuthorizationRequired,
-    ],
+    [pipelineName, backendUrl, refetch, isAuthorized, awaitAuthorization],
   );
 
   useEffect(() => {
@@ -225,7 +218,7 @@ export const PipelineRunsProvider = ({
       submit,
       setRecentRunsCount,
     }),
-    [runs, recentRuns, isLoading, error, refetch, submit, setRecentRunsCount],
+    [runs, recentRuns, isLoading, isSubmitting, error, refetch, submit],
   );
 
   return (

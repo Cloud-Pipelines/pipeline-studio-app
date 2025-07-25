@@ -124,7 +124,7 @@ export const useGoogleCloudSubmitter = ({
         result: "failed",
       });
     }
-  }, [config.googleCloudOAuthClientId]);
+  }, [config.googleCloudOAuthClientId, notify]);
 
   const submit = useCallback(async () => {
     if (vertexPipelineJob === undefined) {
@@ -179,7 +179,15 @@ export const useGoogleCloudSubmitter = ({
         result: "failed",
       });
     }
-  }, [vertexPipelineJob, config, componentSpec]);
+  }, [
+    vertexPipelineJob,
+    componentSpec?.name,
+    config.projectId,
+    config.region,
+    config.googleCloudOAuthClientId,
+    config.gcsOutputDirectory,
+    notify,
+  ]);
 
   useEffect(() => {
     if (componentSpec !== undefined) {
@@ -220,7 +228,14 @@ export const useGoogleCloudSubmitter = ({
         URL.revokeObjectURL(jsonBlobUrl);
       }
     };
-  }, [componentSpec, pipelineArguments, config.gcsOutputDirectory]);
+  }, [
+    componentSpec,
+    pipelineArguments,
+    config.gcsOutputDirectory,
+    vertexPipelineJob,
+    notify,
+    jsonBlobUrl,
+  ]);
 
   return {
     config,

@@ -48,7 +48,7 @@ export const ArgumentInputField = ({
     getInputValue(argument) ?? "",
   );
 
-  const undoValue = useMemo(() => argument, []);
+  const undoValue = useMemo(() => argument, [argument]);
   const hint = argument.inputSpec.annotations?.hint as string | undefined;
 
   const handleInputChange = (e: ChangeEvent) => {

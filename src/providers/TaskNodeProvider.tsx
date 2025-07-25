@@ -73,12 +73,22 @@ export const TaskNodeProvider = ({
   const notify = useToastNotification();
   const reactFlowInstance = useReactFlow();
 
-  const taskSpec = data.taskSpec ?? ({} as TaskSpec);
   const taskId = data.taskId as string;
   const nodeId = taskIdToNodeId(taskId);
 
-  const inputs = taskSpec.componentRef.spec?.inputs || [];
-  const outputs = taskSpec.componentRef.spec?.outputs || [];
+  const taskSpec = useMemo(
+    () => data.taskSpec ?? ({} as TaskSpec),
+    [data.taskSpec],
+  );
+  const inputs = useMemo(
+    () => taskSpec.componentRef.spec?.inputs || [],
+    [taskSpec.componentRef.spec?.inputs],
+  );
+  const outputs = useMemo(
+    // in case outputs are undefined - array will force to update deps on each render
+    () => taskSpec.componentRef.spec?.outputs || [],
+    [taskSpec.componentRef.spec?.outputs],
+  );
 
   const name = getComponentName(taskSpec.componentRef);
 
@@ -146,9 +156,10 @@ export const TaskNodeProvider = ({
     }),
     [
       selected,
+      data.isGhost,
       data.highlighted,
       data.readOnly,
-      data.isGhost,
+      data.connectable,
       runStatus,
       isCustomComponent,
       dimensions,
