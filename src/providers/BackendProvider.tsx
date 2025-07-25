@@ -114,12 +114,12 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
           return false;
         });
     },
-    [backendUrl],
+    [backendUrl, notify]
   );
 
   useEffect(() => {
     ping({ notifyResult: false });
-  }, [backendUrl]);
+  }, [backendUrl, ping]);
 
   useEffect(() => {
     const getSettings = async () => {
@@ -133,7 +133,7 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
       setUseRelativePath(relativeFlag === true && !backendUrlFromEnv);
     };
     getSettings();
-  }, []);
+  }, [backendUrlFromEnv]);
 
   const contextValue = useMemo(
     () => ({
@@ -158,7 +158,7 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
       setRelativePathConfig,
       setBackendUrl,
       ping,
-    ],
+    ]
   );
 
   return (

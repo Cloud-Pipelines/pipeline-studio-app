@@ -45,7 +45,7 @@ export const OutputNameEditor = ({
 
       return updatedComponentSpec;
     },
-    [componentSpec, setComponentSpec],
+    [componentSpec],
   );
 
   const handleNameChange = (value: string) => {

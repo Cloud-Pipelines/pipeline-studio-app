@@ -20,9 +20,12 @@ export const RerunPipelineButton = ({
   const navigate = useNavigate();
   const notify = useToastNotification();
 
-  const onSuccess = useCallback((response: PipelineRun) => {
-    navigate({ to: `${APP_ROUTES.RUNS}/${response.root_execution_id}` });
-  }, []);
+  const onSuccess = useCallback(
+    (response: PipelineRun) => {
+      navigate({ to: `${APP_ROUTES.RUNS}/${response.root_execution_id}` });
+    },
+    [navigate],
+  );
 
   const onError = useCallback(
     (error: Error | string) => {

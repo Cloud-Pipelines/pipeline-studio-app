@@ -203,14 +203,17 @@ const FlowCanvas = ({
   );
 
   // Workaround for nodes state being stale in task node callbacks
-  const getNodeById = useCallback((id: string) => {
-    let node: Node | undefined;
-    setNodes((currentNodes) => {
-      node = currentNodes.find((n) => n.id === id);
-      return currentNodes;
-    });
-    return node;
-  }, []);
+  const getNodeById = useCallback(
+    (id: string) => {
+      let node: Node | undefined;
+      setNodes((currentNodes) => {
+        node = currentNodes.find((n) => n.id === id);
+        return currentNodes;
+      });
+      return node;
+    },
+    [setNodes],
+  );
 
   const onElementsRemove = useCallback(
     (params: NodesAndEdges) => {
@@ -371,6 +374,30 @@ const FlowCanvas = ({
     ],
   );
 
+  const updateReactFlow = useCallback(
+    (newComponentSpec: ComponentSpec) => {
+      const newNodes = createNodesFromComponentSpec(newComponentSpec, nodeData);
+
+      const updatedNewNodes = newNodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          highlighted: node.id === replaceTarget?.id,
+        },
+      }));
+
+      setNodes((prevNodes) => {
+        const updatedNodes = updatedNewNodes.map((newNode) => {
+          const existingNode = prevNodes.find((node) => node.id === newNode.id);
+          return existingNode ? { ...existingNode, ...newNode } : newNode;
+        });
+
+        return updatedNodes;
+      });
+    },
+    [setNodes, nodeData, replaceTarget],
+  );
+
   const onConnect = useCallback(
     (connection: Connection) => {
       if (connection.source === connection.target) return;
@@ -378,7 +405,7 @@ const FlowCanvas = ({
       const updatedGraphSpec = handleConnection(graphSpec, connection);
       updateGraphSpec(updatedGraphSpec);
     },
-    [graphSpec, handleConnection, updateGraphSpec],
+    [graphSpec, updateGraphSpec],
   );
 
   const onConnectEnd = useCallback(
@@ -427,13 +454,7 @@ const FlowCanvas = ({
 
       setComponentSpec(updatedComponentSpec);
     },
-    [
-      reactFlowInstance,
-      componentSpec,
-      nodeData,
-      setComponentSpec,
-      updateOrAddNodes,
-    ],
+    [reactFlowInstance, componentSpec, setComponentSpec],
   );
 
   useEffect(() => {
@@ -614,13 +635,15 @@ const FlowCanvas = ({
       }
     },
     [
-      componentSpec,
-      reactFlowInstance,
       replaceTarget,
-      setComponentSpec,
-      updateGraphSpec,
-      triggerConfirmation,
+      reactFlowInstance,
       handleDrop,
+      graphSpec,
+      triggerConfirmation,
+      updateGraphSpec,
+      componentSpec,
+      setComponentSpec,
+      updateReactFlow,
     ],
   );
 
@@ -631,7 +654,7 @@ const FlowCanvas = ({
     if (confirmed) {
       onElementsRemove(selectedElements);
     }
-  }, [selectedElements, onElementsRemove, triggerConfirmation]);
+  }, [triggerConfirmation, selectedNodes, onElementsRemove, selectedElements]);
 
   const handleOnNodesChange = (changes: NodeChange[]) => {
     const positionChanges = changes.filter(
@@ -700,7 +723,7 @@ const FlowCanvas = ({
       updatedNodes,
       newNodes,
     });
-  }, [graphSpec, selectedNodes, updateGraphSpec, setNodes]);
+  }, [graphSpec, selectedNodes, updateGraphSpec, updateOrAddNodes]);
 
   const onUpgradeNodes = useCallback(async () => {
     let newGraphSpec = graphSpec;
@@ -741,7 +764,7 @@ const FlowCanvas = ({
       updateGraphSpec(newGraphSpec);
       notify(`${includedNodes.length} nodes updated`, "success");
     }
-  }, [graphSpec, selectedNodes, updateGraphSpec]);
+  }, [graphSpec, notify, selectedNodes, triggerConfirmation, updateGraphSpec]);
 
   const handleSelectionChange = useCallback(() => {
     if (selectedNodes.length < 1) {
@@ -753,34 +776,10 @@ const FlowCanvas = ({
     setShowToolbar(true);
   }, []);
 
-  const updateReactFlow = useCallback(
-    (newComponentSpec: ComponentSpec) => {
-      const newNodes = createNodesFromComponentSpec(newComponentSpec, nodeData);
-
-      const updatedNewNodes = newNodes.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          highlighted: node.id === replaceTarget?.id,
-        },
-      }));
-
-      setNodes((prevNodes) => {
-        const updatedNodes = updatedNewNodes.map((newNode) => {
-          const existingNode = prevNodes.find((node) => node.id === newNode.id);
-          return existingNode ? { ...existingNode, ...newNode } : newNode;
-        });
-
-        return updatedNodes;
-      });
-    },
-    [setNodes, nodeData, replaceTarget],
-  );
-
   useEffect(() => {
     // Update ReactFlow based on the component spec
     updateReactFlow(componentSpec);
-  }, [componentSpec, replaceTarget]);
+  }, [componentSpec, replaceTarget, updateReactFlow]);
 
   const store = useStoreApi();
 
@@ -794,7 +793,7 @@ const FlowCanvas = ({
       const message = `Copied ${selectedNodes.length} nodes to clipboard`;
       notify(message, "success");
     }
-  }, [selectedNodes]);
+  }, [notify, selectedNodes]);
 
   const onPaste = useCallback(() => {
     if (readOnly) return;
@@ -850,7 +849,15 @@ const FlowCanvas = ({
         console.error("Failed to paste nodes from clipboard:", err);
       }
     });
-  }, [graphSpec, nodes, reactFlowInstance, store, updateOrAddNodes]);
+  }, [
+    graphSpec,
+    nodes,
+    reactFlowInstance,
+    readOnly,
+    store,
+    updateGraphSpec,
+    updateOrAddNodes,
+  ]);
 
   useCopyPaste({
     onCopy,

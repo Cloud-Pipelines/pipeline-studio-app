@@ -53,7 +53,7 @@ const ComponentDuplicateDialog = ({
     }
 
     generateNewDigest();
-  }, [existingComponent, newComponent]);
+  }, [existingComponent, newComponent, newComponentDigest]);
 
   const generateNewDigestOnBlur = useCallback(async () => {
     if (
@@ -74,7 +74,7 @@ const ComponentDuplicateDialog = ({
       );
       setNewDigest(digest);
     }
-  }, [newComponent, newName]);
+  }, [newComponent, newComponentDigest, newName]);
 
   const handleOnOpenChange = useCallback(
     (open: boolean) => {
@@ -96,7 +96,7 @@ const ComponentDuplicateDialog = ({
 
       setClose();
     },
-    [handleImportComponent, setClose],
+    [handleImportComponent, newComponent, setClose],
   );
 
   const handleReplaceAndImport = useCallback(async () => {
@@ -108,7 +108,7 @@ const ComponentDuplicateDialog = ({
     handleImportComponent(yamlString);
 
     setClose();
-  }, [handleImportComponent, setClose]);
+  }, [existingComponent?.name, handleImportComponent, newComponent, setClose]);
 
   const handleCancel = useCallback(() => {
     setClose();

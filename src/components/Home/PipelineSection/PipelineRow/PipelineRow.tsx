@@ -60,7 +60,7 @@ const PipelineRow = ({
     };
 
     await deletePipeline(name, deleteCallback);
-  }, [name]);
+  }, [name, onDelete]);
 
   const formattedDate = useMemo(() => {
     if (!modificationTime) return "N/A";

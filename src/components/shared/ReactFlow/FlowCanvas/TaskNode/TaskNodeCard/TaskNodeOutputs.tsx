@@ -155,7 +155,13 @@ export function TaskNodeOutputs({
 
     toggleHighlightRelatedHandles(true, output);
     setIsDragging(true);
-  }, [connection, outputs, isDragging, toggleHighlightRelatedHandles]);
+  }, [
+    connection,
+    outputs,
+    isDragging,
+    toggleHighlightRelatedHandles,
+    resetHighlightRelatedHandles,
+  ]);
 
   if (!outputs.length) return null;
 

@@ -52,7 +52,7 @@ const CodeViewer = ({
           />
         </div>
       ),
-    [code, language],
+    [code, isLarge, language],
   );
 
   return (

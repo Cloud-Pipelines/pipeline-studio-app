@@ -119,7 +119,7 @@ export const ComponentSpecProvider = ({
         componentText,
       );
     },
-    [componentSpec],
+    [componentSpec, readOnly],
   );
 
   useAutoSave((spec) => {

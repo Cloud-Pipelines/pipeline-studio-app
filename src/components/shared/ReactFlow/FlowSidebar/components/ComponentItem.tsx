@@ -114,9 +114,9 @@ const ComponentMarkup = ({
 };
 
 const ComponentItemFromUrl = ({ url }: ComponentItemFromUrlProps) => {
-  if (!url) return null;
-
   const { isLoading, error, componentRef } = useComponentFromUrl(url);
+
+  if (!url) return null;
 
   if (!componentRef.spec) {
     componentRef.spec = EMPTY_GRAPH_COMPONENT_SPEC;
