@@ -8,13 +8,11 @@ import { getComponentFilename } from "@/utils/getComponentFilename";
 interface TaskImplementationProps {
   displayName: string;
   componentSpec: ComponentSpec;
-  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 const TaskImplementation = ({
   displayName,
   componentSpec,
-  onFullscreenChange = () => {},
 }: TaskImplementationProps) => {
   const filename = getComponentFilename(componentSpec);
 
@@ -40,7 +38,6 @@ const TaskImplementation = ({
       language="yaml"
       title={`${displayName} Implementation (read-only)`}
       filename={filename}
-      onFullscreenChange={onFullscreenChange}
     />
   );
 };
