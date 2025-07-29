@@ -9,10 +9,8 @@ import { useBackend } from "@/providers/BackendProvider";
 import { getBackendStatusString } from "@/utils/backend";
 
 const LogDisplay = ({
-  onFullscreenChange,
   logs,
 }: {
-  onFullscreenChange?: (isFullscreen: boolean) => void;
   logs: {
     log_text?: string;
     system_error_exception_full?: string;
@@ -30,7 +28,6 @@ const LogDisplay = ({
           language="text"
           title="Logs"
           filename="logs"
-          onFullscreenChange={onFullscreenChange}
         />
       )}
       {logs?.system_error_exception_full && (
@@ -39,7 +36,6 @@ const LogDisplay = ({
           language="text"
           title="Logs"
           filename="error"
-          onFullscreenChange={onFullscreenChange}
         />
       )}
     </>
@@ -73,11 +69,9 @@ const getLogs = async (executionId: string, backendUrl: string) => {
 
 const Logs = ({
   executionId,
-  onFullscreenChange,
   status,
 }: {
   executionId?: string | number;
-  onFullscreenChange?: (isFullscreen: boolean) => void;
   status?: ContainerExecutionStatus;
 }) => {
   const { backendUrl, configured, available } = useBackend();
@@ -147,9 +141,7 @@ const Logs = ({
   return (
     <div className="space-y-4 h-full">
       <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg h-full min-h-0 flex-1">
-        {logs && (
-          <LogDisplay logs={logs} onFullscreenChange={onFullscreenChange} />
-        )}
+        {logs && <LogDisplay logs={logs} />}
       </div>
     </div>
   );
