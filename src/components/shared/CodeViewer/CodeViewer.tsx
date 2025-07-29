@@ -1,19 +1,17 @@
 import { Maximize2, X as XIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
 import { FullscreenElement } from "../FullscreenElement/FullscreenElement";
 import { useBetaFlagValue } from "../Settings/useBetaFlags";
 import CodeSyntaxHighlighter from "./CodeSyntaxHighlighter";
-import { useFullscreen } from "./FullscreenCodeViewer";
 
 interface CodeViewerProps {
   code: string;
   language?: string;
   title?: string;
   filename?: string;
-  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 const DEFAULT_HEIGHT = 128;
@@ -21,34 +19,31 @@ const DEFAULT_HEIGHT = 128;
 const CodeViewer = ({
   code,
   language = "yaml",
-  title = "Code Implementation",
   filename = "",
-  onFullscreenChange = () => {},
 }: CodeViewerProps) => {
   const isVirtualized = useBetaFlagValue("codeViewer");
-  const isFullscreenElement = useBetaFlagValue("fullscreen-code-viewer");
 
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const { openFullscreen } = useFullscreen();
-
   const handleEnterFullscreen = useCallback(() => {
-    if (isFullscreenElement) {
-      setIsFullscreen((prev) => !prev);
-      onFullscreenChange(!isFullscreen);
-    } else {
-      openFullscreen({ code, language, title });
-      onFullscreenChange(true);
-    }
-  }, [
-    code,
-    language,
-    title,
-    openFullscreen,
-    onFullscreenChange,
-    isFullscreenElement,
-    isFullscreen,
-  ]);
+    setIsFullscreen((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (isFullscreen && e.key === "Escape") {
+        setIsFullscreen(false);
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscapeKey);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [isFullscreen]);
 
   const codeViewer = (
     <>
@@ -89,12 +84,10 @@ const CodeViewer = ({
     </>
   );
 
-  return isFullscreenElement ? (
+  return (
     <FullscreenElement fullscreen={isFullscreen}>
       {codeViewer}
     </FullscreenElement>
-  ) : (
-    codeViewer
   );
 };
 
