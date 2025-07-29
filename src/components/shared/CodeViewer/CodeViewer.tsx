@@ -6,14 +6,12 @@ import { Button } from "@/components/ui/button";
 import { FullscreenElement } from "../FullscreenElement";
 import { useBetaFlagValue } from "../Settings/useBetaFlags";
 import CodeSyntaxHighlighter from "./CodeSyntaxHighlighter";
-import { useFullscreen } from "./FullscreenCodeViewer";
 
 interface CodeViewerProps {
   code: string;
   language?: string;
   title?: string;
   filename?: string;
-  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 const DEFAULT_HEIGHT = 128;
@@ -21,36 +19,16 @@ const DEFAULT_HEIGHT = 128;
 const CodeViewer = ({
   code,
   language = "yaml",
-  title = "Code Implementation",
   filename = "",
-  onFullscreenChange = () => {},
 }: CodeViewerProps) => {
   const isVirtualized = useBetaFlagValue("codeViewer");
-  const isFullscreenElement = useBetaFlagValue("fullscreen-code-viewer");
 
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const { openFullscreen } = useFullscreen();
-
   const handleEnterFullscreen = useCallback(() => {
-    if (isFullscreenElement) {
-      setIsFullscreen((prev) => !prev);
-      onFullscreenChange(!isFullscreen);
-    } else {
-      openFullscreen({ code, language, title });
-      onFullscreenChange(true);
-    }
-  }, [
-    code,
-    language,
-    title,
-    openFullscreen,
-    onFullscreenChange,
-    isFullscreenElement,
-    isFullscreen,
-  ]);
+    setIsFullscreen((prev) => !prev);
+  }, []);
 
-  // Handle Escape key
   useEffect(() => {
     const handleEscapeKey = (e: KeyboardEvent) => {
       if (isFullscreen && e.key === "Escape") {
@@ -106,12 +84,10 @@ const CodeViewer = ({
     </>
   );
 
-  return isFullscreenElement ? (
+  return (
     <FullscreenElement fullscreen={isFullscreen}>
       {codeViewer}
     </FullscreenElement>
-  ) : (
-    codeViewer
   );
 };
 
