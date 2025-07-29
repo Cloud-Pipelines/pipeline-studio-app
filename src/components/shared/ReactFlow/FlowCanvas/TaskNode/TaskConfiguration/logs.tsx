@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { ContainerExecutionStatus } from "@/api/types.gen";
 import { CodeViewer } from "@/components/shared/CodeViewer";
 import { InfoBox } from "@/components/shared/InfoBox";
+import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
 import { useBackend } from "@/providers/BackendProvider";
 import { getBackendStatusString } from "@/utils/backend";
@@ -64,6 +65,26 @@ const isStatusActivelyLogging = (
   }
 };
 
+const shouldStatusHaveLogs = (status?: ContainerExecutionStatus): boolean => {
+  if (!status) {
+    return false;
+  }
+
+  if (isStatusActivelyLogging(status)) {
+    return true;
+  }
+
+  switch (status) {
+    case "FAILED":
+    case "SYSTEM_ERROR":
+    case "SUCCEEDED":
+    case "CANCELLED":
+      return true;
+    default:
+      return false;
+  }
+};
+
 const getLogs = async (executionId: string, backendUrl: string) => {
   const response = await fetch(
     `${backendUrl}/api/executions/${executionId}/container_log`,
@@ -83,6 +104,7 @@ const Logs = ({
   const { backendUrl, configured, available } = useBackend();
 
   const [isLogging, setIsLogging] = useState(!!executionId);
+  const [shouldHaveLogs, setShouldHaveLogs] = useState(!!executionId);
   const [logs, setLogs] = useState<{
     log_text?: string;
     system_error_exception_full?: string;
@@ -98,6 +120,7 @@ const Logs = ({
   useEffect(() => {
     if (status) {
       setIsLogging(isStatusActivelyLogging(status));
+      setShouldHaveLogs(shouldStatusHaveLogs(status));
     }
   }, [status]);
 
@@ -122,6 +145,14 @@ const Logs = ({
     return (
       <InfoBox title="Backend not configured" variant="warning">
         Configure a backend to view execution logs.
+      </InfoBox>
+    );
+  }
+
+  if (!shouldHaveLogs) {
+    return (
+      <InfoBox title="No logs available" variant="info">
+        Logs are available only for active, queued and completed executions.
       </InfoBox>
     );
   }
@@ -152,6 +183,37 @@ const Logs = ({
         )}
       </div>
     </div>
+  );
+};
+
+export const OpenLogsInNewWindowLink = ({
+  executionId,
+  status,
+}: {
+  executionId: string;
+  status?: ContainerExecutionStatus;
+}) => {
+  const { backendUrl, available } = useBackend();
+  const logsUrl = `${backendUrl}/api/executions/${executionId}/stream_container_log`;
+
+  if (!executionId || !shouldStatusHaveLogs(status)) {
+    return null;
+  }
+
+  return (
+    <Link
+      href={logsUrl}
+      external
+      variant={available ? "link" : "disabled"}
+      size="sm"
+      aria-label={
+        available
+          ? "Open logs in a new tab"
+          : "Cant open logs: Backend not available"
+      }
+    >
+      Open in new tab
+    </Link>
   );
 };
 
