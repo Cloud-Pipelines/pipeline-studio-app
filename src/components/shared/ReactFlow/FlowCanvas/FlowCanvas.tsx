@@ -22,14 +22,12 @@ import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useCopyPaste } from "@/hooks/useCopyPaste";
 import { useGhostNode } from "@/hooks/useGhostNode";
 import { useHintNode } from "@/hooks/useHintNode";
+import { useNodeCallbacks } from "@/hooks/useNodeCallbacks";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
-import type { Annotations } from "@/types/annotations";
-import type { NodeAndTaskId } from "@/types/taskNode";
 import type {
-  ArgumentType,
   ComponentReference,
   ComponentSpec,
   InputSpec,
@@ -42,7 +40,6 @@ import ComponentDuplicateDialog from "../../Dialogs/ComponentDuplicateDialog";
 import { getBulkUpdateConfirmationDetails } from "./ConfirmationDialogs/BulkUpdateConfirmationDialog";
 import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfirmation";
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
-import { getUpgradeConfirmationDetails } from "./ConfirmationDialogs/UpgradeComponent";
 import SmoothEdge from "./Edges/SmoothEdge";
 import GhostNode from "./GhostNode/GhostNode";
 import HintNode from "./GhostNode/HintNode";
@@ -59,8 +56,6 @@ import { handleConnection } from "./utils/handleConnection";
 import { isPositionInNode } from "./utils/isPositionInNode";
 import { removeEdge } from "./utils/removeEdge";
 import { removeNode } from "./utils/removeNode";
-import replaceTaskAnnotationsInGraphSpec from "./utils/replaceTaskAnnotationsInGraphSpec";
-import replaceTaskArgumentsInGraphSpec from "./utils/replaceTaskArgumentsInGraphSpec";
 import { replaceTaskNode } from "./utils/replaceTaskNode";
 import { updateNodePositions } from "./utils/updateNodePosition";
 
@@ -202,16 +197,6 @@ const FlowCanvas = ({
     [selectedNodes, selectedEdges],
   );
 
-  // Workaround for nodes state being stale in task node callbacks
-  const getNodeById = useCallback((id: string) => {
-    let node: Node | undefined;
-    setNodes((currentNodes) => {
-      node = currentNodes.find((n) => n.id === id);
-      return currentNodes;
-    });
-    return node;
-  }, []);
-
   const onElementsRemove = useCallback(
     (params: NodesAndEdges) => {
       let updatedComponentSpec = { ...componentSpec };
@@ -228,147 +213,20 @@ const FlowCanvas = ({
     [componentSpec, setComponentSpec],
   );
 
-  const onDelete = useCallback(
-    async (ids: NodeAndTaskId) => {
-      const nodeId = ids.nodeId;
-
-      const nodeToDelete = getNodeById(nodeId);
-
-      if (!nodeToDelete) {
-        console.warn(`Node with id ${nodeId} not found.`);
-        return;
-      }
-
-      const edgesToRemove = edges.filter(
-        (edge) => edge.source === nodeId || edge.target === nodeId,
-      );
-
-      const params = {
-        nodes: [nodeToDelete],
-        edges: edgesToRemove,
-      } as NodesAndEdges;
-
-      const confirmed = await triggerConfirmation(
-        getDeleteConfirmationDetails(params),
-      );
-
-      if (confirmed) {
-        onElementsRemove(params);
-      }
-    },
-    [edges, triggerConfirmation, onElementsRemove, getNodeById],
-  );
-
-  const setArguments = useCallback(
-    (ids: NodeAndTaskId, args: Record<string, ArgumentType>) => {
-      const taskId = ids.taskId;
-      const newGraphSpec = replaceTaskArgumentsInGraphSpec(
-        taskId,
-        graphSpec,
-        args,
-      );
-      updateGraphSpec(newGraphSpec);
-    },
-    [graphSpec, updateGraphSpec],
-  );
-
-  const setAnnotations = useCallback(
-    (ids: NodeAndTaskId, annotations: Annotations) => {
-      const taskId = ids.taskId;
-      const newGraphSpec = replaceTaskAnnotationsInGraphSpec(
-        taskId,
-        graphSpec,
-        annotations,
-      );
-      updateGraphSpec(newGraphSpec);
-    },
-    [graphSpec, updateGraphSpec],
-  );
-
-  const onDuplicate = useCallback(
-    (ids: NodeAndTaskId, selected = true) => {
-      const nodeId = ids.nodeId;
-      const node = getNodeById(nodeId);
-
-      if (!node) {
-        console.warn(`Node with id ${nodeId} not found.`);
-        return;
-      }
-
-      const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
-        graphSpec,
-        [node],
-        { selected },
-      );
-
-      updateGraphSpec(updatedGraphSpec);
-
-      updateOrAddNodes({
-        updatedNodes,
-        newNodes,
-      });
-    },
-    [graphSpec, getNodeById, updateGraphSpec, updateOrAddNodes],
-  );
-
-  const onUpgrade = useCallback(
-    async (ids: NodeAndTaskId, newComponentRef: ComponentReference) => {
-      const nodeId = ids.nodeId;
-      const node = getNodeById(nodeId);
-
-      if (!node) {
-        console.warn(`Node with id ${nodeId} not found.`);
-        return;
-      }
-
-      const { updatedGraphSpec, lostInputs } = replaceTaskNode(
-        node,
-        newComponentRef,
-        graphSpec,
-      );
-
-      if (!newComponentRef.digest) {
-        console.error("Component reference does not have a digest.");
-        return;
-      }
-
-      const dialogData = getUpgradeConfirmationDetails(
-        node,
-        newComponentRef.digest,
-        lostInputs,
-      );
-
-      const confirmed = await triggerConfirmation(dialogData);
-
-      if (confirmed) {
-        updateGraphSpec(updatedGraphSpec);
-        notify("Component updated", "success");
-      }
-    },
-    [graphSpec, getNodeById, updateGraphSpec, triggerConfirmation, notify],
-  );
+  const nodeCallbacks = useNodeCallbacks({
+    reactFlowInstance,
+    triggerConfirmation,
+    onElementsRemove,
+    updateOrAddNodes,
+  });
 
   const nodeData = useMemo(
     () => ({
       connectable: !readOnly && !!nodesConnectable,
       readOnly,
-      nodeCallbacks: {
-        onDelete,
-        setArguments,
-        setAnnotations,
-        onDuplicate,
-        onUpgrade,
-      },
+      nodeCallbacks,
     }),
-    [
-      readOnly,
-      nodesConnectable,
-      onDelete,
-      setArguments,
-      setAnnotations,
-      onDuplicate,
-      onUpgrade,
-    ],
+    [readOnly, nodesConnectable, nodeCallbacks],
   );
 
   const onConnect = useCallback(

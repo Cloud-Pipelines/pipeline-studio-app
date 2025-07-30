@@ -5,7 +5,7 @@ type ConfirmationDialogHandlers = {
   onCancel: () => void;
 };
 
-type TriggerDialogProps = {
+export type TriggerDialogProps = {
   title?: string;
   description?: string;
   content?: ReactNode;
