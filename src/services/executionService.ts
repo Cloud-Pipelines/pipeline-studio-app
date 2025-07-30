@@ -35,7 +35,7 @@ export const fetchExecutionDetails = async (
   return response.json();
 };
 
-export const fetchExecutionInfo = (
+export const useFetchExecutionInfo = (
   executionId: string,
   backendUrl: string,
   poll: boolean = false,

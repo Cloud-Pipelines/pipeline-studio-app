@@ -16,7 +16,7 @@ import {
   useComponentSpec,
 } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
-import { fetchExecutionInfo } from "@/services/executionService";
+import { useFetchExecutionInfo } from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
@@ -24,7 +24,7 @@ const PipelineRun = () => {
   const { backendUrl, configured, available } = useBackend();
   const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
 
-  const { data, isLoading, error, refetch } = fetchExecutionInfo(
+  const { data, isLoading, error, refetch } = useFetchExecutionInfo(
     rootExecutionId,
     backendUrl,
     false,

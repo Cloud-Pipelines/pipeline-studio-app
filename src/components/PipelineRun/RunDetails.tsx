@@ -6,10 +6,10 @@ import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import {
   countTaskStatuses,
-  fetchExecutionInfo,
   getRunStatus,
   isStatusComplete,
   isStatusInProgress,
+  useFetchExecutionInfo,
 } from "@/services/executionService";
 import { fetchPipelineRunById } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
@@ -33,7 +33,7 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
   const [isPolling, setIsPolling] = useState(true);
   const { componentSpec } = useComponentSpec();
 
-  const { data, isLoading, error, refetch } = fetchExecutionInfo(
+  const { data, isLoading, error, refetch } = useFetchExecutionInfo(
     executionId,
     backendUrl,
     isPolling,
