@@ -58,18 +58,6 @@ const TaskNodeCard = () => {
     [nodeId, callbacks.onDuplicate, callbacks.onUpgrade, isCustomComponent],
   );
 
-  useEffect(() => {
-    if (selected) {
-      setContent(taskConfigMarkup);
-    }
-
-    return () => {
-      if (selected) {
-        clearContent();
-      }
-    };
-  }, [selected, taskConfigMarkup, setContent, clearContent]);
-
   const handleInputSectionClick = useCallback(() => {
     setExpandedInputs((prev) => !prev);
   }, []);
@@ -89,6 +77,18 @@ const TaskNodeCard = () => {
       setCondensed(scrollHeight > dimensions.h);
     }
   }, [scrollHeight, dimensions.h]);
+
+  useEffect(() => {
+    if (selected) {
+      setContent(taskConfigMarkup);
+    }
+
+    return () => {
+      if (selected) {
+        clearContent();
+      }
+    };
+  }, [selected, taskConfigMarkup, setContent, clearContent]);
 
   return (
     <Card
