@@ -224,8 +224,15 @@ const FlowCanvas = ({
       }
 
       setComponentSpec(updatedComponentSpec);
+
+      /**
+       * `onElementsRemove` maybe called asynchronously, so we need to clear the content after a short delay.
+       */
+      setTimeout(() => {
+        clearContent();
+      });
     },
-    [componentSpec, setComponentSpec],
+    [componentSpec, setComponentSpec, clearContent],
   );
 
   const onDelete = useCallback(
