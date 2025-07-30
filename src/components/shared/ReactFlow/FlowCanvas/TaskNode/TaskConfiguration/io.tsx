@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 
 import type { GetArtifactsApiExecutionsIdArtifactsGetResponse } from "@/api/types.gen";
 import { InfoBox } from "@/components/shared/InfoBox";
@@ -39,16 +38,11 @@ const Io = ({ taskSpec, executionId, readOnly }: IoProps) => {
     isLoading,
     isFetching,
     error,
-    refetch,
   } = useQuery({
     queryKey: ["artifacts", executionId],
     queryFn: () => getArtifacts(String(executionId), backendUrl),
     enabled: !!executionId,
   });
-
-  useEffect(() => {
-    refetch();
-  }, [backendUrl, refetch]);
 
   if (!configured) {
     return (

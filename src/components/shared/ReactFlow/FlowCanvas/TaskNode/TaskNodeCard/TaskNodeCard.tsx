@@ -12,7 +12,7 @@ import { TaskNodeOutputs } from "./TaskNodeOutputs";
 
 const TaskNodeCard = () => {
   const taskNode = useTaskNode();
-  const { setContent, clearContent } = useContextPanel();
+  const { setContent } = useContextPanel();
 
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -61,8 +61,6 @@ const TaskNodeCard = () => {
   useEffect(() => {
     if (selected) {
       setContent(taskConfigMarkup);
-    } else {
-      clearContent();
     }
   }, [selected, taskConfigMarkup]);
 
@@ -85,12 +83,6 @@ const TaskNodeCard = () => {
       setCondensed(scrollHeight > dimensions.h);
     }
   }, [scrollHeight, dimensions.h]);
-
-  useEffect(() => {
-    if (selected) {
-      setContent(taskConfigMarkup);
-    }
-  }, [selected, setContent, taskConfigMarkup]);
 
   return (
     <Card

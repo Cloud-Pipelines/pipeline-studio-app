@@ -2,8 +2,10 @@ import { useReactFlow } from "@xyflow/react";
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -35,13 +37,13 @@ export const ContextPanelProvider = ({
   const { setNodes } = useReactFlow();
   const [content, setContentState] = useState<ReactNode>(defaultContent);
 
-  const setContent = (content: ReactNode) => {
+  const setContent = useCallback((content: ReactNode) => {
     setContentState(content);
-  };
+  }, []);
 
-  const clearContent = () => {
+  const clearContent = useCallback(() => {
     setContentState(defaultContent);
-  };
+  }, [defaultContent]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -58,8 +60,13 @@ export const ContextPanelProvider = ({
     };
   }, [defaultContent]);
 
+  const value = useMemo(
+    () => ({ content, setContent, clearContent }),
+    [content, setContent, clearContent],
+  );
+
   return (
-    <ContextPanelContext.Provider value={{ content, setContent, clearContent }}>
+    <ContextPanelContext.Provider value={value}>
       {children}
     </ContextPanelContext.Provider>
   );
