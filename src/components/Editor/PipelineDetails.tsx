@@ -17,7 +17,6 @@ import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { deselectAllNodes } from "@/utils/flowUtils";
 
 import { TaskImplementation } from "../shared/TaskDetails";
-import RecentExecutions from "./components/RecentExecutions";
 import { InputValueEditor } from "./InputValueEditor/InputValueEditor";
 import { OutputNameEditor } from "./OutputNameEditor";
 import RenamePipeline from "./RenamePipeline";
@@ -285,9 +284,6 @@ const PipelineDetails = () => {
           </div>
         </div>
       </div>
-
-      {/* Recent Executions */}
-      <RecentExecutions />
 
       {/* Pipeline YAML */}
       <div className="flex flex-col h-full">

@@ -10,6 +10,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
+import { RecentExecutionsButton } from "../components/RecentExecutionsButton";
+
 const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
   const { componentSpec } = useComponentSpec();
 
@@ -30,6 +32,9 @@ const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
                 <GoogleCloudSubmissionDialog componentSpec={componentSpec} />
               </SidebarMenuItem>
             )}
+            <SidebarMenuItem>
+              <RecentExecutionsButton tooltipPosition="right" />
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
       </>
@@ -38,7 +43,12 @@ const RunsAndSubmission = ({ isOpen }: { isOpen: boolean }) => {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Runs & Submissions</SidebarGroupLabel>
+      <SidebarGroupLabel>
+        <div className="flex items-center justify-between gap-2 w-full">
+          <div>Runs & Submissions</div>
+          <RecentExecutionsButton />
+        </div>
+      </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
