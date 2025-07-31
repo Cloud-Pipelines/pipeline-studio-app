@@ -9,7 +9,6 @@ import {
   getRunStatus,
   isStatusComplete,
   isStatusInProgress,
-  useFetchExecutionInfo,
 } from "@/services/executionService";
 import { fetchPipelineRunById } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
@@ -21,39 +20,15 @@ import { CancelPipelineRunButton } from "./components/CancelPipelineRunButton";
 import { ClonePipelineButton } from "./components/ClonePipelineButton";
 import { InspectPipelineButton } from "./components/InspectPipelineButton";
 import { RerunPipelineButton } from "./components/RerunPipelineButton";
+import { useRootExecutionContext } from "./RootExecutionStatusProvider";
 
-type RunDetailsProps = {
-  executionId?: string;
-};
+export const RunDetails = () => {
+  const { details, state, runId, isLoading, error } = useRootExecutionContext();
 
-export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
-  const { backendUrl, configured } = useBackend();
+  const { configured } = useBackend();
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
-  const [isPolling, setIsPolling] = useState(true);
   const { componentSpec } = useComponentSpec();
-
-  const { data, isLoading, error, refetch } = useFetchExecutionInfo(
-    executionId,
-    backendUrl,
-    isPolling,
-  );
-  const { details, state } = data;
-  const runId = details?.pipeline_run_id;
-
-  useEffect(() => {
-    refetch();
-  }, [backendUrl, executionId, refetch]);
-
-  useEffect(() => {
-    if (details && state) {
-      const statusCounts = countTaskStatuses(details, state);
-      const runStatus = getRunStatus(statusCounts);
-      if (isStatusComplete(runStatus)) {
-        setIsPolling(false);
-      }
-    }
-  }, [details, state]);
 
   useEffect(() => {
     const fetchData = async () => {
