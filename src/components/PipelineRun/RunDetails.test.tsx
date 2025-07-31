@@ -15,6 +15,7 @@ import * as executionService from "@/services/executionService";
 import * as pipelineRunService from "@/services/pipelineRunService";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
+import { RootExecutionStatusProvider } from "./RootExecutionStatusProvider";
 import { RunDetails } from "./RunDetails";
 
 // Mock the hooks and services
@@ -147,7 +148,11 @@ describe("<RunDetails/>", () => {
       <ComponentSpecProvider spec={mockComponentSpec}>
         <QueryClientProvider client={queryClient}>
           <PipelineRunsProvider pipelineName={mockPipelineRun.pipeline_name}>
-            {component}
+            <RootExecutionStatusProvider
+              rootExecutionId={mockPipelineRun.root_execution_id.toString()}
+            >
+              {component}
+            </RootExecutionStatusProvider>
           </PipelineRunsProvider>
         </QueryClientProvider>
       </ComponentSpecProvider>,
@@ -169,7 +174,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+      renderWithQueryClient(<RunDetails />);
 
       // assert
       const inspect = screen.getByTestId("inspect-pipeline-button");
@@ -192,7 +197,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+      renderWithQueryClient(<RunDetails />);
 
       // assert
       const cloneButton = screen.getByTestId("clone-pipeline-run-button");
@@ -215,7 +220,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+      renderWithQueryClient(<RunDetails />);
 
       // assert
       const cancelButton = screen.getByTestId("cancel-pipeline-run-button");
@@ -236,7 +241,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+      renderWithQueryClient(<RunDetails />);
 
       // assert
       const cancelButton = screen.queryByTestId("cancel-pipeline-run-button");
@@ -259,7 +264,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+      renderWithQueryClient(<RunDetails />);
 
       // assert
       const rerunButton = screen.getByTestId("rerun-pipeline-button");
@@ -280,7 +285,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails executionId="test-execution-id" />);
+      renderWithQueryClient(<RunDetails />);
 
       // assert
       const rerunButton = screen.queryByTestId("rerun-pipeline-button");
