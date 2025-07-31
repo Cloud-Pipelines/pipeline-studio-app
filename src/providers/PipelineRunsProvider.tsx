@@ -1,9 +1,7 @@
 import yaml from "js-yaml";
 import {
-  createContext,
   type ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -33,6 +31,10 @@ import {
   type ComponentSpec,
 } from "@/utils/componentSpec";
 
+import {
+  createRequiredContext,
+  useRequiredContext,
+} from "../hooks/useRequiredContext";
 import { useBackend } from "./BackendProvider";
 
 type PipelineRunsContextType = {
@@ -52,8 +54,8 @@ type PipelineRunsContextType = {
   setRecentRunsCount: (count: number) => void;
 };
 
-const PipelineRunsContext = createContext<PipelineRunsContextType | undefined>(
-  undefined,
+const PipelineRunsContext = createRequiredContext<PipelineRunsContextType>(
+  "PipelineRunsProvider",
 );
 
 const DEFAULT_RECENT_RUNS = 4;
@@ -241,10 +243,7 @@ export const PipelineRunsProvider = ({
 };
 
 export const usePipelineRuns = () => {
-  const ctx = useContext(PipelineRunsContext);
-  if (!ctx)
-    throw new Error("usePipelineRuns must be used within PipelineRunsProvider");
-  return ctx;
+  return useRequiredContext(PipelineRunsContext);
 };
 
 // Fetch component with timeout to avoid hanging on unresponsive URLs

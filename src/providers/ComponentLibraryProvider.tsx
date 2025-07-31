@@ -1,9 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  createContext,
   type ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -42,6 +40,10 @@ import {
 } from "@/utils/localforage";
 import { componentMatchesSearch } from "@/utils/searchUtils";
 
+import {
+  createRequiredContext,
+  useRequiredContext,
+} from "../hooks/useRequiredContext";
 import { useComponentSpec } from "./ComponentSpecProvider";
 
 type ComponentLibraryContextType = {
@@ -74,9 +76,10 @@ type ComponentLibraryContextType = {
   checkIfHighlighted: (component: ComponentReference) => boolean;
 };
 
-const ComponentLibraryContext = createContext<
-  ComponentLibraryContextType | undefined
->(undefined);
+const ComponentLibraryContext =
+  createRequiredContext<ComponentLibraryContextType>(
+    "ComponentLibraryProvider",
+  );
 
 export const ComponentLibraryProvider = ({
   children,
@@ -519,10 +522,5 @@ export const ComponentLibraryProvider = ({
 };
 
 export const useComponentLibrary = () => {
-  const ctx = useContext(ComponentLibraryContext);
-  if (!ctx)
-    throw new Error(
-      "useComponentLibrary must be used within a ComponentLibraryProvider",
-    );
-  return ctx;
+  return useRequiredContext(ComponentLibraryContext);
 };
