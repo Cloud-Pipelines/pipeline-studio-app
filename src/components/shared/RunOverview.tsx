@@ -30,12 +30,13 @@ const defaultConfig = {
   showAuthor: false,
 };
 
-const RunOverview = ({
-  run,
-  config = defaultConfig,
-  className = "",
-}: RunOverviewProps) => {
+const RunOverview = ({ run, config, className = "" }: RunOverviewProps) => {
   const navigate = useNavigate();
+
+  const combinedConfig = {
+    ...defaultConfig,
+    ...config,
+  };
 
   return (
     <div
@@ -50,20 +51,20 @@ const RunOverview = ({
     >
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
-          {config?.showName && <span>{run.pipeline_name}</span>}
+          {combinedConfig?.showName && <span>{run.pipeline_name}</span>}
           <div className="flex items-center gap-3">
-            {config?.showStatus && <StatusIcon status={run.status} />}
-            {config?.showExecutionId && (
+            {combinedConfig?.showStatus && <StatusIcon status={run.status} />}
+            {combinedConfig?.showExecutionId && (
               <div className="text-xs">{`#${run.root_execution_id}`}</div>
             )}
           </div>
-          {config?.showCreatedAt && run.created_at && (
+          {combinedConfig?.showCreatedAt && run.created_at && (
             <div className="flex items-center gap-2">
               <span>•</span>
               <span className="text-gray-500 text-xs">{`${formatDate(run.created_at || "")}`}</span>
             </div>
           )}
-          {config?.showAuthor && run.created_by && (
+          {combinedConfig?.showAuthor && run.created_by && (
             <div className="flex items-center gap-1">
               <span className="mr-1">•</span>
               <span className="text-xs">Initiated by</span>
@@ -73,20 +74,20 @@ const RunOverview = ({
             </div>
           )}
         </div>
-        {config?.showStatusCounts &&
-          config.showStatusCounts !== "none" &&
+        {combinedConfig?.showStatusCounts &&
+          combinedConfig.showStatusCounts !== "none" &&
           run.statusCounts && (
             <StatusText
               statusCounts={run.statusCounts}
               shorthand={
-                config.showStatusCounts === "shorthand" ||
-                (config.showAuthor && !!run.created_by)
+                combinedConfig.showStatusCounts === "shorthand" ||
+                (combinedConfig.showAuthor && !!run.created_by)
               }
             />
           )}
       </div>
 
-      {config?.showTaskStatusBar && (
+      {combinedConfig?.showTaskStatusBar && (
         <StatusBar statusCounts={run.statusCounts} />
       )}
     </div>
