@@ -1,9 +1,7 @@
 import { useReactFlow } from "@xyflow/react";
 import {
-  createContext,
   type ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -11,14 +9,19 @@ import {
 
 import { deselectAllNodes } from "@/utils/flowUtils";
 
+import {
+  createRequiredContext,
+  useRequiredContext,
+} from "../hooks/useRequiredContext";
+
 type ContextPanelContextType = {
   content: ReactNode;
   setContent: (content: ReactNode) => void;
   clearContent: () => void;
 };
 
-const ContextPanelContext = createContext<ContextPanelContextType | undefined>(
-  undefined,
+const ContextPanelContext = createRequiredContext<ContextPanelContextType>(
+  "ContextPanelProvider",
 );
 
 const EMPTY_STATE = (
@@ -73,10 +76,5 @@ export const ContextPanelProvider = ({
 };
 
 export const useContextPanel = () => {
-  const ctx = useContext(ContextPanelContext);
-  if (!ctx)
-    throw new Error(
-      "useContextPanel must be used within a ContextPanelProvider",
-    );
-  return ctx;
+  return useRequiredContext(ContextPanelContext);
 };

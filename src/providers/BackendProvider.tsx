@@ -1,8 +1,6 @@
 import {
-  createContext,
   type ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -20,6 +18,11 @@ import {
 } from "@/utils/localforage";
 import { normalizeUrl } from "@/utils/URL";
 
+import {
+  createRequiredContext,
+  useRequiredContext,
+} from "../hooks/useRequiredContext";
+
 type BackendContextType = {
   configured: boolean;
   available: boolean;
@@ -36,7 +39,8 @@ type BackendContextType = {
   }) => Promise<boolean>;
 };
 
-const BackendContext = createContext<BackendContextType | undefined>(undefined);
+const BackendContext =
+  createRequiredContext<BackendContextType>("BackendProvider");
 
 export const BackendProvider = ({ children }: { children: ReactNode }) => {
   const notify = useToastNotification();
@@ -169,7 +173,5 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useBackend = () => {
-  const ctx = useContext(BackendContext);
-  if (!ctx) throw new Error("useBackend must be used within a BackendProvider");
-  return ctx;
+  return useRequiredContext(BackendContext);
 };

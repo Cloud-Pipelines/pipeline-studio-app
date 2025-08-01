@@ -1,11 +1,5 @@
 import { useReactFlow } from "@xyflow/react";
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useMemo,
-} from "react";
+import { type ReactNode, useCallback, useMemo } from "react";
 
 import type { ContainerExecutionStatus } from "@/api/types.gen";
 import useComponentFromUrl from "@/hooks/useComponentFromUrl";
@@ -21,6 +15,11 @@ import type {
 } from "@/utils/componentSpec";
 import { getComponentName } from "@/utils/getComponentName";
 import { taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
+
+import {
+  createRequiredContext,
+  useRequiredContext,
+} from "../hooks/useRequiredContext";
 
 type TaskNodeState = Readonly<{
   selected: boolean;
@@ -60,9 +59,8 @@ export type TaskNodeContextType = {
   select: () => void;
 };
 
-const TaskNodeContext = createContext<TaskNodeContextType | undefined>(
-  undefined,
-);
+const TaskNodeContext =
+  createRequiredContext<TaskNodeContextType>("TaskNodeProvider");
 
 export const TaskNodeProvider = ({
   children,
@@ -195,9 +193,5 @@ export const TaskNodeProvider = ({
 };
 
 export function useTaskNode() {
-  const ctx = useContext(TaskNodeContext);
-  if (!ctx) {
-    throw new Error("useTaskNode must be used within a TaskNodeProvider");
-  }
-  return ctx;
+  return useRequiredContext(TaskNodeContext);
 }

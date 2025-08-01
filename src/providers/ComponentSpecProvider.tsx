@@ -1,8 +1,6 @@
 import {
-  createContext,
   type ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -13,6 +11,10 @@ import { loadPipelineByName } from "@/services/pipelineService";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 
+import {
+  createRequiredContext,
+  useRequiredContext,
+} from "../hooks/useRequiredContext";
 import type {
   ComponentSpec,
   GraphImplementation,
@@ -44,9 +46,9 @@ interface ComponentSpecContextType {
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
 }
 
-const ComponentSpecContext = createContext<
-  ComponentSpecContextType | undefined
->(undefined);
+const ComponentSpecContext = createRequiredContext<ComponentSpecContextType>(
+  "ComponentSpecProvider",
+);
 
 export const ComponentSpecProvider = ({
   spec,
@@ -176,11 +178,5 @@ export const ComponentSpecProvider = ({
 };
 
 export const useComponentSpec = () => {
-  const context = useContext(ComponentSpecContext);
-  if (!context) {
-    throw new Error(
-      "useComponentSpec must be used within a ComponentSpecProvider",
-    );
-  }
-  return context;
+  return useRequiredContext(ComponentSpecContext);
 };
