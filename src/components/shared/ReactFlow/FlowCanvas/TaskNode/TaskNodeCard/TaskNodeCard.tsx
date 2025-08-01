@@ -12,7 +12,7 @@ import { TaskNodeOutputs } from "./TaskNodeOutputs";
 
 const TaskNodeCard = () => {
   const taskNode = useTaskNode();
-  const { setContent } = useContextPanel();
+  const { setContent, clearContent } = useContextPanel();
 
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -62,7 +62,13 @@ const TaskNodeCard = () => {
     if (selected) {
       setContent(taskConfigMarkup);
     }
-  }, [selected, taskConfigMarkup]);
+
+    return () => {
+      if (selected) {
+        clearContent();
+      }
+    };
+  }, [selected, taskConfigMarkup, setContent, clearContent]);
 
   const handleInputSectionClick = useCallback(() => {
     setExpandedInputs((prev) => !prev);
