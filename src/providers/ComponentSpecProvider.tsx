@@ -7,8 +7,12 @@ import {
 } from "react";
 
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
 import { loadPipelineByName } from "@/services/pipelineService";
-import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
+import {
+  AUTOSAVE_DEBOUNCE_TIME,
+  USER_PIPELINES_LIST_NAME,
+} from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 
 import {
@@ -44,6 +48,7 @@ interface ComponentSpecContextType {
   saveComponentSpec: (name: string) => Promise<void>;
   taskStatusMap: Map<string, string>;
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
+  undoRedo: UndoRedo;
 }
 
 const ComponentSpecContext = createRequiredContext<ComponentSpecContextType>(
@@ -66,7 +71,7 @@ export const ComponentSpecProvider = ({
     new Map(),
   );
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!!spec);
 
   const graphSpec = useMemo(() => {
     if (
@@ -79,6 +84,8 @@ export const ComponentSpecProvider = ({
     return (EMPTY_GRAPH_COMPONENT_SPEC.implementation as GraphImplementation)
       .graph;
   }, [componentSpec]);
+
+  const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
 
   const loadPipeline = useCallback(
     async (newName?: string) => {
@@ -121,14 +128,8 @@ export const ComponentSpecProvider = ({
         componentText,
       );
     },
-    [componentSpec],
+    [componentSpec, readOnly],
   );
-
-  useAutoSave((spec) => {
-    if (spec.name) {
-      saveComponentSpec(spec.name);
-    }
-  }, componentSpec);
 
   const updateGraphSpec = useCallback((newGraphSpec: GraphSpec) => {
     setComponentSpec((prevSpec) => ({
@@ -140,9 +141,35 @@ export const ComponentSpecProvider = ({
     }));
   }, []);
 
+  const shouldAutoSave = !isLoading && !readOnly && !!componentSpec.name;
+
+  useAutoSave(
+    (spec) => {
+      if (spec.name) {
+        saveComponentSpec(spec.name);
+      }
+    },
+    componentSpec,
+    AUTOSAVE_DEBOUNCE_TIME,
+    shouldAutoSave,
+  );
+
   useEffect(() => {
-    setComponentSpec(spec ?? EMPTY_GRAPH_COMPONENT_SPEC);
-    setIsLoading(false);
+    if (spec) {
+      setIsLoading(true);
+      setComponentSpec(spec);
+      undoRedo.clearHistory();
+
+      // When we load a new spec we go from null -> empy_spec -> full_spec
+      // Delay loading completion to allow initial state updates to settle
+      // This prevents unecessary autosave calls
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 0);
+    } else {
+      setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
+      setIsLoading(false);
+    }
   }, [spec]);
 
   const value = useMemo(
@@ -156,6 +183,7 @@ export const ComponentSpecProvider = ({
       saveComponentSpec,
       updateGraphSpec,
       setTaskStatusMap,
+      undoRedo,
     }),
     [
       componentSpec,
@@ -167,6 +195,7 @@ export const ComponentSpecProvider = ({
       saveComponentSpec,
       updateGraphSpec,
       setTaskStatusMap,
+      undoRedo,
     ],
   );
 
