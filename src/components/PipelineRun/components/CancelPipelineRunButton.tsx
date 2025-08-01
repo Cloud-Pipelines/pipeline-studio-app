@@ -20,6 +20,7 @@ export const CancelPipelineRunButton = () => {
 
   const handleConfirm = useCallback(async () => {
     setIsOpen(false);
+
     try {
       await cancel();
     } catch (error) {

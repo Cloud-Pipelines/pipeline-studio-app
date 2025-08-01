@@ -270,6 +270,16 @@ export const PipelineRunProvider = ({
   //   refetchExecutionInfo();
   // }, [backendUrl]);
 
+  // TODO:
+  // see if we can remove polling and use live status and streamed logs
+  // see https://github.com/Shopify/oasis-frontend/issues/171
+  // adapt the RootExecutionStatusProvider test file to this provider
+  // update RunDetails tests
+  // fix cancel/rerun/clone button tests
+  // remove/replace unused execution/run queries and hooks
+  // fix src/hooks/useLoadPipelineRuns.ts:21:7
+  // rework pipelinerun route so that it doesn't need to make an execution info query and can use the provider instead
+
   const value = useMemo(
     () => ({
       details,
