@@ -1,7 +1,6 @@
 import { Code, InfoIcon, ListFilter } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { useFullscreen } from "@/components/shared/CodeViewer";
 import {
   Dialog,
   DialogContent,
@@ -34,9 +33,6 @@ const ComponentDetails = ({
   onClose,
   onDelete,
 }: ComponentDetailsProps) => {
-  // Get global fullscreen state
-  const { isAnyFullscreen } = useFullscreen();
-
   const { url, spec: componentSpec, digest: componentDigest } = component;
 
   const dialogTriggerButton = trigger || <InfoIconButton />;
@@ -47,14 +43,8 @@ const ComponentDetails = ({
     }
   };
 
-  const onFullscreenChange = (isFullscreen: boolean) => {
-    if (!isFullscreen) {
-      onClose?.();
-    }
-  };
-
   return (
-    <Dialog modal={!isAnyFullscreen} onOpenChange={onOpenChange}>
+    <Dialog modal onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{dialogTriggerButton}</DialogTrigger>
 
       <DialogDescription
@@ -119,7 +109,6 @@ const ComponentDetails = ({
                 <TaskImplementation
                   displayName={displayName}
                   componentSpec={componentSpec}
-                  onFullscreenChange={onFullscreenChange}
                 />
               </TabsContent>
             </div>
