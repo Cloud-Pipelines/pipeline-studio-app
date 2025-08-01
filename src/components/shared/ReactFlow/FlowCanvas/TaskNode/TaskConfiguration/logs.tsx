@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { ContainerExecutionStatus } from "@/api/types.gen";
 import { CodeViewer } from "@/components/shared/CodeViewer";
 import { InfoBox } from "@/components/shared/InfoBox";
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Spinner } from "@/components/ui/spinner";
 import { useBackend } from "@/providers/BackendProvider";
 import { getBackendStatusString } from "@/utils/backend";
@@ -74,6 +76,8 @@ const Logs = ({
   executionId?: string | number;
   status?: ContainerExecutionStatus;
 }) => {
+  const logsUrlInDetails = useBetaFlagValue("logs-url-in-details");
+
   const { backendUrl, configured, available } = useBackend();
 
   const [isLogging, setIsLogging] = useState(!!executionId);
@@ -112,6 +116,8 @@ const Logs = ({
     refetch();
   }, [backendUrl, refetch]);
 
+  const logsUrl = `${backendUrl}/api/executions/${executionId}/container_log`;
+
   if (!configured) {
     return (
       <InfoBox title="Backend not configured" variant="warning">
@@ -139,11 +145,26 @@ const Logs = ({
   }
 
   return (
-    <div className="space-y-4 h-full">
-      <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg h-full min-h-0 flex-1">
-        {logs && <LogDisplay logs={logs} />}
+    <>
+      {logsUrlInDetails ? (
+        <div className="flex items-right gap-2">
+          <a
+            href={logsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm hover:underline flex items-center gap-1"
+          >
+            <ExternalLink className="size-4" />
+            Open raw logs in new tab
+          </a>
+        </div>
+      ) : null}
+      <div className="space-y-4 h-full">
+        <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg h-full min-h-0 flex-1">
+          {logs && <LogDisplay logs={logs} />}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
