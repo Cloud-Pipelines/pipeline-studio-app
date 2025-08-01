@@ -66,7 +66,7 @@ const TaskStatusBar = ({
       )}
       {skipped > 0 && (
         <div
-          className="bg-gray-800"
+          className="bg-gray-200"
           style={getSegmentStyle(skippedWidth, hatched)}
         ></div>
       )}
