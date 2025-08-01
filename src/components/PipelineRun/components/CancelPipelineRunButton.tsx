@@ -7,7 +7,7 @@ import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
 import { Spinner } from "@/components/ui/spinner";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useBackend } from "@/providers/BackendProvider";
-import { cancelPipelineRun } from "@/services/pipelineRunService";
+import { usePipelineRun } from "@/providers/PipelineRunProvider";
 
 interface CancelPipelineRunButtonProps {
   runId: string | null | undefined;
@@ -16,44 +16,37 @@ interface CancelPipelineRunButtonProps {
 export const CancelPipelineRunButton = ({
   runId,
 }: CancelPipelineRunButtonProps) => {
-  const { backendUrl, available } = useBackend();
+  const { cancel, isCancelling, status } = usePipelineRun();
+  const { available } = useBackend();
   const notify = useToastNotification();
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const {
-    mutate: cancelPipeline,
-    isPending,
-    isSuccess,
-  } = useMutation({
-    mutationFn: (runId: string) => cancelPipelineRun(runId, backendUrl),
-    onSuccess: () => {
-      notify(`Pipeline run ${runId} cancelled`, "success");
-    },
-    onError: (error) => {
-      notify(`Error cancelling run: ${error}`, "error");
-    },
-  });
+  // const {
+  //   mutate: cancelPipeline,
+  //   isPending,
+  //   isSuccess,
+  // } = useMutation({
+  //   mutationFn: (runId: string) => cancelPipelineRun(runId, backendUrl),
+  //   onSuccess: () => {
+  //     notify(`Pipeline run ${runId} cancelled`, "success");
+  //   },
+  //   onError: (error) => {
+  //     notify(`Error cancelling run: ${error}`, "error");
+  //   },
+  // });
+
+  const isCancelled = status === "cancelled";
 
   const handleConfirm = useCallback(() => {
     setIsOpen(false);
 
-    if (!runId) {
-      notify(`Failed to cancel run. No run ID found.`, "warning");
-      return;
-    }
-
-    if (!available) {
-      notify(`Backend is not available. Cannot cancel run.`, "warning");
-      return;
-    }
-
     try {
-      cancelPipeline(runId);
+      cancel();
     } catch (error) {
       notify(`Error cancelling run: ${error}`, "error");
     }
-  }, [runId, available]);
+  }, [cancel, notify]);
 
   const onClick = useCallback(() => {
     setIsOpen(true);
@@ -63,7 +56,7 @@ export const CancelPipelineRunButton = ({
     setIsOpen(false);
   }, []);
 
-  if (isSuccess) {
+  if (isCancelled) {
     return (
       <TooltipButton disabled tooltip="Run cancelled">
         <CircleSlash className="w-4 h-4" />
@@ -77,10 +70,10 @@ export const CancelPipelineRunButton = ({
         variant="destructive"
         onClick={onClick}
         tooltip="Cancel run"
-        disabled={isPending || !available}
+        disabled={isCancelling || !available}
         data-testid="cancel-pipeline-run-button"
       >
-        {isPending ? (
+        {isCancelling ? (
           <Spinner className="mr-2" />
         ) : (
           <div className="flex items-center gap-2">
