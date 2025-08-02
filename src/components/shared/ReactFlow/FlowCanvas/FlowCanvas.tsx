@@ -75,12 +75,27 @@ const edgeTypes: Record<string, ComponentType<any>> = {
   customEdge: SmoothEdge,
 };
 
+const useScheduleExecutionOnceWhenConditionMet = (
+  condition: boolean,
+  callback: () => void,
+) => {
+  const hasExecuted = useRef(false);
+  useEffect(() => {
+    if (condition && !hasExecuted.current) {
+      callback();
+      hasExecuted.current = true;
+    }
+  }, [condition, callback]);
+};
+
 const FlowCanvas = ({
   readOnly,
   nodesConnectable,
   children,
   ...rest
 }: ReactFlowProps & { readOnly?: boolean }) => {
+  const initialCanvasLoaded = useRef(false);
+
   const { clearContent } = useContextPanel();
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
@@ -787,7 +802,19 @@ const FlowCanvas = ({
   useEffect(() => {
     // Update ReactFlow based on the component spec
     updateReactFlow(componentSpec);
+    initialCanvasLoaded.current = true;
   }, [componentSpec, replaceTarget]);
+
+  const fitView = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.fitView();
+    }
+  }, [reactFlowInstance]);
+
+  useScheduleExecutionOnceWhenConditionMet(
+    initialCanvasLoaded.current && !!reactFlowInstance,
+    fitView,
+  );
 
   const store = useStoreApi();
 
