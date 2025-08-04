@@ -39,10 +39,11 @@
     "lint:fix": "eslint src --config eslint.config.js --fix",
     "validate": "npm run format && npm run lint:fix && npm run typecheck && npm run knip",
     "validate:test": "npm run validate && npm run test",
-    "generate-api": "npx @hey-api/openapi-ts -i http://localhost:8000/openapi.json -o src/api -c @hey-api/client-fetch",
+    "generate-api": "openapi-ts",
     "knip": "knip"
   },
   "dependencies": {
+    "@hey-api/client-fetch": "^0.13.1",
     "@dnd-kit/core": "^6.3.1",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -88,6 +89,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "^0.81.1",
     "@eslint/js": "^9.31.0",
     "@playwright/test": "^1.55.0",
     "@testing-library/dom": "^10.4.1",
