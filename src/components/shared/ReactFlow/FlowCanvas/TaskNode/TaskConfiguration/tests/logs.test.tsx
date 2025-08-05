@@ -85,9 +85,6 @@ describe("OpenLogsInNewWindowLink", () => {
   describe("different execution statuses", () => {
     const statusesThatShouldHaveLogs: ContainerExecutionStatus[] = [
       "RUNNING",
-      "PENDING",
-      "QUEUED",
-      "WAITING_FOR_UPSTREAM",
       "CANCELLING",
       "FAILED",
       "SYSTEM_ERROR",
@@ -99,6 +96,9 @@ describe("OpenLogsInNewWindowLink", () => {
       "INVALID",
       "UNINITIALIZED",
       "SKIPPED",
+      "PENDING",
+      "QUEUED",
+      "WAITING_FOR_UPSTREAM",
     ];
 
     test.each(statusesThatShouldHaveLogs)(
