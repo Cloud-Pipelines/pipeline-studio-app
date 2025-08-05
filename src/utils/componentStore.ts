@@ -91,7 +91,7 @@ export const loadComponentAsRefFromText = async (
   }
   const componentSpec: ComponentSpec = loadedObj;
 
-  const digest = await calculateHashDigestHex(componentBytes);
+  const digest = await calculateHashDigestHex(componentBytes as ArrayBuffer);
   const componentRef: ComponentReferenceWithSpec = {
     spec: componentSpec,
     digest: digest,
@@ -320,7 +320,7 @@ const writeComponentRefToFile = async (
   const existingFile =
     await componentListDb.getItem<ComponentFileEntry>(fileName);
   const currentTime = new Date();
-  const componentData = new TextEncoder().encode(componentRef.text);
+  const componentData = new TextEncoder().encode(componentRef.text).buffer;
   let fileEntry: ComponentFileEntry;
   if (existingFile === null) {
     fileEntry = {
@@ -691,7 +691,8 @@ const upgradeSingleComponentListDb = async (listName: string) => {
           `Db is corrupted: Could not find data for file "${fileName}" with digest ${fileEntry.componentRef.digest}.`,
         );
         const componentText = componentSpecToYaml(fileEntry.componentRef.spec);
-        data = new TextEncoder().encode(componentText);
+        const encodedData = new TextEncoder().encode(componentText);
+        data = encodedData.buffer;
         const newDigest = await calculateHashDigestHex(data);
         componentRef.digest = newDigest;
         console.warn(
