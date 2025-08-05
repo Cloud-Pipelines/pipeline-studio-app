@@ -18,6 +18,11 @@ const GPUs: AnnotationOption[] = [
   // { value: "nvidia-tesla-v100", name: "NVIDIA V100" },
 ];
 
+const CloudProviders: AnnotationOption[] = [
+  { value: "google", name: "Google Cloud" },
+  { value: "nebius", name: "Nebius Cloud" },
+];
+
 export const COMPUTE_RESOURCES: AnnotationConfig[] = [
   {
     annotation: "cloud-pipelines.net/launchers/generic/resources.cpu",
@@ -37,6 +42,11 @@ export const COMPUTE_RESOURCES: AnnotationConfig[] = [
     label: "GPU",
     options: GPUs,
     enableQuantity: true,
+  },
+  {
+    annotation: "cloud-pipelines.net/orchestration/cloud_provider",
+    label: "Cloud provider",
+    options: CloudProviders,
   },
   {
     annotation: "cloud-pipelines.net/launchers/kubernetes/google/use_spot_vms",
