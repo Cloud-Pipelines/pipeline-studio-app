@@ -7,14 +7,15 @@ import type {
 import { AnnotationsInput } from "./AnnotationsInput";
 
 const GPUs: AnnotationOption[] = [
-  { value: "nvidia-a100-80gb", name: "NVIDIA A100 80GB" },
-  { value: "nvidia-h100-80gb", name: "NVIDIA H100 80GB" },
-  { value: "nvidia-h100-mega-80gb", name: "NVIDIA H100 80GB MEGA" },
-  { value: "nvidia-l4", name: "NVIDIA L4" },
-  { value: "nvidia-tesla-a100", name: "NVIDIA A100 40GB" },
-  { value: "nvidia-tesla-p4", name: "NVIDIA Tesla P4" },
-  { value: "nvidia-tesla-t4", name: "NVIDIA T4" },
-  { value: "nvidia-tesla-v100", name: "NVIDIA V100" },
+  { value: "NVIDIA-H200", name: "NVIDIA H200" },
+  // { value: "nvidia-a100-80gb", name: "NVIDIA A100 80GB" },
+  // { value: "nvidia-h100-80gb", name: "NVIDIA H100 80GB" },
+  // { value: "nvidia-h100-mega-80gb", name: "NVIDIA H100 80GB MEGA" },
+  // { value: "nvidia-l4", name: "NVIDIA L4" },
+  // { value: "nvidia-tesla-a100", name: "NVIDIA A100 40GB" },
+  // { value: "nvidia-tesla-p4", name: "NVIDIA Tesla P4" },
+  // { value: "nvidia-tesla-t4", name: "NVIDIA T4" },
+  // { value: "nvidia-tesla-v100", name: "NVIDIA V100" },
 ];
 
 export const COMPUTE_RESOURCES: AnnotationConfig[] = [
