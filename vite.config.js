@@ -20,6 +20,7 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./vitest-setup.js"],
+    include: ["src/**/*.{test,spec}.?(c|m)[jt]s?(x)"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
@@ -27,6 +28,7 @@ export default defineConfig({
         "node_modules/",
         "test/",
         "tests/",
+        "tests/e2e/",
         "*.test.tsx",
         "*.test.ts",
         "*.d.ts",

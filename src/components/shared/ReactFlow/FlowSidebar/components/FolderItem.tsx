@@ -30,7 +30,7 @@ const FolderItem = ({ folder, icon }: FolderItemProps) => {
   const chevronStyles = "h-4 w-4 text-gray-400 flex-shrink-0";
 
   return (
-    <div className="w-full">
+    <div className="w-full" data-folder-name={folder.name}>
       <div
         className="flex items-center px-4 py-1 cursor-pointer hover:bg-gray-100"
         onClick={toggle}

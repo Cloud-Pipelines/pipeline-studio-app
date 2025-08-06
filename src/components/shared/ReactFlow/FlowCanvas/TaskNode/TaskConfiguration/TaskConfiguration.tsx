@@ -51,7 +51,10 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div
+      className="flex flex-col h-full"
+      data-context-panel="task-configuration"
+    >
       <div className="flex items-center gap-2 px-2 pb-2 font-semibold text-lg">
         {name} <ComponentFavoriteToggle component={taskSpec.componentRef} />
         {runStatus && <StatusIcon status={runStatus} tooltip label="task" />}
