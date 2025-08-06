@@ -2,7 +2,6 @@ import { Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { ToastContainer } from "react-toastify";
 
-import { FullscreenProvider } from "@/components/shared/CodeViewer";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { BackendProvider } from "@/providers/BackendProvider";
@@ -16,23 +15,21 @@ const RootLayout = () => {
   return (
     <BackendProvider>
       <SidebarProvider>
-        <FullscreenProvider>
-          <ToastContainer />
+        <ToastContainer />
 
-          <div className="App flex flex-col min-h-screen w-full">
-            <AppMenu />
+        <div className="App flex flex-col min-h-screen w-full">
+          <AppMenu />
 
-            <main className="flex-1 grid">
-              <Outlet />
-            </main>
+          <main className="flex-1 grid">
+            <Outlet />
+          </main>
 
-            <AppFooter />
+          <AppFooter />
 
-            {import.meta.env.VITE_ENABLE_ROUTER_DEVTOOLS === "true" && (
-              <TanStackRouterDevtools />
-            )}
-          </div>
-        </FullscreenProvider>
+          {import.meta.env.VITE_ENABLE_ROUTER_DEVTOOLS === "true" && (
+            <TanStackRouterDevtools />
+          )}
+        </div>
       </SidebarProvider>
     </BackendProvider>
   );
