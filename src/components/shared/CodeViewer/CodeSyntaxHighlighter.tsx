@@ -120,6 +120,19 @@ const VirtualizedViewportContent = memo(function VirtualizedViewportContent({
   );
 });
 
+function bypassScrollLocks(element: HTMLElement | null) {
+  if (element) {
+    /**
+     * To ensure scrolling the code viewer in any context (e.g. fullscreen)
+     * we need to bypass the scroll locks introduced by https://github.com/theKashey/react-remove-scroll in Dialogs
+     */
+    element.onwheel = (e) => e.stopPropagation();
+    element.ontouchmove = (e) => e.stopPropagation();
+  }
+
+  return element;
+}
+
 function VirtualizedViewport({
   rows,
   stylesheet,
@@ -146,7 +159,9 @@ function VirtualizedViewport({
     <div
       ref={(el) => {
         if (!listRef.current) {
-          listRef.current = el?.closest("pre")?.parentElement ?? null;
+          listRef.current = bypassScrollLocks(
+            el?.closest("pre")?.parentElement ?? null,
+          );
         }
       }}
     >
