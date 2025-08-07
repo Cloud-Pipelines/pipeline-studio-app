@@ -137,6 +137,7 @@ export const InputHandle = ({
         className={cn(
           "flex flex-row items-center rounded-md cursor-pointer relative",
         )}
+        data-testid={`input-handle-${input.name}`}
       >
         <div className="flex flex-row w-full gap-0.5 items-center justify-between">
           <div
@@ -159,7 +160,10 @@ export const InputHandle = ({
             </div>
           </div>
           {(hasValue || hasDefault) && (
-            <div className="flex w-fit max-w-1/2 min-w-0">
+            <div
+              className="flex w-fit max-w-1/2 min-w-0"
+              data-testid={`input-handle-value-${input.name}`}
+            >
               <div
                 className={cn(
                   "text-xs text-gray-800! truncate inline-block text-right pr-2",

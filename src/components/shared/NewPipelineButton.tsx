@@ -30,7 +30,11 @@ const NewPipelineButton = () => {
   };
 
   return (
-    <Button variant="outline" onClick={handleCreate}>
+    <Button
+      variant="outline"
+      onClick={handleCreate}
+      data-testid="new-pipeline-button"
+    >
       New Pipeline
     </Button>
   );

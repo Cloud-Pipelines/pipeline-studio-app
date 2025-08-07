@@ -26,3 +26,5 @@ yarn-error.log*
 # vite specific
 dist
 dist-ssr
+test-results
+playwright-report

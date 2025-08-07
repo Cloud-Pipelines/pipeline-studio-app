@@ -121,11 +121,14 @@ const PipelineDetails = () => {
   const annotations = componentSpec.metadata?.annotations || {};
 
   return (
-    <div className="p-2 flex flex-col gap-6 h-full">
+    <div
+      className="p-2 flex flex-col gap-6 h-full"
+      data-context-panel="pipeline-details"
+    >
       {/* Header */}
       <div className="flex items-center gap-2 max-w-[90%]">
         <Network className="w-6 h-6 text-secondary-foreground rotate-270 min-w-6 min-h-6" />
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-lg font-semibold" data-testid="pipeline-name">
           {componentSpec.name ?? "Unnamed Pipeline"}
         </h2>
         <RenamePipeline />
