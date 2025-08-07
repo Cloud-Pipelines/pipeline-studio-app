@@ -7,10 +7,10 @@ export const useAutoSave = <T>(
   saveFunction: (data: T) => Promise<void> | void,
   data: T,
   debounceMs: number = 2000,
+  shouldSave: boolean = true,
 ) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSavedDataRef = useRef<T>(data);
-  const hasSavedRef = useRef(false);
+  const lastSavedDataRef = useRef<T>(deepClone(data));
 
   const isDirty = !equal(data, lastSavedDataRef.current);
 
@@ -19,12 +19,16 @@ export const useAutoSave = <T>(
       clearTimeout(timeoutRef.current);
     }
 
-    if (isDirty) {
+    if (!shouldSave && isDirty) {
+      lastSavedDataRef.current = deepClone(data);
+      return;
+    }
+
+    if (shouldSave && isDirty) {
       timeoutRef.current = setTimeout(async () => {
         try {
           await saveFunction(data);
           lastSavedDataRef.current = deepClone(data);
-          hasSavedRef.current = true;
         } catch (error) {
           console.error("Auto-save failed:", error);
         }
@@ -36,12 +40,5 @@ export const useAutoSave = <T>(
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [data, isDirty, saveFunction, debounceMs]);
-
-  useEffect(() => {
-    if (!isDirty) {
-      lastSavedDataRef.current = deepClone(data);
-      hasSavedRef.current = false;
-    }
-  }, [isDirty, data]);
+  }, [data, isDirty, saveFunction, debounceMs, shouldSave]);
 };

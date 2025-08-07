@@ -3,11 +3,13 @@ import "@/styles/editor.css";
 import { Background, MiniMap, type ReactFlowProps } from "@xyflow/react";
 import { useCallback, useState } from "react";
 
+import { CollapsibleContextPanel } from "@/components/shared/ContextPanel/CollapsibleContextPanel";
 import {
   FlowCanvas,
   FlowControls,
   FlowSidebar,
 } from "@/components/shared/ReactFlow";
+import { UndoRedo } from "@/components/shared/UndoRedo";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -22,7 +24,6 @@ import {
 import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
 
-import { CollapsibleContextPanel } from "../shared/ContextPanel/CollapsibleContextPanel";
 import PipelineDetails from "./PipelineDetails";
 
 const GRID_SIZE = 10;
@@ -65,7 +66,7 @@ const PipelineEditor = () => {
           <FlowSidebar />
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel>
-              <div className="reactflow-wrapper">
+              <div className="reactflow-wrapper relative">
                 <FlowCanvas {...flowConfig}>
                   <MiniMap position="bottom-left" pannable />
                   <FlowControls
@@ -76,6 +77,10 @@ const PipelineEditor = () => {
                   />
                   <Background gap={GRID_SIZE} className="bg-slate-50!" />
                 </FlowCanvas>
+
+                <div className="absolute bottom-0 right-0 p-4">
+                  <UndoRedo />
+                </div>
               </div>
             </ResizablePanel>
             <ResizableHandle />
