@@ -41,6 +41,7 @@ export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
 interface ComponentSpecContextType {
   componentSpec: ComponentSpec;
   setComponentSpec: (spec: ComponentSpec) => void;
+  clearComponentSpec: () => void;
   graphSpec: GraphSpec;
   isLoading: boolean;
   refetch: () => void;
@@ -67,12 +68,20 @@ export const ComponentSpecProvider = ({
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
     spec ?? EMPTY_GRAPH_COMPONENT_SPEC,
   );
+
   const [taskStatusMap, setTaskStatusMap] = useState<Map<string, string>>(
     new Map(),
   );
 
   const [isLoading, setIsLoading] = useState(!!spec);
   const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+
+  const clearComponentSpec = useCallback(() => {
+    setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
+    setTaskStatusMap(new Map());
+    setIsLoading(false);
+    setHasInitiallyLoaded(false);
+  }, []);
 
   const graphSpec = useMemo(() => {
     if (
@@ -186,6 +195,7 @@ export const ComponentSpecProvider = ({
       isLoading,
       refetch,
       setComponentSpec,
+      clearComponentSpec,
       saveComponentSpec,
       updateGraphSpec,
       setTaskStatusMap,
@@ -198,6 +208,7 @@ export const ComponentSpecProvider = ({
       isLoading,
       refetch,
       setComponentSpec,
+      clearComponentSpec,
       saveComponentSpec,
       updateGraphSpec,
       setTaskStatusMap,

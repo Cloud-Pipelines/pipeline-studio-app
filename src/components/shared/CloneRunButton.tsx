@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { RUNS_BASE_PATH } from "@/routes/router";
 import { copyRunToPipeline } from "@/services/pipelineRunService";
 import type { ComponentSpec } from "@/utils/componentSpec";
@@ -51,15 +52,16 @@ const CloneRunButtonInner = ({
   );
 };
 
-const CloneRunButton = ({ spec }: { spec?: ComponentSpec }) => {
+const CloneRunButton = () => {
   const location = useLocation();
+  const { componentSpec } = useComponentSpec();
 
   const isRunDetailRoute = location.pathname.includes(RUNS_BASE_PATH);
 
   if (!isRunDetailRoute) {
     return null;
   }
-  return <CloneRunButtonInner componentSpec={spec} />;
+  return <CloneRunButtonInner componentSpec={componentSpec} />;
 };
 
 export default CloneRunButton;
