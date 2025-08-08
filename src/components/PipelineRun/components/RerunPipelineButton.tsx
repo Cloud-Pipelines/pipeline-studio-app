@@ -4,7 +4,7 @@ import { useCallback } from "react";
 
 import TooltipButton from "@/components/shared/Buttons/TooltipButton";
 import useToastNotification from "@/hooks/useToastNotification";
-import { usePipelineRuns } from "@/providers/PipelineRunsProvider";
+import { usePipelineRun } from "@/providers/PipelineRunProvider";
 import { APP_ROUTES } from "@/routes/router";
 import type { PipelineRun } from "@/types/pipelineRun";
 import type { ComponentSpec } from "@/utils/componentSpec";
@@ -16,7 +16,7 @@ type RerunPipelineButtonProps = {
 export const RerunPipelineButton = ({
   componentSpec,
 }: RerunPipelineButtonProps) => {
-  const { submit, isSubmitting } = usePipelineRuns();
+  const { rerun, isSubmitting } = usePipelineRun();
   const navigate = useNavigate();
   const notify = useToastNotification();
 
@@ -33,8 +33,8 @@ export const RerunPipelineButton = ({
   );
 
   const handleRerun = useCallback(() => {
-    submit(componentSpec, { onSuccess, onError });
-  }, [componentSpec, submit, onSuccess, onError]);
+    rerun(componentSpec, { onSuccess, onError });
+  }, [componentSpec, rerun, onSuccess, onError]);
 
   return (
     <TooltipButton
