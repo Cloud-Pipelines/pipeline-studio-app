@@ -1,12 +1,18 @@
 import yaml from "js-yaml";
 
+import { COMPONENT_LIBRARY_FILE } from "@/appSettings";
 import {
   type ComponentFolder,
   type ComponentLibrary,
   isValidComponentLibrary,
 } from "@/types/componentLibrary";
 import { loadObjectFromYamlData } from "@/utils/cache";
-import type { ComponentSpec, InputSpec, TaskSpec } from "@/utils/componentSpec";
+import type {
+  ComponentReference,
+  ComponentSpec,
+  InputSpec,
+  TaskSpec,
+} from "@/utils/componentSpec";
 import {
   componentExistsByUrl,
   getAllUserComponents,
@@ -15,12 +21,12 @@ import {
   type UserComponent,
 } from "@/utils/localforage";
 
-const COMPONENT_LIBRARY_URL = "/component_library.yaml";
-
 export interface ExistingAndNewComponent {
   existingComponent: UserComponent | undefined;
   newComponent: ComponentSpec | undefined;
 }
+
+const COMPONENT_LIBRARY_URL = "/" + COMPONENT_LIBRARY_FILE;
 
 /**
  * Generate a digest for a component
@@ -118,9 +124,7 @@ const storeComponentsFromLibrary = async (
   const processFolder = async (folder: ComponentFolder) => {
     // Store each component in the folder
     for (const component of folder.components || []) {
-      if (component.url) {
-        await fetchAndStoreComponent(component.url);
-      }
+      await fetchAndStoreComponent(component);
     }
 
     // Process subfolders recursively
@@ -138,21 +142,17 @@ const storeComponentsFromLibrary = async (
 /**
  * Fetch and store a single component by URL
  */
-export const fetchAndStoreComponent = async (
+export const fetchAndStoreComponentByUrl = async (
   url: string,
 ): Promise<ComponentSpec | null> => {
   try {
     // Check if component already exists in storage
     const exists = await componentExistsByUrl(url);
     if (exists) {
-      const storedComponent = await getComponentByUrl(url);
-      if (storedComponent) {
+      const text = await fetchComponentTextFromUrl(url);
+      if (text) {
         try {
-          // Parse the component data
-          const componentSpec = yaml.load(
-            storedComponent.data,
-          ) as ComponentSpec;
-          return componentSpec;
+          return yaml.load(text) as ComponentSpec;
         } catch (error) {
           console.error(`Error parsing component at ${url}:`, error);
         }
@@ -166,38 +166,131 @@ export const fetchAndStoreComponent = async (
     }
 
     const text = await response.text();
+    const digest = await generateDigest(text);
 
-    // Parse the component
+    const id = `component-${digest}`;
+    const createdAt = Date.now();
+    const updatedAt = Date.now();
+
+    await saveComponent({
+      id,
+      url,
+      data: text,
+      createdAt,
+      updatedAt,
+    });
+
     try {
-      const componentSpec = yaml.load(text) as ComponentSpec;
-
-      // Store the component
-      await saveComponent({
-        id: `component-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        url,
-        data: text,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-
-      return componentSpec;
+      return yaml.load(text) as ComponentSpec;
     } catch (error) {
       console.error(`Error parsing component at ${url}:`, error);
-
-      // Still store the raw data even if parsing failed
-      await saveComponent({
-        id: `component-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        url,
-        data: text,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-
       return null;
     }
   } catch (error) {
     console.error(`Error fetching component at ${url}:`, error);
     return null;
+  }
+};
+
+/**
+ * Fetch and store a single component by text, URL or spec (in that order).
+ * Returns the populated ComponentSpec or null.
+ */
+export const fetchAndStoreComponent = async (
+  component: ComponentReference,
+): Promise<ComponentSpec | null> => {
+  try {
+    const text = await getComponentText(component);
+    const spec = await parseTextToSpec(component, text);
+
+    if (text) {
+      const digest = await generateDigest(text);
+
+      const id = `component-${digest}`;
+      const createdAt = Date.now();
+      const updatedAt = Date.now();
+
+      await saveComponent({
+        id,
+        url: component.url ?? "",
+        data: text,
+        createdAt,
+        updatedAt,
+      });
+    }
+
+    return spec;
+  } catch (error) {
+    console.error(`Error in fetchAndStoreComponent:`, error);
+    return null;
+  }
+};
+
+/**
+ * Get component text from any available source (text, URL, or spec)
+ */
+const getComponentText = async (
+  component: ComponentReference,
+): Promise<string | undefined> => {
+  if (component.text) {
+    return component.text;
+  }
+
+  if (component.url) {
+    return await fetchComponentTextFromUrl(component.url);
+  }
+
+  if (component.spec) {
+    return yaml.dump(component.spec);
+  }
+
+  return undefined;
+};
+
+/**
+ * Parse text content into ComponentSpec, with fallback to existing spec
+ */
+const parseTextToSpec = async (
+  component: ComponentReference,
+  text: string | undefined,
+): Promise<ComponentSpec | null> => {
+  if (text) {
+    try {
+      return yaml.load(text) as ComponentSpec;
+    } catch (error) {
+      console.error("Error parsing component text:", error);
+    }
+  }
+
+  if (component.spec) {
+    return component.spec;
+  }
+
+  return null;
+};
+
+/**
+ * Helper function to fetch text content from URL (with caching)
+ */
+const fetchComponentTextFromUrl = async (
+  url: string,
+): Promise<string | undefined> => {
+  // Check cache first
+  const storedComponent = await getComponentByUrl(url);
+  if (storedComponent) {
+    return storedComponent.data;
+  }
+
+  // Fetch from network
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch component: ${response.statusText}`);
+    }
+    return await response.text();
+  } catch (error) {
+    console.error(`Error fetching component from URL ${url}:`, error);
+    return undefined;
   }
 };
 
