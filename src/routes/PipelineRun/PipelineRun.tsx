@@ -11,16 +11,14 @@ import { InfoBox } from "@/components/shared/InfoBox";
 import { Spinner } from "@/components/ui/spinner";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useBackend } from "@/providers/BackendProvider";
-import {
-  ComponentSpecProvider,
-  useComponentSpec,
-} from "@/providers/ComponentSpecProvider";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
 import { useFetchExecutionInfo } from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
 const PipelineRun = () => {
+  const { setComponentSpec } = useComponentSpec();
   const { backendUrl, configured, available } = useBackend();
   const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
 
@@ -34,6 +32,17 @@ const PipelineRun = () => {
 
   const componentSpec = details?.task_spec.componentRef.spec;
 
+  useEffect(() => {
+    if (componentSpec) {
+      const componentSpecWithExecutionIds = addExecutionIdToComponent(
+        componentSpec as ComponentSpec,
+        details,
+      );
+
+      setComponentSpec(componentSpecWithExecutionIds);
+    }
+  }, [componentSpec, setComponentSpec]);
+
   useDocumentTitle({
     "/runs/$id": (params) =>
       `Oasis - ${componentSpec?.name || ""} - ${params.id}`,
@@ -43,7 +52,7 @@ const PipelineRun = () => {
     refetch();
   }, [backendUrl, refetch]);
 
-  if (isLoading) {
+  if (isLoading || !componentSpec) {
     return (
       <div className="flex items-center justify-center h-full w-full gap-2">
         <Spinner /> Loading Pipeline Run...
@@ -81,25 +90,18 @@ const PipelineRun = () => {
     );
   }
 
-  const componentSpecWithExecutionIds = addExecutionIdToComponent(
-    componentSpec as ComponentSpec,
-    details,
-  );
-
   return (
-    <ComponentSpecProvider spec={componentSpecWithExecutionIds}>
-      <div className="dndflow">
-        <DndContext>
-          <ReactFlowProvider>
-            <PipelineRunContent
-              rootExecutionId={rootExecutionId}
-              details={details}
-              state={state}
-            />
-          </ReactFlowProvider>
-        </DndContext>
-      </div>
-    </ComponentSpecProvider>
+    <div className="dndflow">
+      <DndContext>
+        <ReactFlowProvider>
+          <PipelineRunContent
+            rootExecutionId={rootExecutionId}
+            details={details}
+            state={state}
+          />
+        </ReactFlowProvider>
+      </DndContext>
+    </div>
   );
 };
 
