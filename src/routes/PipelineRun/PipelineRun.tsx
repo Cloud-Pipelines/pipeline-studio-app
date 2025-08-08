@@ -18,7 +18,7 @@ import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
 const PipelineRun = () => {
-  const { setComponentSpec } = useComponentSpec();
+  const { setComponentSpec, clearComponentSpec } = useComponentSpec();
   const { backendUrl, configured, available } = useBackend();
   const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
 
@@ -41,7 +41,10 @@ const PipelineRun = () => {
 
       setComponentSpec(componentSpecWithExecutionIds);
     }
-  }, [componentSpec, setComponentSpec]);
+    return () => {
+      clearComponentSpec();
+    };
+  }, [componentSpec, setComponentSpec, clearComponentSpec]);
 
   useDocumentTitle({
     "/runs/$id": (params) =>
