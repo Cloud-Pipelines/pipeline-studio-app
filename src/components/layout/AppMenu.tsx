@@ -11,6 +11,7 @@ import { PersonalPreferences } from "../shared/Settings/PersonalPreferences";
 
 const AppMenu = () => {
   const { componentSpec } = useComponentSpec();
+
   const title = componentSpec?.name;
   return (
     <div
