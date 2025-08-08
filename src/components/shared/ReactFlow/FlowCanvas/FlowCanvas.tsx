@@ -132,8 +132,18 @@ const FlowCanvas = ({
           event.preventDefault();
         }
       }
+
+      if (event.key === "a" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setNodes((currentNodes) =>
+          currentNodes.map((node) => ({
+            ...node,
+            selected: event.shiftKey ? false : node.type === "task",
+          })),
+        );
+      }
     },
-    [handleTabCycle],
+    [handleTabCycle, setNodes],
   );
 
   const handleKeyUp = useCallback((event: KeyboardEvent) => {
