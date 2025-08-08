@@ -1,20 +1,17 @@
 import { Link } from "@tanstack/react-router";
 
-import CloneRunButton from "@/components/shared/CloneRunButton";
 import ImportPipeline from "@/components/shared/ImportPipeline";
-import { useLoadComponentSpecFromPath } from "@/hooks/useLoadComponentSpecFromPath";
-import { useBackend } from "@/providers/BackendProvider";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 
 import BackendStatus from "../shared/BackendStatus";
+import CloneRunButton from "../shared/CloneRunButton";
 import NewPipelineButton from "../shared/NewPipelineButton";
 import { PersonalPreferences } from "../shared/Settings/PersonalPreferences";
 
 const AppMenu = () => {
-  const { backendUrl } = useBackend();
-  const { componentSpec } = useLoadComponentSpecFromPath(backendUrl);
+  const { componentSpec } = useComponentSpec();
   const title = componentSpec?.name;
-
   return (
     <div
       className="w-full bg-stone-900 p-2"
@@ -33,7 +30,7 @@ const AppMenu = () => {
         </div>
         <div className="flex flex-row gap-32 items-center">
           <div className="flex flex-row gap-2 items-center">
-            <CloneRunButton spec={componentSpec} />
+            <CloneRunButton componentSpec={componentSpec} />
             <ImportPipeline />
             <NewPipelineButton />
           </div>

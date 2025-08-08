@@ -1,10 +1,4 @@
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
@@ -19,28 +13,26 @@ import {
   createRequiredContext,
   useRequiredContext,
 } from "../hooks/useRequiredContext";
-import type {
-  ComponentSpec,
-  GraphImplementation,
-  GraphSpec,
-} from "../utils/componentSpec";
+import type { ComponentSpec, GraphSpec } from "../utils/componentSpec";
 import {
   type ComponentReferenceWithSpec,
   componentSpecToYaml,
   writeComponentToFileListFromText,
 } from "../utils/componentStore";
 
-export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
-  implementation: {
-    graph: {
-      tasks: {},
-    },
-  },
+const EMPTY_GRAPH_SPEC: GraphSpec = {
+  tasks: {},
 };
 
+export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
+  implementation: {
+    graph: EMPTY_GRAPH_SPEC,
+  },
+};
 interface ComponentSpecContextType {
   componentSpec: ComponentSpec;
   setComponentSpec: (spec: ComponentSpec) => void;
+  clearComponentSpec: () => void;
   graphSpec: GraphSpec;
   isLoading: boolean;
   refetch: () => void;
@@ -67,14 +59,34 @@ export const ComponentSpecProvider = ({
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
     spec ?? EMPTY_GRAPH_COMPONENT_SPEC,
   );
+
+  // This is used to prevent autosaving on initial load
+  const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
+  // Auto save should happen on the first change without debounce to prevent waiting for two debounces (4000ms)
+  const [debounceMultiplier, setDebounceMultiplier] = useState<0 | 1>(0);
+
   const [taskStatusMap, setTaskStatusMap] = useState<Map<string, string>>(
     new Map(),
   );
 
   const [isLoading, setIsLoading] = useState(!!spec);
-  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+
+  const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
+  const undoRedoRef = useRef(undoRedo);
+  undoRedoRef.current = undoRedo;
+
+  const clearComponentSpec = useCallback(() => {
+    setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
+    setTaskStatusMap(new Map());
+    setIsLoading(false);
+    undoRedoRef.current.clearHistory();
+  }, []);
 
   const graphSpec = useMemo(() => {
+    if (!componentSpec) {
+      return EMPTY_GRAPH_SPEC;
+    }
+
     if (
       "graph" in componentSpec.implementation &&
       componentSpec.implementation.graph
@@ -82,11 +94,8 @@ export const ComponentSpecProvider = ({
       return componentSpec.implementation.graph;
     }
 
-    return (EMPTY_GRAPH_COMPONENT_SPEC.implementation as GraphImplementation)
-      .graph;
+    return EMPTY_GRAPH_SPEC;
   }, [componentSpec]);
-
-  const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
 
   const loadPipeline = useCallback(
     async (newName?: string) => {
@@ -148,35 +157,24 @@ export const ComponentSpecProvider = ({
   }, []);
 
   const shouldAutoSave =
-    !isLoading && !readOnly && !!componentSpec.name && hasInitiallyLoaded;
+    !isLoading && !readOnly && componentSpec && !!componentSpec.name;
 
   useAutoSave(
-    (spec) => {
+    async (spec) => {
+      if (isInitialLoad) {
+        setIsInitialLoad(false);
+        setDebounceMultiplier(1);
+        return;
+      }
+
       if (spec.name) {
         saveComponentSpec(spec.name);
       }
     },
     componentSpec,
-    AUTOSAVE_DEBOUNCE_TIME_MS,
+    AUTOSAVE_DEBOUNCE_TIME_MS * debounceMultiplier,
     shouldAutoSave,
   );
-
-  useEffect(() => {
-    if (spec) {
-      setIsLoading(true);
-      setComponentSpec(spec);
-      undoRedo.clearHistory();
-      setIsLoading(false);
-
-      // When the provider is loaded with a spec the value goes from null -> empty_graph_spec -> full_spec.
-      // Due to this the update from empty_graph_spec to full_spec get detected as a change by the autosaver, triggering an autosave on load.
-      // This timeout avoids that by delaying the initial load completion to allow state updates to settle.
-      // This is a temporary workaround and the deeper issue should be investigated later.
-      setTimeout(() => {
-        setHasInitiallyLoaded(true);
-      }, AUTOSAVE_DEBOUNCE_TIME_MS);
-    }
-  }, [spec]);
 
   const value = useMemo(
     () => ({
@@ -186,6 +184,7 @@ export const ComponentSpecProvider = ({
       isLoading,
       refetch,
       setComponentSpec,
+      clearComponentSpec,
       saveComponentSpec,
       updateGraphSpec,
       setTaskStatusMap,
@@ -198,6 +197,7 @@ export const ComponentSpecProvider = ({
       isLoading,
       refetch,
       setComponentSpec,
+      clearComponentSpec,
       saveComponentSpec,
       updateGraphSpec,
       setTaskStatusMap,

@@ -1,10 +1,10 @@
 import { useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { RUNS_BASE_PATH } from "@/routes/router";
 import { fetchExecutionDetails } from "@/services/executionService";
 import { loadPipelineByName } from "@/services/pipelineService";
-import type { ComponentSpec } from "@/utils/componentSpec";
 import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 import { getIdOrTitleFromPath } from "@/utils/URL";
@@ -14,14 +14,13 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
 
   const pathname = useMemo(() => location.pathname, [location.pathname]);
   const isRunPath = pathname.includes(RUNS_BASE_PATH);
+  const { setComponentSpec, clearComponentSpec, componentSpec } =
+    useComponentSpec();
 
   const { title, id } = useMemo(
     () => getIdOrTitleFromPath(pathname),
     [pathname],
   );
-  const [componentSpec, setComponentSpec] = useState<
-    ComponentSpec | undefined
-  >();
   const [isLoadingPipeline, setIsLoadingPipeline] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +29,7 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
       setError(null);
 
       if (!title && !id) {
-        setComponentSpec(undefined);
+        clearComponentSpec();
         return;
       }
 
@@ -44,8 +43,10 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
             const preparedComponentRef = await prepareComponentRefForEditor(
               result.task_spec.componentRef as ComponentReferenceWithSpec,
             );
-            setComponentSpec(preparedComponentRef);
-            return;
+            if (preparedComponentRef) {
+              setComponentSpec(preparedComponentRef);
+              return;
+            }
           }
         }
 
@@ -57,12 +58,14 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
             const preparedComponentRef = await prepareComponentRefForEditor(
               result.experiment.componentRef as ComponentReferenceWithSpec,
             );
-            setComponentSpec(preparedComponentRef);
-            return;
+            if (preparedComponentRef) {
+              setComponentSpec(preparedComponentRef);
+              return;
+            }
           }
         }
 
-        setComponentSpec(undefined);
+        clearComponentSpec();
         setError("No component spec found for the current path.");
       } catch (error) {
         console.error("Error loading pipeline from storage:", error);
@@ -75,7 +78,10 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
     };
 
     loadPipelineFromStorage();
-  }, [id, title]);
+    return () => {
+      clearComponentSpec();
+    };
+  }, [id, title, setComponentSpec, clearComponentSpec]);
 
   return {
     componentSpec,
