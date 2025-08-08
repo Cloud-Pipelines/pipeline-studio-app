@@ -12,13 +12,16 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 const Editor = () => {
   const { backendUrl } = useBackend();
   const { componentSpec } = useLoadComponentSpecFromPath(backendUrl);
-  const { setComponentSpec } = useComponentSpec();
+  const { setComponentSpec, clearComponentSpec } = useComponentSpec();
 
   useEffect(() => {
     if (componentSpec) {
       setComponentSpec(componentSpec);
     }
-  }, [componentSpec, setComponentSpec]);
+    return () => {
+      clearComponentSpec();
+    };
+  }, [componentSpec, setComponentSpec, clearComponentSpec]);
 
   if (!componentSpec) {
     return <div>Loading...</div>;
