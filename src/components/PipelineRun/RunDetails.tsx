@@ -129,8 +129,8 @@ export const RunDetails = () => {
 
       <div>
         <div className="flex gap-2">
-          <InspectPipelineButton pipelineName={componentSpec.name} />
           <ClonePipelineButton componentSpec={componentSpec} />
+          <InspectPipelineButton pipelineName={componentSpec.name} />
           {isInProgress && <CancelPipelineRunButton runId={runId} />}
           {isComplete && <RerunPipelineButton componentSpec={componentSpec} />}
         </div>
