@@ -289,17 +289,10 @@ const PipelineDetails = () => {
       </div>
 
       {/* Pipeline YAML */}
-      <div className="flex flex-col h-full">
-        <div className="font-medium text-md flex items-center gap-1 cursor-pointer">
-          Pipeline YAML
-        </div>
-        <div className="mt-1 h-full min-h-0 flex-1">
-          <TaskImplementation
-            displayName={componentSpec.name ?? "Pipeline"}
-            componentSpec={componentSpec}
-          />
-        </div>
-      </div>
+      <TaskImplementation
+        displayName={componentSpec.name ?? "Pipeline YAML"}
+        componentSpec={componentSpec}
+      />
     </div>
   );
 };
