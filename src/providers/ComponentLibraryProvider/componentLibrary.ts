@@ -86,7 +86,7 @@ export const fetchFavoriteComponents = (
   userComponents: ComponentFolder | undefined,
 ): ComponentFolder => {
   const favoritesFolder = {
-    name: "My Components",
+    name: "Favorite Components",
     components: [] as ComponentReference[],
     folders: [],
     isUserFolder: false,
@@ -101,20 +101,6 @@ export const fetchFavoriteComponents = (
   );
 
   uniqueLibraryComponents.forEach((component) => {
-    if (component?.favorited) {
-      favoritesFolder.components.push(component);
-    }
-  });
-
-  if (!userComponents) {
-    return favoritesFolder;
-  }
-
-  const uniqueUserComponents = filterToUniqueByDigest(
-    flattenFolders(userComponents),
-  );
-
-  uniqueUserComponents.forEach((component) => {
     if (component?.favorited) {
       favoritesFolder.components.push(component);
     }
