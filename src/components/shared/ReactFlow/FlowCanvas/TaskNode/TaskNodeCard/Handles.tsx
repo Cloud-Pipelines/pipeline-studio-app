@@ -136,13 +136,15 @@ export const InputHandle = ({
             state.readOnly && "cursor-pointer!",
           )}
           onClick={handleHandleClick}
+          data-invalid={invalid}
+          data-testid={`input-handle-${input.name}`}
         />
       </div>
       <div
         className={cn(
           "flex flex-row items-center rounded-md cursor-pointer relative",
         )}
-        data-testid={`input-handle-${input.name}`}
+        data-testid={`input-handle-label-${input.name}`}
       >
         <div className="flex flex-row w-full gap-0.5 items-center justify-between">
           <div

@@ -68,7 +68,10 @@ const SearchResults = ({
 
   return (
     <div className="py-2">
-      <div className="px-4 pb-2 text-sm font-medium text-gray-600 border-b">
+      <div
+        className="px-4 pb-2 text-sm font-medium text-gray-600 border-b"
+        data-testid="search-results-header"
+      >
         Search Results ({totalResults})
       </div>
       <div className="mt-1">

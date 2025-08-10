@@ -102,6 +102,17 @@ export async function fitToView(page: Page): Promise<void> {
   }
 }
 
+export async function locateFolderByName(
+  page: Page,
+  folderName: string,
+): Promise<Locator> {
+  await page.waitForSelector(`[data-folder-name="${folderName}"]`, {
+    // loading the library can take a while
+    timeout: 25000,
+  });
+  return page.locator(`[data-folder-name="${folderName}"]`);
+}
+
 /**
  * Opens a component library folder by name
  */
@@ -109,7 +120,7 @@ async function openComponentLibFolder(
   page: Page,
   folderName: string,
 ): Promise<Locator> {
-  const folderContainer = page.locator(`[data-folder-name="${folderName}"]`);
+  const folderContainer = await locateFolderByName(page, folderName);
   const button = await folderContainer.locator('[role="button"]');
 
   if ((await button.getAttribute("aria-expanded")) === "false") {
@@ -199,6 +210,25 @@ export async function dropComponentFromLibraryOnCanvas(
   await dragComponentToCanvas(page, component, dragOptions);
 
   return await locateNodeByName(page, componentName);
+}
+
+/**
+ * Removes a component from the canvas
+ */
+export async function removeComponentFromCanvas(
+  page: Page,
+  componentName: string,
+): Promise<void> {
+  const node = await locateNodeByName(page, componentName);
+  await node.click();
+
+  await node.press("Delete");
+
+  await page.waitForTimeout(100);
+
+  await page.locator('[role="alertdialog"]').getByText("Continue").click();
+
+  await page.waitForTimeout(100);
 }
 
 /**

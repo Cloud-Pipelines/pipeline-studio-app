@@ -14,14 +14,6 @@ import type {
   ComponentLibrary,
   SearchResult,
 } from "@/types/componentLibrary";
-import {
-  fetchFavoriteComponents,
-  fetchUsedComponents,
-  fetchUserComponents,
-  filterToUniqueByDigest,
-  flattenFolders,
-  populateComponentRefs,
-} from "@/utils/componentLibrary";
 import type { ComponentReference } from "@/utils/componentSpec";
 import {
   type ComponentReferenceWithSpec,
@@ -43,8 +35,16 @@ import { componentMatchesSearch } from "@/utils/searchUtils";
 import {
   createRequiredContext,
   useRequiredContext,
-} from "../hooks/useRequiredContext";
-import { useComponentSpec } from "./ComponentSpecProvider";
+} from "../../hooks/useRequiredContext";
+import { useComponentSpec } from "../ComponentSpecProvider";
+import {
+  fetchFavoriteComponents,
+  fetchUsedComponents,
+  fetchUserComponents,
+  filterToUniqueByDigest,
+  flattenFolders,
+  populateComponentRefs,
+} from "./componentLibrary";
 
 type ComponentLibraryContextType = {
   componentLibrary: ComponentLibrary | undefined;
