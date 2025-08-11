@@ -5,10 +5,12 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 
 import BackendStatus from "../shared/BackendStatus";
+import CloneRunButton from "../shared/CloneRunButton";
 import NewPipelineButton from "../shared/NewPipelineButton";
 
 const AppMenu = () => {
   const { componentSpec } = useComponentSpec();
+
   const title = componentSpec?.name;
   return (
     <div
@@ -28,6 +30,7 @@ const AppMenu = () => {
         </div>
         <div className="flex flex-row gap-32 items-center">
           <div className="flex flex-row gap-2 items-center">
+            <CloneRunButton />
             <ImportPipeline />
             <NewPipelineButton />
           </div>
