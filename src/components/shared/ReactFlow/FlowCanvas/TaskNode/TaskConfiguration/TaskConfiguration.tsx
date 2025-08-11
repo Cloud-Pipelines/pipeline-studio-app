@@ -108,7 +108,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
                     <div className="h-[512px]">
                       <TaskImplementation
                         key="task-implementation"
-                        displayName={name}
+                        displayName={componentSpec.name ?? "Component YAML"}
                         componentSpec={componentSpec}
                       />
                     </div>

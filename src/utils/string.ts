@@ -69,26 +69,11 @@ function createStringList(
   );
 }
 
-const getLineHeight = (fontSize: string | number, factor = 1.4) => {
-  if (typeof fontSize === "number") return fontSize * factor;
-  if (fontSize.endsWith("px")) return parseFloat(fontSize) * factor;
-  if (fontSize.endsWith("rem")) {
-    const rem = parseFloat(fontSize);
-    return (
-      rem *
-      parseFloat(getComputedStyle(document.documentElement).fontSize) *
-      factor
-    );
-  }
-  return 18 * factor;
-};
-
 export {
   copyToClipboard,
   createStringList,
   formatBytes,
   formatJsonValue,
-  getLineHeight,
   getValue,
   removeTrailingDateFromTitle,
 };
