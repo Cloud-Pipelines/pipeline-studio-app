@@ -1335,7 +1335,7 @@
     semver "^7.6.0"
     ts-api-utils "^2.1.0"
 
-"@typescript-eslint/utils@8.39.0":
+"@typescript-eslint/utils@^8.13.0", "@typescript-eslint/utils@8.39.0":
   version "8.39.0"
   resolved "https://registry.npmjs.org/@typescript-eslint/utils/-/utils-8.39.0.tgz"
   integrity sha512-4GVSvNA0Vx1Ktwvf4sFE+exxJ3QGUorQG1/A5mRfRNZtkBT2xrA/BCO2H0eALx/PnvCS6/vmYwRdDA41EoffkQ==
@@ -1750,6 +1750,13 @@ chai@^5.2.0:
     loupe "^3.1.0"
     pathval "^2.0.0"
 
+chalk-template@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/chalk-template/-/chalk-template-1.1.0.tgz"
+  integrity sha512-T2VJbcDuZQ0Tb2EWwSotMPJjgpy1/tGee1BTpUNsGZ/qgNjV2t7Mvu+d4600U564nbLesN1x2dPL+xii174Ekg==
+  dependencies:
+    chalk "^5.2.0"
+
 chalk@^4.0.0:
   version "4.1.2"
   resolved "https://registry.npmjs.org/chalk/-/chalk-4.1.2.tgz"
@@ -1757,6 +1764,11 @@ chalk@^4.0.0:
   dependencies:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
+
+chalk@^5.2.0:
+  version "5.5.0"
+  resolved "https://registry.npmjs.org/chalk/-/chalk-5.5.0.tgz"
+  integrity sha512-1tm8DTaJhPBG3bIkVeZt1iZM9GfSX2lzOeDVZH9R9ffRHpmHvxZ/QhgQH/aDTkswQVt+YHdXAdS/In/30OjCbg==
 
 character-entities-legacy@^1.0.0:
   version "1.1.4"
@@ -2278,6 +2290,25 @@ escape-string-regexp@^4.0.0:
   resolved "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz"
   integrity sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==
 
+eslint-formatter-summary@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.npmjs.org/eslint-formatter-summary/-/eslint-formatter-summary-2.0.2.tgz"
+  integrity sha512-Dn7SSot96yLRiyXIMRfjWwp2jcacY9ASWCDUbyO3LZDRRQw1OVRMLfUxBSI3NfUAP9o/vfah3hCZnJ0zhHgmrA==
+  dependencies:
+    chalk-template "^1.1.0"
+
+eslint-plugin-no-barrel-files@^1.2.0:
+  version "1.2.2"
+  resolved "https://registry.npmjs.org/eslint-plugin-no-barrel-files/-/eslint-plugin-no-barrel-files-1.2.2.tgz"
+  integrity sha512-DF2bnHuEHClmL1+maBO5TD2HnnRsLj8J69FFtVkjObkELyjCXaWBsk+URJkqBpdOWURlL+raGX9AEpWCAiOV0g==
+  dependencies:
+    "@typescript-eslint/utils" "^8.13.0"
+
+eslint-plugin-react-hooks@^5.1.0:
+  version "5.2.0"
+  resolved "https://registry.npmjs.org/eslint-plugin-react-hooks/-/eslint-plugin-react-hooks-5.2.0.tgz"
+  integrity sha512-+f15FfK64YQwZdJNELETdn5ibXEUQmW1DZL6KXhNnc2heoy/sg9VJJeT7n8TlMWouzWqSWavFkIhHyIbIAEapg==
+
 eslint-plugin-react@^7.37.5:
   version "7.37.5"
   resolved "https://registry.npmjs.org/eslint-plugin-react/-/eslint-plugin-react-7.37.5.tgz"
@@ -2325,7 +2356,7 @@ eslint-visitor-keys@^4.2.1:
   resolved "https://registry.npmjs.org/eslint-visitor-keys/-/eslint-visitor-keys-4.2.1.tgz"
   integrity sha512-Uhdk5sfqcee/9H/rCOJikYz67o0a2Tw2hGRPOG2Y1R2dg7brRe1uG0yaNQDHu+TO/uQPF/5eCapvYSmHUjt7JQ==
 
-"eslint@^3 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9.7", "eslint@^6.0.0 || ^7.0.0 || >=8.0.0", "eslint@^8.57.0 || ^9.0.0", eslint@^9.32.0, eslint@>=5.0.0:
+"eslint@^3 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9.7", "eslint@^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0", "eslint@^6.0.0 || ^7.0.0 || >=8.0.0", "eslint@^8.57.0 || ^9.0.0", eslint@^9.32.0, eslint@>=5.0.0:
   version "9.32.0"
   resolved "https://registry.npmjs.org/eslint/-/eslint-9.32.0.tgz"
   integrity sha512-LSehfdpgMeWcTZkWZVIJl+tkZ2nuSkyyB9C27MZqFWXuph7DvaowgcTvKqxvpLW1JZIk8PN7hFY3Rj9LQ7m7lg==
