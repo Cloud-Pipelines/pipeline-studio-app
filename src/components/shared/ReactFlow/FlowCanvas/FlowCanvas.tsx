@@ -132,8 +132,23 @@ const FlowCanvas = ({
           event.preventDefault();
         }
       }
+
+      if (event.key === "a" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+
+        const nodeTypesToSelect = ["task", "input", "output"];
+        setNodes((currentNodes) =>
+          currentNodes.map((node) => ({
+            ...node,
+            selected:
+              event.shiftKey || !node.type
+                ? false
+                : nodeTypesToSelect.includes(node.type),
+          })),
+        );
+      }
     },
-    [handleTabCycle],
+    [handleTabCycle, setNodes],
   );
 
   const handleKeyUp = useCallback((event: KeyboardEvent) => {
