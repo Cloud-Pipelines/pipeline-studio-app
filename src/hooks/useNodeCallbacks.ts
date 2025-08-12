@@ -35,7 +35,8 @@ export const useNodeCallbacks = ({
 }: UseNodeCallbacksProps) => {
   const notify = useToastNotification();
 
-  const { graphSpec, updateGraphSpec } = useComponentSpec();
+  const { graphSpec, updateGraphSpec, componentSpec, setComponentSpec } =
+    useComponentSpec();
 
   // Workaround for nodes state being stale in task node callbacks
   const getNodeById = useCallback(
@@ -136,20 +137,20 @@ export const useNodeCallbacks = ({
         return;
       }
 
-      const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
-        graphSpec,
+      const { updatedComponentSpec, newNodes, updatedNodes } = duplicateNodes(
+        componentSpec,
         [node],
         { selected },
       );
 
-      updateGraphSpec(updatedGraphSpec);
+      setComponentSpec(updatedComponentSpec);
 
       updateOrAddNodes({
         updatedNodes,
         newNodes,
       });
     },
-    [graphSpec, getNodeById, updateGraphSpec, updateOrAddNodes],
+    [componentSpec, getNodeById, setComponentSpec, updateOrAddNodes],
   );
 
   const onUpgrade = useCallback(
