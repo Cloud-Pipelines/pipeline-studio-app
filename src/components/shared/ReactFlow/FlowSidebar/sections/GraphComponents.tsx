@@ -144,6 +144,7 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
   }, [
     componentLibrary,
     usedComponentsFolder,
+    userComponentsFolder,
     favoritesFolder,
     isLoading,
     error,

@@ -83,7 +83,6 @@ export const fetchUsedComponents = (graphSpec: GraphSpec): ComponentFolder => {
 
 export const fetchFavoriteComponents = (
   componentLibrary: ComponentLibrary | undefined,
-  userComponents: ComponentFolder | undefined,
 ): ComponentFolder => {
   const favoritesFolder = {
     name: "Favorite Components",

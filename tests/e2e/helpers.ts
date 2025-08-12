@@ -121,7 +121,9 @@ export async function openComponentLibFolder(
   folderName: string,
 ): Promise<Locator> {
   const folderContainer = await locateFolderByName(page, folderName);
-  const button = await folderContainer.locator('[role="button"]');
+  const button = await folderContainer.locator(
+    `[aria-label="Folder: ${folderName}"][role="button"]`,
+  );
 
   if ((await button.getAttribute("aria-expanded")) === "false") {
     await button.click();
