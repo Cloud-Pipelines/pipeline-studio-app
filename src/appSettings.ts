@@ -7,8 +7,10 @@
  */
 
 // Settings: Default values and local storage configuration keys
+export const COMPONENT_LIBRARY_FILE = "component_library.yaml";
+
 const COMPONENT_LIBRARY_URL_DEFAULT_VALUE =
-  import.meta.env.BASE_URL + "component_library.yaml";
+  import.meta.env.BASE_URL + COMPONENT_LIBRARY_FILE;
 const COMPONENT_LIBRARY_URL_LOCAL_STORAGE_KEY =
   "ComponentLibrary/component_library_url";
 

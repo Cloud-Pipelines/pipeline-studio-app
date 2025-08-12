@@ -8,7 +8,10 @@ import type {
 } from "@/types/componentLibrary";
 
 import type { ComponentReference, GraphSpec, TaskSpec } from "./componentSpec";
-import { getAllComponentFilesFromList } from "./componentStore";
+import {
+  componentSpecToYaml,
+  getAllComponentFilesFromList,
+} from "./componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "./constants";
 import { getComponentByUrl } from "./localforage";
 
@@ -123,11 +126,6 @@ export async function populateComponentRefs<
   async function populateRef(
     ref: ComponentReference,
   ): Promise<ComponentReference> {
-    if (ref.spec) {
-      return ref;
-    }
-
-    // if there is no spec, fallback to text
     if (ref.text) {
       const parsed = parseComponentData(ref.text);
       const digest = await generateDigest(ref.text);
@@ -152,6 +150,13 @@ export async function populateComponentRefs<
           favorited: stored.favorited || ref.favorited || false,
         };
       }
+    }
+
+    // if there is no url, fallback to spec
+    if (ref.spec) {
+      const text = componentSpecToYaml(ref.spec);
+      const digest = await generateDigest(text);
+      return { ...ref, text, digest };
     }
 
     return ref;
