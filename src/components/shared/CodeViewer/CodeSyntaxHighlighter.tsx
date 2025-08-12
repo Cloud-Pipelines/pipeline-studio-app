@@ -6,6 +6,7 @@ import {
   useContext,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import {
   createElement as ViewerCodeLine,
@@ -55,6 +56,7 @@ const CodeLine = memo(function CodeLine({ id }: { id: number }) {
     />
   );
 });
+CodeLine.displayName = "CodeLine";
 
 const VirtualizedViewportContext = createContext<VirtualizedViewportProps>({
   rows: [],
@@ -67,11 +69,16 @@ const VirtualizedViewportContent = memo(function VirtualizedViewportContent({
   scrollElement,
   overscan = 0,
   lineHeight = 18,
+  version,
 }: {
   batchSize: number;
   scrollElement: RefObject<HTMLElement | null>;
   overscan?: number;
   lineHeight?: number;
+  /**
+   * signal to re-render the component when the scroll element changes
+   */
+  version: number;
 }) {
   const { rows } = useContext(VirtualizedViewportContext);
 
@@ -100,6 +107,7 @@ const VirtualizedViewportContent = memo(function VirtualizedViewportContent({
           width: "100%",
           transform: `translateY(${lines[0]?.start ?? 0}px)`,
         }}
+        data-version={version}
       >
         {lines.map((item: VirtualItem) => (
           <div
@@ -119,6 +127,7 @@ const VirtualizedViewportContent = memo(function VirtualizedViewportContent({
     </div>
   );
 });
+VirtualizedViewportContent.displayName = "VirtualizedViewportContent";
 
 function bypassScrollLocks(element: HTMLElement | null) {
   if (element) {
@@ -140,6 +149,7 @@ function VirtualizedViewport({
   fontSize = "0.75rem",
 }: VirtualizedViewportProps) {
   const listRef = useRef<HTMLElement | null>(null);
+  const [version, setVersion] = useState(0);
 
   const contextValue = useMemo(
     () => ({
@@ -162,6 +172,7 @@ function VirtualizedViewport({
           listRef.current = bypassScrollLocks(
             el?.closest("pre")?.parentElement ?? null,
           );
+          setVersion((prev) => prev + 1);
         }
       }}
     >
@@ -171,11 +182,13 @@ function VirtualizedViewport({
           batchSize={BATCH_SIZE}
           overscan={OVERSCAN}
           lineHeight={lineHeight}
+          version={version}
         />
       </VirtualizedViewportContext.Provider>
     </div>
   );
 }
+VirtualizedViewport.displayName = "VirtualizedViewport";
 
 const CodeSyntaxHighlighter = memo(function CodeSyntaxHighlighter({
   code,
