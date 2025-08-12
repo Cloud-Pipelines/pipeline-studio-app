@@ -9,6 +9,8 @@
 import yaml from "js-yaml";
 import localForage from "localforage";
 
+import { fetchComponentTextFromUrl } from "@/services/componentService";
+
 import type { DownloadDataType } from "./cache";
 import { downloadDataWithCache } from "./cache";
 import type { ComponentReference, ComponentSpec } from "./componentSpec";
@@ -32,6 +34,17 @@ export interface ComponentReferenceWithSpec extends ComponentReference {
   digest: string;
   // If ComponentReference has digest it probably should have text as well
   text: string;
+}
+
+export function isComponentReferenceWithSpec(
+  componentRef: ComponentReference,
+): componentRef is ComponentReferenceWithSpec {
+  return (
+    "spec" in componentRef &&
+    isValidComponentSpec(componentRef.spec) &&
+    "digest" in componentRef &&
+    "text" in componentRef
+  );
 }
 
 interface ComponentReferenceWithSpecPlusData {
@@ -85,6 +98,10 @@ export const loadComponentAsRefFromText = async (
     throw Error(`componentText is not a YAML-encoded object: ${loadedObj}`);
   }
   if (!isValidComponentSpec(loadedObj)) {
+    console.error(
+      `componentText is valid components - implementation field is absent`,
+      loadedObj,
+    );
     throw Error(
       `componentText does not encode a valid pipeline component: ${loadedObj}`,
     );
@@ -235,8 +252,7 @@ const storeComponentFromUrl = async (
   }
 
   // TODO: Think about whether to directly use fetch here.
-  const response = await fetch(url);
-  const componentData = await response.arrayBuffer();
+  const componentData = await fetchComponentTextFromUrl(url);
   const componentRef = await storeComponentText(componentData);
   componentRef.url = url;
   const digest = componentRef.digest;

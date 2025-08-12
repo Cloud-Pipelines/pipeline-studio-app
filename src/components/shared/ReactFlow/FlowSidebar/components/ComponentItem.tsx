@@ -1,10 +1,10 @@
-import { File } from "lucide-react";
 import type { DragEvent } from "react";
 import { useCallback, useMemo, useRef } from "react";
 
 import { ComponentDetailsDialog } from "@/components/shared/Dialogs";
 import { ComponentFavoriteToggle } from "@/components/shared/FavoriteComponentToggle";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
+import { Icon } from "@/components/ui/icon";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
 import useComponentFromUrl from "@/hooks/useComponentFromUrl";
 import { cn } from "@/lib/utils";
@@ -36,11 +36,11 @@ const ComponentMarkup = ({
   const { checkIfHighlighted } = useComponentLibrary();
   const { notifyNode, getNodeIdsByDigest, fitNodeIntoView } = useNodesOverlay();
 
-  const { spec, digest, url } = component;
+  const { spec, digest, url, name, published_by: author, owned } = component;
 
   const displayName = useMemo(
-    () => getComponentName({ spec, url }),
-    [spec, url],
+    () => name ?? getComponentName({ spec, url }),
+    [spec, url, name],
   );
 
   const onDragStart = useCallback(
@@ -137,7 +137,10 @@ const ComponentMarkup = ({
             data-component-name={displayName}
           >
             <div className="flex gap-2 w-full items-center">
-              <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
+              <Icon
+                kind={owned ? "FileBadge" : "File"}
+                className="flex-shrink-0 text-gray-400"
+              />
 
               <div
                 className="flex flex-col w-[144px]"
@@ -148,7 +151,11 @@ const ComponentMarkup = ({
                 <span className="truncate text-xs text-gray-800">
                   {displayName}
                 </span>
-
+                {author && author.length > 0 ? (
+                  <span className="truncate text-[10px] text-gray-500 max-w-[100px] font-mono">
+                    {author}
+                  </span>
+                ) : null}
                 <span className="truncate text-[10px] text-gray-500 max-w-[100px] font-mono">
                   Ver: {digest}
                 </span>
@@ -218,7 +225,7 @@ export const IONodeSidebarItem = ({ nodeType }: IONodeSidebarItemProps) => {
       onDragStart={onDragStart}
     >
       <div className="flex items-center gap-2">
-        <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
+        <Icon kind="File" className="text-gray-400 flex-shrink-0" />
         <span className="truncate text-xs text-gray-800">
           {nodeType === "input" ? "Input Node" : "Output Node"}
         </span>

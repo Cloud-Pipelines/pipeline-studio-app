@@ -27,11 +27,13 @@ import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
-import type {
-  ComponentReference,
-  ComponentSpec,
-  InputSpec,
-  TaskSpec,
+import { fetchAndStoreComponent } from "@/services/componentService";
+import {
+  type ComponentReference,
+  type ComponentSpec,
+  type InputSpec,
+  isNotMaterializedComponentReferenceLoadable,
+  type TaskSpec,
 } from "@/utils/componentSpec";
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
 import createNodesFromComponentSpec from "@/utils/nodes/createNodesFromComponentSpec";
@@ -477,6 +479,25 @@ const FlowCanvas = ({
       if (!droppedTask && taskType === "task") {
         console.error("Unable to find dropped task.");
         return;
+      }
+
+      if (
+        isNotMaterializedComponentReferenceLoadable(droppedTask?.componentRef)
+      ) {
+        // todo: remove this notification
+        notify("Component has been loaded from the Library.", "warning");
+
+        // load spec
+        const spec = await fetchAndStoreComponent({
+          url: droppedTask.componentRef.url,
+        });
+
+        if (spec) {
+          droppedTask.componentRef = {
+            ...droppedTask.componentRef,
+            spec,
+          } as ComponentReference;
+        }
       }
 
       // Replacing an existing node
