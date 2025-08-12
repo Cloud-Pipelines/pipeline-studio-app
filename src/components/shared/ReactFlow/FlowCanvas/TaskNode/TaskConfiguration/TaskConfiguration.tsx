@@ -24,7 +24,7 @@ import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
 import { AnnotationsSection } from "../AnnotationsEditor/AnnotationsSection";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
 import Io from "./io";
-import Logs from "./logs";
+import Logs, { OpenLogsInNewWindowLink } from "./logs";
 import OutputsList from "./OutputsList";
 
 interface ButtonPropsWithTooltip extends ButtonProps {
@@ -147,6 +147,12 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
           </TabsContent>
           {readOnly && (
             <TabsContent value="logs" className="h-full">
+              <div className="flex w-full justify-end pr-4">
+                <OpenLogsInNewWindowLink
+                  executionId={taskSpec.annotations?.executionId as string}
+                  status={runStatus}
+                />
+              </div>
               <Logs
                 executionId={taskSpec.annotations?.executionId as string}
                 status={runStatus}
