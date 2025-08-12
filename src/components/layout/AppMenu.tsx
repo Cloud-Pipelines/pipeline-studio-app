@@ -8,6 +8,7 @@ import { TOP_NAV_HEIGHT } from "@/utils/constants";
 
 import BackendStatus from "../shared/BackendStatus";
 import NewPipelineButton from "../shared/NewPipelineButton";
+import { PersonalPreferences } from "../shared/Settings/PersonalPreferences";
 
 const AppMenu = () => {
   const { backendUrl } = useBackend();
@@ -36,7 +37,11 @@ const AppMenu = () => {
             <ImportPipeline />
             <NewPipelineButton />
           </div>
-          <BackendStatus />
+
+          <div className="flex flex-row gap-1 items-center">
+            <BackendStatus />
+            <PersonalPreferences />
+          </div>
         </div>
       </div>
     </div>
