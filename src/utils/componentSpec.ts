@@ -161,7 +161,7 @@ export interface ComponentSpec {
 /**
  * Component reference. Contains information that can be used to locate and load a component by name, digest or URL
  */
-export interface ComponentReference {
+export interface ComponentReferenceBase {
   name?: string;
   digest?: string;
   tag?: string;
@@ -175,7 +175,17 @@ export interface ComponentReference {
   // and have better support for text compared to binary data.
   // Not yet in the standard.
   text?: string;
+}
+
+export interface ComponentReference extends ComponentReferenceBase {
   favorited?: boolean;
+  published_by?: string;
+  deprecated?: boolean;
+  owned?: boolean;
+  /**
+   * Whether the component can be imported implicitly by URL.
+   */
+  allow_implicit_import?: boolean;
 }
 
 export type UnknownComponentReference = ComponentReference | null | undefined;
