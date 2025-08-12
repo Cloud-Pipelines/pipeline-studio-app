@@ -4,15 +4,14 @@ import { useEffect, useState } from "react";
 import type { ContainerExecutionStatus } from "@/api/types.gen";
 import { CodeViewer } from "@/components/shared/CodeViewer";
 import { InfoBox } from "@/components/shared/InfoBox";
+import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
 import { useBackend } from "@/providers/BackendProvider";
 import { getBackendStatusString } from "@/utils/backend";
 
 const LogDisplay = ({
-  onFullscreenChange,
   logs,
 }: {
-  onFullscreenChange?: (isFullscreen: boolean) => void;
   logs: {
     log_text?: string;
     system_error_exception_full?: string;
@@ -30,7 +29,6 @@ const LogDisplay = ({
           language="text"
           title="Logs"
           filename="logs"
-          onFullscreenChange={onFullscreenChange}
         />
       )}
       {logs?.system_error_exception_full && (
@@ -39,7 +37,6 @@ const LogDisplay = ({
           language="text"
           title="Logs"
           filename="error"
-          onFullscreenChange={onFullscreenChange}
         />
       )}
     </>
@@ -64,6 +61,26 @@ const isStatusActivelyLogging = (
   }
 };
 
+const shouldStatusHaveLogs = (status?: ContainerExecutionStatus): boolean => {
+  if (!status) {
+    return false;
+  }
+
+  if (isStatusActivelyLogging(status)) {
+    return true;
+  }
+
+  switch (status) {
+    case "FAILED":
+    case "SYSTEM_ERROR":
+    case "SUCCEEDED":
+    case "CANCELLED":
+      return true;
+    default:
+      return false;
+  }
+};
+
 const getLogs = async (executionId: string, backendUrl: string) => {
   const response = await fetch(
     `${backendUrl}/api/executions/${executionId}/container_log`,
@@ -73,16 +90,15 @@ const getLogs = async (executionId: string, backendUrl: string) => {
 
 const Logs = ({
   executionId,
-  onFullscreenChange,
   status,
 }: {
   executionId?: string | number;
-  onFullscreenChange?: (isFullscreen: boolean) => void;
   status?: ContainerExecutionStatus;
 }) => {
   const { backendUrl, configured, available } = useBackend();
 
   const [isLogging, setIsLogging] = useState(!!executionId);
+  const [shouldHaveLogs, setShouldHaveLogs] = useState(!!executionId);
   const [logs, setLogs] = useState<{
     log_text?: string;
     system_error_exception_full?: string;
@@ -98,6 +114,7 @@ const Logs = ({
   useEffect(() => {
     if (status) {
       setIsLogging(isStatusActivelyLogging(status));
+      setShouldHaveLogs(shouldStatusHaveLogs(status));
     }
   }, [status]);
 
@@ -126,6 +143,14 @@ const Logs = ({
     );
   }
 
+  if (!shouldHaveLogs) {
+    return (
+      <InfoBox title="No logs available" variant="info">
+        Logs are available only for active, queued and completed executions.
+      </InfoBox>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex gap-2 items-center">
@@ -147,11 +172,40 @@ const Logs = ({
   return (
     <div className="space-y-4 h-full">
       <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg h-full min-h-0 flex-1">
-        {logs && (
-          <LogDisplay logs={logs} onFullscreenChange={onFullscreenChange} />
-        )}
+        {logs && <LogDisplay logs={logs} />}
       </div>
     </div>
+  );
+};
+
+export const OpenLogsInNewWindowLink = ({
+  executionId,
+  status,
+}: {
+  executionId: string;
+  status?: ContainerExecutionStatus;
+}) => {
+  const { backendUrl, available } = useBackend();
+  const logsUrl = `${backendUrl}/api/executions/${executionId}/stream_container_log`;
+
+  if (!executionId || !shouldStatusHaveLogs(status)) {
+    return null;
+  }
+
+  return (
+    <Link
+      href={logsUrl}
+      external
+      variant={available ? "link" : "disabled"}
+      size="sm"
+      aria-label={
+        available
+          ? "Open logs in a new tab"
+          : "Cant open logs: Backend not available"
+      }
+    >
+      Open in new tab
+    </Link>
   );
 };
 
