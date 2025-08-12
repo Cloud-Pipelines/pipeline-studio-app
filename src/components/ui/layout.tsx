@@ -21,6 +21,8 @@ interface BlockStackProps extends AriaAttributes {
   as?: StackElement;
   /** Horizontal alignment of children */
   align?: BlockStackAlign;
+  /** Horizontal alignment of children */
+  inlineAlign?: InlineStackAlign;
   /** The spacing between elements.
    */
   gap?: Gap;
@@ -36,6 +38,14 @@ const blockStackVariants = cva("flex flex-col", {
       end: "justify-end",
       stretch: "justify-stretch",
     } as Record<BlockStackAlign, string>,
+    inlineAlign: {
+      start: "justify-start",
+      center: "justify-center",
+      end: "justify-end",
+      "space-around": "justify-around",
+      "space-between": "justify-between",
+      "space-evenly": "justify-evenly",
+    } as Record<InlineStackAlign, string>,
     gap: {
       "0": "gap-0",
       "1": "gap-1",
@@ -54,6 +64,7 @@ export const BlockStack = forwardRef<
     as: Element = "div",
     className = "",
     align = "start",
+    inlineAlign = "start",
     gap = "0",
     children,
     ...rest
@@ -61,7 +72,10 @@ export const BlockStack = forwardRef<
 
   return (
     <Element
-      className={cn(blockStackVariants({ align, gap }), className)}
+      className={cn(
+        blockStackVariants({ align, inlineAlign, gap }),
+        className.split(" "),
+      )}
       {...rest}
       ref={ref as Ref<any>}
     >
