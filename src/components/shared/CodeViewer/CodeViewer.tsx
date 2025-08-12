@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 import { FullscreenElement } from "../FullscreenElement";
-import { useBetaFlagValue } from "../Settings/useBetaFlags";
 import CodeSyntaxHighlighter from "./CodeSyntaxHighlighter";
 
 interface CodeViewerProps {
@@ -21,8 +20,6 @@ const CodeViewer = ({
   language = "yaml",
   filename = "",
 }: CodeViewerProps) => {
-  const isVirtualized = useBetaFlagValue("codeViewer");
-
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const handleEnterFullscreen = useCallback(() => {
@@ -76,7 +73,7 @@ const CodeViewer = ({
               language={language}
               height="calc(100% - 48px)"
               fontSize="0.75rem"
-              virtualized={isVirtualized}
+              virtualized
             />
           </div>
         </div>
