@@ -599,19 +599,19 @@ const FlowCanvas = ({
   };
 
   const onDuplicateNodes = useCallback(() => {
-    const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
-      graphSpec,
+    const { updatedComponentSpec, newNodes, updatedNodes } = duplicateNodes(
+      componentSpec,
       selectedNodes,
       { selected: true },
     );
 
-    updateGraphSpec(updatedGraphSpec);
+    setComponentSpec(updatedComponentSpec);
 
     updateOrAddNodes({
       updatedNodes,
       newNodes,
     });
-  }, [graphSpec, selectedNodes, updateGraphSpec, setNodes]);
+  }, [componentSpec, selectedNodes, setComponentSpec, setNodes]);
 
   const onUpgradeNodes = useCallback(async () => {
     let newGraphSpec = graphSpec;
@@ -762,8 +762,8 @@ const FlowCanvas = ({
             y: center?.y || 0,
           };
 
-          const { newNodes, updatedGraphSpec } = duplicateNodes(
-            graphSpec,
+          const { newNodes, updatedComponentSpec } = duplicateNodes(
+            componentSpec,
             nodesToPaste,
             { position: reactFlowCenter, connection: "internal" },
           );
@@ -779,13 +779,21 @@ const FlowCanvas = ({
             newNodes,
           });
 
-          updateGraphSpec(updatedGraphSpec);
+          setComponentSpec(updatedComponentSpec);
         }
       } catch (err) {
         console.error("Failed to paste nodes from clipboard:", err);
       }
     });
-  }, [graphSpec, nodes, reactFlowInstance, store, updateOrAddNodes]);
+  }, [
+    componentSpec,
+    nodes,
+    reactFlowInstance,
+    store,
+    updateOrAddNodes,
+    setComponentSpec,
+    readOnly,
+  ]);
 
   useCopyPaste({
     onCopy,
