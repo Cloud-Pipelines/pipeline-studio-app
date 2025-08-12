@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer } from "react";
 
-import type { BetaFlag } from "./types";
+import type { BetaFlag } from "@/types/betaFlags";
+
 import { useBetaFlags } from "./useBetaFlags";
 
 interface SetFlagAction {

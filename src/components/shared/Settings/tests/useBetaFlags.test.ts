@@ -1,18 +1,17 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the betaFlags module before importing the hook
+import { useBetaFlagValue } from "../useBetaFlags";
+
 vi.mock("@/betaFlags", () => ({
   ExistingBetaFlags: {
     codeViewer: {
       name: "Code Viewer",
-      description: "Enable enhanced code viewing capabilities",
+      description: "Code Viewer",
       default: false,
     },
   },
 }));
-
-import { useBetaFlagValue } from "../useBetaFlags";
 
 describe("useBetaFlagValue", () => {
   beforeEach(() => {
