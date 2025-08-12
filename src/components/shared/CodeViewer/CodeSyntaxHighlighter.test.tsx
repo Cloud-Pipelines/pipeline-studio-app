@@ -58,8 +58,9 @@ describe("<CodeSyntaxHighlighter />", () => {
 
   describe("virtualized mode", () => {
     const batchSize = 100;
+    const lineNumber = 1000;
     const largeCode = Array.from(
-      { length: 1000 },
+      { length: lineNumber },
       (_, i) => `const line${i} = ${i};`,
     ).join("\n");
 
@@ -114,11 +115,7 @@ describe("<CodeSyntaxHighlighter />", () => {
       expect(virtualizedDivs.length).toBeGreaterThan(0);
     });
 
-    /**
-     * This test skipped, due to unknown failure. Not sure what changed in the between the last time it was run and now.
-     * Given, that entire code viewer is going to be replaced, may not be worth fixing.
-     */
-    test.skip("virtualized mode renders large code efficiently in batches", async () => {
+    test("virtualized mode renders large code efficiently in batches", async () => {
       render(
         <div
           data-testid="scroll-container"
@@ -146,7 +143,7 @@ describe("<CodeSyntaxHighlighter />", () => {
         virtualizedContainer!.querySelectorAll("div[data-index]");
 
       expect(batchContainerDivs[0].childElementCount).toBe(batchSize);
-      expect(batchContainerDivs.length).toBe(2);
+      expect(batchContainerDivs.length).toBe(Math.ceil(lineNumber / batchSize));
     });
   });
 });
