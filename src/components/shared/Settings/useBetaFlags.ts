@@ -54,7 +54,8 @@ export function useBetaFlags() {
 
 export function useBetaFlagValue(betaFlagName: keyof typeof ExistingBetaFlags) {
   const { getFlag, subscribe } = useBetaFlags();
+
   return useSyncExternalStore(subscribe, () =>
-    getFlag(betaFlagName, ExistingBetaFlags[betaFlagName].default),
+    getFlag(betaFlagName, ExistingBetaFlags[betaFlagName]?.default ?? false),
   );
 }
