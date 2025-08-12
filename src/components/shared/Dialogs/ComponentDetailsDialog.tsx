@@ -1,4 +1,4 @@
-import { Code, InfoIcon, ListFilter } from "lucide-react";
+import { Code, InfoIcon, LibraryBig, ListFilter } from "lucide-react";
 import type { ReactNode } from "react";
 
 import {
@@ -11,9 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ComponentReference } from "@/utils/componentSpec";
+import { isComponentReferenceWithSpec } from "@/utils/componentStore";
 
 import InfoIconButton from "../Buttons/InfoIconButton";
 import { ComponentFavoriteToggle } from "../FavoriteComponentToggle";
+import { PublishComponent } from "../ManageComponent/PublishComponent";
+import { useBetaFlagValue } from "../Settings/useBetaFlags";
 import { TaskDetails, TaskImplementation, TaskIO } from "../TaskDetails";
 
 interface ComponentDetailsProps {
@@ -33,6 +36,10 @@ const ComponentDetails = ({
   onClose,
   onDelete,
 }: ComponentDetailsProps) => {
+  const remoteComponentLibrarySearchEnabled = useBetaFlagValue(
+    "remote-component-library-search",
+  );
+
   const { url, spec: componentSpec, digest: componentDigest } = component;
 
   const dialogTriggerButton = trigger || <InfoIconButton />;
@@ -42,6 +49,9 @@ const ComponentDetails = ({
       onClose?.();
     }
   };
+
+  const hasPublishSection =
+    remoteComponentLibrarySearchEnabled && component.owned;
 
   return (
     <Dialog modal onOpenChange={onOpenChange}>
@@ -87,6 +97,13 @@ const ComponentDetails = ({
                 <Code className="h-4 w-4" />
                 Implementation
               </TabsTrigger>
+
+              {hasPublishSection ? (
+                <TabsTrigger value="publish" className="flex-1">
+                  <LibraryBig className="h-4 w-4" />
+                  Publish
+                </TabsTrigger>
+              ) : null}
             </TabsList>
 
             <div className="overflow-hidden h-[40vh]">
@@ -111,6 +128,15 @@ const ComponentDetails = ({
                   componentSpec={componentSpec}
                 />
               </TabsContent>
+
+              {hasPublishSection && isComponentReferenceWithSpec(component) ? (
+                <TabsContent value="publish" className="h-full">
+                  <PublishComponent
+                    component={component}
+                    displayName={displayName}
+                  />
+                </TabsContent>
+              ) : null}
             </div>
           </Tabs>
         )}

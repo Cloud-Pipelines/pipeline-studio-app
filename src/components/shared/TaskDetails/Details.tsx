@@ -348,7 +348,7 @@ function LinkBlock({
           </div>
           <div className="text-sm break-all">
             <a
-              href={convertGithubUrlToDirectoryUrl(url)}
+              href={url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sky-500 hover:underline flex items-center gap-1"
