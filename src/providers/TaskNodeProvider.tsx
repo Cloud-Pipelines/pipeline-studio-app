@@ -38,6 +38,7 @@ type TaskNodeCallbacks = {
   onDelete?: () => void;
   onDuplicate?: () => void;
   onUpgrade?: () => void;
+  setHighlightSimilarTasks?: (highlight: boolean) => void;
 };
 
 type TaskNodeProviderProps = {
@@ -123,6 +124,13 @@ export const TaskNodeProvider = ({
     data.callbacks?.onUpgrade(mostRecentComponentRef);
   }, [data.callbacks, isOutdated, mostRecentComponentRef, notify]);
 
+  const handleSetHighlightSimilarTasks = useCallback(
+    (highlight: boolean) => {
+      data.callbacks?.setHighlightSimilarTasks?.(highlight);
+    },
+    [data.callbacks],
+  );
+
   const select = useCallback(() => {
     reactFlowInstance.setNodes((nodes) =>
       nodes.map((node) =>
@@ -160,6 +168,7 @@ export const TaskNodeProvider = ({
       onDelete: handleDeleteTaskNode,
       onDuplicate: handleDuplicateTaskNode,
       onUpgrade: handleUpgradeTaskNode,
+      setHighlightSimilarTasks: handleSetHighlightSimilarTasks,
     }),
     [
       handleSetArguments,
@@ -167,6 +176,7 @@ export const TaskNodeProvider = ({
       handleDeleteTaskNode,
       handleDuplicateTaskNode,
       handleUpgradeTaskNode,
+      handleSetHighlightSimilarTasks,
     ],
   );
 
