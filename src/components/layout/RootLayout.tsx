@@ -15,10 +15,10 @@ const RootLayout = () => {
   useDocumentTitle();
 
   return (
-    <ComponentSpecProvider>
-      <BackendProvider>
-        <SidebarProvider>
-          <FullscreenProvider>
+    <BackendProvider>
+      <SidebarProvider>
+        <FullscreenProvider>
+          <ComponentSpecProvider>
             <ToastContainer />
 
             <div className="App flex flex-col min-h-screen w-full">
@@ -34,10 +34,10 @@ const RootLayout = () => {
                 <TanStackRouterDevtools />
               )}
             </div>
-          </FullscreenProvider>
-        </SidebarProvider>
-      </BackendProvider>
-    </ComponentSpecProvider>
+          </ComponentSpecProvider>
+        </FullscreenProvider>
+      </SidebarProvider>
+    </BackendProvider>
   );
 };
 
