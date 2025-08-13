@@ -116,7 +116,7 @@ export async function locateFolderByName(
 /**
  * Opens a component library folder by name
  */
-async function openComponentLibFolder(
+export async function openComponentLibFolder(
   page: Page,
   folderName: string,
 ): Promise<Locator> {
@@ -133,7 +133,7 @@ async function openComponentLibFolder(
 /**
  * Locates a component item within a folder
  */
-function locateComponentInFolder(
+export function locateComponentInFolder(
   folder: Locator,
   componentName: string,
 ): Locator {
@@ -234,3 +234,38 @@ export async function removeComponentFromCanvas(
 /**
  * todo: helper to position node relatively to another node accounting for the Canvas transform
  */
+
+export async function assertSearchState(
+  page: Page,
+  options: {
+    searchTerm: string;
+    searchFilterCount?: string;
+    searchResultsCount?: string;
+  } = {
+    searchTerm: "",
+  },
+) {
+  const { searchTerm, searchFilterCount, searchResultsCount } = options;
+
+  // assert search inputs
+  const searchInput = await page.getByTestId("search-input");
+  expect(await searchInput).toHaveValue(searchTerm);
+
+  const searchFilterCounter = await page.getByTestId("search-filter-counter");
+  if (searchFilterCount) {
+    expect(await searchFilterCounter).toHaveText(searchFilterCount);
+  } else {
+    expect(await searchFilterCounter).not.toBeVisible();
+  }
+
+  const searchResultsHeader = await page.getByTestId("search-results-header");
+  if (searchResultsCount) {
+    expect(await searchResultsHeader).toHaveText(
+      `Search Results (${searchResultsCount})`,
+    );
+    const componentItem = await page.getByTestId("component-item");
+    expect(componentItem).toHaveCount(Number(searchResultsCount));
+  } else {
+    expect(await searchResultsHeader).not.toBeVisible();
+  }
+}

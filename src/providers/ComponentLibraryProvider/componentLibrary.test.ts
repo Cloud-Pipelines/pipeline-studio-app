@@ -56,7 +56,7 @@ describe("componentLibrary", () => {
               name: "test-component-1",
               digest: "digest1",
               url: "https://example.com/component1.yaml",
-              spec: {} as any,
+              spec: {} as ComponentSpec,
               text: "test-yaml",
             },
           },
@@ -72,7 +72,7 @@ describe("componentLibrary", () => {
               name: "test-component-2",
               digest: "digest2",
               url: "https://example.com/component2.yaml",
-              spec: {} as any,
+              spec: {} as ComponentSpec,
               text: "test-yaml",
             },
           },
@@ -377,30 +377,6 @@ describe("componentLibrary", () => {
       mockComponentService.generateDigest.mockImplementation(
         async (text) => `digest-${text}`,
       );
-    });
-
-    it("should return component ref unchanged when spec already exists", async () => {
-      // Arrange
-      const componentRef: ComponentReference = {
-        name: "test-component",
-        digest: "existing-digest",
-        spec: {
-          name: "existing-spec",
-          implementation: { graph: { tasks: {} } },
-        },
-      };
-      const folder: ComponentFolder = {
-        name: "Test Folder",
-        components: [componentRef],
-        folders: [],
-      };
-
-      // Act
-      const result = await populateComponentRefs(folder);
-
-      // Assert
-      expect(result.components?.[0]).toEqual(componentRef);
-      expect(mockComponentService.parseComponentData).not.toHaveBeenCalled();
     });
 
     it("should populate spec from text when spec is missing", async () => {

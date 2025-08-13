@@ -129,11 +129,6 @@ test.describe("FlowCanvas Basic Functionality", () => {
 
     await expect(
       nodeB.locator('[data-testid="input-handle-value-training_data"]'),
-    ).toHaveText(`{
-  "taskOutput": {
-    "taskId": "Chicago Taxi Trips dataset",
-    "outputName": "Table"
-  }
-}`);
+    ).toHaveText(`→ Chicago Taxi Trips dataset.Table`);
   });
 });

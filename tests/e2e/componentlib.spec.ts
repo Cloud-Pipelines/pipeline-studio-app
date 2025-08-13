@@ -1,9 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import {
+  assertSearchState,
   createNewPipeline,
   dropComponentFromLibraryOnCanvas,
   locateComponentInFolder,
+  locateFlowCanvas,
   locateFolderByName,
   openComponentLibFolder,
   removeComponentFromCanvas,
@@ -63,7 +65,7 @@ test.describe("Component Library", () => {
     );
     expect(
       await inputsOutputsFolder
-        .locator('[role="button"]')
+        .getByRole("button")
         .getAttribute("aria-expanded"),
     ).toBe("false");
     const inputsOutputsFolderContent = await inputsOutputsFolder.locator("li");
@@ -77,7 +79,7 @@ test.describe("Component Library", () => {
 
     expect(
       await inputsOutputsFolder
-        .locator('[role="button"]')
+        .getByRole("button")
         .getAttribute("aria-expanded"),
     ).toBe("true");
 
@@ -85,13 +87,13 @@ test.describe("Component Library", () => {
     const components = await inputsOutputsFolder.locator("li");
     expect(components).toHaveCount(2);
 
-    await inputsOutputsFolder.locator('[role="button"]').click();
+    await inputsOutputsFolder.getByRole("button").click();
 
     await page.waitForTimeout(200);
 
     expect(
       await inputsOutputsFolder
-        .locator('[role="button"]')
+        .getByRole("button")
         .getAttribute("aria-expanded"),
     ).toBe("false");
   });
@@ -104,9 +106,8 @@ test.describe("Component Library", () => {
 
     const nestedFolder = await openComponentLibFolder(page, "Storage");
 
-    const nestedFolderContent = await nestedFolder.locator(
-      '[data-testid="component-item"]',
-    );
+    const nestedFolderContent =
+      await nestedFolder.getByTestId("component-item");
     expect(await nestedFolderContent).toHaveCount(4);
   });
 
@@ -117,18 +118,14 @@ test.describe("Component Library", () => {
       quickStartFolder,
       "Chicago Taxi Trips dataset",
     );
-    await chicagoTaxiTripsDataset
-      .locator('[data-testid="favorite-star"]')
-      .click();
+    await chicagoTaxiTripsDataset.getByTestId("favorite-star").click();
 
     // expect the component to be in the favorites folder
     const favoritesFolder = await openComponentLibFolder(page, "My Components");
     expect(await favoritesFolder.locator("li")).toHaveCount(1);
 
     // unstar the component
-    await chicagoTaxiTripsDataset
-      .locator('[data-testid="favorite-star"]')
-      .click();
+    await chicagoTaxiTripsDataset.getByTestId("favorite-star").click();
 
     // giving time for the component to be removed from the favorites folder
     // todo: find a better way to do this
@@ -146,9 +143,7 @@ test.describe("Component Library", () => {
       "Chicago Taxi Trips dataset",
     );
 
-    await chicagoTaxiTripsDataset
-      .locator('[data-testid="info-icon-button"]')
-      .click();
+    await chicagoTaxiTripsDataset.getByTestId("info-icon-button").click();
 
     await page.waitForTimeout(200);
 
@@ -183,20 +178,135 @@ test.describe("Component Library", () => {
 
   test("library can be searched", async () => {
     // search for a component
-    await page.locator('[data-testid="search-input"]').fill("GCS");
+    await page.getByTestId("search-input").fill("GCS");
 
     await page.waitForTimeout(200);
 
-    const searchResultsHeader = await page.locator(
-      '[data-testid="search-results-header"]',
-    );
+    const searchResultsHeader = await page.getByTestId("search-results-header");
     expect(await searchResultsHeader.isVisible()).toBe(true);
     expect(await searchResultsHeader).toHaveText("Search Results (5)");
-    const componentItem = await page.locator('[data-testid="component-item"]');
+    const componentItem = await page.getByTestId("component-item");
     expect(componentItem).toHaveCount(5);
 
-    await page.locator('[data-testid="search-input"]').clear();
+    await page.getByTestId("search-input").clear();
 
     await page.waitForTimeout(200);
+  });
+
+  test("search results can be highlighted on input pin click", async () => {
+    await openComponentLibFolder(page, "Data manipulation");
+    await openComponentLibFolder(page, "CSV");
+
+    // drop component on the canvas
+    await dropComponentFromLibraryOnCanvas(
+      page,
+      "CSV",
+      "Select columns using Pandas on CSV data",
+    );
+
+    // click on component output pin
+    await page.getByTestId("input-handle-table").click();
+    await page.waitForTimeout(200);
+
+    // assert that the output handle is highlighted
+    const outputConnection = await page.getByTestId(
+      "output-connection-transformed_table",
+    );
+    const inputConnection = await page.getByTestId("input-connection-table");
+
+    // assert highlighting
+    expect(await outputConnection.getAttribute("data-highlighted")).toBe(
+      "true",
+    );
+    expect(await inputConnection.getAttribute("data-highlighted")).toBe(
+      "false",
+    );
+    expect(await inputConnection.getAttribute("data-selected")).toBe("true");
+
+    assertSearchState(page, {
+      searchTerm: "CSV",
+      searchFilterCount: "2",
+      searchResultsCount: "7",
+    });
+
+    // reset highlighting after clicking on the canvas
+    await locateFlowCanvas(page).click();
+    await page.waitForTimeout(200);
+
+    // resets selection after clicking on the canvas
+    expect(await inputConnection.getAttribute("data-highlighted")).toBe(
+      "false",
+    );
+    expect(await outputConnection.getAttribute("data-highlighted")).toBe(
+      "false",
+    );
+
+    // search should be reset
+    assertSearchState(page, {
+      searchTerm: "",
+    });
+
+    // remove the component from the canvas
+    await removeComponentFromCanvas(
+      page,
+      "Select columns using Pandas on CSV data",
+    );
+  });
+
+  test("search results can be highlighted on output pin click", async () => {
+    await openComponentLibFolder(page, "Data manipulation");
+    await openComponentLibFolder(page, "CSV");
+
+    // drop component on the canvas
+    await dropComponentFromLibraryOnCanvas(
+      page,
+      "CSV",
+      "Select columns using Pandas on CSV data",
+    );
+
+    // click on component output pin
+    await page.getByTestId("output-handle-transformed_table").click();
+    await page.waitForTimeout(200);
+
+    // assert that the output handle is selected
+    const outputConnection = await page.getByTestId(
+      "output-connection-transformed_table",
+    );
+    const inputConnection = await page.getByTestId("input-connection-table");
+
+    // assert highlighting
+    expect(await outputConnection.getAttribute("data-highlighted")).toBe(
+      "false",
+    );
+    expect(await outputConnection.getAttribute("data-selected")).toBe("true");
+    expect(await inputConnection.getAttribute("data-highlighted")).toBe("true");
+
+    // assert search inputs
+    assertSearchState(page, {
+      searchTerm: "CSV",
+      searchFilterCount: "2",
+      searchResultsCount: "20",
+    });
+
+    // reset highlighting after clicking on the canvas
+    await locateFlowCanvas(page).click();
+    await page.waitForTimeout(200);
+
+    // resets selection after clicking on the canvas
+    expect(await inputConnection.getAttribute("data-highlighted")).toBe(
+      "false",
+    );
+    expect(await outputConnection.getAttribute("data-selected")).toBe("false");
+
+    // search should be reset
+    assertSearchState(page, {
+      searchTerm: "",
+    });
+
+    // remove the component from the canvas
+    await removeComponentFromCanvas(
+      page,
+      "Select columns using Pandas on CSV data",
+    );
   });
 });

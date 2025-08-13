@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskNodeInputs } from "@/components/shared/ReactFlow/FlowCanvas/TaskNode/TaskNodeCard/TaskNodeInputs";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
-import type { InputSpec, TaskSpec } from "@/utils/componentSpec";
+import type { ArgumentType, InputSpec, TaskSpec } from "@/utils/componentSpec";
 
 vi.mock("@/providers/ComponentLibraryProvider", () => ({
   useComponentLibrary: () => ({
@@ -14,6 +14,14 @@ vi.mock("@/providers/ComponentLibraryProvider", () => ({
     searchFilters: [],
     highlightSearchResults: false,
     setHighlightSearchResults: vi.fn(),
+  }),
+}));
+
+vi.mock("@/providers/ComponentSpecProvider", () => ({
+  useComponentSpec: () => ({
+    graphSpec: {
+      tasks: {},
+    },
   }),
 }));
 
@@ -47,7 +55,7 @@ describe("<TaskNodeInputs />", () => {
   });
 
   const createMockTaskSpec = (
-    taskArguments?: Record<string, any>,
+    taskArguments?: Record<string, ArgumentType>,
   ): TaskSpec => ({
     componentRef: { digest: "test-digest" },
     arguments: taskArguments,
