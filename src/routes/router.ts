@@ -38,10 +38,15 @@ const mainLayout = createRoute({
   component: RootLayout,
 });
 
-const indexRoute = createRoute({
+export const indexRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: APP_ROUTES.HOME,
   component: Home,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      created_by: search.created_by as string | undefined,
+    };
+  },
 });
 
 const editorRoute = createRoute({

@@ -1,7 +1,12 @@
 import { PipelineSection, RunSection } from "@/components/Home";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { indexRoute } from "../router";
+
 const Home = () => {
+  const search = indexRoute.useSearch();
+  const createdBy = (search as { created_by?: string }).created_by;
+
   return (
     <div className="container mx-auto w-3/4 p-4 flex flex-col gap-4">
       <div className="flex justify-between items-center">
@@ -16,7 +21,7 @@ const Home = () => {
           <PipelineSection />
         </TabsContent>
         <TabsContent value="runs" className="flex flex-col gap-1">
-          <RunSection />
+          <RunSection createdBy={createdBy} />
         </TabsContent>
       </Tabs>
     </div>
