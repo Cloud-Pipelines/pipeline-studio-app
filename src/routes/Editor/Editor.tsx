@@ -2,26 +2,14 @@ import "@/styles/editor.css";
 
 import { DndContext } from "@dnd-kit/core";
 import { ReactFlowProvider } from "@xyflow/react";
-import { useEffect } from "react";
 
 import PipelineEditor from "@/components/Editor/PipelineEditor";
 import { useLoadComponentSpecFromPath } from "@/hooks/useLoadComponentSpecFromPath";
 import { useBackend } from "@/providers/BackendProvider";
-import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
 const Editor = () => {
   const { backendUrl } = useBackend();
   const { componentSpec } = useLoadComponentSpecFromPath(backendUrl);
-  const { setComponentSpec, clearComponentSpec } = useComponentSpec();
-
-  useEffect(() => {
-    if (componentSpec) {
-      setComponentSpec(componentSpec);
-    }
-    return () => {
-      clearComponentSpec();
-    };
-  }, [componentSpec, setComponentSpec, clearComponentSpec]);
 
   if (!componentSpec) {
     return <div>Loading...</div>;
