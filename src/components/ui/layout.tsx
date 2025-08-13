@@ -33,10 +33,10 @@ interface BlockStackProps extends AriaAttributes {
 const blockStackVariants = cva("flex flex-col", {
   variants: {
     align: {
-      start: "justify-start",
-      center: "justify-center",
-      end: "justify-end",
-      stretch: "justify-stretch",
+      start: "items-start",
+      center: "items-center",
+      end: "items-end",
+      stretch: "items-stretch",
     } as Record<BlockStackAlign, string>,
     inlineAlign: {
       start: "justify-start",
