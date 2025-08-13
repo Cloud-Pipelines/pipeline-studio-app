@@ -19,9 +19,10 @@ import { useBackend } from "@/providers/BackendProvider";
 
 import RunRow from "./RunRow";
 
+const PIPELINE_RUNS_QUERY_URL = "/api/pipeline_runs/";
+const PAGE_TOKEN_QUERY_KEY = "page_token";
+const FILTER_QUERY_KEY = "filter";
 const CREATED_BY_ME_FILTER = "created_by:me";
-
-const FILTER_QUERY_PARAM = "?filter=";
 
 export const RunSection = () => {
   const { backendUrl, configured, available } = useBackend();
@@ -30,26 +31,23 @@ export const RunSection = () => {
   const [pageToken, setPageToken] = useState<string | undefined>();
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
-  const filter = useCreatedByMe
-    ? FILTER_QUERY_PARAM + CREATED_BY_ME_FILTER
-    : "";
-
   const { data, isLoading, isFetching, error, refetch } =
     useQuery<ListPipelineJobsResponse>({
       queryKey: ["runs", pageToken],
       refetchOnWindowFocus: false,
       queryFn: async () => {
-        const pageTokenParam = pageToken ? `?page_token=${pageToken}` : "";
-        const url = `${backendUrl}/api/pipeline_runs/${pageTokenParam}${filter}`;
+        const u = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
+        if (pageToken) u.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
+        if (useCreatedByMe)
+          u.searchParams.set(FILTER_QUERY_KEY, CREATED_BY_ME_FILTER);
 
         try {
-          const response = await fetch(url);
+          const response = await fetch(u.toString());
           if (!response.ok) {
             throw new Error(
               `Failed to fetch pipeline runs: ${response.statusText}`,
             );
           }
-
           return response.json();
         } catch (error) {
           if (error instanceof Error) {
