@@ -1,8 +1,3 @@
-interface BetaFlag {
-  name: string;
-  description: string;
-  default: boolean;
-  [key: string]: unknown;
-}
+import type { BetaFlag } from "@/types/betaFlags";
 
 export const ExistingBetaFlags: Record<string, BetaFlag> = {};
