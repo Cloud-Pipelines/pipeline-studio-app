@@ -10,12 +10,15 @@ import TaskConfiguration from "../TaskConfiguration";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
 
+const DIGEST_HOVER_DELAY_MS = 300;
+
 const TaskNodeCard = () => {
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
 
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [scrollHeight, setScrollHeight] = useState(0);
   const [condensed, setCondensed] = useState(false);
@@ -66,6 +69,25 @@ const TaskNodeCard = () => {
     setExpandedOutputs((prev) => !prev);
   }, []);
 
+  const handleHighlightSimilarTasks = useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    hoverTimeoutRef.current = setTimeout(() => {
+      callbacks.setHighlightSimilarTasks?.(true);
+    }, DIGEST_HOVER_DELAY_MS);
+  }, [callbacks]);
+
+  const handleUnhighlightSimilarTasks = useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+
+    callbacks.setHighlightSimilarTasks?.(false);
+  }, [callbacks]);
+
   useEffect(() => {
     if (nodeRef.current) {
       setScrollHeight(nodeRef.current.scrollHeight);
@@ -90,12 +112,17 @@ const TaskNodeCard = () => {
     };
   }, [selected, taskConfigMarkup, setContent, clearContent]);
 
+  useEffect(() => {
+    callbacks.setHighlightSimilarTasks?.(false);
+  }, []);
+
   return (
     <Card
       className={cn(
         "rounded-2xl border-gray-200 border-2 break-words p-0 drop-shadow-none gap-2",
         selected ? "border-gray-500" : "hover:border-slate-200",
-        highlighted && "border-orange-500",
+        highlighted && "border-orange-500 hover:border-orange-500",
+        highlighted && selected && "border-orange-700 hover:border-orange-700",
       )}
       style={{
         width: dimensions.w + "px",
@@ -109,7 +136,14 @@ const TaskNodeCard = () => {
           {name}
         </CardTitle>
         {taskSpec.componentRef?.digest && (
-          <div className="text-xs text-muted-foreground font-light">
+          <div
+            className={cn(
+              "text-xs text-muted-foreground font-light hover:text-warning cursor-pointer",
+              highlighted && "text-warning",
+            )}
+            onMouseEnter={handleHighlightSimilarTasks}
+            onMouseLeave={handleUnhighlightSimilarTasks}
+          >
             {taskSpec.componentRef.digest.substring(0, 8)}...
           </div>
         )}

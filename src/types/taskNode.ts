@@ -31,6 +31,7 @@ interface TaskNodeCallbacks {
   onDelete: () => void;
   onDuplicate: (selected?: boolean) => void;
   onUpgrade: (newComponentRef: ComponentReference) => void;
+  setHighlightSimilarTasks: (highlight: boolean) => void;
 }
 
 // Dynamic Node Callback types - every callback has a version with the node & task id added to it as an input parameter

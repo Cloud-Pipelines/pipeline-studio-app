@@ -20,13 +20,15 @@ export const createTaskNode = (
   const nodeCallbacks = nodeData.nodeCallbacks;
   const dynamicCallbacks = generateDynamicNodeCallbacks(nodeId, nodeCallbacks);
 
+  const highlighted = taskSpec.annotations?.["editor.highlight"] ?? false;
+
   return {
     id: nodeId,
     data: {
       ...nodeData,
       taskSpec,
       taskId,
-      highlighted: false,
+      highlighted,
       callbacks: dynamicCallbacks, // Use these callbacks internally within the node
     },
     position: position,

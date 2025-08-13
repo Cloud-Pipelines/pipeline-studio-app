@@ -189,11 +189,47 @@ export const useNodeCallbacks = ({
     [graphSpec, getNodeById, updateGraphSpec, triggerConfirmation, notify],
   );
 
+  const setHighlightSimilarTasks = useCallback(
+    (ids: NodeAndTaskId, highlight: boolean) => {
+      const taskId = ids.taskId;
+      const digest = graphSpec.tasks[taskId]?.componentRef?.digest;
+
+      if (!digest) {
+        return;
+      }
+
+      let updatedGraphSpec = { ...graphSpec };
+
+      // Update annotations for all tasks with matching digest
+      Object.keys(graphSpec.tasks).forEach((currentTaskId) => {
+        const task = graphSpec.tasks[currentTaskId];
+        const taskDigest = task?.componentRef?.digest;
+        const newAnnotations = { ...task.annotations };
+
+        newAnnotations["editor.highlight"] = false;
+
+        if (taskDigest === digest && highlight) {
+          newAnnotations["editor.highlight"] = true;
+        }
+
+        updatedGraphSpec = replaceTaskAnnotationsInGraphSpec(
+          currentTaskId,
+          updatedGraphSpec,
+          newAnnotations as Annotations,
+        );
+      });
+
+      updateGraphSpec(updatedGraphSpec);
+    },
+    [graphSpec, updateGraphSpec],
+  );
+
   return {
     onDelete,
     setArguments,
     setAnnotations,
     onDuplicate,
     onUpgrade,
+    setHighlightSimilarTasks,
   };
 };
