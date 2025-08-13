@@ -71,6 +71,7 @@ describe("FullscreenElement", () => {
     expect(fullscreenContainer.parentElement).toBe(document.body);
     expect(fullscreenContainer).toHaveClass("fixed");
     expect(fullscreenContainer).toHaveClass("z-[2147483647]");
+    expect(fullscreenContainer).toHaveClass("pointer-events-auto");
   });
 
   test("switches from fullscreen to normal mode", () => {

@@ -35,6 +35,7 @@ function FullscreenElementPortal({
         "w-full",
         "h-full",
         "overflow-hidden",
+        "pointer-events-auto",
       );
       document.body.appendChild(containerElementRef.current);
     } else {
