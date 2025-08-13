@@ -66,6 +66,11 @@ const nodeTypes: Record<string, ComponentType<any>> = {
   input: IONode,
   output: IONode,
 };
+
+const SELECTABLE_NODES = new Set(["task", "input", "output"]);
+const UPGRADEABLE_NODES = new Set(["task"]);
+const REPLACEABLE_NODES = new Set(["task"]);
+
 const edgeTypes: Record<string, ComponentType<any>> = {
   customEdge: SmoothEdge,
 };
@@ -211,7 +216,10 @@ const FlowCanvas = ({
   );
 
   const selectedNodes = useMemo(
-    () => nodes.filter((node) => node.selected && node.type === "task"),
+    () =>
+      nodes.filter(
+        (node) => node.selected && node.type && SELECTABLE_NODES.has(node.type),
+      ),
     [nodes],
   );
   const selectedEdges = useMemo(
@@ -225,6 +233,14 @@ const FlowCanvas = ({
       edges: selectedEdges,
     }),
     [selectedNodes, selectedEdges],
+  );
+
+  const canUpgrade = useMemo(
+    () =>
+      selectedNodes.some(
+        (node) => node.type && UPGRADEABLE_NODES.has(node.type),
+      ),
+    [selectedNodes],
   );
 
   const onElementsRemove = useCallback(
@@ -426,6 +442,10 @@ const FlowCanvas = ({
         );
 
         if (hoveredNode?.id === replaceTarget?.id) return;
+        if (hoveredNode?.type && !REPLACEABLE_NODES.has(hoveredNode.type)) {
+          setReplaceTarget(null);
+          return;
+        }
 
         setReplaceTarget(hoveredNode || null);
       }
@@ -600,6 +620,11 @@ const FlowCanvas = ({
     const excludedNodes: Node[] = [];
 
     selectedNodes.forEach((node) => {
+      if (node.type && !UPGRADEABLE_NODES.has(node.type)) {
+        excludedNodes.push(node);
+        return;
+      }
+
       const taskSpec = node.data.taskSpec as TaskSpec | undefined;
       // Custom components don't have a componentRef.url so they are currently excluded from bulk operations
       if (taskSpec?.componentRef && taskSpec.componentRef.url) {
@@ -619,6 +644,11 @@ const FlowCanvas = ({
         excludedNodes.push(node);
       }
     });
+
+    if (includedNodes.length === 0) {
+      notify("Selected nodes are not upgradeable", "info");
+      return;
+    }
 
     const dialogData = getBulkUpdateConfirmationDetails(
       includedNodes,
@@ -806,7 +836,7 @@ const FlowCanvas = ({
             onDelete={!readOnly ? onRemoveNodes : undefined}
             onDuplicate={!readOnly ? onDuplicateNodes : undefined}
             onCopy={!readOnly ? undefined : onCopy}
-            onUpgrade={!readOnly ? onUpgradeNodes : undefined}
+            onUpgrade={!readOnly && canUpgrade ? onUpgradeNodes : undefined}
           />
         </NodeToolbar>
         {children}
