@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation, useNavigate, useSearch } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -24,22 +25,28 @@ const PAGE_TOKEN_QUERY_KEY = "page_token";
 const FILTER_QUERY_KEY = "filter";
 const CREATED_BY_ME_FILTER = "created_by:me";
 
+type RunSectionSearch = { page_token?: string; filter?: string };
+
 export const RunSection = () => {
   const { backendUrl, configured, available } = useBackend();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const search = useSearch({ strict: false }) as RunSectionSearch;
 
-  const [useCreatedByMe, setUseCreatedByMe] = useState(false);
-  const [pageToken, setPageToken] = useState<string | undefined>();
+  const useCreatedByMe = search.filter === CREATED_BY_ME_FILTER;
+  const pageToken = search.page_token;
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
   const { data, isLoading, isFetching, error, refetch } =
     useQuery<ListPipelineJobsResponse>({
-      queryKey: ["runs", pageToken],
+      queryKey: ["runs", backendUrl, pageToken, useCreatedByMe],
       refetchOnWindowFocus: false,
       queryFn: async () => {
         const u = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
         if (pageToken) u.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
-        if (useCreatedByMe)
+        if (useCreatedByMe) {
           u.searchParams.set(FILTER_QUERY_KEY, CREATED_BY_ME_FILTER);
+        }
 
         try {
           const response = await fetch(u.toString());
@@ -61,25 +68,45 @@ export const RunSection = () => {
 
   useEffect(() => {
     refetch();
-  }, [backendUrl, useCreatedByMe, refetch]);
+  }, [backendUrl, useCreatedByMe, pageToken, refetch]);
 
   const handleFilterChange = (value: boolean) => {
-    setUseCreatedByMe(value);
-    setPageToken(undefined);
+    const nextSearch: Record<string, string> = {
+      ...(search as Record<string, string>),
+    };
+    delete nextSearch[PAGE_TOKEN_QUERY_KEY];
+    if (value) {
+      nextSearch[FILTER_QUERY_KEY] = CREATED_BY_ME_FILTER;
+    } else {
+      delete nextSearch[FILTER_QUERY_KEY];
+    }
     setPreviousPageTokens([]);
+    navigate({ to: pathname, search: nextSearch });
   };
 
   const handleNextPage = () => {
     if (data?.next_page_token) {
       setPreviousPageTokens([...previousPageTokens, pageToken || ""]);
-      setPageToken(data.next_page_token);
+      const nextSearch: Record<string, string> = {
+        ...(search as Record<string, string>),
+      };
+      nextSearch[PAGE_TOKEN_QUERY_KEY] = data.next_page_token;
+      navigate({ to: pathname, search: nextSearch });
     }
   };
 
   const handlePreviousPage = () => {
     const previousToken = previousPageTokens[previousPageTokens.length - 1];
     setPreviousPageTokens(previousPageTokens.slice(0, -1));
-    setPageToken(previousToken);
+    const nextSearch: Record<string, string> = {
+      ...(search as Record<string, string>),
+    };
+    if (previousToken) {
+      nextSearch[PAGE_TOKEN_QUERY_KEY] = previousToken;
+    } else {
+      delete nextSearch[PAGE_TOKEN_QUERY_KEY];
+    }
+    navigate({ to: pathname, search: nextSearch });
   };
 
   if (!configured) {
