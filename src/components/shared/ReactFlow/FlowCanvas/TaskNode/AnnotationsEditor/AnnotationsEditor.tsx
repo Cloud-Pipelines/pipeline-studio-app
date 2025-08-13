@@ -26,6 +26,8 @@ const COMMON_ANNOTATIONS: AnnotationConfig[] = [
   },
 ];
 
+const HIDDEN_ANNOTATIONS = ["editor.highlight"];
+
 export const AnnotationsEditor = ({
   annotations,
   onChange,
@@ -36,7 +38,8 @@ export const AnnotationsEditor = ({
   const remainingAnnotations = Object.entries(annotations).filter(
     ([key]) =>
       !COMPUTE_RESOURCES.some((resource) => resource.annotation === key) &&
-      !COMMON_ANNOTATIONS.some((common) => common.annotation === key),
+      !COMMON_ANNOTATIONS.some((common) => common.annotation === key) &&
+      !HIDDEN_ANNOTATIONS.includes(key),
   );
 
   const handleValueChange = (key: string, value: string) => {

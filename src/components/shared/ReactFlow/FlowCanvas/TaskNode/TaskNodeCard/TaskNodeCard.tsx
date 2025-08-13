@@ -1,12 +1,22 @@
 import { useStore } from "@xyflow/react";
 import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
+import type { Annotations } from "@/types/annotations";
 
+import replaceTaskAnnotationsInGraphSpec from "../../utils/replaceTaskAnnotationsInGraphSpec";
 import TaskConfiguration from "../TaskConfiguration";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
@@ -14,6 +24,7 @@ import { TaskNodeOutputs } from "./TaskNodeOutputs";
 const TaskNodeCard = () => {
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
+  const { graphSpec, updateGraphSpec } = useComponentSpec();
 
   const isDragging = useStore((state) => {
     const thisNode = state.nodes.find((node) => node.id === taskNode.nodeId);
@@ -27,6 +38,7 @@ const TaskNodeCard = () => {
   const [condensed, setCondensed] = useState(false);
   const [expandedInputs, setExpandedInputs] = useState(false);
   const [expandedOutputs, setExpandedOutputs] = useState(false);
+  const [highlightActive, setHighlightActive] = useState(false);
 
   const { name, state, callbacks, nodeId, taskSpec } = taskNode;
   const { dimensions, selected, highlighted, isCustomComponent } = state;
@@ -72,6 +84,76 @@ const TaskNodeCard = () => {
     setExpandedOutputs((prev) => !prev);
   }, []);
 
+  const setHighlightSimilarTasks = useCallback(
+    (highlight: boolean) => {
+      setHighlightActive(highlight);
+
+      const taskId = taskNode.taskId;
+      const digest = graphSpec.tasks[taskId]?.componentRef?.digest;
+
+      if (!digest) {
+        return;
+      }
+
+      let updatedGraphSpec = { ...graphSpec };
+
+      // Update annotations for all tasks with matching digest
+      Object.keys(graphSpec.tasks).forEach((currentTaskId) => {
+        const task = graphSpec.tasks[currentTaskId];
+        const taskDigest = task?.componentRef?.digest;
+        const newAnnotations = { ...task.annotations };
+
+        newAnnotations["editor.highlight"] = false;
+
+        if (taskDigest === digest && highlight) {
+          newAnnotations["editor.highlight"] = true;
+        }
+
+        updatedGraphSpec = replaceTaskAnnotationsInGraphSpec(
+          currentTaskId,
+          updatedGraphSpec,
+          newAnnotations as Annotations,
+        );
+      });
+
+      updateGraphSpec(updatedGraphSpec);
+    },
+    [graphSpec, updateGraphSpec],
+  );
+
+  const handleToggleHighlightSimilarTasks = useCallback(
+    (e: ReactMouseEvent) => {
+      e.stopPropagation();
+      const newHighlightState = !highlightActive;
+      setHighlightSimilarTasks(newHighlightState);
+    },
+    [highlightActive, setHighlightSimilarTasks],
+  );
+
+  useEffect(() => {
+    if (!highlightActive) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (nodeRef.current && !nodeRef.current.contains(e.target as Node)) {
+        setHighlightSimilarTasks(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setHighlightSimilarTasks(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside, true);
+    document.addEventListener("keydown", handleKeyDown, true);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside, true);
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [highlightActive, setHighlightSimilarTasks]);
+
   useEffect(() => {
     if (nodeRef.current) {
       setScrollHeight(nodeRef.current.scrollHeight);
@@ -96,12 +178,17 @@ const TaskNodeCard = () => {
     };
   }, [selected, taskConfigMarkup, setContent, clearContent]);
 
+  useEffect(() => {
+    setHighlightSimilarTasks(false);
+  }, []);
+
   return (
     <Card
       className={cn(
         "rounded-2xl border-gray-200 border-2 break-words p-0 drop-shadow-none gap-2",
         selected ? "border-gray-500" : "hover:border-slate-200",
-        highlighted && "border-orange-500",
+        highlighted && "border-orange-500 hover:border-orange-500",
+        highlighted && selected && "border-orange-700 hover:border-orange-700",
       )}
       style={{
         width: dimensions.w + "px",
@@ -115,7 +202,13 @@ const TaskNodeCard = () => {
           {name}
         </CardTitle>
         {taskSpec.componentRef?.digest && (
-          <div className="text-xs text-muted-foreground font-light">
+          <div
+            className={cn(
+              "text-xs text-muted-foreground font-light hover:text-warning cursor-pointer",
+              highlighted && "text-warning",
+            )}
+            onClick={handleToggleHighlightSimilarTasks}
+          >
             {taskSpec.componentRef.digest.substring(0, 8)}...
           </div>
         )}

@@ -132,6 +132,9 @@ const FlowCanvas = ({
 
   const [showToolbar, setShowToolbar] = useState(false);
   const [replaceTarget, setReplaceTarget] = useState<Node | null>(null);
+  const [previousReplaceTarget, setPreviousReplaceTarget] =
+    useState<Node | null>(null);
+
   const [shiftKeyPressed, setShiftKeyPressed] = useState(false);
 
   const handleKeyDown = useCallback(
@@ -441,13 +444,16 @@ const FlowCanvas = ({
           isPositionInNode(node, cursorPosition),
         );
 
-        if (hoveredNode?.id === replaceTarget?.id) return;
-        if (hoveredNode?.type && !REPLACEABLE_NODES.has(hoveredNode.type)) {
+        if (
+          !hoveredNode ||
+          hoveredNode?.id === replaceTarget?.id ||
+          (hoveredNode?.type && !REPLACEABLE_NODES.has(hoveredNode.type))
+        ) {
           setReplaceTarget(null);
           return;
         }
 
-        setReplaceTarget(hoveredNode || null);
+        setReplaceTarget(hoveredNode);
       }
     },
     [reactFlowInstance, nodes, replaceTarget, setReplaceTarget],
@@ -674,20 +680,64 @@ const FlowCanvas = ({
     setShowToolbar(true);
   }, []);
 
+  const setHighlightInAnnotations = useCallback(
+    (node: Node, highlighted: boolean) => {
+      if (node.type !== "task") return;
+
+      const taskId = node.data.taskId as string;
+
+      if (!taskId) return;
+
+      const taskSpec = node.data.taskSpec as TaskSpec;
+      const annotations = taskSpec.annotations || {};
+
+      const updatedAnnotations = {
+        ...annotations,
+        ["editor.highlight"]: highlighted,
+      };
+
+      const newTaskSpec = {
+        ...taskSpec,
+        annotations: updatedAnnotations,
+      };
+
+      const updatedGraphSpec = {
+        ...graphSpec,
+        tasks: {
+          ...graphSpec.tasks,
+          [taskId]: newTaskSpec,
+        },
+      };
+
+      updateGraphSpec(updatedGraphSpec);
+    },
+    [graphSpec, updateGraphSpec],
+  );
+
+  useEffect(() => {
+    if (previousReplaceTarget === replaceTarget) {
+      return;
+    }
+
+    // Clear previous highlight
+    if (previousReplaceTarget) {
+      setHighlightInAnnotations(previousReplaceTarget, false);
+    }
+
+    // Set new highlight
+    if (replaceTarget) {
+      setHighlightInAnnotations(replaceTarget, true);
+    }
+
+    setPreviousReplaceTarget(replaceTarget);
+  }, [replaceTarget, previousReplaceTarget, setHighlightInAnnotations]);
+
   const updateReactFlow = useCallback(
     (newComponentSpec: ComponentSpec) => {
       const newNodes = createNodesFromComponentSpec(newComponentSpec, nodeData);
 
-      const updatedNewNodes = newNodes.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          highlighted: node.id === replaceTarget?.id,
-        },
-      }));
-
       setNodes((prevNodes) => {
-        const updatedNodes = updatedNewNodes.map((newNode) => {
+        const updatedNodes = newNodes.map((newNode) => {
           const existingNode = prevNodes.find((node) => node.id === newNode.id);
           return existingNode ? { ...existingNode, ...newNode } : newNode;
         });
@@ -695,7 +745,7 @@ const FlowCanvas = ({
         return updatedNodes;
       });
     },
-    [setNodes, nodeData, replaceTarget],
+    [setNodes, nodeData],
   );
 
   useEffect(() => {
