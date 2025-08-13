@@ -18,7 +18,8 @@ import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
 const PipelineRun = () => {
-  const { setComponentSpec, clearComponentSpec } = useComponentSpec();
+  const { setComponentSpec, clearComponentSpec, componentSpec } =
+    useComponentSpec();
   const { backendUrl, configured, available } = useBackend();
   const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
 
@@ -30,12 +31,10 @@ const PipelineRun = () => {
 
   const { details, state } = data;
 
-  const componentSpec = details?.task_spec.componentRef.spec;
-
   useEffect(() => {
     if (componentSpec) {
       const componentSpecWithExecutionIds = addExecutionIdToComponent(
-        componentSpec as ComponentSpec,
+        details?.task_spec.componentRef.spec as ComponentSpec,
         details,
       );
 
@@ -44,7 +43,7 @@ const PipelineRun = () => {
     return () => {
       clearComponentSpec();
     };
-  }, [componentSpec, setComponentSpec, clearComponentSpec]);
+  }, [details, setComponentSpec, clearComponentSpec]);
 
   useDocumentTitle({
     "/runs/$id": (params) =>

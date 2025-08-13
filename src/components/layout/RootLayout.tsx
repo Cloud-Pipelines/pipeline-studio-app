@@ -14,7 +14,6 @@ const RootLayout = () => {
   useDocumentTitle();
 
   return (
-
     <BackendProvider>
       <SidebarProvider>
         <ComponentSpecProvider>

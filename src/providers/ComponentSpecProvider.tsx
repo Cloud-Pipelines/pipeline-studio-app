@@ -19,18 +19,14 @@ import {
   createRequiredContext,
   useRequiredContext,
 } from "../hooks/useRequiredContext";
-import type {
-  ComponentSpec,
-  GraphImplementation,
-  GraphSpec,
-} from "../utils/componentSpec";
+import type { ComponentSpec, GraphSpec } from "../utils/componentSpec";
 import {
   type ComponentReferenceWithSpec,
   componentSpecToYaml,
   writeComponentToFileListFromText,
 } from "../utils/componentStore";
 
-export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
+export const EMPTY_GRAPH_COMPONENT_SPEC = {
   implementation: {
     graph: {
       tasks: {},
@@ -84,6 +80,10 @@ export const ComponentSpecProvider = ({
   }, []);
 
   const graphSpec = useMemo(() => {
+    if (!componentSpec) {
+      return { tasks: {} }; // Return empty graph instead of null
+    }
+
     if (
       "graph" in componentSpec.implementation &&
       componentSpec.implementation.graph
@@ -91,8 +91,7 @@ export const ComponentSpecProvider = ({
       return componentSpec.implementation.graph;
     }
 
-    return (EMPTY_GRAPH_COMPONENT_SPEC.implementation as GraphImplementation)
-      .graph;
+    return { tasks: {} }; // Return empty graph as fallback
   }, [componentSpec]);
 
   const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
@@ -157,7 +156,11 @@ export const ComponentSpecProvider = ({
   }, []);
 
   const shouldAutoSave =
-    !isLoading && !readOnly && !!componentSpec.name && hasInitiallyLoaded;
+    !isLoading &&
+    !readOnly &&
+    componentSpec &&
+    !!componentSpec.name &&
+    hasInitiallyLoaded;
 
   useAutoSave(
     (spec) => {

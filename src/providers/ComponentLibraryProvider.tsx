@@ -129,10 +129,9 @@ export const ComponentLibraryProvider = ({
   });
 
   // Fetch "Used in Pipeline" components
-  const usedComponentsFolder: ComponentFolder = useMemo(
-    () => fetchUsedComponents(graphSpec),
-    [graphSpec],
-  );
+  const usedComponentsFolder: ComponentFolder = useMemo(() => {
+    return fetchUsedComponents(graphSpec);
+  }, [graphSpec]);
 
   // Fetch "Starred" components
   const favoritesFolder: ComponentFolder = useMemo(
