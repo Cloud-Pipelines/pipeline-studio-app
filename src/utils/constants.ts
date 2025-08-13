@@ -68,3 +68,9 @@ export const KEYBOARD_SHORTCUTS = {
   MAC_META: "⌘",
   WINDOWS_META: "Ctrl",
 } as const;
+
+/* Runs API */
+export const PIPELINE_RUNS_QUERY_URL = "/api/pipeline_runs/";
+export const PAGE_TOKEN_QUERY_KEY = "page_token";
+export const FILTER_QUERY_KEY = "filter";
+export const CREATED_BY_ME_FILTER = "created_by:me";
