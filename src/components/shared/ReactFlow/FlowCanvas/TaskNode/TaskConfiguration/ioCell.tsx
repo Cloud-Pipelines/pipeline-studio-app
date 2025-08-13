@@ -1,7 +1,7 @@
 import { ChevronsUpDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 
+import CodeSyntaxHighlighter from "@/components/shared/CodeViewer/CodeSyntaxHighlighter";
 import {
   Collapsible,
   CollapsibleContent,
@@ -196,24 +196,12 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                     } else {
                       parsed = value;
                     }
-                    // If we get here, parsed is a valid object/array
+
                     return (
-                      <SyntaxHighlighter
+                      <CodeSyntaxHighlighter
+                        code={JSON.stringify(parsed, null, 2)}
                         language="json"
-                        wrapLongLines
-                        customStyle={{
-                          background: "transparent",
-                          margin: 0,
-                          padding: 0,
-                          wordBreak: "break-word",
-                          whiteSpace: "pre-wrap",
-                          fontFamily: "monospace",
-                          fontSize: "10px",
-                        }}
-                        className="overflow-auto max-h-[300px] w-full rounded bg-gray-100 max-w-full break-words whitespace-pre-wrap"
-                      >
-                        {JSON.stringify(parsed, null, 2)}
-                      </SyntaxHighlighter>
+                      />
                     );
                   })()}
                 </span>
