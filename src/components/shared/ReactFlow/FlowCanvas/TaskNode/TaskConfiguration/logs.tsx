@@ -55,9 +55,6 @@ const isStatusActivelyLogging = (
   }
   switch (status) {
     case "RUNNING":
-    case "PENDING":
-    case "QUEUED":
-    case "WAITING_FOR_UPSTREAM":
     case "CANCELLING":
       return true;
     default:
