@@ -10,7 +10,10 @@ import type {
 } from "@/api/types.gen";
 import { hydrateComponentReference } from "@/services/componentService";
 import type { ComponentFolder } from "@/types/componentLibrary";
-import { type ComponentReference, hasValidDigest } from "@/utils/componentSpec";
+import {
+  type ComponentReference,
+  isDiscoverableComponentReference,
+} from "@/utils/componentSpec";
 import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
 import { API_URL } from "@/utils/constants";
 
@@ -60,11 +63,14 @@ export class PublishedComponentsLibrary implements Library {
   }
 
   async hasComponent(component: ComponentReference): Promise<boolean> {
-    if (!hasValidDigest(component)) {
+    if (!isDiscoverableComponentReference(component)) {
       throw new InvalidComponentReferenceError(component);
     }
 
-    if (this.#knownDigests.has(component.digest)) {
+    if (
+      isDiscoverableComponentReference(component) &&
+      this.#knownDigests.has(component.digest)
+    ) {
       return true;
     }
 
@@ -91,7 +97,6 @@ export class PublishedComponentsLibrary implements Library {
     }
 
     const hydratedComponent = await hydrateComponentReference({
-      digest: component.digest,
       text: getComponentResult.data.text,
       url: component.url,
     });
@@ -115,7 +120,10 @@ export class PublishedComponentsLibrary implements Library {
    * @throws {DuplicateComponentError} If the component already exists.
    */
   async addComponent(component: ComponentReference): Promise<void> {
-    if (hasValidDigest(component) && this.#knownDigests.has(component.digest)) {
+    if (
+      isDiscoverableComponentReference(component) &&
+      this.#knownDigests.has(component.digest)
+    ) {
       throw new DuplicateComponentError(component);
     }
 
@@ -203,10 +211,9 @@ export class PublishedComponentsLibrary implements Library {
             name_substring: filter.filters?.includes("name")
               ? filter.searchTerm
               : undefined,
-            // todo: update this to use the author filter
-            // published_by_substring: filter.filters.includes("author")
-            //   ? filter.searchTerm
-            //   : undefined,
+            published_by_substring: filter.filters.includes("author")
+              ? filter.searchTerm
+              : undefined,
             include_deprecated: filter.filters?.includes("deprecated"),
           },
         })
@@ -230,8 +237,7 @@ export class PublishedComponentsLibrary implements Library {
           digest: component.digest,
           name: component.name,
           url: component.url ?? `${API_URL}/api/components/${component.digest}`,
-          // todo: do we need this? or we can infer it from the object shape?
-          allow_implicit_import: true,
+
           published_by: component.published_by,
           superseded_by: component.superseded_by,
           deprecated: component.deprecated,

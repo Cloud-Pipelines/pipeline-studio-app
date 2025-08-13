@@ -62,6 +62,10 @@ type ComponentLibraryContextType = {
   searchResult: SearchResult | null;
 
   highlightedComponentDigest: string | null;
+  searchComponentLibrary: (
+    search: string,
+    filters: string[],
+  ) => SearchResult | null;
   addToComponentLibrary: (component: ComponentReference) => void;
   removeFromComponentLibrary: (component: ComponentReference) => void;
   refetchLibrary: () => void;
@@ -485,6 +489,7 @@ export const ComponentLibraryProvider = ({
       error,
       searchResult,
       highlightedComponentDigest,
+      searchComponentLibrary,
       getComponentLibrary,
       addToComponentLibrary,
       removeFromComponentLibrary,
@@ -506,6 +511,7 @@ export const ComponentLibraryProvider = ({
       error,
       searchResult,
       highlightedComponentDigest,
+      searchComponentLibrary,
       getComponentLibrary,
       addToComponentLibrary,
       removeFromComponentLibrary,

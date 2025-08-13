@@ -161,7 +161,7 @@ export interface ComponentSpec {
 /**
  * Component reference. Contains information that can be used to locate and load a component by name, digest or URL
  */
-export interface ComponentReferenceBase {
+interface ComponentReferenceBase {
   name?: string;
   digest?: string;
   tag?: string;
@@ -182,10 +182,6 @@ export interface ComponentReference extends ComponentReferenceBase {
   published_by?: string;
   deprecated?: boolean;
   owned?: boolean;
-  /**
-   * Whether the component can be imported implicitly by URL.
-   */
-  allow_implicit_import?: boolean;
 }
 
 export type UnknownComponentReference = ComponentReference | null | undefined;
@@ -495,16 +491,3 @@ export const isContainerImplementation = (
 export const isGraphImplementation = (
   implementation: ImplementationType,
 ): implementation is GraphImplementation => "graph" in implementation;
-
-/**
- * Checks if the component reference has a valid digest.
- *
- * @param componentRef - The component reference to check.
- * @returns True if the component reference has a valid digest, false otherwise.
- */
-export const hasValidDigest = (
-  componentRef: any,
-): componentRef is ComponentReferenceWithDigest =>
-  typeof componentRef === "object" &&
-  "digest" in componentRef &&
-  componentRef.digest !== undefined;

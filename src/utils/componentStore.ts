@@ -36,17 +36,6 @@ export interface ComponentReferenceWithSpec extends ComponentReference {
   text: string;
 }
 
-export function isComponentReferenceWithSpec(
-  componentRef: ComponentReference,
-): componentRef is ComponentReferenceWithSpec {
-  return (
-    "spec" in componentRef &&
-    isValidComponentSpec(componentRef.spec) &&
-    "digest" in componentRef &&
-    "text" in componentRef
-  );
-}
-
 interface ComponentReferenceWithSpecPlusData {
   componentRef: ComponentReferenceWithSpec;
   data: ArrayBuffer;
@@ -98,10 +87,6 @@ export const loadComponentAsRefFromText = async (
     throw Error(`componentText is not a YAML-encoded object: ${loadedObj}`);
   }
   if (!isValidComponentSpec(loadedObj)) {
-    console.error(
-      `componentText is valid components - implementation field is absent`,
-      loadedObj,
-    );
     throw Error(
       `componentText does not encode a valid pipeline component: ${loadedObj}`,
     );

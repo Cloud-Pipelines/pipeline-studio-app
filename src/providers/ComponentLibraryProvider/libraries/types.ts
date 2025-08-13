@@ -3,7 +3,7 @@ import type { ComponentReference } from "@/utils/componentSpec";
 
 import type { LibraryFilterRequest } from "../types";
 
-export interface AddComponentOptions {
+interface AddComponentOptions {
   path?: string[];
 }
 
@@ -25,14 +25,6 @@ export interface Library {
   getComponents(filter?: LibraryFilterRequest): Promise<ComponentFolder>;
 }
 
-export type LibraryComponentReference = Omit<
-  ComponentReference,
-  "digest" | "name"
-> & {
-  name: string;
-  digest: string;
-};
-
 export class InvalidComponentReferenceError extends Error {
   name = "InvalidComponentReferenceError";
 
@@ -50,13 +42,5 @@ export class DuplicateComponentError extends Error {
     super(
       `Component already exists in library: ${component.digest ?? component.url ?? ""}`,
     );
-  }
-}
-
-export class ReadOnlyLibraryError extends Error {
-  name = "ReadOnlyLibraryError";
-
-  constructor(message: string) {
-    super(message);
   }
 }

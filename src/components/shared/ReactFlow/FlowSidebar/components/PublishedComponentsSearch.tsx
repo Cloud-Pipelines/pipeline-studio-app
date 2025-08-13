@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
+  type ChangeEvent,
   type PropsWithChildren,
-  Suspense,
   useCallback,
   useEffect,
   useReducer,
@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 
+import { withSuspenseWrapper } from "@/components/shared/SuspenseWrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,6 +25,11 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Text } from "@/components/ui/typography";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider/ComponentLibraryProvider";
@@ -31,7 +37,8 @@ import {
   isValidFilterRequest,
   type LibraryFilterRequest,
 } from "@/providers/ComponentLibraryProvider/types";
-import type { ComponentReference } from "@/utils/componentSpec";
+import type { ComponentFolder } from "@/types/componentLibrary";
+import { ComponentSearchFilter } from "@/utils/constants";
 
 import { ComponentMarkup } from "./ComponentItem";
 
@@ -41,7 +48,7 @@ import { ComponentMarkup } from "./ComponentItem";
  */
 
 interface SearchResultsProps {
-  searchResult?: ComponentReference[];
+  searchResult?: ComponentFolder[];
 }
 
 interface SearchRequestProps {
@@ -95,11 +102,13 @@ const SearchFilter = ({
       <PopoverTrigger asChild>
         <InlineStack align="center" gap="1" className="relative">
           <Button variant="outline" size="icon" className="h-8 w-8 p-0">
-            <Icon kind="ListFilter" />
+            <Icon name="ListFilter" />
 
-            <Badge size="xs" variant="inform" display="absolute">
-              {activeFilters.current.size}
-            </Badge>
+            {activeFilters.current.size > 0 ? (
+              <Badge size="xs" variant="inform" position="topright">
+                {activeFilters.current.size}
+              </Badge>
+            ) : null}
           </Button>
         </InlineStack>
       </PopoverTrigger>
@@ -191,7 +200,7 @@ const SearchRequestInput = ({ value, onChange }: SearchRequestProps) => {
     dispatch({ type: "SET_FILTERS", payload: filters });
   }, []);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     dispatch({ type: "SET_SEARCH_TERM", payload: e.target.value });
   }, []);
 
@@ -199,16 +208,21 @@ const SearchRequestInput = ({ value, onChange }: SearchRequestProps) => {
     <InlineStack align="space-between" gap="2" className="w-full">
       <div className="relative flex-1">
         <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 pointer-events-none">
-          <Icon kind="Search" size="sm" className="text-gray-400" />
+          <Icon name="Search" size="sm" className="text-gray-400" />
         </div>
-        <Input
-          type="text"
-          data-testid="search-input"
-          placeholder="Search components..."
-          className="w-full pl-8 text-sm h-8 focus-visible:ring-gray-400/50"
-          value={searchRequest.searchTerm}
-          onChange={handleChange}
-        />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Input
+              type="text"
+              data-testid="search-input"
+              placeholder="Search components..."
+              className="w-full pl-8 text-sm h-8 focus-visible:ring-gray-400/50"
+              value={searchRequest.searchTerm}
+              onChange={handleChange}
+            />
+          </TooltipTrigger>
+          <TooltipContent>Search components - min 3 characters</TooltipContent>
+        </Tooltip>
       </div>
       <SearchFilter onFiltersChange={onFiltersChange} />
     </InlineStack>
@@ -216,36 +230,45 @@ const SearchRequestInput = ({ value, onChange }: SearchRequestProps) => {
 };
 
 const SearchResults = ({ searchResult }: SearchResultsProps) => {
-  const { backendUrl } = useBackend();
   if (!searchResult) {
     return null;
   }
 
-  /**
-   * todo: consider extracting helper to map component to ComponentReference
-   */
-  const components = searchResult.map(
-    (component) =>
-      ({
-        digest: component.digest,
-        name: component.name,
-        // todo: revisit?
-        url:
-          component.url ?? `${backendUrl}/api/components/${component.digest}`,
-        published_by: component.published_by,
-        allow_implicit_import: true,
-      }) as ComponentReference,
+  const totalResults = searchResult.reduce(
+    (acc, curr) => acc + (curr.components?.length ?? 0),
+    0,
   );
 
   return (
-    <BlockStack gap="2" className="px-2">
-      <Text tone="subdued">Search Results ({searchResult.length})</Text>
+    <BlockStack gap="2" className="px-2" data-testid="search-results-container">
+      <Text
+        tone="subdued"
+        data-testid="search-results-header"
+      >{`Search Results (${totalResults})`}</Text>
       <Separator />
-      <BlockStack>
-        {components.map((component) => (
-          <ComponentMarkup key={component.digest} component={component} />
-        ))}
-      </BlockStack>
+      {totalResults > 0 ? (
+        searchResult.map((folder) => (
+          <BlockStack key={folder.name}>
+            {folder.components && folder.components.length > 0 ? (
+              <>
+                {searchResult.length > 1 ? (
+                  <Text tone="subdued" size="xs">
+                    {folder.name}
+                  </Text>
+                ) : null}
+                {folder.components.map((component) => (
+                  <ComponentMarkup
+                    key={component.digest}
+                    component={component}
+                  />
+                ))}
+              </>
+            ) : null}
+          </BlockStack>
+        ))
+      ) : (
+        <Text tone="subdued">No results found</Text>
+      )}
     </BlockStack>
   );
 };
@@ -269,43 +292,86 @@ const SearchResultsSkeleton = () => {
   );
 };
 
+const Search = withSuspenseWrapper(
+  ({ searchRequest }: { searchRequest: LibraryFilterRequest }) => {
+    const { backendUrl } = useBackend();
+    const { getComponentLibrary, searchComponentLibrary } =
+      useComponentLibrary();
+    const publishedComponentsLibrary = getComponentLibrary(
+      "published_components",
+    );
+
+    const { data } = useSuspenseQuery({
+      queryKey: ["componentLibrary", "publishedComponents", searchRequest],
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      queryFn: async () => {
+        const remoteSearchResult =
+          await publishedComponentsLibrary.getComponents(searchRequest);
+
+        const staticSearchResult = isValidFilterRequest(searchRequest, {
+          includesFilter: "name",
+        })
+          ? searchComponentLibrary(searchRequest.searchTerm, [
+              ComponentSearchFilter.NAME,
+            ])
+          : null;
+
+        const { used: usedComponentResult, user: userComponentResult } =
+          staticSearchResult?.components ?? {};
+
+        const result: ComponentFolder[] = [];
+
+        if (
+          remoteSearchResult.components &&
+          remoteSearchResult.components.length > 0
+        ) {
+          result.push({
+            name: "Library Components",
+            // normalize the components to the ComponentReference type
+            components: remoteSearchResult.components.map((component) => ({
+              digest: component.digest,
+              name: component.name,
+              // todo: revisit?
+              url:
+                component.url ??
+                `${backendUrl}/api/components/${component.digest}`,
+              published_by: component.published_by,
+            })),
+          });
+        }
+
+        if (usedComponentResult && usedComponentResult.length > 0) {
+          result.push({
+            name: "Used in Pipeline",
+            components: usedComponentResult,
+          });
+        }
+
+        if (userComponentResult && userComponentResult.length > 0) {
+          result.push({
+            name: "User Components",
+            components: userComponentResult,
+          });
+        }
+
+        return result;
+      },
+    });
+
+    if (data) {
+      return (
+        <BlockStack>
+          <SearchResults searchResult={data} />
+        </BlockStack>
+      );
+    }
+
+    return <BlockStack>No results found</BlockStack>;
+  },
+  SearchResultsSkeleton,
+);
+
 const MIN_SEARCH_TERM_LENGTH = 3;
-
-function searchQueryHash(searchRequest: LibraryFilterRequest) {
-  // todo: consider using a more robust hash function
-  return JSON.stringify({
-    searchTerm: searchRequest.searchTerm,
-    filters: searchRequest.filters,
-  });
-}
-
-const Search = ({ searchRequest }: { searchRequest: LibraryFilterRequest }) => {
-  const { getComponentLibrary } = useComponentLibrary();
-  const publishedComponentsLibrary = getComponentLibrary(
-    "published_components",
-  );
-
-  const { data } = useSuspenseQuery({
-    queryKey: [
-      "componentLibrary",
-      "publishedComponents",
-      searchQueryHash(searchRequest),
-    ],
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    queryFn: () => publishedComponentsLibrary.getComponents(searchRequest),
-  });
-
-  if (data) {
-    // todo: consider using ComponentFolder type as prop
-    return <SearchResults searchResult={data.components} />;
-  }
-
-  return (
-    <BlockStack>
-      <Text>No results found</Text>
-    </BlockStack>
-  );
-};
 
 function isSearchRequestValid(searchRequest: LibraryFilterRequest | undefined) {
   return isValidFilterRequest(searchRequest, {
@@ -320,7 +386,6 @@ const PublishedComponentsSearch = ({ children }: PropsWithChildren) => {
 
   const handleSearchRequestChange = useCallback(
     (searchRequest: LibraryFilterRequest) => {
-      console.log("searchRequest", searchRequest);
       setSearchRequest(searchRequest);
     },
     [setSearchRequest],
@@ -332,9 +397,7 @@ const PublishedComponentsSearch = ({ children }: PropsWithChildren) => {
         <SearchRequestInput value={""} onChange={handleSearchRequestChange} />
       </BlockStack>
       {isSearchRequestValid(searchRequest) ? (
-        <Suspense fallback={<SearchResultsSkeleton />}>
-          <Search searchRequest={searchRequest} />
-        </Suspense>
+        <Search searchRequest={searchRequest} />
       ) : (
         children
       )}

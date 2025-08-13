@@ -27,12 +27,12 @@ import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
-import { fetchAndStoreComponent } from "@/services/componentService";
+import { hydrateComponentReference } from "@/services/componentService";
 import {
   type ComponentReference,
   type ComponentSpec,
   type InputSpec,
-  isNotMaterializedComponentReferenceLoadable,
+  isNotMaterializedComponentReference,
   type TaskSpec,
 } from "@/utils/componentSpec";
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
@@ -481,22 +481,14 @@ const FlowCanvas = ({
         return;
       }
 
-      if (
-        isNotMaterializedComponentReferenceLoadable(droppedTask?.componentRef)
-      ) {
-        // todo: remove this notification
-        notify("Component has been loaded from the Library.", "warning");
-
+      if (isNotMaterializedComponentReference(droppedTask?.componentRef)) {
         // load spec
-        const spec = await fetchAndStoreComponent({
-          url: droppedTask.componentRef.url,
-        });
+        const hydratedComponentRef = await hydrateComponentReference(
+          droppedTask.componentRef,
+        );
 
-        if (spec) {
-          droppedTask.componentRef = {
-            ...droppedTask.componentRef,
-            spec,
-          } as ComponentReference;
+        if (hydratedComponentRef) {
+          droppedTask.componentRef = hydratedComponentRef;
         }
       }
 

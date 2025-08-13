@@ -138,7 +138,7 @@ const ComponentMarkup = ({
           >
             <div className="flex gap-2 w-full items-center">
               <Icon
-                kind={owned ? "FileBadge" : "File"}
+                name={owned ? "FileBadge" : "File"}
                 className="flex-shrink-0 text-gray-400"
               />
 
@@ -225,7 +225,7 @@ export const IONodeSidebarItem = ({ nodeType }: IONodeSidebarItemProps) => {
       onDragStart={onDragStart}
     >
       <div className="flex items-center gap-2">
-        <Icon kind="File" className="text-gray-400 flex-shrink-0" />
+        <Icon name="File" className="text-gray-400 flex-shrink-0" />
         <span className="truncate text-xs text-gray-800">
           {nodeType === "input" ? "Input Node" : "Output Node"}
         </span>

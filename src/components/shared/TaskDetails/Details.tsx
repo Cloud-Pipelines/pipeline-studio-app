@@ -26,6 +26,7 @@ import type { ComponentSpec } from "@/utils/componentSpec";
 import {
   convertGithubUrlToDirectoryUrl,
   downloadYamlFromComponentText,
+  isGithubUrl,
 } from "@/utils/URL";
 import copyToYaml from "@/utils/yaml";
 
@@ -348,7 +349,9 @@ function LinkBlock({
           </div>
           <div className="text-sm break-all">
             <a
-              href={url}
+              href={
+                isGithubUrl(url) ? convertGithubUrlToDirectoryUrl(url) : url
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="text-sky-500 hover:underline flex items-center gap-1"
