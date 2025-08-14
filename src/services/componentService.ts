@@ -125,7 +125,7 @@ export const fetchAndStoreComponentLibrary =
     });
 
     // Also store individual components for future reference
-    await storeComponentsFromLibrary(obj);
+    // await storeComponentsFromLibrary(obj);
 
     return obj;
   };

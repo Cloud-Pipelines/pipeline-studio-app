@@ -51,6 +51,9 @@ const ComponentMarkup = ({
   const isHighlightTasksOnComponentHoverEnabled = useBetaFlagValue(
     "highlight-node-on-component-hover",
   );
+  const isRemoteComponentLibrarySearchEnabled = useBetaFlagValue(
+    "remote-component-library-search",
+  );
 
   // TODO: respect selected node as a starting point
   const carousel = useRef(0);
@@ -158,11 +161,18 @@ const ComponentMarkup = ({
             data-component-name={displayName}
           >
             <div className="flex gap-2 w-full items-center">
-              <ComponentIcon
-                name={owned ? "FileBadge" : "File"}
-                className="flex-shrink-0 text-gray-400"
-                component={component}
-              />
+              {isRemoteComponentLibrarySearchEnabled ? (
+                <ComponentIcon
+                  name={owned ? "FileBadge" : "File"}
+                  className="flex-shrink-0 text-gray-400"
+                  component={component}
+                />
+              ) : (
+                <Icon
+                  name={owned ? "FileBadge" : "File"}
+                  className="flex-shrink-0 text-gray-400"
+                />
+              )}
 
               <div
                 className="flex flex-col w-[144px]"
