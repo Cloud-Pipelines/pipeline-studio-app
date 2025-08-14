@@ -506,38 +506,41 @@ const FlowCanvas = ({
     }
   }, [selectedElements, onElementsRemove, triggerConfirmation]);
 
-  const handleOnNodesChange = (changes: NodeChange[]) => {
-    const positionChanges = changes.filter(
-      (change) => change.type === "position" && change.dragging === false,
-    );
+  const handleOnNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      const positionChanges = changes.filter(
+        (change) => change.type === "position" && change.dragging === false,
+      );
 
-    if (positionChanges.length > 0) {
-      const updatedNodes = positionChanges
-        .map((change) => {
-          if ("id" in change && "position" in change) {
-            const node = nodes.find((n) => n.id === change.id);
-            return node
-              ? {
-                  ...node,
-                  position: { x: change?.position?.x, y: change?.position?.y },
-                }
-              : null;
-          }
-          return null;
-        })
-        .filter(Boolean) as Node[];
+      if (positionChanges.length > 0) {
+        const updatedNodes = positionChanges
+          .map((change) => {
+            if ("id" in change && "position" in change && change.position) {
+              const node = nodes.find((n) => n.id === change.id);
+              return node
+                ? {
+                    ...node,
+                    position: { x: change.position.x, y: change.position.y },
+                  }
+                : null;
+            }
+            return null;
+          })
+          .filter(Boolean) as Node[];
 
-      if (updatedNodes.length > 0) {
-        const updatedComponentSpec = updateNodePositions(
-          updatedNodes,
-          componentSpec,
-        );
-        setComponentSpec(updatedComponentSpec);
+        if (updatedNodes.length > 0) {
+          const updatedComponentSpec = updateNodePositions(
+            updatedNodes,
+            componentSpec,
+          );
+          setComponentSpec(updatedComponentSpec);
+        }
       }
-    }
 
-    onNodesChange(changes);
-  };
+      onNodesChange(changes);
+    },
+    [nodes, componentSpec, setComponentSpec, onNodesChange],
+  );
 
   const handleBeforeDelete = async (params: NodesAndEdges) => {
     if (readOnly) {
