@@ -30,7 +30,7 @@ interface BlockStackProps extends AriaAttributes {
   className?: string;
 }
 
-const blockStackVariants = cva("flex flex-col", {
+const blockStackVariants = cva("flex flex-col w-full", {
   variants: {
     align: {
       start: "items-start",
