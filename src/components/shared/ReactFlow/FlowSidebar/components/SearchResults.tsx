@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import { useForcedSearchContext } from "@/providers/ComponentLibraryProvider/ForcedSearchProvider";
 import type { SearchResult } from "@/types/componentLibrary";
 import { ComponentSearchFilter } from "@/utils/constants";
 
@@ -16,23 +16,27 @@ const SearchResults = ({
   searchResult,
   onFiltersChange,
 }: SearchResultsProps) => {
-  const { searchTerm, searchFilters } = useComponentLibrary();
+  const { currentSearchFilter } = useForcedSearchContext();
 
   const matchedComponents = searchResult.components.standard;
 
   const matchedUserComponents = searchResult.components.user;
 
   const handleNameFilterClick = useCallback(() => {
-    if (!searchFilters.includes(ComponentSearchFilter.NAME)) {
-      onFiltersChange([...searchFilters, ComponentSearchFilter.NAME]);
+    if (!currentSearchFilter.filters.includes(ComponentSearchFilter.NAME)) {
+      onFiltersChange([
+        ...currentSearchFilter.filters,
+        ComponentSearchFilter.NAME,
+      ]);
     }
-  }, [searchFilters, onFiltersChange]);
+  }, [currentSearchFilter.filters, onFiltersChange]);
 
-  const filtersWithoutExactMatch = searchFilters.filter(
-    (f) => f !== ComponentSearchFilter.EXACTMATCH,
-  );
+  const filtersWithoutExactMatch =
+    currentSearchFilter.filters?.filter(
+      (f) => f !== ComponentSearchFilter.EXACTMATCH,
+    ) ?? [];
 
-  const exactMatchFilter = searchFilters.includes(
+  const exactMatchFilter = currentSearchFilter.filters?.includes(
     ComponentSearchFilter.EXACTMATCH,
   );
 
@@ -58,7 +62,7 @@ const SearchResults = ({
       <div className="px-4 py-2 text-sm text-gray-500">
         No component {filtersWithoutExactMatch.join(" or ")}{" "}
         {exactMatchFilter ? "exactly matches" : "contains"} &ldquo;
-        {searchTerm}
+        {currentSearchFilter.searchTerm}
         &rdquo;
       </div>
     );
