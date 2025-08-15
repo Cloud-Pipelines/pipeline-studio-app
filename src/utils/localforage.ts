@@ -72,7 +72,7 @@ export async function componentExistsByUrl(url: string): Promise<boolean> {
 }
 
 // Function to get a component by ID
-async function getComponentById(id: string): Promise<Component | null> {
+export async function getComponentById(id: string): Promise<Component | null> {
   return componentStore.getItem<Component>(id);
 }
 

@@ -18,6 +18,7 @@ import {
 vi.mock("@/utils/localforage", () => ({
   componentExistsByUrl: vi.fn(),
   getComponentByUrl: vi.fn(),
+  getComponentById: vi.fn(),
   saveComponent: vi.fn(),
   getAllUserComponents: vi.fn(),
 }));
@@ -281,6 +282,28 @@ describe("componentService", () => {
 
       expect(result).toBeNull();
       expect(localforage.saveComponent).not.toHaveBeenCalled();
+    });
+
+    it("should not override existing component if component already exists", async () => {
+      const yamlText = yaml.dump(mockComponentSpec);
+      const id = `component-${await generateDigest(yamlText)}`;
+
+      vi.mocked(localforage.getComponentById).mockResolvedValue({
+        id,
+        data: yamlText,
+        url: "",
+        createdAt: 1,
+        updatedAt: 1,
+      });
+
+      const component: ComponentReference = {
+        text: yamlText,
+      };
+
+      const result = await fetchAndStoreComponent(component);
+
+      expect(localforage.saveComponent).not.toHaveBeenCalled();
+      expect(result).toEqual(mockComponentSpec);
     });
   });
 
