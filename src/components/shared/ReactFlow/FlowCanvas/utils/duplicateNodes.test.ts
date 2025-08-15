@@ -2,8 +2,18 @@ import type { Node } from "@xyflow/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { NodeCallbacks, TaskNodeData } from "@/types/taskNode";
-import type { ComponentSpec, InputSpec, TaskSpec } from "@/utils/componentSpec";
-import { inputNameToNodeId, taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
+import type {
+  ComponentSpec,
+  InputSpec,
+  OutputSpec,
+  TaskOutputArgument,
+  TaskSpec,
+} from "@/utils/componentSpec";
+import {
+  inputNameToNodeId,
+  outputNameToNodeId,
+  taskIdToNodeId,
+} from "@/utils/nodes/nodeIdUtils";
 
 import { duplicateNodes } from "./duplicateNodes";
 
@@ -20,6 +30,12 @@ const mockInputSpec: InputSpec = {
   annotations: {},
 };
 
+const mockOutputSpec: OutputSpec = {
+  name: "test-output",
+  type: "String",
+  annotations: {},
+};
+
 const createMockComponentSpec = (
   tasks: Record<string, TaskSpec> = {},
   inputs: InputSpec[] = [],
@@ -29,6 +45,33 @@ const createMockComponentSpec = (
   implementation: {
     graph: {
       tasks,
+    },
+  },
+});
+
+const createMockComponentSpecWithOutputs = (
+  tasks: Record<string, TaskSpec> = {},
+  inputs: InputSpec[] = [],
+  outputs: OutputSpec[] = [],
+): ComponentSpec => ({
+  name: "test-component",
+  inputs,
+  outputs,
+  implementation: {
+    graph: {
+      tasks,
+      outputValues: outputs.reduce<Record<string, TaskOutputArgument>>(
+        (acc, output) => {
+          acc[output.name] = {
+            taskOutput: {
+              taskId: "task1",
+              outputName: "result",
+            },
+          };
+          return acc;
+        },
+        {},
+      ),
     },
   },
 });
@@ -81,6 +124,22 @@ const createMockInputNode = (
   data: {
     label: inputName,
     inputSpec: { ...mockInputSpec, name: inputName },
+  },
+  selected: false,
+  dragging: false,
+  measured: { width: 150, height: 80 },
+});
+
+const createMockOutputNode = (
+  outputName: string,
+  position = { x: 300, y: 300 },
+): Node => ({
+  id: outputNameToNodeId(outputName),
+  type: "output",
+  position,
+  data: {
+    label: outputName,
+    outputSpec: { ...mockOutputSpec, name: outputName },
   },
   selected: false,
   dragging: false,
@@ -166,6 +225,43 @@ describe("duplicateNodes", () => {
       expect(
         result.updatedComponentSpec.inputs?.some(
           (input) => input.name === "original-input 2",
+        ),
+      ).toBe(true);
+    });
+
+    it("should duplicate a single output node", () => {
+      const outputSpec = {
+        ...mockOutputSpec,
+        name: "original-output",
+        annotations: {
+          "editor.position": JSON.stringify({ x: 300, y: 300 }),
+        },
+      };
+
+      const componentSpec = createMockComponentSpecWithOutputs(
+        {},
+        [],
+        [outputSpec],
+      );
+
+      const outputNode = createMockOutputNode("original-output", {
+        x: 300,
+        y: 300,
+      });
+
+      const result = duplicateNodes(componentSpec, [outputNode]);
+
+      expect(result.newNodes).toHaveLength(1);
+      expect(result.newNodes[0].type).toBe("output");
+      expect(result.newNodes[0].id).toBe(
+        outputNameToNodeId("original-output 2"),
+      );
+      expect(result.newNodes[0].position).toEqual({ x: 310, y: 310 });
+
+      expect(result.updatedComponentSpec.outputs).toHaveLength(2);
+      expect(
+        result.updatedComponentSpec.outputs?.some(
+          (output) => output.name === "original-output 2",
         ),
       ).toBe(true);
     });
@@ -473,6 +569,47 @@ describe("duplicateNodes", () => {
         });
       }
     });
+
+    it("should handle graph output connections", () => {
+      const taskSpec: TaskSpec = {
+        ...mockTaskSpec,
+        arguments: {},
+      };
+
+      const outputSpec: OutputSpec = {
+        ...mockOutputSpec,
+        name: "graph-output",
+      };
+
+      const componentSpec = createMockComponentSpecWithOutputs(
+        { task1: taskSpec },
+        [],
+        [outputSpec],
+      );
+
+      const nodes = [
+        createMockTaskNode("task1", taskSpec),
+        createMockOutputNode("graph-output"),
+      ];
+
+      const result = duplicateNodes(componentSpec, nodes, {
+        connection: "all",
+      });
+
+      // Check that outputValues are updated for duplicated outputs
+      if ("graph" in result.updatedComponentSpec.implementation!) {
+        const outputValues =
+          result.updatedComponentSpec.implementation.graph.outputValues;
+
+        // Duplicated output should reference duplicated task
+        expect(outputValues?.["graph-output 2"]).toEqual({
+          taskOutput: {
+            taskId: "task1 2",
+            outputName: "result",
+          },
+        });
+      }
+    });
   });
 
   describe("edge cases", () => {
@@ -482,22 +619,6 @@ describe("duplicateNodes", () => {
 
       expect(result.newNodes).toHaveLength(0);
       expect(result.nodeIdMap).toEqual({});
-    });
-
-    it("should handle output node duplication (warning case)", () => {
-      const componentSpec = createMockComponentSpec();
-      const outputNode: Node = {
-        id: "output:test",
-        type: "output",
-        position: { x: 0, y: 0 },
-        data: {},
-        selected: false,
-        dragging: false,
-      };
-
-      // Should not throw but might log warning
-      const result = duplicateNodes(componentSpec, [outputNode]);
-      expect(result.newNodes).toHaveLength(0);
     });
 
     it("should preserve node measurements", () => {
