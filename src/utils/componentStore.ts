@@ -253,6 +253,9 @@ const storeComponentFromUrl = async (
 
   // TODO: Think about whether to directly use fetch here.
   const componentData = await fetchComponentTextFromUrl(url);
+  if (!componentData) {
+    throw new Error(`Failed to fetch component text: ${url}`);
+  }
   const componentRef = await storeComponentText(componentData);
   componentRef.url = url;
   const digest = componentRef.digest;

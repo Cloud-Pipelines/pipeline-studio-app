@@ -28,6 +28,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/typography";
 import { useBackend } from "@/providers/BackendProvider";
+import {
+  isValidFilterRequest,
+  type LibraryFilterRequest,
+} from "@/providers/ComponentLibraryProvider/types";
 import type { ComponentReference } from "@/utils/componentSpec";
 
 import { ComponentMarkup } from "./ComponentItem";
@@ -41,14 +45,9 @@ interface SearchResultsProps {
   searchResult?: PublishedComponentResponse[];
 }
 
-interface SearchRequest {
-  searchTerm: string;
-  filters: string[];
-}
-
 interface SearchRequestProps {
   value: string;
-  onChange: (searchRequest: SearchRequest) => void;
+  onChange: (searchRequest: LibraryFilterRequest) => void;
 }
 
 type ApiSearchFilter = "name" | "author";
@@ -160,7 +159,7 @@ const SearchRequestInput = ({ value, onChange }: SearchRequestProps) => {
     | { type: "SET_FILTERS"; payload: string[] };
 
   const searchRequestReducer = useCallback(
-    (state: SearchRequest, action: SearchRequestAction) => {
+    (state: LibraryFilterRequest, action: SearchRequestAction) => {
       switch (action.type) {
         case "SET_SEARCH_TERM":
           return { ...state, searchTerm: action.payload };
@@ -174,7 +173,7 @@ const SearchRequestInput = ({ value, onChange }: SearchRequestProps) => {
   );
 
   const debouncedOnChange = useCallback(
-    debounce((searchRequest: SearchRequest) => {
+    debounce((searchRequest: LibraryFilterRequest) => {
       onChange(searchRequest);
     }, DEBOUNCE_TIME_MS),
     [onChange],
@@ -273,7 +272,7 @@ const SearchResultsSkeleton = () => {
 
 const MIN_SEARCH_TERM_LENGTH = 3;
 
-function searchQueryHash(searchRequest: SearchRequest) {
+function searchQueryHash(searchRequest: LibraryFilterRequest) {
   // todo: consider using a more robust hash function
   return JSON.stringify({
     searchTerm: searchRequest.searchTerm,
@@ -281,7 +280,7 @@ function searchQueryHash(searchRequest: SearchRequest) {
   });
 }
 
-const Search = ({ searchRequest }: { searchRequest: SearchRequest }) => {
+const Search = ({ searchRequest }: { searchRequest: LibraryFilterRequest }) => {
   const { data } = useSuspenseQuery({
     queryKey: [
       "componentLibrary",
@@ -292,7 +291,7 @@ const Search = ({ searchRequest }: { searchRequest: SearchRequest }) => {
     queryFn: () =>
       listApiPublishedComponentsGet({
         query: {
-          name_substring: searchRequest.filters.includes("name")
+          name_substring: searchRequest.filters?.includes("name")
             ? searchRequest.searchTerm
             : undefined,
           // todo: update this to use the author filter
@@ -315,22 +314,19 @@ const Search = ({ searchRequest }: { searchRequest: SearchRequest }) => {
   );
 };
 
-function isSearchRequestValid(
-  searchRequest: SearchRequest | undefined,
-): searchRequest is SearchRequest {
-  return Boolean(
-    searchRequest &&
-      searchRequest.searchTerm.trim().length >= MIN_SEARCH_TERM_LENGTH,
-  );
+function isSearchRequestValid(searchRequest: LibraryFilterRequest | undefined) {
+  return isValidFilterRequest(searchRequest, {
+    minLength: MIN_SEARCH_TERM_LENGTH,
+  });
 }
 
 const PublishedComponentsSearch = ({ children }: PropsWithChildren) => {
   const [searchRequest, setSearchRequest] = useState<
-    SearchRequest | undefined
+    LibraryFilterRequest | undefined
   >();
 
   const handleSearchRequestChange = useCallback(
-    (searchRequest: SearchRequest) => {
+    (searchRequest: LibraryFilterRequest) => {
       console.log("searchRequest", searchRequest);
       setSearchRequest(searchRequest);
     },
