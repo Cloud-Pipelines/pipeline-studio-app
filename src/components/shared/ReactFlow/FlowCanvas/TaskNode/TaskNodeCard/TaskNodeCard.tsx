@@ -1,3 +1,4 @@
+import { useStore } from "@xyflow/react";
 import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -13,6 +14,11 @@ import { TaskNodeOutputs } from "./TaskNodeOutputs";
 const TaskNodeCard = () => {
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
+
+  const isDragging = useStore((state) => {
+    const thisNode = state.nodes.find((node) => node.id === taskNode.nodeId);
+    return thisNode?.dragging || false;
+  });
 
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -79,7 +85,7 @@ const TaskNodeCard = () => {
   }, [scrollHeight, dimensions.h]);
 
   useEffect(() => {
-    if (selected) {
+    if (selected && !isDragging) {
       setContent(taskConfigMarkup);
     }
 
