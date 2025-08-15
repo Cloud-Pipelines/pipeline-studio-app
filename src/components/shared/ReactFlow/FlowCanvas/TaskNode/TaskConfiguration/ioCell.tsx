@@ -1,7 +1,7 @@
 import { ChevronsUpDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import CodeSyntaxHighlighter from "@/components/shared/CodeViewer/CodeSyntaxHighlighter";
+import { CodeViewer } from "@/components/shared/CodeViewer";
 import {
   Collapsible,
   CollapsibleContent,
@@ -21,6 +21,10 @@ import type {
 } from "@/utils/componentSpec";
 import { copyToClipboard, formatBytes } from "@/utils/string";
 import { convertGcsUrlToBrowserUrl } from "@/utils/URL";
+
+const MAX_LINES = 10;
+const JSON_CODE_LINE_HEIGHT = 31;
+const HEADER_HEIGHT = 55;
 
 interface IoCellProps {
   io: InputSpec | OutputSpec;
@@ -176,7 +180,7 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
             {artifacts.artifact_data.value !== undefined && (
               <div className="flex px-3 py-0 w-full">
                 <span
-                  className="flex-1 w-full cursor-copy"
+                  className="flex-1 w-full cursor-copy overflow-hidden"
                   onClick={handleCopyValue}
                 >
                   {(() => {
@@ -197,11 +201,21 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
                       parsed = value;
                     }
 
+                    const codeString = JSON.stringify(parsed, null, 2);
+
+
+                    const lines = codeString.split("\n");
+                    const maxLines = Math.min(MAX_LINES, lines.length);
+                    const lineHeight = `${maxLines * JSON_CODE_LINE_HEIGHT + HEADER_HEIGHT}px`;
+
                     return (
-                      <CodeSyntaxHighlighter
-                        code={JSON.stringify(parsed, null, 2)}
-                        language="json"
-                      />
+                      <div style={{ height: lineHeight }}>
+                        <CodeViewer
+                          code={codeString}
+                          language="json"
+                          filename={io.name}
+                        />
+                      </div>
                     );
                   })()}
                 </span>
