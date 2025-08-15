@@ -16,6 +16,7 @@ import type {
 import {
   componentExistsByUrl,
   getAllUserComponents,
+  getComponentById,
   getComponentByUrl,
   saveComponent,
   type UserComponent,
@@ -210,13 +211,19 @@ export const fetchAndStoreComponent = async (
       const createdAt = Date.now();
       const updatedAt = Date.now();
 
-      await saveComponent({
-        id,
-        url: component.url ?? "",
-        data: text,
-        createdAt,
-        updatedAt,
-      });
+      const existingComponent = await getComponentById(id);
+
+      if (!existingComponent || text !== existingComponent.data) {
+        await saveComponent({
+          // preserve existing state
+          ...(existingComponent ?? {}),
+          id,
+          url: component.url ?? "",
+          data: text,
+          createdAt: existingComponent?.createdAt ?? createdAt,
+          updatedAt,
+        });
+      }
     }
 
     return spec;
