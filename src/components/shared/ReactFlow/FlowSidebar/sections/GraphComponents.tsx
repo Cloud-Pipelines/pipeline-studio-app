@@ -21,6 +21,7 @@ import {
 import { Paragraph } from "@/components/ui/typography";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import { useForcedSearchContext } from "@/providers/ComponentLibraryProvider/ForcedSearchProvider";
+import { FAVORITE_COMPONENTS_LIBRARY_ID } from "@/providers/ComponentLibraryProvider/libraries/migrateLegacyFavoriteFolder";
 import type { UIComponentFolder } from "@/types/componentLibrary";
 import type { HydratedComponentReference } from "@/utils/componentSpec";
 
@@ -35,6 +36,7 @@ import {
   SearchResults,
 } from "../components";
 import { IONodeSidebarItem } from "../components/ComponentItem";
+import { LibraryFolderItem } from "../components/FolderItem";
 import PublishedComponentsSearch from "../components/PublishedComponentsSearch";
 
 function useUpgradeAllComponentsCallback(
@@ -82,6 +84,14 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
   const remoteComponentLibrarySearchEnabled = useBetaFlagValue(
     "remote-component-library-search",
   );
+  const componentLibraryV2Enabled = useBetaFlagValue("component-library-v2");
+
+  const { getComponentLibrary } = useComponentLibrary();
+  const favoriteComponentsLibrary = getComponentLibrary(
+    FAVORITE_COMPONENTS_LIBRARY_ID,
+  );
+  const standardComponentsLibrary = getComponentLibrary("standard_components");
+  const usedComponentsLibrary = getComponentLibrary("used_components");
 
   const { updateSearchFilter, currentSearchFilter } = useForcedSearchContext();
   const {
@@ -133,11 +143,14 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
 
     // Otherwise show the regular folder structure
     const hasUsedComponents =
+      !componentLibraryV2Enabled &&
       usedComponentsFolder?.components &&
       usedComponentsFolder.components.length > 0;
 
     const hasFavouriteComponents =
-      favoritesFolder?.components && favoritesFolder.components.length > 0;
+      !componentLibraryV2Enabled &&
+      favoritesFolder?.components &&
+      favoritesFolder.components.length > 0;
 
     const hasUserComponents =
       userComponentsFolder?.components &&
@@ -178,14 +191,29 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
               hasAlertBadge={showOutdatedComponentsAlert}
             />
           )}
-          {hasFavouriteComponents && (
+          {componentLibraryV2Enabled ? (
+          <LibraryFolderItem
+            key="used-components-folder-v2"
+            library={usedComponentsLibrary}
+            icon="LayoutGrid"
+          />
+        ) : null}
+        {hasFavouriteComponents && (
             <FolderItem
               key="favorite-components-folder"
               folder={favoritesFolder}
               icon="Star"
             />
           )}
-          {hasUserComponents && (
+          {componentLibraryV2Enabled ? (
+          <LibraryFolderItem
+            key="favorite-components-folder-v2"
+            library={favoriteComponentsLibrary}
+            icon="Star"
+          />
+        ) : null}
+
+        {hasUserComponents && (
             <FolderItem
               key="my-components-folder"
               folder={userComponentsFolder}
@@ -208,18 +236,27 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
             icon="Cable"
           />
           <Separator />
+          {componentLibraryV2Enabled ? null : (
           <FolderItem
-            key="standard-library-folder"
-            folder={
-              {
-                name: "Standard library",
-                components: [],
-                folders: componentLibrary.folders,
-              } as UIComponentFolder
-            }
+              key="standard-library-folder"
+              folder={
+                {
+                  name: "Standard library",
+                  components: [],
+                  folders: componentLibrary.folders,
+                } as UIComponentFolder
+              }
+              icon="Folder"
+            />
+        </BlockStack>
+        )}
+        {componentLibraryV2Enabled ? (
+          <LibraryFolderItem
+            key="standard-library-folder-v2"
+            library={standardComponentsLibrary}
             icon="Folder"
           />
-        </BlockStack>
+        ) : null}
       </BlockStack>
     );
   }, [
@@ -227,10 +264,15 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
     usedComponentsFolder,
     userComponentsFolder,
     favoritesFolder,
+    componentLibraryV2Enabled,
     isLoading,
     error,
     searchResult,
     remoteComponentLibrarySearchEnabled,
+    handleFiltersChange,
+    favoriteComponentsLibrary,
+    standardComponentsLibrary,
+    usedComponentsLibrary,
   ]);
 
   if (!isOpen) {
