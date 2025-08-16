@@ -226,6 +226,9 @@ export type DiscoverableComponentReference = Omit<
   digest: string;
 };
 
+// todo: temp alias
+export type ComponentReferenceWithDigest = DiscoverableComponentReference;
+
 export function isDiscoverableComponentReference(
   componentReference: UnknownComponentReference,
 ): componentReference is DiscoverableComponentReference {
@@ -492,3 +495,16 @@ export const isContainerImplementation = (
 export const isGraphImplementation = (
   implementation: ImplementationType,
 ): implementation is GraphImplementation => "graph" in implementation;
+
+/**
+ * Checks if the component reference has a valid digest.
+ *
+ * @param componentRef - The component reference to check.
+ * @returns True if the component reference has a valid digest, false otherwise.
+ */
+export const hasValidDigest = (
+  componentRef: any,
+): componentRef is ComponentReferenceWithDigest =>
+  typeof componentRef === "object" &&
+  "digest" in componentRef &&
+  componentRef.digest !== undefined;

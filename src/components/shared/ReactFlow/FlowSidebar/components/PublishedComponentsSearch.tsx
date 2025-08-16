@@ -9,8 +9,6 @@ import {
   useState,
 } from "react";
 
-import { listApiPublishedComponentsGet } from "@/api/sdk.gen";
-import type { PublishedComponentResponse } from "@/api/types.gen";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/typography";
 import { useBackend } from "@/providers/BackendProvider";
+import { useComponentLibrary } from "@/providers/ComponentLibraryProvider/ComponentLibraryProvider";
 import {
   isValidFilterRequest,
   type LibraryFilterRequest,
@@ -42,7 +41,7 @@ import { ComponentMarkup } from "./ComponentItem";
  */
 
 interface SearchResultsProps {
-  searchResult?: PublishedComponentResponse[];
+  searchResult?: ComponentReference[];
 }
 
 interface SearchRequestProps {
@@ -281,6 +280,11 @@ function searchQueryHash(searchRequest: LibraryFilterRequest) {
 }
 
 const Search = ({ searchRequest }: { searchRequest: LibraryFilterRequest }) => {
+  const { getComponentLibrary } = useComponentLibrary();
+  const publishedComponentsLibrary = getComponentLibrary(
+    "published_components",
+  );
+
   const { data } = useSuspenseQuery({
     queryKey: [
       "componentLibrary",
@@ -288,23 +292,12 @@ const Search = ({ searchRequest }: { searchRequest: LibraryFilterRequest }) => {
       searchQueryHash(searchRequest),
     ],
     staleTime: 1000 * 60 * 5, // 5 minutes
-    queryFn: () =>
-      listApiPublishedComponentsGet({
-        query: {
-          name_substring: searchRequest.filters?.includes("name")
-            ? searchRequest.searchTerm
-            : undefined,
-          // todo: update this to use the author filter
-          // published_by_substring: searchRequest.filters.includes("author")
-          //   ? searchRequest.searchTerm
-          //   : undefined,
-          include_deprecated: false,
-        },
-      }),
+    queryFn: () => publishedComponentsLibrary.getComponents(searchRequest),
   });
 
-  if (data && data.data && data.data.published_components) {
-    return <SearchResults searchResult={data.data.published_components} />;
+  if (data) {
+    // todo: consider using ComponentFolder type as prop
+    return <SearchResults searchResult={data.components} />;
   }
 
   return (
