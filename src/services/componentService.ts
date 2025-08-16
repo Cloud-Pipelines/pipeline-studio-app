@@ -41,7 +41,7 @@ export interface ExistingAndNewComponent {
   newComponent: ComponentSpec | undefined;
 }
 
-const COMPONENT_LIBRARY_URL = "/" + COMPONENT_LIBRARY_FILE;
+export const COMPONENT_LIBRARY_URL = "/" + COMPONENT_LIBRARY_FILE;
 
 /**
  * Generate a digest for a component
