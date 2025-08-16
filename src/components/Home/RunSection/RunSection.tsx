@@ -24,22 +24,34 @@ const PAGE_TOKEN_QUERY_KEY = "page_token";
 const FILTER_QUERY_KEY = "filter";
 const CREATED_BY_ME_FILTER = "created_by:me";
 
-export const RunSection = () => {
+interface RunSectionProps {
+  createdBy?: string;
+}
+
+export const RunSection = ({ createdBy }: RunSectionProps) => {
   const { backendUrl, configured, available } = useBackend();
 
-  const [useCreatedByMe, setUseCreatedByMe] = useState(false);
+  // If createdBy is provided via URL, use it. Otherwise default to false
+  const [useCreatedByMe, setUseCreatedByMe] = useState(
+    createdBy === "me" || false,
+  );
   const [pageToken, setPageToken] = useState<string | undefined>();
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
   const { data, isLoading, isFetching, error, refetch } =
     useQuery<ListPipelineJobsResponse>({
-      queryKey: ["runs", pageToken],
+      queryKey: ["runs", pageToken, createdBy, useCreatedByMe],
       refetchOnWindowFocus: false,
       queryFn: async () => {
         const u = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
         if (pageToken) u.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
-        if (useCreatedByMe)
+
+        // Use the filter logic consistently
+        if (createdBy) {
+          u.searchParams.set(FILTER_QUERY_KEY, `created_by:${createdBy}`);
+        } else if (useCreatedByMe) {
           u.searchParams.set(FILTER_QUERY_KEY, CREATED_BY_ME_FILTER);
+        }
 
         try {
           const response = await fetch(u.toString());
@@ -61,7 +73,17 @@ export const RunSection = () => {
 
   useEffect(() => {
     refetch();
-  }, [backendUrl, useCreatedByMe, refetch]);
+  }, [backendUrl, useCreatedByMe, createdBy, refetch]);
+
+  // Update the toggle when URL parameter changes
+  useEffect(() => {
+    if (createdBy === "me") {
+      setUseCreatedByMe(true);
+    } else if (createdBy === undefined) {
+      // Only reset if there's no URL parameter at all
+      setUseCreatedByMe(false);
+    }
+  }, [createdBy]);
 
   const handleFilterChange = (value: boolean) => {
     setUseCreatedByMe(value);
@@ -129,8 +151,12 @@ export const RunSection = () => {
             id="created-by-me"
             checked={useCreatedByMe}
             onCheckedChange={handleFilterChange}
+            disabled={!!createdBy} // Disable if controlled by URL
           />
-          <Label htmlFor="created-by-me">Created by me</Label>
+          <Label htmlFor="created-by-me">
+            Created by me
+            {createdBy && " (controlled by URL)"}
+          </Label>
         </div>
         <div>No runs found. Run a pipeline to see it here.</div>
       </div>
@@ -144,8 +170,12 @@ export const RunSection = () => {
           id="created-by-me"
           checked={useCreatedByMe}
           onCheckedChange={handleFilterChange}
+          disabled={!!createdBy} // Disable if controlled by URL
         />
-        <Label htmlFor="created-by-me">Created by me</Label>
+        <Label htmlFor="created-by-me">
+          Created by me
+          {createdBy && " (controlled by URL)"}
+        </Label>
       </div>
       <Table>
         <TableHeader>
