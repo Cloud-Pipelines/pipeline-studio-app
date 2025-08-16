@@ -7,7 +7,7 @@ import { OutputNameEditor } from "@/components/Editor/OutputNameEditor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
-import { useContextPanel } from "@/providers/ContextPanelProvider";
+import { useContextPanelActions } from "@/providers/ContextPanelProvider";
 import { deselectAllNodes } from "@/utils/flowUtils";
 
 import { getOutputConnectedDetails } from "../utils/getOutputConnectedDetails";
@@ -28,7 +28,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const { setNodes } = useReactFlow();
   const location = useLocation();
   const { graphSpec, componentSpec } = useComponentSpec();
-  const { setContent, clearContent } = useContextPanel();
+  const { setContent, clearContent } = useContextPanelActions();
 
   const isPipelineEditor = location.pathname.includes("/editor");
 

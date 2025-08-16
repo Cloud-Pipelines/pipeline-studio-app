@@ -1,8 +1,8 @@
-import { useContextPanel } from "@/providers/ContextPanelProvider";
+import { useContextPanelContent } from "@/providers/ContextPanelProvider";
 import { BOTTOM_FOOTER_HEIGHT, TOP_NAV_HEIGHT } from "@/utils/constants";
 
 export const ContextPanel = () => {
-  const { content } = useContextPanel();
+  const { content } = useContextPanelContent();
   return (
     <div
       data-testid="context-panel-container"

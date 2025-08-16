@@ -15,15 +15,22 @@ import {
   useRequiredContext,
 } from "../hooks/useRequiredContext";
 
-type ContextPanelContextType = {
+// Readonly context for content
+type ContextPanelContentType = {
   content: ReactNode;
+};
+
+// Modify context for actions
+type ContextPanelActionsType = {
   setContent: (content: ReactNode) => void;
   clearContent: () => void;
 };
 
-const ContextPanelContext = createRequiredContext<ContextPanelContextType>(
-  "ContextPanelProvider",
-);
+const ContextPanelContentContext =
+  createRequiredContext<ContextPanelContentType>("ContextPanelContentProvider");
+
+const ContextPanelActionsContext =
+  createRequiredContext<ContextPanelActionsType>("ContextPanelActionsProvider");
 
 const EMPTY_STATE = (
   <div className="flex items-center justify-center h-full">
@@ -65,20 +72,28 @@ export const ContextPanelProvider = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [defaultContent]);
+  }, [defaultContent, clearContent, setNodes]);
 
-  const value = useMemo(
-    () => ({ content, setContent, clearContent }),
-    [content, setContent, clearContent],
+  const contentValue = useMemo(() => ({ content }), [content]);
+
+  const actionsValue = useMemo(
+    () => ({ setContent, clearContent }),
+    [setContent, clearContent],
   );
 
   return (
-    <ContextPanelContext.Provider value={value}>
-      {children}
-    </ContextPanelContext.Provider>
+    <ContextPanelContentContext.Provider value={contentValue}>
+      <ContextPanelActionsContext.Provider value={actionsValue}>
+        {children}
+      </ContextPanelActionsContext.Provider>
+    </ContextPanelContentContext.Provider>
   );
 };
 
-export const useContextPanel = () => {
-  return useRequiredContext(ContextPanelContext);
+export const useContextPanelContent = () => {
+  return useRequiredContext(ContextPanelContentContext);
+};
+
+export const useContextPanelActions = () => {
+  return useRequiredContext(ContextPanelActionsContext);
 };
