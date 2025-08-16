@@ -26,7 +26,7 @@ import { useNodeCallbacks } from "@/hooks/useNodeCallbacks";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
-import { useContextPanel } from "@/providers/ContextPanelProvider";
+import { useContextPanelActions } from "@/providers/ContextPanelProvider";
 import type {
   ComponentReference,
   ComponentSpec,
@@ -76,7 +76,7 @@ const FlowCanvas = ({
   children,
   ...rest
 }: ReactFlowProps & { readOnly?: boolean }) => {
-  const { clearContent } = useContextPanel();
+  const { clearContent } = useContextPanelActions();
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);

@@ -6,7 +6,7 @@ import { getOutputConnectedDetails } from "@/components/shared/ReactFlow/FlowCan
 import { Button } from "@/components/ui/button";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
-import { useContextPanel } from "@/providers/ContextPanelProvider";
+import { useContextPanelActions } from "@/providers/ContextPanelProvider";
 import {
   type InputSpec,
   type OutputSpec,
@@ -24,7 +24,7 @@ import RenamePipeline from "./RenamePipeline";
 const PipelineDetails = () => {
   const { setNodes } = useReactFlow();
 
-  const { setContent, clearContent } = useContextPanel();
+  const { setContent, clearContent } = useContextPanelActions();
   const { componentSpec, graphSpec } = useComponentSpec();
 
   const notify = useToastNotification();

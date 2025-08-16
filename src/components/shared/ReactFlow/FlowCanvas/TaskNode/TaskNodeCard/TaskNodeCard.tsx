@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { useContextPanel } from "@/providers/ContextPanelProvider";
+import { useContextPanelActions } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 
 import TaskConfiguration from "../TaskConfiguration";
@@ -12,7 +12,7 @@ import { TaskNodeOutputs } from "./TaskNodeOutputs";
 
 const TaskNodeCard = () => {
   const taskNode = useTaskNode();
-  const { setContent, clearContent } = useContextPanel();
+  const { setContent, clearContent } = useContextPanelActions();
 
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
