@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -38,6 +39,7 @@ export const ContextPanelProvider = ({
   children: ReactNode;
 }) => {
   const { setNodes } = useReactFlow();
+  const defaultContentRef = useRef<ReactNode>(defaultContent);
   const [content, setContentState] = useState<ReactNode>(defaultContent);
 
   const setContent = useCallback((content: ReactNode) => {
@@ -45,10 +47,12 @@ export const ContextPanelProvider = ({
   }, []);
 
   const clearContent = useCallback(() => {
-    setContentState(defaultContent);
-  }, [defaultContent]);
+    setContentState(defaultContentRef.current);
+  }, []);
 
   useEffect(() => {
+    defaultContentRef.current = defaultContent;
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         clearContent();
