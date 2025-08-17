@@ -2,21 +2,24 @@ import {
   getApiComponentsDigestGet,
   listApiPublishedComponentsGet,
   publishApiPublishedComponentsPost,
+  updateApiPublishedComponentsDigestPut,
 } from "@/api/sdk.gen";
 import type {
   ComponentReferenceInput,
   HttpValidationError,
 } from "@/api/types.gen";
-// import { hydrateComponentReference } from "@/services/componentService";
+import { hydrateComponentReference } from "@/services/componentService";
 import type { ComponentFolder } from "@/types/componentLibrary";
 import { type ComponentReference, hasValidDigest } from "@/utils/componentSpec";
 import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
+import { API_URL } from "@/utils/constants";
 
 import { isValidFilterRequest, type LibraryFilterRequest } from "../types";
 import {
   DuplicateComponentError,
   InvalidComponentReferenceError,
   type Library,
+  type RemoveComponentOptions,
 } from "./types";
 
 function getComponentReferenceInput(component: ComponentReferenceWithSpec) {
@@ -150,11 +153,47 @@ export class PublishedComponentsLibrary implements Library {
     this.#knownDigests.add(hydratedComponent.digest);
   }
 
-  async removeComponent(): Promise<void> {
-    /**
-     * Deprecating process
-     */
-    throw new Error("Method not implemented.");
+  async removeComponent(
+    component: ComponentReference,
+    options?: RemoveComponentOptions,
+  ): Promise<void> {
+    const hydratedComponent = await hydrateComponentReference(component);
+
+    if (!hydratedComponent) {
+      throw new InvalidComponentReferenceError(component);
+    }
+
+    let supersededByDigest: string | undefined;
+
+    if (options?.supersedeBy) {
+      // should it handle adding component or leave it to the caller?
+      const hydratedSupersedeBy = await hydrateComponentReference(
+        options.supersedeBy,
+      );
+
+      if (!hydratedSupersedeBy) {
+        throw new InvalidComponentReferenceError(options.supersedeBy);
+      }
+
+      await this.addComponent(hydratedSupersedeBy);
+      supersededByDigest = hydratedSupersedeBy.digest;
+    }
+
+    const deleteComponentResult = await updateApiPublishedComponentsDigestPut({
+      path: {
+        digest: hydratedComponent.digest,
+      },
+      query: {
+        deprecated: true,
+        superseded_by: supersededByDigest,
+      },
+    });
+
+    if (deleteComponentResult.response.status !== 200) {
+      throw new BackendLibraryError(
+        `Failed to delete component. Unexpected status code: ${deleteComponentResult.response.status}`,
+      );
+    }
   }
 
   async getComponents(filter: LibraryFilterRequest): Promise<ComponentFolder> {
@@ -168,7 +207,7 @@ export class PublishedComponentsLibrary implements Library {
             // published_by_substring: filter.filters.includes("author")
             //   ? filter.searchTerm
             //   : undefined,
-            include_deprecated: false,
+            include_deprecated: filter.filters?.includes("deprecated"),
           },
         })
       : await listApiPublishedComponentsGet({});
@@ -190,10 +229,12 @@ export class PublishedComponentsLibrary implements Library {
         ({
           digest: component.digest,
           name: component.name,
-          url: component.url,
-          // todo: handle this?
+          url: component.url ?? `${API_URL}/api/components/${component.digest}`,
+          // todo: do we need this? or we can infer it from the object shape?
           allow_implicit_import: true,
           published_by: component.published_by,
+          superseded_by: component.superseded_by,
+          deprecated: component.deprecated,
         }) as ComponentReference,
     );
 
