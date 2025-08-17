@@ -3,9 +3,9 @@ import type { AriaAttributes, AriaRole, PropsWithChildren } from "react";
 
 import { cn } from "@/lib/utils";
 
-type TextTone = "inherit" | "subdued" | "critical" | "inverted";
+type TextTone = "inherit" | "subdued" | "critical" | "inverted" | "info";
 type TextWeight = "regular" | "semibold" | "bold";
-type TextSize = "sm" | "md" | "lg";
+type TextSize = "xs" | "sm" | "md" | "lg";
 type TextElement =
   | "dt"
   | "dd"
@@ -28,8 +28,10 @@ const textVariants = cva("", {
       subdued: "text-muted-foreground",
       critical: "text-destructive",
       inverted: "text-inverted",
+      info: "text-foreground underline decoration-dotted",
     } as Record<TextTone, string>,
     size: {
+      xs: "text-xs",
       sm: "text-sm",
       md: "text-md",
       lg: "text-lg",
