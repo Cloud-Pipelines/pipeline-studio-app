@@ -78,7 +78,8 @@ export const RunDetails = () => {
 
   const statusCounts = countTaskStatuses(details, state);
   const runStatus = getRunStatus(statusCounts);
-  const isInProgress = isStatusInProgress(runStatus);
+  const hasRunningTasks = statusCounts.running > 0;
+  const isInProgress = isStatusInProgress(runStatus) || hasRunningTasks;
   const isComplete = isStatusComplete(runStatus);
 
   const annotations = componentSpec.metadata?.annotations || {};
