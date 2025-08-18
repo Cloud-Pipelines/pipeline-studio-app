@@ -28,7 +28,7 @@ const TaskNodeCard = () => {
   const [expandedInputs, setExpandedInputs] = useState(false);
   const [expandedOutputs, setExpandedOutputs] = useState(false);
 
-  const { name, state, callbacks, nodeId } = taskNode;
+  const { name, state, callbacks, nodeId, taskSpec } = taskNode;
   const { dimensions, selected, highlighted, isCustomComponent } = state;
 
   const taskConfigMarkup = useMemo(
@@ -110,10 +110,15 @@ const TaskNodeCard = () => {
       }}
       ref={nodeRef}
     >
-      <CardHeader className="border-b border-slate-200 px-2 py-2.5">
+      <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-center">
         <CardTitle className="break-words text-left text-xs text-slate-900">
           {name}
         </CardTitle>
+        {taskSpec.componentRef?.digest && (
+          <div className="text-xs text-muted-foreground font-light">
+            {taskSpec.componentRef.digest.substring(0, 8)}...
+          </div>
+        )}
       </CardHeader>
       <CardContent className="p-2 flex flex-col gap-2">
         <div
