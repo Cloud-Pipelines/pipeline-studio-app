@@ -1,11 +1,8 @@
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import type { AriaAttributes, AriaRole, PropsWithChildren } from "react";
 
 import { cn } from "@/lib/utils";
 
-type TextTone = "inherit" | "subdued" | "critical" | "inverted" | "info";
-type TextWeight = "regular" | "semibold" | "bold";
-type TextSize = "xs" | "sm" | "md" | "lg";
 type TextElement =
   | "dt"
   | "dd"
@@ -29,22 +26,24 @@ const textVariants = cva("", {
       critical: "text-destructive",
       inverted: "text-inverted",
       info: "text-foreground underline decoration-dotted",
-    } as Record<TextTone, string>,
+    },
     size: {
       xs: "text-xs",
       sm: "text-sm",
       md: "text-md",
       lg: "text-lg",
-    } as Record<TextSize, string>,
+    },
     weight: {
       regular: "font-regular",
       semibold: "font-semibold",
       bold: "font-bold",
-    } as Record<TextWeight, string>,
+    },
   },
 });
 
-interface TextProps extends PropsWithChildren<AriaAttributes> {
+interface TextProps
+  extends PropsWithChildren<AriaAttributes>,
+    VariantProps<typeof textVariants> {
   /**
    * The role of the text element.
    * @default 'text'
@@ -55,18 +54,11 @@ interface TextProps extends PropsWithChildren<AriaAttributes> {
    * @default 'span'
    */
   as?: TextElement;
-  /** Adjust tone of text
-   * @default 'inherit'
+
+  /** Custom class name
+   * @default ''
    */
-  tone?: TextTone;
-  /** Font weight
-   * @default 'regular'
-   */
-  size?: TextSize;
-  /** Adjust the font size
-   * @default 'bodyMd'
-   */
-  weight?: TextWeight;
+  className?: string;
 }
 
 /**
@@ -80,10 +72,14 @@ export function Text({
   size = "md",
   weight = "regular",
   children,
+  className,
   ...rest
 }: TextProps) {
   return (
-    <Element className={cn(textVariants({ tone, size, weight }))} {...rest}>
+    <Element
+      className={cn(textVariants({ tone, size, weight }), className)}
+      {...rest}
+    >
       {children}
     </Element>
   );
