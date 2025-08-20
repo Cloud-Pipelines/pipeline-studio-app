@@ -203,7 +203,6 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
 
                     const codeString = JSON.stringify(parsed, null, 2);
 
-
                     const lines = codeString.split("\n");
                     const maxLines = Math.min(MAX_LINES, lines.length);
                     const lineHeight = `${maxLines * JSON_CODE_LINE_HEIGHT + HEADER_HEIGHT}px`;

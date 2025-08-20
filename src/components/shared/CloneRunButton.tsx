@@ -10,7 +10,7 @@ import { removeTrailingDateFromTitle } from "@/utils/string";
 const CloneRunButtonInner = ({
   componentSpec,
 }: {
-  componentSpec?: ComponentSpec;
+  componentSpec: ComponentSpec;
 }) => {
   const navigate = useNavigate();
 
@@ -51,15 +51,19 @@ const CloneRunButtonInner = ({
   );
 };
 
-const CloneRunButton = ({ spec }: { spec?: ComponentSpec }) => {
+const CloneRunButton = ({
+  componentSpec,
+}: {
+  componentSpec?: ComponentSpec;
+}) => {
   const location = useLocation();
 
   const isRunDetailRoute = location.pathname.includes(RUNS_BASE_PATH);
 
-  if (!isRunDetailRoute) {
+  if (!isRunDetailRoute || !componentSpec) {
     return null;
   }
-  return <CloneRunButtonInner componentSpec={spec} />;
+  return <CloneRunButtonInner componentSpec={componentSpec} />;
 };
 
 export default CloneRunButton;
