@@ -7,13 +7,20 @@ import { cn } from "@/lib/utils";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 
+import {
+  type NotifyMessage,
+  useNodesOverlay,
+} from "../../../NodesOverlay/NodesOverlayProvider";
 import TaskConfiguration from "../TaskConfiguration";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
 
 const TaskNodeCard = () => {
+  const { registerNode } = useNodesOverlay();
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
+
+  const [highlightedState, setHighlighted] = useState(false);
 
   const isDragging = useStore((state) => {
     const thisNode = state.nodes.find((node) => node.id === taskNode.nodeId);
@@ -30,6 +37,25 @@ const TaskNodeCard = () => {
 
   const { name, state, callbacks, nodeId, taskSpec } = taskNode;
   const { dimensions, selected, highlighted, isCustomComponent } = state;
+
+  const onNotify = useCallback((message: NotifyMessage) => {
+    switch (message.type) {
+      case "highlight":
+        setHighlighted(true);
+        break;
+      case "clear":
+        setHighlighted(false);
+        break;
+    }
+  }, []);
+
+  useEffect(() => {
+    return registerNode({
+      nodeId,
+      taskSpec,
+      onNotify,
+    });
+  }, [registerNode, nodeId, taskSpec, onNotify]);
 
   const taskConfigMarkup = useMemo(
     () => (
@@ -101,7 +127,7 @@ const TaskNodeCard = () => {
       className={cn(
         "rounded-2xl border-gray-200 border-2 break-words p-0 drop-shadow-none gap-2",
         selected ? "border-gray-500" : "hover:border-slate-200",
-        highlighted && "border-orange-500",
+        (highlighted || highlightedState) && "border-orange-500",
       )}
       style={{
         width: dimensions.w + "px",
@@ -114,9 +140,10 @@ const TaskNodeCard = () => {
         <CardTitle className="break-words text-left text-xs text-slate-900">
           {name}
         </CardTitle>
+
         {taskSpec.componentRef?.digest && (
-          <div className="text-xs text-muted-foreground font-light">
-            {taskSpec.componentRef.digest.substring(0, 8)}...
+          <div className="text-xs text-muted-foreground font-light font-mono">
+            {taskSpec.componentRef.digest.substring(0, 8)}
           </div>
         )}
       </CardHeader>

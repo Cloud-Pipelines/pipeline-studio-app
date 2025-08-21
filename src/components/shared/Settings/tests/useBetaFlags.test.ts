@@ -23,7 +23,7 @@ describe("useBetaFlagValue", () => {
   });
 
   it("should return false by default when no flag is stored", () => {
-    const { result } = renderHook(() => useBetaFlagValue("codeViewer"));
+    const { result } = renderHook(() => useBetaFlagValue("codeViewer" as any));
 
     expect(result.current).toBe(false);
   });
@@ -31,7 +31,7 @@ describe("useBetaFlagValue", () => {
   it("should return stored flag value when flag exists in localStorage", () => {
     localStorage.setItem("betaFlags", JSON.stringify({ codeViewer: true }));
 
-    const { result } = renderHook(() => useBetaFlagValue("codeViewer"));
+    const { result } = renderHook(() => useBetaFlagValue("codeViewer" as any));
 
     expect(result.current).toBe(true);
   });
@@ -39,7 +39,7 @@ describe("useBetaFlagValue", () => {
   it("should return stored flag value when flag is explicitly set to false", () => {
     localStorage.setItem("betaFlags", JSON.stringify({ codeViewer: false }));
 
-    const { result } = renderHook(() => useBetaFlagValue("codeViewer"));
+    const { result } = renderHook(() => useBetaFlagValue("codeViewer" as any));
 
     expect(result.current).toBe(false);
   });
@@ -47,7 +47,7 @@ describe("useBetaFlagValue", () => {
   it("should return false when betaFlags exists but specific flag is not set", () => {
     localStorage.setItem("betaFlags", JSON.stringify({ otherFlag: true }));
 
-    const { result } = renderHook(() => useBetaFlagValue("codeViewer"));
+    const { result } = renderHook(() => useBetaFlagValue("codeViewer" as any));
 
     expect(result.current).toBe(false);
   });
@@ -55,13 +55,13 @@ describe("useBetaFlagValue", () => {
   it("should return false when localStorage contains invalid JSON", () => {
     localStorage.setItem("betaFlags", "invalid-json");
 
-    const { result } = renderHook(() => useBetaFlagValue("codeViewer"));
+    const { result } = renderHook(() => useBetaFlagValue("codeViewer" as any));
 
     expect(result.current).toBe(false);
   });
 
   it("should react to localStorage changes and update the returned value", () => {
-    const { result } = renderHook(() => useBetaFlagValue("codeViewer"));
+    const { result } = renderHook(() => useBetaFlagValue("codeViewer" as any));
 
     expect(result.current).toBe(false);
 
@@ -84,7 +84,7 @@ describe("useBetaFlagValue", () => {
     // Start with flag set to true
     localStorage.setItem("betaFlags", JSON.stringify({ codeViewer: true }));
 
-    const { result } = renderHook(() => useBetaFlagValue("codeViewer"));
+    const { result } = renderHook(() => useBetaFlagValue("codeViewer" as any));
 
     expect(result.current).toBe(true);
 
@@ -113,7 +113,7 @@ describe("useBetaFlagValue", () => {
       }),
     );
 
-    const { result } = renderHook(() => useBetaFlagValue("codeViewer"));
+    const { result } = renderHook(() => useBetaFlagValue("codeViewer" as any));
 
     expect(result.current).toBe(true);
   });
