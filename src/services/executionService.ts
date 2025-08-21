@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 import type {
+  GetContainerExecutionStateResponse,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
@@ -33,6 +34,33 @@ export const fetchExecutionDetails = async (
     );
   }
   return response.json();
+};
+
+const fetchContainerExecutionState = async (
+  executionId: string,
+  backendUrl: string,
+): Promise<GetContainerExecutionStateResponse> => {
+  const response = await fetch(
+    `${backendUrl}/api/executions/${executionId}/container_state`,
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch container execution state: ${response.statusText}`,
+    );
+  }
+  return response.json();
+};
+
+export const useFetchContainerExecutionState = (
+  executionId: string | undefined,
+  backendUrl: string,
+) => {
+  return useQuery<GetContainerExecutionStateResponse>({
+    queryKey: ["container-execution-state", executionId],
+    queryFn: () => fetchContainerExecutionState(executionId!, backendUrl),
+    enabled: !!executionId,
+    refetchOnWindowFocus: false,
+  });
 };
 
 export const useFetchExecutionInfo = (
