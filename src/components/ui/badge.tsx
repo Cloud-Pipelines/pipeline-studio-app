@@ -9,17 +9,18 @@ const badgeVariants = cva(
   {
     variants: {
       size: {
-        xs: "text-xs",
+        xs: "text-xs p-0.5 w-4 h-4",
         md: "text-sm",
       },
-      display: {
+      position: {
         inline: "inline-flex",
         block: "block",
-        absolute: "absolute -top-1 -right-1",
+        topright: "absolute -top-1 -right-1",
+        topleft: "absolute -top-2 -left-2",
       },
       variant: {
         default: "border-transparent bg-primary text-primary-foreground",
-        inform: "p-0.5 w-4 h-4 bg-primary text-primary-foreground",
+        inform: "bg-primary text-primary-foreground",
         secondary:
           "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
         destructive:
@@ -30,7 +31,7 @@ const badgeVariants = cva(
     },
     defaultVariants: {
       variant: "default",
-      display: "inline",
+      position: "inline",
       size: "md",
     },
   },
@@ -39,7 +40,7 @@ const badgeVariants = cva(
 function Badge({
   className,
   variant,
-  display,
+  position,
   size,
   asChild = false,
   ...props
@@ -50,7 +51,7 @@ function Badge({
   return (
     <Comp
       data-slot="badge"
-      className={cn(badgeVariants({ variant, display, size }), className)}
+      className={cn(badgeVariants({ variant, position, size }), className)}
       {...props}
     />
   );

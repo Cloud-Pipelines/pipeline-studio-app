@@ -119,7 +119,7 @@ export const Heading = ({
   return (
     <Text
       as={`h${level}`}
-      size="lg"
+      size={level === 1 ? "md" : "sm"}
       weight="semibold"
       role="heading"
       aria-level={level}

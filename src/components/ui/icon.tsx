@@ -15,11 +15,11 @@ const iconVariants = cva("", {
 });
 
 interface IconProps extends VariantProps<typeof iconVariants> {
-  kind: keyof typeof icons;
+  name: keyof typeof icons;
   className?: string;
 }
 
-export const Icon = ({ kind: icon, size = "md", className }: IconProps) => {
+export const Icon = ({ name: icon, size = "md", className }: IconProps) => {
   const Icon = icons[icon];
   return <Icon className={cn(iconVariants({ size }), className)} />;
 };
