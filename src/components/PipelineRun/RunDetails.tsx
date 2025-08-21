@@ -1,17 +1,15 @@
 import { Frown, Videotape } from "lucide-react";
-import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { usePipelineRun } from "@/providers/PipelineRunProvider";
 import {
   countTaskStatuses,
   getRunStatus,
   isStatusComplete,
   isStatusInProgress,
 } from "@/services/executionService";
-import { fetchPipelineRunById } from "@/services/pipelineRunService";
-import type { PipelineRun } from "@/types/pipelineRun";
 
 import { InfoBox } from "../shared/InfoBox";
 import { StatusBar, StatusIcon, StatusText } from "../shared/Status";
@@ -20,35 +18,13 @@ import { CancelPipelineRunButton } from "./components/CancelPipelineRunButton";
 import { ClonePipelineButton } from "./components/ClonePipelineButton";
 import { InspectPipelineButton } from "./components/InspectPipelineButton";
 import { RerunPipelineButton } from "./components/RerunPipelineButton";
-import { useRootExecutionContext } from "./RootExecutionStatusProvider";
 
 export const RunDetails = () => {
-  const { details, state, runId, isLoading, error } = useRootExecutionContext();
-
   const { configured } = useBackend();
-
-  const [metadata, setMetadata] = useState<PipelineRun | null>(null);
   const { componentSpec } = useComponentSpec();
+  const { details, state, metadata, isLoading, error } = usePipelineRun();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!runId) {
-        setMetadata(null);
-        return;
-      }
-
-      const res = await fetchPipelineRunById(runId);
-
-      if (!res) {
-        setMetadata(null);
-        return;
-      }
-
-      setMetadata(res);
-    };
-
-    fetchData();
-  }, [runId]);
+  const runId = details?.pipeline_run_id;
 
   if (error || !details || !state || !componentSpec) {
     return (
