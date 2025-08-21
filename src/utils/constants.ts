@@ -68,3 +68,6 @@ export const KEYBOARD_SHORTCUTS = {
   MAC_META: "⌘",
   WINDOWS_META: "Ctrl",
 } as const;
+
+// Container exit codes
+export const EXIT_CODE_OOM = 137; // SIGKILL (128 + 9) - Out of Memory

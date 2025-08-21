@@ -92,6 +92,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
           <TabsContent value="details" className="h-full">
             <TaskDetails
               displayName={name}
+              executionId={taskSpec.annotations?.executionId as string}
               componentSpec={componentSpec}
               taskId={taskId}
               componentDigest={taskSpec.componentRef.digest}
