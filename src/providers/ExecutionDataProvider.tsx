@@ -3,7 +3,6 @@ import type { PropsWithChildren } from "react";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
-  ContainerExecutionStatus,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
@@ -12,6 +11,8 @@ import {
   createRequiredContext,
   useRequiredContext,
 } from "@/hooks/useRequiredContext";
+import { processExecutionStatuses } from "@/services/executionService";
+import type { ExecutionStatus } from "@/types/pipelineRun";
 
 import { useComponentSpec } from "./ComponentSpecProvider";
 
@@ -29,7 +30,7 @@ interface ExecutionDataContextType {
   rootDetails: GetExecutionInfoResponse | undefined;
   rootState: GetGraphExecutionStateResponse | undefined;
   runId: string | undefined | null;
-  taskStatusMap: Map<string, ContainerExecutionStatus>;
+  status: ExecutionStatus | undefined;
   isLoading: boolean;
   error: Error | null;
 }
@@ -38,48 +39,12 @@ const ExecutionDataContext = createRequiredContext<ExecutionDataContextType>(
   "ExecutionDataProvider",
 );
 
-const DEFAULT_TASK_STATUS = "WAITING_FOR_UPSTREAM";
 const PATH_DELIMITER = ".";
 const ROOT_PATH_START_INDEX = 1;
 
 const isAtRootLevel = (path: string[]) => path.length <= 1;
 
 const buildPathKey = (path: string[]) => path.join(PATH_DELIMITER);
-
-const extractStatusFromStats = (
-  statusStats: Record<string, number>,
-): ContainerExecutionStatus | undefined => {
-  const statuses = Object.keys(statusStats);
-  return statuses.length > 0
-    ? (statuses[0] as ContainerExecutionStatus)
-    : undefined;
-};
-
-const buildTaskStatusMap = (
-  details?: GetExecutionInfoResponse,
-  state?: GetGraphExecutionStateResponse,
-): Map<string, ContainerExecutionStatus> => {
-  const taskStatusMap = new Map<string, ContainerExecutionStatus>();
-
-  if (!details?.child_task_execution_ids) {
-    return taskStatusMap;
-  }
-
-  Object.entries(details.child_task_execution_ids).forEach(
-    ([taskId, executionId]) => {
-      const executionIdStr = executionId;
-      const statusStats = state?.child_execution_status_stats?.[executionIdStr];
-
-      const status = statusStats
-        ? extractStatusFromStats(statusStats)
-        : undefined;
-
-      taskStatusMap.set(taskId, status ?? DEFAULT_TASK_STATUS);
-    },
-  );
-
-  return taskStatusMap;
-};
 
 /**
  * Traverses subgraph path to find execution ID at target level.
@@ -144,9 +109,7 @@ export function ExecutionDataProvider({
   const queryClient = useQueryClient();
   const { currentSubgraphPath } = useComponentSpec();
 
-  const [taskStatusMap, setTaskStatusMap] = useState<
-    Map<string, ContainerExecutionStatus>
-  >(new Map());
+  const [status, setStatus] = useState<ExecutionStatus>();
 
   const executionDataCache = useRef<Map<string, CachedExecutionData>>(
     new Map(),
@@ -218,8 +181,8 @@ export function ExecutionDataProvider({
   ]);
 
   useEffect(() => {
-    const taskStatusMap = buildTaskStatusMap(details, state);
-    setTaskStatusMap(taskStatusMap);
+    const status = processExecutionStatuses(details, state);
+    setStatus(status);
   }, [details, state]);
 
   const value = useMemo(
@@ -231,7 +194,7 @@ export function ExecutionDataProvider({
       rootDetails,
       rootState,
       runId,
-      taskStatusMap,
+      status,
       isLoading,
       error,
     }),
@@ -243,7 +206,7 @@ export function ExecutionDataProvider({
       rootDetails,
       rootState,
       runId,
-      taskStatusMap,
+      status,
       isLoading,
       error,
     ],

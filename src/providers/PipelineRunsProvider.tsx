@@ -12,10 +12,9 @@ import { isAuthorizationRequired } from "@/components/shared/GitHubAuth/helpers"
 import { useAuthLocalStorage } from "@/components/shared/GitHubAuth/useAuthLocalStorage";
 import { useAwaitAuthorization } from "@/components/shared/GitHubAuth/useAwaitAuthorization";
 import {
-  countTaskStatuses,
   fetchExecutionDetails,
   fetchExecutionState,
-  getRunStatus,
+  processExecutionStatuses,
 } from "@/services/executionService";
 import { fetchPipelineRuns } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
@@ -112,8 +111,9 @@ export const PipelineRunsProvider = ({
           );
 
           if (details && state) {
-            run.statusCounts = countTaskStatuses(details, state);
-            run.status = getRunStatus(run.statusCounts);
+            const status = processExecutionStatuses(details, state);
+            run.statusCounts = status.counts;
+            run.status = status.run;
           }
 
           return run;

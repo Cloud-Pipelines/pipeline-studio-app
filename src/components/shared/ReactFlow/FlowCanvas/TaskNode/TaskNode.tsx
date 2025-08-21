@@ -13,7 +13,7 @@ const TaskNode = ({ data, selected }: NodeProps) => {
   const executionData = useExecutionDataOptional();
   const typedData = useMemo(() => data as TaskNodeData, [data]);
 
-  const status = executionData?.taskStatusMap?.get(typedData.taskId ?? "");
+  const status = executionData?.status?.map.get(typedData.taskId ?? "");
 
   const disabledCache = isCacheDisabled(typedData.taskSpec);
 
