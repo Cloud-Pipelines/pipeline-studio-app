@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import {
   type ReactNode,
   useCallback,
@@ -18,14 +19,19 @@ import {
   createRequiredContext,
   useRequiredContext,
 } from "@/hooks/useRequiredContext";
+import useToastNotification from "@/hooks/useToastNotification";
 import { useBackend } from "@/providers/BackendProvider";
 import {
   countTaskStatuses,
   getRunStatus,
+  isStatusCancelled,
   isStatusComplete,
   useFetchExecutionInfo,
 } from "@/services/executionService";
-import { fetchPipelineRunById } from "@/services/pipelineRunService";
+import {
+  cancelPipelineRun,
+  fetchPipelineRunById,
+} from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { submitPipelineRun } from "@/utils/submitPipeline";
@@ -38,6 +44,7 @@ type PipelineRunContextType = {
 
   isLoading: boolean;
   isSubmitting: boolean;
+  isCancelling: boolean;
   error: Error | null;
 
   rerun: (
@@ -47,6 +54,7 @@ type PipelineRunContextType = {
       onError?: (error: Error | string) => void;
     },
   ) => Promise<void>;
+  cancel: () => Promise<void>;
 };
 
 const PipelineRunContext = createRequiredContext<PipelineRunContextType>(
@@ -60,7 +68,8 @@ export const PipelineRunProvider = ({
   rootExecutionId: string;
   children: ReactNode;
 }) => {
-  const { backendUrl } = useBackend();
+  const { backendUrl, available } = useBackend();
+  const notify = useToastNotification();
 
   const { awaitAuthorization, isAuthorized } = useAwaitAuthorization();
   const { getToken } = useAuthLocalStorage();
@@ -69,6 +78,7 @@ export const PipelineRunProvider = ({
   const [status, setStatus] = useState<string>("UNKNOWN");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [isPolling, setIsPolling] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -87,6 +97,16 @@ export const PipelineRunProvider = ({
     () => details?.pipeline_run_id,
     [details?.pipeline_run_id],
   );
+
+  const { mutate: cancelRun } = useMutation({
+    mutationFn: (runId: string) => cancelPipelineRun(runId, backendUrl),
+    onSuccess: () => {
+      notify(`Pipeline run cancelled`, "success");
+    },
+    onError: (error) => {
+      notify(`Error cancelling run: ${error}`, "error");
+    },
+  });
 
   const fetchRunMetadata = useCallback(async () => {
     if (!runId) {
@@ -140,6 +160,22 @@ export const PipelineRunProvider = ({
     [isAuthorized, awaitAuthorization, backendUrl],
   );
 
+  const cancel = useCallback(async () => {
+    if (!runId) {
+      notify(`Failed to cancel run. No run ID found.`, "warning");
+      return;
+    }
+
+    if (!available) {
+      notify(`Backend is not available. Cannot cancel run.`, "warning");
+      return;
+    }
+
+    setIsCancelling(true);
+
+    cancelRun(runId);
+  }, [runId, available, cancelRun, notify]);
+
   useEffect(() => {
     if (executionError) {
       setError(executionError);
@@ -155,6 +191,10 @@ export const PipelineRunProvider = ({
   }, [details, state]);
 
   useEffect(() => {
+    if (isCancelling && isStatusCancelled(status)) {
+      setIsCancelling(false);
+    }
+
     const shouldPollStatus =
       backendUrl && rootExecutionId && !isStatusComplete(status);
 
@@ -163,7 +203,7 @@ export const PipelineRunProvider = ({
     } else {
       setIsPolling(false);
     }
-  }, [status, backendUrl]);
+  }, [status, isCancelling, backendUrl, rootExecutionId]);
 
   useEffect(() => {
     refetchExecutionInfo();
@@ -177,10 +217,23 @@ export const PipelineRunProvider = ({
       metadata,
       isLoading,
       isSubmitting,
+      isCancelling,
       error,
       rerun,
+      cancel,
     }),
-    [details, state, status, metadata, isLoading, isSubmitting, error, rerun],
+    [
+      details,
+      state,
+      status,
+      metadata,
+      isLoading,
+      isSubmitting,
+      isCancelling,
+      error,
+      rerun,
+      cancel,
+    ],
   );
 
   return (
