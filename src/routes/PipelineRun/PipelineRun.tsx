@@ -14,11 +14,7 @@ import {
   useExecutionData,
 } from "@/providers/ExecutionDataProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
-import {
-  countTaskStatuses,
-  getRunStatus,
-  STATUS,
-} from "@/services/executionService";
+import { processExecutionStatuses, STATUS } from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
@@ -44,8 +40,8 @@ const PipelineRunContent = () => {
       return;
     }
 
-    const statusCounts = countTaskStatuses(details, state);
-    const pipelineStatus = getRunStatus(statusCounts);
+    const executionStatus = processExecutionStatuses(details, state);
+    const pipelineStatus = executionStatus.run;
     const iconStatus = mapRunStatusToFavicon(pipelineStatus);
     faviconManager.updateFavicon(iconStatus);
 

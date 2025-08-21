@@ -18,8 +18,13 @@ import {
 import useToastNotification from "@/hooks/useToastNotification";
 import { APP_ROUTES } from "@/routes/router";
 import {
+<<<<<<< HEAD
   convertExecutionStatsToStatusCounts,
   getRunStatus,
+=======
+  processExecutionStatuses,
+  useFetchExecutionInfo,
+>>>>>>> 613a2399 (Migrate TaskStatusMap to PipelineRunProvider)
 } from "@/services/executionService";
 import { convertUTCToLocalTime, formatDate } from "@/utils/date";
 
@@ -48,7 +53,27 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
     run.execution_status_stats,
   );
 
+<<<<<<< HEAD
   const clickThroughUrl = `${APP_ROUTES.RUNS}/${runId}`;
+=======
+  if (error || !details || !state) {
+    return (
+      <TableRow>
+        <TableCell
+          colSpan={4}
+          className="flex flex-col p-2 text-sm text-red-500"
+        >
+          <span>Error loading run details</span>
+          <span className="text-xs">{error?.message}</span>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  const status = processExecutionStatuses(details, state);
+
+  const clickThroughUrl = `${APP_ROUTES.RUNS}/${executionId}`;
+>>>>>>> 613a2399 (Migrate TaskStatusMap to PipelineRunProvider)
 
   const LinkProps = {
     to: clickThroughUrl,
@@ -87,7 +112,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
       className="cursor-pointer text-gray-500 text-xs"
     >
       <TableCell className="text-sm flex items-center gap-2">
-        <StatusIcon status={getRunStatus(statusCounts)} />
+        <StatusIcon status={status.run} />
         <Link {...LinkProps}>{name}</Link>
         <span>{`#${runId}`}</span>
       </TableCell>
@@ -95,13 +120,13 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
         <HoverCard openDelay={100}>
           <HoverCardTrigger>
             <div className="w-2/3">
-              <StatusBar statusCounts={statusCounts} />
+              <StatusBar statusCounts={status.counts} />
             </div>
           </HoverCardTrigger>
           <HoverCardContent>
             <div className="flex flex-col gap-2">
               <div className="text-sm font-bold">Status</div>
-              <StatusText statusCounts={statusCounts} />
+              <StatusText statusCounts={status.counts} />
             </div>
           </HoverCardContent>
         </HoverCard>

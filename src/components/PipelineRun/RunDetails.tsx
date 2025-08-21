@@ -8,10 +8,9 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useExecutionData } from "@/providers/ExecutionDataProvider";
 import { usePipelineRun } from "@/providers/PipelineRunProvider";
 import {
-  countTaskStatuses,
-  getRunStatus,
   isStatusComplete,
   isStatusInProgress,
+  processExecutionStatuses,
 } from "@/services/executionService";
 
 import { InfoBox } from "../shared/InfoBox";
@@ -77,8 +76,9 @@ export const RunDetails = () => {
     );
   }
 
-  const statusCounts = countTaskStatuses(details, state);
-  const runStatus = getRunStatus(statusCounts);
+  const status = processExecutionStatuses(details, state);
+  const statusCounts = status.counts;
+  const runStatus = status.run;
   const hasRunningTasks = statusCounts.running > 0;
   const isInProgress = isStatusInProgress(runStatus) || hasRunningTasks;
   const isComplete = isStatusComplete(runStatus);

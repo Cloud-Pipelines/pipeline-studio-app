@@ -22,7 +22,7 @@ export const StatusIndicator = ({
 }: StatusIndicatorProps) => {
   if (!status) return null;
 
-  const { style, text, icon } = getRunStatus(status);
+  const { style, text, icon } = getContainerStatus(status);
 
   return (
     <div className="absolute -z-1 -top-5 left-0 flex items-start">
@@ -47,7 +47,7 @@ export const StatusIndicator = ({
   );
 };
 
-const getRunStatus = (status: ContainerExecutionStatus) => {
+const getContainerStatus = (status: ContainerExecutionStatus) => {
   switch (status) {
     case "SUCCEEDED":
       return {

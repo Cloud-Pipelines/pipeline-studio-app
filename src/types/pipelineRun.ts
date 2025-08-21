@@ -1,3 +1,5 @@
+import type { ContainerExecutionStatus } from "@/api/types.gen";
+
 export interface PipelineRun {
   id: number;
   root_execution_id: number;
@@ -17,4 +19,10 @@ export interface TaskStatusCounts {
   waiting: number;
   skipped: number;
   cancelled: number;
+}
+
+export interface ExecutionStatus {
+  run: string;
+  map: Map<string, ContainerExecutionStatus>;
+  counts: TaskStatusCounts;
 }

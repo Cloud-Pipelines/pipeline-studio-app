@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type {
-  GetArtifactsApiExecutionsIdArtifactsGetResponse,
+  ContainerExecutionStatus,
   GetContainerExecutionStateResponse,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
   PipelineRunResponse,
 } from "@/api/types.gen";
-import type { TaskStatusCounts } from "@/types/pipelineRun";
+import type { ExecutionStatus, TaskStatusCounts } from "@/types/pipelineRun";
 import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
 export const fetchExecutionState = async (
@@ -71,10 +71,9 @@ export const fetchExecutionStatus = async (
       backendUrl,
     );
 
-    const taskStatuses = countTaskStatuses(details, stateData);
-    const runStatus = getRunStatus(taskStatuses);
+    const status = processExecutionStatuses(details, stateData);
 
-    return runStatus;
+    return status;
   } catch (error) {
     console.error(
       `Error fetching task statuses for run ${executionId}:`,
@@ -131,7 +130,7 @@ export const isStatusCancelled = (status: string = "") => {
   return status === STATUS.CANCELLED;
 };
 
-const mapStatus = (status: string) => {
+export const mapStatus = (status: string) => {
   switch (status) {
     case "SUCCEEDED":
       return "succeeded";
@@ -155,13 +154,14 @@ const mapStatus = (status: string) => {
 };
 
 /**
- * Count task statuses from API response
+ * Count execution statuses from API response
  */
-export const countTaskStatuses = (
-  details: GetExecutionInfoResponse,
-  stateData: GetGraphExecutionStateResponse,
-): TaskStatusCounts => {
-  const statusCounts = {
+export const processExecutionStatuses = (
+  details?: GetExecutionInfoResponse,
+  state?: GetGraphExecutionStateResponse,
+): ExecutionStatus => {
+  const map = new Map<string, ContainerExecutionStatus>();
+  const counts = {
     total: 0,
     succeeded: 0,
     failed: 0,
@@ -171,121 +171,90 @@ export const countTaskStatuses = (
     cancelled: 0,
   };
 
-  if (
-    details.child_task_execution_ids &&
-    stateData.child_execution_status_stats
-  ) {
-    Object.values(details.child_task_execution_ids).forEach((executionId) => {
-      const executionIdStr = String(executionId);
-      const statusStats =
-        stateData.child_execution_status_stats[executionIdStr];
-
-      if (statusStats) {
-        const status = Object.keys(statusStats)[0];
-        const mappedStatus = mapStatus(status);
-        statusCounts[mappedStatus as keyof TaskStatusCounts]++;
-      } else {
-        statusCounts.waiting++;
-      }
-    });
-  }
-
-  const total =
-    statusCounts.succeeded +
-    statusCounts.failed +
-    statusCounts.running +
-    statusCounts.waiting +
-    statusCounts.skipped +
-    statusCounts.cancelled;
-
-  return { ...statusCounts, total };
-};
-
-export const getExecutionArtifacts = async (
-  executionId: string,
-  backendUrl: string,
-) => {
-  if (!executionId) return null;
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/artifacts`,
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch artifacts: ${response.statusText}`);
-  }
-  return response.json() as Promise<GetArtifactsApiExecutionsIdArtifactsGetResponse>;
-};
-
-export const convertExecutionStatsToStatusCounts = (
-  stats: { [key: string]: number } | null | undefined,
-): TaskStatusCounts => {
-  const statusCounts = {
-    total: 0,
-    succeeded: 0,
-    failed: 0,
-    running: 0,
-    waiting: 0,
-    skipped: 0,
-    cancelled: 0,
-  };
-
-  if (!stats) {
-    return statusCounts;
-  }
-
-  Object.entries(stats).forEach(([status, count]) => {
-    const mappedStatus = mapStatus(status);
-    statusCounts[mappedStatus as keyof TaskStatusCounts] += count;
-  });
-
-  const total =
-    statusCounts.succeeded +
-    statusCounts.failed +
-    statusCounts.running +
-    statusCounts.waiting +
-    statusCounts.skipped +
-    statusCounts.cancelled;
-
-  return { ...statusCounts, total };
-};
-
-export const buildTaskStatusMap = (
-  detailsData?: GetExecutionInfoResponse,
-  stateData?: GetGraphExecutionStateResponse,
-) => {
-  const taskStatusMap = new Map();
-  if (!detailsData) {
-    return taskStatusMap;
+  if (!details) {
+    return {
+      run: STATUS.UNKNOWN,
+      map,
+      counts,
+    };
   }
 
   // If no state data is available, set all tasks to WAITING_FOR_UPSTREAM
-  if (!stateData && detailsData?.child_task_execution_ids) {
-    Object.keys(detailsData.child_task_execution_ids).forEach((taskId) => {
-      taskStatusMap.set(taskId, "WAITING_FOR_UPSTREAM");
+  if (!state && details?.child_task_execution_ids) {
+    Object.keys(details.child_task_execution_ids).forEach((taskId) => {
+      map.set(taskId, "WAITING_FOR_UPSTREAM");
+      counts.waiting++;
     });
-    return taskStatusMap;
+
+    counts.total = counts.waiting;
+
+    return {
+      run: STATUS.WAITING,
+      map,
+      counts,
+    };
   }
 
   if (
-    detailsData?.child_task_execution_ids &&
-    stateData?.child_execution_status_stats
+    details?.child_task_execution_ids &&
+    state?.child_execution_status_stats
   ) {
-    Object.entries(detailsData.child_task_execution_ids).forEach(
+    Object.entries(details.child_task_execution_ids).forEach(
       ([taskId, executionId]) => {
         const executionIdStr = String(executionId);
-        const statusStats =
-          stateData.child_execution_status_stats[executionIdStr];
+        const statusStats = state.child_execution_status_stats[executionIdStr];
+
+        let status: ContainerExecutionStatus;
 
         if (statusStats) {
-          const status = Object.keys(statusStats)[0];
-          taskStatusMap.set(taskId, status);
+          status = Object.keys(statusStats)[0] as ContainerExecutionStatus;
+          map.set(taskId, status);
         } else {
-          // If this task doesn't have status in state data, mark as WAITING
-          taskStatusMap.set(taskId, "WAITING_FOR_UPSTREAM");
+          status = "WAITING_FOR_UPSTREAM";
+          map.set(taskId, status);
+        }
+
+        // Count the status
+        switch (status) {
+          case "SUCCEEDED":
+            counts.succeeded++;
+            break;
+          case "FAILED":
+          case "SYSTEM_ERROR":
+          case "INVALID":
+            counts.failed++;
+            break;
+          case "CANCELLING":
+          case "SKIPPED":
+            counts.skipped++;
+            break;
+          case "RUNNING":
+            counts.running++;
+            break;
+          case "CANCELLED":
+            counts.cancelled++;
+            break;
+          default:
+            counts.waiting++;
+            break;
         }
       },
     );
   }
 
-  return taskStatusMap;
+  counts.total =
+    counts.succeeded +
+    counts.failed +
+    counts.running +
+    counts.waiting +
+    counts.skipped +
+    counts.cancelled;
+
+  const runStatus = getRunStatus(counts);
+
+  return {
+    run: runStatus,
+    map,
+    counts,
+  };
 };

@@ -24,17 +24,15 @@ import {
 import useToastNotification from "@/hooks/useToastNotification";
 import { useBackend } from "@/providers/BackendProvider";
 import {
-  buildTaskStatusMap,
-  countTaskStatuses,
-  getRunStatus,
   isStatusCancelled,
+  processExecutionStatuses,
 } from "@/services/executionService";
 import {
   cancelPipelineRun,
   copyRunToPipeline,
   fetchPipelineRunById,
 } from "@/services/pipelineRunService";
-import type { PipelineRun } from "@/types/pipelineRun";
+import type { ExecutionStatus, PipelineRun } from "@/types/pipelineRun";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { getInitialName } from "@/utils/getComponentName";
 import { submitPipelineRun } from "@/utils/submitPipeline";
@@ -45,8 +43,7 @@ type PipelineRunContextType = {
   details: GetExecutionInfoResponse | undefined;
   state: GetGraphExecutionStateResponse | undefined;
   metadata: PipelineRun | null;
-  status: string;
-  taskStatusMap: Map<string, string>;
+  status: ExecutionStatus;
 
   isLoading: boolean;
   isSubmitting: boolean;
@@ -71,6 +68,20 @@ const PipelineRunContext = createRequiredContext<PipelineRunContextType>(
   "PipelineRunProvider",
 );
 
+const EMPTY_EXECUTION_STATUS: ExecutionStatus = {
+  run: "UNKNOWN",
+  map: new Map(),
+  counts: {
+    total: 0,
+    waiting: 0,
+    succeeded: 0,
+    failed: 0,
+    running: 0,
+    skipped: 0,
+    cancelled: 0,
+  },
+};
+
 export const PipelineRunProvider = ({
   rootExecutionId,
   children,
@@ -88,10 +99,7 @@ export const PipelineRunProvider = ({
   const { getToken } = useAuthLocalStorage();
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
-  const [status, setStatus] = useState<string>("UNKNOWN");
-  const [taskStatusMap, setTaskStatusMap] = useState<Map<string, string>>(
-    new Map(),
-  );
+  const [status, setStatus] = useState<ExecutionStatus>(EMPTY_EXECUTION_STATUS);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -235,22 +243,21 @@ export const PipelineRunProvider = ({
 
   useEffect(() => {
     if (details && state) {
-      const taskStatusCounts = countTaskStatuses(details, state);
-      const runStatus = getRunStatus(taskStatusCounts);
-      setStatus(runStatus);
-
-      const taskStatusMap = buildTaskStatusMap(details, state);
-      setTaskStatusMap(taskStatusMap);
+      const updatedStatus = processExecutionStatuses(details, state);
+      setStatus(updatedStatus);
     }
   }, [details, state]);
 
   useEffect(() => {
-    if (isCancelling && isStatusCancelled(status)) {
+    if (isCancelling && isStatusCancelled(status.run)) {
       setIsCancelling(false);
     }
 
     // const shouldPollStatus =
-    //   backendUrl && rootExecutionId && !isStatusComplete(status);
+    //   backendUrl &&
+    //   rootExecutionId &&
+    //   (!isStatusComplete(status.run) ||
+    //     status.counts.running + status.counts.waiting > 0);
 
     // if (shouldPollStatus) {
     //   setIsPolling(true);
@@ -269,7 +276,6 @@ export const PipelineRunProvider = ({
       state,
       status,
       metadata,
-      taskStatusMap,
       isLoading,
       isSubmitting,
       isCancelling,
@@ -284,7 +290,6 @@ export const PipelineRunProvider = ({
       state,
       status,
       metadata,
-      taskStatusMap,
       isLoading,
       isSubmitting,
       isCancelling,
@@ -307,6 +312,6 @@ export const usePipelineRun = () => {
   return useRequiredContext(PipelineRunContext);
 };
 
-export const useTaskStatusMap = () => {
-  return useContext(PipelineRunContext)?.taskStatusMap;
+export const usePipelineRunStatus = () => {
+  return useContext(PipelineRunContext)?.status;
 };

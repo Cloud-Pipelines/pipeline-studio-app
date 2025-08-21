@@ -35,7 +35,11 @@ function TestConsumer() {
       <div data-testid="state-available">
         {context.state ? "available" : "null"}
       </div>
-      <div data-testid="status">{context.status}</div>
+      <div data-testid="status">{context.status.run}</div>
+      <div data-testid="metadata-id">{context.metadata?.id || "null"}</div>
+      <div data-testid="metadata-name">
+        {context.metadata?.pipeline_name || "null"}
+      </div>
     </div>
   );
 }
@@ -43,7 +47,7 @@ function TestConsumer() {
 // Invalid consumer (outside provider)
 function InvalidConsumer() {
   const context = usePipelineRun();
-  return <div>{context.status}</div>;
+  return <div>{context.status.run}</div>;
 }
 
 describe("<PipelineRunProvider />", () => {
@@ -173,16 +177,22 @@ describe("<PipelineRunProvider />", () => {
         error: null,
       });
 
-      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
-        total: 2,
-        succeeded: 1,
-        failed: 0,
-        running: 1,
-        waiting: 0,
-        skipped: 0,
-        cancelled: 0,
+      vi.spyOn(executionService, "processExecutionStatuses").mockReturnValue({
+        run: "RUNNING",
+        map: new Map([
+          ["task1", "SUCCEEDED"],
+          ["task2", "RUNNING"],
+        ]),
+        counts: {
+          total: 2,
+          succeeded: 1,
+          failed: 0,
+          running: 1,
+          waiting: 0,
+          skipped: 0,
+          cancelled: 0,
+        },
       });
-      vi.spyOn(executionService, "getRunStatus").mockReturnValue("RUNNING");
 
       renderWithProvider("test-execution-id");
 
@@ -198,9 +208,7 @@ describe("<PipelineRunProvider />", () => {
 
       // Wait for metadata to be fetched
       await waitFor(() => {
-        expect(screen.getByTestId("metadata-id")).toHaveTextContent(
-          "test-run-id-123",
-        );
+        expect(screen.getByTestId("metadata-id")).toHaveTextContent("100");
         expect(screen.getByTestId("metadata-name")).toHaveTextContent(
           "Test Pipeline Run",
         );
@@ -257,16 +265,22 @@ describe("<PipelineRunProvider />", () => {
         refetch: vi.fn(),
       });
 
-      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
-        total: 2,
-        succeeded: 1,
-        failed: 0,
-        running: 1,
-        waiting: 0,
-        skipped: 0,
-        cancelled: 0,
+      vi.spyOn(executionService, "processExecutionStatuses").mockReturnValue({
+        run: "RUNNING",
+        map: new Map([
+          ["task1", "SUCCEEDED"],
+          ["task2", "RUNNING"],
+        ]),
+        counts: {
+          total: 2,
+          succeeded: 1,
+          failed: 0,
+          running: 1,
+          waiting: 0,
+          skipped: 0,
+          cancelled: 0,
+        },
       });
-      vi.spyOn(executionService, "getRunStatus").mockReturnValue("RUNNING");
 
       renderWithProvider("test-execution-id");
 
@@ -285,16 +299,22 @@ describe("<PipelineRunProvider />", () => {
         refetch: vi.fn(),
       });
 
-      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
-        total: 2,
-        succeeded: 2,
-        failed: 0,
-        running: 0,
-        waiting: 0,
-        skipped: 0,
-        cancelled: 0,
+      vi.spyOn(executionService, "processExecutionStatuses").mockReturnValue({
+        run: "SUCCEEDED",
+        map: new Map([
+          ["task1", "SUCCEEDED"],
+          ["task2", "SUCCEEDED"],
+        ]),
+        counts: {
+          total: 2,
+          succeeded: 2,
+          failed: 0,
+          running: 0,
+          waiting: 0,
+          skipped: 0,
+          cancelled: 0,
+        },
       });
-      vi.spyOn(executionService, "getRunStatus").mockReturnValue("SUCCEEDED");
 
       renderWithProvider("test-execution-id");
 
@@ -313,16 +333,22 @@ describe("<PipelineRunProvider />", () => {
         refetch: vi.fn(),
       });
 
-      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
-        total: 2,
-        succeeded: 1,
-        failed: 1,
-        running: 0,
-        waiting: 0,
-        skipped: 0,
-        cancelled: 0,
+      vi.spyOn(executionService, "processExecutionStatuses").mockReturnValue({
+        run: "FAILED",
+        map: new Map([
+          ["task1", "SUCCEEDED"],
+          ["task2", "FAILED"],
+        ]),
+        counts: {
+          total: 2,
+          succeeded: 1,
+          failed: 1,
+          running: 0,
+          waiting: 0,
+          skipped: 0,
+          cancelled: 0,
+        },
       });
-      vi.spyOn(executionService, "getRunStatus").mockReturnValue("FAILED");
 
       renderWithProvider("test-execution-id");
 
@@ -362,16 +388,22 @@ describe("<PipelineRunProvider />", () => {
       );
 
       // Mock the service functions used in the effect
-      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
-        total: 2,
-        succeeded: 2,
-        failed: 0,
-        running: 0,
-        waiting: 0,
-        skipped: 0,
-        cancelled: 0,
+      vi.spyOn(executionService, "processExecutionStatuses").mockReturnValue({
+        run: "SUCCEEDED",
+        map: new Map([
+          ["task1", "SUCCEEDED"],
+          ["task2", "SUCCEEDED"],
+        ]),
+        counts: {
+          total: 2,
+          succeeded: 2,
+          failed: 0,
+          running: 0,
+          waiting: 0,
+          skipped: 0,
+          cancelled: 0,
+        },
       });
-      vi.spyOn(executionService, "getRunStatus").mockReturnValue("SUCCEEDED");
       vi.spyOn(executionService, "isStatusComplete").mockReturnValue(true);
 
       // First call - still loading
@@ -423,16 +455,22 @@ describe("<PipelineRunProvider />", () => {
       );
 
       // Mock the service functions
-      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
-        total: 2,
-        succeeded: 1,
-        failed: 1,
-        running: 0,
-        waiting: 0,
-        skipped: 0,
-        cancelled: 0,
+      vi.spyOn(executionService, "processExecutionStatuses").mockReturnValue({
+        run: "FAILED",
+        map: new Map([
+          ["task1", "SUCCEEDED"],
+          ["task2", "FAILED"],
+        ]),
+        counts: {
+          total: 2,
+          succeeded: 1,
+          failed: 1,
+          running: 0,
+          waiting: 0,
+          skipped: 0,
+          cancelled: 0,
+        },
       });
-      vi.spyOn(executionService, "getRunStatus").mockReturnValue("FAILED");
       vi.spyOn(executionService, "isStatusComplete").mockReturnValue(true);
 
       // First call - still loading
@@ -481,16 +519,22 @@ describe("<PipelineRunProvider />", () => {
       );
 
       // Mock the service functions for running status
-      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
-        total: 2,
-        succeeded: 1,
-        failed: 0,
-        running: 1,
-        waiting: 0,
-        skipped: 0,
-        cancelled: 0,
+      vi.spyOn(executionService, "processExecutionStatuses").mockReturnValue({
+        run: "RUNNING",
+        map: new Map([
+          ["task1", "SUCCEEDED"],
+          ["task2", "RUNNING"],
+        ]),
+        counts: {
+          total: 2,
+          succeeded: 1,
+          failed: 0,
+          running: 1,
+          waiting: 0,
+          skipped: 0,
+          cancelled: 0,
+        },
       });
-      vi.spyOn(executionService, "getRunStatus").mockReturnValue("RUNNING");
       vi.spyOn(executionService, "isStatusComplete").mockReturnValue(false);
 
       mockUseFetchExecutionInfo.mockReturnValue({
