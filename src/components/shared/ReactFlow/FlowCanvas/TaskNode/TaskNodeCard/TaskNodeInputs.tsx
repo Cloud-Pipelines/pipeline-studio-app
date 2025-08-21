@@ -4,15 +4,16 @@ import { type MouseEvent, useCallback, useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
 import type { InputSpec } from "@/utils/componentSpec";
 import { ComponentSearchFilter, DEFAULT_FILTERS } from "@/utils/constants";
 import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
-import { getValue } from "@/utils/string";
 
 import { InputHandle } from "./Handles";
+import { getDisplayValue } from "./handleUtils";
 
 interface TaskNodeInputsProps {
   condensed: boolean;
@@ -26,6 +27,7 @@ export function TaskNodeInputs({
   onBackgroundClick,
 }: TaskNodeInputsProps) {
   const { inputs, taskSpec, state, select } = useTaskNode();
+  const { graphSpec } = useComponentSpec();
   const {
     setSearchTerm,
     setSearchFilters,
@@ -218,7 +220,7 @@ export function TaskNodeInputs({
               key={input.name}
               input={input}
               invalid={invalidArguments.includes(input.name)}
-              value={getValue(values?.[input.name])}
+              value={getDisplayValue(values?.[input.name], graphSpec)}
               onHandleSelectionChange={handleSelectionChange}
               highlight={checkHighlight(input)}
               onLabelClick={handleLabelClick}
