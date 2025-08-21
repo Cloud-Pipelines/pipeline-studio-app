@@ -508,7 +508,7 @@ const FlowCanvas = ({
         }
 
         const { updatedGraphSpec, lostInputs, newTaskId } = replaceTaskNode(
-          replaceTarget,
+          replaceTarget.data.taskId as string,
           droppedTask.componentRef,
           graphSpec,
         );
@@ -652,7 +652,7 @@ const FlowCanvas = ({
       // Custom components don't have a componentRef.url so they are currently excluded from bulk operations
       if (taskSpec?.componentRef && taskSpec.componentRef.url) {
         const { updatedGraphSpec, lostInputs } = replaceTaskNode(
-          node,
+          node.data.taskId as string,
           taskSpec.componentRef,
           newGraphSpec,
         );

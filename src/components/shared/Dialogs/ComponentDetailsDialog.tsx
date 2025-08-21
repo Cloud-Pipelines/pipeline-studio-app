@@ -1,5 +1,5 @@
 import { Code, InfoIcon, ListFilter } from "lucide-react";
-import { type ReactNode } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import {
   Dialog,
@@ -19,9 +19,11 @@ import type { ComponentReference } from "@/utils/componentSpec";
 import InfoIconButton from "../Buttons/InfoIconButton";
 import { InfoBox } from "../InfoBox";
 import { PublishComponent } from "../ManageComponent/PublishComponent";
+import { PublishedComponentDetails } from "../ManageComponent/PublishedComponentDetails";
 import { useBetaFlagValue } from "../Settings/useBetaFlags";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
 import { TaskDetails, TaskImplementation, TaskIO } from "../TaskDetails";
+import { DialogContext } from "./dialog.context";
 
 interface ComponentDetailsProps {
   component: ComponentReference;
@@ -124,6 +126,10 @@ const ComponentDetailsDialog = withSuspenseWrapper(
 
             <div className="overflow-hidden h-[40vh]">
               <TabsContent value="details" className="h-full">
+                {remoteComponentLibrarySearchEnabled ? (
+                  <PublishedComponentDetails component={componentRef} />
+                ) : null}
+
                 <TaskDetails
                   displayName={displayName}
                   componentSpec={componentSpec}
@@ -170,16 +176,28 @@ const ComponentDetails = ({
   onClose,
   onDelete,
 }: ComponentDetailsProps) => {
+  const [open, setOpen] = useState(false);
   const dialogTriggerButton = trigger || <InfoIconButton />;
 
   const onOpenChange = (open: boolean) => {
+    setOpen(open);
     if (!open) {
       onClose?.();
     }
   };
 
+  const dialogContextValue = useMemo(
+    () => ({
+      name: "ComponentDetails",
+      close: () => {
+        setOpen(false);
+      },
+    }),
+    [],
+  );
+
   return (
-    <Dialog modal onOpenChange={onOpenChange}>
+    <Dialog modal open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{dialogTriggerButton}</DialogTrigger>
 
       <DialogDescription
@@ -198,14 +216,16 @@ const ComponentDetails = ({
           </DialogTitle>
         </DialogHeader>
 
-        <ComponentDetailsDialog
-          component={component}
-          displayName={displayName}
-          trigger={dialogTriggerButton}
-          actions={actions}
-          onClose={onClose}
-          onDelete={onDelete}
-        />
+        <DialogContext.Provider value={dialogContextValue}>
+          <ComponentDetailsDialog
+            component={component}
+            displayName={displayName}
+            trigger={dialogTriggerButton}
+            actions={actions}
+            onClose={onClose}
+            onDelete={onDelete}
+          />
+        </DialogContext.Provider>
       </DialogContent>
     </Dialog>
   );

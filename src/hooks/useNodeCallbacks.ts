@@ -11,7 +11,7 @@ import { replaceTaskNode } from "@/components/shared/ReactFlow/FlowCanvas/utils/
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { Annotations } from "@/types/annotations";
 import type { NodeAndTaskId } from "@/types/taskNode";
-import type { ComponentReference } from "@/utils/componentSpec";
+import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
 import type { ArgumentType } from "@/utils/componentSpec";
 
 import type { TriggerDialogProps } from "./useConfirmationDialog";
@@ -164,7 +164,7 @@ export const useNodeCallbacks = ({
       }
 
       const { updatedGraphSpec, lostInputs } = replaceTaskNode(
-        node,
+        node.data.taskId as string,
         newComponentRef,
         graphSpec,
       );
@@ -175,7 +175,8 @@ export const useNodeCallbacks = ({
       }
 
       const dialogData = getUpgradeConfirmationDetails(
-        node,
+        node.data.taskId as string,
+        node.data.taskSpec as TaskSpec | undefined,
         newComponentRef.digest,
         lostInputs,
       );
