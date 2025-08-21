@@ -39,7 +39,7 @@ const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
   const executionData = useExecutionDataOptional();
   const details = executionData?.details;
 
-  const { readOnly, runStatus } = state;
+  const { readOnly, status: runStatus } = state;
   const disabled = !!runStatus;
 
   if (!taskSpec || !taskId) {
@@ -110,7 +110,7 @@ const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
               componentDigest={taskSpec.componentRef.digest}
               url={taskSpec.componentRef.url}
               onDelete={callbacks.onDelete}
-              runStatus={runStatus}
+              status={status}
               hasDeletionConfirmation={false}
               readOnly={readOnly}
               additionalSection={[
