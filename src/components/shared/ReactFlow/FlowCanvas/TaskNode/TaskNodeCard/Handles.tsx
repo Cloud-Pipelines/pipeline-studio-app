@@ -6,6 +6,11 @@ import {
 } from "react";
 import { useEffect, useRef } from "react";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
@@ -164,14 +169,23 @@ export const InputHandle = ({
               className="flex w-fit max-w-1/2 min-w-0"
               data-testid={`input-handle-value-${input.name}`}
             >
-              <div
-                className={cn(
-                  "text-xs text-gray-800! truncate inline-block text-right pr-2",
-                  !hasValue && "text-gray-400! italic",
-                )}
-              >
-                {hasValue ? value : input.default}
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    className={cn(
+                      "text-xs text-gray-800! truncate inline-block text-right pr-2",
+                      !hasValue && "text-gray-400! italic",
+                    )}
+                  >
+                    {hasValue ? value : input.default}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <div className="text-xs">
+                    {hasValue ? value : input.default}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
         </div>
