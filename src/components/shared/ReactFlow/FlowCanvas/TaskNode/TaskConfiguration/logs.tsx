@@ -21,25 +21,35 @@ const LogDisplay = ({
     return <div>No logs available</div>;
   }
 
+  const hasLogs = !!logs?.log_text;
+  const hasErrors = !!logs?.system_error_exception_full;
+  const hasBoth = hasLogs && hasErrors;
+
+  const logWrapperStyle = hasBoth ? "flex-1 min-h-0" : "h-full";
+
   return (
-    <>
-      {logs?.log_text && (
-        <CodeViewer
-          code={logs.log_text || ""}
-          language="text"
-          title="Logs"
-          filename="logs"
-        />
+    <div className="flex flex-col h-full gap-2">
+      {hasLogs && (
+        <div className={logWrapperStyle}>
+          <CodeViewer
+            code={logs.log_text || ""}
+            language="text"
+            title="Execution Logs"
+            filename="Execution Logs"
+          />
+        </div>
       )}
-      {logs?.system_error_exception_full && (
-        <CodeViewer
-          code={logs?.system_error_exception_full || ""}
-          language="text"
-          title="Logs"
-          filename="error"
-        />
+      {hasErrors && (
+        <div className={logWrapperStyle}>
+          <CodeViewer
+            code={logs.system_error_exception_full || ""}
+            language="text"
+            title="System Error Logs"
+            filename="System Error Logs"
+          />
+        </div>
       )}
-    </>
+    </div>
   );
 };
 
