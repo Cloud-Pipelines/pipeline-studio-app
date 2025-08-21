@@ -2,7 +2,10 @@ import { act, render, renderHook, screen } from "@testing-library/react";
 import type { ReactFlowInstance } from "@xyflow/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
+import type {
+  HydratedComponentReference,
+  TaskSpec,
+} from "@/utils/componentSpec";
 
 import {
   NodesOverlayProvider,
@@ -29,7 +32,7 @@ describe("NodesOverlayProvider", () => {
     arguments: {},
   } as TaskSpec;
 
-  const mockHydratedComponentRef: ComponentReference = {
+  const mockHydratedComponentRef: HydratedComponentReference = {
     digest: "digest-456",
     name: "updated-component",
     version: "2.0.0",
@@ -38,7 +41,7 @@ describe("NodesOverlayProvider", () => {
       implementation: { container: { image: "test:latest" } },
     },
     text: "component: updated-component",
-  } as unknown as ComponentReference;
+  } as unknown as HydratedComponentReference;
 
   beforeEach(() => {
     vi.clearAllMocks();

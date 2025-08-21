@@ -8,7 +8,10 @@ import {
   useRef,
 } from "react";
 
-import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
+import type {
+  HydratedComponentReference,
+  TaskSpec,
+} from "@/utils/componentSpec";
 
 type RegisterNodeOptions = {
   nodeId: string;
@@ -19,7 +22,7 @@ type RegisterNodeOptions = {
 export type UpdateOverlayMessage = {
   type: "update-overlay";
   data: {
-    replaceWith: ComponentReference;
+    replaceWith: HydratedComponentReference;
     ids: string[];
   };
 };
@@ -98,9 +101,17 @@ export const NodesOverlayProvider = ({ children }: PropsWithChildren<{}>) => {
   }, []);
 
   const getNodeIdsByDigest = useCallback((digest: string) => {
-    return Array.from(nodesRef.current.entries())
-      .filter(([_, { taskSpec }]) => taskSpec.componentRef.digest === digest)
-      .map(([nodeId]) => nodeId);
+    return (
+      Array.from(nodesRef.current.entries())
+        .filter(([_, { taskSpec }]) => taskSpec.componentRef.digest === digest)
+        // In most cases we want to navigate to selected node first
+        .sort((a, b) => {
+          const aNode = instanceRef.current?.getNode(a[0]);
+          const bNode = instanceRef.current?.getNode(b[0]);
+          return (aNode?.selected ? 1 : 0) - (bNode?.selected ? 1 : 0);
+        })
+        .map(([nodeId]) => nodeId)
+    );
   }, []);
 
   const notifyNode = useCallback((nodeId: string, message: NotifyMessage) => {
