@@ -1238,6 +1238,7 @@ function mockFetchResponse(
     headers: new Headers(),
     statusText: options.statusText ?? "OK",
     text: vi.fn().mockResolvedValue(text),
+    headers: new Headers(),
   };
   vi.mocked(global.fetch).mockResolvedValue(response as unknown as Response);
 }

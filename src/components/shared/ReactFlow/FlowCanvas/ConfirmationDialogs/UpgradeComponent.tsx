@@ -1,4 +1,3 @@
-import { type Node } from "@xyflow/react";
 import { Unlink } from "lucide-react";
 
 import {
@@ -12,12 +11,13 @@ import type { InputSpec, TaskSpec } from "@/utils/componentSpec";
 import { getArgumentDetails, thisCannotBeUndone } from "./shared";
 
 export function getUpgradeConfirmationDetails(
-  replacedNode: Node,
+  taskId: string,
+  taskSpec: TaskSpec | undefined,
   newComponentDigest: string,
   lostInputs: InputSpec[],
 ) {
-  const oldTaskId = replacedNode.data.taskId as string;
-  const oldTaskSpec = replacedNode.data.taskSpec as TaskSpec | undefined;
+  const oldTaskId = taskId;
+  const oldTaskSpec = taskSpec;
   const oldTaskInputs = oldTaskSpec?.componentRef.spec?.inputs;
   const oldTaskArguments = oldTaskSpec?.arguments;
   const oldTaskDigest = oldTaskSpec?.componentRef.digest;

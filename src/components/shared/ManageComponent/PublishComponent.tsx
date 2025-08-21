@@ -1,9 +1,5 @@
 import { Separator } from "@radix-ui/react-separator";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   type ComponentProps,
   type PropsWithChildren,
@@ -30,26 +26,32 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Heading, Text } from "@/components/ui/typography";
+import { Heading, Paragraph, Text } from "@/components/ui/typography";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useHydrateComponentReference } from "@/hooks/useHydrateComponentReference";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import { useCurrentUserDetails } from "@/providers/ComponentLibraryProvider/hooks/useCurrentUserDetails";
+import { useHasPublishedComponent } from "@/providers/ComponentLibraryProvider/hooks/useHasPublishedComponent";
+import { useHasUpdatedVersionOfComponent } from "@/providers/ComponentLibraryProvider/hooks/useHasUpdatedVersionOfComponent";
+import { usePublishedComponentHistory } from "@/providers/ComponentLibraryProvider/hooks/usePublishedComponentHistory";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import {
   type ComponentReference,
   type ComponentReferenceWithDigest,
   type HydratedComponentReference,
-  isDiscoverableComponentReference,
   isGraphImplementation,
 } from "@/utils/componentSpec";
 
+import { ComponentDetailsDialog } from "../Dialogs";
 import ConfirmationDialog from "../Dialogs/ConfirmationDialog";
+import { useDialogContext } from "../Dialogs/dialog.context";
 import { InfoBox } from "../InfoBox";
+import ImportComponent from "../ReactFlow/FlowSidebar/components/ImportComponent";
+import { useNodesOverlay } from "../ReactFlow/NodesOverlay/NodesOverlayProvider";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
 import TaskImplementation from "../TaskDetails/Implementation";
-import { getUserDetails } from "./user.utils";
 
 interface ComponentPublishProps {
   component: HydratedComponentReference;
@@ -203,6 +205,7 @@ const ComponentQuickDetailsDialogTrigger = ({
         variant="link-info"
         size="inline-xs"
         onClick={() => setIsOpen(true)}
+        className="font-mono"
       >
         {trimDigest(component.digest)}
       </Button>
@@ -514,8 +517,8 @@ const DeletePublishedComponentButton = ({
  * @param digest - The digest to trim.
  * @returns The trimmed digest.
  */
-function trimDigest(digest: string) {
-  return digest.slice(0, 4) + "..." + digest.slice(-6);
+export function trimDigest(digest: string) {
+  return digest.slice(0, 8);
 }
 
 const TrimmedDigest = ({
@@ -591,6 +594,55 @@ const ComponentHistoryTimelineItem = ({
   );
 };
 
+function useForceUpdateTasks(
+  currentComponent: HydratedComponentReference | null,
+) {
+  const dialogContext = useDialogContext();
+  const { notifyNode, getNodeIdsByDigest, fitNodeIntoView } = useNodesOverlay();
+
+  return useCallback(
+    async (digest: string) => {
+      if (!currentComponent) {
+        return;
+      }
+
+      // todo: move duplicate code to one hook
+      const nodeIds = getNodeIdsByDigest(digest);
+
+      if (nodeIds.length === 0) {
+        return;
+      }
+
+      const nodeId = nodeIds.pop();
+
+      if (!nodeId) {
+        return;
+      }
+
+      // close current dialog?
+      dialogContext?.close();
+
+      await fitNodeIntoView(nodeId);
+
+      console.log("notifyNode", nodeId, currentComponent);
+      notifyNode(nodeId, {
+        type: "update-overlay",
+        data: {
+          replaceWith: currentComponent,
+          ids: nodeIds,
+        },
+      });
+    },
+    [
+      dialogContext,
+      getNodeIdsByDigest,
+      fitNodeIntoView,
+      notifyNode,
+      currentComponent,
+    ],
+  );
+}
+
 const ComponentHistoryTimeline = withSuspenseWrapper(
   ({
     history,
@@ -603,8 +655,17 @@ const ComponentHistoryTimeline = withSuspenseWrapper(
     currentUserName?: string;
     onChange?: () => void;
   }) => {
+    const onForceUpdate = useForceUpdateTasks(currentComponent);
+
+    const onReleaseNewVersion = useCallback(() => {
+      console.log("release new version");
+    }, []);
+
+    const lastComponentInHistory =
+      history.length === 0 ? undefined : history[history.length - 1];
+
     const lastHydratedComponent = useHydrateComponentReference(
-      history.length === 0 ? {} : history[history.length - 1],
+      lastComponentInHistory ?? {},
     );
 
     const isPotentiallyOutdated = Boolean(
@@ -615,10 +676,11 @@ const ComponentHistoryTimeline = withSuspenseWrapper(
 
     const isPotentialNewRelease =
       lastHydratedComponent &&
+      lastComponentInHistory &&
       !history.find((c) => c.digest === currentComponent.digest) &&
-      lastHydratedComponent.name === currentComponent.name &&
-      !lastHydratedComponent.deprecated &&
-      lastHydratedComponent.published_by === currentUserName;
+      lastComponentInHistory.name === currentComponent.name &&
+      !lastComponentInHistory.deprecated &&
+      lastComponentInHistory.published_by === currentUserName;
 
     const isFirstPublish = history.length === 0;
 
@@ -656,32 +718,17 @@ const ComponentHistoryTimeline = withSuspenseWrapper(
                       </Text>
                     ) : null}
                   </InlineStack>
-                  {/* <TrimmedDigest digest={item.digest}>
-                    {(trimmedDigest) => (
-                      <InlineStack gap="1" blockAlign="center">
-                        <Link
-                          href="#" // todo: add link to the component version
-                          className="hover:underline underline decoration-dotted text-xs"
-                        >
-                          {trimmedDigest}
-                        </Link>
-                        <Text size="xs">by {item.published_by}</Text>
 
-                        {isMatchCurrentComponent && isPotentiallyOutdated ? (
-                          <Text size="xs" tone="critical">
-                            | You`re using an outdated version of this
-                            component.
-                          </Text>
-                        ) : null}
-                      </InlineStack>
-                    )}
-                  </TrimmedDigest> */}
                   <ComponentsOnCanvas digest={item.digest}>
                     {(count) => (
                       <Text size="xs" tone="subdued">
                         Used in {count} canvas tasks.
                         {isMostRecent ? null : (
-                          <Button variant="secondary" size="xs">
+                          <Button
+                            variant="secondary"
+                            size="xs"
+                            onClick={() => onForceUpdate(item.digest)}
+                          >
                             Update?
                           </Button>
                         )}
@@ -700,7 +747,7 @@ const ComponentHistoryTimeline = withSuspenseWrapper(
                   <InlineStack gap="1" blockAlign="center">
                     <TrimmedDigest digest={currentComponent.digest}>
                       {(trimmedDigest) => (
-                        <Text size="xs" weight="semibold">
+                        <Text size="xs" weight="semibold" font="mono">
                           {trimmedDigest}
                         </Text>
                       )}
@@ -735,12 +782,14 @@ const ComponentHistoryTimeline = withSuspenseWrapper(
                 iconClassName="text-gray-500"
               >
                 <InlineStack gap="1" blockAlign="center">
-                  <Button variant="secondary" size="xs">
-                    Release new version?
-                  </Button>
-                  <Button variant="destructive" size="xs">
-                    Deprecate
-                  </Button>
+                  <ImportComponent
+                    onImportSuccess={onReleaseNewVersion}
+                    triggerComponent={
+                      <Button variant="secondary" size="xs">
+                        Release new version?
+                      </Button>
+                    }
+                  />
                 </InlineStack>
               </ComponentHistoryTimelineItem>
             ) : null}
@@ -751,85 +800,11 @@ const ComponentHistoryTimeline = withSuspenseWrapper(
   },
 );
 
-function hasSupersededBy(
-  c: ComponentReference,
-): c is ComponentReference & { superseded_by: string } {
-  return Boolean(c.superseded_by);
-}
-
-function buildComponentHistory(
-  componentVersions: ComponentReference[],
-  component: HydratedComponentReference,
-  userName: string,
-) {
-  const relatedComponents = componentVersions
-    .filter((c) => c.name === component.name && c.published_by === userName)
-    .filter((c) => isDiscoverableComponentReference(c));
-
-  const index = new Map<string, ComponentReferenceWithDigest>(
-    relatedComponents
-      .filter((c) => hasSupersededBy(c))
-      .map((c) => [c.superseded_by, c]),
-  );
-
-  /**
-   * [
-   *  {a, supersededBy: b}
-   *  {b, supersededBy: c}
-   *  {c, supersededBy: d}
-   * ] => [d, c, b, a]
-   */
-  const lastList = relatedComponents.filter((c) => !c.superseded_by);
-
-  if (lastList.length !== 1) {
-    return [];
-  }
-
-  const timeline: ComponentReferenceWithDigest[] = [];
-
-  let current: ComponentReferenceWithDigest | undefined = lastList[0];
-  while (current) {
-    timeline.unshift(current);
-    const predecessor = index.get(current.digest);
-    current = predecessor;
-  }
-
-  return timeline;
-}
-
 export const PublishComponent = withSuspenseWrapper(
   ({ component }: ComponentPublishProps) => {
-    const { getComponentLibrary } = useComponentLibrary();
-    const publishedComponentsLibrary = getComponentLibrary(
-      "published_components",
-    );
-
-    const { data: currentUserDetails } = useSuspenseQuery({
-      queryKey: ["user"],
-      staleTime: 1000 * 60 * 60 * 0.5, // 30 minutes
-      queryFn: () => getUserDetails(),
-    });
-
-    const { data: history, refetch: refetchHistory } = useSuspenseQuery({
-      queryKey: ["component-library", "published", "history", component.name],
-      queryFn: async () => {
-        const components = await publishedComponentsLibrary.getComponents({
-          searchTerm: component.name,
-          filters: ["name", "deprecated"],
-        });
-
-        /**
-         * Assuming that component name never changed
-         */
-        const history = buildComponentHistory(
-          components.components ?? [],
-          component,
-          currentUserDetails.name,
-        );
-
-        return history;
-      },
-    });
+    const { data: currentUserDetails } = useCurrentUserDetails();
+    const { data: history, refetch: refetchHistory } =
+      usePublishedComponentHistory(component, currentUserDetails.name);
 
     const onChange = useCallback(() => {
       refetchHistory();
@@ -838,13 +813,13 @@ export const PublishComponent = withSuspenseWrapper(
     return (
       <ScrollArea className="h-full">
         <BlockStack inlineAlign="space-between" className="h-full" gap="3">
-          <Text as="p" size="xs" tone="subdued">
+          <Paragraph size="xs" tone="subdued">
             Published Components are shared components that are available to all
             users in the workspace. By publishing, you make this component
             discoverable and reusable by others through the component library.
             Once published, the component will appear in the components search
             result for easy access and collaboration.
-          </Text>
+          </Paragraph>
 
           <BlockStack gap="2" className="border rounded-md p-2 h-full">
             <Heading level={2}>Component Review</Heading>
@@ -877,6 +852,123 @@ export const PublishComponent = withSuspenseWrapper(
           </BlockStack>
         </BlockStack>
       </ScrollArea>
+    );
+  },
+);
+
+const PublishedComponentDetailsSkeleton = () => {
+  return (
+    <InlineStack gap="1" blockAlign="center" align="center">
+      <Spinner size={10} />
+      <Text size="xs" tone="subdued">
+        Looking for updates...
+      </Text>
+    </InlineStack>
+  );
+};
+
+export const PublishedComponentDetails = withSuspenseWrapper(
+  ({ component }: { component: HydratedComponentReference }) => {
+    const { data: isPublished } = useHasPublishedComponent(component);
+    const { data: currentUserDetails } = useCurrentUserDetails();
+    const { data: history } = usePublishedComponentHistory(
+      component,
+      currentUserDetails.name,
+    );
+    const mostRecentComponentRef = useHydrateComponentReference(
+      history[history.length - 1] ?? {},
+    );
+    const onForceUpdate = useForceUpdateTasks(mostRecentComponentRef);
+
+    if (!isPublished) {
+      return null;
+    }
+
+    const isOutdated =
+      history.length > 0 &&
+      history[history.length - 1].digest !== component.digest;
+
+    const onUpdateTasks = useCallback(() => {
+      onForceUpdate(component.digest);
+    }, [onForceUpdate, component.digest]);
+
+    return (
+      <BlockStack className="w-full py-2 my-2 border rounded-md">
+        <InlineStack
+          blockAlign="start"
+          align="space-between"
+          className="w-full"
+          gap="1"
+        >
+          <BlockStack
+            className="w-[10%] p-2"
+            inlineAlign="center"
+            align="center"
+          >
+            <Icon name="BookCheck" size="fill" />
+          </BlockStack>
+          <BlockStack className="w-[85%]">
+            <Heading level={2}>This is a published component</Heading>
+            <InlineStack gap="1">
+              <TrimmedDigest digest={component.digest}>
+                {(trimmedDigest) => (
+                  <Text size="xs" tone="info">
+                    {trimmedDigest}
+                  </Text>
+                )}
+              </TrimmedDigest>
+              <ComponentsOnCanvas digest={component.digest}>
+                {(count) => (
+                  <Text size="xs" tone="subdued">
+                    | Used in {count} Pipeline tasks.
+                  </Text>
+                )}
+              </ComponentsOnCanvas>
+            </InlineStack>
+            {isOutdated ? (
+              <InlineStack gap="1" blockAlign="center" align="center">
+                <Paragraph size="xs" tone="critical">
+                  There is a newer version of this component available.
+                </Paragraph>
+                <Button variant="secondary" size="xs" onClick={onUpdateTasks}>
+                  Update tasks?
+                </Button>
+              </InlineStack>
+            ) : null}
+          </BlockStack>
+        </InlineStack>
+      </BlockStack>
+    );
+  },
+  PublishedComponentDetailsSkeleton,
+);
+
+export const PublishedComponentBadge = withSuspenseWrapper(
+  ({ componentRef }: { componentRef: ComponentReference }) => {
+    const { data: isPublished } = useHasPublishedComponent(componentRef);
+    const isOutdated = useHasUpdatedVersionOfComponent(componentRef);
+
+    if (!isPublished) {
+      return null;
+    }
+
+    return (
+      <InlineStack className="relative">
+        <ComponentDetailsDialog
+          displayName={componentRef.name ?? "Details"}
+          component={componentRef}
+          trigger={
+            <Button variant="ghost" size="inline-xs">
+              <Icon
+                name={isOutdated ? "BookAlert" : "BookCheck"}
+                className={cn(
+                  isOutdated ? "text-orange-500" : "text-muted-foreground",
+                )}
+              />
+            </Button>
+          }
+        />
+      </InlineStack>
     );
   },
 );

@@ -26,8 +26,10 @@ enum TabType {
 
 const ImportComponent = ({
   triggerComponent,
+  onImportSuccess,
 }: {
   triggerComponent?: React.ReactNode;
+  onImportSuccess?: () => void;
 }) => {
   const notify = useToastNotification();
   const [url, setUrl] = useState("");
@@ -48,6 +50,7 @@ const ImportComponent = ({
       setSelectedFileName("");
       setIsSubmitting(false);
       notify("Component imported successfully", "success");
+      onImportSuccess?.();
     },
     errorCallback: (error: Error) => {
       notify(error.message, "error");

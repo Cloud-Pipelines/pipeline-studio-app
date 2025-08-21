@@ -432,10 +432,12 @@ const findDuplicateComponent = async (
       const existingComponentName = fileEntry.componentRef.spec.name;
 
       if (existingComponentName === targetComponentName) {
-        // Found a component with the same name, now check if content is identical
-        if (fileEntry.componentRef.text === componentRef.text) {
-          return fileEntry; // Exact duplicate found
-        }
+        return fileEntry;
+        // TODO: Uncomment this when we want to check for exact duplicates
+        // // Found a component with the same name, now check if content is identical
+        // if (fileEntry.componentRef.text === componentRef.text) {
+        //   return fileEntry; // Exact duplicate found
+        // }
       }
     }
 

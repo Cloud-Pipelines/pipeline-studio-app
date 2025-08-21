@@ -8,7 +8,10 @@ import {
   useRef,
 } from "react";
 
-import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
+import type {
+  HydratedComponentReference,
+  TaskSpec,
+} from "@/utils/componentSpec";
 
 type RegisterNodeOptions = {
   nodeId: string;
@@ -19,7 +22,7 @@ type RegisterNodeOptions = {
 export type UpdateOverlayMessage = {
   type: "update-overlay";
   data: {
-    replaceWith: ComponentReference;
+    replaceWith: HydratedComponentReference;
     ids: string[];
   };
 };
