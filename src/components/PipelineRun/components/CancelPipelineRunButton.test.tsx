@@ -38,9 +38,11 @@ describe("<CancelPipelineRunButton/>", () => {
     isLoading: false,
     isSubmitting: false,
     isCancelling: false,
+    isCloning: false,
     error: null,
     rerun: vi.fn(),
     cancel: mockCancel,
+    clone: vi.fn(),
   };
 
   const mockUsePipelineRun = (overrides = {}) => {
