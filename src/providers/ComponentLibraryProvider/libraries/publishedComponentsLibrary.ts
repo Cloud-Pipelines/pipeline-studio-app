@@ -12,6 +12,7 @@ import { hydrateComponentReference } from "@/services/componentService";
 import type { ComponentFolder } from "@/types/componentLibrary";
 import {
   type ComponentReference,
+  type ComponentReferenceWithDigest,
   isDiscoverableComponentReference,
 } from "@/utils/componentSpec";
 import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
@@ -241,8 +242,11 @@ export class PublishedComponentsLibrary implements Library {
           published_by: component.published_by,
           superseded_by: component.superseded_by,
           deprecated: component.deprecated,
-        }) as ComponentReference,
+        }) as ComponentReferenceWithDigest,
     );
+
+    // warming up the cache
+    components.forEach((component) => this.#knownDigests.add(component.digest));
 
     return {
       name: "Published Components",
