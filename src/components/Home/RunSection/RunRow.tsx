@@ -19,8 +19,7 @@ import useToastNotification from "@/hooks/useToastNotification";
 import { useBackend } from "@/providers/BackendProvider";
 import { APP_ROUTES } from "@/routes/router";
 import {
-  countTaskStatuses,
-  getRunStatus,
+  processExecutionStatuses,
   useFetchExecutionInfo,
 } from "@/services/executionService";
 import { convertUTCToLocalTime, formatDate } from "@/utils/date";
@@ -76,7 +75,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
     );
   }
 
-  const statusCounts = countTaskStatuses(details, state);
+  const status = processExecutionStatuses(details, state);
 
   const clickThroughUrl = `${APP_ROUTES.RUNS}/${executionId}`;
 
@@ -117,7 +116,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
       className="cursor-pointer text-gray-500 text-xs"
     >
       <TableCell className="text-sm flex items-center gap-2">
-        <StatusIcon status={getRunStatus(statusCounts)} />
+        <StatusIcon status={status.run} />
         <Link {...LinkProps}>{name}</Link>
         <span>{`#${executionId}`}</span>
       </TableCell>
@@ -125,13 +124,13 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
         <HoverCard openDelay={100}>
           <HoverCardTrigger>
             <div className="w-2/3">
-              <StatusBar statusCounts={statusCounts} />
+              <StatusBar statusCounts={status.counts} />
             </div>
           </HoverCardTrigger>
           <HoverCardContent>
             <div className="flex flex-col gap-2">
               <div className="text-sm font-bold">Status</div>
-              <StatusText statusCounts={statusCounts} />
+              <StatusText statusCounts={status.counts} />
             </div>
           </HoverCardContent>
         </HoverCard>

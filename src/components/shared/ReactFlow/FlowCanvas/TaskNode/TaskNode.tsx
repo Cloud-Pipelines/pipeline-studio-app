@@ -2,7 +2,7 @@ import { type NodeProps } from "@xyflow/react";
 import { memo, useMemo } from "react";
 
 import type { ContainerExecutionStatus } from "@/api/types.gen";
-import { useTaskStatusMap } from "@/providers/PipelineRunProvider";
+import { usePipelineRunStatus } from "@/providers/PipelineRunProvider";
 import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
 import type { TaskNodeData } from "@/types/taskNode";
 
@@ -10,20 +10,16 @@ import { StatusIndicator } from "./StatusIndicator";
 import { TaskNodeCard } from "./TaskNodeCard";
 
 const TaskNode = ({ data, selected }: NodeProps) => {
-  const taskStatusMap = useTaskStatusMap();
+  const runStatus = usePipelineRunStatus();
   const typedData = useMemo(() => data as TaskNodeData, [data]);
 
-  const executionStatus = taskStatusMap?.get(typedData.taskId ?? "") as
+  const status = runStatus?.map.get(typedData.taskId ?? "") as
     | ContainerExecutionStatus
     | undefined;
 
   return (
-    <TaskNodeProvider
-      data={typedData}
-      selected={selected}
-      status={executionStatus}
-    >
-      <StatusIndicator status={executionStatus} />
+    <TaskNodeProvider data={typedData} selected={selected} status={status}>
+      {status && <StatusIndicator status={status} />}
       <TaskNodeCard />
     </TaskNodeProvider>
   );

@@ -16,7 +16,7 @@ export const CancelPipelineRunButton = () => {
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const isCancelled = isStatusCancelled(status);
+  const isCancelled = isStatusCancelled(status.run);
 
   const handleConfirm = useCallback(async () => {
     setIsOpen(false);
