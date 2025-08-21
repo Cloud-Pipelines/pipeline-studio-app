@@ -34,6 +34,7 @@ export const RunDetails = () => {
   } = useExecutionData();
   const { data: currentUserDetails } = useUserDetails();
 
+<<<<<<< HEAD
   const editorRoute = componentSpec.name
     ? `/editor/${encodeURIComponent(componentSpec.name)}`
     : "";
@@ -52,6 +53,8 @@ export const RunDetails = () => {
 
   // const runId = details?.pipeline_run_id;
 
+=======
+>>>>>>> dd4c00ff (Add Cancel Action to PipelinRunProvider)
   if (error || !details || !state || !componentSpec) {
     return (
       <div className="flex flex-col gap-8 items-center justify-center h-full">
@@ -136,9 +139,13 @@ export const RunDetails = () => {
             <InspectPipelineButton pipelineName={componentSpec.name} />
           )}
           <ClonePipelineButton componentSpec={componentSpec} />
+<<<<<<< HEAD
           {isInProgress && isRunCreator && (
             <CancelPipelineRunButton runId={runId} />
           )}
+=======
+          {isInProgress && <CancelPipelineRunButton />}
+>>>>>>> dd4c00ff (Add Cancel Action to PipelinRunProvider)
           {isComplete && <RerunPipelineButton componentSpec={componentSpec} />}
         </div>
       </div>

@@ -127,6 +127,10 @@ export const isStatusComplete = (status: string = "") => {
   );
 };
 
+export const isStatusCancelled = (status: string = "") => {
+  return status === STATUS.CANCELLED;
+};
+
 const mapStatus = (status: string) => {
   switch (status) {
     case "SUCCEEDED":

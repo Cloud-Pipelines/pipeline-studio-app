@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import {
   type ReactNode,
   useCallback,
@@ -18,8 +19,17 @@ import {
   createRequiredContext,
   useRequiredContext,
 } from "@/hooks/useRequiredContext";
-import { countTaskStatuses, getRunStatus } from "@/services/executionService";
-import { fetchPipelineRunById } from "@/services/pipelineRunService";
+import useToastNotification from "@/hooks/useToastNotification";
+import { useBackend } from "@/providers/BackendProvider";
+import {
+  countTaskStatuses,
+  getRunStatus,
+  isStatusCancelled,
+} from "@/services/executionService";
+import {
+  cancelPipelineRun,
+  fetchPipelineRunById,
+} from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { submitPipelineRun } from "@/utils/submitPipeline";
@@ -34,6 +44,7 @@ type PipelineRunContextType = {
 
   isLoading: boolean;
   isSubmitting: boolean;
+  isCancelling: boolean;
   error: Error | null;
 
   rerun: (
@@ -43,6 +54,7 @@ type PipelineRunContextType = {
       onError?: (error: Error | string) => void;
     },
   ) => Promise<void>;
+  cancel: () => Promise<void>;
 };
 
 const PipelineRunContext = createRequiredContext<PipelineRunContextType>(
@@ -58,6 +70,8 @@ export const PipelineRunProvider = ({
 }) => {
   console.log(rootExecutionId); // tbd if we still need this provider given we now have useExecutionData - to be fair it would be good to have somewhere to consolidate execute state with status calculations
   // const { backendUrl } = useBackend();
+  const { backendUrl, available } = useBackend();
+  const notify = useToastNotification();
 
   const { awaitAuthorization, isAuthorized } = useAwaitAuthorization();
   const { getToken } = useAuthLocalStorage();
@@ -65,8 +79,9 @@ export const PipelineRunProvider = ({
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
   const [status, setStatus] = useState<string>("UNKNOWN");
 
-  // const [isPolling, setIsPolling] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  // const [isPolling, setIsPolling] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   const authorizationToken = useRef<string | undefined>(getToken());
@@ -84,6 +99,16 @@ export const PipelineRunProvider = ({
     () => details?.pipeline_run_id,
     [details?.pipeline_run_id],
   );
+
+  const { mutate: cancelRun } = useMutation({
+    mutationFn: (runId: string) => cancelPipelineRun(runId, backendUrl),
+    onSuccess: () => {
+      notify(`Pipeline run cancelled`, "success");
+    },
+    onError: (error) => {
+      notify(`Error cancelling run: ${error}`, "error");
+    },
+  });
 
   const fetchRunMetadata = useCallback(async () => {
     if (!runId) {
@@ -137,6 +162,22 @@ export const PipelineRunProvider = ({
     [isAuthorized, awaitAuthorization, backendUrl],
   );
 
+  const cancel = useCallback(async () => {
+    if (!runId) {
+      notify(`Failed to cancel run. No run ID found.`, "warning");
+      return;
+    }
+
+    if (!available) {
+      notify(`Backend is not available. Cannot cancel run.`, "warning");
+      return;
+    }
+
+    setIsCancelling(true);
+
+    cancelRun(runId);
+  }, [runId, available, cancelRun, notify]);
+
   useEffect(() => {
     if (executionError) {
       setError(executionError);
@@ -151,16 +192,20 @@ export const PipelineRunProvider = ({
     }
   }, [details, state]);
 
-  // useEffect(() => {
-  //   const shouldPollStatus =
-  //     backendUrl && rootExecutionId && !isStatusComplete(status);
+  useEffect(() => {
+    if (isCancelling && isStatusCancelled(status)) {
+      setIsCancelling(false);
+    }
 
-  //   if (shouldPollStatus) {
-  //     setIsPolling(true);
-  //   } else {
-  //     setIsPolling(false);
-  //   }
-  // }, [status, backendUrl]);
+    // const shouldPollStatus =
+    //   backendUrl && rootExecutionId && !isStatusComplete(status);
+
+    // if (shouldPollStatus) {
+    //   setIsPolling(true);
+    // } else {
+    //   setIsPolling(false);
+    // }
+  }, [status, isCancelling, backendUrl, rootExecutionId]);
 
   // useEffect(() => {
   //   refetchExecutionInfo();
@@ -174,10 +219,23 @@ export const PipelineRunProvider = ({
       metadata,
       isLoading,
       isSubmitting,
+      isCancelling,
       error,
       rerun,
+      cancel,
     }),
-    [details, state, status, metadata, isLoading, isSubmitting, error, rerun],
+    [
+      details,
+      state,
+      status,
+      metadata,
+      isLoading,
+      isSubmitting,
+      isCancelling,
+      error,
+      rerun,
+      cancel,
+    ],
   );
 
   return (
