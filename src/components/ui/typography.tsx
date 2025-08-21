@@ -20,6 +20,10 @@ type TextElement =
 
 const textVariants = cva("", {
   variants: {
+    font: {
+      default: "",
+      mono: "font-mono",
+    },
     tone: {
       inherit: "text-foreground",
       subdued: "text-muted-foreground",
@@ -71,13 +75,14 @@ export function Text({
   tone = "inherit",
   size = "md",
   weight = "regular",
+  font = "default",
   children,
   className,
   ...rest
 }: TextProps) {
   return (
     <Element
-      className={cn(textVariants({ tone, size, weight }), className)}
+      className={cn(textVariants({ tone, size, weight, font }), className)}
       {...rest}
     >
       {children}
