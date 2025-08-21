@@ -38,8 +38,8 @@ interface TaskConfigurationProps {
 const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
   const { name, taskSpec, taskId, state, callbacks } = taskNode;
 
-  const { readOnly, runStatus } = state;
-  const disabled = !!runStatus;
+  const { readOnly, status } = state;
+  const disabled = !!status;
 
   const componentSpec = taskSpec.componentRef.spec;
 
@@ -57,7 +57,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
     >
       <div className="flex items-center gap-2 px-2 pb-2 font-semibold text-lg">
         {name} <ComponentFavoriteToggle component={taskSpec.componentRef} />
-        {runStatus && <StatusIcon status={runStatus} tooltip label="task" />}
+        {status && <StatusIcon status={status} tooltip label="task" />}
       </div>
 
       <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4 h-full">
@@ -98,7 +98,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
               componentDigest={taskSpec.componentRef.digest}
               url={taskSpec.componentRef.url}
               onDelete={callbacks.onDelete}
-              runStatus={runStatus}
+              status={status}
               hasDeletionConfirmation={false}
               readOnly={readOnly}
               additionalSection={[
@@ -151,12 +151,12 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
               <div className="flex w-full justify-end pr-4">
                 <OpenLogsInNewWindowLink
                   executionId={taskSpec.annotations?.executionId as string}
-                  status={runStatus}
+                  status={status}
                 />
               </div>
               <Logs
                 executionId={taskSpec.annotations?.executionId as string}
-                status={runStatus}
+                status={status}
               />
             </TabsContent>
           )}

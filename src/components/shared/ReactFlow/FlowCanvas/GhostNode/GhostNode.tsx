@@ -44,11 +44,7 @@ const GhostNode = memo(({ data }: NodeProps) => {
           p-1
         "
       >
-        <TaskNodeProvider
-          data={ghostTaskData}
-          selected={false}
-          runStatus={undefined}
-        >
+        <TaskNodeProvider data={ghostTaskData} selected={false}>
           <TaskNodeCard />
         </TaskNodeProvider>
       </div>

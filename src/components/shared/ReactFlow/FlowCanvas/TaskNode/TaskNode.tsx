@@ -14,7 +14,7 @@ const TaskNode = ({ data, selected }: NodeProps) => {
 
   const typedData = useMemo(() => data as TaskNodeData, [data]);
 
-  const runStatus = taskStatusMap.get(
+  const executionStatus = taskStatusMap.get(
     typedData.taskId ?? "",
   ) as ContainerExecutionStatus;
 
@@ -22,9 +22,9 @@ const TaskNode = ({ data, selected }: NodeProps) => {
     <TaskNodeProvider
       data={typedData}
       selected={selected}
-      runStatus={runStatus}
+      status={executionStatus}
     >
-      <StatusIndicator status={runStatus} />
+      <StatusIndicator status={executionStatus} />
       <TaskNodeCard />
     </TaskNodeProvider>
   );
