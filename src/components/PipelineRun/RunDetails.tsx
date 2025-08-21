@@ -24,8 +24,6 @@ export const RunDetails = () => {
   const { componentSpec } = useComponentSpec();
   const { details, state, metadata, isLoading, error } = usePipelineRun();
 
-  const runId = details?.pipeline_run_id;
-
   if (error || !details || !state || !componentSpec) {
     return (
       <div className="flex flex-col gap-8 items-center justify-center h-full">
@@ -108,7 +106,7 @@ export const RunDetails = () => {
         <div className="flex gap-2">
           <InspectPipelineButton pipelineName={componentSpec.name} />
           <ClonePipelineButton componentSpec={componentSpec} />
-          {isInProgress && <CancelPipelineRunButton runId={runId} />}
+          {isInProgress && <CancelPipelineRunButton />}
           {isComplete && <RerunPipelineButton componentSpec={componentSpec} />}
         </div>
       </div>

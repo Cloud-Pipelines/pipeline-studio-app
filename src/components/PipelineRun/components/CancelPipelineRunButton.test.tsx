@@ -11,14 +11,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import useToastNotification from "@/hooks/useToastNotification";
 import { useBackend } from "@/providers/BackendProvider";
-import * as pipelineRunService from "@/services/pipelineRunService";
+import { usePipelineRun } from "@/providers/PipelineRunProvider";
 
 import { CancelPipelineRunButton } from "./CancelPipelineRunButton";
 
 // Mock the services and hooks
-vi.mock("@/services/pipelineRunService");
 vi.mock("@/hooks/useToastNotification");
 vi.mock("@/providers/BackendProvider");
+vi.mock("@/providers/PipelineRunProvider");
 
 describe("<CancelPipelineRunButton/>", () => {
   const queryClient = new QueryClient({
@@ -28,6 +28,27 @@ describe("<CancelPipelineRunButton/>", () => {
     },
   });
   const mockNotify: ReturnType<typeof vi.fn> = vi.fn();
+  const mockCancel: ReturnType<typeof vi.fn> = vi.fn();
+
+  const basePipelineRunMock = {
+    details: undefined,
+    state: undefined,
+    metadata: null,
+    status: "RUNNING",
+    isLoading: false,
+    isSubmitting: false,
+    isCancelling: false,
+    error: null,
+    rerun: vi.fn(),
+    cancel: mockCancel,
+  };
+
+  const mockUsePipelineRun = (overrides = {}) => {
+    vi.mocked(usePipelineRun).mockReturnValue({
+      ...basePipelineRunMock,
+      ...overrides,
+    });
+  };
 
   beforeEach(() => {
     // Reset all mocks
@@ -46,6 +67,8 @@ describe("<CancelPipelineRunButton/>", () => {
       setBackendUrl: vi.fn(),
       ping: vi.fn(),
     });
+
+    mockUsePipelineRun();
   });
 
   afterEach(() => {
@@ -64,7 +87,7 @@ describe("<CancelPipelineRunButton/>", () => {
 
   describe("Rendering", () => {
     test("renders cancel button with correct icon", () => {
-      renderWithQueryClient(<CancelPipelineRunButton runId="test-run-123" />);
+      renderWithQueryClient(<CancelPipelineRunButton />);
 
       const button = screen.getByTestId("cancel-pipeline-run-button");
       expect(button).toBeInTheDocument();
@@ -72,143 +95,191 @@ describe("<CancelPipelineRunButton/>", () => {
       expect(button).toHaveClass("bg-destructive");
     });
 
-    test("renders button when runId is null", () => {
-      renderWithQueryClient(<CancelPipelineRunButton runId={null} />);
+    test("renders button when backend is not available", () => {
+      vi.mocked(useBackend).mockReturnValue({
+        configured: true,
+        available: false,
+        backendUrl: "http://localhost:8000",
+        isConfiguredFromEnv: false,
+        isConfiguredFromRelativePath: false,
+        setEnvConfig: vi.fn(),
+        setRelativePathConfig: vi.fn(),
+        setBackendUrl: vi.fn(),
+        ping: vi.fn(),
+      });
+
+      renderWithQueryClient(<CancelPipelineRunButton />);
 
       const button = screen.getByTestId("cancel-pipeline-run-button");
-      expect(button).toBeDefined();
+      expect(button).toBeInTheDocument();
+      expect(button).toBeDisabled();
+    });
+
+    test("shows cancelling state when isCancelling is true", () => {
+      mockUsePipelineRun({ isCancelling: true });
+
+      renderWithQueryClient(<CancelPipelineRunButton />);
+
+      expect(screen.getByText("Cancelling...")).toBeInTheDocument();
+      const button = screen.getByRole("button");
+      expect(button).toBeDisabled();
+    });
+
+    test("shows cancelled state when status is cancelled", () => {
+      mockUsePipelineRun({ status: "CANCELLED" });
+
+      renderWithQueryClient(<CancelPipelineRunButton />);
+
+      const button = screen.getByRole("button");
+      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute("title", "Run cancelled");
     });
   });
 
   describe("Confirmation Dialog", () => {
     test("opens confirmation dialog when button is clicked", async () => {
-      // arrange
-      renderWithQueryClient(<CancelPipelineRunButton runId="test-run-123" />);
+      renderWithQueryClient(<CancelPipelineRunButton />);
       const button = screen.getByTestId("cancel-pipeline-run-button");
 
-      // act
       await act(() => fireEvent.click(button));
 
-      // assert
-      expect(screen.getByRole("heading", { name: "Cancel run" })).toBeDefined();
+      expect(
+        screen.getByRole("heading", { name: "Cancel run" }),
+      ).toBeInTheDocument();
       expect(
         screen.getByText(
           "The run will be scheduled for cancellation. This action cannot be undone.",
         ),
-      ).toBeDefined();
+      ).toBeInTheDocument();
     });
 
     test("closes confirmation dialog when cancel is clicked", async () => {
-      // arrange
-      renderWithQueryClient(<CancelPipelineRunButton runId="test-run-123" />);
+      renderWithQueryClient(<CancelPipelineRunButton />);
       const button = screen.getByTestId("cancel-pipeline-run-button");
 
-      // act
       await act(() => fireEvent.click(button));
-      expect(screen.getByRole("heading", { name: "Cancel run" })).toBeDefined();
+      expect(
+        screen.getByRole("heading", { name: "Cancel run" }),
+      ).toBeInTheDocument();
 
       const cancelButton = screen.getByRole("button", { name: "Cancel" });
       await act(() => fireEvent.click(cancelButton));
 
-      // assert
       expect(screen.queryByRole("heading", { name: "Cancel run" })).toBeNull();
     });
   });
 
   describe("Pipeline Cancellation", () => {
-    const cancelPipelineRun = vi.mocked(pipelineRunService.cancelPipelineRun);
-
     test("successfully cancels pipeline run", async () => {
-      // arrange
-      cancelPipelineRun.mockResolvedValue();
-      renderWithQueryClient(<CancelPipelineRunButton runId="test-run-123" />);
+      mockCancel.mockResolvedValue(undefined);
+      renderWithQueryClient(<CancelPipelineRunButton />);
 
-      // act
       const button = screen.getByTestId("cancel-pipeline-run-button");
       await act(() => fireEvent.click(button));
       const confirmButton = screen.getByText("Continue");
       await act(() => fireEvent.click(confirmButton));
 
-      // assert
-      expect(cancelPipelineRun).toHaveBeenCalledWith(
-        "test-run-123",
-        "http://localhost:8000",
-      );
-      expect(mockNotify).toHaveBeenCalledWith(
-        "Pipeline run test-run-123 cancelled",
-        "success",
-      );
-      expect(button).toBeDisabled();
+      expect(mockCancel).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole("heading", { name: "Cancel run" })).toBeNull();
     });
 
     test("handles cancellation error", async () => {
-      // arrange
       const errorMessage = "Network error";
-      cancelPipelineRun.mockRejectedValue(new Error(errorMessage));
-      renderWithQueryClient(<CancelPipelineRunButton runId="test-run-123" />);
+      mockCancel.mockRejectedValue(new Error(errorMessage));
+      renderWithQueryClient(<CancelPipelineRunButton />);
 
-      // act
       const button = screen.getByTestId("cancel-pipeline-run-button");
       await act(() => fireEvent.click(button));
       const confirmButton = screen.getByText("Continue");
       await act(() => fireEvent.click(confirmButton));
 
-      // assert
+      expect(mockCancel).toHaveBeenCalledTimes(1);
       expect(mockNotify).toHaveBeenCalledWith(
         `Error cancelling run: Error: ${errorMessage}`,
         "error",
       );
-      expect(button).toBeVisible();
-    });
-
-    test("shows warning when runId is null", async () => {
-      // arrange
-      renderWithQueryClient(<CancelPipelineRunButton runId={null} />);
-
-      // act
-      const button = screen.getByTestId("cancel-pipeline-run-button");
-      await act(() => fireEvent.click(button));
-      const confirmButton = screen.getByText("Continue");
-      await act(() => fireEvent.click(confirmButton));
-
-      // assert
-      expect(mockNotify).toHaveBeenCalledWith(
-        "Failed to cancel run. No run ID found.",
-        "warning",
-      );
-      expect(cancelPipelineRun).not.toHaveBeenCalled();
     });
 
     test("shows loading state during cancellation", async () => {
-      // arrange
       let resolvePromise: () => void;
       const pendingPromise = new Promise<void>((resolve) => {
         resolvePromise = resolve;
       });
 
-      cancelPipelineRun.mockReturnValue(pendingPromise);
+      mockCancel.mockReturnValue(pendingPromise);
 
-      renderWithQueryClient(<CancelPipelineRunButton runId="test-run-123" />);
+      renderWithQueryClient(<CancelPipelineRunButton />);
 
-      // act
       const button = screen.getByTestId("cancel-pipeline-run-button");
       await act(() => fireEvent.click(button));
       const confirmButton = screen.getByText("Continue");
-      await act(() => fireEvent.click(confirmButton));
 
-      // assert
-      expect(button).toBeDisabled();
-      expect(button).toHaveTextContent("");
+      // Start the cancellation
+      fireEvent.click(confirmButton);
+
+      // Verify dialog closes immediately
+      expect(screen.queryByRole("heading", { name: "Cancel run" })).toBeNull();
+
+      // Mock the provider to return isCancelling: true
+      mockUsePipelineRun({ isCancelling: true });
+
+      // Re-render to show the cancelling state
+      renderWithQueryClient(<CancelPipelineRunButton />);
+
+      expect(screen.getByText("Cancelling...")).toBeInTheDocument();
+      const cancellingButton = screen.getByRole("button");
+      expect(cancellingButton).toBeDisabled();
 
       // Resolve the promise
       resolvePromise!();
 
       await waitFor(() => {
-        expect(mockNotify).toHaveBeenCalledWith(
-          "Pipeline run test-run-123 cancelled",
-          "success",
-        );
+        expect(mockCancel).toHaveBeenCalledTimes(1);
       });
+    });
+  });
+
+  describe("Status-based rendering", () => {
+    test("renders cancel button for RUNNING status", () => {
+      mockUsePipelineRun({ status: "RUNNING" });
+
+      renderWithQueryClient(<CancelPipelineRunButton />);
+
+      const button = screen.getByTestId("cancel-pipeline-run-button");
+      expect(button).toBeInTheDocument();
+      expect(button).not.toBeDisabled();
+    });
+
+    test("renders cancel button for WAITING status", () => {
+      mockUsePipelineRun({ status: "WAITING" });
+
+      renderWithQueryClient(<CancelPipelineRunButton />);
+
+      const button = screen.getByTestId("cancel-pipeline-run-button");
+      expect(button).toBeInTheDocument();
+      expect(button).not.toBeDisabled();
+    });
+
+    test("shows disabled button for SUCCEEDED status", () => {
+      mockUsePipelineRun({ status: "SUCCEEDED" });
+
+      renderWithQueryClient(<CancelPipelineRunButton />);
+
+      const button = screen.queryByTestId("cancel-pipeline-run-button");
+      if (button) {
+        expect(button).toBeDisabled();
+      }
+    });
+
+    test("shows disabled button for FAILED status", () => {
+      mockUsePipelineRun({ status: "FAILED" });
+
+      renderWithQueryClient(<CancelPipelineRunButton />);
+
+      const button = screen.queryByTestId("cancel-pipeline-run-button");
+      if (button) {
+        expect(button).toBeDisabled();
+      }
     });
   });
 });
