@@ -8,11 +8,10 @@ import type {
 } from "@/api/types.gen";
 import { useBackend } from "@/providers/BackendProvider";
 import * as executionService from "@/services/executionService";
+import * as pipelineRunService from "@/services/pipelineRunService";
+import type { PipelineRun } from "@/types/pipelineRun";
 
-import {
-  RootExecutionStatusProvider,
-  useRootExecutionContext,
-} from "./RootExecutionStatusProvider";
+import { PipelineRunProvider, usePipelineRun } from "./PipelineRunProvider";
 
 // Mock dependencies
 vi.mock("@/providers/BackendProvider");
@@ -22,30 +21,31 @@ vi.mock("@/services/executionService", async (importOriginal) => {
     useFetchExecutionInfo: vi.fn(),
   };
 });
+vi.mock("@/services/pipelineRunService");
 
 // Test component to access context
 function TestConsumer() {
-  const context = useRootExecutionContext();
+  const context = usePipelineRun();
   return (
     <div>
       <div data-testid="loading">{context.isLoading.toString()}</div>
-      <div data-testid="run-id">{context.runId || "null"}</div>
       <div data-testid="error">{context.error?.message || "null"}</div>
       <div data-testid="details-id">{context.details?.id || "null"}</div>
       <div data-testid="state-available">
         {context.state ? "available" : "null"}
       </div>
+      <div data-testid="status">{context.status}</div>
     </div>
   );
 }
 
 // Invalid consumer (outside provider)
 function InvalidConsumer() {
-  const context = useRootExecutionContext();
-  return <div>{context.runId}</div>;
+  const context = usePipelineRun();
+  return <div>{context.status}</div>;
 }
 
-describe("<RootExecutionStatusProvider />", () => {
+describe("<PipelineRunProvider />", () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -98,6 +98,15 @@ describe("<RootExecutionStatusProvider />", () => {
     },
   };
 
+  const mockPipelineRunMetadata: PipelineRun = {
+    id: 100,
+    root_execution_id: 123,
+    pipeline_name: "Test Pipeline Run",
+    status: "RUNNING",
+    created_at: "2023-01-01T00:00:00Z",
+    created_by: "test-user",
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -112,6 +121,10 @@ describe("<RootExecutionStatusProvider />", () => {
       setBackendUrl: vi.fn(),
       ping: vi.fn(),
     });
+
+    vi.mocked(pipelineRunService.fetchPipelineRunById).mockResolvedValue(
+      mockPipelineRunMetadata,
+    );
   });
 
   afterEach(() => {
@@ -121,9 +134,9 @@ describe("<RootExecutionStatusProvider />", () => {
   const renderWithProvider = (rootExecutionId: string) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <RootExecutionStatusProvider rootExecutionId={rootExecutionId}>
+        <PipelineRunProvider rootExecutionId={rootExecutionId}>
           <TestConsumer />
-        </RootExecutionStatusProvider>
+        </PipelineRunProvider>
       </QueryClientProvider>,
     );
   };
@@ -144,11 +157,11 @@ describe("<RootExecutionStatusProvider />", () => {
       renderWithProvider("test-execution-id");
 
       expect(screen.getByTestId("loading")).toHaveTextContent("true");
-      expect(screen.getByTestId("run-id")).toHaveTextContent("null");
       expect(screen.getByTestId("error")).toHaveTextContent("null");
+      expect(screen.getByTestId("status")).toHaveTextContent("UNKNOWN");
     });
 
-    test("provides correct context values when data is loaded", () => {
+    test("provides correct context values when data is loaded", async () => {
       vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
         data: {
           details: mockExecutionDetails,
@@ -160,10 +173,20 @@ describe("<RootExecutionStatusProvider />", () => {
         refetch: vi.fn(),
       });
 
+      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
+        total: 2,
+        succeeded: 1,
+        failed: 0,
+        running: 1,
+        waiting: 0,
+        skipped: 0,
+        cancelled: 0,
+      });
+      vi.spyOn(executionService, "getRunStatus").mockReturnValue("RUNNING");
+
       renderWithProvider("test-execution-id");
 
       expect(screen.getByTestId("loading")).toHaveTextContent("false");
-      expect(screen.getByTestId("run-id")).toHaveTextContent("test-run-id-123");
       expect(screen.getByTestId("error")).toHaveTextContent("null");
       expect(screen.getByTestId("details-id")).toHaveTextContent(
         "test-execution-id",
@@ -171,6 +194,17 @@ describe("<RootExecutionStatusProvider />", () => {
       expect(screen.getByTestId("state-available")).toHaveTextContent(
         "available",
       );
+      expect(screen.getByTestId("status")).toHaveTextContent("RUNNING");
+
+      // Wait for metadata to be fetched
+      await waitFor(() => {
+        expect(screen.getByTestId("metadata-id")).toHaveTextContent(
+          "test-run-id-123",
+        );
+        expect(screen.getByTestId("metadata-name")).toHaveTextContent(
+          "Test Pipeline Run",
+        );
+      });
     });
 
     test("handles loading state correctly", () => {
@@ -212,6 +246,92 @@ describe("<RootExecutionStatusProvider />", () => {
     });
   });
 
+  describe("Status calculation", () => {
+    test("calculates RUNNING status correctly", () => {
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        refetch: vi.fn(),
+      });
+
+      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
+        total: 2,
+        succeeded: 1,
+        failed: 0,
+        running: 1,
+        waiting: 0,
+        skipped: 0,
+        cancelled: 0,
+      });
+      vi.spyOn(executionService, "getRunStatus").mockReturnValue("RUNNING");
+
+      renderWithProvider("test-execution-id");
+
+      expect(screen.getByTestId("status")).toHaveTextContent("RUNNING");
+    });
+
+    test("calculates SUCCEEDED status correctly", () => {
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockCompletedExecutionState,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        refetch: vi.fn(),
+      });
+
+      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
+        total: 2,
+        succeeded: 2,
+        failed: 0,
+        running: 0,
+        waiting: 0,
+        skipped: 0,
+        cancelled: 0,
+      });
+      vi.spyOn(executionService, "getRunStatus").mockReturnValue("SUCCEEDED");
+
+      renderWithProvider("test-execution-id");
+
+      expect(screen.getByTestId("status")).toHaveTextContent("SUCCEEDED");
+    });
+
+    test("calculates FAILED status correctly", () => {
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockFailedExecutionState,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        refetch: vi.fn(),
+      });
+
+      vi.spyOn(executionService, "countTaskStatuses").mockReturnValue({
+        total: 2,
+        succeeded: 1,
+        failed: 1,
+        running: 0,
+        waiting: 0,
+        skipped: 0,
+        cancelled: 0,
+      });
+      vi.spyOn(executionService, "getRunStatus").mockReturnValue("FAILED");
+
+      renderWithProvider("test-execution-id");
+
+      expect(screen.getByTestId("status")).toHaveTextContent("FAILED");
+    });
+  });
+
   describe("Polling behavior", () => {
     test("starts with polling enabled", () => {
       const mockUseFetchExecutionInfo = vi.mocked(
@@ -239,7 +359,6 @@ describe("<RootExecutionStatusProvider />", () => {
     });
 
     test("stops polling when status becomes complete (SUCCEEDED)", async () => {
-      // Create a mock that can track state changes
       const mockUseFetchExecutionInfo = vi.mocked(
         executionService.useFetchExecutionInfo,
       );
@@ -286,9 +405,9 @@ describe("<RootExecutionStatusProvider />", () => {
       // Trigger re-render to simulate data update
       rerender(
         <QueryClientProvider client={queryClient}>
-          <RootExecutionStatusProvider rootExecutionId="test-execution-id">
+          <PipelineRunProvider rootExecutionId="test-execution-id">
             <TestConsumer />
-          </RootExecutionStatusProvider>
+          </PipelineRunProvider>
         </QueryClientProvider>,
       );
 
@@ -346,9 +465,9 @@ describe("<RootExecutionStatusProvider />", () => {
 
       rerender(
         <QueryClientProvider client={queryClient}>
-          <RootExecutionStatusProvider rootExecutionId="test-execution-id">
+          <PipelineRunProvider rootExecutionId="test-execution-id">
             <TestConsumer />
-          </RootExecutionStatusProvider>
+          </PipelineRunProvider>
         </QueryClientProvider>,
       );
 
@@ -397,6 +516,84 @@ describe("<RootExecutionStatusProvider />", () => {
     });
   });
 
+  describe("Metadata fetching", () => {
+    test("fetches pipeline run metadata when runId is available", async () => {
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        refetch: vi.fn(),
+      });
+
+      renderWithProvider("test-execution-id");
+
+      await waitFor(() => {
+        expect(pipelineRunService.fetchPipelineRunById).toHaveBeenCalledWith(
+          "test-run-id-123",
+        );
+        expect(screen.getByTestId("metadata-id")).toHaveTextContent(
+          "test-run-id-123",
+        );
+      });
+    });
+
+    test("handles metadata fetch failure gracefully", async () => {
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        refetch: vi.fn(),
+      });
+
+      vi.mocked(pipelineRunService.fetchPipelineRunById).mockRejectedValue(
+        new Error("Failed to fetch metadata"),
+      );
+
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      renderWithProvider("test-execution-id");
+
+      await waitFor(() => {
+        expect(screen.getByTestId("metadata-id")).toHaveTextContent("null");
+      });
+
+      consoleSpy.mockRestore();
+    });
+
+    test("does not fetch metadata when no runId is available", () => {
+      const executionDetailsWithoutRunId = {
+        ...mockExecutionDetails,
+        pipeline_run_id: undefined,
+      };
+
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
+        data: {
+          details: executionDetailsWithoutRunId,
+          state: mockRunningExecutionState,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        refetch: vi.fn(),
+      });
+
+      renderWithProvider("test-execution-id");
+
+      expect(pipelineRunService.fetchPipelineRunById).not.toHaveBeenCalled();
+      expect(screen.getByTestId("metadata-id")).toHaveTextContent("null");
+    });
+  });
+
   describe("Context values", () => {
     test("provides undefined values when no data is loaded", () => {
       vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
@@ -414,30 +611,12 @@ describe("<RootExecutionStatusProvider />", () => {
 
       expect(screen.getByTestId("details-id")).toHaveTextContent("null");
       expect(screen.getByTestId("state-available")).toHaveTextContent("null");
-      expect(screen.getByTestId("run-id")).toHaveTextContent("null");
-    });
-
-    test("extracts pipeline_run_id correctly from details", () => {
-      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
-        data: {
-          details: mockExecutionDetails,
-          state: mockRunningExecutionState,
-        },
-        isLoading: false,
-        error: null,
-        isFetching: false,
-        refetch: vi.fn(),
-      });
-
-      renderWithProvider("test-execution-id");
-
-      expect(screen.getByTestId("run-id")).toHaveTextContent(
-        mockExecutionDetails.pipeline_run_id!,
-      );
+      expect(screen.getByTestId("metadata-id")).toHaveTextContent("null");
+      expect(screen.getByTestId("status")).toHaveTextContent("UNKNOWN");
     });
   });
 
-  describe("useRootExecutionContext hook", () => {
+  describe("usePipelineRun hook", () => {
     test("throws error when used outside provider", () => {
       // Mock console.error to avoid noise in test output
       const consoleSpy = vi
@@ -446,9 +625,7 @@ describe("<RootExecutionStatusProvider />", () => {
 
       expect(() => {
         render(<InvalidConsumer />);
-      }).toThrow(
-        "useRootExecutionContext must be used within RootExecutionContext",
-      );
+      }).toThrow("usePipelineRun must be used within PipelineRunProvider");
 
       consoleSpy.mockRestore();
     });
@@ -468,7 +645,7 @@ describe("<RootExecutionStatusProvider />", () => {
       renderWithProvider("test-execution-id");
 
       // If we reach here without throwing, the hook works correctly
-      expect(screen.getByTestId("run-id")).toBeInTheDocument();
+      expect(screen.getByTestId("status")).toBeInTheDocument();
     });
   });
 
@@ -532,6 +709,24 @@ describe("<RootExecutionStatusProvider />", () => {
         customBackendUrl,
         true,
       );
+    });
+
+    test("refetches execution info when backend URL changes", () => {
+      const mockRefetch = vi.fn();
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
+        data: {
+          details: undefined,
+          state: undefined,
+        },
+        isLoading: true,
+        error: null,
+        isFetching: false,
+        refetch: mockRefetch,
+      });
+
+      renderWithProvider("test-execution-id");
+
+      expect(mockRefetch).toHaveBeenCalled();
     });
   });
 });
