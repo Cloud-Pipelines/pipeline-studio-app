@@ -23,11 +23,13 @@ import {
 } from "@/hooks/useRequiredContext";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useBackend } from "@/providers/BackendProvider";
+import { type RunDetailParams, runDetailRoute } from "@/routes/router";
 import {
   isStatusCancelled,
   isStatusComplete,
   processExecutionStatuses,
   useFetchExecutionInfo,
+  usePipelineRunDetailsQuery,
 } from "@/services/executionService";
 import {
   cancelPipelineRun,

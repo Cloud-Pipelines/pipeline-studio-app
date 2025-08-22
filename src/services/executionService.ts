@@ -64,6 +64,35 @@ export const useFetchContainerExecutionState = (
   });
 };
 
+export const usePipelineRunDetailsQuery = (
+  executionId: string,
+  backendUrl: string,
+) => {
+  return useQuery<GetExecutionInfoResponse>({
+    queryKey: ["pipeline-run-details", executionId],
+    refetchOnWindowFocus: false,
+    queryFn: () => fetchExecutionDetails(executionId, backendUrl),
+    staleTime: 1000 * 60 * 60, // 1 hour
+    enabled: Boolean(executionId && backendUrl),
+  });
+};
+
+export const usePipelineRunStateQuery = (
+  executionId: string | undefined,
+  backendUrl: string,
+  poll: number | undefined = 5000,
+) => {
+  return useQuery<GetGraphExecutionStateResponse>({
+    queryKey: ["pipeline-run-state", executionId],
+    refetchOnWindowFocus: false,
+    queryFn: () =>
+      fetchExecutionState(executionId ?? "" /* todo: typings */, backendUrl),
+    refetchInterval: poll ?? false,
+    staleTime: 5000,
+    enabled: Boolean(executionId && backendUrl),
+  });
+};
+
 export const useFetchExecutionInfo = (
   executionId: string,
   backendUrl: string,
@@ -75,12 +104,7 @@ export const useFetchExecutionInfo = (
     isFetching: isDetailsFetching,
     error: detailsError,
     refetch: refetchDetails,
-  } = useQuery<GetExecutionInfoResponse>({
-    queryKey: ["pipeline-run-details", executionId],
-    refetchOnWindowFocus: false,
-    queryFn: () => fetchExecutionDetails(executionId, backendUrl),
-    refetchInterval: poll ? 5000 : false,
-  });
+  } = usePipelineRunDetailsQuery(executionId, backendUrl);
 
   const {
     data: state,
@@ -93,6 +117,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionState(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
+    enabled: false,
   });
 
   const isLoading = isDetailsLoading || isStateLoading;
@@ -101,8 +126,8 @@ export const useFetchExecutionInfo = (
   const data = { state, details };
 
   const refetch = useCallback(() => {
-    refetchDetails();
-    refetchState();
+    // refetchDetails();
+    // refetchState();
   }, [refetchDetails, refetchState]);
 
   return { data, isLoading, isFetching, error, refetch };
