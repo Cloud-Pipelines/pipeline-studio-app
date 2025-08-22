@@ -114,17 +114,18 @@ const ComponentMarkup = ({
 };
 
 const ComponentItemFromUrl = ({ url }: ComponentItemFromUrlProps) => {
-  if (!url) return null;
-
   const { isLoading, error, componentRef } = useComponentFromUrl(url);
 
-  if (!componentRef.spec) {
-    componentRef.spec = EMPTY_GRAPH_COMPONENT_SPEC;
-  }
+  if (!url) return null;
+
+  // Create a new componentRef with spec if needed (avoid mutation)
+  const normalizedComponentRef = componentRef.spec
+    ? componentRef
+    : { ...componentRef, spec: EMPTY_GRAPH_COMPONENT_SPEC };
 
   return (
     <ComponentMarkup
-      component={componentRef}
+      component={normalizedComponentRef}
       isLoading={isLoading}
       error={error}
     />

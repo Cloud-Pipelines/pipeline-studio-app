@@ -1,5 +1,6 @@
 import pluginJs from "@eslint/js";
 import pluginReact from "eslint-plugin-react";
+import reactCompiler from "eslint-plugin-react-compiler";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -11,6 +12,13 @@ export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
+  {
+    settings: {
+      react: {
+        version: "19.0.0",
+      },
+    },
+  },
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
@@ -51,9 +59,11 @@ export default [
           ],
         },
       ],
+      "react-compiler/react-compiler": "error",
     },
     plugins: {
       "simple-import-sort": simpleImportSort,
+      "react-compiler": reactCompiler,
     },
   },
   {
