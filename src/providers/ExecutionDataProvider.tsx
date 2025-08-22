@@ -1,8 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
-import { useContext, useEffect, useMemo, useRef } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
+  ContainerExecutionStatus,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
@@ -28,6 +29,7 @@ interface ExecutionDataContextType {
   rootDetails: GetExecutionInfoResponse | undefined;
   rootState: GetGraphExecutionStateResponse | undefined;
   runId: string | undefined | null;
+  taskStatusMap: Map<string, ContainerExecutionStatus>;
   isLoading: boolean;
   error: Error | null;
 }
@@ -46,16 +48,18 @@ const buildPathKey = (path: string[]) => path.join(PATH_DELIMITER);
 
 const extractStatusFromStats = (
   statusStats: Record<string, number>,
-): string | undefined => {
+): ContainerExecutionStatus | undefined => {
   const statuses = Object.keys(statusStats);
-  return statuses.length > 0 ? statuses[0] : undefined;
+  return statuses.length > 0
+    ? (statuses[0] as ContainerExecutionStatus)
+    : undefined;
 };
 
 const buildTaskStatusMap = (
   details?: GetExecutionInfoResponse,
   state?: GetGraphExecutionStateResponse,
-): Map<string, string> => {
-  const taskStatusMap = new Map<string, string>();
+): Map<string, ContainerExecutionStatus> => {
+  const taskStatusMap = new Map<string, ContainerExecutionStatus>();
 
   if (!details?.child_task_execution_ids) {
     return taskStatusMap;
@@ -138,7 +142,11 @@ export function ExecutionDataProvider({
   children,
 }: PropsWithChildren<{ pipelineRunId: string }>) {
   const queryClient = useQueryClient();
-  const { currentSubgraphPath, setTaskStatusMap } = useComponentSpec();
+  const { currentSubgraphPath } = useComponentSpec();
+
+  const [taskStatusMap, setTaskStatusMap] = useState<
+    Map<string, ContainerExecutionStatus>
+  >(new Map());
 
   const executionDataCache = useRef<Map<string, CachedExecutionData>>(
     new Map(),
@@ -212,7 +220,7 @@ export function ExecutionDataProvider({
   useEffect(() => {
     const taskStatusMap = buildTaskStatusMap(details, state);
     setTaskStatusMap(taskStatusMap);
-  }, [details, state, setTaskStatusMap]);
+  }, [details, state]);
 
   const value = useMemo(
     () => ({
@@ -223,6 +231,7 @@ export function ExecutionDataProvider({
       rootDetails,
       rootState,
       runId,
+      taskStatusMap,
       isLoading,
       error,
     }),
@@ -234,6 +243,7 @@ export function ExecutionDataProvider({
       rootDetails,
       rootState,
       runId,
+      taskStatusMap,
       isLoading,
       error,
     ],
