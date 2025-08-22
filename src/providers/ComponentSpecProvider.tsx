@@ -38,8 +38,6 @@ interface ComponentSpecContextType {
   refetch: () => void;
   updateGraphSpec: (newGraphSpec: GraphSpec) => void;
   saveComponentSpec: (name: string) => Promise<void>;
-  taskStatusMap: Map<string, string>;
-  setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
   undoRedo: UndoRedo;
 }
 
@@ -65,10 +63,6 @@ export const ComponentSpecProvider = ({
   // Auto save should happen on the first change without debounce to prevent waiting for two debounces (4000ms)
   const [debounceMultiplier, setDebounceMultiplier] = useState<0 | 1>(0);
 
-  const [taskStatusMap, setTaskStatusMap] = useState<Map<string, string>>(
-    new Map(),
-  );
-
   const [isLoading, setIsLoading] = useState(!!spec);
 
   const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
@@ -77,7 +71,6 @@ export const ComponentSpecProvider = ({
 
   const clearComponentSpec = useCallback(() => {
     setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
-    setTaskStatusMap(new Map());
     setIsLoading(false);
     undoRedoRef.current.clearHistory();
   }, []);
@@ -180,27 +173,23 @@ export const ComponentSpecProvider = ({
     () => ({
       componentSpec,
       graphSpec,
-      taskStatusMap,
       isLoading,
       refetch,
       setComponentSpec,
       clearComponentSpec,
       saveComponentSpec,
       updateGraphSpec,
-      setTaskStatusMap,
       undoRedo,
     }),
     [
       componentSpec,
       graphSpec,
-      taskStatusMap,
       isLoading,
       refetch,
       setComponentSpec,
       clearComponentSpec,
       saveComponentSpec,
       updateGraphSpec,
-      setTaskStatusMap,
       undoRedo,
     ],
   );

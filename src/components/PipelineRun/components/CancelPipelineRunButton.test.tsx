@@ -34,6 +34,7 @@ describe("<CancelPipelineRunButton/>", () => {
     details: undefined,
     state: undefined,
     metadata: null,
+    taskStatusMap: new Map(),
     status: "RUNNING",
     isLoading: false,
     isSubmitting: false,
