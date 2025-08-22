@@ -105,10 +105,12 @@ export const PipelineRunsProvider = ({
             backendUrl,
           );
 
-          const details = await fetchExecutionDetails(
-            run.root_execution_id.toString(),
-            backendUrl,
-          );
+          const details = undefined;
+
+          // const details = await fetchExecutionDetails(
+          //   run.root_execution_id.toString(),
+          //   backendUrl,
+          // );
 
           if (details && state) {
             const status = processExecutionStatuses(details, state);
