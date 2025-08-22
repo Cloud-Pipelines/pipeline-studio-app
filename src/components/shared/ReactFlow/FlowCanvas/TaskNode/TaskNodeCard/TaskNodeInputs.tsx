@@ -98,7 +98,7 @@ export function TaskNodeInputs({
       const input = inputs.find((i) => i.name === inputName);
       toggleHighlightRelatedHandles(selected, input);
     },
-    [inputs, state, toggleHighlightRelatedHandles],
+    [inputs, state.readOnly, toggleHighlightRelatedHandles],
   );
 
   const checkHighlight = useCallback(

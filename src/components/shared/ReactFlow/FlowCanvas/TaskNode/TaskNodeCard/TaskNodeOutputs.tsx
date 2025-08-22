@@ -40,7 +40,8 @@ export function TaskNodeOutputs({
   const outputsWithTaskInput = outputs.filter((output) =>
     edges.some(
       (edge) =>
-        edge.source === nodeId && edge.sourceHandle === `output_${output.name}`,
+        edge.source === nodeId &&
+        edge.sourceHandle === outputNameToNodeId(output.name),
     ),
   );
 
@@ -90,7 +91,7 @@ export function TaskNodeOutputs({
       const output = outputs.find((o) => o.name === outputName);
       toggleHighlightRelatedHandles(selected, output);
     },
-    [outputs, state, toggleHighlightRelatedHandles],
+    [outputs, state.readOnly, toggleHighlightRelatedHandles],
   );
 
   const checkHighlight = useCallback(
