@@ -248,3 +248,44 @@ export const convertExecutionStatsToStatusCounts = (
 
   return { ...statusCounts, total };
 };
+
+export const buildTaskStatusMap = (
+  detailsData?: GetExecutionInfoResponse,
+  stateData?: GetGraphExecutionStateResponse,
+) => {
+  const taskStatusMap = new Map();
+  if (!detailsData) {
+    return taskStatusMap;
+  }
+
+  // If no state data is available, set all tasks to WAITING_FOR_UPSTREAM
+  if (!stateData && detailsData?.child_task_execution_ids) {
+    Object.keys(detailsData.child_task_execution_ids).forEach((taskId) => {
+      taskStatusMap.set(taskId, "WAITING_FOR_UPSTREAM");
+    });
+    return taskStatusMap;
+  }
+
+  if (
+    detailsData?.child_task_execution_ids &&
+    stateData?.child_execution_status_stats
+  ) {
+    Object.entries(detailsData.child_task_execution_ids).forEach(
+      ([taskId, executionId]) => {
+        const executionIdStr = String(executionId);
+        const statusStats =
+          stateData.child_execution_status_stats[executionIdStr];
+
+        if (statusStats) {
+          const status = Object.keys(statusStats)[0];
+          taskStatusMap.set(taskId, status);
+        } else {
+          // If this task doesn't have status in state data, mark as WAITING
+          taskStatusMap.set(taskId, "WAITING_FOR_UPSTREAM");
+        }
+      },
+    );
+  }
+
+  return taskStatusMap;
+};
