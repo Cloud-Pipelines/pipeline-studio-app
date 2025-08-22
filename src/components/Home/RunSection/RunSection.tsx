@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocation, useNavigate, useSearch } from "@tanstack/react-router";
+import { ChevronFirst, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { ListPipelineJobsResponse } from "@/api/types.gen";
@@ -24,22 +25,28 @@ const PAGE_TOKEN_QUERY_KEY = "page_token";
 const FILTER_QUERY_KEY = "filter";
 const CREATED_BY_ME_FILTER = "created_by:me";
 
+type RunSectionSearch = { page_token?: string; filter?: string };
+
 export const RunSection = () => {
   const { backendUrl, configured, available } = useBackend();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const search = useSearch({ strict: false }) as RunSectionSearch;
 
-  const [useCreatedByMe, setUseCreatedByMe] = useState(false);
-  const [pageToken, setPageToken] = useState<string | undefined>();
+  const useCreatedByMe = search.filter === CREATED_BY_ME_FILTER;
+  const pageToken = search.page_token;
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
   const { data, isLoading, isFetching, error, refetch } =
     useQuery<ListPipelineJobsResponse>({
-      queryKey: ["runs", pageToken],
+      queryKey: ["runs", backendUrl, pageToken, useCreatedByMe],
       refetchOnWindowFocus: false,
       queryFn: async () => {
         const u = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
         if (pageToken) u.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
-        if (useCreatedByMe)
+        if (useCreatedByMe) {
           u.searchParams.set(FILTER_QUERY_KEY, CREATED_BY_ME_FILTER);
+        }
 
         try {
           const response = await fetch(u.toString());
@@ -61,25 +68,47 @@ export const RunSection = () => {
 
   useEffect(() => {
     refetch();
-  }, [backendUrl, useCreatedByMe, refetch]);
+  }, [backendUrl, useCreatedByMe, pageToken, refetch]);
 
   const handleFilterChange = (value: boolean) => {
-    setUseCreatedByMe(value);
-    setPageToken(undefined);
+    const nextSearch: RunSectionSearch = { ...search };
+    delete nextSearch.page_token;
+    if (value) {
+      nextSearch.filter = CREATED_BY_ME_FILTER;
+    } else {
+      delete nextSearch.filter;
+    }
     setPreviousPageTokens([]);
+    navigate({ to: pathname, search: nextSearch });
   };
 
   const handleNextPage = () => {
     if (data?.next_page_token) {
       setPreviousPageTokens([...previousPageTokens, pageToken || ""]);
-      setPageToken(data.next_page_token);
+      navigate({
+        to: pathname,
+        search: { ...search, page_token: data.next_page_token },
+      });
     }
   };
 
   const handlePreviousPage = () => {
     const previousToken = previousPageTokens[previousPageTokens.length - 1];
     setPreviousPageTokens(previousPageTokens.slice(0, -1));
-    setPageToken(previousToken);
+    const nextSearch: RunSectionSearch = { ...search };
+    if (previousToken) {
+      nextSearch.page_token = previousToken;
+    } else {
+      delete nextSearch.page_token;
+    }
+    navigate({ to: pathname, search: nextSearch });
+  };
+
+  const handleFirstPage = () => {
+    setPreviousPageTokens([]);
+    const nextSearch: RunSectionSearch = { ...search };
+    delete nextSearch.page_token;
+    navigate({ to: pathname, search: nextSearch });
   };
 
   if (!configured) {
@@ -165,14 +194,23 @@ export const RunSection = () => {
 
       {(data.next_page_token || previousPageTokens.length > 0) && (
         <div className="flex justify-between items-center mt-4">
-          <Button
-            variant="outline"
-            onClick={handlePreviousPage}
-            disabled={previousPageTokens.length === 0}
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleFirstPage}
+              disabled={!pageToken}
+            >
+              <ChevronFirst className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handlePreviousPage}
+              disabled={previousPageTokens.length === 0}
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Previous
+            </Button>
+          </div>
           <Button
             variant="outline"
             onClick={handleNextPage}
