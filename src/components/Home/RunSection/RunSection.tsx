@@ -33,19 +33,44 @@ export const RunSection = () => {
   const { pathname } = useLocation();
   const search = useSearch({ strict: false }) as RunSectionSearch;
 
-  const useCreatedByMe = search.filter === CREATED_BY_ME_FILTER;
+  // Parse filter into a dictionary
+  const parseFilter = (filter?: string): Record<string, string> => {
+    if (!filter) return {};
+
+    const filterDict: Record<string, string> = {};
+    const parts = filter.split(",");
+
+    for (const part of parts) {
+      const [key, value] = part.split(":");
+      if (key && value) {
+        filterDict[key.trim()] = value.trim();
+      }
+    }
+
+    return filterDict;
+  };
+
+  const filterDict = parseFilter(search.filter);
+  const createdByValue = filterDict.created_by;
+
+  // Determine if toggle should be on and what text to show
+  const useCreatedByMe = createdByValue !== undefined;
+  const toggleText = createdByValue
+    ? `Created by ${createdByValue}`
+    : "Created by me";
+
   const pageToken = search.page_token;
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
   const { data, isLoading, isFetching, error, refetch } =
     useQuery<ListPipelineJobsResponse>({
-      queryKey: ["runs", backendUrl, pageToken, useCreatedByMe],
+      queryKey: ["runs", backendUrl, pageToken, search.filter],
       refetchOnWindowFocus: false,
       queryFn: async () => {
         const u = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
         if (pageToken) u.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
-        if (useCreatedByMe) {
-          u.searchParams.set(FILTER_QUERY_KEY, CREATED_BY_ME_FILTER);
+        if (useCreatedByMe && search.filter) {
+          u.searchParams.set(FILTER_QUERY_KEY, search.filter);
         }
 
         try {
@@ -68,16 +93,34 @@ export const RunSection = () => {
 
   useEffect(() => {
     refetch();
-  }, [backendUrl, useCreatedByMe, pageToken, refetch]);
+  }, [backendUrl, search.filter, pageToken, refetch]);
 
   const handleFilterChange = (value: boolean) => {
     const nextSearch: RunSectionSearch = { ...search };
     delete nextSearch.page_token;
+
     if (value) {
-      nextSearch.filter = CREATED_BY_ME_FILTER;
+      // If there's already a created_by filter, keep it; otherwise use "created_by:me"
+      if (!filterDict.created_by) {
+        nextSearch.filter = CREATED_BY_ME_FILTER;
+      }
     } else {
-      delete nextSearch.filter;
+      // Remove created_by from filter, but keep other filters
+      const updatedFilterDict = { ...filterDict };
+      delete updatedFilterDict.created_by;
+
+      // Convert back to string format
+      const remainingFilters = Object.entries(updatedFilterDict)
+        .map(([key, value]) => `${key}:${value}`)
+        .join(",");
+
+      if (remainingFilters) {
+        nextSearch.filter = remainingFilters;
+      } else {
+        delete nextSearch.filter;
+      }
     }
+
     setPreviousPageTokens([]);
     navigate({ to: pathname, search: nextSearch });
   };
@@ -159,7 +202,7 @@ export const RunSection = () => {
             checked={useCreatedByMe}
             onCheckedChange={handleFilterChange}
           />
-          <Label htmlFor="created-by-me">Created by me</Label>
+          <Label htmlFor="created-by-me">{toggleText}</Label>
         </div>
         <div>No runs found. Run a pipeline to see it here.</div>
       </div>
@@ -174,7 +217,7 @@ export const RunSection = () => {
           checked={useCreatedByMe}
           onCheckedChange={handleFilterChange}
         />
-        <Label htmlFor="created-by-me">Created by me</Label>
+        <Label htmlFor="created-by-me">{toggleText}</Label>
       </div>
       <Table>
         <TableHeader>
