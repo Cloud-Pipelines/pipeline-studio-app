@@ -6,7 +6,11 @@ import useComponentFromUrl from "@/hooks/useComponentFromUrl";
 import { useTaskNodeDimensions } from "@/hooks/useTaskNodeDimensions";
 import useToastNotification from "@/hooks/useToastNotification";
 import type { Annotations } from "@/types/annotations";
-import type { TaskNodeData, TaskNodeDimensions } from "@/types/taskNode";
+import {
+  DEFAULT_TASK_NODE_CALLBACKS,
+  type TaskNodeData,
+  type TaskNodeDimensions,
+} from "@/types/taskNode";
 import type {
   ArgumentType,
   InputSpec,
@@ -75,6 +79,9 @@ export const TaskNodeProvider = ({
   const taskId = data.taskId as string;
   const nodeId = taskIdToNodeId(taskId);
 
+  const { onDelete, onDuplicate, onUpgrade, setArguments, setAnnotations } =
+    data.callbacks ?? DEFAULT_TASK_NODE_CALLBACKS;
+
   const inputs = taskSpec.componentRef.spec?.inputs || [];
   const outputs = taskSpec.componentRef.spec?.outputs || [];
 
@@ -93,26 +100,26 @@ export const TaskNodeProvider = ({
 
   const handleSetArguments = useCallback(
     (args: Record<string, ArgumentType>) => {
-      data.callbacks?.setArguments(args);
+      setArguments(args);
     },
-    [data.callbacks],
+    [setArguments],
   );
 
   const handleSetAnnotations = useCallback(
     (annotations: Annotations) => {
-      data.callbacks?.setAnnotations(annotations);
+      setAnnotations(annotations);
       notify("Annotations updated", "success");
     },
-    [data.callbacks, notify],
+    [setAnnotations, notify],
   );
 
   const handleDeleteTaskNode = useCallback(() => {
-    data.callbacks?.onDelete();
-  }, [data.callbacks]);
+    onDelete();
+  }, [onDelete]);
 
   const handleDuplicateTaskNode = useCallback(() => {
-    data.callbacks?.onDuplicate();
-  }, [data.callbacks]);
+    onDuplicate();
+  }, [onDuplicate]);
 
   const handleUpgradeTaskNode = useCallback(() => {
     if (!isOutdated) {
@@ -120,8 +127,8 @@ export const TaskNodeProvider = ({
       return;
     }
 
-    data.callbacks?.onUpgrade(mostRecentComponentRef);
-  }, [data.callbacks, isOutdated, mostRecentComponentRef, notify]);
+    onUpgrade(mostRecentComponentRef);
+  }, [onUpgrade, isOutdated, mostRecentComponentRef, notify]);
 
   const select = useCallback(() => {
     reactFlowInstance.setNodes((nodes) =>
