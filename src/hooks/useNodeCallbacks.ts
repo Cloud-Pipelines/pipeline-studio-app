@@ -1,5 +1,5 @@
 import type { Node, ReactFlowInstance } from "@xyflow/react";
-import { useCallback } from "react";
+import { type RefObject, useCallback } from "react";
 
 import { getDeleteConfirmationDetails } from "@/components/shared/ReactFlow/FlowCanvas/ConfirmationDialogs/DeleteConfirmation";
 import { getUpgradeConfirmationDetails } from "@/components/shared/ReactFlow/FlowCanvas/ConfirmationDialogs/UpgradeComponent";
@@ -18,7 +18,7 @@ import type { TriggerDialogProps } from "./useConfirmationDialog";
 import useToastNotification from "./useToastNotification";
 
 interface UseNodeCallbacksProps {
-  reactFlowInstance: ReactFlowInstance | undefined;
+  reactFlowInstanceRef: RefObject<ReactFlowInstance | undefined>;
   triggerConfirmation: (data: TriggerDialogProps) => Promise<boolean>;
   onElementsRemove: (params: NodesAndEdges) => void;
   updateOrAddNodes: (params: {
@@ -28,7 +28,7 @@ interface UseNodeCallbacksProps {
 }
 
 export const useNodeCallbacks = ({
-  reactFlowInstance,
+  reactFlowInstanceRef,
   triggerConfirmation,
   onElementsRemove,
   updateOrAddNodes,
@@ -40,12 +40,12 @@ export const useNodeCallbacks = ({
   // Workaround for nodes state being stale in task node callbacks
   const getNodeById = useCallback(
     (id: string) => {
-      if (!reactFlowInstance) {
+      if (!reactFlowInstanceRef.current) {
         console.warn("React Flow instance is not available.");
         return undefined;
       }
 
-      const { getNodes } = reactFlowInstance;
+      const { getNodes } = reactFlowInstanceRef.current;
       const nodes = getNodes();
       if (!nodes) {
         console.warn("No nodes found in the current React Flow instance.");
@@ -59,7 +59,7 @@ export const useNodeCallbacks = ({
       }
       return node;
     },
-    [reactFlowInstance],
+    [reactFlowInstanceRef],
   );
 
   const onDelete = useCallback(
@@ -73,12 +73,12 @@ export const useNodeCallbacks = ({
         return;
       }
 
-      if (!reactFlowInstance) {
+      if (!reactFlowInstanceRef.current) {
         console.warn("React Flow instance is not available.");
         return;
       }
 
-      const currentEdges = reactFlowInstance.getEdges();
+      const currentEdges = reactFlowInstanceRef.current.getEdges();
 
       const edgesToRemove = currentEdges.filter(
         (edge) => edge.source === nodeId || edge.target === nodeId,
@@ -97,7 +97,7 @@ export const useNodeCallbacks = ({
         onElementsRemove(params);
       }
     },
-    [triggerConfirmation, onElementsRemove, getNodeById],
+    [triggerConfirmation, onElementsRemove, getNodeById, reactFlowInstanceRef],
   );
 
   const setArguments = useCallback(

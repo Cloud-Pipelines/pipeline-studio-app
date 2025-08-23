@@ -177,11 +177,10 @@ const FlowCanvas = ({
     };
   }, [handleKeyDown, handleKeyUp]);
 
-  const [reactFlowInstance, setReactFlowInstance] =
-    useState<ReactFlowInstance>();
+  const reactFlowInstanceRef = useRef<ReactFlowInstance>(undefined);
 
   const onInit: OnInit = (instance) => {
-    setReactFlowInstance(instance);
+    reactFlowInstanceRef.current = instance;
   };
 
   const updateOrAddNodes = useCallback(
@@ -244,7 +243,7 @@ const FlowCanvas = ({
   );
 
   const nodeCallbacks = useNodeCallbacks({
-    reactFlowInstance,
+    reactFlowInstanceRef,
     triggerConfirmation,
     onElementsRemove,
     updateOrAddNodes,
@@ -276,7 +275,7 @@ const FlowCanvas = ({
         return;
       }
 
-      const ghostNode = reactFlowInstance
+      const ghostNode = reactFlowInstanceRef.current
         ?.getNodes()
         .find((node) => node.type === "ghost");
 
@@ -294,7 +293,7 @@ const FlowCanvas = ({
       let newComponentSpec = { ...componentSpec };
       const fromHandle = connectionState.fromHandle;
 
-      const existingInputEdge = reactFlowInstance
+      const existingInputEdge = reactFlowInstanceRef.current
         ?.getEdges()
         .find(
           (edge) =>
@@ -316,7 +315,7 @@ const FlowCanvas = ({
       setComponentSpec(updatedComponentSpec);
     },
     [
-      reactFlowInstance,
+      reactFlowInstanceRef,
       componentSpec,
       nodeData,
       setComponentSpec,
@@ -326,8 +325,8 @@ const FlowCanvas = ({
 
   useEffect(() => {
     function handleMouseMove(event: MouseEvent) {
-      if (isConnecting && reactFlowInstance) {
-        const flowPos = reactFlowInstance.screenToFlowPosition({
+      if (isConnecting && reactFlowInstanceRef.current) {
+        const flowPos = reactFlowInstanceRef.current.screenToFlowPosition({
           x: event.clientX,
           y: event.clientY,
         });
@@ -340,7 +339,7 @@ const FlowCanvas = ({
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [isConnecting, reactFlowInstance]);
+  }, [isConnecting, reactFlowInstanceRef]);
 
   const {
     handleDrop,
@@ -365,16 +364,19 @@ const FlowCanvas = ({
 
         let position;
 
-        if (dropEvent && reactFlowInstance) {
+        if (dropEvent && reactFlowInstanceRef.current) {
           // Use the drop position if available
-          position = getPositionFromEvent(dropEvent, reactFlowInstance);
+          position = getPositionFromEvent(
+            dropEvent,
+            reactFlowInstanceRef.current,
+          );
         } else {
           // Fallback to center of the canvas viewport
           const { domNode } = store.getState();
           const boundingRect = domNode?.getBoundingClientRect();
 
-          if (boundingRect && reactFlowInstance) {
-            position = reactFlowInstance.screenToFlowPosition({
+          if (boundingRect && reactFlowInstanceRef.current) {
+            position = reactFlowInstanceRef.current.screenToFlowPosition({
               x: boundingRect.x + boundingRect.width / 2,
               y: boundingRect.y + boundingRect.height / 2,
             });
@@ -415,10 +417,12 @@ const FlowCanvas = ({
 
       event.dataTransfer.dropEffect = "move";
 
-      const cursorPosition = reactFlowInstance?.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
+      const cursorPosition = reactFlowInstanceRef.current?.screenToFlowPosition(
+        {
+          x: event.clientX,
+          y: event.clientY,
+        },
+      );
 
       if (cursorPosition) {
         const hoveredNode = nodes.find((node) =>
@@ -430,7 +434,7 @@ const FlowCanvas = ({
         setReplaceTarget(hoveredNode || null);
       }
     },
-    [reactFlowInstance, nodes, replaceTarget, setReplaceTarget],
+    [reactFlowInstanceRef, nodes, replaceTarget, setReplaceTarget],
   );
 
   const onDrop = useCallback(
@@ -487,8 +491,11 @@ const FlowCanvas = ({
         return;
       }
 
-      if (reactFlowInstance) {
-        const position = getPositionFromEvent(event, reactFlowInstance);
+      if (reactFlowInstanceRef.current) {
+        const position = getPositionFromEvent(
+          event,
+          reactFlowInstanceRef.current,
+        );
 
         const newComponentSpec = addTask(
           taskType,
@@ -503,7 +510,7 @@ const FlowCanvas = ({
     },
     [
       componentSpec,
-      reactFlowInstance,
+      reactFlowInstanceRef,
       replaceTarget,
       setComponentSpec,
       updateGraphSpec,
@@ -722,7 +729,7 @@ const FlowCanvas = ({
         const boundingRect = domNode?.getBoundingClientRect();
 
         if (boundingRect) {
-          const center = reactFlowInstance?.screenToFlowPosition({
+          const center = reactFlowInstanceRef.current?.screenToFlowPosition({
             x: boundingRect.x + boundingRect.width / 2,
             y: boundingRect.y + boundingRect.height / 2,
           });
@@ -755,7 +762,7 @@ const FlowCanvas = ({
         console.error("Failed to paste nodes from clipboard:", err);
       }
     });
-  }, [graphSpec, nodes, reactFlowInstance, store, updateOrAddNodes]);
+  }, [graphSpec, nodes, reactFlowInstanceRef, store, updateOrAddNodes]);
 
   useCopyPaste({
     onCopy,
