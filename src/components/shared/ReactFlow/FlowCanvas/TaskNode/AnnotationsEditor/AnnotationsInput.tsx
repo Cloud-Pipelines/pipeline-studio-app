@@ -1,6 +1,7 @@
-import { AlertTriangle, TrashIcon } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { type ChangeEvent, useCallback, useState } from "react";
 
+import { MultilineTextInputDialog } from "@/components/shared/Dialogs/MultilineTextInputDialog";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
@@ -40,9 +41,30 @@ export const AnnotationsInput = ({
 }: AnnotationsInputProps) => {
   const [isInvalid, setIsInvalid] = useState(false);
   const [lastSavedValue, setLastSavedValue] = useState(value);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const inputType = config?.type ?? "string";
   const placeholder = config?.label ?? "";
+
+  const handleExpand = useCallback(() => {
+    setIsDialogOpen(true);
+  }, []);
+
+  const handleDialogConfirm = useCallback(
+    (newValue: string) => {
+      onChange(newValue);
+      setIsDialogOpen(false);
+      if (onBlur && newValue !== lastSavedValue) {
+        onBlur(newValue);
+        setLastSavedValue(newValue);
+      }
+    },
+    [onChange, onBlur, lastSavedValue],
+  );
+
+  const handleDialogCancel = useCallback(() => {
+    setIsDialogOpen(false);
+  }, []);
 
   const validateChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -219,7 +241,7 @@ export const AnnotationsInput = ({
     );
   } else {
     inputElement = (
-      <div className="flex-1 w-full relative">
+      <div className="flex-1 w-full relative group">
         <Input
           value={
             config?.enableQuantity
@@ -235,6 +257,14 @@ export const AnnotationsInput = ({
           autoFocus={autoFocus}
           className={cn("min-w-16", className)}
         />
+        <Button
+          className="absolute right-0 top-1/2 -translate-y-1/2 hover:bg-transparent hover:text-blue-500 hidden group-hover:flex h-8 w-8 p-0"
+          onClick={handleExpand}
+          variant="ghost"
+          type="button"
+        >
+          <Icon name="Maximize2" />
+        </Button>
         {isInvalid && (
           <div className="flex items-center gap-1 my-1 text-xs text-warning">
             <AlertTriangle className="w-4 h-4" /> Invalid JSON
@@ -244,25 +274,41 @@ export const AnnotationsInput = ({
     );
   }
 
+  const dialogTitle = `Edit ${config?.label ?? "Annotation"}`;
+
   return (
-    <div className="flex items-center gap-2 grow flex-wrap">
-      {inputElement}
-      {config?.enableQuantity && (
-        <QuantityInput
-          annotation={config.annotation}
-          annotations={annotations}
-          disabled={!getAnnotationKey(config.annotation, annotations)}
-          onChange={onChange}
-          onBlur={onBlur}
-          shouldSave={shouldSaveQuantityField}
+    <>
+      <div className="flex items-center gap-2 grow flex-wrap">
+        {inputElement}
+        {config?.enableQuantity && (
+          <QuantityInput
+            annotation={config.annotation}
+            annotations={annotations}
+            disabled={!getAnnotationKey(config.annotation, annotations)}
+            onChange={onChange}
+            onBlur={onBlur}
+            shouldSave={shouldSaveQuantityField}
+          />
+        )}
+        {deletable && onDelete && (
+          <Button variant="ghost" size="icon" onClick={onDelete} title="Remove">
+            <Icon name="Trash" className="text-destructive" />
+          </Button>
+        )}
+      </div>
+
+      {inputType === "string" && !config?.options && (
+        <MultilineTextInputDialog
+          title={dialogTitle}
+          description="Enter a value for this annotation."
+          placeholder={placeholder}
+          initialValue={value}
+          open={isDialogOpen}
+          onCancel={handleDialogCancel}
+          onConfirm={handleDialogConfirm}
         />
       )}
-      {deletable && onDelete && (
-        <Button variant="ghost" size="icon" onClick={onDelete} title="Remove">
-          <TrashIcon className="h-4 w-4 text-destructive" />
-        </Button>
-      )}
-    </div>
+    </>
   );
 };
 
