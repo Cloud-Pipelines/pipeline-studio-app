@@ -1,5 +1,5 @@
 import { AlertTriangle, TrashIcon } from "lucide-react";
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ interface AnnotationsInputProps {
   autoFocus?: boolean;
   className?: string;
   onChange: (value: string) => void;
+  onBlur?: (value: string) => void;
   onDelete?: () => void;
 }
 
@@ -33,9 +34,11 @@ export const AnnotationsInput = ({
   autoFocus = false,
   className = "",
   onChange,
+  onBlur,
   onDelete,
 }: AnnotationsInputProps) => {
   const [isInvalid, setIsInvalid] = useState(false);
+  const [lastSavedValue, setLastSavedValue] = useState(value);
 
   const inputType = config?.type ?? "string";
   const placeholder = config?.label ?? "";
@@ -51,6 +54,13 @@ export const AnnotationsInput = ({
     }
   };
 
+  const handleBlur = () => {
+    if (onBlur && lastSavedValue !== value) {
+      onBlur(value);
+      setLastSavedValue(value);
+    }
+  };
+
   const handleQuantityKeyInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!config?.annotation) return;
     const selectedKey = getAnnotationKey(config.annotation, annotations);
@@ -59,11 +69,41 @@ export const AnnotationsInput = ({
     onChange(JSON.stringify(newObj));
   };
 
+  const shouldSaveQuantityField = () => {
+    if (!config?.enableQuantity || !config?.annotation) return false;
+    const selectedKey = getAnnotationKey(config.annotation, annotations);
+    const quantity = getAnnotationValue(config.annotation, annotations);
+    return selectedKey && quantity && quantity.trim() !== "";
+  };
+
   const handleQuantitySelectChange = (selectedKey: string) => {
     if (!config?.annotation) return;
     const quantity = getAnnotationValue(config.annotation, annotations);
     const newObj = selectedKey ? { [selectedKey]: quantity } : {};
-    onChange(JSON.stringify(newObj));
+    const newValue = JSON.stringify(newObj);
+    onChange(newValue);
+
+    if (onBlur && newValue !== lastSavedValue && shouldSaveQuantityField()) {
+      onBlur(newValue);
+      setLastSavedValue(newValue);
+    }
+  };
+
+  const handleNonQuantitySelectChange = (selectedKey: string) => {
+    onChange(selectedKey);
+    if (onBlur && selectedKey !== lastSavedValue) {
+      onBlur(selectedKey);
+      setLastSavedValue(selectedKey);
+    }
+  };
+
+  const handleSwitchChange = (checked: boolean) => {
+    const newValue = checked ? "true" : "false";
+    onChange(newValue);
+    if (onBlur && newValue !== lastSavedValue) {
+      onBlur(newValue);
+      setLastSavedValue(newValue);
+    }
   };
 
   let inputElement = null;
@@ -77,7 +117,9 @@ export const AnnotationsInput = ({
             : value
         }
         onValueChange={
-          config?.enableQuantity ? handleQuantitySelectChange : onChange
+          config?.enableQuantity
+            ? handleQuantitySelectChange
+            : handleNonQuantitySelectChange
         }
       >
         <SelectTrigger className={cn("min-w-24 grow", className)}>
@@ -96,7 +138,7 @@ export const AnnotationsInput = ({
     inputElement = (
       <Switch
         checked={value === "true"}
-        onCheckedChange={(checked) => onChange(checked ? "true" : "false")}
+        onCheckedChange={handleSwitchChange}
         className={className}
       />
     );
@@ -106,6 +148,7 @@ export const AnnotationsInput = ({
         type="number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={handleBlur}
         autoFocus={autoFocus}
         className={className}
       />
@@ -124,6 +167,7 @@ export const AnnotationsInput = ({
               ? handleQuantityKeyInputChange
               : validateChange
           }
+          onBlur={handleBlur}
           autoFocus={autoFocus}
           className={cn("min-w-16", className)}
         />
@@ -145,6 +189,8 @@ export const AnnotationsInput = ({
           annotations={annotations}
           disabled={!getAnnotationKey(config.annotation, annotations)}
           onChange={onChange}
+          onBlur={onBlur}
+          shouldSave={shouldSaveQuantityField}
         />
       )}
       {deletable && onDelete && (
@@ -161,18 +207,41 @@ const QuantityInput = ({
   annotations,
   disabled,
   onChange,
+  onBlur,
+  shouldSave,
 }: {
   annotation: string;
   annotations: Annotations;
   disabled: boolean;
   onChange: (value: string) => void;
+  onBlur?: (value: string) => void;
+  shouldSave: () => boolean;
 }) => {
+  const currentQuantity = getAnnotationValue(annotation, annotations);
+  const [lastSavedQuantity, setLastSavedQuantity] = useState(currentQuantity);
+
   const handleValueInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedKey = getAnnotationKey(annotation, annotations);
     if (!selectedKey) return;
     const newObj = { [selectedKey]: e.target.value };
     onChange(JSON.stringify(newObj));
   };
+
+  const handleValueBlur = () => {
+    const selectedKey = getAnnotationKey(annotation, annotations);
+    if (!selectedKey) return;
+    const quantity = getAnnotationValue(annotation, annotations);
+    const newObj = { [selectedKey]: quantity };
+    const newValue = JSON.stringify(newObj);
+    if (onBlur && quantity !== lastSavedQuantity && shouldSave()) {
+      onBlur(newValue);
+      setLastSavedQuantity(quantity);
+    }
+  };
+
+  useEffect(() => {
+    setLastSavedQuantity(currentQuantity);
+  }, [currentQuantity]);
 
   return (
     <div className="flex items-center gap-2 max-w-1/3">
@@ -181,6 +250,7 @@ const QuantityInput = ({
         type="number"
         value={getAnnotationValue(annotation, annotations)}
         onChange={handleValueInputChange}
+        onBlur={handleValueBlur}
         className="min-w-8 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         disabled={disabled}
       />
