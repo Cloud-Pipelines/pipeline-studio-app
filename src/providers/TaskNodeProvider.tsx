@@ -101,9 +101,8 @@ export const TaskNodeProvider = ({
   const handleSetAnnotations = useCallback(
     (annotations: Annotations) => {
       data.callbacks?.setAnnotations(annotations);
-      notify("Annotations updated", "success");
     },
-    [data.callbacks, notify],
+    [data.callbacks],
   );
 
   const handleDeleteTaskNode = useCallback(() => {

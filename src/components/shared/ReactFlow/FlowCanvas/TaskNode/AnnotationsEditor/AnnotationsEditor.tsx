@@ -10,8 +10,10 @@ import { COMPUTE_RESOURCES } from "./ComputeResourcesEditor";
 interface AnnotationsEditorProps {
   annotations: Annotations;
   onChange: (key: string, value: string | undefined) => void;
+  onBlur: (key: string, value: string | undefined) => void;
+  onRemove: (key: string) => void;
   newRows: Array<{ key: string; value: string }>;
-  onNewRowChange: (idx: number, field: "key" | "value", value: string) => void;
+  onNewRowBlur: (idx: number, field: "key" | "value", value: string) => void;
   onRemoveNewRow: (idx: number) => void;
 }
 
@@ -29,8 +31,10 @@ const COMMON_ANNOTATIONS: AnnotationConfig[] = [
 export const AnnotationsEditor = ({
   annotations,
   onChange,
+  onBlur,
+  onRemove,
   newRows,
-  onNewRowChange,
+  onNewRowBlur,
   onRemoveNewRow,
 }: AnnotationsEditorProps) => {
   const remainingAnnotations = Object.entries(annotations).filter(
@@ -43,8 +47,8 @@ export const AnnotationsEditor = ({
     onChange(key, value);
   };
 
-  const handleRemove = (key: string) => {
-    onChange(key, undefined);
+  const handleValueBlur = (key: string, value: string) => {
+    onBlur(key, value);
   };
 
   return (
@@ -63,6 +67,7 @@ export const AnnotationsEditor = ({
             onChange={(newValue) =>
               handleValueChange(config.annotation, newValue)
             }
+            onBlur={(newValue) => handleValueBlur(config.annotation, newValue)}
             annotations={annotations}
             config={config}
           />
@@ -79,25 +84,27 @@ export const AnnotationsEditor = ({
             key={key}
             value={value}
             onChange={(newValue) => handleValueChange(key, newValue)}
-            onDelete={() => handleRemove(key)}
+            onBlur={(newValue) => handleValueBlur(key, newValue)}
+            onDelete={() => onRemove(key)}
             annotations={annotations}
             deletable
           />
         </div>
       ))}
+
       {newRows.map((row, idx) => (
         <div key={idx} className="flex items-center gap-2 mt-2">
           <Input
             placeholder="New annotation"
-            value={row.key}
-            onChange={(e) => onNewRowChange(idx, "key", e.target.value)}
+            defaultValue={row.key}
+            onBlur={(e) => onNewRowBlur(idx, "key", e.target.value)}
             className="w-39 ml-1"
             autoFocus={idx === newRows.length - 1}
           />
           <Input
             placeholder="value"
-            value={row.value}
-            onChange={(e) => onNewRowChange(idx, "value", e.target.value)}
+            defaultValue={row.value}
+            onBlur={(e) => onNewRowBlur(idx, "value", e.target.value)}
             className="flex-1"
           />
           <Button

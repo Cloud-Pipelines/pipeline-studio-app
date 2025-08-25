@@ -58,47 +58,78 @@ export const COMPUTE_RESOURCES: AnnotationConfig[] = [
 interface ComputeResourcesEditorProps {
   annotations: Annotations;
   onChange: (key: string, value: string | undefined) => void;
+  onBlur: (key: string, value: string | undefined) => void;
 }
 
 export const ComputeResourcesEditor = ({
   annotations,
   onChange,
+  onBlur,
 }: ComputeResourcesEditorProps) => {
-  const handleValueChange = (key: string, value: string) => {
-    onChange(key, value);
-  };
-
   return (
     <div className="flex flex-col gap-2">
       <h3>Compute Resources</h3>
       {COMPUTE_RESOURCES.map((resource) => (
-        <div key={resource.annotation} className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground min-w-24 truncate">
-            {resource.label} {resource.unit && `(${resource.unit})`}
-          </span>
-
-          <AnnotationsInput
-            value={
-              resource.append && annotations[resource.annotation]
-                ? annotations[resource.annotation].replace(
-                    new RegExp(`${resource.append}$`),
-                    "",
-                  )
-                : annotations[resource.annotation]
-            }
-            config={resource}
-            onChange={(newValue) =>
-              handleValueChange(
-                resource.annotation,
-                resource.append && newValue
-                  ? `${newValue}${resource.append}`
-                  : newValue,
-              )
-            }
-            annotations={annotations}
-          />
-        </div>
+        <ComputeResourceField
+          key={resource.annotation}
+          resource={resource}
+          annotations={annotations}
+          onChange={onChange}
+          onBlur={onBlur}
+        />
       ))}
+    </div>
+  );
+};
+
+interface ComputeResourceFieldProps {
+  resource: AnnotationConfig;
+  annotations: Annotations;
+  onChange: (key: string, value: string) => void;
+  onBlur: (key: string, value: string) => void;
+}
+
+export const ComputeResourceField = ({
+  resource,
+  annotations,
+  onChange,
+  onBlur,
+}: ComputeResourceFieldProps) => {
+  const handleValueChange = (value: string) => {
+    const formattedValue = resource.append
+      ? `${value}${resource.append}`
+      : value;
+    onChange(resource.annotation, formattedValue);
+  };
+
+  const handleValueBlur = (value: string) => {
+    const formattedValue = resource.append
+      ? `${value}${resource.append}`
+      : value;
+    onBlur(resource.annotation, formattedValue);
+  };
+
+  const value =
+    resource.append && annotations[resource.annotation]
+      ? annotations[resource.annotation].replace(
+          new RegExp(`${resource.append}$`),
+          "",
+        )
+      : annotations[resource.annotation];
+
+  return (
+    <div key={resource.annotation} className="flex items-center gap-2">
+      <span className="text-xs text-muted-foreground min-w-24 truncate">
+        {resource.label} {resource.unit && `(${resource.unit})`}
+      </span>
+
+      <AnnotationsInput
+        value={value}
+        config={resource}
+        onChange={handleValueChange}
+        onBlur={handleValueBlur}
+        annotations={annotations}
+      />
     </div>
   );
 };
