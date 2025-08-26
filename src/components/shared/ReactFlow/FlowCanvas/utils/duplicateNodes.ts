@@ -1,25 +1,33 @@
 import { type Node, type XYPosition } from "@xyflow/react";
 
-import type { TaskOutputArgument } from "@/api/types.gen";
 import type { TaskNodeData } from "@/types/taskNode";
 import {
   type ComponentSpec,
   type GraphInputArgument,
   type InputSpec,
   isGraphImplementation,
+  type OutputSpec,
+  type TaskOutputArgument,
   type TaskSpec,
 } from "@/utils/componentSpec";
 import { createInputNode } from "@/utils/nodes/createInputNode";
+import { createOutputNode } from "@/utils/nodes/createOutputNode";
 import { createTaskNode } from "@/utils/nodes/createTaskNode";
 import { getNodesBounds } from "@/utils/nodes/getNodesBounds";
 import {
   inputNameToNodeId,
   nodeIdToInputName,
+  nodeIdToOutputName,
   nodeIdToTaskId,
+  outputNameToNodeId,
   taskIdToNodeId,
 } from "@/utils/nodes/nodeIdUtils";
 import { setPositionInAnnotations } from "@/utils/nodes/setPositionInAnnotations";
-import { getUniqueInputName, getUniqueTaskName } from "@/utils/unique";
+import {
+  getUniqueInputName,
+  getUniqueOutputName,
+  getUniqueTaskName,
+} from "@/utils/unique";
 
 const OFFSET = 10;
 
@@ -52,6 +60,7 @@ export const duplicateNodes = (
 
   const newTasks: Record<string, TaskSpec> = {};
   const newInputs: Record<string, InputSpec> = {};
+  const newOutputs: Record<string, OutputSpec> = {};
 
   // Default Config
   const selected = config?.selected ?? true;
@@ -113,7 +122,30 @@ export const duplicateNodes = (
 
       newInputs[newInputId] = newInputSpec;
     } else if (node.type === "output") {
-      console.warn("Duplicating output nodes is not supported yet.");
+      const outputSpec = componentSpec.outputs?.find(
+        (output) => output.name === node.data.label,
+      );
+
+      const newOutputId = getUniqueOutputName(componentSpec, outputSpec?.name);
+
+      const newNodeId = outputNameToNodeId(newOutputId);
+
+      nodeIdMap[oldNodeId] = newNodeId;
+
+      const annotations = outputSpec?.annotations || {};
+
+      const updatedAnnotations = setPositionInAnnotations(annotations, {
+        x: node.position.x + OFFSET,
+        y: node.position.y + OFFSET,
+      });
+
+      const newOutputSpec = {
+        ...outputSpec,
+        name: newOutputId,
+        annotations: updatedAnnotations,
+      };
+
+      newOutputs[newOutputId] = newOutputSpec;
     }
   });
 
@@ -154,13 +186,83 @@ export const duplicateNodes = (
     }
   });
 
+  // Outputs are defined in the graph spec
+  const updatedGraphOutputs = { ...graphSpec.outputValues };
+  if (connection !== "none") {
+    /* Reconfigure Outputs */
+    Object.entries(newOutputs).forEach((output) => {
+      const [outputId] = output;
+      const newNodeId = outputNameToNodeId(outputId);
+      const oldNodeId = Object.keys(nodeIdMap).find(
+        (key) => nodeIdMap[key] === newNodeId,
+      );
+
+      if (!oldNodeId) {
+        return;
+      }
+
+      const oldOutputId = nodeIdToOutputName(oldNodeId);
+
+      if (!graphSpec.outputValues) {
+        return;
+      }
+
+      const outputValue = graphSpec.outputValues[oldOutputId];
+
+      if (!outputValue) {
+        return;
+      }
+
+      const updatedOutputValue = { ...outputValue };
+
+      // If the outputvalue references a task that was also duplicated (internal connection), we need to update it to refer to the duplicated task id
+      let isInternal = false;
+      if (
+        typeof updatedOutputValue === "object" &&
+        updatedOutputValue !== null &&
+        connection !== "external"
+      ) {
+        if ("taskOutput" in updatedOutputValue) {
+          const oldTaskId = updatedOutputValue.taskOutput.taskId;
+          const oldTaskNodeId = taskIdToNodeId(oldTaskId);
+          if (oldTaskNodeId in nodeIdMap) {
+            const newTaskId = nodeIdToTaskId(nodeIdMap[oldTaskNodeId]);
+            updatedOutputValue.taskOutput = {
+              ...updatedOutputValue.taskOutput,
+              taskId: newTaskId,
+            };
+
+            isInternal = true;
+          }
+        }
+      }
+
+      if (
+        (isInternal && connection === "internal") ||
+        (!isInternal && connection === "external") ||
+        connection === "all"
+      ) {
+        updatedGraphOutputs[outputId] = updatedOutputValue;
+      }
+    });
+  }
+
   /* Update the Graph Spec & Inputs */
   const updatedTasks = { ...graphSpec.tasks, ...newTasks };
-  const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
+  const updatedGraphSpec = {
+    ...graphSpec,
+    tasks: updatedTasks,
+    outputValues: updatedGraphOutputs,
+  };
 
   const updatedInputs = [
     ...(componentSpec.inputs ?? []),
     ...Object.values(newInputs),
+  ];
+
+  const updatedOutputs = [
+    ...(componentSpec.outputs ?? []),
+    ...Object.values(newOutputs),
   ];
 
   /* Create new Nodes for the new Tasks */
@@ -226,6 +328,31 @@ export const duplicateNodes = (
         updatedNodes.push(originalNode);
 
         return newNode;
+      } else if (originalNode.type === "output") {
+        const newOutputId = nodeIdToOutputName(newNodeId);
+        const newOutputSpec = updatedOutputs.find(
+          (output) => output.name === newOutputId,
+        );
+
+        if (!newOutputSpec) {
+          return null;
+        }
+
+        const newNode = createOutputNode(newOutputSpec);
+
+        newNode.id = newNodeId;
+
+        // Move selection to new node by default
+        if (selected) {
+          originalNode.selected = false;
+          newNode.selected = true;
+        }
+
+        newNode.measured = originalNode.measured;
+
+        updatedNodes.push(originalNode);
+
+        return newNode;
       }
     })
     .filter(Boolean) as Node[];
@@ -270,9 +397,11 @@ export const duplicateNodes = (
         const inputId = nodeIdToInputName(node.id);
 
         const inputSpec = updatedInputs.find((input) => input.name === inputId);
+
         if (!inputSpec) {
           return;
         }
+
         const annotations = inputSpec.annotations || {};
 
         const updatedAnnotations = setPositionInAnnotations(
@@ -292,6 +421,36 @@ export const duplicateNodes = (
         if (updatedInputIndex !== -1) {
           updatedInputs[updatedInputIndex] = newInputSpec;
         }
+      } else if (node.type === "output") {
+        const outputId = nodeIdToOutputName(node.id);
+
+        const outputSpec = updatedOutputs.find(
+          (output) => output.name === outputId,
+        );
+
+        if (!outputSpec) {
+          return;
+        }
+
+        const annotations = outputSpec.annotations || {};
+
+        const updatedAnnotations = setPositionInAnnotations(
+          annotations,
+          newPosition,
+        );
+
+        const newOutputSpec: OutputSpec = {
+          ...outputSpec,
+          annotations: updatedAnnotations,
+        };
+
+        const updatedOutputIndex = updatedOutputs.findIndex(
+          (output) => output.name === outputId,
+        );
+
+        if (updatedOutputIndex !== -1) {
+          updatedOutputs[updatedOutputIndex] = newOutputSpec;
+        }
       }
 
       node.position = newPosition;
@@ -301,6 +460,7 @@ export const duplicateNodes = (
   const updatedComponentSpec = {
     ...componentSpec,
     inputs: updatedInputs,
+    outputs: updatedOutputs,
   };
 
   if (isGraphImplementation(updatedComponentSpec.implementation)) {
