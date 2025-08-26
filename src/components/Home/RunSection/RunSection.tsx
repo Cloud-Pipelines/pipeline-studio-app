@@ -69,9 +69,7 @@ export const RunSection = () => {
       queryFn: async () => {
         const u = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
         if (pageToken) u.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
-        if (useCreatedByMe && search.filter) {
-          u.searchParams.set(FILTER_QUERY_KEY, search.filter);
-        }
+        if (search.filter) u.searchParams.set(FILTER_QUERY_KEY, search.filter);
 
         try {
           const response = await fetch(u.toString());
