@@ -2,12 +2,24 @@ import { type Node, type XYPosition } from "@xyflow/react";
 
 import type { TaskOutputArgument } from "@/api/types.gen";
 import type { TaskNodeData } from "@/types/taskNode";
-import type { GraphSpec, TaskSpec } from "@/utils/componentSpec";
+import {
+  type ComponentSpec,
+  type GraphInputArgument,
+  type InputSpec,
+  isGraphImplementation,
+  type TaskSpec,
+} from "@/utils/componentSpec";
+import { createInputNode } from "@/utils/nodes/createInputNode";
 import { createTaskNode } from "@/utils/nodes/createTaskNode";
 import { getNodesBounds } from "@/utils/nodes/getNodesBounds";
-import { nodeIdToTaskId, taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
+import {
+  inputNameToNodeId,
+  nodeIdToInputName,
+  nodeIdToTaskId,
+  taskIdToNodeId,
+} from "@/utils/nodes/nodeIdUtils";
 import { setPositionInAnnotations } from "@/utils/nodes/setPositionInAnnotations";
-import { getUniqueTaskName } from "@/utils/unique";
+import { getUniqueInputName, getUniqueTaskName } from "@/utils/unique";
 
 const OFFSET = 10;
 
@@ -21,7 +33,7 @@ const OFFSET = 10;
 type ConnectionMode = "none" | "internal" | "external" | "all";
 
 export const duplicateNodes = (
-  graphSpec: GraphSpec,
+  componentSpec: ComponentSpec,
   nodesToDuplicate: Node[],
   config?: {
     selected?: boolean;
@@ -30,8 +42,16 @@ export const duplicateNodes = (
     status?: boolean;
   },
 ) => {
+  if (!isGraphImplementation(componentSpec.implementation)) {
+    throw new Error("ComponentSpec does not contain a graph implementation.");
+  }
+
+  const graphSpec = componentSpec.implementation.graph;
+
+  const nodeIdMap: Record<string, string> = {};
+
   const newTasks: Record<string, TaskSpec> = {};
-  const taskIdMap: Record<string, string> = {};
+  const newInputs: Record<string, InputSpec> = {};
 
   // Default Config
   const selected = config?.selected ?? true;
@@ -40,11 +60,14 @@ export const duplicateNodes = (
 
   /* Create new Nodes and map old Task IDs to new Task IDs */
   nodesToDuplicate.forEach((node) => {
-    const oldTaskId = nodeIdToTaskId(node.id);
-    const newTaskId = getUniqueTaskName(graphSpec, oldTaskId);
+    const oldNodeId = node.id;
 
     if (node.type === "task") {
-      taskIdMap[oldTaskId] = newTaskId;
+      const oldTaskId = nodeIdToTaskId(oldNodeId);
+      const newTaskId = getUniqueTaskName(graphSpec, oldTaskId);
+      const newNodeId = taskIdToNodeId(newTaskId);
+
+      nodeIdMap[oldNodeId] = newNodeId;
 
       const taskSpec = node.data.taskSpec as TaskSpec;
       const annotations = taskSpec.annotations || {};
@@ -64,6 +87,33 @@ export const duplicateNodes = (
         annotations: updatedAnnotations,
       };
       newTasks[newTaskId] = newTaskSpec;
+    } else if (node.type === "input") {
+      const inputSpec = componentSpec.inputs?.find(
+        (input) => input.name === node.data.label,
+      );
+
+      const newInputId = getUniqueInputName(componentSpec, inputSpec?.name);
+
+      const newNodeId = inputNameToNodeId(newInputId);
+
+      nodeIdMap[oldNodeId] = newNodeId;
+
+      const annotations = inputSpec?.annotations || {};
+
+      const updatedAnnotations = setPositionInAnnotations(annotations, {
+        x: node.position.x + OFFSET,
+        y: node.position.y + OFFSET,
+      });
+
+      const newInputSpec = {
+        ...inputSpec,
+        name: newInputId,
+        annotations: updatedAnnotations,
+      };
+
+      newInputs[newInputId] = newInputSpec;
+    } else if (node.type === "output") {
+      console.warn("Duplicating output nodes is not supported yet.");
     }
   });
 
@@ -75,23 +125,23 @@ export const duplicateNodes = (
       Object.entries(taskSpec.arguments).forEach(([argKey, argument]) => {
         const newTaskSpec = newTasks[taskId];
 
-        // Check if the Argument is a connection to another Task (i.e. taskOutput) or a static value
+        // Check if the Argument is a connection to another Task or Input Node (i.e. TaskOutput or GraphInput) or a static value
         if (
           typeof argument === "object" &&
           argument !== null &&
-          "taskOutput" in argument
+          ("taskOutput" in argument || "graphInput" in argument)
         ) {
           newTasks[taskId] = reconfigureConnections(
             newTaskSpec,
             argKey,
-            argument as TaskOutputArgument,
-            taskIdMap,
+            argument,
+            nodeIdMap,
             nodesToDuplicate,
-            graphSpec,
+            componentSpec,
             connection,
           );
         } else {
-          // If the Argument is not a taskOutput, copy it over
+          // If the Argument is not a TaskOutput or GraphInput, copy it over
           newTasks[taskId] = {
             ...newTaskSpec,
             arguments: {
@@ -104,26 +154,66 @@ export const duplicateNodes = (
     }
   });
 
-  /* Update the Graph Spec */
+  /* Update the Graph Spec & Inputs */
   const updatedTasks = { ...graphSpec.tasks, ...newTasks };
   const updatedGraphSpec = { ...graphSpec, tasks: updatedTasks };
+
+  const updatedInputs = [
+    ...(componentSpec.inputs ?? []),
+    ...Object.values(newInputs),
+  ];
 
   /* Create new Nodes for the new Tasks */
   const updatedNodes: Node[] = [];
 
-  const newNodes = Object.entries(taskIdMap)
-    .map(([oldTaskId, newTaskId]) => {
+  const newNodes = Object.entries(nodeIdMap)
+    .map(([oldNodeId, newNodeId]) => {
       const originalNode = nodesToDuplicate.find(
-        (node) => nodeIdToTaskId(node.id) === oldTaskId,
+        (node) => node.id === oldNodeId,
       );
+      if (!originalNode) {
+        return null;
+      }
 
-      if (originalNode) {
+      if (originalNode.type === "task") {
+        const newTaskId = nodeIdToTaskId(newNodeId);
+
         const originalNodeData = originalNode.data as TaskNodeData;
+        const newTaskSpec = updatedGraphSpec.tasks[newTaskId];
 
         const newNode = createTaskNode(
-          [newTaskId, updatedGraphSpec.tasks[newTaskId]],
+          [newTaskId, newTaskSpec],
           originalNodeData,
         );
+
+        newNode.id = newNodeId;
+        newNode.selected = false;
+
+        // Move selection to new node by default
+        if (selected) {
+          originalNode.selected = false;
+          newNode.selected = true;
+        }
+
+        newNode.measured = originalNode.measured;
+
+        updatedNodes.push(originalNode);
+
+        return newNode;
+      } else if (originalNode.type === "input") {
+        const newInputId = nodeIdToInputName(newNodeId);
+        const newInputSpec = updatedInputs.find(
+          (input) => input.name === newInputId,
+        );
+
+        if (!newInputSpec) {
+          return null;
+        }
+
+        const newNode = createInputNode(newInputSpec);
+
+        newNode.id = newNodeId;
+        newNode.selected = false;
 
         // Move selection to new node by default
         if (selected) {
@@ -159,9 +249,9 @@ export const duplicateNodes = (
         y: node.position.y + offset.y,
       };
 
-      const taskId = nodeIdToTaskId(node.id);
-
       if (node.type === "task") {
+        const taskId = nodeIdToTaskId(node.id);
+
         const taskSpec = node.data.taskSpec as TaskSpec;
         const annotations = taskSpec.annotations || {};
 
@@ -176,55 +266,157 @@ export const duplicateNodes = (
         };
 
         updatedGraphSpec.tasks[taskId] = newTaskSpec;
+      } else if (node.type === "input") {
+        const inputId = nodeIdToInputName(node.id);
+
+        const inputSpec = updatedInputs.find((input) => input.name === inputId);
+        if (!inputSpec) {
+          return;
+        }
+        const annotations = inputSpec.annotations || {};
+
+        const updatedAnnotations = setPositionInAnnotations(
+          annotations,
+          newPosition,
+        );
+
+        const newInputSpec: InputSpec = {
+          ...inputSpec,
+          annotations: updatedAnnotations,
+        };
+
+        const updatedInputIndex = updatedInputs.findIndex(
+          (input) => input.name === inputId,
+        );
+
+        if (updatedInputIndex !== -1) {
+          updatedInputs[updatedInputIndex] = newInputSpec;
+        }
       }
 
       node.position = newPosition;
     });
   }
 
-  return { updatedGraphSpec, taskIdMap, newNodes, updatedNodes };
+  const updatedComponentSpec = {
+    ...componentSpec,
+    inputs: updatedInputs,
+  };
+
+  if (isGraphImplementation(updatedComponentSpec.implementation)) {
+    updatedComponentSpec.implementation.graph = updatedGraphSpec;
+  }
+
+  return { updatedComponentSpec, nodeIdMap, newNodes, updatedNodes };
 };
 
 function reconfigureConnections(
   taskSpec: TaskSpec,
   argKey: string,
-  argument: TaskOutputArgument,
-  taskIdMap: Record<string, string>,
+  argument: TaskOutputArgument | GraphInputArgument,
+  nodeIdMap: Record<string, string>,
   nodes: Node[],
-  graphSpec: GraphSpec,
+  componentSpec: ComponentSpec,
   mode: ConnectionMode,
 ) {
-  const oldTaskId = argument.taskOutput.taskId;
-  const oldNodeId = taskIdToNodeId(oldTaskId);
-  const newTaskId = taskIdMap[oldTaskId];
+  let oldNodeId = undefined;
+  let newArgId = undefined;
+  let isExternal = false;
+
+  if ("taskOutput" in argument) {
+    const oldTaskId = argument.taskOutput.taskId;
+    oldNodeId = taskIdToNodeId(oldTaskId);
+
+    if (!isGraphImplementation(componentSpec.implementation)) {
+      throw new Error("ComponentSpec does not contain a graph implementation.");
+    }
+
+    const graphSpec = componentSpec.implementation.graph;
+    isExternal = oldTaskId in graphSpec.tasks;
+
+    const newNodeId = nodeIdMap[oldNodeId];
+
+    if (!newNodeId) {
+      return reconfigureExternalConnection(taskSpec, argKey, mode);
+    }
+
+    const newTaskId = nodeIdToTaskId(newNodeId);
+
+    newArgId = newTaskId;
+  } else if ("graphInput" in argument) {
+    const oldInputId = argument.graphInput.inputName;
+    oldNodeId = inputNameToNodeId(oldInputId);
+
+    if (!("inputs" in componentSpec)) {
+      throw new Error("ComponentSpec does not contain inputs.");
+    }
+
+    const inputs = componentSpec.inputs || [];
+    isExternal = inputs.some((input) => input.name === oldInputId);
+
+    const newNodeId = nodeIdMap[oldNodeId];
+
+    if (!newNodeId) {
+      return reconfigureExternalConnection(taskSpec, argKey, mode);
+    }
+
+    const newInputId = nodeIdToInputName(newNodeId);
+
+    newArgId = newInputId;
+  }
+
+  if (!newArgId) {
+    return reconfigureExternalConnection(taskSpec, argKey, mode);
+  }
 
   const isInternal = nodes.some((node) => node.id === oldNodeId);
-  const isExternal = oldTaskId in graphSpec.tasks;
+
+  const specWithRemovedArg = removeArgumentFromTaskSpec(taskSpec, argKey);
+  const specWithReconfiguredArg = updateTaskArgumentConnection(
+    taskSpec,
+    argKey,
+    argument,
+    newArgId,
+  );
 
   switch (mode) {
     case "none":
       // Remove all links
-      return removeArgumentFromTaskSpec(taskSpec, argKey);
+      return specWithRemovedArg;
     case "internal":
       // Maintain links only between duplicated nodes
-      return isInternal
-        ? updateTaskOutput(taskSpec, argKey, argument, newTaskId)
-        : removeArgumentFromTaskSpec(taskSpec, argKey);
+      return isInternal ? specWithReconfiguredArg : specWithRemovedArg;
     case "external":
       // Maintain links only to original nodes outside the group
-      return isExternal && !isInternal
-        ? taskSpec
-        : removeArgumentFromTaskSpec(taskSpec, argKey);
+      return isExternal && !isInternal ? taskSpec : specWithRemovedArg;
     case "all":
       // Maintain all links
       if (isInternal) {
-        return updateTaskOutput(taskSpec, argKey, argument, newTaskId);
+        return specWithReconfiguredArg;
       } else if (isExternal) {
         return taskSpec;
       } else {
-        return removeArgumentFromTaskSpec(taskSpec, argKey);
+        return specWithRemovedArg;
       }
   }
+}
+
+function reconfigureExternalConnection(
+  taskSpec: TaskSpec,
+  argKey: string,
+  mode: ConnectionMode,
+): TaskSpec {
+  // The connected node is NOT also part of the duplication operation, so full reconfiguration is not required
+  const specWithRemovedArg = removeArgumentFromTaskSpec(taskSpec, argKey);
+
+  if (mode === "internal" || mode === "none") {
+    return specWithRemovedArg;
+  } else if (mode === "external" || mode === "all") {
+    return taskSpec;
+  }
+
+  // Fallback - no changes to the task spec
+  return taskSpec;
 }
 
 function removeArgumentFromTaskSpec(
@@ -242,24 +434,42 @@ function removeArgumentFromTaskSpec(
   return updatedTaskSpec;
 }
 
-function updateTaskOutput(
+function updateTaskArgumentConnection(
   taskSpec: TaskSpec,
   argKey: string,
-  argument: TaskOutputArgument,
-  newTaskId: string,
+  argument: TaskOutputArgument | GraphInputArgument,
+  newArgId: string,
 ): TaskSpec {
-  const updatedTaskSpec = {
-    ...taskSpec,
-    arguments: {
-      ...taskSpec.arguments,
-      [argKey]: {
-        ...argument,
-        taskOutput: {
-          ...argument.taskOutput,
-          taskId: newTaskId,
+  if ("taskOutput" in argument) {
+    return {
+      ...taskSpec,
+      arguments: {
+        ...taskSpec.arguments,
+        [argKey]: {
+          ...argument,
+          taskOutput: {
+            ...argument.taskOutput,
+            taskId: newArgId,
+          },
         },
       },
-    },
-  };
-  return updatedTaskSpec;
+    };
+  } else if ("graphInput" in argument) {
+    return {
+      ...taskSpec,
+      arguments: {
+        ...taskSpec.arguments,
+        [argKey]: {
+          ...argument,
+          graphInput: {
+            ...argument.graphInput,
+            inputName: newArgId,
+          },
+        },
+      },
+    };
+  }
+
+  // fallback - no changes
+  return taskSpec;
 }
