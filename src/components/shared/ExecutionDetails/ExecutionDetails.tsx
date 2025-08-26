@@ -1,5 +1,6 @@
 import { ChevronsUpDown } from "lucide-react";
 
+import type { GetContainerExecutionStateResponse } from "@/api/types.gen";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -36,6 +37,8 @@ export const ExecutionDetails = ({ executionId }: ExecutionDetailsProps) => {
   if (!hasExecutionData) {
     return null;
   }
+
+  const podName = executionPodName(containerState);
 
   return (
     <div className="flex flex-col px-3 py-2">
@@ -124,6 +127,15 @@ export const ExecutionDetails = ({ executionId }: ExecutionDetailsProps) => {
             </div>
           )}
 
+          {podName && (
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-xs text-foreground min-w-fit">
+                Pod Name:
+              </span>
+              <span className="text-xs text-muted-foreground">{podName}</span>
+            </div>
+          )}
+
           {!isLoadingContainerState &&
             !containerState &&
             !containerStateError && (
@@ -136,3 +148,29 @@ export const ExecutionDetails = ({ executionId }: ExecutionDetailsProps) => {
     </div>
   );
 };
+
+function executionPodName(
+  containerState?: GetContainerExecutionStateResponse,
+): string | null {
+  if (!containerState || !("debug_info" in containerState)) {
+    return null;
+  }
+
+  const debugInfo = containerState.debug_info as Record<string, any>;
+
+  if ("pod_name" in debugInfo && typeof debugInfo.pod_name === "string") {
+    return debugInfo.pod_name;
+  }
+
+  if (
+    "kubernetes" in debugInfo &&
+    debugInfo.kubernetes &&
+    typeof debugInfo.kubernetes === "object" &&
+    "pod_name" in debugInfo.kubernetes &&
+    typeof debugInfo.kubernetes.pod_name === "string"
+  ) {
+    return debugInfo.kubernetes.pod_name;
+  }
+
+  return null;
+}
