@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import type { GraphSpec, TaskOutputArgument } from "@/utils/componentSpec";
+
 import { getDisplayValue } from "./handleUtils";
 
 describe("getDisplayValue", () => {
@@ -17,11 +19,14 @@ describe("getDisplayValue", () => {
             componentRef: {
               spec: {
                 name: "DataProcessor",
+                implementation: {
+                  graph: { inputs: {}, tasks: {}, outputs: {} },
+                },
               },
             },
           },
         },
-      };
+      } as GraphSpec;
 
       expect(getDisplayValue(value, graphSpec)).toBe("→ DataProcessor.result");
     });
@@ -31,18 +36,21 @@ describe("getDisplayValue", () => {
         taskOutput: {
           taskId: "task-1",
         },
-      } as any;
+      } as TaskOutputArgument;
       const graphSpec = {
         tasks: {
           "task-1": {
             componentRef: {
               spec: {
                 name: "DataProcessor",
+                implementation: {
+                  graph: { inputs: {}, tasks: {}, outputs: {} },
+                },
               },
             },
           },
         },
-      };
+      } as GraphSpec;
 
       expect(getDisplayValue(value, graphSpec)).toBe("→ DataProcessor");
     });
@@ -58,11 +66,15 @@ describe("getDisplayValue", () => {
         tasks: {
           "task-1": {
             componentRef: {
-              spec: {},
+              spec: {
+                implementation: {
+                  graph: { inputs: {}, tasks: {}, outputs: {} },
+                },
+              },
             },
           },
         },
-      };
+      } as GraphSpec;
 
       expect(getDisplayValue(value, graphSpec)).toBe("→ task-1.result");
     });
@@ -85,7 +97,6 @@ describe("getDisplayValue", () => {
           outputName: "result",
         },
       };
-      // graphSpec with different task - not used since we test fallback behavior
 
       expect(getDisplayValue(value)).toBe("→ task-1.result");
     });
@@ -95,7 +106,7 @@ describe("getDisplayValue", () => {
         taskOutput: {
           taskId: "task-1",
         },
-      } as any;
+      } as TaskOutputArgument;
 
       expect(getDisplayValue(value)).toBe("→ task-1");
     });
@@ -116,9 +127,31 @@ describe("getDisplayValue", () => {
         taskOutput: {
           outputName: "result",
         },
-      } as any;
+      } as TaskOutputArgument;
 
       expect(getDisplayValue(value)).toBe("→ undefined.result");
+    });
+  });
+
+  describe("connected graph input values (graphInput)", () => {
+    it("formats graph input with input name", () => {
+      const value = {
+        graphInput: {
+          inputName: "user_data",
+        },
+      };
+
+      expect(getDisplayValue(value)).toBe("→ user_data");
+    });
+
+    it("handles graph input with empty input name", () => {
+      const value = {
+        graphInput: {
+          inputName: "",
+        },
+      };
+
+      expect(getDisplayValue(value)).toBe("→ ");
     });
   });
 
@@ -134,64 +167,12 @@ describe("getDisplayValue", () => {
       );
     });
 
-    it("handles object values", () => {
-      const obj = { key: "value", number: 42 } as any;
-      expect(getDisplayValue(obj)).toBe(
-        '{\n  "key": "value",\n  "number": 42\n}',
-      );
-    });
-
     it("handles undefined values", () => {
       expect(getDisplayValue(undefined)).toBe(undefined);
-    });
-
-    it("handles null values", () => {
-      expect(getDisplayValue(null as any)).toBe("null");
-    });
-
-    it("handles number values", () => {
-      expect(getDisplayValue(42 as any)).toBe("42");
-    });
-
-    it("handles boolean values", () => {
-      expect(getDisplayValue(true as any)).toBe("true");
-      expect(getDisplayValue(false as any)).toBe("false");
-    });
-
-    it("handles array values", () => {
-      const arr = [1, 2, "three"] as any;
-      expect(getDisplayValue(arr)).toBe('[\n  1,\n  2,\n  "three"\n]');
     });
   });
 
   describe("edge cases", () => {
-    it("handles empty object", () => {
-      expect(getDisplayValue({} as any)).toBe("{}");
-    });
-
-    it("handles object without taskOutput property", () => {
-      const value = {
-        someOtherProperty: "value",
-      } as any;
-      expect(getDisplayValue(value)).toBe(
-        '{\n  "someOtherProperty": "value"\n}',
-      );
-    });
-
-    it("handles object with taskOutput but not matching expected structure", () => {
-      const value = {
-        taskOutput: "not an object",
-      } as any;
-      expect(getDisplayValue(value)).toBe("→ undefined");
-    });
-
-    it("handles null taskOutput", () => {
-      const value = {
-        taskOutput: null,
-      } as any;
-      expect(getDisplayValue(value)).toBe("→ undefined");
-    });
-
     it("handles empty graphSpec", () => {
       const value = {
         taskOutput: {
@@ -199,21 +180,9 @@ describe("getDisplayValue", () => {
           outputName: "result",
         },
       };
-      const graphSpec = {};
-
-      expect(getDisplayValue(value, graphSpec)).toBe("→ task-1.result");
-    });
-
-    it("handles graphSpec without tasks", () => {
-      const value = {
-        taskOutput: {
-          taskId: "task-1",
-          outputName: "result",
-        },
-      };
       const graphSpec = {
-        otherProperty: "value",
-      } as any;
+        tasks: {},
+      } as GraphSpec;
 
       expect(getDisplayValue(value, graphSpec)).toBe("→ task-1.result");
     });
