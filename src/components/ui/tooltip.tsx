@@ -1,6 +1,8 @@
 "use client";
 
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import { cva, type VariantProps } from "class-variance-authority";
+import type { PropsWithChildren, ReactNode } from "react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -70,4 +72,55 @@ function TooltipContent({
   );
 }
 
-export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
+const quickTooltipVariants = cva(
+  "pointer-events-none absolute z-50 w-fit w-min-xs rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs text-balance opacity-0 transition-opacity duration-200 group-hover:opacity-100",
+  {
+    variants: {
+      cursor: {
+        default: "cursor-default",
+        pointer: "cursor-pointer",
+        question: "cursor-help",
+      },
+      side: {
+        top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
+        bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
+        left: "right-full top-1/2 -translate-y-1/2 mr-2",
+        right: "left-full top-1/2 -translate-y-1/2 ml-2",
+      },
+    },
+    defaultVariants: {
+      cursor: "default",
+      side: "top",
+    },
+  },
+);
+
+function QuickTooltip({
+  children,
+  content,
+  side = "top",
+  className,
+  cursor = "default",
+}: PropsWithChildren<
+  VariantProps<typeof quickTooltipVariants> & {
+    content: ReactNode;
+    className?: string;
+  }
+>) {
+  return (
+    <div className="group relative inline-block p-0">
+      {children}
+      <div className={cn(quickTooltipVariants({ side, cursor }), className)}>
+        {content}
+      </div>
+    </div>
+  );
+}
+
+export {
+  QuickTooltip,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+};
