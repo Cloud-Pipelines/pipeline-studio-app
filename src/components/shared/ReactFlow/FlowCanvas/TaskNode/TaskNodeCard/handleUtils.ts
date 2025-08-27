@@ -1,4 +1,4 @@
-import type { ArgumentType } from "@/utils/componentSpec";
+import type { ArgumentType, GraphSpec } from "@/utils/componentSpec";
 import { getValue } from "@/utils/string";
 
 /**
@@ -7,9 +7,8 @@ import { getValue } from "@/utils/string";
  */
 export const getDisplayValue = (
   value: string | ArgumentType | undefined,
-  graphSpec?: { tasks?: Record<string, any> },
+  graphSpec?: GraphSpec,
 ) => {
-  // Check if this is a connected node value
   if (
     value &&
     typeof value === "object" &&
@@ -27,6 +26,12 @@ export const getDisplayValue = (
     }
 
     return `→ ${taskId}${outputName ? `.${outputName}` : ""}`;
+  }
+
+  if (value && typeof value === "object" && "graphInput" in value) {
+    const inputName = value.graphInput?.inputName;
+
+    return `→ ${inputName}`;
   }
 
   // For non-connected values, use the original logic
