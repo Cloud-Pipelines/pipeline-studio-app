@@ -37,6 +37,7 @@ import { loadComponentAsRefFromText } from "@/utils/componentStore";
 import createNodesFromComponentSpec from "@/utils/nodes/createNodesFromComponentSpec";
 
 import ComponentDuplicateDialog from "../../Dialogs/ComponentDuplicateDialog";
+import { useNodesOverlay } from "../NodesOverlay/NodesOverlayProvider";
 import { getBulkUpdateConfirmationDetails } from "./ConfirmationDialogs/BulkUpdateConfirmationDialog";
 import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfirmation";
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
@@ -97,6 +98,8 @@ const FlowCanvas = ({
   const initialCanvasLoaded = useRef(false);
 
   const { clearContent } = useContextPanel();
+  const { setReactFlowInstance: setReactFlowInstanceForOverlay } =
+    useNodesOverlay();
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
@@ -187,6 +190,7 @@ const FlowCanvas = ({
 
   const onInit: OnInit = (instance) => {
     setReactFlowInstance(instance);
+    setReactFlowInstanceForOverlay(instance);
   };
 
   const updateOrAddNodes = useCallback(

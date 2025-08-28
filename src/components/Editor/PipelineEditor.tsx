@@ -24,6 +24,7 @@ import {
 import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
 
+import { NodesOverlayProvider } from "../shared/ReactFlow/NodesOverlay/NodesOverlayProvider";
 import PipelineDetails from "./PipelineDetails";
 
 const GRID_SIZE = 10;
@@ -61,33 +62,35 @@ const PipelineEditor = () => {
 
   return (
     <PipelineRunsProvider pipelineName={componentSpec.name || ""}>
-      <ContextPanelProvider defaultContent={<PipelineDetails />}>
-        <ComponentLibraryProvider>
-          <FlowSidebar />
-          <ResizablePanelGroup direction="horizontal">
-            <ResizablePanel>
-              <div className="reactflow-wrapper relative">
-                <FlowCanvas {...flowConfig}>
-                  <MiniMap position="bottom-left" pannable />
-                  <FlowControls
-                    className="ml-[224px]! mb-[24px]!"
-                    config={flowConfig}
-                    updateConfig={updateFlowConfig}
-                    showInteractive={false}
-                  />
-                  <Background gap={GRID_SIZE} className="bg-slate-50!" />
-                </FlowCanvas>
+      <NodesOverlayProvider>
+        <ContextPanelProvider defaultContent={<PipelineDetails />}>
+          <ComponentLibraryProvider>
+            <FlowSidebar />
+            <ResizablePanelGroup direction="horizontal">
+              <ResizablePanel>
+                <div className="reactflow-wrapper relative">
+                  <FlowCanvas {...flowConfig}>
+                    <MiniMap position="bottom-left" pannable />
+                    <FlowControls
+                      className="ml-[224px]! mb-[24px]!"
+                      config={flowConfig}
+                      updateConfig={updateFlowConfig}
+                      showInteractive={false}
+                    />
+                    <Background gap={GRID_SIZE} className="bg-slate-50!" />
+                  </FlowCanvas>
 
-                <div className="absolute bottom-0 right-0 p-4">
-                  <UndoRedo />
+                  <div className="absolute bottom-0 right-0 p-4">
+                    <UndoRedo />
+                  </div>
                 </div>
-              </div>
-            </ResizablePanel>
-            <ResizableHandle />
-            <CollapsibleContextPanel />
-          </ResizablePanelGroup>
-        </ComponentLibraryProvider>
-      </ContextPanelProvider>
+              </ResizablePanel>
+              <ResizableHandle />
+              <CollapsibleContextPanel />
+            </ResizablePanelGroup>
+          </ComponentLibraryProvider>
+        </ContextPanelProvider>
+      </NodesOverlayProvider>
     </PipelineRunsProvider>
   );
 };
