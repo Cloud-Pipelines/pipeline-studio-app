@@ -25,6 +25,7 @@ export const FavoriteStar = ({ active, onClick }: FavoriteStarProps) => {
   return (
     <Button
       onClick={handleFavorite}
+      data-testid="favorite-star"
       className={cn(
         "w-fit h-fit p-1 hover:text-yellow-500",
         active ? "text-yellow-500" : "text-gray-500/50",

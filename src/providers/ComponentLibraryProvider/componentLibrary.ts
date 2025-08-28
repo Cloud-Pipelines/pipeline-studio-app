@@ -6,14 +6,17 @@ import type {
   ComponentFolder,
   ComponentLibrary,
 } from "@/types/componentLibrary";
-
-import type { ComponentReference, GraphSpec, TaskSpec } from "./componentSpec";
+import type {
+  ComponentReference,
+  GraphSpec,
+  TaskSpec,
+} from "@/utils/componentSpec";
 import {
   componentSpecToYaml,
   getAllComponentFilesFromList,
-} from "./componentStore";
-import { USER_COMPONENTS_LIST_NAME } from "./constants";
-import { getComponentByUrl } from "./localforage";
+} from "@/utils/componentStore";
+import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
+import { getComponentByUrl } from "@/utils/localforage";
 
 export const fetchUserComponents = async (): Promise<ComponentFolder> => {
   try {

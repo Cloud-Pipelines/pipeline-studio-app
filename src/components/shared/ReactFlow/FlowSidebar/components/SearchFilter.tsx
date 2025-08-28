@@ -33,7 +33,10 @@ const SearchFilter = ({
             <ListFilter className="w-4 h-4" />
           </Button>
           {activeFilters.length > 0 && !disableCounter && (
-            <span className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-white text-xs font-bold">
+            <span
+              className="absolute -top-1 -right-1 flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-white text-xs font-bold"
+              data-testid="search-filter-counter"
+            >
               {activeFilters.length}
             </span>
           )}
