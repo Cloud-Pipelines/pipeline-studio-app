@@ -258,7 +258,7 @@ const SearchResults = ({ searchResult }: SearchResultsProps) => {
                 ) : null}
                 {folder.components.map((component) => (
                   <ComponentMarkup
-                    key={component.digest}
+                    key={`${folder.name}-${component.digest}-${component.name}`}
                     component={component}
                   />
                 ))}

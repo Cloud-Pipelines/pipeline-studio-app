@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +18,8 @@ import type { ComponentReference } from "@/utils/componentSpec";
 
 import InfoIconButton from "../Buttons/InfoIconButton";
 import { InfoBox } from "../InfoBox";
+import { PublishComponent } from "../ManageComponent/PublishComponent";
+import { useBetaFlagValue } from "../Settings/useBetaFlags";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
 import { TaskDetails, TaskImplementation, TaskIO } from "../TaskDetails";
 
@@ -62,6 +65,10 @@ const ComponentDetailsDialog = withSuspenseWrapper(
     actions = [],
     onDelete,
   }: ComponentDetailsProps) => {
+    const remoteComponentLibrarySearchEnabled = useBetaFlagValue(
+      "remote-component-library-search",
+    );
+
     const componentRef = useHydrateComponentReference(component);
 
     if (!componentRef) {
@@ -73,6 +80,9 @@ const ComponentDetailsDialog = withSuspenseWrapper(
     }
 
     const { url, spec: componentSpec, digest: componentDigest } = componentRef;
+
+    const hasPublishSection =
+      remoteComponentLibrarySearchEnabled && component.owned;
 
     return (
       <>
@@ -103,6 +113,13 @@ const ComponentDetailsDialog = withSuspenseWrapper(
                 <Code className="h-4 w-4" />
                 Implementation
               </TabsTrigger>
+
+              {hasPublishSection ? (
+                <TabsTrigger value="publish" className="flex-1">
+                  <Icon name="LibraryBig" />
+                  Publish
+                </TabsTrigger>
+              ) : null}
             </TabsList>
 
             <div className="overflow-hidden h-[40vh]">
@@ -127,6 +144,15 @@ const ComponentDetailsDialog = withSuspenseWrapper(
                   componentSpec={componentSpec}
                 />
               </TabsContent>
+
+              {hasPublishSection ? (
+                <TabsContent value="publish" className="h-full">
+                  <PublishComponent
+                    component={componentRef}
+                    displayName={displayName}
+                  />
+                </TabsContent>
+              ) : null}
             </div>
           </Tabs>
         )}
