@@ -181,6 +181,7 @@ export interface ComponentReference extends ComponentReferenceBase {
   favorited?: boolean;
   published_by?: string;
   deprecated?: boolean;
+  superseded_by?: string;
   owned?: boolean;
 }
 
