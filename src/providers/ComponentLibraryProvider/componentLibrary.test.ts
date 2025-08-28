@@ -291,33 +291,13 @@ describe("componentLibrary", () => {
       ],
     };
 
-    const mockUserComponents: ComponentFolder = {
-      name: "User Components",
-      components: [
-        {
-          name: "user-component-1",
-          digest: "user-digest1",
-          favorited: true,
-        },
-        {
-          name: "user-component-2",
-          digest: "user-digest2",
-          favorited: false,
-        },
-      ],
-      folders: [],
-    };
-
-    it("should return favorited components from library and user components", () => {
+    it("should return favorited components from library", () => {
       // Act
-      const result = fetchFavoriteComponents(
-        mockComponentLibrary,
-        mockUserComponents,
-      );
+      const result = fetchFavoriteComponents(mockComponentLibrary);
 
       // Assert
       expect(result).toEqual({
-        name: "My Components",
+        name: "Favorite Components",
         components: [
           {
             name: "component-1",
@@ -329,11 +309,6 @@ describe("componentLibrary", () => {
             digest: "digest3",
             favorited: true,
           },
-          {
-            name: "user-component-1",
-            digest: "user-digest1",
-            favorited: true,
-          },
         ],
         folders: [],
         isUserFolder: false,
@@ -342,11 +317,11 @@ describe("componentLibrary", () => {
 
     it("should return empty folder when no component library provided", () => {
       // Act
-      const result = fetchFavoriteComponents(undefined, mockUserComponents);
+      const result = fetchFavoriteComponents(undefined);
 
       // Assert
       expect(result).toEqual({
-        name: "My Components",
+        name: "Favorite Components",
         components: [],
         folders: [],
         isUserFolder: false,
@@ -355,7 +330,7 @@ describe("componentLibrary", () => {
 
     it("should work without user components", () => {
       // Act
-      const result = fetchFavoriteComponents(mockComponentLibrary, undefined);
+      const result = fetchFavoriteComponents(mockComponentLibrary);
 
       // Assert
       expect(result.components).toHaveLength(2);
@@ -377,6 +352,47 @@ describe("componentLibrary", () => {
       mockComponentService.generateDigest.mockImplementation(
         async (text) => `digest-${text}`,
       );
+    });
+
+    it("should generate text and digest from spec when only spec exists", async () => {
+      // Arrange
+      const componentRef: ComponentReference = {
+        name: "test-component",
+        digest: "existing-digest",
+        spec: {
+          name: "existing-spec",
+          implementation: { graph: { tasks: {} } },
+        },
+      };
+      const folder: ComponentFolder = {
+        name: "Test Folder",
+        components: [componentRef],
+        folders: [],
+      };
+
+      // Mock componentSpecToYaml to return predictable text
+      mockComponentStore.componentSpecToYaml.mockReturnValue("spec-as-yaml");
+
+      // Act
+      const result = await populateComponentRefs(folder);
+
+      // Assert
+      expect(result.components?.[0]).toEqual({
+        name: "test-component",
+        digest: "digest-spec-as-yaml",
+        spec: {
+          name: "existing-spec",
+          implementation: { graph: { tasks: {} } },
+        },
+        text: "spec-as-yaml",
+      });
+      expect(mockComponentStore.componentSpecToYaml).toHaveBeenCalledWith(
+        componentRef.spec,
+      );
+      expect(mockComponentService.generateDigest).toHaveBeenCalledWith(
+        "spec-as-yaml",
+      );
+      expect(mockComponentService.parseComponentData).not.toHaveBeenCalled();
     });
 
     it("should populate spec from text when spec is missing", async () => {

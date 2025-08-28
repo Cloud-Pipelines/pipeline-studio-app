@@ -1,6 +1,14 @@
-import { Folder, LayoutGrid, PackagePlus, Puzzle } from "lucide-react";
+import {
+  Cable,
+  Folder,
+  LayoutGrid,
+  PackagePlus,
+  Puzzle,
+  Star,
+} from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo } from "react";
 
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -32,6 +40,7 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
   const {
     componentLibrary,
     usedComponentsFolder,
+    userComponentsFolder,
     favoritesFolder,
     isLoading,
     error,
@@ -76,6 +85,10 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
     const hasFavouriteComponents =
       favoritesFolder?.components && favoritesFolder.components.length > 0;
 
+    const hasUserComponents =
+      userComponentsFolder?.components &&
+      userComponentsFolder.components.length > 0;
+
     return (
       <div>
         {hasUsedComponents && (
@@ -87,11 +100,19 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
         )}
         {hasFavouriteComponents && (
           <FolderItem
-            key="my-components-folder"
+            key="favorite-components-folder"
             folder={favoritesFolder}
+            icon={Star}
+          />
+        )}
+        {hasUserComponents && (
+          <FolderItem
+            key="my-components-folder"
+            folder={userComponentsFolder}
             icon={Puzzle}
           />
         )}
+        <Separator />
         <FolderItem
           key="graph-inputs-outputs-folder"
           folder={
@@ -104,16 +125,26 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
               folders: [],
             } as UIComponentFolder
           }
+          icon={Cable}
+        />
+        <Separator />
+        <FolderItem
+          key="standard-library-folder"
+          folder={
+            {
+              name: "Standard library",
+              components: [],
+              folders: componentLibrary.folders,
+            } as UIComponentFolder
+          }
           icon={Folder}
         />
-        {componentLibrary.folders.map((folder) => (
-          <FolderItem key={folder.name} folder={folder} />
-        ))}
       </div>
     );
   }, [
     componentLibrary,
     usedComponentsFolder,
+    userComponentsFolder,
     favoritesFolder,
     isLoading,
     error,

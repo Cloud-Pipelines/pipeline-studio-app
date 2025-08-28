@@ -32,17 +32,8 @@ test.describe("Component Library", () => {
     await page.close();
   });
 
-  test("standard library successfully loads", async () => {
-    const expectedFirstLevelFolders = [
-      "Inputs & Outputs",
-      "Quick start",
-      "Datasets",
-      "Data manipulation",
-      "Upload/Download",
-      "ML frameworks",
-      "Converters",
-      "Google Cloud",
-    ];
+  test("initial set of folders", async () => {
+    const expectedFirstLevelFolders = ["Inputs & Outputs", "Standard library"];
 
     // expect to see all the folders
     for (const folder of expectedFirstLevelFolders) {
@@ -55,6 +46,26 @@ test.describe("Component Library", () => {
     expect(countOfFoldersByDefault).toHaveCount(
       expectedFirstLevelFolders.length,
     );
+  });
+
+  test("standard library successfully loads", async () => {
+    await openComponentLibFolder(page, "Standard library");
+
+    const standardLibraryFolders = [
+      "Quick start",
+      "Datasets",
+      "Data manipulation",
+      "Upload/Download",
+      "ML frameworks",
+      "Converters",
+      "Google Cloud",
+    ];
+
+    // expect to see all the folders
+    for (const folder of standardLibraryFolders) {
+      const folderContainer = await locateFolderByName(page, folder);
+      expect(folderContainer).toBeVisible();
+    }
   });
 
   test("folder can be expanded and collapsed", async () => {
@@ -100,6 +111,8 @@ test.describe("Component Library", () => {
 
   test("user can navigate deep into the nested folders", async () => {
     // navigate to the nested folder
+    await openComponentLibFolder(page, "Standard library");
+
     const topFolder = await openComponentLibFolder(page, "Google Cloud");
     const topFolderContent = await topFolder.locator("[data-folder-name]");
     expect(await topFolderContent).toHaveCount(3);
@@ -113,6 +126,8 @@ test.describe("Component Library", () => {
 
   test("components can be added and removed from favorites folder", async () => {
     // add component to the favorites by clicking the star icon
+    await openComponentLibFolder(page, "Standard library");
+
     const quickStartFolder = await openComponentLibFolder(page, "Quick start");
     const chicagoTaxiTripsDataset = await locateComponentInFolder(
       quickStartFolder,
@@ -121,7 +136,10 @@ test.describe("Component Library", () => {
     await chicagoTaxiTripsDataset.getByTestId("favorite-star").click();
 
     // expect the component to be in the favorites folder
-    const favoritesFolder = await openComponentLibFolder(page, "My Components");
+    const favoritesFolder = await openComponentLibFolder(
+      page,
+      "Favorite Components",
+    );
     expect(await favoritesFolder.locator("li")).toHaveCount(1);
 
     // unstar the component
@@ -137,6 +155,7 @@ test.describe("Component Library", () => {
 
   test("component details can be opened as a dialog", async () => {
     // drop component on the canvas
+    await openComponentLibFolder(page, "Standard library");
     const quickStartFolder = await openComponentLibFolder(page, "Quick start");
     const chicagoTaxiTripsDataset = await locateComponentInFolder(
       quickStartFolder,
@@ -159,6 +178,7 @@ test.describe("Component Library", () => {
 
   test("components can be dragged to the canvas and appear in the used in pipeline folder", async () => {
     // drop component on the canvas
+    await openComponentLibFolder(page, "Standard library");
     await dropComponentFromLibraryOnCanvas(
       page,
       "Quick start",
@@ -194,6 +214,7 @@ test.describe("Component Library", () => {
   });
 
   test("search results can be highlighted on input pin click", async () => {
+    await openComponentLibFolder(page, "Standard library");
     await openComponentLibFolder(page, "Data manipulation");
     await openComponentLibFolder(page, "CSV");
 
@@ -254,6 +275,7 @@ test.describe("Component Library", () => {
   });
 
   test("search results can be highlighted on output pin click", async () => {
+    await openComponentLibFolder(page, "Standard library");
     await openComponentLibFolder(page, "Data manipulation");
     await openComponentLibFolder(page, "CSV");
 

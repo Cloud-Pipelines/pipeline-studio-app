@@ -133,8 +133,8 @@ export const ComponentLibraryProvider = ({
 
   // Fetch "Starred" components
   const favoritesFolder: ComponentFolder = useMemo(
-    () => fetchFavoriteComponents(componentLibrary, userComponentsFolder),
-    [componentLibrary, userComponentsFolder],
+    () => fetchFavoriteComponents(componentLibrary),
+    [componentLibrary],
   );
 
   // Methods
@@ -285,6 +285,9 @@ export const ComponentLibraryProvider = ({
     [highlightedComponentDigest],
   );
 
+  /**
+   * Local component library search
+   */
   const searchComponentLibrary = useCallback(
     (search: string, filters: string[]) => {
       if (!search.trim()) return null;
