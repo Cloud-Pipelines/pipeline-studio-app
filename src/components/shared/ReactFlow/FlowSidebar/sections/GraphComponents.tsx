@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import { useForcedSearchContext } from "@/providers/ComponentLibraryProvider/ForcedSearchProvider";
 import type { UIComponentFolder } from "@/types/componentLibrary";
 
 import {
@@ -27,28 +28,29 @@ import {
 import { IONodeSidebarItem } from "../components/ComponentItem";
 
 const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
+  const { updateSearchFilter, currentSearchFilter } = useForcedSearchContext();
   const {
     componentLibrary,
     usedComponentsFolder,
     favoritesFolder,
     isLoading,
     error,
-    searchTerm,
-    setSearchTerm,
-    searchFilters,
-    setSearchFilters,
     searchResult,
   } = useComponentLibrary();
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    updateSearchFilter({
+      searchTerm: e.target.value,
+    });
   };
 
   const handleFiltersChange = useCallback(
     (filters: string[]) => {
-      setSearchFilters(filters);
+      updateSearchFilter({
+        filters,
+      });
     },
-    [setSearchFilters],
+    [updateSearchFilter],
   );
 
   const memoizedContent = useMemo(() => {
@@ -115,8 +117,7 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
     favoritesFolder,
     isLoading,
     error,
-    searchTerm,
-    searchFilters,
+    searchResult,
   ]);
 
   if (!isOpen) {
@@ -159,8 +160,8 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
       </SidebarGroupLabel>
       <SidebarGroupContent className="[&_li]:marker:hidden [&_li]:before:content-none [&_li]:list-none">
         <SearchInput
-          value={searchTerm}
-          activeFilters={searchFilters}
+          value={currentSearchFilter.searchTerm}
+          activeFilters={currentSearchFilter.filters}
           onChange={handleSearchChange}
           onFiltersChange={handleFiltersChange}
         />
