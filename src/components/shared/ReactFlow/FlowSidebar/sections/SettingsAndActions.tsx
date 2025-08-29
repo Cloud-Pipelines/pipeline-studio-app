@@ -64,7 +64,7 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
         ? componentSpecToYaml(componentSpecRef.current)
         : "";
     }
-  }, [componentSpecRef]);
+  }, [componentSpecRef.current]);
 
   const componentTextBlob = new Blob([componentText], { type: "text/yaml" });
   const filename = componentSpec?.name
