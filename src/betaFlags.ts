@@ -7,6 +7,11 @@ export const ExistingBetaFlags = {
       "Highlight the tasks on the Pipeline canvas when the component is hovered over in the component library.",
     default: false,
   } as BetaFlag,
+  ["remote-component-library-search"]: {
+    name: "Remote component library search",
+    description: "Enable the remote component library search.",
+    default: false,
+  } as BetaFlag,
 
   ["redirect-on-new-pipeline-run"]: {
     name: "Redirect on new pipeline run",
