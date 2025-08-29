@@ -79,6 +79,8 @@ export const ComponentSpecProvider = ({
     setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
     setTaskStatusMap(new Map());
     setIsLoading(false);
+    setIsInitialLoad(true);
+    setDebounceMultiplier(0);
     undoRedoRef.current.clearHistory();
   }, []);
 
