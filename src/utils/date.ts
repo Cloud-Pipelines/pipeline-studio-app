@@ -47,3 +47,41 @@ export const formatDuration = (startTime: string, endTime: string): string => {
     return `${seconds}s`;
   }
 };
+
+/**
+ * Format relative time between a past date and now
+ * @param date - past timestamp string
+ * @returns Formatted relative string (e.g., "9:43am", "yesterday", "3 days ago")
+ */
+export const formatRelativeTime = (date: Date | null) => {
+  if (!date) return null;
+  const now = new Date();
+  const past = new Date(date);
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const pastDate = new Date(
+    past.getFullYear(),
+    past.getMonth(),
+    past.getDate(),
+  );
+
+  const isSameDay = pastDate.getTime() === today.getTime();
+  const isYesterday = pastDate.getTime() === yesterday.getTime();
+
+  if (isSameDay) {
+    return past.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } else if (isYesterday) {
+    return "yesterday";
+  } else {
+    const diffDays = Math.floor(
+      (now.getTime() - past.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    return `${diffDays} days ago`;
+  }
+};

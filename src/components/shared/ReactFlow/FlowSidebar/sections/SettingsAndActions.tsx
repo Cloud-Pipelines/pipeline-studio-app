@@ -1,10 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
 import { FileDownIcon, FileUpIcon, Save, SaveAll } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { PipelineNameDialog } from "@/components/shared/Dialogs";
 import ImportPipeline from "@/components/shared/ImportPipeline";
+import { InlineStack } from "@/components/ui/layout";
 import {
+  SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -12,18 +14,32 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Spinner } from "@/components/ui/spinner";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/routes/router";
-import { useSavePipeline } from "@/services/pipelineService";
+import { getPipelineFile, useSavePipeline } from "@/services/pipelineService";
 import { componentSpecToYaml } from "@/utils/componentStore";
+import { formatRelativeTime } from "@/utils/date";
 
 const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
-  const { componentSpec } = useComponentSpec();
+  const { componentSpec, autoSaveStatus } = useComponentSpec();
   const { savePipeline } = useSavePipeline(componentSpec);
   const notify = useToastNotification();
   const navigate = useNavigate();
+
+  const [onLoadLastSavedAt, setOnLoadLastSavedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const fetchLastSaved = async () => {
+      if (componentSpec?.name) {
+        const lastSavedPipeline = await getPipelineFile(componentSpec.name);
+        setOnLoadLastSavedAt(lastSavedPipeline?.modificationTime ?? null);
+      }
+    };
+    fetchLastSaved();
+  }, [componentSpec?.name]);
 
   const notifyPipelineSaved = (name: string) => {
     notify(`Pipeline saved as "${name}"`, "success");
@@ -31,6 +47,7 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
 
   const handleSavePipeline = async () => {
     await savePipeline();
+    setOnLoadLastSavedAt(new Date());
     notifyPipelineSaved(componentSpec?.name ?? "Untitled Pipeline");
   };
 
@@ -72,9 +89,30 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
     : "pipeline.component.yaml";
 
   const tooltipPosition = isOpen ? "top" : "right";
+
+  const getAutoSaveStatusText = () => {
+    if (autoSaveStatus.isSaving) {
+      return "Saving...";
+    }
+    if (autoSaveStatus.lastSavedAt || onLoadLastSavedAt) {
+      return `Last saved ${formatRelativeTime(
+        autoSaveStatus.lastSavedAt ?? onLoadLastSavedAt,
+      )}`;
+    }
+    return "All changes saved";
+  };
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Pipeline Actions</SidebarGroupLabel>
+      <SidebarContent>
+        <InlineStack blockAlign="center" className="ml-2" gap="1">
+          {autoSaveStatus.isSaving && <Spinner size={16} />}
+          <span className="text-xs text-muted-foreground">
+            {getAutoSaveStatusText()}
+          </span>
+        </InlineStack>
+      </SidebarContent>
       <SidebarGroupContent>
         <SidebarMenu
           className={cn({

@@ -295,3 +295,7 @@ export async function importPipelineFromFile(
     };
   }
 }
+
+export function getPipelineFile(pipelineName: string) {
+  return getComponentFileFromList(USER_PIPELINES_LIST_NAME, pipelineName);
+}
