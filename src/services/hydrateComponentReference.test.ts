@@ -1235,6 +1235,7 @@ function mockFetchResponse(
 ) {
   const response = {
     ok: options.ok ?? true,
+    headers: new Headers(),
     statusText: options.statusText ?? "OK",
     text: vi.fn().mockResolvedValue(text),
   };

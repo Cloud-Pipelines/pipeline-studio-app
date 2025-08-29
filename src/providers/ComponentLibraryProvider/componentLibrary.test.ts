@@ -96,6 +96,7 @@ describe("componentLibrary", () => {
             url: "https://example.com/component1.yaml",
             spec: {},
             text: "test-yaml",
+            owned: true,
           },
           {
             name: "Test Component 2",
@@ -103,6 +104,7 @@ describe("componentLibrary", () => {
             url: "https://example.com/component2.yaml",
             spec: {},
             text: "test-yaml",
+            owned: true,
           },
         ],
         folders: [],

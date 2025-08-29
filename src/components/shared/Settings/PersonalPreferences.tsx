@@ -18,6 +18,7 @@ export function PersonalPreferences() {
       <TooltipButton
         tooltip="Personal Preferences"
         onClick={() => setOpen(true)}
+        data-testid="personal-preferences-button"
       >
         <Settings className="h-4 w-4" />
       </TooltipButton>

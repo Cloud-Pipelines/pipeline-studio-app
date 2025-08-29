@@ -30,6 +30,7 @@ export const fetchUserComponents = async (): Promise<ComponentFolder> => {
       components.push({
         ...fileEntry.componentRef,
         name: fileEntry.name,
+        owned: true,
       });
     });
 

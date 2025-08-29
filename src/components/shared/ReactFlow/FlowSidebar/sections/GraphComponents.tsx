@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo } from "react";
 
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
+import { BlockStack } from "@/components/ui/layout";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarGroup,
@@ -34,8 +36,13 @@ import {
   SearchResults,
 } from "../components";
 import { IONodeSidebarItem } from "../components/ComponentItem";
+import PublishedComponentsSearch from "../components/PublishedComponentsSearch";
 
 const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
+  const remoteComponentLibrarySearchEnabled = useBetaFlagValue(
+    "remote-component-library-search",
+  );
+
   const { updateSearchFilter, currentSearchFilter } = useForcedSearchContext();
   const {
     componentLibrary,
@@ -67,8 +74,8 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
     if (error) return <ErrorState message={(error as Error).message} />;
     if (!componentLibrary) return <EmptyState />;
 
-    // If there's a search result, use the SearchResults component
-    if (searchResult) {
+    if (!remoteComponentLibrarySearchEnabled && searchResult) {
+      // If there's a search result, use the SearchResults component
       return (
         <SearchResults
           searchResult={searchResult}
@@ -90,7 +97,7 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
       userComponentsFolder.components.length > 0;
 
     return (
-      <div>
+      <BlockStack>
         {hasUsedComponents && (
           <FolderItem
             key="used-components-folder"
@@ -139,7 +146,7 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
           }
           icon={Folder}
         />
-      </div>
+      </BlockStack>
     );
   }, [
     componentLibrary,
@@ -149,6 +156,7 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
     isLoading,
     error,
     searchResult,
+    remoteComponentLibrarySearchEnabled,
   ]);
 
   if (!isOpen) {
@@ -174,6 +182,22 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
       </>
     );
   }
+
+  const searchComponent = remoteComponentLibrarySearchEnabled ? (
+    <PublishedComponentsSearch>{memoizedContent}</PublishedComponentsSearch>
+  ) : (
+    <>
+      <SearchInput
+        value={currentSearchFilter.searchTerm}
+        activeFilters={currentSearchFilter.filters}
+        onChange={handleSearchChange}
+        onFiltersChange={handleFiltersChange}
+      />
+
+      {memoizedContent}
+    </>
+  );
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>
@@ -190,14 +214,7 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
         </div>
       </SidebarGroupLabel>
       <SidebarGroupContent className="[&_li]:marker:hidden [&_li]:before:content-none [&_li]:list-none">
-        <SearchInput
-          value={currentSearchFilter.searchTerm}
-          activeFilters={currentSearchFilter.filters}
-          onChange={handleSearchChange}
-          onFiltersChange={handleFiltersChange}
-        />
-
-        {memoizedContent}
+        {searchComponent}
       </SidebarGroupContent>
     </SidebarGroup>
   );

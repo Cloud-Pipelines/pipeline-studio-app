@@ -174,13 +174,12 @@ export const fetchAndStoreComponentByUrl = async (
       }
     }
 
-    // If not in storage or parsing failed, fetch from URL
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch component: ${response.statusText}`);
+    const text = await fetchComponentTextFromUrl(url);
+
+    if (!text) {
+      return null;
     }
 
-    const text = await response.text();
     const digest = await generateDigest(text);
 
     const id = `component-${digest}`;
@@ -293,7 +292,7 @@ const parseTextToSpec = async (
 /**
  * Helper function to fetch text content from URL (with caching)
  */
-const fetchComponentTextFromUrl = async (
+export const fetchComponentTextFromUrl = async (
   url: string,
 ): Promise<string | undefined> => {
   // Check cache first
@@ -308,6 +307,16 @@ const fetchComponentTextFromUrl = async (
     if (!response.ok) {
       throw new Error(`Failed to fetch component: ${response.statusText}`);
     }
+
+    // if response code is json, return the json
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      const json = await response.json();
+      // if coming from the Backend Component Library API
+      if (json.text) {
+        return json.text;
+      }
+    }
+
     return await response.text();
   } catch (error) {
     console.error(`Error fetching component from URL ${url}:`, error);

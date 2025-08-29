@@ -46,6 +46,10 @@ import {
   populateComponentRefs,
 } from "./componentLibrary";
 import { useForcedSearchContext } from "./ForcedSearchProvider";
+import { PublishedComponentsLibrary } from "./libraries/publishedComponentsLibrary";
+import type { Library } from "./libraries/types";
+
+type AvailableComponentLibraries = "published_components";
 
 type ComponentLibraryContextType = {
   componentLibrary: ComponentLibrary | undefined;
@@ -58,6 +62,10 @@ type ComponentLibraryContextType = {
   searchResult: SearchResult | null;
 
   highlightedComponentDigest: string | null;
+  searchComponentLibrary: (
+    search: string,
+    filters: string[],
+  ) => SearchResult | null;
   addToComponentLibrary: (component: ComponentReference) => void;
   removeFromComponentLibrary: (component: ComponentReference) => void;
   refetchLibrary: () => void;
@@ -72,12 +80,26 @@ type ComponentLibraryContextType = {
   checkIfUserComponent: (component: ComponentReference) => boolean;
   checkLibraryContainsComponent: (component: ComponentReference) => boolean;
   checkIfHighlighted: (component: ComponentReference) => boolean;
+
+  getComponentLibrary: (libraryName: AvailableComponentLibraries) => Library;
 };
 
 const ComponentLibraryContext =
   createRequiredContext<ComponentLibraryContextType>(
     "ComponentLibraryProvider",
   );
+
+const componentLibraries = new Map<AvailableComponentLibraries, Library>([
+  ["published_components", new PublishedComponentsLibrary()],
+]);
+
+function getComponentLibraryObject(libraryName: AvailableComponentLibraries) {
+  if (!componentLibraries.has(libraryName)) {
+    throw new Error(`Component library "${libraryName}" is not supported.`);
+  }
+
+  return componentLibraries.get(libraryName) as Library;
+}
 
 export const ComponentLibraryProvider = ({
   children,
@@ -447,6 +469,13 @@ export const ComponentLibraryProvider = ({
     });
   }, [rawUserComponentsFolder]);
 
+  const getComponentLibrary = useCallback(
+    (libraryName: AvailableComponentLibraries) => {
+      return getComponentLibraryObject(libraryName);
+    },
+    [],
+  );
+
   const isLoading = isLibraryLoading || isUserComponentsLoading;
   const error = libraryError || userComponentsError;
 
@@ -460,6 +489,8 @@ export const ComponentLibraryProvider = ({
       error,
       searchResult,
       highlightedComponentDigest,
+      searchComponentLibrary,
+      getComponentLibrary,
       addToComponentLibrary,
       removeFromComponentLibrary,
       refetchLibrary,
@@ -480,6 +511,8 @@ export const ComponentLibraryProvider = ({
       error,
       searchResult,
       highlightedComponentDigest,
+      searchComponentLibrary,
+      getComponentLibrary,
       addToComponentLibrary,
       removeFromComponentLibrary,
       refetchLibrary,

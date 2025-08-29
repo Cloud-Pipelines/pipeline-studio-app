@@ -147,7 +147,7 @@ type DragOptions = Parameters<Locator["dragTo"]>[1];
 /**
  * Drags a component from the library to the canvas
  */
-async function dragComponentToCanvas(
+export async function dragComponentToCanvas(
   page: Page,
   component: Locator,
   dragOptions: DragOptions = {},
