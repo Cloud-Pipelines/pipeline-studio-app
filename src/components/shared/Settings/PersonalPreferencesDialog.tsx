@@ -38,6 +38,7 @@ export function PersonalPreferencesDialog({
       <DialogContent
         className="w-2xl overflow-hidden"
         aria-label="Personal Preferences"
+        data-testid="personal-preferences-dialog"
       >
         <DialogHeader>
           <DialogTitle>Personal Preferences</DialogTitle>
@@ -54,6 +55,7 @@ export function PersonalPreferencesDialog({
               <Switch
                 checked={flag.enabled}
                 onCheckedChange={(checked) => handleSetFlag(flag.key, checked)}
+                data-testid={`${flag.key}-switch`}
               />
               <div className="flex flex-col items-start">
                 <span>{flag.name}</span>

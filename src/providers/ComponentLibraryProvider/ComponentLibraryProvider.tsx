@@ -14,14 +14,6 @@ import type {
   ComponentLibrary,
   SearchResult,
 } from "@/types/componentLibrary";
-import {
-  fetchFavoriteComponents,
-  fetchUsedComponents,
-  fetchUserComponents,
-  filterToUniqueByDigest,
-  flattenFolders,
-  populateComponentRefs,
-} from "@/utils/componentLibrary";
 import type { ComponentReference } from "@/utils/componentSpec";
 import {
   type ComponentReferenceWithSpec,
@@ -30,7 +22,7 @@ import {
   updateComponentInListByText,
   updateComponentRefInList,
 } from "@/utils/componentStore";
-import { DEFAULT_FILTERS, USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
+import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 import { getComponentName } from "@/utils/getComponentName";
 import {
   getComponentByUrl,
@@ -43,8 +35,21 @@ import { componentMatchesSearch } from "@/utils/searchUtils";
 import {
   createRequiredContext,
   useRequiredContext,
-} from "../hooks/useRequiredContext";
-import { useComponentSpec } from "./ComponentSpecProvider";
+} from "../../hooks/useRequiredContext";
+import { useComponentSpec } from "../ComponentSpecProvider";
+import {
+  fetchFavoriteComponents,
+  fetchUsedComponents,
+  fetchUserComponents,
+  filterToUniqueByDigest,
+  flattenFolders,
+  populateComponentRefs,
+} from "./componentLibrary";
+import { useForcedSearchContext } from "./ForcedSearchProvider";
+import { PublishedComponentsLibrary } from "./libraries/publishedComponentsLibrary";
+import type { Library } from "./libraries/types";
+
+type AvailableComponentLibraries = "published_components";
 
 type ComponentLibraryContextType = {
   componentLibrary: ComponentLibrary | undefined;
@@ -53,18 +58,19 @@ type ComponentLibraryContextType = {
   favoritesFolder: ComponentFolder;
   isLoading: boolean;
   error: Error | null;
-  searchTerm: string;
-  searchFilters: string[];
+
   searchResult: SearchResult | null;
-  highlightSearchResults: boolean;
+
   highlightedComponentDigest: string | null;
+  searchComponentLibrary: (
+    search: string,
+    filters: string[],
+  ) => SearchResult | null;
   addToComponentLibrary: (component: ComponentReference) => void;
   removeFromComponentLibrary: (component: ComponentReference) => void;
   refetchLibrary: () => void;
   refetchUserComponents: () => void;
-  setSearchTerm: (term: string) => void;
-  setSearchFilters: (filters: string[]) => void;
-  setHighlightSearchResults: (highlight: boolean) => void;
+
   setHighlightedComponentDigest: (digest: string | null) => void;
   setComponentFavorite: (
     component: ComponentReference,
@@ -74,6 +80,8 @@ type ComponentLibraryContextType = {
   checkIfUserComponent: (component: ComponentReference) => boolean;
   checkLibraryContainsComponent: (component: ComponentReference) => boolean;
   checkIfHighlighted: (component: ComponentReference) => boolean;
+
+  getComponentLibrary: (libraryName: AvailableComponentLibraries) => Library;
 };
 
 const ComponentLibraryContext =
@@ -81,19 +89,30 @@ const ComponentLibraryContext =
     "ComponentLibraryProvider",
   );
 
+const componentLibraries = new Map<AvailableComponentLibraries, Library>([
+  ["published_components", new PublishedComponentsLibrary()],
+]);
+
+function getComponentLibraryObject(libraryName: AvailableComponentLibraries) {
+  if (!componentLibraries.has(libraryName)) {
+    throw new Error(`Component library "${libraryName}" is not supported.`);
+  }
+
+  return componentLibraries.get(libraryName) as Library;
+}
+
 export const ComponentLibraryProvider = ({
   children,
 }: {
   children: ReactNode;
 }) => {
   const { graphSpec } = useComponentSpec();
+  const { currentSearchFilter } = useForcedSearchContext();
 
   const [componentLibrary, setComponentLibrary] = useState<ComponentLibrary>();
   const [userComponentsFolder, setUserComponentsFolder] =
     useState<ComponentFolder>();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchFilters, setSearchFilters] = useState<string[]>(DEFAULT_FILTERS);
-  const [highlightSearchResults, setHighlightSearchResults] = useState(true);
+
   const [highlightedComponentDigest, setHighlightedComponentDigest] = useState<
     string | null
   >(null);
@@ -136,8 +155,8 @@ export const ComponentLibraryProvider = ({
 
   // Fetch "Starred" components
   const favoritesFolder: ComponentFolder = useMemo(
-    () => fetchFavoriteComponents(componentLibrary, userComponentsFolder),
-    [componentLibrary, userComponentsFolder],
+    () => fetchFavoriteComponents(componentLibrary),
+    [componentLibrary],
   );
 
   // Methods
@@ -288,6 +307,9 @@ export const ComponentLibraryProvider = ({
     [highlightedComponentDigest],
   );
 
+  /**
+   * Local component library search
+   */
   const searchComponentLibrary = useCallback(
     (search: string, filters: string[]) => {
       if (!search.trim()) return null;
@@ -419,15 +441,13 @@ export const ComponentLibraryProvider = ({
   }, []);
 
   const searchResult = useMemo(
-    () => searchComponentLibrary(searchTerm, searchFilters),
-    [searchTerm, searchFilters, searchComponentLibrary],
+    () =>
+      searchComponentLibrary(
+        currentSearchFilter.searchTerm,
+        currentSearchFilter.filters,
+      ),
+    [currentSearchFilter, searchComponentLibrary],
   );
-
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setSearchFilters(DEFAULT_FILTERS);
-    }
-  }, [searchTerm]);
 
   useEffect(() => {
     if (!rawComponentLibrary) {
@@ -449,6 +469,13 @@ export const ComponentLibraryProvider = ({
     });
   }, [rawUserComponentsFolder]);
 
+  const getComponentLibrary = useCallback(
+    (libraryName: AvailableComponentLibraries) => {
+      return getComponentLibraryObject(libraryName);
+    },
+    [],
+  );
+
   const isLoading = isLibraryLoading || isUserComponentsLoading;
   const error = libraryError || userComponentsError;
 
@@ -460,18 +487,14 @@ export const ComponentLibraryProvider = ({
       favoritesFolder,
       isLoading,
       error,
-      searchTerm,
-      searchFilters,
       searchResult,
-      highlightSearchResults,
       highlightedComponentDigest,
+      searchComponentLibrary,
+      getComponentLibrary,
       addToComponentLibrary,
       removeFromComponentLibrary,
       refetchLibrary,
       refetchUserComponents,
-      setSearchTerm,
-      setSearchFilters,
-      setHighlightSearchResults,
       setHighlightedComponentDigest,
       setComponentFavorite,
       checkIfFavorited,
@@ -486,18 +509,14 @@ export const ComponentLibraryProvider = ({
       favoritesFolder,
       isLoading,
       error,
-      searchTerm,
-      searchFilters,
       searchResult,
-      highlightSearchResults,
       highlightedComponentDigest,
+      searchComponentLibrary,
+      getComponentLibrary,
       addToComponentLibrary,
       removeFromComponentLibrary,
       refetchLibrary,
       refetchUserComponents,
-      setSearchTerm,
-      setSearchFilters,
-      setHighlightSearchResults,
       setHighlightedComponentDigest,
       setComponentFavorite,
       checkIfFavorited,

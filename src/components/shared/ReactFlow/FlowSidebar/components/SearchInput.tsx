@@ -20,6 +20,7 @@ const SearchInput = ({
         </div>
         <Input
           type="text"
+          data-testid="search-input"
           placeholder="Search components..."
           className="w-full pl-8 text-sm h-8 focus-visible:ring-gray-400/50"
           value={value}

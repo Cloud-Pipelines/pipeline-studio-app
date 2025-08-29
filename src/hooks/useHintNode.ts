@@ -2,12 +2,17 @@ import type { Node } from "@xyflow/react";
 import { useConnection } from "@xyflow/react";
 import { useMemo } from "react";
 
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import type { HintNodeData } from "@/types/hintNode";
 
 const HINT_NODE_ID = "hint-node";
 
 export const useHintNode = ({ key, hint }: { key: string; hint: string }) => {
+  const isRemoteComponentLibraryEnabled = useBetaFlagValue(
+    "remote-component-library-search",
+  );
+
   const connectionTo = useConnection((connection) => connection.to);
   const connectionToHandle = useConnection((connection) => connection.toHandle);
   const connectionFromHandle = useConnection(
@@ -38,7 +43,12 @@ export const useHintNode = ({ key, hint }: { key: string; hint: string }) => {
   );
 
   const hintNode = useMemo((): Node<HintNodeData> | null => {
-    if (!shouldShowHint || !connectionTo) {
+    /**
+     * Turning off hint node for remote component library
+     * Todo: it will be addressed in a follow PRs, when we can search "input/output" remotely,
+     *  or when we can search all libs at once
+     */
+    if (isRemoteComponentLibraryEnabled || !shouldShowHint || !connectionTo) {
       return null;
     }
 
@@ -61,6 +71,7 @@ export const useHintNode = ({ key, hint }: { key: string; hint: string }) => {
       zIndex: 1000,
     };
   }, [
+    isRemoteComponentLibraryEnabled,
     shouldShowHint,
     connectionTo?.x,
     connectionTo?.y,

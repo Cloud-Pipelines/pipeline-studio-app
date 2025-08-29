@@ -133,6 +133,7 @@ describe("componentService", () => {
       vi.mocked(localforage.componentExistsByUrl).mockResolvedValue(false);
       mockFetch.mockResolvedValue({
         ok: true,
+        headers: new Headers(),
         text: () => Promise.resolve(yamlContent),
       } as Response);
 
@@ -158,6 +159,7 @@ describe("componentService", () => {
       vi.mocked(localforage.componentExistsByUrl).mockResolvedValue(false);
       mockFetch.mockResolvedValue({
         ok: false,
+        headers: new Headers(),
         statusText: "Not Found",
       } as Response);
 
@@ -165,7 +167,7 @@ describe("componentService", () => {
 
       expect(result).toBeNull();
       expect(consoleSpy).toHaveBeenCalledWith(
-        `Error fetching component at ${url}:`,
+        `Error fetching component from URL ${url}:`,
         expect.any(Error),
       );
     });
@@ -180,6 +182,7 @@ describe("componentService", () => {
       vi.mocked(localforage.componentExistsByUrl).mockResolvedValue(false);
       mockFetch.mockResolvedValue({
         ok: true,
+        headers: new Headers(),
         text: () => Promise.resolve(invalidYaml),
       } as Response);
 
@@ -197,6 +200,90 @@ describe("componentService", () => {
         `Error parsing component at ${url}:`,
         expect.any(Error),
       );
+    });
+
+    it("should handle JSON response with text field from backend API", async () => {
+      const url = "https://api.example.com/component/123";
+      const yamlContent = yaml.dump(mockComponentSpec);
+      const jsonResponse = { text: yamlContent };
+
+      vi.mocked(localforage.componentExistsByUrl).mockResolvedValue(false);
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({
+          "content-type": "application/json",
+        }),
+        json: () => Promise.resolve(jsonResponse),
+        text: () => Promise.resolve(JSON.stringify(jsonResponse)),
+      } as Response);
+
+      const result = await fetchAndStoreComponentByUrl(url);
+
+      expect(mockFetch).toHaveBeenCalledWith(url);
+      expect(localforage.saveComponent).toHaveBeenCalledWith({
+        id: expect.stringMatching(/^component-\w+$/),
+        url,
+        data: yamlContent,
+        createdAt: expect.any(Number),
+        updatedAt: expect.any(Number),
+      });
+      expect(result).toEqual(mockComponentSpec);
+    });
+
+    it("should handle JSON response with invalid YAML in text field", async () => {
+      const url = "https://api.example.com/component/789";
+      const invalidYaml = "invalid: yaml: content: -";
+      const jsonResponse = { text: invalidYaml };
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      vi.mocked(localforage.componentExistsByUrl).mockResolvedValue(false);
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: new Headers({
+          "content-type": "application/json",
+        }),
+        json: () => Promise.resolve(jsonResponse),
+        text: () => Promise.resolve(JSON.stringify(jsonResponse)),
+      } as Response);
+
+      const result = await fetchAndStoreComponentByUrl(url);
+
+      expect(localforage.saveComponent).toHaveBeenCalledWith({
+        id: expect.stringMatching(/^component-\w+$/),
+        url,
+        data: invalidYaml,
+        createdAt: expect.any(Number),
+        updatedAt: expect.any(Number),
+      });
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        `Error parsing component at ${url}:`,
+        expect.any(Error),
+      );
+    });
+
+    it("should use cached JSON-sourced component on subsequent calls", async () => {
+      const url = "https://api.example.com/component/cached";
+      const yamlContent = yaml.dump(mockComponentSpec);
+      const cachedComponent = {
+        id: "cached-json-1",
+        url,
+        data: yamlContent,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      vi.mocked(localforage.componentExistsByUrl).mockResolvedValue(true);
+      vi.mocked(localforage.getComponentByUrl).mockResolvedValue(
+        cachedComponent,
+      );
+
+      const result = await fetchAndStoreComponentByUrl(url);
+
+      expect(result).toEqual(mockComponentSpec);
+      expect(mockFetch).not.toHaveBeenCalled();
     });
   });
 
@@ -232,6 +319,7 @@ describe("componentService", () => {
       vi.mocked(localforage.getComponentByUrl).mockResolvedValue(null);
       mockFetch.mockResolvedValue({
         ok: true,
+        headers: new Headers(),
         text: () => Promise.resolve(yamlText),
       } as Response);
 
@@ -400,20 +488,27 @@ describe("componentService", () => {
 
     it("should fetch and store component library successfully", async () => {
       const { loadObjectFromYamlData } = await import("@/utils/cache");
+      const componentYaml = yaml.dump({
+        name: "component1",
+        implementation: { container: { image: "test" } },
+      });
 
-      mockFetch.mockResolvedValue({
+      // First mock for fetching the library
+      mockFetch.mockResolvedValueOnce({
         ok: true,
+        headers: new Headers(),
         arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+      } as Response);
+
+      // Mock for fetching individual component from library
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers(),
+        text: () => Promise.resolve(componentYaml),
       } as Response);
 
       vi.mocked(loadObjectFromYamlData).mockReturnValue(mockLibrary);
-
-      // Mock the component storage for individual components
       vi.mocked(localforage.getComponentByUrl).mockResolvedValue(null);
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
-      } as Response);
 
       const result = await fetchAndStoreComponentLibrary();
 
@@ -430,6 +525,7 @@ describe("componentService", () => {
     it("should handle fetch errors and fallback to local storage", async () => {
       mockFetch.mockResolvedValue({
         ok: false,
+        headers: new Headers(),
         statusText: "Not Found",
       } as Response);
 

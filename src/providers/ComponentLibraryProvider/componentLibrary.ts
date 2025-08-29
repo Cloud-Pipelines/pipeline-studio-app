@@ -6,14 +6,17 @@ import type {
   ComponentFolder,
   ComponentLibrary,
 } from "@/types/componentLibrary";
-
-import type { ComponentReference, GraphSpec, TaskSpec } from "./componentSpec";
+import type {
+  ComponentReference,
+  GraphSpec,
+  TaskSpec,
+} from "@/utils/componentSpec";
 import {
   componentSpecToYaml,
   getAllComponentFilesFromList,
-} from "./componentStore";
-import { USER_COMPONENTS_LIST_NAME } from "./constants";
-import { getComponentByUrl } from "./localforage";
+} from "@/utils/componentStore";
+import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
+import { getComponentByUrl } from "@/utils/localforage";
 
 export const fetchUserComponents = async (): Promise<ComponentFolder> => {
   try {
@@ -27,6 +30,7 @@ export const fetchUserComponents = async (): Promise<ComponentFolder> => {
       components.push({
         ...fileEntry.componentRef,
         name: fileEntry.name,
+        owned: true,
       });
     });
 
@@ -80,10 +84,9 @@ export const fetchUsedComponents = (graphSpec: GraphSpec): ComponentFolder => {
 
 export const fetchFavoriteComponents = (
   componentLibrary: ComponentLibrary | undefined,
-  userComponents: ComponentFolder | undefined,
 ): ComponentFolder => {
   const favoritesFolder = {
-    name: "My Components",
+    name: "Favorite Components",
     components: [] as ComponentReference[],
     folders: [],
     isUserFolder: false,
@@ -98,20 +101,6 @@ export const fetchFavoriteComponents = (
   );
 
   uniqueLibraryComponents.forEach((component) => {
-    if (component?.favorited) {
-      favoritesFolder.components.push(component);
-    }
-  });
-
-  if (!userComponents) {
-    return favoritesFolder;
-  }
-
-  const uniqueUserComponents = filterToUniqueByDigest(
-    flattenFolders(userComponents),
-  );
-
-  uniqueUserComponents.forEach((component) => {
     if (component?.favorited) {
       favoritesFolder.components.push(component);
     }

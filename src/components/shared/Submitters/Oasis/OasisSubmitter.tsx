@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle, Loader2, SendHorizonal } from "lucide-react";
 import { useCallback, useState } from "react";
 
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import useCooldownTimer from "@/hooks/useCooldownTimer";
@@ -24,6 +25,7 @@ const OasisSubmitter = ({
 }: OasisSubmitterProps) => {
   const { configured, available } = useBackend();
   const { submit, isSubmitting } = usePipelineRuns();
+  const isAutoRedirect = useBetaFlagValue("redirect-on-new-pipeline-run");
 
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const { cooldownTime, setCooldownTime } = useCooldownTimer(0);
@@ -55,9 +57,11 @@ const OasisSubmitter = ({
               Pipeline successfully submitted
             </span>
           </div>
-          <Button onClick={() => handleViewRun(runId)} className="w-full">
-            View Run
-          </Button>
+          {!isAutoRedirect && (
+            <Button onClick={() => handleViewRun(runId)} className="w-full">
+              View Run
+            </Button>
+          )}
         </div>
       );
       notify(<SuccessComponent />, "success");
@@ -71,8 +75,18 @@ const OasisSubmitter = ({
       setCooldownTime(3);
       onSubmitComplete?.();
       showSuccessNotification(response.root_execution_id);
+
+      if (isAutoRedirect) {
+        handleViewRun(response.root_execution_id);
+      }
     },
-    [setCooldownTime, onSubmitComplete, showSuccessNotification],
+    [
+      setCooldownTime,
+      onSubmitComplete,
+      showSuccessNotification,
+      isAutoRedirect,
+      handleViewRun,
+    ],
   );
 
   const onError = useCallback(

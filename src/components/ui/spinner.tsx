@@ -18,6 +18,7 @@ export function Spinner({ size = DEFAULT_SIZE, className }: SpinnerProps) {
       width={`${size}`}
       height={`${size}`}
       strokeWidth={`${strokeWidth}`}
+      data-testid="spinner"
     />
   );
 }

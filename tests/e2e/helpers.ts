@@ -102,15 +102,28 @@ export async function fitToView(page: Page): Promise<void> {
   }
 }
 
-/**
- * Opens a component library folder by name
- */
-async function openComponentLibFolder(
+export async function locateFolderByName(
   page: Page,
   folderName: string,
 ): Promise<Locator> {
-  const folderContainer = page.locator(`[data-folder-name="${folderName}"]`);
-  const button = await folderContainer.locator('[role="button"]');
+  await page.waitForSelector(`[data-folder-name="${folderName}"]`, {
+    // loading the library can take a while
+    timeout: 25000,
+  });
+  return page.locator(`[data-folder-name="${folderName}"]`);
+}
+
+/**
+ * Opens a component library folder by name
+ */
+export async function openComponentLibFolder(
+  page: Page,
+  folderName: string,
+): Promise<Locator> {
+  const folderContainer = await locateFolderByName(page, folderName);
+  const button = await folderContainer.locator(
+    `[aria-label="Folder: ${folderName}"][role="button"]`,
+  );
 
   if ((await button.getAttribute("aria-expanded")) === "false") {
     await button.click();
@@ -122,7 +135,7 @@ async function openComponentLibFolder(
 /**
  * Locates a component item within a folder
  */
-function locateComponentInFolder(
+export function locateComponentInFolder(
   folder: Locator,
   componentName: string,
 ): Locator {
@@ -134,7 +147,7 @@ type DragOptions = Parameters<Locator["dragTo"]>[1];
 /**
  * Drags a component from the library to the canvas
  */
-async function dragComponentToCanvas(
+export async function dragComponentToCanvas(
   page: Page,
   component: Locator,
   dragOptions: DragOptions = {},
@@ -202,5 +215,59 @@ export async function dropComponentFromLibraryOnCanvas(
 }
 
 /**
+ * Removes a component from the canvas
+ */
+export async function removeComponentFromCanvas(
+  page: Page,
+  componentName: string,
+): Promise<void> {
+  const node = await locateNodeByName(page, componentName);
+  await node.click();
+
+  await node.press("Delete");
+
+  await page.waitForTimeout(100);
+
+  await page.locator('[role="alertdialog"]').getByText("Continue").click();
+
+  await page.waitForTimeout(100);
+}
+
+/**
  * todo: helper to position node relatively to another node accounting for the Canvas transform
  */
+
+export async function assertSearchState(
+  page: Page,
+  options: {
+    searchTerm: string;
+    searchFilterCount?: string;
+    searchResultsCount?: string;
+  } = {
+    searchTerm: "",
+  },
+) {
+  const { searchTerm, searchFilterCount, searchResultsCount } = options;
+
+  // assert search inputs
+  const searchInput = await page.getByTestId("search-input");
+  expect(await searchInput).toHaveValue(searchTerm);
+
+  const searchFilterCounter = await page.getByTestId("search-filter-counter");
+  if (searchFilterCount) {
+    expect(await searchFilterCounter).toHaveText(searchFilterCount);
+  } else {
+    expect(await searchFilterCounter).not.toBeVisible();
+  }
+
+  const searchResultsHeader = await page.getByTestId("search-results-header");
+  if (searchResultsCount) {
+    expect(await searchResultsHeader).toHaveText(
+      `Search Results (${searchResultsCount})`,
+    );
+    const componentItem = await page.getByTestId("component-item");
+    expect(componentItem).toHaveCount(Number(searchResultsCount));
+  } else {
+    expect(await searchResultsHeader).not.toBeVisible();
+  }
+}

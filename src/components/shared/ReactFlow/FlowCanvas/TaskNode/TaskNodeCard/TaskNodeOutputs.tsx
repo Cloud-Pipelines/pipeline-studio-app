@@ -2,10 +2,11 @@ import { useConnection, useEdges } from "@xyflow/react";
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import { useForcedSearchContext } from "@/providers/ComponentLibraryProvider/ForcedSearchProvider";
+import { isValidFilterRequest } from "@/providers/ComponentLibraryProvider/types";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import type { OutputSpec } from "@/utils/componentSpec";
-import { ComponentSearchFilter, DEFAULT_FILTERS } from "@/utils/constants";
+import { ComponentSearchFilter } from "@/utils/constants";
 import { outputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
 
@@ -24,13 +25,11 @@ export function TaskNodeOutputs({
 }: TaskNodeOutputsProps) {
   const { nodeId, outputs, state, select } = useTaskNode();
   const {
-    setSearchTerm,
-    setSearchFilters,
-    searchTerm,
-    searchFilters,
+    highlightSearchFilter,
+    resetSearchFilter,
+    currentSearchFilter,
     highlightSearchResults,
-    setHighlightSearchResults,
-  } = useComponentLibrary();
+  } = useForcedSearchContext();
 
   const connection = useConnection();
   const edges = useEdges();
@@ -45,33 +44,23 @@ export function TaskNodeOutputs({
     ),
   );
 
-  const resetHighlightRelatedHandles = useCallback(() => {
-    setSearchTerm("");
-    setSearchFilters(DEFAULT_FILTERS);
-    setHighlightSearchResults(false);
-  }, [setSearchTerm, setSearchFilters, setHighlightSearchResults]);
-
   const toggleHighlightRelatedHandles = useCallback(
     (selected: boolean, output?: OutputSpec) => {
       if (selected && output) {
         const type = (output.type as string) || "[type undefined]";
 
-        setSearchTerm(type);
-        setSearchFilters([
-          ComponentSearchFilter.INPUTTYPE,
-          ComponentSearchFilter.EXACTMATCH,
-        ]);
-        setHighlightSearchResults(true);
+        highlightSearchFilter({
+          searchTerm: type,
+          filters: [
+            ComponentSearchFilter.INPUTTYPE,
+            ComponentSearchFilter.EXACTMATCH,
+          ],
+        });
       } else {
-        resetHighlightRelatedHandles();
+        resetSearchFilter();
       }
     },
-    [
-      setSearchTerm,
-      setSearchFilters,
-      setHighlightSearchResults,
-      resetHighlightRelatedHandles,
-    ],
+    [highlightSearchFilter, resetSearchFilter],
   );
 
   const handleBackgroundClick = useCallback(
@@ -98,22 +87,22 @@ export function TaskNodeOutputs({
     (output: OutputSpec) => {
       if (
         !highlightSearchResults ||
-        searchTerm.length < 1 ||
-        searchFilters.length < 1 ||
-        !searchFilters.includes(ComponentSearchFilter.OUTPUTTYPE)
+        !isValidFilterRequest(currentSearchFilter, {
+          includesFilter: ComponentSearchFilter.OUTPUTTYPE,
+        })
       ) {
         return false;
       }
 
       const matchFound = checkArtifactMatchesSearchFilters(
-        searchTerm,
-        searchFilters,
+        currentSearchFilter?.searchTerm,
+        currentSearchFilter?.filters,
         output,
       );
 
       return matchFound;
     },
-    [highlightSearchResults, searchTerm, searchFilters],
+    [highlightSearchResults, currentSearchFilter],
   );
 
   const handleLabelClick = useCallback(
@@ -129,7 +118,7 @@ export function TaskNodeOutputs({
     const { fromHandle, from, to, inProgress } = connection;
 
     if (!inProgress) {
-      resetHighlightRelatedHandles();
+      resetSearchFilter();
       setIsDragging(false);
       return;
     }
@@ -156,7 +145,13 @@ export function TaskNodeOutputs({
 
     toggleHighlightRelatedHandles(true, output);
     setIsDragging(true);
-  }, [connection, outputs, isDragging, toggleHighlightRelatedHandles]);
+  }, [
+    connection,
+    outputs,
+    isDragging,
+    toggleHighlightRelatedHandles,
+    resetSearchFilter,
+  ]);
 
   if (!outputs.length) return null;
 

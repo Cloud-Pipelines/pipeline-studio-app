@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { screen } from "@testing-library/dom";
-import { cleanup, render } from "@testing-library/react";
+import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type {
@@ -144,19 +144,21 @@ describe("<RunDetails/>", () => {
   });
 
   const renderWithQueryClient = (component: React.ReactElement) => {
-    return render(
-      <ComponentSpecProvider spec={mockComponentSpec}>
-        <QueryClientProvider client={queryClient}>
-          <PipelineRunsProvider pipelineName={mockPipelineRun.pipeline_name}>
-            <RootExecutionStatusProvider
-              rootExecutionId={mockPipelineRun.root_execution_id.toString()}
-            >
-              {component}
-            </RootExecutionStatusProvider>
-          </PipelineRunsProvider>
-        </QueryClientProvider>
-      </ComponentSpecProvider>,
-    );
+    return render(component, {
+      wrapper: ({ children }) => (
+        <ComponentSpecProvider spec={mockComponentSpec}>
+          <QueryClientProvider client={queryClient}>
+            <PipelineRunsProvider pipelineName={mockPipelineRun.pipeline_name}>
+              <RootExecutionStatusProvider
+                rootExecutionId={mockPipelineRun.root_execution_id.toString()}
+              >
+                {children}
+              </RootExecutionStatusProvider>
+            </PipelineRunsProvider>
+          </QueryClientProvider>
+        </ComponentSpecProvider>
+      ),
+    });
   };
 
   describe("Inspect Pipeline Button", () => {
@@ -174,7 +176,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails />);
+      await act(async () => renderWithQueryClient(<RunDetails />));
 
       // assert
       const inspect = screen.getByTestId("inspect-pipeline-button");
@@ -197,7 +199,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails />);
+      await act(async () => renderWithQueryClient(<RunDetails />));
 
       // assert
       const cloneButton = screen.getByTestId("clone-pipeline-run-button");
@@ -220,7 +222,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails />);
+      await act(async () => renderWithQueryClient(<RunDetails />));
 
       // assert
       const cancelButton = screen.getByTestId("cancel-pipeline-run-button");
@@ -241,7 +243,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails />);
+      await act(async () => renderWithQueryClient(<RunDetails />));
 
       // assert
       const cancelButton = screen.queryByTestId("cancel-pipeline-run-button");
@@ -264,7 +266,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails />);
+      await act(async () => renderWithQueryClient(<RunDetails />));
 
       // assert
       const rerunButton = screen.getByTestId("rerun-pipeline-button");
@@ -285,7 +287,7 @@ describe("<RunDetails/>", () => {
       });
 
       // act
-      renderWithQueryClient(<RunDetails />);
+      await act(async () => renderWithQueryClient(<RunDetails />));
 
       // assert
       const rerunButton = screen.queryByTestId("rerun-pipeline-button");
