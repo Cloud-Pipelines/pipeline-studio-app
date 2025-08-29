@@ -177,6 +177,178 @@ export interface ComponentReference {
   text?: string;
   favorited?: boolean;
 }
+
+export type UnknownComponentReference = ComponentReference | null | undefined;
+
+export type HydratedComponentReference = Omit<
+  ComponentReference,
+  "spec" | "text" | "digest" | "name"
+> & {
+  digest: string;
+  name: string;
+  spec: ComponentSpec;
+  text: string;
+};
+
+type NotMaterializedComponentReference = Omit<
+  ComponentReference,
+  "spec" | "text"
+> & {
+  spec: never;
+  text: never;
+};
+
+export function isNotMaterializedComponentReference(
+  componentReference: UnknownComponentReference,
+): componentReference is NotMaterializedComponentReference {
+  return Boolean(
+    componentReference &&
+      typeof componentReference === "object" &&
+      !componentReference.spec &&
+      !componentReference.text,
+  );
+}
+
+export type DiscoverableComponentReference = Omit<
+  ComponentReference,
+  "digest"
+> & {
+  digest: string;
+};
+
+export function isDiscoverableComponentReference(
+  componentReference: UnknownComponentReference,
+): componentReference is DiscoverableComponentReference {
+  return Boolean(
+    componentReference &&
+      typeof componentReference === "object" &&
+      componentReference.digest !== undefined &&
+      componentReference.digest.length > 0,
+  );
+}
+
+export type LoadableComponentReference = Omit<ComponentReference, "url"> & {
+  url: string;
+};
+
+export function isLoadableComponentReference(
+  componentReference: UnknownComponentReference,
+): componentReference is LoadableComponentReference {
+  return Boolean(
+    componentReference &&
+      typeof componentReference === "object" &&
+      componentReference.url !== undefined &&
+      componentReference.url.length > 0 &&
+      // simple URL validation
+      /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(componentReference.url),
+  );
+}
+
+export type ContentfulComponentReference = Omit<
+  ComponentReference,
+  "spec" | "text"
+> & {
+  spec: ComponentSpec;
+  text: string;
+};
+
+export function isContentfulComponentReference(
+  componentReference: UnknownComponentReference,
+): componentReference is ContentfulComponentReference {
+  return Boolean(
+    componentReference &&
+      typeof componentReference === "object" &&
+      componentReference.spec !== undefined &&
+      componentReference.text !== undefined &&
+      isValidComponentSpec(componentReference.spec) &&
+      componentReference.text.length > 0,
+  );
+}
+
+type TextOnlyComponentReference = Omit<ComponentReference, "spec" | "text"> & {
+  spec: never;
+  text: string;
+};
+
+export function isTextOnlyComponentReference(
+  componentReference: UnknownComponentReference,
+): componentReference is TextOnlyComponentReference {
+  return Boolean(
+    componentReference &&
+      typeof componentReference === "object" &&
+      !componentReference.spec &&
+      componentReference.text !== undefined &&
+      componentReference.text.length > 0,
+  );
+}
+
+type SpecOnlyComponentReference = Omit<ComponentReference, "spec"> & {
+  spec: ComponentSpec;
+  text: never;
+};
+
+export function isSpecOnlyComponentReference(
+  componentReference: UnknownComponentReference,
+): componentReference is SpecOnlyComponentReference {
+  return Boolean(
+    componentReference &&
+      typeof componentReference === "object" &&
+      componentReference.spec !== undefined &&
+      isValidComponentSpec(componentReference.spec) &&
+      (!componentReference.text || componentReference.text.length === 0),
+  );
+}
+
+type PartialContentfulComponentReference =
+  | TextOnlyComponentReference
+  | SpecOnlyComponentReference;
+
+export function isPartialContentfulComponentReference(
+  componentReference: UnknownComponentReference,
+): componentReference is PartialContentfulComponentReference {
+  return Boolean(
+    isTextOnlyComponentReference(componentReference) ||
+      isSpecOnlyComponentReference(componentReference),
+  );
+}
+
+export function isHydratedComponentReference(
+  componentReference: UnknownComponentReference,
+): componentReference is HydratedComponentReference {
+  return Boolean(
+    componentReference &&
+      typeof componentReference === "object" &&
+      componentReference.spec !== undefined &&
+      componentReference.text !== undefined &&
+      isValidComponentSpec(componentReference.spec) &&
+      componentReference.text.length > 0 &&
+      componentReference.digest !== undefined &&
+      componentReference.digest.length > 0 &&
+      componentReference.name !== undefined &&
+      componentReference.name.length > 0,
+  );
+}
+
+type InvalidComponentReference = Omit<ComponentReference, "spec" | "text"> & {
+  url: never;
+  digest: never;
+  spec: never;
+  text: never;
+};
+
+export function isInvalidComponentReference(
+  componentReference: UnknownComponentReference,
+): componentReference is InvalidComponentReference {
+  return Boolean(
+    !componentReference ||
+      typeof componentReference !== "object" ||
+      (!isLoadableComponentReference(componentReference) &&
+        !isDiscoverableComponentReference(componentReference) &&
+        !componentReference.spec &&
+        !componentReference.text),
+  );
+}
+
 /**
  * Represents the component argument value that comes from the graph component input.
  */
