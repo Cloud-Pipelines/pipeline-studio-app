@@ -1,21 +1,26 @@
+import { ChevronDown, ChevronRight } from "lucide-react";
 import {
-  ChevronDown,
-  ChevronRight,
-  Folder,
-  type LucideProps,
-} from "lucide-react";
-import {
+  type ComponentProps,
   isValidElement,
-  type JSXElementConstructor,
   type MouseEvent,
   useState,
 } from "react";
 
-import { type FolderItemProps } from "@/types/componentLibrary";
+import { Badge } from "@/components/ui/badge";
+import { Icon } from "@/components/ui/icon";
+import { InlineStack } from "@/components/ui/layout";
+import { cn } from "@/lib/utils";
+import type { UIComponentFolder } from "@/types/componentLibrary";
 
 import { ComponentItemFromUrl, ComponentMarkup } from "./ComponentItem";
 
-const FolderItem = ({ folder, icon }: FolderItemProps) => {
+type FolderItemProps = {
+  folder: UIComponentFolder;
+  icon?: ComponentProps<typeof Icon>["name"];
+  hasAlertBadge?: boolean;
+};
+
+const FolderItem = ({ folder, icon, hasAlertBadge }: FolderItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const hasComponents = folder.components && folder.components.length > 0;
@@ -26,7 +31,6 @@ const FolderItem = ({ folder, icon }: FolderItemProps) => {
     setIsOpen(!isOpen);
   };
 
-  const Icon = icon as JSXElementConstructor<LucideProps>;
   const chevronStyles = "h-4 w-4 text-gray-400 flex-shrink-0";
 
   return (
@@ -38,11 +42,21 @@ const FolderItem = ({ folder, icon }: FolderItemProps) => {
         aria-expanded={isOpen}
         aria-label={`Folder: ${folder.name}`}
       >
-        {icon ? (
-          <Icon className={chevronStyles + " mr-2"} />
-        ) : (
-          <Folder className={chevronStyles + " mr-2"} />
-        )}
+        <InlineStack
+          className={cn(
+            "relative",
+            "mr-2",
+            // hasAlertBadge &&
+            //   "border-1 border-orange-500 rounded-full p-1 -translate-x-1",
+          )}
+        >
+          <Icon name={icon ? icon : "Folder"} className={chevronStyles} />
+          {hasAlertBadge ? (
+            <Badge position="topleft" size="xs" variant="inform">
+              !
+            </Badge>
+          ) : null}
+        </InlineStack>
         <span className="truncate text-sm font-medium">{folder.name}</span>
         <div className="ml-auto">
           {isOpen ? (
