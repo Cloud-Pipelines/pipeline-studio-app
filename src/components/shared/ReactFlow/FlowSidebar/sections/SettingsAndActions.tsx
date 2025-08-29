@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { PipelineNameDialog } from "@/components/shared/Dialogs";
 import ImportPipeline from "@/components/shared/ImportPipeline";
+import { InlineStack } from "@/components/ui/layout";
 import {
+  SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -12,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Spinner } from "@/components/ui/spinner";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
@@ -20,7 +23,7 @@ import { useSavePipeline } from "@/services/pipelineService";
 import { componentSpecToYaml } from "@/utils/componentStore";
 
 const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
-  const { componentSpec } = useComponentSpec();
+  const { componentSpec, autoSaveStatus } = useComponentSpec();
   const { savePipeline } = useSavePipeline(componentSpec);
   const notify = useToastNotification();
   const navigate = useNavigate();
@@ -49,6 +52,11 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
       : `Untitled Pipeline ${new Date().toLocaleTimeString()}`;
   };
 
+  const formatLastSaved = (date: Date | null) => {
+    if (!date) return null;
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
   const componentSpecRef = useRef(componentSpec);
 
   useEffect(() => {
@@ -72,9 +80,23 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
     : "pipeline.component.yaml";
 
   const tooltipPosition = isOpen ? "top" : "right";
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Pipeline Actions</SidebarGroupLabel>
+      <SidebarContent>
+        {autoSaveStatus.isSaving && (
+          <InlineStack blockAlign="center" className="ml-2" gap="1">
+            <Spinner size={16} />
+            <span className="text-xs text-muted-foreground">Saving...</span>
+          </InlineStack>
+        )}
+        {!autoSaveStatus.isSaving && autoSaveStatus.lastSavedAt && (
+          <span className="text-xs text-muted-foreground ml-2">
+            Last saved {formatLastSaved(autoSaveStatus.lastSavedAt)}
+          </span>
+        )}
+      </SidebarContent>
       <SidebarGroupContent>
         <SidebarMenu
           className={cn({
