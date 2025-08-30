@@ -9,7 +9,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  plugins: [viteReact(), tailwindcss()],
+  plugins: [
+    viteReact({
+      babel: {
+        plugins: [
+          [
+            "babel-plugin-react-compiler",
+            {
+              // Load configuration from react-compiler.config.js
+              configPath: "./react-compiler.config.js",
+            },
+          ],
+        ],
+      },
+    }),
+    tailwindcss(),
+  ],
   base: "/",
   resolve: {
     alias: {
