@@ -1,4 +1,5 @@
-import type { ComponentReference } from "./componentSpec";
+import type { ComponentReference, ComponentSpec } from "./componentSpec";
+import { removeTrailingDateFromTitle } from "./string";
 
 export const getComponentName = (component: ComponentReference): string => {
   return (
@@ -7,3 +8,10 @@ export const getComponentName = (component: ComponentReference): string => {
     "Component"
   );
 };
+
+export function getInitialName(componentSpec: ComponentSpec): string {
+  const dateTime = new Date().toISOString();
+  const baseName = componentSpec?.name || "Pipeline";
+
+  return `${removeTrailingDateFromTitle(baseName)} (${dateTime})`;
+}

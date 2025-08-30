@@ -3,32 +3,62 @@ import { screen, waitFor } from "@testing-library/dom";
 import { act, fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import useToastNotification from "@/hooks/useToastNotification";
-import * as pipelineRunService from "@/services/pipelineRunService";
+import { usePipelineRun } from "@/providers/PipelineRunProvider";
 
 import { ClonePipelineButton } from "./ClonePipelineButton";
 
-vi.mock("@tanstack/react-router", async (importOriginal) => ({
-  ...(await importOriginal()),
-  useNavigate: () => vi.fn(),
-}));
-vi.mock("@/hooks/useToastNotification");
-vi.mock("@/services/pipelineRunService");
+vi.mock("@/providers/PipelineRunProvider");
 
 describe("<ClonePipelineButton/>", () => {
-  const queryClient = new QueryClient();
-  const mockNotify = vi.fn();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  const mockClone = vi.fn();
+  const componentSpec = { name: "Test Pipeline" } as any;
+
+  const basePipelineRunMock = {
+    details: undefined,
+    state: undefined,
+    metadata: null,
+    status: {
+      execution: "UNKNOWN",
+      map: new Map(),
+      counts: {
+        total: 0,
+        waiting: 0,
+        succeeded: 0,
+        failed: 0,
+        running: 0,
+        skipped: 0,
+        cancelled: 0,
+      },
+    },
+    isLoading: false,
+    isSubmitting: false,
+    isCancelling: false,
+    isCloning: false,
+    error: null,
+    rerun: vi.fn(),
+    cancel: vi.fn(),
+    clone: mockClone,
+  };
+
+  const mockUsePipelineRun = (overrides = {}) => {
+    vi.mocked(usePipelineRun).mockReturnValue({
+      ...basePipelineRunMock,
+      ...overrides,
+    });
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useToastNotification).mockReturnValue(mockNotify);
-    vi.mocked(pipelineRunService.copyRunToPipeline).mockResolvedValue({
-      url: "/editor/cloned-pipeline",
-      name: "Cloned Pipeline",
-    });
-  });
 
-  const componentSpec = { name: "Test Pipeline" } as any;
+    mockUsePipelineRun();
+  });
 
   const renderWithClient = (component: React.ReactElement) =>
     render(
@@ -37,25 +67,99 @@ describe("<ClonePipelineButton/>", () => {
       </QueryClientProvider>,
     );
 
-  test("renders clone button", () => {
-    renderWithClient(<ClonePipelineButton componentSpec={componentSpec} />);
-    expect(
-      screen.queryByTestId("clone-pipeline-run-button"),
-    ).toBeInTheDocument();
-  });
+  describe("Rendering", () => {
+    test("renders clone button", () => {
+      renderWithClient(<ClonePipelineButton componentSpec={componentSpec} />);
 
-  test("calls copyRunToPipeline and navigate on click", async () => {
-    renderWithClient(<ClonePipelineButton componentSpec={componentSpec} />);
-    const cloneButton = screen.getByTestId("clone-pipeline-run-button");
-    act(() => fireEvent.click(cloneButton));
-
-    await waitFor(() => {
-      expect(pipelineRunService.copyRunToPipeline).toHaveBeenCalled();
+      const button = screen.getByTestId("clone-pipeline-run-button");
+      expect(button).toBeInTheDocument();
+      expect(button).not.toBeDisabled();
     });
 
-    expect(mockNotify).toHaveBeenCalledWith(
-      expect.stringContaining("cloned"),
-      "success",
-    );
+    test("shows disabled state when cloning", () => {
+      mockUsePipelineRun({ isCloning: true });
+
+      renderWithClient(<ClonePipelineButton componentSpec={componentSpec} />);
+
+      const button = screen.getByTestId("clone-pipeline-run-button");
+      expect(button).toBeDisabled();
+    });
+  });
+
+  describe("Clone functionality", () => {
+    test("calls clone function from provider on click", async () => {
+      mockClone.mockResolvedValue({
+        url: "/editor/cloned-pipeline",
+        name: "Cloned Pipeline",
+      });
+
+      renderWithClient(<ClonePipelineButton componentSpec={componentSpec} />);
+
+      const cloneButton = screen.getByTestId("clone-pipeline-run-button");
+
+      await act(async () => {
+        fireEvent.click(cloneButton);
+      });
+
+      expect(mockClone).toHaveBeenCalledWith(componentSpec);
+      expect(mockClone).toHaveBeenCalledTimes(1);
+    });
+
+    test("handles clone function with promise", async () => {
+      const clonePromise = Promise.resolve({
+        url: "/editor/cloned-pipeline",
+        name: "Cloned Pipeline",
+      });
+      mockClone.mockReturnValue(clonePromise);
+
+      renderWithClient(<ClonePipelineButton componentSpec={componentSpec} />);
+
+      const cloneButton = screen.getByTestId("clone-pipeline-run-button");
+
+      await act(async () => {
+        fireEvent.click(cloneButton);
+      });
+
+      await waitFor(() => {
+        expect(mockClone).toHaveBeenCalledWith(componentSpec);
+      });
+    });
+
+    test("handles clone errors gracefully", async () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      mockClone.mockRejectedValue(new Error("Clone failed"));
+
+      renderWithClient(<ClonePipelineButton componentSpec={componentSpec} />);
+
+      const cloneButton = screen.getByTestId("clone-pipeline-run-button");
+
+      await act(async () => {
+        fireEvent.click(cloneButton);
+      });
+
+      expect(mockClone).toHaveBeenCalledWith(componentSpec);
+
+      consoleSpy.mockRestore();
+    });
+
+    test("button remains enabled after successful clone", async () => {
+      mockClone.mockResolvedValue({
+        url: "/editor/cloned-pipeline",
+        name: "Cloned Pipeline",
+      });
+
+      renderWithClient(<ClonePipelineButton componentSpec={componentSpec} />);
+
+      const cloneButton = screen.getByTestId("clone-pipeline-run-button");
+
+      await act(async () => {
+        fireEvent.click(cloneButton);
+      });
+
+      // After clone completes, button should be enabled again
+      expect(cloneButton).not.toBeDisabled();
+    });
   });
 });
