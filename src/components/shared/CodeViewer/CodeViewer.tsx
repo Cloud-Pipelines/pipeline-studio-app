@@ -42,8 +42,8 @@ const CodeViewer = ({
     };
   }, [isFullscreen]);
 
-  const codeViewer = (
-    <>
+  return (
+    <FullscreenElement fullscreen={isFullscreen}>
       <div className="h-full bg-slate-900 flex flex-col">
         <div className="flex justify-between items-center p-2 sticky top-0 z-10 bg-slate-800">
           <h3 className="text-secondary font-medium ml-2">
@@ -72,12 +72,6 @@ const CodeViewer = ({
           </div>
         </div>
       </div>
-    </>
-  );
-
-  return (
-    <FullscreenElement fullscreen={isFullscreen}>
-      {codeViewer}
     </FullscreenElement>
   );
 };
