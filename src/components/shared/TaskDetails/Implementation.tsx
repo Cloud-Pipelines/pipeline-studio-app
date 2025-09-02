@@ -16,13 +16,15 @@ const TaskImplementation = ({
 }: TaskImplementationProps) => {
   const filename = getComponentFilename(componentSpec);
 
-  const code = useMemo(() => {
-    return yaml.dump(componentSpec, {
-      lineWidth: 80,
-      noRefs: true,
-      indent: 2,
-    });
-  }, [componentSpec]);
+  const code = useMemo(
+    () =>
+      yaml.dump(componentSpec, {
+        lineWidth: 80,
+        noRefs: true,
+        indent: 2,
+      }),
+    [componentSpec],
+  );
 
   if (!componentSpec?.implementation) {
     return (

@@ -14,7 +14,7 @@ const CodeSyntaxHighlighter = memo(function CodeSyntaxHighlighter({
     <MonacoEditor
       defaultLanguage={language}
       theme="vs-dark"
-      defaultValue={code}
+      value={code}
       options={{
         readOnly: true,
         minimap: {
