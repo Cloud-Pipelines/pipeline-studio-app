@@ -1,4 +1,12 @@
-import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import equal from "fast-deep-equal";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { type AutoSaveStatus, useAutoSave } from "@/hooks/useAutoSave";
 import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
@@ -13,7 +21,11 @@ import {
   createRequiredContext,
   useRequiredContext,
 } from "../hooks/useRequiredContext";
-import type { ComponentSpec, GraphSpec } from "../utils/componentSpec";
+import {
+  type ComponentSpec,
+  type GraphSpec,
+  isGraphImplementation,
+} from "../utils/componentSpec";
 import {
   type ComponentReferenceWithSpec,
   componentSpecToYaml,
@@ -61,16 +73,14 @@ export const ComponentSpecProvider = ({
     spec ?? EMPTY_GRAPH_COMPONENT_SPEC,
   );
 
-  // This is used to prevent autosaving on initial load
-  const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
-  // Auto save should happen on the first change without debounce to prevent waiting for two debounces (4000ms)
-  const [debounceMultiplier, setDebounceMultiplier] = useState<0 | 1>(0);
-
   const [taskStatusMap, setTaskStatusMap] = useState<Map<string, string>>(
     new Map(),
   );
 
   const [isLoading, setIsLoading] = useState(!!spec);
+  const [isEmptySpec, setIsEmptySpec] = useState(
+    equal(componentSpec, EMPTY_GRAPH_COMPONENT_SPEC),
+  );
 
   const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
   const undoRedoRef = useRef(undoRedo);
@@ -80,20 +90,11 @@ export const ComponentSpecProvider = ({
     setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
     setTaskStatusMap(new Map());
     setIsLoading(false);
-    setIsInitialLoad(true);
-    setDebounceMultiplier(0);
     undoRedoRef.current.clearHistory();
   }, []);
 
   const graphSpec = useMemo(() => {
-    if (!componentSpec) {
-      return EMPTY_GRAPH_SPEC;
-    }
-
-    if (
-      "graph" in componentSpec.implementation &&
-      componentSpec.implementation.graph
-    ) {
+    if (isGraphImplementation(componentSpec.implementation)) {
       return componentSpec.implementation.graph;
     }
 
@@ -160,24 +161,26 @@ export const ComponentSpecProvider = ({
   }, []);
 
   const shouldAutoSave =
-    !isLoading && !readOnly && componentSpec && !!componentSpec.name;
+    !isLoading &&
+    !readOnly &&
+    componentSpec &&
+    !!componentSpec.name &&
+    !isEmptySpec;
 
   const autoSaveStatus = useAutoSave(
     async (spec) => {
-      if (isInitialLoad) {
-        setIsInitialLoad(false);
-        setDebounceMultiplier(1);
-        return;
-      }
-
       if (spec.name) {
         saveComponentSpec(spec.name);
       }
     },
     componentSpec,
-    AUTOSAVE_DEBOUNCE_TIME_MS * debounceMultiplier,
+    AUTOSAVE_DEBOUNCE_TIME_MS,
     shouldAutoSave,
   );
+
+  useEffect(() => {
+    setIsEmptySpec(equal(componentSpec, EMPTY_GRAPH_COMPONENT_SPEC));
+  }, [componentSpec]);
 
   const value = useMemo(
     () => ({
