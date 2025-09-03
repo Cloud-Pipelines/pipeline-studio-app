@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getOutputConnectedDetails } from "@/components/shared/ReactFlow/FlowCanvas/utils/getOutputConnectedDetails";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { InlineStack } from "@/components/ui/layout";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
@@ -104,6 +106,18 @@ const PipelineDetails = () => {
         onCancel={handleCancel}
       />,
     );
+  };
+
+  const handleInputCopy = (input: InputSpec) => {
+    const value = input.value ?? input.default;
+
+    if (!value) {
+      notify("Copy failed: Input has no value", "error");
+      return;
+    }
+
+    void navigator.clipboard.writeText(value);
+    notify("Input value copied to clipboard", "success");
   };
 
   if (!componentSpec) {
@@ -228,15 +242,31 @@ const PipelineDetails = () => {
                         <span className="font-semibold">Type:</span>{" "}
                         {typeSpecToString(input?.type)}
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="text-xs text-muted-foreground cursor-pointer hover:bg-transparent"
-                        size="sm"
-                        onClick={() => handleInputEdit(input)}
+                      <InlineStack
+                        className="min-w-24"
+                        align="end"
+                        blockAlign="center"
                       >
-                        Edit
-                      </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="min"
+                          onClick={() => handleInputCopy(input)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <Icon name="Copy" className="size-3" />
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="text-xs text-muted-foreground cursor-pointer hover:bg-transparent"
+                          size="sm"
+                          onClick={() => handleInputEdit(input)}
+                        >
+                          Edit
+                        </Button>
+                      </InlineStack>
                     </div>
                   );
                 })}
@@ -269,15 +299,17 @@ const PipelineDetails = () => {
                       )}
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="text-xs text-muted-foreground cursor-pointer hover:bg-transparent"
-                      size="sm"
-                      onClick={() => handleOutputEdit(output)}
-                    >
-                      Edit
-                    </Button>
+                    <InlineStack className="min-w-24" align={"end"}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-xs text-muted-foreground cursor-pointer hover:bg-transparent"
+                        size="sm"
+                        onClick={() => handleOutputEdit(output)}
+                      >
+                        Edit
+                      </Button>
+                    </InlineStack>
                   </div>
                 ))}
               </div>
