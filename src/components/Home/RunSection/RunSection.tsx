@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import type { ListPipelineJobsResponse } from "@/api/types.gen";
 import { InfoBox } from "@/components/shared/InfoBox";
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
@@ -32,6 +33,7 @@ export const RunSection = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const search = useSearch({ strict: false }) as RunSectionSearch;
+  const isCreatedByMeDefault = useBetaFlagValue("created-by-me-default");
 
   // Parse filter into a dictionary
   const parseFilter = (filter?: string): Record<string, string> => {
@@ -93,6 +95,12 @@ export const RunSection = () => {
     refetch();
   }, [backendUrl, search.filter, pageToken, refetch]);
 
+  useEffect(() => {
+    if (!search.page_token && search.filter === undefined) {
+      handleFilterChange(isCreatedByMeDefault);
+    }
+  }, [isCreatedByMeDefault]);
+
   const handleFilterChange = (value: boolean) => {
     const nextSearch: RunSectionSearch = { ...search };
     delete nextSearch.page_token;
@@ -115,7 +123,11 @@ export const RunSection = () => {
       if (remainingFilters) {
         nextSearch.filter = remainingFilters;
       } else {
-        delete nextSearch.filter;
+        if (isCreatedByMeDefault) {
+          nextSearch.filter = "";
+        } else {
+          delete nextSearch.filter;
+        }
       }
     }
 
