@@ -12,9 +12,10 @@ const CodeSyntaxHighlighter = memo(function CodeSyntaxHighlighter({
 }: CodeSyntaxHighlighterProps) {
   return (
     <MonacoEditor
+      key={code} // force re-render when code changes
       defaultLanguage={language}
       theme="vs-dark"
-      value={code}
+      defaultValue={code}
       options={{
         readOnly: true,
         minimap: {
