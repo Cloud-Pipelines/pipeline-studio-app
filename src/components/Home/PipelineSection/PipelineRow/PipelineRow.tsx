@@ -6,6 +6,7 @@ import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import RunOverview from "@/components/shared/RunOverview";
 import StatusIcon from "@/components/shared/Status/StatusIcon";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
   PopoverContent,
@@ -26,12 +27,16 @@ interface PipelineRowProps {
   name?: string;
   modificationTime?: Date;
   onDelete?: () => void;
+  isSelected?: boolean;
+  onSelect?: (checked: boolean) => void;
 }
 
 const PipelineRow = ({
   name,
   modificationTime,
   onDelete,
+  isSelected = false,
+  onSelect,
 }: PipelineRowProps) => {
   const { backendUrl } = useBackend();
   const navigate = useNavigate();
@@ -52,6 +57,13 @@ const PipelineRow = ({
     [navigate, name],
   );
 
+  const handleCheckboxChange = useCallback(
+    (checked: boolean) => {
+      onSelect?.(checked);
+    },
+    [onSelect],
+  );
+
   const confirmPipelineDelete = useCallback(async () => {
     if (!name) return;
 
@@ -61,6 +73,11 @@ const PipelineRow = ({
 
     await deletePipeline(name, deleteCallback);
   }, [name]);
+
+  const handleClick = useCallback((e: MouseEvent) => {
+    // Prevent row click when clicking on the checkbox
+    e.stopPropagation();
+  }, []);
 
   const formattedDate = useMemo(() => {
     if (!modificationTime) return "N/A";
@@ -73,6 +90,14 @@ const PipelineRow = ({
         className="cursor-pointer hover:bg-muted/50 group"
         onClick={handleRowClick}
       >
+        <TableCell onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            data-checkbox
+            checked={isSelected}
+            onCheckedChange={handleCheckboxChange}
+            onClick={handleClick}
+          />
+        </TableCell>
         <TableCell>
           <a href={`${EDITOR_PATH}/${name}`} className="hover:underline">
             {name}

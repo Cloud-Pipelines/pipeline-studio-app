@@ -4,8 +4,10 @@ import { type ChangeEvent, useEffect, useState } from "react";
 import NewPipelineButton from "@/components/shared/NewPipelineButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BlockStack } from "@/components/ui/layout";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
@@ -21,6 +23,7 @@ import {
 } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
+import BulkActionsBar from "./BulkActionsBar";
 import PipelineRow from "./PipelineRow";
 
 type Pipelines = Map<string, ComponentFileEntry>;
@@ -29,6 +32,9 @@ export const PipelineSection = () => {
   const [pipelines, setPipelines] = useState<Pipelines>(new Map());
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPipelines, setSelectedPipelines] = useState<Set<string>>(
+    new Set(),
+  );
 
   useEffect(() => {
     fetchUserPipelines();
@@ -86,8 +92,36 @@ export const PipelineSection = () => {
     setSearchQuery(e.target.value);
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allPipelineNames = new Set(filteredPipelines.map(([name]) => name));
+      setSelectedPipelines(allPipelineNames);
+    } else {
+      setSelectedPipelines(new Set());
+    }
+  };
+
+  const handleSelectPipeline = (pipelineName: string, checked: boolean) => {
+    const newSelected = new Set(selectedPipelines);
+    if (checked) {
+      newSelected.add(pipelineName);
+    } else {
+      newSelected.delete(pipelineName);
+    }
+    setSelectedPipelines(newSelected);
+  };
+
+  const isAllSelected =
+    filteredPipelines.length > 0 &&
+    filteredPipelines.every(([name]) => selectedPipelines.has(name));
+
+  const handleBulkDelete = () => {
+    setSelectedPipelines(new Set());
+    fetchUserPipelines();
+  };
+
   return (
-    <div>
+    <BlockStack>
       <Alert variant="destructive">
         <Terminal className="h-4 w-4" />
         <AlertTitle>Heads up!</AlertTitle>
@@ -116,6 +150,12 @@ export const PipelineSection = () => {
         <Table>
           <TableHeader>
             <TableRow className="text-xs">
+              <TableHead>
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={handleSelectAll}
+                />
+              </TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Modified at</TableHead>
               <TableHead>Last run</TableHead>
@@ -133,6 +173,8 @@ export const PipelineSection = () => {
                 name={name.replace(/_/g, " ")}
                 modificationTime={fileEntry.modificationTime}
                 onDelete={fetchUserPipelines}
+                isSelected={selectedPipelines.has(name)}
+                onSelect={(checked) => handleSelectPipeline(name, checked)}
               />
             ))}
           </TableBody>
@@ -142,6 +184,14 @@ export const PipelineSection = () => {
       <Button onClick={refreshAll} className="mt-6 max-w-96">
         Refresh
       </Button>
-    </div>
+
+      {selectedPipelines.size > 0 && (
+        <BulkActionsBar
+          selectedPipelines={Array.from(selectedPipelines)}
+          onDeleteSuccess={handleBulkDelete}
+          onClearSelection={() => setSelectedPipelines(new Set())}
+        />
+      )}
+    </BlockStack>
   );
 };
