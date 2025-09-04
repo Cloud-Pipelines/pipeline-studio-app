@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { updateInputNameOnComponentSpec } from "@/components/shared/ReactFlow/FlowCanvas/utils/updateInputNameOnComponentSpec";
 import { Button } from "@/components/ui/button";
+import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type InputSpec } from "@/utils/componentSpec";
 import { checkInputConnectionToRequiredFields } from "@/utils/inputConnectionUtils";
@@ -27,6 +28,8 @@ export const InputValueEditor = ({
   onCancel,
   disabled = false,
 }: InputValueEditorProps) => {
+  const notify = useToastNotification();
+
   const [inputValue, setInputValue] = useState(input.value || "");
   const [inputName, setInputName] = useState(input.name);
   const [inputType, setInputType] = useState(input.type?.toString() || "any");
@@ -103,6 +106,7 @@ export const InputValueEditor = ({
 
     setValidationError(null);
   };
+
   const handleSave = () => {
     const updatedComponentSpecWithValues = handleInputChange(
       input.name,
@@ -124,6 +128,13 @@ export const InputValueEditor = ({
     onCancel?.();
   };
 
+  const handleCopyValue = () => {
+    if (inputValue) {
+      void navigator.clipboard.writeText(inputValue);
+      notify("Input value copied to clipboard", "success");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3 p-4">
       <div className="flex flex-col gap-3">
@@ -143,6 +154,13 @@ export const InputValueEditor = ({
         placeholder={placeholder}
         disabled={disabled}
         inputName={input.name}
+        actions={[
+          {
+            icon: "Copy",
+            hidden: !inputValue,
+            onClick: handleCopyValue,
+          },
+        ]}
       />
 
       <TypeField

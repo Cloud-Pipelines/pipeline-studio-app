@@ -1,22 +1,53 @@
+import type { icons } from "lucide-react";
+import type { ReactNode } from "react";
+
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Textarea } from "@/components/ui/textarea";
+
+export type FormFieldAction = {
+  icon: keyof typeof icons;
+  disabled?: boolean;
+  hidden?: boolean;
+  onClick: () => void;
+};
 
 const FormField = ({
   label,
   id,
+  actions,
   children,
 }: {
   label: string;
   id: string;
-  children: React.ReactNode;
+  actions?: FormFieldAction[];
+  children: ReactNode;
 }) => (
-  <div className="flex flex-col">
-    <label htmlFor={id} className="text-xs text-muted-foreground mb-1">
-      {label}
-    </label>
+  <BlockStack>
+    <InlineStack align="space-between" blockAlign="center">
+      <label htmlFor={id} className="text-xs text-muted-foreground mb-1">
+        {label}
+      </label>
+      {actions?.map(
+        (action) =>
+          !action.hidden && (
+            <Button
+              key={action.icon}
+              variant="ghost"
+              onClick={action.onClick}
+              disabled={action.disabled}
+              size="min"
+            >
+              <Icon name={action.icon} className="size-3" />
+            </Button>
+          ),
+      )}
+    </InlineStack>
     {children}
-  </div>
+  </BlockStack>
 );
 
 const NameField = ({
@@ -49,14 +80,20 @@ const TextField = ({
   placeholder,
   disabled,
   inputName,
+  actions,
 }: {
   inputValue: string;
   onInputChange: (value: string) => void;
   placeholder: string;
   disabled: boolean;
   inputName: string;
+  actions?: FormFieldAction[];
 }) => (
-  <FormField label="Default Value" id={`input-value-${inputName}`}>
+  <FormField
+    label="Default Value"
+    id={`input-value-${inputName}`}
+    actions={actions}
+  >
     <Textarea
       id={`input-value-${inputName}`}
       value={inputValue}
