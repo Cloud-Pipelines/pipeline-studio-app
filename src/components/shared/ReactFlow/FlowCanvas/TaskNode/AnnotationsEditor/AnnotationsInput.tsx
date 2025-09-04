@@ -1,5 +1,5 @@
 import { AlertTriangle, TrashIcon } from "lucide-react";
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useCallback, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -44,61 +44,90 @@ export const AnnotationsInput = ({
   const inputType = config?.type ?? "string";
   const placeholder = config?.label ?? "";
 
-  const validateChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    onChange(newValue);
-    try {
-      JSON.parse(newValue);
-      setIsInvalid(false);
-    } catch {
-      setIsInvalid(true);
-    }
-  };
+  const validateChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
 
-  const handleBlur = () => {
+      onChange(newValue);
+
+      try {
+        JSON.parse(newValue);
+        setIsInvalid(false);
+      } catch {
+        setIsInvalid(true);
+      }
+    },
+    [onChange],
+  );
+
+  const handleBlur = useCallback(() => {
     if (onBlur && lastSavedValue !== value) {
       onBlur(value);
       setLastSavedValue(value);
     }
-  };
+  }, [onBlur, lastSavedValue, value]);
 
-  const handleQuantityKeyInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!config?.annotation) return;
-    const selectedKey = getAnnotationKey(config.annotation, annotations);
-    if (!selectedKey) return;
-    const newObj = { [selectedKey]: e.target.value };
-    onChange(JSON.stringify(newObj));
-  };
+  const handleQuantityKeyInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      if (!config?.annotation) return;
 
-  const shouldSaveQuantityField = () => {
+      const selectedKey = getAnnotationKey(config.annotation, annotations);
+
+      if (!selectedKey) return;
+
+      const newObj = { [selectedKey]: e.target.value };
+
+      onChange(JSON.stringify(newObj));
+    },
+    [config, annotations, onChange],
+  );
+
+  const shouldSaveQuantityField = useCallback(() => {
     if (!config?.enableQuantity || !config?.annotation) return false;
+
     const selectedKey = getAnnotationKey(config.annotation, annotations);
     const quantity = getAnnotationValue(config.annotation, annotations);
     return !!selectedKey && !!quantity && quantity.trim() !== "";
-  };
+  }, [config, annotations]);
 
-  const handleQuantitySelectChange = (selectedKey: string) => {
-    if (!config?.annotation) return;
-    const quantity = getAnnotationValue(config.annotation, annotations);
-    const newObj = selectedKey ? { [selectedKey]: quantity } : {};
-    const newValue = JSON.stringify(newObj);
-    onChange(newValue);
+  const handleQuantitySelectChange = useCallback(
+    (selectedKey: string) => {
+      if (!config?.annotation) return;
 
-    if (onBlur && newValue !== lastSavedValue && shouldSaveQuantityField()) {
-      onBlur(newValue);
-      setLastSavedValue(newValue);
-    }
-  };
+      const quantity = getAnnotationValue(config.annotation, annotations);
+      const newObj = selectedKey ? { [selectedKey]: quantity } : {};
+      const newValue = JSON.stringify(newObj);
 
-  const handleNonQuantitySelectChange = (selectedKey: string) => {
-    onChange(selectedKey);
-    if (onBlur && selectedKey !== lastSavedValue) {
-      onBlur(selectedKey);
-      setLastSavedValue(selectedKey);
-    }
-  };
+      onChange(newValue);
 
-  const handleClearSelection = () => {
+      if (onBlur && newValue !== lastSavedValue && shouldSaveQuantityField()) {
+        onBlur(newValue);
+        setLastSavedValue(newValue);
+      }
+    },
+    [
+      config,
+      annotations,
+      onChange,
+      onBlur,
+      lastSavedValue,
+      shouldSaveQuantityField,
+    ],
+  );
+
+  const handleNonQuantitySelectChange = useCallback(
+    (selectedKey: string) => {
+      onChange(selectedKey);
+
+      if (onBlur && selectedKey !== lastSavedValue) {
+        onBlur(selectedKey);
+        setLastSavedValue(selectedKey);
+      }
+    },
+    [onChange, onBlur, lastSavedValue],
+  );
+
+  const handleClearSelection = useCallback(() => {
     if (config?.enableQuantity) {
       const newValue = "";
       onChange(newValue);
@@ -113,16 +142,19 @@ export const AnnotationsInput = ({
         setLastSavedValue("");
       }
     }
-  };
+  }, [config, onChange, onBlur, lastSavedValue]);
 
-  const handleSwitchChange = (checked: boolean) => {
-    const newValue = checked ? "true" : "false";
-    onChange(newValue);
-    if (onBlur && newValue !== lastSavedValue) {
-      onBlur(newValue);
-      setLastSavedValue(newValue);
-    }
-  };
+  const handleSwitchChange = useCallback(
+    (checked: boolean) => {
+      const newValue = checked ? "true" : "false";
+      onChange(newValue);
+      if (onBlur && newValue !== lastSavedValue) {
+        onBlur(newValue);
+        setLastSavedValue(newValue);
+      }
+    },
+    [onChange, onBlur, lastSavedValue],
+  );
 
   let inputElement = null;
 
@@ -252,24 +284,33 @@ const QuantityInput = ({
   const currentQuantity = getAnnotationValue(annotation, annotations);
   const [lastSavedQuantity, setLastSavedQuantity] = useState(currentQuantity);
 
-  const handleValueInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const selectedKey = getAnnotationKey(annotation, annotations);
-    if (!selectedKey) return;
-    const newObj = { [selectedKey]: e.target.value };
-    onChange(JSON.stringify(newObj));
-  };
+  const handleValueInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const selectedKey = getAnnotationKey(annotation, annotations);
 
-  const handleValueBlur = () => {
+      if (!selectedKey) return;
+
+      const newObj = { [selectedKey]: e.target.value };
+
+      onChange(JSON.stringify(newObj));
+    },
+    [annotation, annotations, onChange],
+  );
+
+  const handleValueBlur = useCallback(() => {
     const selectedKey = getAnnotationKey(annotation, annotations);
+
     if (!selectedKey) return;
+
     const quantity = getAnnotationValue(annotation, annotations);
     const newObj = { [selectedKey]: quantity };
     const newValue = JSON.stringify(newObj);
+
     if (onBlur && quantity !== lastSavedQuantity && shouldSave()) {
       onBlur(newValue);
       setLastSavedQuantity(quantity);
     }
-  };
+  }, [annotation, annotations, onBlur, lastSavedQuantity, shouldSave]);
 
   return (
     <div className="flex items-center gap-2 max-w-1/3">
