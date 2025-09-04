@@ -1,3 +1,6 @@
+import { PlusCircleIcon } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import type { AnnotationConfig, Annotations } from "@/types/annotations";
 
 import { AnnotationsInput } from "./AnnotationsInput";
@@ -12,6 +15,7 @@ interface AnnotationsEditorProps {
   newRows: Array<{ key: string; value: string }>;
   onNewRowBlur: (idx: number, newRow: { key: string; value: string }) => void;
   onRemoveNewRow: (idx: number) => void;
+  onAddNewRow: () => void;
 }
 
 const COMMON_ANNOTATIONS: AnnotationConfig[] = [
@@ -33,6 +37,7 @@ export const AnnotationsEditor = ({
   newRows,
   onNewRowBlur,
   onRemoveNewRow,
+  onAddNewRow,
 }: AnnotationsEditorProps) => {
   const remainingAnnotations = Object.entries(annotations).filter(
     ([key]) =>
@@ -42,7 +47,19 @@ export const AnnotationsEditor = ({
 
   return (
     <div className="h-auto flex flex-col gap-2">
-      <h3>Other Annotations</h3>
+      <div className="flex justify-between items-center">
+        <h3>Other Annotations</h3>
+
+        <Button
+          onClick={onAddNewRow}
+          variant="ghost"
+          className="w-fit"
+          type="button"
+        >
+          <PlusCircleIcon className="h-4 w-4" />
+          New
+        </Button>
+      </div>
 
       {COMMON_ANNOTATIONS.map((config) => (
         <div key={config.annotation} className="flex items-center gap-2">

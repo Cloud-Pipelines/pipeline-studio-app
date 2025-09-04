@@ -1,7 +1,5 @@
-import { PlusCircleIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import useToastNotification from "@/hooks/useToastNotification";
 import type { Annotations } from "@/types/annotations";
 import type { TaskSpec } from "@/utils/componentSpec";
@@ -116,39 +114,25 @@ export const AnnotationsSection = ({
   }, [rawAnnotations]);
 
   return (
-    <>
-      <div className="h-auto flex flex-col gap-2 overflow-y-auto pr-4 py-2 overflow-visible">
-        <ComputeResourcesEditor
-          annotations={annotations}
-          onChange={handleValueChange}
-          onBlur={handleValueBlur}
-        />
-
-        <hr className="border-t border-dashed border-gray-200 my-4" />
-
-        <AnnotationsEditor
-          annotations={annotations}
-          onChange={handleValueChange}
-          onBlur={handleValueBlur}
-          onRemove={handleRemove}
-          newRows={newRows}
-          onNewRowBlur={handleNewRowBlur}
-          onRemoveNewRow={handleRemoveNewRow}
-        />
-      </div>
+    <div className="h-auto flex flex-col gap-2 overflow-y-auto pr-4 py-2 overflow-visible">
+      <ComputeResourcesEditor
+        annotations={annotations}
+        onChange={handleValueChange}
+        onBlur={handleValueBlur}
+      />
 
       <hr className="border-t border-dashed border-gray-200 my-4" />
-      <div className="flex gap-2 justify-end mt-4">
-        <Button
-          onClick={handleAddNewRow}
-          variant="ghost"
-          className="w-fit"
-          type="button"
-        >
-          <PlusCircleIcon className="h-4 w-4" />
-          New
-        </Button>
-      </div>
-    </>
+
+      <AnnotationsEditor
+        annotations={annotations}
+        onChange={handleValueChange}
+        onBlur={handleValueBlur}
+        onRemove={handleRemove}
+        newRows={newRows}
+        onNewRowBlur={handleNewRowBlur}
+        onRemoveNewRow={handleRemoveNewRow}
+        onAddNewRow={handleAddNewRow}
+      />
+    </div>
   );
 };
