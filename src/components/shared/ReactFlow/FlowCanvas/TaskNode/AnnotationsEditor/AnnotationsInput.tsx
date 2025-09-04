@@ -1,7 +1,8 @@
 import { AlertTriangle, TrashIcon } from "lucide-react";
-import { type ChangeEvent, useEffect, useState } from "react";
+import { type ChangeEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -73,7 +74,7 @@ export const AnnotationsInput = ({
     if (!config?.enableQuantity || !config?.annotation) return false;
     const selectedKey = getAnnotationKey(config.annotation, annotations);
     const quantity = getAnnotationValue(config.annotation, annotations);
-    return selectedKey && quantity && quantity.trim() !== "";
+    return !!selectedKey && !!quantity && quantity.trim() !== "";
   };
 
   const handleQuantitySelectChange = (selectedKey: string) => {
@@ -97,6 +98,23 @@ export const AnnotationsInput = ({
     }
   };
 
+  const handleClearSelection = () => {
+    if (config?.enableQuantity) {
+      const newValue = "";
+      onChange(newValue);
+      if (onBlur && newValue !== lastSavedValue) {
+        onBlur(newValue);
+        setLastSavedValue(newValue);
+      }
+    } else {
+      onChange("");
+      if (onBlur && "" !== lastSavedValue) {
+        onBlur("");
+        setLastSavedValue("");
+      }
+    }
+  };
+
   const handleSwitchChange = (checked: boolean) => {
     const newValue = checked ? "true" : "false";
     onChange(newValue);
@@ -109,30 +127,44 @@ export const AnnotationsInput = ({
   let inputElement = null;
 
   if (config?.options && config.options.length > 0) {
+    const currentValue = config?.enableQuantity
+      ? getAnnotationKey(config.annotation, annotations)
+      : value;
+
     inputElement = (
-      <Select
-        value={
-          config?.enableQuantity
-            ? getAnnotationKey(config.annotation, annotations)
-            : value
-        }
-        onValueChange={
-          config?.enableQuantity
-            ? handleQuantitySelectChange
-            : handleNonQuantitySelectChange
-        }
-      >
-        <SelectTrigger className={cn("min-w-24 grow", className)}>
-          <SelectValue placeholder={"Select " + placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {config.options.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex items-center gap-1 grow">
+        <Select
+          value={currentValue}
+          onValueChange={
+            config?.enableQuantity
+              ? handleQuantitySelectChange
+              : handleNonQuantitySelectChange
+          }
+        >
+          <div className="relative group grow min-w-24">
+            <SelectTrigger className={cn("w-full", className)}>
+              <SelectValue placeholder={"Select " + placeholder} />
+            </SelectTrigger>
+            {!!currentValue && (
+              <Button
+                variant="ghost"
+                size="min"
+                className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover:block"
+                onClick={handleClearSelection}
+              >
+                <Icon name="X" className="size-3 text-muted-foreground" />
+              </Button>
+            )}
+          </div>
+          <SelectContent>
+            {config.options.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     );
   } else if (inputType === "boolean") {
     inputElement = (
@@ -239,10 +271,6 @@ const QuantityInput = ({
     }
   };
 
-  useEffect(() => {
-    setLastSavedQuantity(currentQuantity);
-  }, [currentQuantity]);
-
   return (
     <div className="flex items-center gap-2 max-w-1/3">
       <span>x</span>
@@ -251,7 +279,10 @@ const QuantityInput = ({
         value={getAnnotationValue(annotation, annotations)}
         onChange={handleValueInputChange}
         onBlur={handleValueBlur}
-        className="min-w-8 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className={cn(
+          "min-w-8 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+          !currentQuantity && !disabled && "border-destructive/50",
+        )}
         disabled={disabled}
       />
     </div>
