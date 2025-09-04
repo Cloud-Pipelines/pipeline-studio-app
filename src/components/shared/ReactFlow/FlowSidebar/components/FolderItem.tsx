@@ -62,7 +62,7 @@ const FolderItem = ({ folder, icon }: FolderItemProps) => {
                 if (isValidElement(component)) {
                   return component;
                 }
-                const key = `${folder.name}-component-${component.name || component?.spec?.name || component.url || idx}`;
+                const key = `${folder.name}-component-${component.digest ?? component?.spec?.name ?? component.url ?? idx}`;
                 // If the component has a spec render the component, otherwise, render using URL
                 if (component.spec) {
                   return <ComponentMarkup key={key} component={component} />;
