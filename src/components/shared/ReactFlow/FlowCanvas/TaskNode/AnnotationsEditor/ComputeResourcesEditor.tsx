@@ -1,3 +1,5 @@
+import { useCallback } from "react";
+
 import type {
   AnnotationConfig,
   AnnotationOption,
@@ -89,25 +91,31 @@ interface ComputeResourceFieldProps {
   onBlur: (key: string, value: string) => void;
 }
 
-export const ComputeResourceField = ({
+const ComputeResourceField = ({
   resource,
   annotations,
   onChange,
   onBlur,
 }: ComputeResourceFieldProps) => {
-  const handleValueChange = (value: string) => {
-    const formattedValue = resource.append
-      ? `${value}${resource.append}`
-      : value;
-    onChange(resource.annotation, formattedValue);
-  };
+  const handleValueChange = useCallback(
+    (value: string) => {
+      const formattedValue = resource.append
+        ? `${value}${resource.append}`
+        : value;
+      onChange(resource.annotation, formattedValue);
+    },
+    [resource, onChange],
+  );
 
-  const handleValueBlur = (value: string) => {
-    const formattedValue = resource.append
-      ? `${value}${resource.append}`
-      : value;
-    onBlur(resource.annotation, formattedValue);
-  };
+  const handleValueBlur = useCallback(
+    (value: string) => {
+      const formattedValue = resource.append
+        ? `${value}${resource.append}`
+        : value;
+      onBlur(resource.annotation, formattedValue);
+    },
+    [resource, onBlur],
+  );
 
   const value =
     resource.append && annotations[resource.annotation]

@@ -1,5 +1,5 @@
 import { PlusCircleIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import useToastNotification from "@/hooks/useToastNotification";
@@ -31,76 +31,85 @@ export const AnnotationsSection = ({
     [],
   );
 
-  const handleAddNewRow = () => {
+  const handleAddNewRow = useCallback(() => {
     setNewRows((rows) => [...rows, { key: "", value: "" }]);
-  };
+  }, []);
 
-  const handleRemoveNewRow = (idx: number) => {
+  const handleRemoveNewRow = useCallback((idx: number) => {
     setNewRows((rows) => rows.filter((_, i) => i !== idx));
-  };
+  }, []);
 
-  const handleNewRowBlur = (
-    idx: number,
-    newRow: { key: string; value: string },
-  ) => {
-    const updatedRows = [...newRows];
-    updatedRows[idx] = { ...updatedRows[idx], ...newRow };
+  const handleNewRowBlur = useCallback(
+    (idx: number, newRow: { key: string; value: string }) => {
+      const updatedRows = [...newRows];
+      updatedRows[idx] = { ...updatedRows[idx], ...newRow };
 
-    const row = updatedRows[idx];
+      const row = updatedRows[idx];
 
-    if (row.key.trim() && !(row.key in annotations)) {
-      const newAnnotations = {
-        ...annotations,
-        [row.key]: row.value,
-      };
+      if (row.key.trim() && !(row.key in annotations)) {
+        const newAnnotations = {
+          ...annotations,
+          [row.key]: row.value,
+        };
+        setAnnotations(newAnnotations);
+        onApply(newAnnotations);
+
+        setNewRows((rows) => rows.filter((_, i) => i !== idx));
+      } else {
+        if (row.key.trim() && row.key in annotations) {
+          notify("Annotation key already exists", "warning");
+        }
+
+        setNewRows(updatedRows);
+      }
+    },
+    [newRows, annotations, onApply],
+  );
+
+  const handleValueBlur = useCallback(
+    (key: string, value: string | undefined) => {
+      const newAnnotations =
+        value === undefined || value === ""
+          ? (() => {
+              const { [key]: _, ...rest } = annotations;
+              return rest;
+            })()
+          : {
+              ...annotations,
+              [key]: value,
+            };
+
       setAnnotations(newAnnotations);
       onApply(newAnnotations);
+    },
+    [annotations, onApply],
+  );
 
-      setNewRows((rows) => rows.filter((_, i) => i !== idx));
-    } else {
-      if (row.key.trim() && row.key in annotations) {
-        notify("Annotation key already exists", "warning");
+  const handleRemove = useCallback(
+    (key: string) => {
+      const { [key]: _, ...rest } = annotations;
+      const newAnnotations = rest;
+      setAnnotations(newAnnotations);
+      onApply(newAnnotations);
+    },
+    [annotations, onApply],
+  );
+
+  const handleValueChange = useCallback(
+    (key: string, value: string | undefined) => {
+      if (value === undefined || value === "") {
+        // If value is empty or undefined, remove the annotation
+        handleRemove(key);
+        return;
       }
 
-      setNewRows(updatedRows);
-    }
-  };
-
-  const handleValueChange = (key: string, value: string | undefined) => {
-    if (value === undefined || value === "") {
-      // If value is empty or undefined, remove the annotation
-      handleRemove(key);
-      return;
-    }
-
-    setAnnotations((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const handleValueBlur = (key: string, value: string | undefined) => {
-    const newAnnotations =
-      value === undefined || value === ""
-        ? (() => {
-            const { [key]: _, ...rest } = annotations;
-            return rest;
-          })()
-        : {
-            ...annotations,
-            [key]: value,
-          };
-
-    setAnnotations(newAnnotations);
-    onApply(newAnnotations);
-  };
-
-  const handleRemove = (key: string) => {
-    const { [key]: _, ...rest } = annotations;
-    const newAnnotations = rest;
-    setAnnotations(newAnnotations);
-    onApply(newAnnotations);
-  };
+      setAnnotations((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    },
+    [handleRemove],
+  );
 
   useEffect(() => {
     setAnnotations(rawAnnotations);
