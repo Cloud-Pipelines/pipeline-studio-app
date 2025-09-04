@@ -2,6 +2,7 @@ import { PlusCircleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import useToastNotification from "@/hooks/useToastNotification";
 import type { Annotations } from "@/types/annotations";
 import type { TaskSpec } from "@/utils/componentSpec";
 
@@ -17,13 +18,15 @@ export const AnnotationsSection = ({
   taskSpec,
   onApply,
 }: AnnotationsSectionProps) => {
+  const notify = useToastNotification();
+
   const rawAnnotations = (taskSpec.annotations || {}) as Annotations;
 
   const [annotations, setAnnotations] = useState<Annotations>({
     ...rawAnnotations,
   });
 
-  // Track new rows separately until apply
+  // Track new rows separately until they have a key
   const [newRows, setNewRows] = useState<Array<{ key: string; value: string }>>(
     [],
   );
@@ -32,20 +35,35 @@ export const AnnotationsSection = ({
     setNewRows((rows) => [...rows, { key: "", value: "" }]);
   };
 
-  const handleNewRowChange = (
-    idx: number,
-    field: "key" | "value",
-    value: string,
-  ) => {
-    setNewRows((rows) => {
-      const updated = [...rows];
-      updated[idx] = { ...updated[idx], [field]: value };
-      return updated;
-    });
-  };
-
   const handleRemoveNewRow = (idx: number) => {
     setNewRows((rows) => rows.filter((_, i) => i !== idx));
+  };
+
+  const handleNewRowBlur = (
+    idx: number,
+    newRow: { key: string; value: string },
+  ) => {
+    const updatedRows = [...newRows];
+    updatedRows[idx] = { ...updatedRows[idx], ...newRow };
+
+    const row = updatedRows[idx];
+
+    if (row.key.trim() && !(row.key in annotations)) {
+      const newAnnotations = {
+        ...annotations,
+        [row.key]: row.value,
+      };
+      setAnnotations(newAnnotations);
+      onApply(newAnnotations);
+
+      setNewRows((rows) => rows.filter((_, i) => i !== idx));
+    } else {
+      if (row.key.trim() && row.key in annotations) {
+        notify("Annotation key already exists", "warning");
+      }
+
+      setNewRows(updatedRows);
+    }
   };
 
   const handleValueChange = (key: string, value: string | undefined) => {
@@ -61,26 +79,27 @@ export const AnnotationsSection = ({
     }));
   };
 
-  const handleRemove = (key: string) => {
-    const { [key]: _, ...rest } = annotations;
-    setAnnotations(rest);
+  const handleValueBlur = (key: string, value: string | undefined) => {
+    const newAnnotations =
+      value === undefined || value === ""
+        ? (() => {
+            const { [key]: _, ...rest } = annotations;
+            return rest;
+          })()
+        : {
+            ...annotations,
+            [key]: value,
+          };
+
+    setAnnotations(newAnnotations);
+    onApply(newAnnotations);
   };
 
-  const handleApply = () => {
-    // Merge valid new rows into annotations
-    const validNewRows = newRows.filter(
-      (row) => row.key && row.value && !(row.key in annotations),
-    );
-    const merged = {
-      ...annotations,
-      ...Object.fromEntries(validNewRows.map((row) => [row.key, row.value])),
-    };
-
-    setAnnotations(merged);
-    setNewRows([]);
-    if (onApply) {
-      onApply(merged);
-    }
+  const handleRemove = (key: string) => {
+    const { [key]: _, ...rest } = annotations;
+    const newAnnotations = rest;
+    setAnnotations(newAnnotations);
+    onApply(newAnnotations);
   };
 
   useEffect(() => {
@@ -93,16 +112,22 @@ export const AnnotationsSection = ({
         <ComputeResourcesEditor
           annotations={annotations}
           onChange={handleValueChange}
+          onBlur={handleValueBlur}
         />
+
         <hr className="border-t border-dashed border-gray-200 my-4" />
+
         <AnnotationsEditor
           annotations={annotations}
           onChange={handleValueChange}
+          onBlur={handleValueBlur}
+          onRemove={handleRemove}
           newRows={newRows}
-          onNewRowChange={handleNewRowChange}
+          onNewRowBlur={handleNewRowBlur}
           onRemoveNewRow={handleRemoveNewRow}
         />
       </div>
+
       <hr className="border-t border-dashed border-gray-200 my-4" />
       <div className="flex gap-2 justify-end mt-4">
         <Button
@@ -113,9 +138,6 @@ export const AnnotationsSection = ({
         >
           <PlusCircleIcon className="h-4 w-4" />
           New
-        </Button>
-        <Button className="w-fit" onClick={handleApply}>
-          Apply
         </Button>
       </div>
     </>
