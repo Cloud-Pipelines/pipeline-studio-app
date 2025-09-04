@@ -14,7 +14,7 @@ const ArgumentsSection = ({
   disabled = false,
 }: ArgumentsSectionProps) => {
   return (
-    <div className="flex-1 overflow-y-auto p-2">
+    <div className="flex-1 overflow-y-auto py-2">
       <p className="text-sm text-muted-foreground mb-3">
         Configure the arguments for this task node.
       </p>
