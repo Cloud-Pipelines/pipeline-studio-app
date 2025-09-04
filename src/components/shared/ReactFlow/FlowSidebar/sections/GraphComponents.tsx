@@ -1,11 +1,4 @@
-import {
-  Cable,
-  Folder,
-  LayoutGrid,
-  PackagePlus,
-  Puzzle,
-  Star,
-} from "lucide-react";
+import { PackagePlus } from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo } from "react";
 
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
@@ -37,6 +30,7 @@ import {
 } from "../components";
 import { IONodeSidebarItem } from "../components/ComponentItem";
 import PublishedComponentsSearch from "../components/PublishedComponentsSearch";
+import { UpgradeAvailableAlertBox } from "../components/UpgradeAvailableAlertBox";
 
 const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
   const remoteComponentLibrarySearchEnabled = useBetaFlagValue(
@@ -97,55 +91,59 @@ const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
       userComponentsFolder.components.length > 0;
 
     return (
-      <BlockStack>
-        {hasUsedComponents && (
+      <BlockStack gap="2">
+        {remoteComponentLibrarySearchEnabled && <UpgradeAvailableAlertBox />}
+
+        <BlockStack>
+          {hasUsedComponents && (
+            <FolderItem
+              key="used-components-folder"
+              folder={usedComponentsFolder}
+              icon="LayoutGrid"
+            />
+          )}
+          {hasFavouriteComponents && (
+            <FolderItem
+              key="favorite-components-folder"
+              folder={favoritesFolder}
+              icon="Star"
+            />
+          )}
+          {hasUserComponents && (
+            <FolderItem
+              key="my-components-folder"
+              folder={userComponentsFolder}
+              icon="Puzzle"
+            />
+          )}
+          <Separator />
           <FolderItem
-            key="used-components-folder"
-            folder={usedComponentsFolder}
-            icon={LayoutGrid}
+            key="graph-inputs-outputs-folder"
+            folder={
+              {
+                name: "Inputs & Outputs",
+                components: [
+                  <IONodeSidebarItem key="input" nodeType="input" />,
+                  <IONodeSidebarItem key="output" nodeType="output" />,
+                ],
+                folders: [],
+              } as UIComponentFolder
+            }
+            icon="Cable"
           />
-        )}
-        {hasFavouriteComponents && (
+          <Separator />
           <FolderItem
-            key="favorite-components-folder"
-            folder={favoritesFolder}
-            icon={Star}
+            key="standard-library-folder"
+            folder={
+              {
+                name: "Standard library",
+                components: [],
+                folders: componentLibrary.folders,
+              } as UIComponentFolder
+            }
+            icon="Folder"
           />
-        )}
-        {hasUserComponents && (
-          <FolderItem
-            key="my-components-folder"
-            folder={userComponentsFolder}
-            icon={Puzzle}
-          />
-        )}
-        <Separator />
-        <FolderItem
-          key="graph-inputs-outputs-folder"
-          folder={
-            {
-              name: "Inputs & Outputs",
-              components: [
-                <IONodeSidebarItem key="input" nodeType="input" />,
-                <IONodeSidebarItem key="output" nodeType="output" />,
-              ],
-              folders: [],
-            } as UIComponentFolder
-          }
-          icon={Cable}
-        />
-        <Separator />
-        <FolderItem
-          key="standard-library-folder"
-          folder={
-            {
-              name: "Standard library",
-              components: [],
-              folders: componentLibrary.folders,
-            } as UIComponentFolder
-          }
-          icon={Folder}
-        />
+        </BlockStack>
       </BlockStack>
     );
   }, [

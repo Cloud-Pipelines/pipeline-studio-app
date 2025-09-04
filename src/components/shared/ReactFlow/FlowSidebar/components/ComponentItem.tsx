@@ -1,9 +1,11 @@
-import type { DragEvent } from "react";
+import type { ComponentProps, DragEvent } from "react";
 import { useCallback, useMemo, useRef } from "react";
 
 import { ComponentDetailsDialog } from "@/components/shared/Dialogs";
 import { ComponentFavoriteToggle } from "@/components/shared/FavoriteComponentToggle";
+import { useOutdatedComponents } from "@/components/shared/ManageComponent/hooks/useOutdatedComponents";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
+import { withSuspenseWrapper } from "@/components/shared/SuspenseWrapper";
 import { Icon } from "@/components/ui/icon";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
 import useComponentFromUrl from "@/hooks/useComponentFromUrl";
@@ -21,6 +23,25 @@ interface ComponentMarkupProps {
   isLoading?: boolean;
   error?: string | null;
 }
+
+const ComponentIcon = withSuspenseWrapper(
+  ({
+    component,
+    className,
+    ...iconProps
+  }: {
+    component: ComponentReference;
+  } & ComponentProps<typeof Icon>) => {
+    const { data: outdatedComponents } = useOutdatedComponents([component]);
+
+    const hasOutdatedComponents = outdatedComponents.length > 0;
+
+    if (!hasOutdatedComponents)
+      return <Icon className={className} {...iconProps} />;
+
+    return <Icon name="BookAlert" className="text-orange-500" />;
+  },
+);
 
 const ComponentMarkup = ({
   component,
@@ -137,9 +158,10 @@ const ComponentMarkup = ({
             data-component-name={displayName}
           >
             <div className="flex gap-2 w-full items-center">
-              <Icon
+              <ComponentIcon
                 name={owned ? "FileBadge" : "File"}
                 className="flex-shrink-0 text-gray-400"
+                component={component}
               />
 
               <div

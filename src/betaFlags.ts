@@ -9,8 +9,8 @@ export const ExistingBetaFlags = {
   } as BetaFlag,
 
   ["remote-component-library-search"]: {
-    name: "Remote component library search",
-    description: "Enable the remote component library search.",
+    name: "Published Components Library",
+    description: "Enable the Published Components Library feature.",
     default: false,
   } as BetaFlag,
 

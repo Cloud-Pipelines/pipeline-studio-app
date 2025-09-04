@@ -22,7 +22,7 @@ type RegisterNodeOptions = {
 export type UpdateOverlayMessage = {
   type: "update-overlay";
   data: {
-    replaceWith: HydratedComponentReference;
+    replaceWith: Map<string, HydratedComponentReference>;
     ids: string[];
   };
 };
