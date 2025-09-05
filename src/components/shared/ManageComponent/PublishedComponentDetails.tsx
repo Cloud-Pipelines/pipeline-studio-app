@@ -26,7 +26,13 @@ const PublishedComponentDetailsSkeleton = () => {
 };
 
 export const PublishedComponentDetails = withSuspenseWrapper(
-  ({ component }: { component: HydratedComponentReference }) => {
+  ({
+    component,
+    onUpdateTasks,
+  }: {
+    component: HydratedComponentReference;
+    onUpdateTasks?: () => void;
+  }) => {
     const { data: isPublished } = useHasPublishedComponent(component);
     const { data: outdatedComponents } = useOutdatedComponents([component]);
 
@@ -45,9 +51,10 @@ export const PublishedComponentDetails = withSuspenseWrapper(
 
     const isOutdated = outdatedComponentIndex.has(component.digest);
 
-    const onUpdateTasks = useCallback(() => {
+    const handleUpdateTasks = useCallback(() => {
       onForceUpdate(component.digest);
-    }, [onForceUpdate, component.digest]);
+      onUpdateTasks?.();
+    }, [onUpdateTasks, onForceUpdate, component.digest]);
 
     return (
       <BlockStack className="w-full py-2 my-2 border rounded-md">
@@ -81,7 +88,11 @@ export const PublishedComponentDetails = withSuspenseWrapper(
                 <Paragraph size="xs" tone="critical">
                   There is a newer version of this component available.
                 </Paragraph>
-                <Button variant="secondary" size="xs" onClick={onUpdateTasks}>
+                <Button
+                  variant="secondary"
+                  size="xs"
+                  onClick={handleUpdateTasks}
+                >
                   Upgrade tasks?
                 </Button>
               </InlineStack>

@@ -2,13 +2,11 @@ import { useCallback } from "react";
 
 import type { HydratedComponentReference } from "@/utils/componentSpec";
 
-import { useDialogContext } from "../../Dialogs/dialog.context";
 import { useNodesOverlay } from "../../ReactFlow/NodesOverlay/NodesOverlayProvider";
 
 export function useForceUpdateTasks(
   currentComponent: HydratedComponentReference | null,
 ) {
-  const dialogContext = useDialogContext();
   const { notifyNode, getNodeIdsByDigest, fitNodeIntoView } = useNodesOverlay();
 
   return useCallback(
@@ -29,9 +27,6 @@ export function useForceUpdateTasks(
         return;
       }
 
-      // close current dialog?
-      dialogContext?.close();
-
       await fitNodeIntoView(nodeId);
 
       notifyNode(nodeId, {
@@ -42,12 +37,6 @@ export function useForceUpdateTasks(
         },
       });
     },
-    [
-      dialogContext,
-      getNodeIdsByDigest,
-      fitNodeIntoView,
-      notifyNode,
-      currentComponent,
-    ],
+    [getNodeIdsByDigest, fitNodeIntoView, notifyNode, currentComponent],
   );
 }
