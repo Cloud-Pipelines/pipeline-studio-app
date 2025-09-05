@@ -344,7 +344,9 @@ describe("NodesOverlayProvider", () => {
       const message: UpdateOverlayMessage = {
         type: "update-overlay",
         data: {
-          replaceWith: mockHydratedComponentRef,
+          replaceWith: new Map([
+            [mockHydratedComponentRef.digest, mockHydratedComponentRef],
+          ]),
           ids: ["node-1", "node-2"],
         },
       };
@@ -397,7 +399,9 @@ describe("NodesOverlayProvider", () => {
         {
           type: "update-overlay",
           data: {
-            replaceWith: mockHydratedComponentRef,
+            replaceWith: new Map([
+              [mockHydratedComponentRef.digest, mockHydratedComponentRef],
+            ]),
             ids: ["node-1"],
           },
         },
