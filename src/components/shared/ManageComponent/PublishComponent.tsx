@@ -16,6 +16,7 @@ import { useUserDetails } from "./hooks/useUserDetails";
 interface ComponentPublishProps {
   component: HydratedComponentReference;
   displayName: string;
+  onUpgrade?: () => void;
 }
 
 const ComponentPublishDescription = () => {
@@ -43,7 +44,7 @@ const PublishComponentSkeleton = () => {
 };
 
 export const PublishComponent = withSuspenseWrapper(
-  ({ component }: ComponentPublishProps) => {
+  ({ component, onUpgrade }: ComponentPublishProps) => {
     const { data: currentUserDetails } = useUserDetails();
 
     const { data: history, refetch: refetchHistory } =
@@ -89,6 +90,7 @@ export const PublishComponent = withSuspenseWrapper(
               currentComponent={component}
               currentUserName={currentUserDetails.name}
               onChange={onChange}
+              onUpgrade={onUpgrade}
             />
           </BlockStack>
         </BlockStack>

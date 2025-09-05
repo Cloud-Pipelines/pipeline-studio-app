@@ -1,4 +1,8 @@
-import { type ComponentProps, type PropsWithChildren } from "react";
+import {
+  type ComponentProps,
+  type PropsWithChildren,
+  useCallback,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -68,11 +72,13 @@ export const ComponentHistoryTimeline = withSuspenseWrapper(
     currentComponent,
     currentUserName,
     onChange,
+    onUpgrade,
   }: {
     history: ComponentReferenceWithDigest[];
     currentComponent: HydratedComponentReference;
     currentUserName?: string;
     onChange?: () => void;
+    onUpgrade?: () => void;
   }) => {
     const onForceUpdate = useForceUpdateTasks(currentComponent);
 
@@ -97,6 +103,14 @@ export const ComponentHistoryTimeline = withSuspenseWrapper(
       lastComponentInHistory.published_by === currentUserName;
 
     const isFirstPublish = history.length === 0;
+
+    const handleUpgrade = useCallback(
+      (digest: string) => {
+        onForceUpdate(digest);
+        onUpgrade?.();
+      },
+      [onForceUpdate, onUpgrade],
+    );
 
     return (
       <BlockStack gap="2">
@@ -141,7 +155,7 @@ export const ComponentHistoryTimeline = withSuspenseWrapper(
                           <Button
                             variant="secondary"
                             size="xs"
-                            onClick={() => onForceUpdate(item.digest)}
+                            onClick={() => handleUpgrade(item.digest)}
                           >
                             Upgrade?
                           </Button>

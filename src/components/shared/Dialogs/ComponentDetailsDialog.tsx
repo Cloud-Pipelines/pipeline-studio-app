@@ -1,5 +1,5 @@
 import { Code, InfoIcon, ListFilter } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import {
   Dialog,
@@ -23,7 +23,6 @@ import { PublishedComponentDetails } from "../ManageComponent/PublishedComponent
 import { useBetaFlagValue } from "../Settings/useBetaFlags";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
 import { TaskDetails, TaskImplementation, TaskIO } from "../TaskDetails";
-import { DialogContext } from "./dialog.context";
 
 interface ComponentDetailsProps {
   component: ComponentReference;
@@ -66,6 +65,7 @@ const ComponentDetailsDialog = withSuspenseWrapper(
     displayName,
     actions = [],
     onDelete,
+    onClose,
   }: ComponentDetailsProps) => {
     const remoteComponentLibrarySearchEnabled = useBetaFlagValue(
       "remote-component-library-search",
@@ -127,7 +127,10 @@ const ComponentDetailsDialog = withSuspenseWrapper(
             <div className="overflow-hidden h-[40vh]">
               <TabsContent value="details" className="h-full">
                 {remoteComponentLibrarySearchEnabled ? (
-                  <PublishedComponentDetails component={componentRef} />
+                  <PublishedComponentDetails
+                    component={componentRef}
+                    onUpdateTasks={onClose}
+                  />
                 ) : null}
 
                 <TaskDetails
@@ -156,6 +159,7 @@ const ComponentDetailsDialog = withSuspenseWrapper(
                   <PublishComponent
                     component={componentRef}
                     displayName={displayName}
+                    onUpgrade={onClose}
                   />
                 </TabsContent>
               ) : null}
@@ -186,16 +190,6 @@ const ComponentDetails = ({
     }
   };
 
-  const dialogContextValue = useMemo(
-    () => ({
-      name: "ComponentDetails",
-      close: () => {
-        setOpen(false);
-      },
-    }),
-    [],
-  );
-
   return (
     <Dialog modal open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{dialogTriggerButton}</DialogTrigger>
@@ -216,16 +210,14 @@ const ComponentDetails = ({
           </DialogTitle>
         </DialogHeader>
 
-        <DialogContext.Provider value={dialogContextValue}>
-          <ComponentDetailsDialog
-            component={component}
-            displayName={displayName}
-            trigger={dialogTriggerButton}
-            actions={actions}
-            onClose={onClose}
-            onDelete={onDelete}
-          />
-        </DialogContext.Provider>
+        <ComponentDetailsDialog
+          component={component}
+          displayName={displayName}
+          trigger={dialogTriggerButton}
+          actions={actions}
+          onClose={() => onOpenChange(false)}
+          onDelete={onDelete}
+        />
       </DialogContent>
     </Dialog>
   );
