@@ -248,9 +248,7 @@ export function isLoadableComponentReference(
     componentReference &&
       typeof componentReference === "object" &&
       componentReference.url !== undefined &&
-      componentReference.url.length > 0 &&
-      // simple URL validation
-      /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(componentReference.url),
+      componentReference.url.length > 0,
   );
 }
 

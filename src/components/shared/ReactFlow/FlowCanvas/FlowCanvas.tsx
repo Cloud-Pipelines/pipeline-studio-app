@@ -489,6 +489,12 @@ const FlowCanvas = ({
 
         if (hydratedComponentRef) {
           droppedTask.componentRef = hydratedComponentRef;
+        } else {
+          notify(
+            "Failed to add component to canvas. Please, try again.",
+            "error",
+          );
+          return;
         }
       }
 

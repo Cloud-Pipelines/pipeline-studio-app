@@ -410,6 +410,31 @@ describe("hydrateComponentReference()", () => {
         expect(result).toBeNull();
         expect(localforage.saveComponent).not.toHaveBeenCalled();
       });
+
+      it("should handle relative URL", async () => {
+        // Arrange
+        const testUrl = "/remote-component.yaml";
+        const { text: componentText, spec: componentSpec } =
+          prepareComponentContent("RemoteComponent", "remote:v2");
+
+        mockGetComponentByUrl(null); // Not cached
+        mockFetchResponse(componentText);
+
+        const loadableRef = { url: testUrl };
+
+        // Act
+        const result = await hydrateComponentReference(loadableRef);
+
+        // Assert
+        expect(localforage.getComponentByUrl).toHaveBeenCalledWith(testUrl);
+        expect(global.fetch).toHaveBeenCalledWith(testUrl);
+        expect(result).not.toBeNull();
+        expect(result?.digest).toBeDefined();
+        expect(result?.name).toBe("RemoteComponent");
+        expect(result?.spec).toEqual(componentSpec);
+        expect(result?.text).toBe(componentText);
+        expect(localforage.saveComponent).toHaveBeenCalled();
+      });
     });
 
     describe("when remote component text is invalid", () => {
