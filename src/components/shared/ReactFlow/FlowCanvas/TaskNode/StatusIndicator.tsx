@@ -10,13 +10,11 @@ import type { ContainerExecutionStatus } from "@/api/types.gen";
 import { cn } from "@/lib/utils";
 
 type StatusIndicatorProps = {
-  status?: ContainerExecutionStatus;
+  status: ContainerExecutionStatus;
 };
 
 export const StatusIndicator = ({ status }: StatusIndicatorProps) => {
-  if (!status) return null;
-
-  const { style, text, icon } = getRunStatus(status);
+  const { style, text, icon } = getContainerStatus(status);
 
   return (
     <div
@@ -33,7 +31,7 @@ export const StatusIndicator = ({ status }: StatusIndicatorProps) => {
   );
 };
 
-const getRunStatus = (status: ContainerExecutionStatus) => {
+const getContainerStatus = (status: ContainerExecutionStatus) => {
   switch (status) {
     case "SUCCEEDED":
       return {
