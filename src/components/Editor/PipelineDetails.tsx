@@ -95,8 +95,7 @@ const PipelineDetails = () => {
       <InputValueEditor
         key={input.name}
         input={input}
-        onSave={deselectNode}
-        onCancel={handleCancel}
+        onClose={handleCancel}
       />,
     );
   };

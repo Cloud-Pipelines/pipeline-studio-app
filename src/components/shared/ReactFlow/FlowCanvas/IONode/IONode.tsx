@@ -1,6 +1,6 @@
 import { useLocation } from "@tanstack/react-router";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 
 import { InputValueEditor } from "@/components/Editor/InputValueEditor/InputValueEditor";
 import { OutputNameEditor } from "@/components/Editor/OutputNameEditor";
@@ -44,12 +44,14 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
       : "border-violet-300 bg-violet-100";
   const borderColor = selected ? selectedBorderColor : defaultBorderColor;
 
-  const input = componentSpec.inputs?.find(
-    (input) => input.name === data.label,
+  const input = useMemo(
+    () => componentSpec.inputs?.find((input) => input.name === data.label),
+    [componentSpec.inputs, data.label],
   );
 
-  const output = componentSpec.outputs?.find(
-    (output) => output.name === data.label,
+  const output = useMemo(
+    () => componentSpec.outputs?.find((output) => output.name === data.label),
+    [componentSpec.outputs, data.label],
   );
 
   const deselectNode = useCallback(() => {
@@ -64,9 +66,8 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
           <InputValueEditor
             input={input}
             key={input.name}
-            onSave={deselectNode}
             disabled={!isPipelineEditor}
-            onCancel={deselectNode}
+            onClose={deselectNode}
           />,
         );
       }
@@ -88,7 +89,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
         );
       }
     }
-  }, [selected]);
+  }, [input, selected]);
 
   const {
     outputName: outputConnectedValue,
