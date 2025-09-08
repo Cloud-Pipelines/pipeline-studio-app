@@ -11,9 +11,9 @@ import { AuthorizedUserProfile } from "../../GitHubAuth/AuthorizedUserProfile";
 import { GitHubAuthButton } from "../../GitHubAuth/GitHubAuthButton";
 import { isAuthorizationRequired } from "../../GitHubAuth/helpers";
 import { useAwaitAuthorization } from "../../GitHubAuth/useAwaitAuthorization";
+import FileActions from "./sections/FileActions";
 import GraphComponents from "./sections/GraphComponents";
 import RunsAndSubmission from "./sections/RunsAndSubmission";
-import SettingsAndActions from "./sections/SettingsAndActions";
 
 const FlowSidebar = () => {
   const { isAuthorized } = useAwaitAuthorization();
@@ -48,7 +48,7 @@ const FlowSidebar = () => {
       >
         <SidebarContent className="gap-0! m-0! p-0!">
           {authorizationSectionMarkup}
-          <SettingsAndActions isOpen={isOpen} />
+          <FileActions isOpen={isOpen} />
           <RunsAndSubmission isOpen={isOpen} />
           <GraphComponents isOpen={isOpen} />
         </SidebarContent>

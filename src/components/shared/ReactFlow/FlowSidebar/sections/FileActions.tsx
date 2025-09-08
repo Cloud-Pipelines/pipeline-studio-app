@@ -1,9 +1,9 @@
 import { useNavigate } from "@tanstack/react-router";
-import { FileDownIcon, FileUpIcon, Save, SaveAll } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PipelineNameDialog } from "@/components/shared/Dialogs";
 import ImportPipeline from "@/components/shared/ImportPipeline";
+import { Icon } from "@/components/ui/icon";
 import { InlineStack } from "@/components/ui/layout";
 import {
   SidebarContent,
@@ -23,13 +23,70 @@ import { getPipelineFile, useSavePipeline } from "@/services/pipelineService";
 import { componentSpecToYaml } from "@/utils/componentStore";
 import { formatRelativeTime } from "@/utils/date";
 
-const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
+const FileActions = ({ isOpen }: { isOpen: boolean }) => {
   const { componentSpec, autoSaveStatus } = useComponentSpec();
   const { savePipeline } = useSavePipeline(componentSpec);
   const notify = useToastNotification();
   const navigate = useNavigate();
 
   const [onLoadLastSavedAt, setOnLoadLastSavedAt] = useState<Date | null>(null);
+
+  const componentText = useMemo(() => {
+    try {
+      return componentSpecToYaml(componentSpec);
+    } catch (err) {
+      console.error("Error preparing pipeline for export:", err);
+      return componentSpec ? componentSpecToYaml(componentSpec) : "";
+    }
+  }, [componentSpec]);
+
+  const notifyPipelineSaved = useCallback(
+    (name: string) => {
+      notify(`Pipeline saved as "${name}"`, "success");
+    },
+    [notify],
+  );
+
+  const handleSavePipeline = useCallback(async () => {
+    await savePipeline();
+    setOnLoadLastSavedAt(new Date());
+    notifyPipelineSaved(componentSpec?.name ?? "Untitled Pipeline");
+  }, [
+    savePipeline,
+    setOnLoadLastSavedAt,
+    notifyPipelineSaved,
+    componentSpec?.name,
+  ]);
+
+  const handleSavePipelineAs = useCallback(
+    async (name: string) => {
+      await savePipeline(name);
+      notifyPipelineSaved(name);
+
+      navigate({
+        to: `${EDITOR_PATH}/${encodeURIComponent(name)}`,
+      });
+    },
+    [navigate, savePipeline, notifyPipelineSaved],
+  );
+
+  const getAutoSaveStatusText = useCallback(() => {
+    if (autoSaveStatus.isSaving) {
+      return "Saving...";
+    }
+    if (autoSaveStatus.lastSavedAt || onLoadLastSavedAt) {
+      return `Last saved ${formatRelativeTime(
+        autoSaveStatus.lastSavedAt ?? onLoadLastSavedAt,
+      )}`;
+    }
+    return "All changes saved";
+  }, [autoSaveStatus, onLoadLastSavedAt]);
+
+  const getDuplicatePipelineName = useCallback(() => {
+    return componentSpec?.name
+      ? `${componentSpec.name} (Copy)`
+      : `Untitled Pipeline ${new Date().toLocaleTimeString()}`;
+  }, [componentSpec?.name]);
 
   useEffect(() => {
     const fetchLastSaved = async () => {
@@ -41,66 +98,12 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
     fetchLastSaved();
   }, [componentSpec?.name]);
 
-  const notifyPipelineSaved = (name: string) => {
-    notify(`Pipeline saved as "${name}"`, "success");
-  };
-
-  const handleSavePipeline = async () => {
-    await savePipeline();
-    setOnLoadLastSavedAt(new Date());
-    notifyPipelineSaved(componentSpec?.name ?? "Untitled Pipeline");
-  };
-
-  const handleSavePipelineAs = async (name: string) => {
-    await savePipeline(name);
-    notifyPipelineSaved(name);
-
-    navigate({
-      to: `${EDITOR_PATH}/${encodeURIComponent(name)}`,
-    });
-  };
-
-  const getInitialName = () => {
-    return componentSpec?.name
-      ? `${componentSpec.name} (Copy)`
-      : `Untitled Pipeline ${new Date().toLocaleTimeString()}`;
-  };
-
-  const componentSpecRef = useRef(componentSpec);
-
-  useEffect(() => {
-    componentSpecRef.current = componentSpec;
-  }, [componentSpec]);
-
-  const componentText = useMemo(() => {
-    try {
-      return componentSpecToYaml(componentSpecRef.current);
-    } catch (err) {
-      console.error("Error preparing pipeline for export:", err);
-      return componentSpecRef.current
-        ? componentSpecToYaml(componentSpecRef.current)
-        : "";
-    }
-  }, [componentSpecRef.current]);
-
   const componentTextBlob = new Blob([componentText], { type: "text/yaml" });
   const filename = componentSpec?.name
     ? `${componentSpec.name}.pipeline.component.yaml`
     : "pipeline.component.yaml";
 
   const tooltipPosition = isOpen ? "top" : "right";
-
-  const getAutoSaveStatusText = () => {
-    if (autoSaveStatus.isSaving) {
-      return "Saving...";
-    }
-    if (autoSaveStatus.lastSavedAt || onLoadLastSavedAt) {
-      return `Last saved ${formatRelativeTime(
-        autoSaveStatus.lastSavedAt ?? onLoadLastSavedAt,
-      )}`;
-    }
-    return "All changes saved";
-  };
 
   return (
     <SidebarGroup>
@@ -127,9 +130,8 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
               forceTooltip
               tooltipPosition={tooltipPosition}
               onClick={handleSavePipeline}
-              className="cursor-pointer"
             >
-              <Save className="w-5! h-5!" strokeWidth={1.5} />
+              <Icon name="Save" size="lg" className="stroke-[1.5]" />
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
@@ -139,17 +141,16 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
                   tooltip="Save Pipeline As"
                   forceTooltip
                   tooltipPosition={tooltipPosition}
-                  className="cursor-pointer"
                 >
-                  <SaveAll className="w-5! h-5!" strokeWidth={1.5} />
+                  <Icon name="SaveAll" size="lg" className="stroke-[1.5]" />
                 </SidebarMenuButton>
               }
               title="Save Pipeline As"
               description="Enter a name for your pipeline"
-              initialName={getInitialName()}
+              initialName={getDuplicatePipelineName()}
               onSubmit={handleSavePipelineAs}
               submitButtonText="Save"
-              submitButtonIcon={<SaveAll className="mr-2 h-4 w-4" />}
+              submitButtonIcon={<Icon name="SaveAll" className="mr-2" />}
             />
           </SidebarMenuItem>
           <SidebarMenuItem>
@@ -158,13 +159,12 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
               forceTooltip
               tooltipPosition={tooltipPosition}
               asChild
-              className="cursor-pointer"
             >
               <a
                 href={URL.createObjectURL(componentTextBlob)}
                 download={filename}
               >
-                <FileDownIcon className="w-5! h-5!" strokeWidth={1.5} />
+                <Icon name="FileDown" size="lg" className="stroke-[1.5]" />
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -175,10 +175,9 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
                   tooltip="Import Pipeline"
                   forceTooltip
                   tooltipPosition={tooltipPosition}
-                  className="cursor-pointer"
                   asChild={!isOpen}
                 >
-                  <FileUpIcon className="w-5! h-5!" strokeWidth={1.5} />
+                  <Icon name="FileUp" size="lg" className="stroke-[1.5]" />
                 </SidebarMenuButton>
               }
             />
@@ -189,4 +188,4 @@ const SettingsAndActions = ({ isOpen }: { isOpen: boolean }) => {
   );
 };
 
-export default SettingsAndActions;
+export default FileActions;
