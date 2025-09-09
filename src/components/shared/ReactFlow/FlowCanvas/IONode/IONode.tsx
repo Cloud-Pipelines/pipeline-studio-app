@@ -90,11 +90,10 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     }
   }, [input, output, selected]);
 
-  const {
-    outputName: outputConnectedValue,
-    outputType: outputConnectedType,
-    taskId: outputConnectedTaskId,
-  } = getOutputConnectedDetails(graphSpec, data.label);
+  const connectedOutput = getOutputConnectedDetails(graphSpec, data.label);
+  const outputConnectedValue = connectedOutput.outputName;
+  const outputConnectedType = connectedOutput.outputType;
+  const outputConnectedTaskId = connectedOutput.taskId;
 
   const handleDefaultClassName =
     "!w-[12px] !h-[12px] !border-0! !w-[12px] !h-[12px] transform-none! cursor-pointer bg-gray-500! border-none!";
@@ -115,14 +114,14 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
         {/* type */}
         <div className="text-xs text-slate-700 font-mono truncate max-w-[250px]">
           <span className="font-bold text-slate-700">Type:</span>{" "}
-          {type === "input"
-            ? input?.type?.toString() || "Any"
-            : outputConnectedType || output?.type?.toString() || "Any"}
+          {outputConnectedType ?? data.type ?? "Any"}
         </div>
 
-        <span className="font-bold text-slate-700">
-          {outputConnectedTaskId}
-        </span>
+        {!!outputConnectedTaskId && (
+          <span className="font-bold text-slate-700">
+            {outputConnectedTaskId}
+          </span>
+        )}
 
         {/* value */}
         <div className={cn("flex flex-col gap-3 p-2 bg-white rounded-lg")}>
@@ -150,7 +149,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
               )}
             >
               <span className="font-bold text-slate-700">From:</span>{" "}
-              {outputConnectedValue || "Not connected"}
+              {outputConnectedValue ?? "Not connected"}
             </div>
           )}
           <Handle
