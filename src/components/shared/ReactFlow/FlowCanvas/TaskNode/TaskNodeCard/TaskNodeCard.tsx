@@ -2,24 +2,35 @@ import { useStore } from "@xyflow/react";
 import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { PublishedComponentBadge } from "@/components/shared/ManageComponent/PublishedComponentBadge";
+import { trimDigest } from "@/components/shared/ManageComponent/utils/digest";
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { QuickTooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 
 import {
   type NotifyMessage,
+  type UpdateOverlayMessage,
   useNodesOverlay,
 } from "../../../NodesOverlay/NodesOverlayProvider";
 import TaskConfiguration from "../TaskConfiguration";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
+import { UpgradeNodePopover } from "./UpgradeNodePopover";
 
 const TaskNodeCard = () => {
+  const isRemoteComponentLibrarySearchEnabled = useBetaFlagValue(
+    "remote-component-library-search",
+  );
   const { registerNode } = useNodesOverlay();
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
-
+  const [updateOverlayDialogOpen, setUpdateOverlayDialogOpen] = useState<
+    UpdateOverlayMessage["data"] | undefined
+  >();
   const [highlightedState, setHighlighted] = useState(false);
 
   const isDragging = useStore((state) => {
@@ -46,6 +57,12 @@ const TaskNodeCard = () => {
       case "clear":
         setHighlighted(false);
         break;
+      case "update-overlay":
+        setHighlighted(true);
+        setUpdateOverlayDialogOpen({
+          ...message.data,
+        });
+        break;
     }
   }, []);
 
@@ -56,6 +73,14 @@ const TaskNodeCard = () => {
       onNotify,
     });
   }, [registerNode, nodeId, taskSpec, onNotify]);
+
+  const closeOverlayPopover = useCallback((open: boolean) => {
+    setHighlighted(open);
+
+    if (!open) {
+      setUpdateOverlayDialogOpen(undefined);
+    }
+  }, []);
 
   const taskConfigMarkup = useMemo(
     () => (
@@ -122,12 +147,20 @@ const TaskNodeCard = () => {
     };
   }, [selected, taskConfigMarkup, setContent, clearContent]);
 
+  const digestMarkup = taskSpec.componentRef?.digest && (
+    <QuickTooltip content={taskSpec.componentRef.digest}>
+      <div className="text-xs font-light font-mono">
+        {trimDigest(taskSpec.componentRef.digest)}
+      </div>
+    </QuickTooltip>
+  );
+
   return (
     <Card
       className={cn(
         "rounded-2xl border-gray-200 border-2 break-words p-0 drop-shadow-none gap-2",
         selected ? "border-gray-500" : "hover:border-slate-200",
-        (highlighted || highlightedState) && "border-orange-500",
+        (highlighted || highlightedState) && "border-orange-500!",
       )}
       style={{
         width: dimensions.w + "px",
@@ -136,15 +169,17 @@ const TaskNodeCard = () => {
       }}
       ref={nodeRef}
     >
-      <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-center">
+      <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
         <CardTitle className="break-words text-left text-xs text-slate-900">
           {name}
         </CardTitle>
 
-        {taskSpec.componentRef?.digest && (
-          <div className="text-xs text-muted-foreground font-light font-mono">
-            {taskSpec.componentRef.digest.substring(0, 8)}
-          </div>
+        {isRemoteComponentLibrarySearchEnabled ? (
+          <PublishedComponentBadge componentRef={taskSpec.componentRef}>
+            {digestMarkup}
+          </PublishedComponentBadge>
+        ) : (
+          digestMarkup
         )}
       </CardHeader>
       <CardContent className="p-2 flex flex-col gap-2">
@@ -169,6 +204,13 @@ const TaskNodeCard = () => {
             onBackgroundClick={handleOutputSectionClick}
           />
         </div>
+        {isRemoteComponentLibrarySearchEnabled && updateOverlayDialogOpen ? (
+          <UpgradeNodePopover
+            currentNode={taskNode}
+            onOpenChange={closeOverlayPopover}
+            {...updateOverlayDialogOpen}
+          />
+        ) : null}
       </CardContent>
     </Card>
   );
