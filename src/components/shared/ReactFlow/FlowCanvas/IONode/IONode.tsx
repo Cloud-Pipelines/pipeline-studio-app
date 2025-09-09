@@ -2,15 +2,14 @@ import { useLocation } from "@tanstack/react-router";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
 import { memo, useCallback, useEffect, useMemo } from "react";
 
-import { InputValueEditor } from "@/components/Editor/InputValueEditor/InputValueEditor";
-import { OutputNameEditor } from "@/components/Editor/OutputNameEditor";
+import { InputValueEditor } from "@/components/Editor/IOEditor/InputValueEditor";
+import { OutputNameEditor } from "@/components/Editor/IOEditor/OutputNameEditor";
+import { getOutputConnectedDetails } from "@/components/Editor/utils/getOutputConnectedDetails";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { deselectAllNodes } from "@/utils/flowUtils";
-
-import { getOutputConnectedDetails } from "../utils/getOutputConnectedDetails";
 
 interface IONodeProps {
   type: "input" | "output";
@@ -32,17 +31,18 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
 
   const isPipelineEditor = location.pathname.includes("/editor");
 
-  const handleType = type === "input" ? "source" : "target";
-  const handlePosition = type === "input" ? Position.Right : Position.Left;
-  const selectedBorderColor =
-    type === "input"
-      ? "border-blue-500 bg-blue-100"
-      : "border-violet-500 bg-violet-100";
-  const defaultBorderColor =
-    type === "input"
-      ? "border-blue-300 bg-blue-100"
-      : "border-violet-300 bg-violet-100";
-  const borderColor = selected ? selectedBorderColor : defaultBorderColor;
+  const isInput = type === "input";
+  const isOutput = type === "output";
+
+  const handleType = isInput ? "source" : "target";
+  const handlePosition = isInput ? Position.Right : Position.Left;
+  const selectedColor = isInput
+    ? "border-blue-500 bg-blue-100"
+    : "border-violet-500 bg-violet-100";
+  const defaultColor = isInput
+    ? "border-blue-300 bg-blue-100"
+    : "border-violet-300 bg-violet-100";
+  const borderColor = selected ? selectedColor : defaultColor;
 
   const input = useMemo(
     () => componentSpec.inputs?.find((input) => input.name === data.label),
@@ -61,7 +61,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
 
   useEffect(() => {
     if (selected) {
-      if (input && type === "input") {
+      if (input && isInput) {
         setContent(
           <InputValueEditor
             input={input}
@@ -72,7 +72,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
         );
       }
 
-      if (output && type === "output") {
+      if (output && isOutput) {
         const outputConnectedDetails = getOutputConnectedDetails(
           graphSpec,
           output.name,
@@ -96,14 +96,16 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const outputConnectedTaskId = connectedOutput.taskId;
 
   const handleDefaultClassName =
-    "!w-[12px] !h-[12px] !border-0! !w-[12px] !h-[12px] transform-none! cursor-pointer bg-gray-500! border-none!";
+    "!w-[12px] !h-[12px] !border-0 !transform-none !bg-gray-500";
 
-  const handleClassName =
-    type === "input" ? "translate-x-1.5" : "-translate-x-1.5";
+  const handleClassName = isInput ? "translate-x-1.5" : "-translate-x-1.5";
 
   return (
     <Card
-      className={`rounded-2xl ${borderColor} border-2 max-w-[300px] break-words p-0 drop-shadow-none gap-2`}
+      className={cn(
+        "rounded-2xl border-2 max-w-[300px] break-words p-0 drop-shadow-none",
+        borderColor,
+      )}
     >
       <CardHeader className="border-b border-slate-200 px-2 py-2.5">
         <CardTitle className="max-w-[300px] break-words text-left text-xs text-slate-900">
@@ -125,26 +127,25 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
 
         {/* value */}
         <div className={cn("flex flex-col gap-3 p-2 bg-white rounded-lg")}>
-          {type === "input" && (
+          {isInput && (
             <div
               className={cn(
                 "text-xs text-slate-700 font-mono truncate max-w-[250px]",
                 {
-                  "text-red-500":
-                    type === "input" && !data.value && !data.default,
+                  "text-red-500": !data.value && !data.default,
                 },
               )}
             >
               <span className="font-bold text-slate-700">Value:</span>{" "}
-              {data.value || data.default || "No value"}
+              {data.value ?? data.default ?? "No value"}
             </div>
           )}
-          {type === "output" && (
+          {isOutput && (
             <div
               className={cn(
                 "text-xs text-slate-700 font-mono truncate max-w-[250px]",
                 {
-                  "text-red-500": type === "output" && !outputConnectedValue,
+                  "text-red-500": !outputConnectedValue,
                 },
               )}
             >

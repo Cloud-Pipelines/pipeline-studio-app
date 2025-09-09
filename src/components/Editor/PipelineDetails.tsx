@@ -2,7 +2,6 @@ import { useReactFlow } from "@xyflow/react";
 import { Frown, Network } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-import { getOutputConnectedDetails } from "@/components/shared/ReactFlow/FlowCanvas/utils/getOutputConnectedDetails";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -26,9 +25,10 @@ import { deselectAllNodes } from "@/utils/flowUtils";
 
 import { InfoBox } from "../shared/InfoBox";
 import { TaskImplementation } from "../shared/TaskDetails";
-import { InputValueEditor } from "./InputValueEditor/InputValueEditor";
-import { OutputNameEditor } from "./OutputNameEditor";
+import { InputValueEditor } from "./IOEditor/InputValueEditor";
+import { OutputNameEditor } from "./IOEditor/OutputNameEditor";
 import RenamePipeline from "./RenamePipeline";
+import { getOutputConnectedDetails } from "./utils/getOutputConnectedDetails";
 
 const PipelineDetails = () => {
   const { setNodes } = useReactFlow();
