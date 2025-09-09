@@ -17,6 +17,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
+import { useAutoSaveStatus } from "@/providers/AutoSaveProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { EDITOR_PATH } from "@/routes/router";
 import { getPipelineFile, useSavePipeline } from "@/services/pipelineService";
@@ -24,7 +25,8 @@ import { componentSpecToYaml } from "@/utils/componentStore";
 import { formatRelativeTime } from "@/utils/date";
 
 const FileActions = ({ isOpen }: { isOpen: boolean }) => {
-  const { componentSpec, autoSaveStatus } = useComponentSpec();
+  const { componentSpec } = useComponentSpec();
+  const { autoSaveStatus } = useAutoSaveStatus();
   const { savePipeline } = useSavePipeline(componentSpec);
   const notify = useToastNotification();
   const navigate = useNavigate();
