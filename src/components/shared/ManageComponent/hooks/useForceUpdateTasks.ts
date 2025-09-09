@@ -37,7 +37,7 @@ export function useForceUpdateTasks(
       notifyNode(nodeId, {
         type: "update-overlay",
         data: {
-          replaceWith: currentComponent,
+          replaceWith: new Map([[digest, currentComponent]]),
           ids: nodeIds,
         },
       });

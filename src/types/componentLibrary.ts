@@ -1,9 +1,4 @@
-import type { LucideProps } from "lucide-react";
-import type {
-  ChangeEvent,
-  ForwardRefExoticComponent,
-  ReactElement,
-} from "react";
+import type { ChangeEvent, ReactElement } from "react";
 
 import type { ComponentReference } from "@/utils/componentSpec";
 
@@ -32,11 +27,6 @@ export type UIComponentFolder = {
   components?: (ComponentReference | ReactElement)[];
   folders?: UIComponentFolder[];
   isUserFolder?: boolean;
-};
-
-export type FolderItemProps = {
-  folder: UIComponentFolder;
-  icon?: ForwardRefExoticComponent<Omit<LucideProps, "ref">>;
 };
 
 export type SearchInputProps = {

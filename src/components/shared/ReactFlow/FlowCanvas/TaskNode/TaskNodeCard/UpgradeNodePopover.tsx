@@ -10,6 +10,7 @@ import {
 import { Heading } from "@/components/ui/typography";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { TaskNodeContextType } from "@/providers/TaskNodeProvider";
+import type { HydratedComponentReference } from "@/utils/componentSpec";
 
 import {
   type UpdateOverlayMessage,
@@ -44,20 +45,26 @@ export const UpgradeNodePopover = ({
   const { graphSpec, updateGraphSpec } = useComponentSpec();
   const { notifyNode, fitNodeIntoView } = useNodesOverlay();
 
+  const replaceWithComponent = useMemo(() => {
+    return replaceWith.get(
+      taskSpec.componentRef.digest ?? "",
+    ) as HydratedComponentReference;
+  }, [replaceWith, taskSpec]);
+
   const updatePreview = useMemo(() => {
-    return replaceTaskNode(taskId, replaceWith, graphSpec);
-  }, [taskId, replaceWith, graphSpec]);
+    return replaceTaskNode(taskId, replaceWithComponent, graphSpec);
+  }, [taskId, replaceWithComponent, graphSpec]);
 
   const markup = useMemo(() => {
     const { content } = getUpgradeConfirmationDetails(
       taskId,
       taskSpec,
-      replaceWith.digest,
+      replaceWithComponent.digest,
       updatePreview.lostInputs,
     );
 
     return content;
-  }, [taskId, taskSpec, replaceWith, updatePreview.lostInputs]);
+  }, [taskId, taskSpec, updatePreview.lostInputs, replaceWithComponent.digest]);
 
   const handleOpenChange = useCallback(() => {
     setOpen(false);
