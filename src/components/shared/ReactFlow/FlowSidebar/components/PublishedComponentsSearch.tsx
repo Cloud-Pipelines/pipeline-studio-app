@@ -5,16 +5,13 @@ import {
   useCallback,
   useEffect,
   useReducer,
-  useRef,
   useState,
 } from "react";
 
 import { withSuspenseWrapper } from "@/components/shared/SuspenseWrapper";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@/components/ui/icon";
-import { Input } from "@/components/ui/input";
+import { Input, InputGroup } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import {
@@ -22,6 +19,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radiogroup";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
@@ -31,6 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Text } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider/ComponentLibraryProvider";
 import {
@@ -85,30 +85,27 @@ const SearchFilter = ({
   availableFilters = DEFAULT_AVAILABLE_FILTERS,
   onFiltersChange,
 }: SearchFilterProps) => {
-  const activeFilters = useRef(new Set<string>(["name"]));
+  const [open, setOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<ApiSearchFilter>("name");
 
-  const handleCheckboxChange = (filter: string, checked: boolean) => {
-    if (checked) {
-      activeFilters.current.add(filter);
-      onFiltersChange(Array.from(activeFilters.current));
-    } else {
-      activeFilters.current.delete(filter);
-      onFiltersChange(Array.from(activeFilters.current));
-    }
-  };
+  const handleFilterChange = useCallback(
+    (filter: ApiSearchFilter) => {
+      setActiveFilter(filter);
+      onFiltersChange([filter]);
+      // it is more convenient to close the popover after the filter is changed, saves at least one click
+      setTimeout(() => {
+        setOpen(false);
+      }, 200);
+    },
+    [onFiltersChange],
+  );
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <InlineStack align="center" gap="1" className="relative">
           <Button variant="outline" size="icon" className="h-8 w-8 p-0">
             <Icon name="ListFilter" />
-
-            {activeFilters.current.size > 0 ? (
-              <Badge size="xs" variant="inform" position="topright">
-                {activeFilters.current.size}
-              </Badge>
-            ) : null}
           </Button>
         </InlineStack>
       </PopoverTrigger>
@@ -116,28 +113,30 @@ const SearchFilter = ({
         <BlockStack gap="2">
           <Text size="md">Filter Search</Text>
           <BlockStack gap="1">
-            {availableFilters.map(({ label, value }) => {
-              return (
-                <InlineStack
-                  key={value}
-                  gap="2"
-                  align="start"
-                  blockAlign="center"
-                >
-                  <Checkbox
-                    id={value}
-                    checked={activeFilters.current.has(value)}
-                    onCheckedChange={(checked: boolean) =>
-                      handleCheckboxChange(value, !!checked)
-                    }
-                    className="hover:cursor-pointer"
-                  />
-                  <Label htmlFor={value} className="font-light text-sm">
-                    {label}
-                  </Label>
-                </InlineStack>
-              );
-            })}
+            <RadioGroup onValueChange={handleFilterChange} value={activeFilter}>
+              {availableFilters.map(({ label, value }) => {
+                return (
+                  <InlineStack
+                    key={value}
+                    gap="2"
+                    align="start"
+                    blockAlign="center"
+                  >
+                    <RadioGroupItem
+                      id={value}
+                      value={value}
+                      className="hover:cursor-pointer"
+                    />
+                    <Label
+                      htmlFor={value}
+                      className="font-light text-sm hover:cursor-pointer"
+                    >
+                      {label}
+                    </Label>
+                  </InlineStack>
+                );
+              })}
+            </RadioGroup>
           </BlockStack>
         </BlockStack>
       </PopoverContent>
@@ -207,19 +206,42 @@ const SearchRequestInput = ({ value, onChange }: SearchRequestProps) => {
   return (
     <InlineStack align="space-between" gap="2" className="w-full">
       <div className="relative flex-1">
-        <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 pointer-events-none">
-          <Icon name="Search" size="sm" className="text-gray-400" />
-        </div>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Input
-              type="text"
-              data-testid="search-input"
-              placeholder="Search components..."
-              className="w-full pl-8 text-sm h-8 focus-visible:ring-gray-400/50"
-              value={searchRequest.searchTerm}
-              onChange={handleChange}
-            />
+            <InputGroup
+              className="px-2 gap-2"
+              prefixElement={
+                <div className="inset-y-0 left-0 flex items-center pointer-events-none">
+                  <Icon name="Search" size="sm" className="text-gray-400" />
+                </div>
+              }
+              suffixElement={
+                <Button
+                  variant="ghost"
+                  size="min"
+                  className={cn(
+                    isValidFilterRequest(searchRequest) ? "visible" : "hidden",
+                  )}
+                  onClick={() => {
+                    dispatch({ type: "SET_SEARCH_TERM", payload: "" });
+                  }}
+                >
+                  <Icon name="X" className="size-3 text-muted-foreground" />
+                </Button>
+              }
+            >
+              <Input
+                id="search-input"
+                variant="noBorder"
+                type="text"
+                data-testid="search-input"
+                placeholder="Search components..."
+                className="w-full text-xs p-0"
+                value={searchRequest.searchTerm}
+                autoComplete="off"
+                onChange={handleChange}
+              />
+            </InputGroup>
           </TooltipTrigger>
           <TooltipContent>Search components - min 3 characters</TooltipContent>
         </Tooltip>
@@ -246,29 +268,31 @@ const SearchResults = ({ searchResult }: SearchResultsProps) => {
         data-testid="search-results-header"
       >{`Search Results (${totalResults})`}</Text>
       <Separator />
-      {totalResults > 0 ? (
-        searchResult.map((folder) => (
-          <BlockStack key={folder.name}>
-            {folder.components && folder.components.length > 0 ? (
-              <>
-                {searchResult.length > 1 ? (
-                  <Text tone="subdued" size="xs">
-                    {folder.name}
-                  </Text>
-                ) : null}
-                {folder.components.map((component) => (
-                  <ComponentMarkup
-                    key={`${folder.name}-${component.digest}-${component.name}`}
-                    component={component}
-                  />
-                ))}
-              </>
-            ) : null}
-          </BlockStack>
-        ))
-      ) : (
-        <Text tone="subdued">No results found</Text>
-      )}
+      <ScrollArea className="h-[calc(100vh-400px)]" type="always">
+        {totalResults > 0 ? (
+          searchResult.map((folder) => (
+            <BlockStack key={folder.name}>
+              {folder.components && folder.components.length > 0 ? (
+                <>
+                  {searchResult.length > 1 ? (
+                    <Text tone="subdued" size="xs">
+                      {folder.name}
+                    </Text>
+                  ) : null}
+                  {folder.components.map((component) => (
+                    <ComponentMarkup
+                      key={`${folder.name}-${component.digest}-${component.name}`}
+                      component={component}
+                    />
+                  ))}
+                </>
+              ) : null}
+            </BlockStack>
+          ))
+        ) : (
+          <Text tone="subdued">No results found</Text>
+        )}
+      </ScrollArea>
     </BlockStack>
   );
 };
