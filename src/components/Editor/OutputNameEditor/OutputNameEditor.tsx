@@ -3,8 +3,10 @@ import { useCallback, useEffect, useState } from "react";
 import { type OutputConnectedDetails } from "@/components/shared/ReactFlow/FlowCanvas/utils/getOutputConnectedDetails";
 import { updateOutputNameOnComponentSpec } from "@/components/shared/ReactFlow/FlowCanvas/utils/updateOutputNameOnComponentSpec";
 import { Button } from "@/components/ui/button";
+import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type OutputSpec } from "@/utils/componentSpec";
+import { outputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 
 import {
   NameField,
@@ -27,6 +29,7 @@ export const OutputNameEditor = ({
   connectedDetails,
   onClose,
 }: OutputNameEditorProps) => {
+  const { transferSelection } = useNodeSelectionTransfer(outputNameToNodeId);
   const { setComponentSpec, componentSpec } = useComponentSpec();
   const [outputName, setOutputName] = useState(output.name);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -44,6 +47,8 @@ export const OutputNameEditor = ({
         oldName,
         newName,
       );
+
+      transferSelection(oldName, newName);
 
       return updatedComponentSpec;
     },
