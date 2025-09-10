@@ -31,6 +31,7 @@ export const COMPUTE_RESOURCES: AnnotationConfig[] = [
     label: "CPU",
     unit: "cores",
     type: "number",
+    min: 0,
   },
   {
     annotation: "cloud-pipelines.net/launchers/generic/resources.memory",
@@ -38,12 +39,15 @@ export const COMPUTE_RESOURCES: AnnotationConfig[] = [
     unit: "GiB",
     type: "number",
     append: "Gi",
+    min: 0,
+    max: 2880,
   },
   {
     annotation: "cloud-pipelines.net/launchers/generic/resources.accelerators",
     label: "GPU",
     options: GPUs,
     enableQuantity: true,
+    min: 0,
   },
   {
     annotation: "cloud-pipelines.net/orchestration/cloud_provider",
