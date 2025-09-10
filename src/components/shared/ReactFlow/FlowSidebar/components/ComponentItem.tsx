@@ -24,14 +24,20 @@ interface ComponentMarkupProps {
   error?: string | null;
 }
 
+type ComponentIconProps = {
+  component: ComponentReference;
+} & ComponentProps<typeof Icon>;
+
+const ComponentIconSkeleton = ({
+  ...iconProps
+}: Partial<ComponentIconProps>) => {
+  return (
+    <Icon name="File" className="flex-shrink-0 text-gray-400" {...iconProps} />
+  );
+};
+
 const ComponentIcon = withSuspenseWrapper(
-  ({
-    component,
-    className,
-    ...iconProps
-  }: {
-    component: ComponentReference;
-  } & ComponentProps<typeof Icon>) => {
+  ({ component, className, ...iconProps }: ComponentIconProps) => {
     const { data: outdatedComponents } = useOutdatedComponents([component]);
 
     const hasOutdatedComponents = outdatedComponents.length > 0;
@@ -41,6 +47,7 @@ const ComponentIcon = withSuspenseWrapper(
 
     return <Icon name="BookAlert" className="text-orange-500" />;
   },
+  ComponentIconSkeleton,
 );
 
 const ComponentMarkup = ({
@@ -50,6 +57,9 @@ const ComponentMarkup = ({
 }: ComponentMarkupProps) => {
   const isHighlightTasksOnComponentHoverEnabled = useBetaFlagValue(
     "highlight-node-on-component-hover",
+  );
+  const isRemoteComponentLibrarySearchEnabled = useBetaFlagValue(
+    "remote-component-library-search",
   );
 
   // TODO: respect selected node as a starting point
@@ -158,11 +168,18 @@ const ComponentMarkup = ({
             data-component-name={displayName}
           >
             <div className="flex gap-2 w-full items-center">
-              <ComponentIcon
-                name={owned ? "FileBadge" : "File"}
-                className="flex-shrink-0 text-gray-400"
-                component={component}
-              />
+              {isRemoteComponentLibrarySearchEnabled ? (
+                <ComponentIcon
+                  name={owned ? "FileBadge" : "File"}
+                  className="flex-shrink-0 text-gray-400"
+                  component={component}
+                />
+              ) : (
+                <Icon
+                  name={owned ? "FileBadge" : "File"}
+                  className="flex-shrink-0 text-gray-400"
+                />
+              )}
 
               <div
                 className="flex flex-col w-[144px]"
