@@ -47,6 +47,80 @@ export const InputValueEditor = ({
   const isOptionalDisabled = isConnectedToRequired || disabled;
   const effectiveOptionalValue = isConnectedToRequired ? false : inputOptional;
 
+  const handleInputChange = useCallback(
+    (
+      oldName: string,
+      value: string,
+      newName: string,
+      optional: boolean,
+      type: string,
+    ) => {
+      if (!componentSpec.inputs) return;
+
+      const updatedInputs = componentSpec.inputs.map((componentInput) => {
+        if (componentInput.name === oldName) {
+          return {
+            ...componentInput,
+            value,
+            default: value,
+            name: newName,
+            optional,
+            type,
+          };
+        }
+        return componentInput;
+      });
+
+      const updatedComponentSpecValues = {
+        ...componentSpec,
+        inputs: updatedInputs,
+      };
+
+      const updatedComponentSpec = updateInputNameOnComponentSpec(
+        updatedComponentSpecValues,
+        oldName,
+        newName,
+      );
+
+      transferSelection(oldName, newName);
+
+      return updatedComponentSpec;
+    },
+    [componentSpec, transferSelection],
+  );
+
+  const handleValueChange = useCallback((value: string) => {
+    setInputValue(value);
+  }, []);
+
+  const handleOptionalChange = useCallback(
+    (checked: boolean) => {
+      if (isConnectedToRequired) {
+        return;
+      }
+      setInputOptional(checked);
+    },
+    [isConnectedToRequired],
+  );
+
+  const handleTypeChange = useCallback((value: string) => {
+    setInputType(value);
+  }, []);
+
+  const handleNameChange = useCallback(
+    (newName: string) => {
+      setInputName(newName);
+
+      if (checkNameCollision(newName, input.name, componentSpec, "inputs")) {
+        setValidationError("An input with this name already exists");
+        return;
+      }
+
+      setValidationError(null);
+    },
+    [input.name, componentSpec],
+  );
+
   const hasChanges = useCallback(() => {
     return (
       inputValue !== (input.value ?? "") ||
@@ -71,6 +145,8 @@ export const InputValueEditor = ({
       setComponentSpec(updatedComponentSpecWithValues);
     }
   }, [
+    handleInputChange,
+    setComponentSpec,
     hasChanges,
     validationError,
     input.name,
@@ -89,79 +165,12 @@ export const InputValueEditor = ({
     onClose?.();
   }, [saveChanges, onClose]);
 
-  const handleInputChange = (
-    oldName: string,
-    value: string,
-    newName: string,
-    optional: boolean,
-    type: string,
-  ) => {
-    if (!componentSpec.inputs) return;
-
-    const updatedInputs = componentSpec.inputs.map((componentInput) => {
-      if (componentInput.name === oldName) {
-        return {
-          ...componentInput,
-          value,
-          default: value,
-          name: newName,
-          optional,
-          type,
-        };
-      }
-      return componentInput;
-    });
-
-    const updatedComponentSpecValues = {
-      ...componentSpec,
-      inputs: updatedInputs,
-    };
-
-    const updatedComponentSpec = updateInputNameOnComponentSpec(
-      updatedComponentSpecValues,
-      oldName,
-      newName,
-    );
-
-    transferSelection(oldName, newName);
-
-    return updatedComponentSpec;
-  };
-
-  const handleValueChange = (value: string) => {
-    setInputValue(value);
-  };
-
-  const handleOptionalChange = (checked: boolean) => {
-    if (isConnectedToRequired) {
-      return;
-    }
-    setInputOptional(checked);
-  };
-
-  const handleTypeChange = (value: string) => {
-    setInputType(value);
-  };
-
-  const handleNameChange = (newName: string) => {
-    setInputName(newName);
-
-    if (checkNameCollision(newName, input.name, componentSpec, "inputs")) {
-      setValidationError("An input with this name already exists");
-      return;
-    }
-
-    setValidationError(null);
-  };
-
-  const placeholder = input.default || `Enter ${input.name}...`;
-
-  const handleCopyValue = () => {
+  const handleCopyValue = useCallback(() => {
     if (inputValue) {
       void navigator.clipboard.writeText(inputValue);
       notify("Input value copied to clipboard", "success");
     }
-  };
+  }, [inputValue]);
 
   useEffect(() => {
     setInputValue(input.value ?? "");
@@ -170,6 +179,8 @@ export const InputValueEditor = ({
     setInputOptional(input.optional ?? true);
     setValidationError(null);
   }, [input]);
+
+  const placeholder = input.default || `Enter ${input.name}...`;
 
   return (
     <div className="flex flex-col gap-3 p-4">
