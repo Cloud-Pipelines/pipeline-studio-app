@@ -194,6 +194,7 @@ export const InputValueEditor = ({
         onBlur={handleBlur}
         error={validationError}
         disabled={disabled}
+        autoFocus={!disabled}
       />
 
       <TextField
