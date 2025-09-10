@@ -56,14 +56,12 @@ SuspenseWrapper.displayName = "SuspenseWrapper";
  */
 export function withSuspenseWrapper<T extends ComponentType<any>>(
   Component: T,
-  Skeleton?: ComponentType<{}>,
+  Skeleton?: ComponentType<Partial<ComponentProps<T>>>,
   errorFallback?: (props: FallbackProps) => ReactNode,
 ) {
-  const SkeletonMarkup = Skeleton ? <Skeleton /> : undefined;
-
   const ComponentWithSuspense = (props: ComponentProps<T>) => (
     <SuspenseWrapper
-      fallback={SkeletonMarkup}
+      fallback={Skeleton ? <Skeleton {...props} /> : undefined}
       errorFallback={errorFallback ?? ErrorFallback}
     >
       <Component {...props} />
