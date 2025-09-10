@@ -16,6 +16,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { Spinner } from "@/components/ui/spinner";
+import { AutoSaveProvider } from "@/providers/AutoSaveProvider";
 import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
 import { ForcedSearchProvider } from "@/providers/ComponentLibraryProvider/ForcedSearchProvider";
 import {
@@ -62,39 +63,41 @@ const PipelineEditor = () => {
   }
 
   return (
-    <PipelineRunsProvider pipelineName={componentSpec.name || ""}>
-      <NodesOverlayProvider>
-        <ContextPanelProvider defaultContent={<PipelineDetails />}>
-          <ForcedSearchProvider>
-            <ComponentLibraryProvider>
-              <FlowSidebar />
-              <ResizablePanelGroup direction="horizontal">
-                <ResizablePanel>
-                  <div className="reactflow-wrapper relative">
-                    <FlowCanvas {...flowConfig}>
-                      <MiniMap position="bottom-left" pannable />
-                      <FlowControls
-                        className="ml-[224px]! mb-[24px]!"
-                        config={flowConfig}
-                        updateConfig={updateFlowConfig}
-                        showInteractive={false}
-                      />
-                      <Background gap={GRID_SIZE} className="bg-slate-50!" />
-                    </FlowCanvas>
+    <AutoSaveProvider>
+      <PipelineRunsProvider pipelineName={componentSpec.name || ""}>
+        <NodesOverlayProvider>
+          <ContextPanelProvider defaultContent={<PipelineDetails />}>
+            <ForcedSearchProvider>
+              <ComponentLibraryProvider>
+                <FlowSidebar />
+                <ResizablePanelGroup direction="horizontal">
+                  <ResizablePanel>
+                    <div className="reactflow-wrapper relative">
+                      <FlowCanvas {...flowConfig}>
+                        <MiniMap position="bottom-left" pannable />
+                        <FlowControls
+                          className="ml-[224px]! mb-[24px]!"
+                          config={flowConfig}
+                          updateConfig={updateFlowConfig}
+                          showInteractive={false}
+                        />
+                        <Background gap={GRID_SIZE} className="bg-slate-50!" />
+                      </FlowCanvas>
 
-                    <div className="absolute bottom-0 right-0 p-4">
-                      <UndoRedo />
+                      <div className="absolute bottom-0 right-0 p-4">
+                        <UndoRedo />
+                      </div>
                     </div>
-                  </div>
-                </ResizablePanel>
-                <ResizableHandle />
-                <CollapsibleContextPanel />
-              </ResizablePanelGroup>
-            </ComponentLibraryProvider>
-          </ForcedSearchProvider>
-        </ContextPanelProvider>
-      </NodesOverlayProvider>
-    </PipelineRunsProvider>
+                  </ResizablePanel>
+                  <ResizableHandle />
+                  <CollapsibleContextPanel />
+                </ResizablePanelGroup>
+              </ComponentLibraryProvider>
+            </ForcedSearchProvider>
+          </ContextPanelProvider>
+        </NodesOverlayProvider>
+      </PipelineRunsProvider>
+    </AutoSaveProvider>
   );
 };
 

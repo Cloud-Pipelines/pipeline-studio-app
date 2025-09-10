@@ -1,20 +1,8 @@
-import equal from "fast-deep-equal";
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 
-import { type AutoSaveStatus, useAutoSave } from "@/hooks/useAutoSave";
 import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
 import { loadPipelineByName } from "@/services/pipelineService";
-import {
-  AUTOSAVE_DEBOUNCE_TIME_MS,
-  USER_PIPELINES_LIST_NAME,
-} from "@/utils/constants";
+import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 
 import {
@@ -53,7 +41,6 @@ interface ComponentSpecContextType {
   taskStatusMap: Map<string, string>;
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
   undoRedo: UndoRedo;
-  autoSaveStatus: AutoSaveStatus;
 }
 
 const ComponentSpecContext = createRequiredContext<ComponentSpecContextType>(
@@ -78,9 +65,6 @@ export const ComponentSpecProvider = ({
   );
 
   const [isLoading, setIsLoading] = useState(!!spec);
-  const [isEmptySpec, setIsEmptySpec] = useState(
-    equal(componentSpec, EMPTY_GRAPH_COMPONENT_SPEC),
-  );
 
   const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
   const undoRedoRef = useRef(undoRedo);
@@ -160,34 +144,11 @@ export const ComponentSpecProvider = ({
     }));
   }, []);
 
-  const shouldAutoSave =
-    !isLoading &&
-    !readOnly &&
-    componentSpec &&
-    !!componentSpec.name &&
-    !isEmptySpec;
-
-  const autoSaveStatus = useAutoSave(
-    async (spec) => {
-      if (spec.name) {
-        saveComponentSpec(spec.name);
-      }
-    },
-    componentSpec,
-    AUTOSAVE_DEBOUNCE_TIME_MS,
-    shouldAutoSave,
-  );
-
-  useEffect(() => {
-    setIsEmptySpec(equal(componentSpec, EMPTY_GRAPH_COMPONENT_SPEC));
-  }, [componentSpec]);
-
   const value = useMemo(
     () => ({
       componentSpec,
       graphSpec,
       taskStatusMap,
-      autoSaveStatus,
       isLoading,
       refetch,
       setComponentSpec,
@@ -201,7 +162,6 @@ export const ComponentSpecProvider = ({
       componentSpec,
       graphSpec,
       taskStatusMap,
-      autoSaveStatus,
       isLoading,
       refetch,
       setComponentSpec,
