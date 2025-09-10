@@ -12,17 +12,19 @@ import { getIdOrTitleFromPath } from "@/utils/URL";
 export const useLoadComponentSpecFromPath = (backendUrl: string) => {
   const location = useLocation();
 
-  const pathname = useMemo(() => location.pathname, [location.pathname]);
-  const isRunPath = pathname.includes(RUNS_BASE_PATH);
   const { setComponentSpec, clearComponentSpec, componentSpec } =
     useComponentSpec();
+
+  const [isLoadingPipeline, setIsLoadingPipeline] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const pathname = useMemo(() => location.pathname, [location.pathname]);
+  const isRunPath = pathname.includes(RUNS_BASE_PATH);
 
   const { title, id } = useMemo(
     () => getIdOrTitleFromPath(pathname),
     [pathname],
   );
-  const [isLoadingPipeline, setIsLoadingPipeline] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadPipelineFromStorage = async () => {
