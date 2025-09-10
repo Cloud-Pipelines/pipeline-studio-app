@@ -1,6 +1,6 @@
 import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 
-import { useAutoSave } from "@/hooks/useAutoSave";
+import { type AutoSaveStatus, useAutoSave } from "@/hooks/useAutoSave";
 import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
 import { loadPipelineByName } from "@/services/pipelineService";
 import {
@@ -41,6 +41,7 @@ interface ComponentSpecContextType {
   taskStatusMap: Map<string, string>;
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
   undoRedo: UndoRedo;
+  autoSaveStatus: AutoSaveStatus;
 }
 
 const ComponentSpecContext = createRequiredContext<ComponentSpecContextType>(
@@ -161,7 +162,7 @@ export const ComponentSpecProvider = ({
   const shouldAutoSave =
     !isLoading && !readOnly && componentSpec && !!componentSpec.name;
 
-  useAutoSave(
+  const autoSaveStatus = useAutoSave(
     async (spec) => {
       if (isInitialLoad) {
         setIsInitialLoad(false);
@@ -183,6 +184,7 @@ export const ComponentSpecProvider = ({
       componentSpec,
       graphSpec,
       taskStatusMap,
+      autoSaveStatus,
       isLoading,
       refetch,
       setComponentSpec,
@@ -196,6 +198,7 @@ export const ComponentSpecProvider = ({
       componentSpec,
       graphSpec,
       taskStatusMap,
+      autoSaveStatus,
       isLoading,
       refetch,
       setComponentSpec,
