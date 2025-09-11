@@ -4,6 +4,7 @@ import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
 import { loadPipelineByName } from "@/services/pipelineService";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
+import { checkComponentSpecValidity } from "@/utils/validations";
 
 import {
   createRequiredContext,
@@ -35,6 +36,8 @@ interface ComponentSpecContextType {
   clearComponentSpec: () => void;
   graphSpec: GraphSpec;
   isLoading: boolean;
+  isValid: boolean;
+  errors: string[];
   refetch: () => void;
   updateGraphSpec: (newGraphSpec: GraphSpec) => void;
   saveComponentSpec: (name: string) => Promise<void>;
@@ -69,6 +72,11 @@ export const ComponentSpecProvider = ({
   const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
   const undoRedoRef = useRef(undoRedo);
   undoRedoRef.current = undoRedo;
+
+  const { isValid, errors } = useMemo(
+    () => checkComponentSpecValidity(componentSpec),
+    [componentSpec],
+  );
 
   const clearComponentSpec = useCallback(() => {
     setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
@@ -150,6 +158,8 @@ export const ComponentSpecProvider = ({
       graphSpec,
       taskStatusMap,
       isLoading,
+      isValid,
+      errors,
       refetch,
       setComponentSpec,
       clearComponentSpec,
@@ -163,6 +173,8 @@ export const ComponentSpecProvider = ({
       graphSpec,
       taskStatusMap,
       isLoading,
+      isValid,
+      errors,
       refetch,
       setComponentSpec,
       clearComponentSpec,
