@@ -157,7 +157,7 @@ export const InputValueEditor = ({
         actions={[
           {
             icon: "Copy",
-            hidden: !inputValue,
+            hidden: !disabled && !inputValue,
             onClick: handleCopyValue,
           },
         ]}
