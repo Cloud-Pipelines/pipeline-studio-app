@@ -20,7 +20,7 @@ import type { ComponentSpec } from "@/utils/componentSpec";
 const PipelineRun = () => {
   const { setComponentSpec, clearComponentSpec, componentSpec } =
     useComponentSpec();
-  const { backendUrl, configured, available } = useBackend();
+  const { backendUrl, configured, available, ready } = useBackend();
   const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
 
   const { data, isLoading, error, refetch } = useFetchExecutionInfo(
@@ -54,7 +54,7 @@ const PipelineRun = () => {
     refetch();
   }, [backendUrl, refetch]);
 
-  if (isLoading) {
+  if (isLoading || !ready) {
     return (
       <div className="flex items-center justify-center h-full w-full gap-2">
         <Spinner /> Loading Pipeline Run...
@@ -72,10 +72,22 @@ const PipelineRun = () => {
     );
   }
 
+  if (!available) {
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <InfoBox title="Backend not available" variant="error">
+          The configured backend is not available.
+        </InfoBox>
+      </div>
+    );
+  }
+
   if (!componentSpec) {
     return (
       <div className="flex items-center justify-center h-full w-full">
-        No pipeline data available
+        <InfoBox title="Error loading pipeline run" variant="error">
+          No pipeline data available.
+        </InfoBox>
       </div>
     );
   }

@@ -38,6 +38,7 @@ describe("<CancelPipelineRunButton/>", () => {
     vi.mocked(useBackend).mockReturnValue({
       configured: true,
       available: true,
+      ready: true,
       backendUrl: "http://localhost:8000",
       isConfiguredFromEnv: false,
       isConfiguredFromRelativePath: false,
