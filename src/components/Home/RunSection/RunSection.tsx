@@ -7,7 +7,9 @@ import type { ListPipelineJobsResponse } from "@/api/types.gen";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InlineStack } from "@/components/ui/layout";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -54,6 +56,8 @@ export const RunSection = () => {
 
   const filterDict = parseFilter(search.filter);
   const createdByValue = filterDict.created_by;
+
+  const [searchUser, setSearchUser] = useState(createdByValue ?? "");
 
   // Determine if toggle should be on and what text to show
   const useCreatedByMe = createdByValue !== undefined;
@@ -109,6 +113,7 @@ export const RunSection = () => {
       // If there's already a created_by filter, keep it; otherwise use "created_by:me"
       if (!filterDict.created_by) {
         nextSearch.filter = CREATED_BY_ME_FILTER;
+        setSearchUser("");
       }
     } else {
       // Remove created_by from filter, but keep other filters
@@ -130,6 +135,27 @@ export const RunSection = () => {
         }
       }
     }
+
+    setPreviousPageTokens([]);
+    navigate({ to: pathname, search: nextSearch });
+  };
+
+  const handleUserSearch = () => {
+    if (!searchUser.trim()) return;
+
+    const nextSearch: RunSectionSearch = { ...search };
+    delete nextSearch.page_token;
+
+    // Create or update the created_by filter
+    const updatedFilterDict = { ...filterDict };
+    updatedFilterDict.created_by = searchUser.trim();
+
+    // Convert back to string format
+    const newFilter = Object.entries(updatedFilterDict)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(",");
+
+    nextSearch.filter = newFilter;
 
     setPreviousPageTokens([]);
     navigate({ to: pathname, search: nextSearch });
@@ -203,32 +229,51 @@ export const RunSection = () => {
     return <div>Failed to load runs.</div>;
   }
 
-  if (!data?.pipeline_runs || data?.pipeline_runs?.length === 0) {
-    return (
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="created-by-me"
-            checked={useCreatedByMe}
-            onCheckedChange={handleFilterChange}
-          />
-          <Label htmlFor="created-by-me">{toggleText}</Label>
-        </div>
-        <div>No runs found. Run a pipeline to see it here.</div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="flex items-center space-x-2">
+  const searchMarkup = (
+    <InlineStack gap="4" blockAlign="center">
+      <InlineStack gap="2" blockAlign="center">
         <Switch
           id="created-by-me"
           checked={useCreatedByMe}
           onCheckedChange={handleFilterChange}
         />
         <Label htmlFor="created-by-me">{toggleText}</Label>
+      </InlineStack>
+      <InlineStack gap="1" blockAlign="center" wrap="nowrap">
+        <Input
+          placeholder="Search by user"
+          value={searchUser}
+          onChange={(e) => setSearchUser(e.target.value)}
+        />
+        <Button
+          variant="outline"
+          onClick={handleUserSearch}
+          disabled={!searchUser.trim()}
+        >
+          Search
+        </Button>
+      </InlineStack>
+    </InlineStack>
+  );
+
+  if (!data?.pipeline_runs || data?.pipeline_runs?.length === 0) {
+    return (
+      <div className="flex flex-col gap-2">
+        {searchMarkup}
+        {createdByValue ? (
+          <div>
+            No runs found for user: <strong>{createdByValue}</strong>.
+          </div>
+        ) : (
+          <div>No runs found. Run a pipeline to see it here.</div>
+        )}
       </div>
+    );
+  }
+
+  return (
+    <div>
+      {searchMarkup}
       <Table>
         <TableHeader>
           <TableRow className="text-xs">
