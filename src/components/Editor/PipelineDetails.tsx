@@ -4,6 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getOutputConnectedDetails } from "@/components/shared/ReactFlow/FlowCanvas/utils/getOutputConnectedDetails";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Icon } from "@/components/ui/icon";
 import { InlineStack } from "@/components/ui/layout";
 import useToastNotification from "@/hooks/useToastNotification";
@@ -30,6 +35,8 @@ const PipelineDetails = () => {
   const { componentSpec, graphSpec } = useComponentSpec();
 
   const notify = useToastNotification();
+
+  const [isYamlOpen, setIsYamlOpen] = useState(false);
 
   // Utility function to convert TypeSpecType to string
   const typeSpecToString = (typeSpec?: TypeSpecType): string => {
@@ -321,17 +328,28 @@ const PipelineDetails = () => {
       </div>
 
       {/* Pipeline YAML */}
-      <div className="flex flex-col h-full">
-        <div className="font-medium text-md flex items-center gap-1 cursor-pointer">
-          Pipeline YAML
-        </div>
-        <div className="mt-1 h-full min-h-0 flex-1">
+      <Collapsible
+        open={isYamlOpen}
+        onOpenChange={setIsYamlOpen}
+        className="h-full"
+      >
+        <CollapsibleTrigger asChild>
+          <InlineStack
+            gap="1"
+            blockAlign="center"
+            className="font-medium text-md cursor-pointer"
+          >
+            <Icon name={isYamlOpen ? "ChevronDown" : "ChevronRight"} />
+            Pipeline YAML
+          </InlineStack>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-1 h-9/10 flex-1 min-h-0">
           <TaskImplementation
             displayName={componentSpec.name ?? "Pipeline"}
             componentSpec={componentSpec}
           />
-        </div>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };
