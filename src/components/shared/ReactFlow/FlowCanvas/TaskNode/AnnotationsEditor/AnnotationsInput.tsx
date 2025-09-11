@@ -5,6 +5,7 @@ import { MultilineTextInputDialog } from "@/components/shared/Dialogs/MultilineT
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
+import { InlineStack } from "@/components/ui/layout";
 import {
   Select,
   SelectContent,
@@ -13,8 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Paragraph } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import type { AnnotationConfig, Annotations } from "@/types/annotations";
+import { clamp } from "@/utils/math";
 
 interface AnnotationsInputProps {
   value: string;
@@ -84,6 +87,10 @@ export const AnnotationsInput = ({
 
   const handleBlur = useCallback(() => {
     if (onBlur && lastSavedValue !== value) {
+      if (config?.type === "number" && !isNaN(Number(value)) && value !== "") {
+        value = clamp(Number(value), config.min, config.max).toString();
+      }
+
       onBlur(value);
       setLastSavedValue(value);
     }
@@ -230,14 +237,24 @@ export const AnnotationsInput = ({
     );
   } else if (inputType === "number") {
     inputElement = (
-      <Input
-        type="number"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={handleBlur}
-        autoFocus={autoFocus}
-        className={className}
-      />
+      <InlineStack gap="2" blockAlign="center" wrap="nowrap" className="grow">
+        <Input
+          type="number"
+          value={value}
+          min={config?.min}
+          max={config?.max}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={handleBlur}
+          autoFocus={autoFocus}
+          className={className}
+        />
+
+        {config?.max !== undefined && (
+          <Paragraph size="xs" tone="subdued" className="whitespace-nowrap">
+            (max: {config.max})
+          </Paragraph>
+        )}
+      </InlineStack>
     );
   } else {
     inputElement = (
@@ -278,12 +295,14 @@ export const AnnotationsInput = ({
 
   return (
     <>
-      <div className="flex items-center gap-2 grow flex-wrap">
+      <InlineStack gap="2" blockAlign="center" className="grow flex-wrap">
         {inputElement}
         {config?.enableQuantity && (
           <QuantityInput
             annotation={config.annotation}
             annotations={annotations}
+            min={config.min}
+            max={config.max}
             disabled={!getAnnotationKey(config.annotation, annotations)}
             onChange={onChange}
             onBlur={onBlur}
@@ -295,7 +314,7 @@ export const AnnotationsInput = ({
             <Icon name="Trash" className="text-destructive" />
           </Button>
         )}
-      </div>
+      </InlineStack>
 
       {inputType === "string" && !config?.options && (
         <MultilineTextInputDialog
@@ -315,6 +334,8 @@ export const AnnotationsInput = ({
 const QuantityInput = ({
   annotation,
   annotations,
+  min,
+  max,
   disabled,
   onChange,
   onBlur,
@@ -322,6 +343,8 @@ const QuantityInput = ({
 }: {
   annotation: string;
   annotations: Annotations;
+  min?: number;
+  max?: number;
   disabled: boolean;
   onChange: (value: string) => void;
   onBlur?: (value: string) => void;
@@ -349,30 +372,56 @@ const QuantityInput = ({
     if (!selectedKey) return;
 
     const quantity = getAnnotationValue(annotation, annotations);
-    const newObj = { [selectedKey]: quantity };
-    const newValue = JSON.stringify(newObj);
 
     if (onBlur && quantity !== lastSavedQuantity && shouldSave()) {
+      let limitedQuantity = Number(quantity);
+      if (!isNaN(limitedQuantity) && quantity !== "") {
+        limitedQuantity = clamp(limitedQuantity, min, max);
+      }
+
+      const newObj = { [selectedKey]: limitedQuantity };
+      const newValue = JSON.stringify(newObj);
+
       onBlur(newValue);
-      setLastSavedQuantity(quantity);
+      setLastSavedQuantity(limitedQuantity);
     }
-  }, [annotation, annotations, onBlur, lastSavedQuantity, shouldSave]);
+  }, [
+    annotation,
+    annotations,
+    min,
+    max,
+    onBlur,
+    lastSavedQuantity,
+    shouldSave,
+  ]);
 
   return (
-    <div className="flex items-center gap-2 max-w-1/3">
+    <InlineStack
+      gap="2"
+      blockAlign="center"
+      wrap="nowrap"
+      className="max-w-1/3"
+    >
       <span>x</span>
       <Input
         type="number"
         value={getAnnotationValue(annotation, annotations)}
+        min={min}
+        max={max}
         onChange={handleValueInputChange}
         onBlur={handleValueBlur}
         className={cn(
-          "min-w-8 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+          "min-w-12 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
           !currentQuantity && !disabled && "border-destructive/50",
         )}
         disabled={disabled}
       />
-    </div>
+      {max !== undefined && (
+        <Paragraph size="xs" tone="subdued" className="whitespace-nowrap">
+          (max: {max})
+        </Paragraph>
+      )}
+    </InlineStack>
   );
 };
 

@@ -13,4 +13,6 @@ export type AnnotationConfig = {
   options?: AnnotationOption[];
   enableQuantity?: boolean;
   type?: "string" | "number" | "boolean";
+  min?: number;
+  max?: number;
 };
