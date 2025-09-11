@@ -13,6 +13,7 @@ import { usePipelineRuns } from "@/providers/PipelineRunsProvider";
 import { APP_ROUTES } from "@/routes/router";
 import type { PipelineRun } from "@/types/pipelineRun";
 import type { ComponentSpec } from "@/utils/componentSpec";
+import { checkComponentSpecValidity } from "@/utils/validations";
 
 interface OasisSubmitterProps {
   componentSpec?: ComponentSpec;
@@ -105,6 +106,13 @@ const OasisSubmitter = ({
   const handleSubmit = useCallback(async () => {
     if (!componentSpec) {
       handleError("No pipeline to submit");
+      return;
+    }
+
+    const { isValid, errors } = checkComponentSpecValidity(componentSpec);
+
+    if (!isValid) {
+      handleError(`Pipeline validation failed: ${errors[0]}`);
       return;
     }
 
