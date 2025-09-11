@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Icon } from "@/components/ui/icon";
 import { InlineStack } from "@/components/ui/layout";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
@@ -23,6 +24,7 @@ import { getComponentFileFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { deselectAllNodes } from "@/utils/flowUtils";
 
+import { InfoBox } from "../shared/InfoBox";
 import { TaskImplementation } from "../shared/TaskDetails";
 import { InputValueEditor } from "./InputValueEditor/InputValueEditor";
 import { OutputNameEditor } from "./OutputNameEditor";
@@ -32,7 +34,7 @@ const PipelineDetails = () => {
   const { setNodes } = useReactFlow();
 
   const { setContent, clearContent } = useContextPanel();
-  const { componentSpec, graphSpec } = useComponentSpec();
+  const { componentSpec, graphSpec, isValid, errors } = useComponentSpec();
 
   const notify = useToastNotification();
 
@@ -325,6 +327,39 @@ const PipelineDetails = () => {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Validations */}
+      <div>
+        <h3 className="text-md font-medium mb-1">Validations</h3>
+        {isValid ? (
+          <InfoBox variant="success" title="No validation errors found">
+            Pipeline is ready for submission
+          </InfoBox>
+        ) : (
+          <InfoBox
+            variant="error"
+            title={`${errors.length} validation error${errors.length > 1 ? "s" : ""} found:`}
+          >
+            <ScrollArea className="max-h-80 overflow-y-auto">
+              <ul className="text-xs space-y-1">
+                {errors.map((error) => (
+                  <li key={error}>
+                    <InlineStack
+                      gap="2"
+                      blockAlign="start"
+                      align="start"
+                      wrap="nowrap"
+                    >
+                      <span className="text-destructive flex-shrink-0">•</span>
+                      <span className="break-words">{error}</span>
+                    </InlineStack>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          </InfoBox>
+        )}
       </div>
 
       {/* Pipeline YAML */}

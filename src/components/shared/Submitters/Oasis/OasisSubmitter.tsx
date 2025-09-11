@@ -109,10 +109,12 @@ const OasisSubmitter = ({
       return;
     }
 
-    const { isValid, errors } = checkComponentSpecValidity(componentSpec);
+    const { isValid } = checkComponentSpecValidity(componentSpec);
 
     if (!isValid) {
-      handleError(`Pipeline validation failed: ${errors[0]}`);
+      handleError(
+        `Pipeline validation failed. Refer to details panel for more info.`,
+      );
       return;
     }
 
