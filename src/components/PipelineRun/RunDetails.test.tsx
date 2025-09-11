@@ -174,6 +174,7 @@ describe("<RunDetails/>", () => {
         error: null,
         isFetching: false,
         refetch: () => {},
+        enabled: true,
       });
 
       // act
@@ -197,6 +198,7 @@ describe("<RunDetails/>", () => {
         error: null,
         isFetching: false,
         refetch: () => {},
+        enabled: true,
       });
 
       // act
@@ -220,6 +222,7 @@ describe("<RunDetails/>", () => {
         error: null,
         isFetching: false,
         refetch: () => {},
+        enabled: true,
       });
 
       // act
@@ -241,6 +244,7 @@ describe("<RunDetails/>", () => {
         error: null,
         isFetching: false,
         refetch: () => {},
+        enabled: true,
       });
 
       // act
@@ -264,6 +268,7 @@ describe("<RunDetails/>", () => {
         error: null,
         isFetching: false,
         refetch: () => {},
+        enabled: true,
       });
 
       // act
@@ -285,6 +290,7 @@ describe("<RunDetails/>", () => {
         error: null,
         isFetching: false,
         refetch: () => {},
+        enabled: true,
       });
 
       // act
