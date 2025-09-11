@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { GetArtifactsApiExecutionsIdArtifactsGetResponse } from "@/api/types.gen";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { useBackend } from "@/providers/BackendProvider";
+import { getExecutionArtifacts } from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { TaskSpec } from "@/utils/componentSpec";
 import { formatBytes } from "@/utils/string";
@@ -18,18 +18,6 @@ interface IoProps {
   readOnly?: boolean;
 }
 
-const getArtifacts = async (executionId: string, backendUrl: string) => {
-  if (!executionId) return null;
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/artifacts`,
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch artifacts: ${response.statusText}`);
-  }
-  return response.json() as Promise<GetArtifactsApiExecutionsIdArtifactsGetResponse>;
-};
-
 const Io = ({ taskSpec, executionId, readOnly }: IoProps) => {
   const { backendUrl, configured, available } = useBackend();
 
@@ -40,7 +28,7 @@ const Io = ({ taskSpec, executionId, readOnly }: IoProps) => {
     error,
   } = useQuery({
     queryKey: ["artifacts", executionId],
-    queryFn: () => getArtifacts(String(executionId), backendUrl),
+    queryFn: () => getExecutionArtifacts(String(executionId), backendUrl),
     enabled: !!executionId,
   });
 

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 import type {
+  GetArtifactsApiExecutionsIdArtifactsGetResponse,
   GetContainerExecutionStateResponse,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
@@ -247,4 +248,19 @@ export const countTaskStatuses = (
 
   const total = succeeded + failed + running + waiting + skipped + cancelled;
   return { total, succeeded, failed, running, waiting, skipped, cancelled };
+};
+
+export const getExecutionArtifacts = async (
+  executionId: string,
+  backendUrl: string,
+) => {
+  if (!executionId) return null;
+  const response = await fetch(
+    `${backendUrl}/api/executions/${executionId}/artifacts`,
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch artifacts: ${response.statusText}`);
+  }
+  return response.json() as Promise<GetArtifactsApiExecutionsIdArtifactsGetResponse>;
 };
