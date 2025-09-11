@@ -26,6 +26,7 @@ import {
 type BackendContextType = {
   configured: boolean;
   available: boolean;
+  ready: boolean;
   backendUrl: string;
   isConfiguredFromEnv: boolean;
   isConfiguredFromRelativePath: boolean;
@@ -51,6 +52,8 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
   const [useEnv, setUseEnv] = useState(true);
   const [useRelativePath, setUseRelativePath] = useState(false);
   const [available, setAvailable] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [ready, setReady] = useState(false);
 
   let backendUrl = "";
   if (useEnv && backendUrlFromEnv) {
@@ -110,6 +113,9 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
             else notify(`Backend unavailable: ${res.statusText}`, "error");
           }
           if (saveAvailability) setAvailable(res.ok);
+
+          setReady(true);
+
           return res.ok;
         })
         .catch(() => {
@@ -122,8 +128,10 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
   );
 
   useEffect(() => {
-    ping({ notifyResult: false });
-  }, [backendUrl]);
+    if (settingsLoaded) {
+      ping({ notifyResult: false });
+    }
+  }, [backendUrl, settingsLoaded]);
 
   useEffect(() => {
     const getSettings = async () => {
@@ -135,6 +143,8 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
 
       setUseEnv(envFlag === true);
       setUseRelativePath(relativeFlag === true && !backendUrlFromEnv);
+
+      setSettingsLoaded(true);
     };
     getSettings();
   }, []);
@@ -143,6 +153,7 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       configured,
       available,
+      ready,
       backendUrl,
       isConfiguredFromEnv: useEnv && !!backendUrlFromEnv,
       isConfiguredFromRelativePath: useRelativePath,
@@ -154,6 +165,7 @@ export const BackendProvider = ({ children }: { children: ReactNode }) => {
     [
       configured,
       available,
+      ready,
       backendUrl,
       useEnv,
       useRelativePath,

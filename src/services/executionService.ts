@@ -8,48 +8,30 @@ import type {
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
 import type { TaskStatusCounts } from "@/types/pipelineRun";
+import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
 export const fetchExecutionState = async (
   executionId: string,
   backendUrl: string,
 ) => {
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/state`,
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch execution state: ${response.statusText}`);
-  }
-  return response.json();
+  const url = `${backendUrl}/api/executions/${executionId}/state`;
+  return fetchWithErrorHandling(url);
 };
 
 export const fetchExecutionDetails = async (
   executionId: string,
   backendUrl: string,
 ): Promise<GetExecutionInfoResponse> => {
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/details`,
-  );
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch execution details: ${response.statusText}`,
-    );
-  }
-  return response.json();
+  const url = `${backendUrl}/api/executions/${executionId}/details`;
+  return fetchWithErrorHandling(url);
 };
 
 const fetchContainerExecutionState = async (
   executionId: string,
   backendUrl: string,
 ): Promise<GetContainerExecutionStateResponse> => {
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/container_state`,
-  );
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch container execution state: ${response.statusText}`,
-    );
-  }
-  return response.json();
+  const url = `${backendUrl}/api/executions/${executionId}/container_state`;
+  return fetchWithErrorHandling(url);
 };
 
 export const useFetchContainerExecutionState = (
@@ -113,26 +95,14 @@ export const fetchExecutionStatus = async (
   backendUrl: string,
 ) => {
   try {
-    const response = await fetch(
-      `${backendUrl}/api/executions/${executionId}/details`,
+    const details: GetExecutionInfoResponse = await fetchExecutionDetails(
+      executionId,
+      backendUrl,
     );
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch execution details: ${response.statusText}`,
-      );
-    }
-    const details: GetExecutionInfoResponse = await response.json();
-
-    const stateResponse = await fetch(
-      `${backendUrl}/api/executions/${executionId}/state`,
+    const stateData: GetGraphExecutionStateResponse = await fetchExecutionState(
+      executionId,
+      backendUrl,
     );
-    if (!stateResponse.ok) {
-      throw new Error(
-        `Failed to fetch execution state: ${stateResponse.statusText}`,
-      );
-    }
-    const stateData: GetGraphExecutionStateResponse =
-      await stateResponse.json();
 
     const taskStatuses = countTaskStatuses(details, stateData);
     const runStatus = getRunStatus(taskStatuses);
@@ -143,6 +113,7 @@ export const fetchExecutionStatus = async (
       `Error fetching task statuses for run ${executionId}:`,
       error,
     );
+    throw error;
   }
 };
 
