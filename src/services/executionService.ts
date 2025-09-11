@@ -5,6 +5,7 @@ import type {
   GetContainerExecutionStateResponse,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
+  PipelineRunResponse,
 } from "@/api/types.gen";
 import type { TaskStatusCounts } from "@/types/pipelineRun";
 
@@ -36,6 +37,17 @@ export const fetchExecutionDetails = async (
   return response.json();
 };
 
+export const fetchPipelineRun = async (
+  runId: string,
+  backendUrl: string,
+): Promise<PipelineRunResponse> => {
+  const response = await fetch(`${backendUrl}/api/pipeline_runs/${runId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch pipeline run: ${response.statusText}`);
+  }
+  return response.json();
+};
+
 const fetchContainerExecutionState = async (
   executionId: string,
   backendUrl: string,
@@ -59,6 +71,18 @@ export const useFetchContainerExecutionState = (
     queryKey: ["container-execution-state", executionId],
     queryFn: () => fetchContainerExecutionState(executionId!, backendUrl),
     enabled: !!executionId,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useFetchPipelineRun = (
+  runId: string | undefined,
+  backendUrl: string,
+) => {
+  return useQuery<PipelineRunResponse>({
+    queryKey: ["pipeline-run", runId],
+    queryFn: () => fetchPipelineRun(runId!, backendUrl),
+    enabled: !!runId,
     refetchOnWindowFocus: false,
   });
 };
