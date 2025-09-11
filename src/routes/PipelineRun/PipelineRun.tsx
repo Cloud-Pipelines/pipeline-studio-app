@@ -1,6 +1,6 @@
 import { DndContext } from "@dnd-kit/core";
 import { ReactFlowProvider } from "@xyflow/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import type {
   GetExecutionInfoResponse,
@@ -13,7 +13,10 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
-import { useFetchExecutionInfo } from "@/services/executionService";
+import {
+  useFetchExecutionInfo,
+  useFetchPipelineRun,
+} from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
@@ -21,13 +24,45 @@ const PipelineRun = () => {
   const { setComponentSpec, clearComponentSpec, componentSpec } =
     useComponentSpec();
   const { backendUrl, configured, available } = useBackend();
-  const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
+  const { id } = runDetailRoute.useParams() as RunDetailParams;
+  const [rootExecutionId, setRootExecutionId] = useState<string>(id);
+  const [triedAsRunId, setTriedAsRunId] = useState<boolean>(false);
 
-  const { data, isLoading, error, refetch } = useFetchExecutionInfo(
-    rootExecutionId,
-    backendUrl,
-    false,
-  );
+  // First try to fetch as root_execution_id
+  const {
+    data: executionData,
+    isLoading: isExecutionLoading,
+    error: executionError,
+    refetch: refetchExecution,
+  } = useFetchExecutionInfo(rootExecutionId, backendUrl, false);
+
+  // If fetching as root_execution_id fails, try as run_id
+  const shouldFetchAsRunId = executionError && !triedAsRunId;
+  const {
+    data: pipelineRunData,
+    isLoading: isPipelineRunLoading,
+    error: pipelineRunError,
+  } = useFetchPipelineRun(shouldFetchAsRunId ? id : undefined, backendUrl);
+
+  // Update rootExecutionId when we get pipeline run data
+  useEffect(() => {
+    if (
+      pipelineRunData?.root_execution_id &&
+      pipelineRunData.root_execution_id !== rootExecutionId
+    ) {
+      setRootExecutionId(pipelineRunData.root_execution_id);
+      setTriedAsRunId(true);
+    }
+  }, [pipelineRunData, rootExecutionId]);
+
+  // Determine which data and loading state to use
+  const isLoading =
+    isExecutionLoading || (shouldFetchAsRunId && isPipelineRunLoading);
+  const error = triedAsRunId
+    ? executionError
+    : executionError && pipelineRunError;
+  const data = executionData;
+  const refetch = refetchExecution;
 
   const { details, state } = data;
 
