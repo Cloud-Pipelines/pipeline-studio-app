@@ -22,6 +22,7 @@ import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useCopyPaste } from "@/hooks/useCopyPaste";
 import { useGhostNode } from "@/hooks/useGhostNode";
 import { useHintNode } from "@/hooks/useHintNode";
+import { useIOSelectionPersistence } from "@/hooks/useIOSelectionPersistence";
 import { useNodeCallbacks } from "@/hooks/useNodeCallbacks";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
@@ -104,6 +105,9 @@ const FlowCanvas = ({
     useNodesOverlay();
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
+  const { preserveIOSelectionOnSpecChange, resetPrevSpec } =
+    useIOSelectionPersistence();
+
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 
@@ -710,22 +714,34 @@ const FlowCanvas = ({
       }));
 
       setNodes((prevNodes) => {
-        const updatedNodes = updatedNewNodes.map((newNode) => {
-          const existingNode = prevNodes.find((node) => node.id === newNode.id);
-          return existingNode ? { ...existingNode, ...newNode } : newNode;
+        // For non-IO nodes, preserve existing selection if node ID matches
+        const finalNodes = updatedNewNodes.map((newNode) => {
+          if (newNode.type !== "input" && newNode.type !== "output") {
+            const existingNode = prevNodes.find(
+              (node) => node.id === newNode.id,
+            );
+            return existingNode ? { ...existingNode, ...newNode } : newNode;
+          }
+
+          return newNode;
         });
 
-        return updatedNodes;
+        return finalNodes;
       });
     },
     [setNodes, nodeData, replaceTarget],
   );
 
   useEffect(() => {
-    // Update ReactFlow based on the component spec
+    preserveIOSelectionOnSpecChange(componentSpec);
     updateReactFlow(componentSpec);
     initialCanvasLoaded.current = true;
-  }, [componentSpec, replaceTarget]);
+  }, [componentSpec, preserveIOSelectionOnSpecChange]);
+
+  // Reset when loading a new component file
+  useEffect(() => {
+    resetPrevSpec();
+  }, [componentSpec?.name, resetPrevSpec]);
 
   const fitView = useCallback(() => {
     if (reactFlowInstance) {
