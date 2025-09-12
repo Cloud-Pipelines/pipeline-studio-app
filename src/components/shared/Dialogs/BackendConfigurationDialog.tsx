@@ -1,5 +1,11 @@
 import { AlertCircle, DatabaseZap, RefreshCcw } from "lucide-react";
-import { type ChangeEvent, useCallback, useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -104,6 +110,12 @@ const BackendConfigurationDialog = ({
     setInputBackendTestResult(null);
     setOpen(false);
   }, [isConfiguredFromEnv, isConfiguredFromRelativePath, setOpen]);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+      e.stopPropagation();
+    }
+  }, []);
 
   useEffect(() => {
     setIsEnvConfig(isConfiguredFromEnv);
@@ -230,6 +242,7 @@ const BackendConfigurationDialog = ({
                     value={inputBackendUrl}
                     placeholder="http://localhost:8000"
                     onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
                     className={inputBackendTestResult !== null ? "pr-10" : ""}
                   />
                   {inputBackendTestResult !== null && (

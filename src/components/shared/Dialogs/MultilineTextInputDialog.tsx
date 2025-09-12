@@ -1,4 +1,10 @@
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import {
+  type KeyboardEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +61,12 @@ export const MultilineTextInputDialog = ({
     [open],
   );
 
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+      e.stopPropagation();
+    }
+  }, []);
+
   return (
     <Dialog open={open} onOpenChange={onCancel}>
       <DialogContent>
@@ -66,6 +78,7 @@ export const MultilineTextInputDialog = ({
           ref={setCursorToEnd}
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className="min-h-32"
         />
