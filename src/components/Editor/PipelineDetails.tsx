@@ -1,6 +1,5 @@
-import { useReactFlow } from "@xyflow/react";
 import { Frown, Network } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +20,6 @@ import {
 } from "@/utils/componentSpec";
 import { getComponentFileFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
-import { deselectAllNodes } from "@/utils/flowUtils";
 
 import { InfoBox } from "../shared/InfoBox";
 import { TaskImplementation } from "../shared/TaskDetails";
@@ -31,9 +29,7 @@ import RenamePipeline from "./RenamePipeline";
 import { getOutputConnectedDetails } from "./utils/getOutputConnectedDetails";
 
 const PipelineDetails = () => {
-  const { setNodes } = useReactFlow();
-
-  const { setContent, clearContent } = useContextPanel();
+  const { setContent } = useContextPanel();
   const { componentSpec, graphSpec, isValid, errors } = useComponentSpec();
 
   const notify = useToastNotification();
@@ -51,10 +47,6 @@ const PipelineDetails = () => {
     return JSON.stringify(typeSpec);
   };
 
-  const handleCancel = () => {
-    deselectNode();
-  };
-
   // State for file metadata
   const [fileMeta, setFileMeta] = useState<{
     creationTime?: Date;
@@ -62,11 +54,6 @@ const PipelineDetails = () => {
     createdBy?: string;
     digest?: string;
   }>({});
-
-  const deselectNode = useCallback(() => {
-    setNodes(deselectAllNodes);
-    clearContent();
-  }, [setNodes]);
 
   // Fetch file metadata on mount or when componentSpec.name changes
   useEffect(() => {
@@ -91,13 +78,7 @@ const PipelineDetails = () => {
   }, [componentSpec?.name]);
 
   const handleInputEdit = (input: InputSpec) => {
-    setContent(
-      <InputValueEditor
-        key={input.name}
-        input={input}
-        onClose={handleCancel}
-      />,
-    );
+    setContent(<InputValueEditor key={input.name} input={input} />);
   };
 
   const handleOutputEdit = (output: OutputSpec) => {
@@ -110,7 +91,6 @@ const PipelineDetails = () => {
         connectedDetails={outputConnectedDetails}
         key={output.name}
         output={output}
-        onClose={handleCancel}
       />,
     );
   };
