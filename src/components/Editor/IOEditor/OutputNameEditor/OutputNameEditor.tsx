@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { Heading, Paragraph } from "@/components/ui/typography";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type OutputSpec } from "@/utils/componentSpec";
@@ -13,10 +15,8 @@ import { checkNameCollision } from "../InputValueEditor/FormFields/utils";
 
 interface OutputNameEditorProps {
   output: OutputSpec;
-  onNameChange?: (oldName: string, newName: string) => void;
-  onTypeChange?: (name: string, newType: string) => void;
-  connectedDetails: OutputConnectedDetails;
   disabled?: boolean;
+  connectedDetails: OutputConnectedDetails;
   onClose?: () => void;
 }
 
@@ -101,14 +101,16 @@ export const OutputNameEditor = ({
   }, [output.name]);
 
   return (
-    <div className="flex flex-col gap-3 p-4">
-      <div className="flex flex-col gap-3">
-        <h3 className="text-lg font-bold">{output.name}</h3>
-        {output.description && (
-          <p className="text-sm text-gray-500">{output.description}</p>
+    <BlockStack gap="3" className="p-4 w-full">
+      <BlockStack gap="3">
+        <Heading level={1}>{output.name}</Heading>
+        {!!output.description && (
+          <Paragraph size="sm" tone="subdued">
+            {output.description}
+          </Paragraph>
         )}
-      </div>
-      <div className="flex gap-4">
+      </BlockStack>
+      <InlineStack gap="4" className="w-full">
         <div className="flex-1">
           <NameField
             inputName={outputName}
@@ -127,12 +129,12 @@ export const OutputNameEditor = ({
             inputName={output.name}
           />
         </div>
-      </div>
-      <div className="flex justify-end gap-2">
+      </InlineStack>
+      <InlineStack align="end" className="w-full">
         <Button variant="outline" onClick={handleClose}>
           Close
         </Button>
-      </div>
-    </div>
+      </InlineStack>
+    </BlockStack>
   );
 };
