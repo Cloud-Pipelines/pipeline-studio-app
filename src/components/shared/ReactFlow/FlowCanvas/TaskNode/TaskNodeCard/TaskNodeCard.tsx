@@ -46,7 +46,7 @@ const TaskNodeCard = () => {
   const [expandedInputs, setExpandedInputs] = useState(false);
   const [expandedOutputs, setExpandedOutputs] = useState(false);
 
-  const { name, state, callbacks, nodeId, taskSpec } = taskNode;
+  const { name, state, callbacks, nodeId, taskSpec, taskId } = taskNode;
   const { dimensions, selected, highlighted, isCustomComponent } = state;
 
   const onNotify = useCallback((message: NotifyMessage) => {
@@ -170,9 +170,18 @@ const TaskNodeCard = () => {
       ref={nodeRef}
     >
       <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
-        <CardTitle className="break-words text-left text-xs text-slate-900">
-          {name}
-        </CardTitle>
+        <div className="flex flex-col">
+          <CardTitle className="break-words text-left text-xs text-slate-900">
+            {name}
+          </CardTitle>
+          {taskId &&
+            taskId !== name &&
+            !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
+              <div className="text-xs text-muted-foreground font-light">
+                {taskId}
+              </div>
+            )}
+        </div>
 
         {isRemoteComponentLibrarySearchEnabled ? (
           <PublishedComponentBadge componentRef={taskSpec.componentRef}>
