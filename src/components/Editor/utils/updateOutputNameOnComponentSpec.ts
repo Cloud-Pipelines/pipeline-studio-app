@@ -1,4 +1,7 @@
-import type { ComponentSpec } from "@/utils/componentSpec";
+import {
+  type ComponentSpec,
+  isGraphImplementation,
+} from "@/utils/componentSpec";
 
 /**
  * Renames an output in a component spec, updating both the outputs array
@@ -19,7 +22,10 @@ export const updateOutputNameOnComponentSpec = (
   };
 
   // Update graph spec if it exists
-  if ("graph" in updatedComponentSpec.implementation && oldName !== newName) {
+  if (
+    isGraphImplementation(updatedComponentSpec.implementation) &&
+    oldName !== newName
+  ) {
     const graphSpec = updatedComponentSpec.implementation.graph;
     const updatedOutputValues = { ...graphSpec.outputValues };
 

@@ -1,9 +1,10 @@
-import type {
-  ArgumentType,
-  ComponentSpec,
-  GraphInputArgument,
-  GraphSpec,
-  TaskSpec,
+import {
+  type ArgumentType,
+  type ComponentSpec,
+  type GraphInputArgument,
+  type GraphSpec,
+  isGraphImplementation,
+  type TaskSpec,
 } from "@/utils/componentSpec";
 
 /**
@@ -85,7 +86,7 @@ export const updateInputNameOnComponentSpec = (
   };
 
   // Update graph spec if it exists
-  if ("graph" in updatedComponentSpec.implementation) {
+  if (isGraphImplementation(updatedComponentSpec.implementation)) {
     const graphSpec = updatedComponentSpec.implementation.graph;
     const updatedGraphSpec = updateGraphTasks(graphSpec, oldName, newName);
     updatedComponentSpec.implementation.graph = updatedGraphSpec;
