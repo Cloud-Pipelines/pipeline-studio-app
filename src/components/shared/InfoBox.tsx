@@ -6,7 +6,7 @@ interface InfoBoxProps {
   title: string;
   className?: string;
   children: ReactNode;
-  variant?: "info" | "error" | "warning" | "success";
+  variant?: "info" | "error" | "warning" | "success" | "ghost";
 }
 
 const variantStyles: Record<
@@ -29,6 +29,10 @@ const variantStyles: Record<
     container: "border-green-200 bg-green-50",
     title: "text-green-800",
   },
+  ghost: {
+    container: "border-gray-200 bg-none",
+    title: "text-gray-800",
+  },
 };
 
 export const InfoBox = ({
@@ -39,8 +43,8 @@ export const InfoBox = ({
 }: InfoBoxProps) => {
   const styles = variantStyles[variant];
   return (
-    <div className={`border rounded-md p-2 ${styles.container}`}>
-      <div className={`text-sm font-semibold mb-1 ${styles.title}`}>
+    <div className={cn("border rounded-md p-2", styles.container)}>
+      <div className={cn("text-sm font-semibold mb-1", styles.title)}>
         {title}
       </div>
       <div className={cn("text-sm", className)}>{children}</div>
