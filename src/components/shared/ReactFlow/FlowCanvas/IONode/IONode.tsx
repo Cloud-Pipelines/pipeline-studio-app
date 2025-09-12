@@ -1,6 +1,6 @@
 import { useLocation } from "@tanstack/react-router";
-import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { Handle, Position } from "@xyflow/react";
+import { memo, useEffect, useMemo } from "react";
 
 import { InputValueEditor } from "@/components/Editor/IOEditor/InputValueEditor";
 import { OutputNameEditor } from "@/components/Editor/IOEditor/OutputNameEditor";
@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
-import { deselectAllNodes } from "@/utils/flowUtils";
 
 interface IONodeProps {
   type: "input" | "output";
@@ -24,10 +23,9 @@ interface IONodeProps {
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
-  const { setNodes } = useReactFlow();
   const location = useLocation();
   const { graphSpec, componentSpec } = useComponentSpec();
-  const { setContent, clearContent } = useContextPanel();
+  const { setContent } = useContextPanel();
 
   const isPipelineEditor = location.pathname.includes("/editor");
 
@@ -54,11 +52,6 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     [componentSpec.outputs, data.label],
   );
 
-  const deselectNode = useCallback(() => {
-    setNodes(deselectAllNodes);
-    clearContent();
-  }, [setNodes]);
-
   useEffect(() => {
     if (selected) {
       if (input && isInput) {
@@ -67,7 +60,6 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
             input={input}
             key={input.name}
             disabled={!isPipelineEditor}
-            onClose={deselectNode}
           />,
         );
       }
@@ -83,7 +75,6 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
             connectedDetails={outputConnectedDetails}
             key={output.name}
             disabled={!isPipelineEditor}
-            onClose={deselectNode}
           />,
         );
       }
