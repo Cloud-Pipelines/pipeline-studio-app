@@ -11,6 +11,7 @@ import RootLayout from "../components/layout/RootLayout";
 import Editor from "./Editor";
 import Home from "./Home";
 import PipelineRun from "./PipelineRun";
+import PipelineRunRedirect from "./PipelineRunRedirect";
 
 declare module "@tanstack/react-router" {
   interface Register {
@@ -20,10 +21,12 @@ declare module "@tanstack/react-router" {
 
 export const EDITOR_PATH = "/editor";
 export const RUNS_BASE_PATH = "/runs";
+export const PIPELINE_RUNS_BASE_PATH = "/pipeline_runs";
 export const APP_ROUTES = {
   HOME: "/",
   PIPELINE_EDITOR: `${EDITOR_PATH}/$name`,
   RUN_DETAIL: `${RUNS_BASE_PATH}/$id`,
+  PIPELINE_RUN_REDIRECT: `${PIPELINE_RUNS_BASE_PATH}/$id`,
   RUNS: RUNS_BASE_PATH,
   GITHUB_AUTH_CALLBACK: "/authorize/github",
 };
@@ -70,10 +73,21 @@ export const runDetailRoute = createRoute({
   component: PipelineRun,
 });
 
+export interface PipelineRunRedirectParams {
+  id: string;
+}
+
+export const pipelineRunRedirectRoute = createRoute({
+  getParentRoute: () => mainLayout,
+  path: APP_ROUTES.PIPELINE_RUN_REDIRECT,
+  component: PipelineRunRedirect,
+});
+
 const appRouteTree = mainLayout.addChildren([
   indexRoute,
   editorRoute,
   runDetailRoute,
+  pipelineRunRedirectRoute,
 ]);
 
 const rootRouteTree = rootRoute.addChildren([
