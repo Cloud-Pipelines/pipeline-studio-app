@@ -295,14 +295,14 @@ const PipelineDetails = () => {
                       <span className="font-semibold">{output.name}:</span>{" "}
                       {
                         getOutputConnectedDetails(graphSpec, output.name)
-                          .outputName
+                          ?.outputName
                       }
                     </div>
                     <div className="text-xs">
                       <span className="font-semibold">Type:</span>{" "}
                       {typeSpecToString(
                         getOutputConnectedDetails(graphSpec, output.name)
-                          .outputType,
+                          ?.outputType,
                       )}
                     </div>
 

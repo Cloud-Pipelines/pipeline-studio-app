@@ -114,7 +114,7 @@ export const OutputNameEditor = ({
         </div>
         <div className="w-36">
           <TypeField
-            inputValue={connectedDetails.outputType || "Any"}
+            inputValue={connectedDetails?.outputType || "Any"}
             onInputChange={() => {}}
             placeholder="Any"
             disabled
