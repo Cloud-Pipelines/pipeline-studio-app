@@ -27,4 +27,11 @@ export const ExistingBetaFlags = {
       "Automatically select the 'Created by me' filter when viewing the pipeline run list.",
     default: false,
   } as BetaFlag,
+
+  ["smart-edge-bridges"]: {
+    name: "Smart Edge with Bridges",
+    description:
+      "Enable the Smart Edge with Bridges feature. This will force edges to never intersect with nodes.",
+    default: false,
+  } as BetaFlag,
 };
