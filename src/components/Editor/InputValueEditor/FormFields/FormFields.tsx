@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 export type FormFieldAction = {
   icon: keyof typeof icons;
@@ -27,8 +28,12 @@ const FormField = ({
   children: ReactNode;
 }) => (
   <BlockStack>
-    <InlineStack align="space-between" blockAlign="center">
-      <label htmlFor={id} className="text-xs text-muted-foreground mb-1">
+    <InlineStack
+      align="space-between"
+      blockAlign="center"
+      className="w-full mb-1"
+    >
+      <label htmlFor={id} className="text-xs text-muted-foreground">
         {label}
       </label>
       {actions?.map(
@@ -41,7 +46,7 @@ const FormField = ({
               disabled={action.disabled}
               size="min"
             >
-              <Icon name={action.icon} className="size-3" />
+              <Icon name={action.icon} size="xs" />
             </Button>
           ),
       )}
@@ -53,11 +58,13 @@ const FormField = ({
 const NameField = ({
   inputName,
   onNameChange,
+  onBlur,
   error,
   disabled,
 }: {
   inputName: string;
   onNameChange: (value: string) => void;
+  onBlur?: () => void;
   error?: string | null;
   disabled?: boolean;
 }) => (
@@ -68,15 +75,19 @@ const NameField = ({
       type="text"
       value={inputName}
       onChange={(e) => onNameChange(e.target.value)}
-      className={`text-sm ${error ? "border-red-500 focus:border-red-500" : ""}`}
+      onBlur={onBlur}
+      className={cn("text-sm", {
+        "border-red-500 focus:border-red-500": !!error,
+      })}
     />
-    {error && <div className="text-xs text-red-500 mt-1">{error}</div>}
+    {!!error && <div className="text-xs text-red-500 mt-1">{error}</div>}
   </FormField>
 );
 
 const TextField = ({
   inputValue,
   onInputChange,
+  onBlur,
   placeholder,
   disabled,
   inputName,
@@ -84,6 +95,7 @@ const TextField = ({
 }: {
   inputValue: string;
   onInputChange: (value: string) => void;
+  onBlur?: () => void;
   placeholder: string;
   disabled: boolean;
   inputName: string;
@@ -98,6 +110,7 @@ const TextField = ({
       id={`input-value-${inputName}`}
       value={inputValue}
       onChange={(e) => onInputChange(e.target.value)}
+      onBlur={onBlur}
       placeholder={placeholder}
       disabled={disabled}
       className="text-sm"
@@ -108,11 +121,13 @@ const TextField = ({
 const OptionalField = ({
   inputName,
   onInputChange,
+  onBlur,
   disabled = false,
   inputValue,
 }: {
   inputName: string;
   onInputChange: (checked: boolean) => void;
+  onBlur?: () => void;
   disabled?: boolean;
   inputValue: boolean;
 }) => (
@@ -121,6 +136,7 @@ const OptionalField = ({
       id={`input-optional-${inputName}`}
       checked={inputValue}
       onCheckedChange={onInputChange}
+      onBlur={onBlur}
       disabled={disabled}
       className="h-5 w-5 border-gray-300 focus:ring-2 focus:ring-primary-500 transition-colors"
     />
@@ -136,12 +152,14 @@ const OptionalField = ({
 const TypeField = ({
   inputValue,
   onInputChange,
+  onBlur,
   placeholder,
   disabled,
   inputName,
 }: {
   inputValue: string;
   onInputChange: (value: string) => void;
+  onBlur?: () => void;
   placeholder: string;
   disabled?: boolean;
   inputName: string;
@@ -151,6 +169,7 @@ const TypeField = ({
       id={`input-type-${inputName}`}
       value={inputValue}
       onChange={(e) => onInputChange(e.target.value)}
+      onBlur={onBlur}
       placeholder={placeholder}
       disabled={disabled}
       className="text-sm"
