@@ -67,6 +67,7 @@
     "@tanstack/react-query-devtools": "^5.85.5",
     "@tanstack/react-router": "^1.131.41",
     "@tanstack/router-devtools": "^1.131.40",
+    "@tisoap/react-flow-smart-edge": "^4.0.1",
     "@types/gapi": "^0.0.47",
     "@xyflow/react": "^12.8.4",
     "class-variance-authority": "^0.7.1",

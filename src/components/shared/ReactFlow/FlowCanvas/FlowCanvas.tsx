@@ -43,6 +43,7 @@ import { useNodesOverlay } from "../NodesOverlay/NodesOverlayProvider";
 import { getBulkUpdateConfirmationDetails } from "./ConfirmationDialogs/BulkUpdateConfirmationDialog";
 import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfirmation";
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
+import { SmartEdge } from "./Edges/SmartEdge";
 import SmoothEdge from "./Edges/SmoothEdge";
 import GhostNode from "./GhostNode/GhostNode";
 import HintNode from "./GhostNode/HintNode";
@@ -76,6 +77,7 @@ const REPLACEABLE_NODES = new Set(["task"]);
 
 const edgeTypes: Record<string, ComponentType<any>> = {
   customEdge: SmoothEdge,
+  smart: SmartEdge,
 };
 
 const useScheduleExecutionOnceWhenConditionMet = (

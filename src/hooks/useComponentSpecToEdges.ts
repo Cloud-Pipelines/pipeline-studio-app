@@ -6,6 +6,7 @@ import {
 } from "@xyflow/react";
 import { useEffect } from "react";
 
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import type {
   ArgumentType,
   ComponentSpec,
@@ -26,14 +27,18 @@ const useComponentSpecToEdges = (
   edges: Edge<any>[];
   onEdgesChange: (changes: EdgeChange[]) => void;
 } => {
+  const isSmartEdgeWithBridgesEnabled = useBetaFlagValue("smart-edge-bridges");
+
+  const edgeType = isSmartEdgeWithBridgesEnabled ? "smart" : "customEdge";
+
   const [flowEdges, setFlowEdges, onFlowEdgesChange] = useEdgesState(
-    getEdges(componentSpec),
+    getEdges(componentSpec, edgeType),
   );
 
   useEffect(() => {
-    const newEdges = getEdges(componentSpec);
+    const newEdges = getEdges(componentSpec, edgeType);
     setFlowEdges(newEdges);
-  }, [componentSpec]);
+  }, [componentSpec, edgeType]);
 
   return {
     edges: flowEdges,
@@ -41,28 +46,38 @@ const useComponentSpecToEdges = (
   };
 };
 
-const getEdges = (componentSpec: ComponentSpec) => {
+const getEdges = (
+  componentSpec: ComponentSpec,
+  edgeType: "smart" | "customEdge",
+) => {
   if (!("graph" in componentSpec.implementation)) {
     return [];
   }
 
   const graphSpec = componentSpec.implementation.graph;
-  const taskEdges = createEdgesFromTaskSpec(graphSpec);
-  const outputEdges = createOutputEdgesFromGraphSpec(graphSpec);
+  const taskEdges = createEdgesFromTaskSpec(graphSpec, edgeType);
+  const outputEdges = createOutputEdgesFromGraphSpec(graphSpec, edgeType);
   return [...taskEdges, ...outputEdges];
 };
 
-const createEdgesFromTaskSpec = (graphSpec: GraphSpec) => {
+const createEdgesFromTaskSpec = (
+  graphSpec: GraphSpec,
+  edgeType: "smart" | "customEdge",
+) => {
   const edges: Edge[] = Object.entries(graphSpec.tasks).flatMap(
-    ([taskId, taskSpec]) => createEdgesForTask(taskId, taskSpec),
+    ([taskId, taskSpec]) => createEdgesForTask(taskId, taskSpec, edgeType),
   );
   return edges;
 };
 
-const createEdgesForTask = (taskId: string, taskSpec: TaskSpec): Edge[] => {
+const createEdgesForTask = (
+  taskId: string,
+  taskSpec: TaskSpec,
+  edgeType: "smart" | "customEdge",
+): Edge[] => {
   return Object.entries(taskSpec.arguments ?? {}).flatMap(
     ([inputName, argument]) =>
-      createEdgeForArgument(taskId, inputName, argument),
+      createEdgeForArgument(taskId, inputName, argument, edgeType),
   );
 };
 
@@ -70,17 +85,22 @@ const createEdgeForArgument = (
   taskId: string,
   inputName: string,
   argument: ArgumentType,
+  edgeType: "smart" | "customEdge",
 ): Edge[] => {
   if (typeof argument === "string") {
     return [];
   }
 
   if ("taskOutput" in argument) {
-    return [createTaskOutputEdge(taskId, inputName, argument.taskOutput)];
+    return [
+      createTaskOutputEdge(taskId, inputName, argument.taskOutput, edgeType),
+    ];
   }
 
   if ("graphInput" in argument) {
-    return [createGraphInputEdge(taskId, inputName, argument.graphInput)];
+    return [
+      createGraphInputEdge(taskId, inputName, argument.graphInput, edgeType),
+    ];
   }
 
   console.error("Impossible task input argument kind: ", argument);
@@ -91,6 +111,7 @@ const createTaskOutputEdge = (
   taskId: string,
   inputName: string,
   taskOutput: TaskOutputArgument["taskOutput"],
+  edgeType: "smart" | "customEdge",
 ): Edge => {
   return {
     id: `${taskOutput.taskId}_${taskOutput.outputName}-${taskId}_${inputName}`,
@@ -99,7 +120,8 @@ const createTaskOutputEdge = (
     target: taskIdToNodeId(taskId),
     targetHandle: inputNameToNodeId(inputName),
     markerEnd: { type: MarkerType.Arrow },
-    type: "customEdge",
+    label: `$${inputName}`,
+    type: edgeType,
   };
 };
 
@@ -107,19 +129,23 @@ const createGraphInputEdge = (
   taskId: string,
   inputName: string,
   graphInput: GraphInputArgument["graphInput"],
+  edgeType: "smart" | "customEdge",
 ): Edge => {
   return {
-    id: `Input_${graphInput.inputName}-${taskId}_${inputName}`,
+    id: `${inputName}`,
     source: inputNameToNodeId(graphInput.inputName),
     sourceHandle: null,
     target: taskIdToNodeId(taskId),
     targetHandle: inputNameToNodeId(inputName),
-    type: "customEdge",
+    type: edgeType,
     markerEnd: { type: MarkerType.Arrow },
   };
 };
 
-const createOutputEdgesFromGraphSpec = (graphSpec: GraphSpec) => {
+const createOutputEdgesFromGraphSpec = (
+  graphSpec: GraphSpec,
+  edgeType: "smart" | "customEdge",
+) => {
   const outputEdges: Edge[] = Object.entries(graphSpec.outputValues ?? {}).map(
     ([outputName, argument]) => {
       const taskOutput = argument.taskOutput;
@@ -129,7 +155,10 @@ const createOutputEdgesFromGraphSpec = (graphSpec: GraphSpec) => {
         sourceHandle: outputNameToNodeId(taskOutput.outputName),
         target: outputNameToNodeId(outputName),
         targetHandle: null,
-        type: "customEdge",
+        type: edgeType,
+        data: {
+          label: `${outputName}`,
+        },
         markerEnd: { type: MarkerType.Arrow },
       };
       return edge;
