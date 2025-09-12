@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { updateInputNameOnComponentSpec } from "@/components/Editor/utils/updateInputNameOnComponentSpec";
+import { InfoBox } from "@/components/shared/InfoBox";
 import { Button } from "@/components/ui/button";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { Heading, Paragraph } from "@/components/ui/typography";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
@@ -183,11 +186,15 @@ export const InputValueEditor = ({
   const placeholder = input.default || `Enter ${input.name}...`;
 
   return (
-    <div className="flex flex-col gap-3 p-4">
-      <div className="flex flex-col gap-3">
-        <h3 className="text-lg font-bold">{input.name}</h3>
-        <p className="text-sm text-gray-500">{input.description}</p>
-      </div>
+    <BlockStack gap="3" className="p-4 w-full">
+      <BlockStack gap="3">
+        <Heading level={1}>{input.name}</Heading>
+        {!!input.description && (
+          <Paragraph size="sm" tone="subdued">
+            {input.description}
+          </Paragraph>
+        )}
+      </BlockStack>
       <NameField
         inputName={inputName}
         onNameChange={handleNameChange}
@@ -222,6 +229,13 @@ export const InputValueEditor = ({
         inputName={input.name}
       />
 
+      {isConnectedToRequired && (
+        <InfoBox title="Required input" variant="warning">
+          This input is connected to required fields:{" "}
+          <Paragraph weight="bold">{connectedFields.join(", ")}</Paragraph>
+        </InfoBox>
+      )}
+
       <OptionalField
         inputName={input.name}
         onInputChange={handleOptionalChange}
@@ -229,18 +243,12 @@ export const InputValueEditor = ({
         inputValue={effectiveOptionalValue}
         disabled={isOptionalDisabled}
       />
-      {isConnectedToRequired && (
-        <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-          This input is connected to required fields:{" "}
-          {connectedFields.join(", ")}
-        </div>
-      )}
 
-      <div className="flex justify-end gap-2">
+      <InlineStack align="end" className="w-full">
         <Button variant="outline" onClick={handleClose}>
           Close
         </Button>
-      </div>
-    </div>
+      </InlineStack>
+    </BlockStack>
   );
 };
