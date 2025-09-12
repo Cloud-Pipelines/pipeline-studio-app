@@ -93,8 +93,8 @@ const IoCell = ({ io, artifacts }: IoCellProps) => {
   return (
     <Collapsible key={io.name}>
       <div className="flex flex-col gap-3 py-3 border rounded-md relative z-10 bg-white">
-        <div className="flex justify-between px-3 gap-2">
-          <div className="flex-1 min-w-auto flex-shrink-0">
+        <div className="flex justify-between px-3 gap-2 flex-wrap">
+          <div className="min-w-auto flex-shrink-0">
             <Tooltip
               delayDuration={300}
               open={isTooltipOpen}
