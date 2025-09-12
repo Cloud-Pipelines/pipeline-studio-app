@@ -1,5 +1,11 @@
 import { AlertCircle, InfoIcon } from "lucide-react";
-import { type ChangeEvent, type ReactNode, useState } from "react";
+import {
+  type ChangeEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  useCallback,
+  useState,
+} from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -79,6 +85,12 @@ const PipelineNameDialog = ({
     onSubmit(name);
   };
 
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+      e.stopPropagation();
+    }
+  }, []);
+
   const isDisabled =
     isLoadingUserPipelines ||
     !!error ||
@@ -95,7 +107,11 @@ const PipelineNameDialog = ({
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <div className="grid flex-1 gap-2 flex-col">
-            <Input value={name} onChange={handleOnChange} />
+            <Input
+              value={name}
+              onChange={handleOnChange}
+              onKeyDown={handleKeyDown}
+            />
             <Alert variant={error ? "destructive" : "default"}>
               {error && <AlertCircle className="h-4 w-4" />}
               {!error && <InfoIcon className="h-4 w-4" />}

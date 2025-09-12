@@ -1,5 +1,5 @@
 import yaml from "js-yaml";
-import { useCallback, useEffect, useState } from "react";
+import { type KeyboardEvent, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -114,6 +114,12 @@ const ComponentDuplicateDialog = ({
     setClose();
   }, [setClose]);
 
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+      e.stopPropagation();
+    }
+  }, []);
+
   const disableImportAsNew =
     !newName || newName.trim() === existingComponent?.name?.trim();
 
@@ -151,6 +157,7 @@ const ComponentDuplicateDialog = ({
           <Input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={handleKeyDown}
             autoFocus={true}
             onBlur={generateNewDigestOnBlur}
           />
