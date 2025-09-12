@@ -10,7 +10,7 @@ import type { TaskSpec } from "@/utils/componentSpec";
 import { formatBytes } from "@/utils/string";
 import { convertGcsUrlToBrowserUrl } from "@/utils/URL";
 
-import IoCell from "./ioCell";
+import IoCell from "./IOCell/IOCell";
 
 interface IoProps {
   taskSpec: TaskSpec;
@@ -74,7 +74,11 @@ const Io = ({ taskSpec, executionId, readOnly }: IoProps) => {
               const inputArtifact = artifacts?.input_artifacts?.[input.name];
 
               return (
-                <IoCell key={input.name} io={input} artifacts={inputArtifact} />
+                <IoCell
+                  key={input.name}
+                  io={input}
+                  artifactData={inputArtifact?.artifact_data}
+                />
               );
             })}
             {!taskSpec.componentRef.spec?.inputs?.length && (
@@ -93,7 +97,7 @@ const Io = ({ taskSpec, executionId, readOnly }: IoProps) => {
                 <IoCell
                   key={output.name}
                   io={output}
-                  artifacts={outputArtifact}
+                  artifactData={outputArtifact?.artifact_data}
                 />
               );
             })}
