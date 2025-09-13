@@ -18,11 +18,13 @@ import {
 } from "react";
 
 import TooltipButton from "@/components/shared/Buttons/TooltipButton";
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -50,6 +52,9 @@ export const ArgumentInputField = ({
   onSave: (argument: ArgumentInput) => void;
 }) => {
   const notify = useToastNotification();
+  const useToggleForBooleanFields = useBetaFlagValue(
+    "use-toggle-for-boolean-fields",
+  );
 
   const [inputValue, setInputValue] = useState(getInputValue(argument) ?? "");
   const [showDescription, setShowDescription] = useState(false);
@@ -62,9 +67,34 @@ export const ArgumentInputField = ({
   const undoValue = useMemo(() => argument, []);
   const hint = argument.inputSpec.annotations?.hint as string | undefined;
 
+  // Check if the input type is Boolean
+  const isBooleanType = useMemo(() => {
+    const typeStr = typeSpecToString(argument.inputSpec.type).toLowerCase();
+    return typeStr === "boolean";
+  }, [argument.inputSpec.type]);
+
+  // Only show toggle if beta flag is enabled
+  const showBooleanToggle = useToggleForBooleanFields && isBooleanType;
+
+  // Convert string value to boolean for switch
+  const booleanValue = useMemo(() => {
+    if (isBooleanType) {
+      const val = inputValue.toLowerCase();
+      return val === "true";
+    }
+    return false;
+  }, [inputValue, isBooleanType]);
+
   const handleInputChange = (e: ChangeEvent) => {
     const value = (e.target as HTMLInputElement).value;
     setInputValue(value);
+  };
+
+  const handleSwitchChange = (checked: boolean) => {
+    const newValue = checked ? "True" : "False";
+    setInputValue(newValue);
+    // Save the value directly without DOM manipulation
+    handleSubmit(newValue);
   };
 
   const handleBlur = () => {
@@ -269,6 +299,24 @@ export const ArgumentInputField = ({
           </InlineStack>
 
           <div className="relative min-w-24 grow group">
+            {/* Boolean toggle UI - shown only for Boolean types when beta flag is enabled */}
+            {showBooleanToggle && (
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={booleanValue}
+                  onCheckedChange={handleSwitchChange}
+                  disabled={disabled}
+                  className={cn(argument.isRemoved && "opacity-50")}
+                />
+                {!argument.isRemoved && (
+                  <span className="text-sm text-muted-foreground">
+                    {booleanValue ? "True" : "False"}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Input field - always rendered, but hidden for Boolean types when toggle is enabled */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Input
@@ -279,34 +327,43 @@ export const ArgumentInputField = ({
                   placeholder={placeholder}
                   required={!argument.inputSpec.optional}
                   className={cn(
-                    "flex-1 group-hover:pr-8",
-                    argument.isRemoved &&
+                    showBooleanToggle ? "sr-only" : "flex-1 group-hover:pr-8",
+                    !showBooleanToggle &&
+                      argument.isRemoved &&
                       !argument.inputSpec.optional &&
                       "border-red-200",
-                    argument.isRemoved &&
+                    !showBooleanToggle &&
+                      argument.isRemoved &&
                       argument.inputSpec.optional &&
                       "border-gray-100 text-muted-foreground",
-                    argument.isRemoved && "opacity-50 focus:opacity-100",
+                    !showBooleanToggle &&
+                      argument.isRemoved &&
+                      "opacity-50 focus:opacity-100",
                   )}
                   disabled={disabled}
+                  aria-hidden={showBooleanToggle ? "true" : undefined}
                 />
               </TooltipTrigger>
-              {placeholder && !inputValue && (
+              {!showBooleanToggle && placeholder && !inputValue && (
                 <TooltipContent className="z-9999">
                   {placeholder}
                 </TooltipContent>
               )}
             </Tooltip>
-            <Button
-              className={cn(
-                "absolute right-0 top-1/2 -translate-y-1/2 hover:bg-transparent hover:text-blue-500 hidden group-hover:flex",
-              )}
-              onClick={handleExpand}
-              disabled={disabled}
-              variant="ghost"
-            >
-              <Maximize2 />
-            </Button>
+
+            {/* Expand button - shown only when not showing Boolean toggle */}
+            {!showBooleanToggle && (
+              <Button
+                className={cn(
+                  "absolute right-0 top-1/2 -translate-y-1/2 hover:bg-transparent hover:text-blue-500 hidden group-hover:flex",
+                )}
+                onClick={handleExpand}
+                disabled={disabled}
+                variant="ghost"
+              >
+                <Maximize2 />
+              </Button>
+            )}
           </div>
 
           <InlineStack align="end" blockAlign="center">

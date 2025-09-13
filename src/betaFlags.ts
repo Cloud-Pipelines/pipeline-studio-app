@@ -27,4 +27,11 @@ export const ExistingBetaFlags = {
       "Automatically select the 'Created by me' filter when viewing the pipeline run list.",
     default: false,
   } as BetaFlag,
+
+  ["use-toggle-for-boolean-fields"]: {
+    name: "Use toggle for boolean fields",
+    description:
+      "Display toggle switches instead of text fields for Boolean input types.",
+    default: false,
+  } as BetaFlag,
 };
