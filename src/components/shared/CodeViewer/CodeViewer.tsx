@@ -68,7 +68,11 @@ const CodeViewer = ({
             className="absolute inset-0 overflow-y-auto bg-slate-900"
             style={{ willChange: "transform", minHeight: DEFAULT_HEIGHT }}
           >
-            <CodeSyntaxHighlighter code={code} language={language} />
+            <CodeSyntaxHighlighter
+              code={code}
+              language={language}
+              isFullscreen={isFullscreen}
+            />
           </div>
         </div>
       </div>

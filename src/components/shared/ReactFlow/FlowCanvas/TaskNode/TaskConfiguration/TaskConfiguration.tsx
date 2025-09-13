@@ -148,7 +148,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
           </TabsContent>
           {readOnly && (
             <TabsContent value="logs" className="h-full">
-              <div className="flex w-full justify-end pr-4">
+              <div className="flex w-full justify-end items-center pr-4 mb-2">
                 <OpenLogsInNewWindowLink
                   executionId={taskSpec.annotations?.executionId as string}
                   status={runStatus}
