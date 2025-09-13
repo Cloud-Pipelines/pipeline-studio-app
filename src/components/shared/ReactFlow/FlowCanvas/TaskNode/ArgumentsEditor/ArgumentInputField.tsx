@@ -70,7 +70,7 @@ export const ArgumentInputField = ({
   // Check if the input type is Boolean
   const isBooleanType = useMemo(() => {
     const typeStr = typeSpecToString(argument.inputSpec.type).toLowerCase();
-    return typeStr === "Boolean";
+    return typeStr === "boolean";
   }, [argument.inputSpec.type]);
 
   // Only show toggle if beta flag is enabled
