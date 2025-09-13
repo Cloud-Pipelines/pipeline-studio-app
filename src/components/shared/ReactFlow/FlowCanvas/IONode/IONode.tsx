@@ -115,7 +115,9 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
         {/* type */}
         <div className="text-xs text-slate-700 font-mono truncate max-w-[250px]">
           <span className="font-bold text-slate-700">Type:</span>{" "}
-          {outputConnectedType || data.type || "Any"}
+          {type === "input"
+            ? input?.type?.toString() || "Any"
+            : outputConnectedType || output?.type?.toString() || "Any"}
         </div>
 
         <span className="font-bold text-slate-700">
