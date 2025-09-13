@@ -3,10 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { updateInputNameOnComponentSpec } from "@/components/Editor/utils/updateInputNameOnComponentSpec";
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import { InfoBox } from "@/components/shared/InfoBox";
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { BlockStack } from "@/components/ui/layout";
-import { Heading, Paragraph } from "@/components/ui/typography";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { Switch } from "@/components/ui/switch";
+import { Heading, Paragraph, Text } from "@/components/ui/typography";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import useToastNotification from "@/hooks/useToastNotification";
@@ -29,6 +31,9 @@ export const InputValueEditor = ({
   disabled = false,
 }: InputValueEditorProps) => {
   const notify = useToastNotification();
+  const useToggleForBooleanFields = useBetaFlagValue(
+    "use-toggle-for-boolean-fields",
+  );
   const { transferSelection } = useNodeSelectionTransfer(inputNameToNodeId);
   const { componentSpec, setComponentSpec } = useComponentSpec();
   const { clearContent } = useContextPanel();
@@ -46,6 +51,24 @@ export const InputValueEditor = ({
   const [inputType, setInputType] = useState(input.type?.toString() ?? "any");
   const [inputOptional, setInputOptional] = useState(initialIsOptional);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Check if the input type is Boolean
+  const isBooleanType = useMemo(() => {
+    const typeStr = inputType.toLowerCase();
+    return typeStr === "boolean" || typeStr === "bool";
+  }, [inputType]);
+
+  // Only show toggle if beta flag is enabled
+  const showBooleanToggle = useToggleForBooleanFields && isBooleanType;
+
+  // Convert string value to boolean for switch
+  const booleanValue = useMemo(() => {
+    if (isBooleanType) {
+      const val = inputValue.toLowerCase();
+      return val === "true";
+    }
+    return false;
+  }, [inputValue, isBooleanType]);
 
   // Check if this input is connected to any required fields
   const { isConnectedToRequired } = useMemo(() => {
@@ -98,6 +121,11 @@ export const InputValueEditor = ({
 
   const handleValueChange = useCallback((value: string) => {
     setInputValue(value);
+  }, []);
+
+  const handleSwitchChange = useCallback((checked: boolean) => {
+    const newValue = checked ? "True" : "False";
+    setInputValue(newValue);
   }, []);
 
   const handleTypeChange = useCallback((value: string) => {
@@ -232,21 +260,43 @@ export const InputValueEditor = ({
         autoFocus={!disabled}
       />
 
-      <TextField
-        inputValue={inputValue}
-        onInputChange={handleValueChange}
-        onBlur={handleBlur}
-        placeholder={placeholder}
-        disabled={disabled}
-        inputName={input.name}
-        actions={[
-          {
-            icon: "Copy",
-            hidden: !disabled && !inputValue,
-            onClick: handleCopyValue,
-          },
-        ]}
-      />
+      {/* Boolean toggle UI for Boolean types when beta flag is enabled */}
+      {showBooleanToggle && (
+        <BlockStack gap="1" className="w-full">
+          <Text size="xs" tone="subdued" className="mb-1">
+            Default Value
+          </Text>
+          <InlineStack gap="2" blockAlign="center">
+            <Switch
+              checked={booleanValue}
+              onCheckedChange={handleSwitchChange}
+              disabled={disabled}
+            />
+            <Text size="sm" tone="subdued">
+              {booleanValue ? "True" : "False"}
+            </Text>
+          </InlineStack>
+        </BlockStack>
+      )}
+
+      {/* Only show text field if not showing boolean toggle */}
+      {!showBooleanToggle && (
+        <TextField
+          inputValue={inputValue}
+          onInputChange={handleValueChange}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          disabled={disabled}
+          inputName={input.name}
+          actions={[
+            {
+              icon: "Copy",
+              hidden: !disabled && !inputValue,
+              onClick: handleCopyValue,
+            },
+          ]}
+        />
+      )}
 
       <TypeField
         inputValue={inputType}
