@@ -40,4 +40,11 @@ export const ExistingBetaFlags = {
       "⚠️ Experimental ⚠️ feature for viewing subgraphs. Navigate into nested pipeline components by double-clicking.",
     default: false,
   } as BetaFlag,
+
+  ["use-toggle-for-boolean-fields"]: {
+    name: "Use toggle for boolean fields",
+    description:
+      "Display toggle switches instead of text fields for Boolean input types.",
+    default: false,
+  } as BetaFlag,
 };
