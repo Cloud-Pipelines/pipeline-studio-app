@@ -5,6 +5,7 @@ import {
   LogsIcon,
   Parentheses,
 } from "lucide-react";
+import { useState } from "react";
 
 import { ComponentFavoriteToggle } from "@/components/shared/FavoriteComponentToggle";
 import { StatusIcon } from "@/components/shared/Status";
@@ -13,6 +14,8 @@ import {
   TaskImplementation,
 } from "@/components/shared/TaskDetails";
 import { Button, type ButtonProps } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
@@ -40,6 +43,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
 
   const { readOnly, runStatus } = state;
   const disabled = !!runStatus;
+  const [autoScroll, setAutoScroll] = useState(false);
 
   const componentSpec = taskSpec.componentRef.spec;
 
@@ -148,7 +152,20 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
           </TabsContent>
           {readOnly && (
             <TabsContent value="logs" className="h-full">
-              <div className="flex w-full justify-end pr-4">
+              <div className="flex w-full justify-between items-center pr-4 mb-2">
+                <div className="flex items-center space-x-2 ml-4">
+                  <Checkbox
+                    id="auto-scroll-logs"
+                    checked={autoScroll}
+                    onCheckedChange={(checked) => setAutoScroll(!!checked)}
+                  />
+                  <Label
+                    htmlFor="auto-scroll-logs"
+                    className="text-sm cursor-pointer select-none"
+                  >
+                    Auto-scroll to bottom
+                  </Label>
+                </div>
                 <OpenLogsInNewWindowLink
                   executionId={taskSpec.annotations?.executionId as string}
                   status={runStatus}
@@ -157,6 +174,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
               <Logs
                 executionId={taskSpec.annotations?.executionId as string}
                 status={runStatus}
+                autoScroll={autoScroll}
               />
             </TabsContent>
           )}
