@@ -9,13 +9,16 @@ import { Spinner } from "@/components/ui/spinner";
 import { useBackend } from "@/providers/BackendProvider";
 import { getBackendStatusString } from "@/utils/backend";
 
+// LogDisplay component now receives autoScroll prop instead of using forwardRef
 const LogDisplay = ({
   logs,
+  autoScroll = false,
 }: {
   logs: {
     log_text?: string;
     system_error_exception_full?: string;
   };
+  autoScroll?: boolean;
 }) => {
   if (!logs.log_text && !logs.system_error_exception_full) {
     return <div>No logs available</div>;
@@ -36,6 +39,7 @@ const LogDisplay = ({
             language="text"
             title="Execution Logs"
             filename="Execution Logs"
+            autoScroll={autoScroll}
           />
         </div>
       )}
@@ -46,6 +50,7 @@ const LogDisplay = ({
             language="text"
             title="System Error Logs"
             filename="System Error Logs"
+            autoScroll={autoScroll}
           />
         </div>
       )}
@@ -101,9 +106,11 @@ const getLogs = async (executionId: string, backendUrl: string) => {
 const Logs = ({
   executionId,
   status,
+  autoScroll = false, // New prop to enable/disable auto-scrolling behavior
 }: {
   executionId?: string | number;
   status?: ContainerExecutionStatus;
+  autoScroll?: boolean; // Controlled by checkbox in TaskConfiguration parent component
 }) => {
   const { backendUrl, configured, available } = useBackend();
 
@@ -113,6 +120,7 @@ const Logs = ({
     log_text?: string;
     system_error_exception_full?: string;
   }>();
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["logs", executionId],
     queryFn: () => getLogs(String(executionId), backendUrl),
@@ -139,7 +147,7 @@ const Logs = ({
     if (error) {
       setLogs({ log_text: "No logs available" });
     }
-  }, [data, error]);
+  }, [data, error]); // Re-run when data updates
 
   useEffect(() => {
     refetch();
@@ -182,7 +190,8 @@ const Logs = ({
   return (
     <div className="space-y-4 h-full">
       <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg h-full min-h-0 flex-1">
-        {logs && <LogDisplay logs={logs} />}
+        {/* LogDisplay component with autoScroll prop for automatic scrolling */}
+        {logs && <LogDisplay logs={logs} autoScroll={autoScroll} />}
       </div>
     </div>
   );
