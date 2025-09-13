@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { ContainerExecutionStatus } from "@/api/types.gen";
 import { CodeViewer } from "@/components/shared/CodeViewer";
@@ -98,12 +98,40 @@ const getLogs = async (executionId: string, backendUrl: string) => {
   return response.json();
 };
 
+const performAutoScroll = (
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>,
+) => {
+  // Check if we're in fullscreen mode
+  const fullscreenContainer = document.querySelector(
+    '[data-testid="fullscreen-container"]',
+  );
+
+  // Determine the search root based on mode
+  const searchRoot = fullscreenContainer || scrollContainerRef.current;
+
+  if (!searchRoot) return;
+
+  // Monaco editor's main scrollable viewport
+  const monacoScrollable = searchRoot.querySelector(
+    ".monaco-scrollable-element.editor-scrollable",
+  ) as HTMLElement;
+
+  if (
+    monacoScrollable &&
+    monacoScrollable.scrollHeight > monacoScrollable.clientHeight
+  ) {
+    monacoScrollable.scrollTop = monacoScrollable.scrollHeight;
+  }
+};
+
 const Logs = ({
   executionId,
   status,
+  autoScroll = false,
 }: {
   executionId?: string | number;
   status?: ContainerExecutionStatus;
+  autoScroll?: boolean;
 }) => {
   const { backendUrl, configured, available } = useBackend();
 
@@ -113,6 +141,10 @@ const Logs = ({
     log_text?: string;
     system_error_exception_full?: string;
   }>();
+
+  // Auto-scroll refs
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["logs", executionId],
     queryFn: () => getLogs(String(executionId), backendUrl),
@@ -134,12 +166,19 @@ const Logs = ({
         log_text: data?.log_text,
         system_error_exception_full: data?.system_error_exception_full,
       });
+
+      // Auto-scroll to bottom when new logs arrive (if enabled)
+      if (autoScroll) {
+        setTimeout(() => {
+          performAutoScroll(scrollContainerRef);
+        }, 200);
+      }
     }
 
     if (error) {
       setLogs({ log_text: "No logs available" });
     }
-  }, [data, error]);
+  }, [data, error, autoScroll]);
 
   useEffect(() => {
     refetch();
@@ -181,7 +220,10 @@ const Logs = ({
 
   return (
     <div className="space-y-4 h-full">
-      <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg h-full min-h-0 flex-1">
+      <div
+        className="font-mono text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg h-full min-h-0 flex-1"
+        ref={scrollContainerRef}
+      >
         {logs && <LogDisplay logs={logs} />}
       </div>
     </div>
