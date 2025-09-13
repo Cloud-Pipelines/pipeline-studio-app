@@ -151,7 +151,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
           {readOnly && (
             <TabsContent value="logs" className="h-full">
               {!!executionId && (
-                <div className="flex w-full justify-end pr-4">
+                <div className="flex w-full justify-end items-center pr-4 mb-2">
                   <OpenLogsInNewWindowLink
                     executionId={executionId}
                     status={runStatus}
