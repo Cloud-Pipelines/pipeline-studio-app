@@ -22,7 +22,7 @@ const textVariants = cva("", {
   variants: {
     font: {
       default: "",
-      mono: "font-mono",
+      mono: "!font-mono",
     },
     tone: {
       inherit: "text-foreground",
