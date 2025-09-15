@@ -277,10 +277,11 @@ export const duplicateNodes = (
         return null;
       }
 
+      const originalNodeData = originalNode.data as TaskNodeData;
+
       if (originalNode.type === "task") {
         const newTaskId = nodeIdToTaskId(newNodeId);
 
-        const originalNodeData = originalNode.data as TaskNodeData;
         const newTaskSpec = updatedGraphSpec.tasks[newTaskId];
 
         const newNode = createTaskNode(
@@ -312,7 +313,7 @@ export const duplicateNodes = (
           return null;
         }
 
-        const newNode = createInputNode(newInputSpec);
+        const newNode = createInputNode(newInputSpec, originalNodeData);
 
         newNode.id = newNodeId;
         newNode.selected = false;
@@ -338,7 +339,7 @@ export const duplicateNodes = (
           return null;
         }
 
-        const newNode = createOutputNode(newOutputSpec);
+        const newNode = createOutputNode(newOutputSpec, originalNodeData);
 
         newNode.id = newNodeId;
 

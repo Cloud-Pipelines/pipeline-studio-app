@@ -1,10 +1,12 @@
 import { type Node } from "@xyflow/react";
 
+import type { TaskNodeData } from "@/types/taskNode";
+
 import type { InputSpec } from "../componentSpec";
 import { extractPositionFromAnnotations } from "./extractPositionFromAnnotations";
 import { inputNameToNodeId } from "./nodeIdUtils";
 
-export const createInputNode = (input: InputSpec) => {
+export const createInputNode = (input: InputSpec, nodeData: TaskNodeData) => {
   const { name, annotations, ...rest } = input;
 
   const position = extractPositionFromAnnotations(annotations);
@@ -14,6 +16,7 @@ export const createInputNode = (input: InputSpec) => {
     id: nodeId,
     data: {
       ...rest,
+      ...nodeData,
       label: name,
     },
     position: position,
