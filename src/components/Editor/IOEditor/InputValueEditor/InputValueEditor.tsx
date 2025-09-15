@@ -11,12 +11,7 @@ import { type InputSpec } from "@/utils/componentSpec";
 import { checkInputConnectionToRequiredFields } from "@/utils/inputConnectionUtils";
 import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 
-import {
-  NameField,
-  OptionalField,
-  TextField,
-  TypeField,
-} from "./FormFields/FormFields";
+import { NameField, TextField, TypeField } from "./FormFields/FormFields";
 import { checkNameCollision } from "./FormFields/utils";
 
 interface InputValueEditorProps {
@@ -32,19 +27,20 @@ export const InputValueEditor = ({
   const { transferSelection } = useNodeSelectionTransfer(inputNameToNodeId);
   const { componentSpec, setComponentSpec } = useComponentSpec();
 
-  const [inputValue, setInputValue] = useState(input.value ?? "");
+  const initialInputValue = input.value ?? input.default ?? "";
+  const initialIsOptional = false; // When optional inputs are permitted again change to: input.optional ?? true
+
+  const [inputValue, setInputValue] = useState(initialInputValue);
   const [inputName, setInputName] = useState(input.name);
   const [inputType, setInputType] = useState(input.type?.toString() ?? "any");
-  const [inputOptional, setInputOptional] = useState(input.optional ?? true);
+  const [inputOptional, setInputOptional] = useState(initialIsOptional);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   // Check if this input is connected to any required fields
-  const { isConnectedToRequired, connectedFields } = useMemo(() => {
+  const { isConnectedToRequired } = useMemo(() => {
     return checkInputConnectionToRequiredFields(input.name, componentSpec);
   }, [input.name, componentSpec]);
 
-  // If connected to required fields, force optional to false and disable the field
-  const isOptionalDisabled = isConnectedToRequired || disabled;
   const effectiveOptionalValue = isConnectedToRequired ? false : inputOptional;
 
   const handleInputChange = useCallback(
@@ -93,16 +89,6 @@ export const InputValueEditor = ({
     setInputValue(value);
   }, []);
 
-  const handleOptionalChange = useCallback(
-    (checked: boolean) => {
-      if (isConnectedToRequired) {
-        return;
-      }
-      setInputOptional(checked);
-    },
-    [isConnectedToRequired],
-  );
-
   const handleTypeChange = useCallback((value: string) => {
     setInputType(value);
   }, []);
@@ -123,19 +109,27 @@ export const InputValueEditor = ({
 
   const hasChanges = useCallback(() => {
     return (
-      inputValue !== (input.value ?? "") ||
+      inputValue !== initialInputValue ||
       inputName !== input.name ||
       inputType !== (input.type?.toString() ?? "any") ||
-      inputOptional !== (input.optional ?? true)
+      inputOptional !== initialIsOptional
     );
-  }, [inputValue, inputName, inputType, inputOptional, input]);
+  }, [
+    inputValue,
+    inputName,
+    inputType,
+    inputOptional,
+    initialInputValue,
+    initialIsOptional,
+    input,
+  ]);
 
   const saveChanges = useCallback(() => {
     if (!hasChanges() || validationError) return;
 
     const updatedComponentSpecWithValues = handleInputChange(
       input.name,
-      inputValue,
+      inputValue.trim(),
       inputName,
       effectiveOptionalValue,
       inputType as string,
@@ -161,21 +155,21 @@ export const InputValueEditor = ({
   }, [saveChanges]);
 
   const handleCopyValue = useCallback(() => {
-    if (inputValue) {
-      void navigator.clipboard.writeText(inputValue);
+    if (inputValue.trim()) {
+      void navigator.clipboard.writeText(inputValue.trim());
       notify("Input value copied to clipboard", "success");
     }
   }, [inputValue]);
 
   useEffect(() => {
-    setInputValue(input.value ?? "");
+    setInputValue(initialInputValue);
     setInputName(input.name);
     setInputType(input.type?.toString() ?? "any");
-    setInputOptional(input.optional ?? true);
+    setInputOptional(initialIsOptional);
     setValidationError(null);
-  }, [input]);
+  }, [input, initialInputValue, initialIsOptional]);
 
-  const placeholder = input.default || `Enter ${input.name}...`;
+  const placeholder = input.default ?? `Enter ${input.name}...`;
 
   return (
     <BlockStack gap="3" className="p-4 w-full">
@@ -221,20 +215,11 @@ export const InputValueEditor = ({
         inputName={input.name}
       />
 
-      {isConnectedToRequired && (
-        <InfoBox title="Required input" variant="warning">
-          This input is connected to required fields:{" "}
-          <Paragraph weight="bold">{connectedFields.join(", ")}</Paragraph>
+      {!initialInputValue && !inputOptional && (
+        <InfoBox title="Missing value" variant="error">
+          Input is not optional. Value is required.
         </InfoBox>
       )}
-
-      <OptionalField
-        inputName={input.name}
-        onInputChange={handleOptionalChange}
-        onBlur={handleBlur}
-        inputValue={effectiveOptionalValue}
-        disabled={isOptionalDisabled}
-      />
     </BlockStack>
   );
 };
