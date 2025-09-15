@@ -58,4 +58,10 @@ export const PublishedComponentBadge = withSuspenseWrapper(
     );
   },
   PublishedComponentBadgeSkeleton,
+  /**
+   * Show just inner part of the component when there is an error
+   */
+  ({ originalProps }) => {
+    return originalProps?.children;
+  },
 );
