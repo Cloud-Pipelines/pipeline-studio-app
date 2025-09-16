@@ -1,4 +1,3 @@
-import { AlertCircle, DatabaseZap, RefreshCcw } from "lucide-react";
 import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,13 +9,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Heading, Paragraph } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useBackend } from "@/providers/BackendProvider";
 import { API_URL } from "@/utils/constants";
@@ -126,34 +129,29 @@ const BackendConfigurationDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent
-        className="w-2xl overflow-hidden"
-        aria-label="Configure backend"
-      >
+      <DialogContent className="w-2xl overflow-hidden">
         <DialogHeader>
-          <DialogTitle>
-            <span>Configure Backend</span>
-          </DialogTitle>
+          <DialogTitle>Configure Backend</DialogTitle>
         </DialogHeader>
 
-        <DialogDescription aria-label="Configure backend">
-          <span>Attach the Oasis frontend to a custom backend.</span>
+        <DialogDescription>
+          Attach the Oasis frontend to a custom backend.
         </DialogDescription>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <span>Backend status: </span>
+        <BlockStack gap="4">
+          <InlineStack gap="2" blockAlign="center">
+            <Paragraph>Backend status: </Paragraph>
             <Tooltip>
               <TooltipTrigger className="flex items-center gap-2" tabIndex={-1}>
                 <span
                   className={cn(
                     "w-2 h-2 rounded-full",
-                    available ? "bg-green-500" : "bg-red-500",
+                    available ? "bg-success" : "bg-destructive",
                   )}
                 />
-                <span className="font-light text-xs italic">
+                <Paragraph weight="light" size="xs" className="italic">
                   {available ? "available" : "unavailable"}
-                </span>
+                </Paragraph>
               </TooltipTrigger>
               <TooltipContent>
                 {isConfiguredFromEnv && hasEnvConfig
@@ -166,32 +164,34 @@ const BackendConfigurationDialog = ({
               </TooltipContent>
             </Tooltip>
             <Button onClick={handleRefresh} size="icon" variant="ghost">
-              <RefreshCcw />
+              <Icon name="RefreshCcw" />
             </Button>
-          </div>
+          </InlineStack>
 
           {hasEnvConfig && (
             <>
-              <hr />
-              <div className="flex flex-col gap-2">
-                <p className="font-semibold">Configure using .env</p>
-                <div className="flex items-center gap-2">
+              <Separator />
+              <BlockStack gap="2">
+                <Heading level={1}>Configure using .env</Heading>
+                <InlineStack gap="2" blockAlign="center">
                   <Switch
                     checked={isEnvConfig}
                     onCheckedChange={handleEnvSwitch}
                   />
-                  Use backend url configuration from environment file.
-                </div>
-              </div>
+                  <Paragraph>
+                    Use backend url configuration from environment file.
+                  </Paragraph>
+                </InlineStack>
+              </BlockStack>
             </>
           )}
 
           {showRelativePathOption && (
             <>
-              <hr />
-              <div className="flex flex-col gap-2">
-                <p className="font-semibold">Use same-domain backend</p>
-                <div className="flex items-center gap-2">
+              <Separator />
+              <BlockStack gap="2">
+                <Heading level={1}>Use same-domain backend</Heading>
+                <InlineStack gap="2" blockAlign="center">
                   <Switch
                     checked={isRelativePathConfig}
                     onCheckedChange={(checked) => {
@@ -199,80 +199,84 @@ const BackendConfigurationDialog = ({
                       if (checked) setIsEnvConfig(false);
                     }}
                   />
-                  Use backend configuration relative to the current domain.
-                </div>
+                  <Paragraph>
+                    Use backend configuration relative to the current domain.
+                  </Paragraph>
+                </InlineStack>
                 {isRelativePathConfig && (
-                  <p className="italic font-light text-xs">
+                  <Paragraph weight="light" size="xs" className="italic">
                     Backend requests will be made to {window.location.origin}
                     /api.
-                  </p>
+                  </Paragraph>
                 )}
-              </div>
+              </BlockStack>
             </>
           )}
 
           {!(isEnvConfig && hasEnvConfig) && !isRelativePathConfig && (
             <>
-              <hr />
+              <Separator />
               <InfoBox title="Manual Configuration">
-                <span>
-                  You can set the backend URL in the environment file or use the
-                  input below.
-                </span>
+                You can set the backend URL in the environment file or use the
+                input below.
               </InfoBox>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Backend URL
-                </label>
-                <div className="relative flex items-center">
-                  <Input
-                    type="text"
-                    value={inputBackendUrl}
-                    placeholder="http://localhost:8000"
-                    onChange={handleInputChange}
-                    className={inputBackendTestResult !== null ? "pr-10" : ""}
-                  />
-                  {inputBackendTestResult !== null && (
-                    <Tooltip>
-                      <TooltipTrigger
-                        className={cn(
-                          "absolute right-24 flex items-center h-full text-lg",
-                          inputBackendTestResult
-                            ? "text-green-500"
-                            : "text-red-500",
-                        )}
-                      >
-                        {inputBackendTestResult ? "✓" : "✗"}
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {inputBackendTestResult
-                          ? "Backend responded"
-                          : "No response"}
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                  <Button
-                    variant="secondary"
-                    className="ml-2"
-                    onClick={handleTest}
-                  >
-                    <DatabaseZap className="h-4 w-4" />
+              <BlockStack>
+                <Heading level={3}>Backend URL</Heading>
+                <InlineStack
+                  gap="2"
+                  blockAlign="center"
+                  wrap="nowrap"
+                  className="w-full"
+                >
+                  <InlineStack className="relative w-full">
+                    <Input
+                      value={inputBackendUrl}
+                      placeholder="http://localhost:8000"
+                      onChange={handleInputChange}
+                      className={inputBackendTestResult !== null ? "pr-10" : ""}
+                    />
+                    {inputBackendTestResult !== null && (
+                      <Tooltip>
+                        <TooltipTrigger
+                          className={cn(
+                            "absolute right-2 flex items-center h-full text-lg",
+                            inputBackendTestResult
+                              ? "text-success"
+                              : "text-destructive",
+                          )}
+                        >
+                          {inputBackendTestResult ? "✓" : "✗"}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {inputBackendTestResult
+                            ? "Backend responded"
+                            : "No response"}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </InlineStack>
+
+                  <Button variant="secondary" onClick={handleTest}>
+                    <Icon name="DatabaseZap" />
                     Test
                   </Button>
-                </div>
-              </div>
+                </InlineStack>
+              </BlockStack>
               {!inputBackendUrl.trim() && (
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="inline-block text-red-500 h-4 w-4" />
-                  <p className="text-red-500 text-sm">
+                <InlineStack gap="2" blockAlign="center">
+                  <Icon
+                    name="CircleAlert"
+                    className="inline-block text-destructive"
+                  />
+                  <Paragraph tone="critical" size="sm">
                     No backend is configured. Certain features may not be
                     operable.
-                  </p>
-                </div>
+                  </Paragraph>
+                </InlineStack>
               )}
             </>
           )}
-        </div>
+        </BlockStack>
         <DialogFooter>
           <Button variant="secondary" onClick={handleClose}>
             Cancel

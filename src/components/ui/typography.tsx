@@ -41,6 +41,7 @@ const textVariants = cva("", {
       regular: "font-regular",
       semibold: "font-semibold",
       bold: "font-bold",
+      light: "font-light",
     },
   },
 });
@@ -120,7 +121,7 @@ export const Heading = ({
     <Text
       as={`h${level}`}
       size={level === 1 ? "md" : "sm"}
-      weight="semibold"
+      weight={level < 3 ? "semibold" : "regular"}
       role="heading"
       aria-level={level}
     >
