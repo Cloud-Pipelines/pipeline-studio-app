@@ -41,10 +41,6 @@ export const MultilineTextInputDialog = ({
     onCancel();
   }, [initialValue, onCancel]);
 
-  useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
-
   const setCursorToEnd = useCallback(
     (ref: HTMLTextAreaElement | null) => {
       if (ref && open) {
@@ -55,12 +51,16 @@ export const MultilineTextInputDialog = ({
     [open],
   );
 
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
   return (
     <Dialog open={open} onOpenChange={onCancel}>
       <DialogContent>
         <DialogTitle>{title}</DialogTitle>
         <DialogDescription className={cn(!description ? "hidden" : "")}>
-          {description}
+          {description ?? title}
         </DialogDescription>
         <Textarea
           ref={setCursorToEnd}
