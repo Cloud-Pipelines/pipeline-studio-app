@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { liveQuery } from "dexie";
+import { useLiveQuery } from "dexie-react-hooks";
 import {
   type ReactNode,
   useCallback,
@@ -8,6 +10,7 @@ import {
 } from "react";
 
 import ComponentDuplicateDialog from "@/components/shared/Dialogs/ComponentDuplicateDialog";
+import { GitHubFlatComponentLibrary } from "@/components/shared/GitHubLibrary/githubFlatComponentLibrary";
 import {
   COMPONENT_LIBRARY_URL,
   fetchAndStoreComponentLibrary,
@@ -50,12 +53,17 @@ import {
 } from "./componentLibrary";
 import { useForcedSearchContext } from "./ForcedSearchProvider";
 import { BrowserPersistedLibrary } from "./libraries/browserPersistedLibrary";
+import {
+  createLibraryObject,
+  registerLibraryFactory,
+} from "./libraries/factory";
 import { GraphSpecReadonlyLibrary } from "./libraries/graphSpecReadonlyLibrary";
 import {
   FAVORITE_COMPONENTS_LIBRARY_ID,
   migrateLegacyFavoriteFolder,
 } from "./libraries/migrateLegacyFavoriteFolder";
 import { PublishedComponentsLibrary } from "./libraries/publishedComponentsLibrary";
+import { LibraryDB, type StoredLibrary } from "./libraries/storage";
 import type { Library } from "./libraries/types";
 import { YamlFileLibrary } from "./libraries/yamlFileLibrary";
 
@@ -72,7 +80,9 @@ type ComponentLibraryContextType = {
   favoritesFolder: ComponentFolder;
   isLoading: boolean;
   error: Error | null;
-
+  existingComponentLibraries:
+    | Pick<StoredLibrary, "id" | "name" | "icon" | "type">[]
+    | undefined;
   searchResult: SearchResult | null;
 
   highlightedComponentDigest: string | null;
@@ -103,6 +113,18 @@ const ComponentLibraryContext =
     "ComponentLibraryProvider",
   );
 
+registerLibraryFactory(
+  "indexdb",
+  (library) =>
+    new BrowserPersistedLibrary(library.id, () => Promise.resolve(library)),
+);
+
+registerLibraryFactory(
+  "github",
+  (library) =>
+    new GitHubFlatComponentLibrary(library.configuration?.repo_name as string),
+);
+
 const componentLibraries = new Map<AvailableComponentLibraries, Library>([
   ["published_components", new PublishedComponentsLibrary()],
   [
@@ -122,9 +144,28 @@ const componentLibraries = new Map<AvailableComponentLibraries, Library>([
   ],
 ]);
 
+/**
+ * Sync the existing component libraries with the component libraries map
+ */
+liveQuery(() => LibraryDB.component_libraries.toArray()).subscribe(
+  (libraries) => {
+    libraries.forEach((library) => {
+      // todo: fix this type assertion
+      const id = library.id as AvailableComponentLibraries;
+      if (componentLibraries.has(id)) {
+        return;
+      }
+
+      componentLibraries.set(id, createLibraryObject(library));
+    });
+  },
+);
+
 function getComponentLibraryObject(libraryName: AvailableComponentLibraries) {
   if (!componentLibraries.has(libraryName)) {
-    throw new Error(`Component library "${libraryName}" is not supported.`);
+    throw new Error(
+      `Component library "${libraryName}" is not yet initialized.`,
+    );
   }
 
   return componentLibraries.get(libraryName) as Library;
@@ -147,6 +188,10 @@ export const ComponentLibraryProvider = ({
       );
     }
   }, [graphSpec]);
+
+  const existingComponentLibraries = useLiveQuery(() =>
+    LibraryDB.component_libraries.toArray(),
+  );
 
   const [componentLibrary, setComponentLibrary] = useState<ComponentLibrary>();
   const [userComponentsFolder, setUserComponentsFolder] =
@@ -528,6 +573,7 @@ export const ComponentLibraryProvider = ({
       error,
       searchResult,
       highlightedComponentDigest,
+      existingComponentLibraries,
       searchComponentLibrary,
       getComponentLibrary,
       addToComponentLibrary,
@@ -550,6 +596,7 @@ export const ComponentLibraryProvider = ({
       error,
       searchResult,
       highlightedComponentDigest,
+      existingComponentLibraries,
       searchComponentLibrary,
       getComponentLibrary,
       addToComponentLibrary,
