@@ -39,6 +39,8 @@ code {
   --warning-foreground: oklch(0.145 0 0);
   --success: oklch(0.7 0.18 140);
   --success-foreground: oklch(0.145 0 0);
+  --info: oklch(0.6 0.13 235);
+  --info-foreground: oklch(0.145 0 0);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -79,6 +81,8 @@ code {
   --warning-foreground: oklch(0.145 0 0);
   --success: oklch(0.7 0.18 140);
   --success-foreground: oklch(0.145 0 0);
+  --info: oklch(0.6 0.13 235);
+  --info-foreground: oklch(0.145 0 0);
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
   --ring: oklch(0.439 0 0);
@@ -118,6 +122,8 @@ code {
   --color-warning-foreground: var(--warning-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
