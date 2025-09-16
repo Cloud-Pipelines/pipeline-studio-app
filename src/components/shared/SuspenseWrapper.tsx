@@ -13,12 +13,18 @@ import { Spinner } from "@/components/ui/spinner";
 
 import { InfoBox } from "./InfoBox";
 
+type ErrorFallbackProps<T extends ComponentType<any>> = FallbackProps & {
+  originalProps?: Partial<ComponentProps<T>>;
+};
+
 interface SuspenseWrapperProps {
   fallback?: ReactNode;
   errorFallback?: (props: FallbackProps) => ReactNode;
 }
 
-const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => {
+const ErrorFallback = <T extends ComponentType<any>>({
+  resetErrorBoundary,
+}: ErrorFallbackProps<T>) => {
   return (
     <InfoBox title="There was an error!" variant="error">
       <Button onClick={() => resetErrorBoundary()} variant={"ghost"} size="xs">
@@ -57,12 +63,15 @@ SuspenseWrapper.displayName = "SuspenseWrapper";
 export function withSuspenseWrapper<T extends ComponentType<any>>(
   Component: T,
   Skeleton?: ComponentType<Partial<ComponentProps<T>>>,
-  errorFallback?: (props: FallbackProps) => ReactNode,
+  errorFallback?: (props: ErrorFallbackProps<T>) => ReactNode,
 ) {
+  const ErrorFallbackComponent = errorFallback ?? ErrorFallback<T>;
   const ComponentWithSuspense = (props: ComponentProps<T>) => (
     <SuspenseWrapper
       fallback={Skeleton ? <Skeleton {...props} /> : undefined}
-      errorFallback={errorFallback ?? ErrorFallback}
+      errorFallback={(errorProps) => (
+        <ErrorFallbackComponent {...errorProps} originalProps={props} />
+      )}
     >
       <Component {...props} />
     </SuspenseWrapper>
