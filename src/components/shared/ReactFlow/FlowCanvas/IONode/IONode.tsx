@@ -26,7 +26,7 @@ interface IONodeProps {
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const { graphSpec, componentSpec } = useComponentSpec();
-  const { setContent } = useContextPanel();
+  const { setContent, clearContent } = useContextPanel();
 
   const isInput = type === "input";
   const isOutput = type === "output";
@@ -80,6 +80,12 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
         );
       }
     }
+
+    return () => {
+      if (selected) {
+        clearContent();
+      }
+    };
   }, [input, output, selected, readOnly]);
 
   const connectedOutput = getOutputConnectedDetails(graphSpec, data.label);

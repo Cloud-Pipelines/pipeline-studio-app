@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { updateInputNameOnComponentSpec } from "@/components/Editor/utils/updateInputNameOnComponentSpec";
+import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import { InfoBox } from "@/components/shared/InfoBox";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 import { BlockStack } from "@/components/ui/layout";
 import { Heading, Paragraph } from "@/components/ui/typography";
+import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { type InputSpec } from "@/utils/componentSpec";
 import { checkInputConnectionToRequiredFields } from "@/utils/inputConnectionUtils";
 import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
@@ -26,6 +31,12 @@ export const InputValueEditor = ({
   const notify = useToastNotification();
   const { transferSelection } = useNodeSelectionTransfer(inputNameToNodeId);
   const { componentSpec, setComponentSpec } = useComponentSpec();
+  const { clearContent } = useContextPanel();
+  const {
+    handlers: confirmationHandlers,
+    triggerDialog: triggerConfirmation,
+    ...confirmationProps
+  } = useConfirmationDialog();
 
   const initialInputValue = input.value ?? input.default ?? "";
   const initialIsOptional = false; // When optional inputs are permitted again change to: input.optional ?? true
@@ -161,6 +172,37 @@ export const InputValueEditor = ({
     }
   }, [inputValue]);
 
+  const deleteNode = useCallback(async () => {
+    if (!componentSpec.inputs) return;
+
+    const confirmed = await triggerConfirmation({
+      title: "Delete Input Node",
+      description: `Are you sure you want to delete "${input.name}"?`,
+      content: <Paragraph tone="subdued">This cannot be undone.</Paragraph>,
+    });
+
+    if (!confirmed) return;
+
+    const updatedInputs = componentSpec.inputs.filter(
+      (componentInput) => componentInput.name !== input.name,
+    );
+
+    const updatedComponentSpec = {
+      ...componentSpec,
+      inputs: updatedInputs,
+    };
+
+    setComponentSpec(updatedComponentSpec);
+
+    clearContent();
+  }, [
+    componentSpec,
+    input.name,
+    setComponentSpec,
+    clearContent,
+    triggerConfirmation,
+  ]);
+
   useEffect(() => {
     setInputValue(initialInputValue);
     setInputName(input.name);
@@ -220,6 +262,18 @@ export const InputValueEditor = ({
           Input is not optional. Value is required.
         </InfoBox>
       )}
+
+      {!disabled && (
+        <Button onClick={deleteNode} variant="destructive" size="icon">
+          <Icon name="Trash2" />
+        </Button>
+      )}
+
+      <ConfirmationDialog
+        {...confirmationProps}
+        onConfirm={() => confirmationHandlers?.onConfirm()}
+        onCancel={() => confirmationHandlers?.onCancel()}
+      />
     </BlockStack>
   );
 };
