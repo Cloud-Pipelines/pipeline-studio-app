@@ -16,8 +16,7 @@ export const ExistingBetaFlags = {
 
   ["redirect-on-new-pipeline-run"]: {
     name: "Redirect on new pipeline run",
-    description:
-      "Automatically redirect from the editor to the pipeline run page after starting a new execution.",
+    description: "Automatically open a new tab after starting a new execution.",
     default: false,
   } as BetaFlag,
 
