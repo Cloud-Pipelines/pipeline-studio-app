@@ -6,6 +6,7 @@ import {
 } from "@/utils/componentSpec";
 
 import { isValidFilterRequest, type LibraryFilterRequest } from "../types";
+import { registerLibraryFactory } from "./factory";
 import { LibraryDB, type StoredLibrary } from "./storage";
 import {
   DuplicateComponentError,
