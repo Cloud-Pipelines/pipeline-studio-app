@@ -1,4 +1,4 @@
-import type { MouseEvent, ReactNode } from "react";
+import { type MouseEvent, type ReactNode, useCallback } from "react";
 
 import {
   AlertDialog,
@@ -35,19 +35,25 @@ const ConfirmationDialog = ({
   onConfirm,
   onCancel = () => {},
 }: ConfirmationDialogProps) => {
-  const handleClick = (e: MouseEvent) => {
+  const handleClick = useCallback((e: MouseEvent) => {
     e.stopPropagation();
-  };
+  }, []);
 
-  const handleConfirm = (e: MouseEvent) => {
-    e.stopPropagation();
-    onConfirm();
-  };
+  const handleConfirm = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      onConfirm();
+    },
+    [onConfirm],
+  );
 
-  const handleCancel = (e: MouseEvent) => {
-    e.stopPropagation();
-    onCancel();
-  };
+  const handleCancel = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      onCancel();
+    },
+    [onCancel],
+  );
 
   return (
     <AlertDialog open={isOpen}>
@@ -60,7 +66,7 @@ const ConfirmationDialog = ({
           {trigger}
         </AlertDialogTrigger>
       )}
-      <AlertDialogContent className="z-[9999]">
+      <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
@@ -68,7 +74,7 @@ const ConfirmationDialog = ({
         {content}
         <AlertDialogFooter>
           <AlertDialogCancel onClick={handleCancel}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm}>
+          <AlertDialogAction onClick={handleConfirm} autoFocus>
             Continue
           </AlertDialogAction>
         </AlertDialogFooter>
