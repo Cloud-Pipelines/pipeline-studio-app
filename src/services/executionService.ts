@@ -79,11 +79,13 @@ export const useFetchContainerExecutionState = (
 export const useFetchPipelineRun = (
   runId: string | undefined,
   backendUrl: string,
+  configured: boolean = true,
+  available: boolean = true,
 ) => {
   return useQuery<PipelineRunResponse>({
     queryKey: ["pipeline-run", runId],
     queryFn: () => fetchPipelineRun(runId!, backendUrl),
-    enabled: !!runId,
+    enabled: !!runId && configured && available,
     refetchOnWindowFocus: false,
   });
 };
@@ -92,6 +94,8 @@ export const useFetchExecutionInfo = (
   executionId: string,
   backendUrl: string,
   poll: boolean = false,
+  configured: boolean = true,
+  available: boolean = true,
 ) => {
   const {
     data: details,
@@ -104,6 +108,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionDetails(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
+    enabled: configured && available,
   });
 
   const {
@@ -117,6 +122,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionState(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
+    enabled: configured && available,
   });
 
   const isLoading = isDetailsLoading || isStateLoading;

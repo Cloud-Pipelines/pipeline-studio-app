@@ -33,7 +33,7 @@ export function RootExecutionStatusProvider({
   rootExecutionId,
   children,
 }: PropsWithChildren<{ rootExecutionId: string }>) {
-  const { backendUrl } = useBackend();
+  const { backendUrl, configured, available } = useBackend();
 
   const [isPolling, setIsPolling] = useState(true);
 
@@ -41,6 +41,8 @@ export function RootExecutionStatusProvider({
     rootExecutionId,
     backendUrl,
     isPolling,
+    configured,
+    available,
   );
   const { details, state } = data;
   const runId = details?.pipeline_run_id;

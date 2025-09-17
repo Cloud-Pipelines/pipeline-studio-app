@@ -34,7 +34,13 @@ const PipelineRun = () => {
     isLoading: isExecutionLoading,
     error: executionError,
     refetch: refetchExecution,
-  } = useFetchExecutionInfo(rootExecutionId, backendUrl, false);
+  } = useFetchExecutionInfo(
+    rootExecutionId,
+    backendUrl,
+    false,
+    configured,
+    available,
+  );
 
   // If fetching as root_execution_id fails, try as run_id
   const shouldFetchAsRunId = executionError && !triedAsRunId;
@@ -42,7 +48,12 @@ const PipelineRun = () => {
     data: pipelineRunData,
     isLoading: isPipelineRunLoading,
     error: pipelineRunError,
-  } = useFetchPipelineRun(shouldFetchAsRunId ? id : undefined, backendUrl);
+  } = useFetchPipelineRun(
+    shouldFetchAsRunId ? id : undefined,
+    backendUrl,
+    configured,
+    available,
+  );
 
   // Update rootExecutionId when we get pipeline run data
   useEffect(() => {
