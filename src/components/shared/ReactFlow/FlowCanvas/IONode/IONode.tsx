@@ -6,6 +6,8 @@ import { InputValueEditor } from "@/components/Editor/IOEditor/InputValueEditor"
 import { OutputNameEditor } from "@/components/Editor/IOEditor/OutputNameEditor";
 import { getOutputConnectedDetails } from "@/components/Editor/utils/getOutputConnectedDetails";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { Paragraph } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
@@ -91,65 +93,63 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
 
   const handleClassName = isInput ? "translate-x-1.5" : "-translate-x-1.5";
 
+  const hasDataValue = !!data.value;
+  const hasDataDefault = !!data.default;
+
+  const inputValue = hasDataValue
+    ? data.value
+    : hasDataDefault
+      ? data.default
+      : null;
+
+  const outputValue = outputConnectedValue ?? null;
+
+  const value = isInput ? inputValue : outputValue;
+
   return (
-    <Card
-      className={cn(
-        "rounded-2xl border-2 max-w-[300px] break-words p-0 drop-shadow-none",
-        borderColor,
-      )}
-    >
-      <CardHeader className="border-b border-slate-200 px-2 py-2.5">
-        <CardTitle className="max-w-[300px] break-words text-left text-xs text-slate-900">
-          {data.label}
-        </CardTitle>
+    <Card className={cn("border-2 max-w-[300px] p-0", borderColor)}>
+      <CardHeader className="px-2 py-2.5">
+        <CardTitle className="break-words">{data.label}</CardTitle>
       </CardHeader>
-      <CardContent className="p-2 flex flex-col gap-2">
-        {/* type */}
-        <div className="text-xs text-slate-700 font-mono truncate max-w-[250px]">
-          <span className="font-bold text-slate-700">Type:</span>{" "}
-          {outputConnectedType ?? data.type ?? "Any"}
-        </div>
+      <CardContent className="p-2 max-w-[250px]">
+        <BlockStack gap="2">
+          {/* type */}
+          <Paragraph size="xs" font="mono" className="truncate text-slate-700">
+            <span className="font-bold">Type:</span>{" "}
+            {outputConnectedType ?? data.type ?? "Any"}
+          </Paragraph>
 
-        {!!outputConnectedTaskId && (
-          <span className="font-bold text-slate-700">
-            {outputConnectedTaskId}
-          </span>
-        )}
+          {!!outputConnectedTaskId && (
+            <Paragraph weight="bold" className="text-slate-700">
+              {outputConnectedTaskId}
+            </Paragraph>
+          )}
 
-        {/* value */}
-        <div className={cn("flex flex-col gap-3 p-2 bg-white rounded-lg")}>
-          {isInput && (
-            <div
-              className={cn(
-                "text-xs text-slate-700 font-mono truncate max-w-[250px]",
-                {
-                  "text-red-500": !data.value && !data.default,
-                },
-              )}
+          {/* value */}
+          <InlineStack gap="1" className="p-2 bg-white rounded-lg w-full">
+            <Paragraph
+              size="xs"
+              font="mono"
+              weight="bold"
+              className="text-slate-700"
             >
-              <span className="font-bold text-slate-700">Value:</span>{" "}
-              {data.value ?? data.default ?? "No value"}
-            </div>
-          )}
-          {isOutput && (
-            <div
-              className={cn(
-                "text-xs text-slate-700 font-mono truncate max-w-[250px]",
-                {
-                  "text-red-500": !outputConnectedValue,
-                },
-              )}
+              Value:
+            </Paragraph>
+            <Paragraph
+              size="xs"
+              font="mono"
+              tone={!value ? "critical" : "subdued"}
+              className="truncate"
             >
-              <span className="font-bold text-slate-700">From:</span>{" "}
-              {outputConnectedValue ?? "Not connected"}
-            </div>
-          )}
-          <Handle
-            type={handleType}
-            position={handlePosition}
-            className={cn(handleDefaultClassName, handleClassName)}
-          />
-        </div>
+              {value ?? "No value"}
+            </Paragraph>
+          </InlineStack>
+        </BlockStack>
+        <Handle
+          type={handleType}
+          position={handlePosition}
+          className={cn(handleDefaultClassName, handleClassName)}
+        />
       </CardContent>
     </Card>
   );
