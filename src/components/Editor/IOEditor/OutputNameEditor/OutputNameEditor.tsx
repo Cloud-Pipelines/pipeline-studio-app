@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 
+import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Heading, Paragraph } from "@/components/ui/typography";
+import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { type OutputSpec } from "@/utils/componentSpec";
 import { outputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 
@@ -25,6 +30,12 @@ export const OutputNameEditor = ({
 }: OutputNameEditorProps) => {
   const { transferSelection } = useNodeSelectionTransfer(outputNameToNodeId);
   const { setComponentSpec, componentSpec } = useComponentSpec();
+  const { clearContent } = useContextPanel();
+  const {
+    handlers: confirmationHandlers,
+    triggerDialog: triggerConfirmation,
+    ...confirmationProps
+  } = useConfirmationDialog();
 
   const [outputName, setOutputName] = useState(output.name);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -88,6 +99,37 @@ export const OutputNameEditor = ({
     [componentSpec, output.name],
   );
 
+  const deleteNode = useCallback(async () => {
+    if (!componentSpec.outputs) return;
+
+    const confirmed = await triggerConfirmation({
+      title: "Delete Output Node",
+      description: `Are you sure you want to delete "${output.name}"?`,
+      content: <Paragraph tone="subdued">This cannot be undone.</Paragraph>,
+    });
+
+    if (!confirmed) return;
+
+    const updatedOutputs = componentSpec.outputs.filter(
+      (componentOutput) => componentOutput.name !== output.name,
+    );
+
+    const updatedComponentSpec = {
+      ...componentSpec,
+      outputs: updatedOutputs,
+    };
+
+    setComponentSpec(updatedComponentSpec);
+
+    clearContent();
+  }, [
+    componentSpec,
+    output.name,
+    setComponentSpec,
+    clearContent,
+    triggerConfirmation,
+  ]);
+
   useEffect(() => {
     setOutputName(output.name);
   }, [output.name]);
@@ -122,6 +164,18 @@ export const OutputNameEditor = ({
           />
         </div>
       </InlineStack>
+
+      {!disabled && (
+        <Button onClick={deleteNode} variant="destructive" size="icon">
+          <Icon name="Trash2" />
+        </Button>
+      )}
+
+      <ConfirmationDialog
+        {...confirmationProps}
+        onConfirm={() => confirmationHandlers?.onConfirm()}
+        onCancel={() => confirmationHandlers?.onCancel()}
+      />
     </BlockStack>
   );
 };

@@ -9,6 +9,7 @@ import { InputValueEditor } from "./InputValueEditor";
 const mockSetComponentSpec = vi.fn();
 const mockTransferSelection = vi.fn();
 const mockNotify = vi.fn();
+const mockClearContent = vi.fn();
 
 vi.mock("@/providers/ComponentSpecProvider", () => ({
   useComponentSpec: () => ({
@@ -24,6 +25,14 @@ vi.mock("@/providers/ComponentSpecProvider", () => ({
       },
     },
     setComponentSpec: mockSetComponentSpec,
+  }),
+}));
+
+vi.mock("@/providers/ContextPanelProvider", () => ({
+  useContextPanel: () => ({
+    content: null,
+    setContent: vi.fn(),
+    clearContent: mockClearContent,
   }),
 }));
 
