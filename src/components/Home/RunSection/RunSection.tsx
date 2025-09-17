@@ -190,6 +190,14 @@ export const RunSection = () => {
     navigate({ to: pathname, search: nextSearch });
   };
 
+  if (!available) {
+    return (
+      <InfoBox title="Backend not available" variant="warning">
+        The configured backend is currently unavailable.
+      </InfoBox>
+    );
+  }
+
   if (!configured) {
     return (
       <InfoBox title="Backend not configured" variant="warning">

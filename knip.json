@@ -4,7 +4,8 @@
     "src/api/**",
     "node_modules/**",
     "src/components/ui/**",
-    "openapi-ts.config.ts"
+    "openapi-ts.config.ts",
+    "vite.config.ghpages.js"
   ],
   "ignoreDependencies": [
     "@hey-api/client-fetch",

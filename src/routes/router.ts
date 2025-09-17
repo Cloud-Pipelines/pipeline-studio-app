@@ -1,3 +1,4 @@
+import { createBrowserHistory, createHashHistory } from "@tanstack/history";
 import {
   createRootRoute,
   createRoute,
@@ -6,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 
 import { AuthorizationResultScreen } from "@/components/shared/GitHubAuth/AuthorizationResultScreen";
+import { BASE_URL, IS_GITHUB_PAGES } from "@/utils/constants";
 
 import RootLayout from "../components/layout/RootLayout";
 import Editor from "./Editor";
@@ -81,8 +83,17 @@ const rootRouteTree = rootRoute.addChildren([
   appRouteTree,
 ]);
 
+const basepath = BASE_URL.replace(/\/$/, "") || "";
+
+// Use hash history for GitHub Pages to avoid 404s on refresh
+// Hash routing uses # in URLs (e.g., /pipeline-studio-app/#/editor/my-pipeline)
+// For standard deployment, use browser history with basepath
+const history = IS_GITHUB_PAGES ? createHashHistory() : createBrowserHistory();
+
 export const router = createRouter({
   routeTree: rootRouteTree,
   defaultPreload: "intent",
   scrollRestoration: true,
+  history,
+  basepath: IS_GITHUB_PAGES ? "" : basepath, // Hash history doesn't need basepath
 });
