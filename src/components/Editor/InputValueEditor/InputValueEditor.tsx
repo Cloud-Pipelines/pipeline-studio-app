@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { updateInputNameOnComponentSpec } from "@/components/shared/ReactFlow/FlowCanvas/utils/updateInputNameOnComponentSpec";
 import { Button } from "@/components/ui/button";
@@ -17,22 +17,20 @@ import { checkNameCollision } from "./FormFields/utils";
 
 interface InputValueEditorProps {
   input: InputSpec;
-  onSave?: () => void;
-  onCancel?: () => void;
   disabled?: boolean;
+  onClose?: () => void;
 }
 
 export const InputValueEditor = ({
   input,
-  onSave,
-  onCancel,
   disabled = false,
+  onClose,
 }: InputValueEditorProps) => {
   const notify = useToastNotification();
 
-  const [inputValue, setInputValue] = useState(input.value || "");
+  const [inputValue, setInputValue] = useState(input.value ?? "");
   const [inputName, setInputName] = useState(input.name);
-  const [inputType, setInputType] = useState(input.type?.toString() || "any");
+  const [inputType, setInputType] = useState(input.type?.toString() ?? "any");
   const [inputOptional, setInputOptional] = useState(input.optional ?? true);
   const [validationError, setValidationError] = useState<string | null>(null);
   const { componentSpec, setComponentSpec } = useComponentSpec();
@@ -45,6 +43,48 @@ export const InputValueEditor = ({
   // If connected to required fields, force optional to false and disable the field
   const isOptionalDisabled = isConnectedToRequired || disabled;
   const effectiveOptionalValue = isConnectedToRequired ? false : inputOptional;
+
+  const hasChanges = useCallback(() => {
+    return (
+      inputValue !== (input.value ?? "") ||
+      inputName !== input.name ||
+      inputType !== (input.type?.toString() ?? "any") ||
+      inputOptional !== (input.optional ?? true)
+    );
+  }, [inputValue, inputName, inputType, inputOptional, input]);
+
+  const saveChanges = useCallback(() => {
+    if (!hasChanges() || validationError) return;
+
+    const updatedComponentSpecWithValues = handleInputChange(
+      input.name,
+      inputValue,
+      inputName,
+      effectiveOptionalValue,
+      inputType as string,
+    );
+
+    if (updatedComponentSpecWithValues) {
+      setComponentSpec(updatedComponentSpecWithValues);
+    }
+  }, [
+    hasChanges,
+    validationError,
+    input.name,
+    inputValue,
+    inputName,
+    effectiveOptionalValue,
+    inputType,
+  ]);
+
+  const handleBlur = useCallback(() => {
+    saveChanges();
+  }, [saveChanges]);
+
+  const handleClose = useCallback(() => {
+    saveChanges();
+    onClose?.();
+  }, [saveChanges, onClose]);
 
   const handleInputChange = (
     oldName: string,
@@ -107,26 +147,7 @@ export const InputValueEditor = ({
     setValidationError(null);
   };
 
-  const handleSave = () => {
-    const updatedComponentSpecWithValues = handleInputChange(
-      input.name,
-      inputValue,
-      inputName,
-      effectiveOptionalValue,
-      inputType as string,
-    );
-
-    if (updatedComponentSpecWithValues) {
-      setComponentSpec(updatedComponentSpecWithValues);
-    }
-    onSave?.();
-  };
-
   const placeholder = input.default || `Enter ${input.name}...`;
-
-  const handleCancel = () => {
-    onCancel?.();
-  };
 
   const handleCopyValue = () => {
     if (inputValue) {
@@ -134,6 +155,14 @@ export const InputValueEditor = ({
       notify("Input value copied to clipboard", "success");
     }
   };
+
+  useEffect(() => {
+    setInputValue(input.value ?? "");
+    setInputName(input.name);
+    setInputType(input.type?.toString() ?? "any");
+    setInputOptional(input.optional ?? true);
+    setValidationError(null);
+  }, [input]);
 
   return (
     <div className="flex flex-col gap-3 p-4">
@@ -144,6 +173,7 @@ export const InputValueEditor = ({
       <NameField
         inputName={inputName}
         onNameChange={handleNameChange}
+        onBlur={handleBlur}
         error={validationError}
         disabled={disabled}
       />
@@ -151,6 +181,7 @@ export const InputValueEditor = ({
       <TextField
         inputValue={inputValue}
         onInputChange={handleValueChange}
+        onBlur={handleBlur}
         placeholder={placeholder}
         disabled={disabled}
         inputName={input.name}
@@ -166,6 +197,7 @@ export const InputValueEditor = ({
       <TypeField
         inputValue={inputType}
         onInputChange={handleTypeChange}
+        onBlur={handleBlur}
         placeholder="Type: Any"
         disabled={disabled}
         inputName={input.name}
@@ -174,6 +206,7 @@ export const InputValueEditor = ({
       <OptionalField
         inputName={input.name}
         onInputChange={handleOptionalChange}
+        onBlur={handleBlur}
         inputValue={effectiveOptionalValue}
         disabled={isOptionalDisabled}
       />
@@ -185,11 +218,8 @@ export const InputValueEditor = ({
       )}
 
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={handleCancel}>
-          Cancel
-        </Button>
-        <Button onClick={handleSave} disabled={!!validationError || disabled}>
-          Save
+        <Button variant="outline" onClick={handleClose}>
+          Close
         </Button>
       </div>
     </div>
