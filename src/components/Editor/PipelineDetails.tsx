@@ -110,8 +110,7 @@ const PipelineDetails = () => {
         connectedDetails={outputConnectedDetails}
         key={output.name}
         output={output}
-        onSave={deselectNode}
-        onCancel={handleCancel}
+        onClose={handleCancel}
       />,
     );
   };

@@ -82,14 +82,13 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
             output={output}
             connectedDetails={outputConnectedDetails}
             key={output.name}
-            onSave={deselectNode}
             disabled={!isPipelineEditor}
-            onCancel={deselectNode}
+            onClose={deselectNode}
           />,
         );
       }
     }
-  }, [input, selected]);
+  }, [input, output, selected]);
 
   const {
     outputName: outputConnectedValue,

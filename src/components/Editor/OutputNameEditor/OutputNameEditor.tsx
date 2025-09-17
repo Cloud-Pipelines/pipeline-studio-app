@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { type OutputConnectedDetails } from "@/components/shared/ReactFlow/FlowCanvas/utils/getOutputConnectedDetails";
 import { updateOutputNameOnComponentSpec } from "@/components/shared/ReactFlow/FlowCanvas/utils/updateOutputNameOnComponentSpec";
@@ -16,22 +16,24 @@ interface OutputNameEditorProps {
   output: OutputSpec;
   onNameChange?: (oldName: string, newName: string) => void;
   onTypeChange?: (name: string, newType: string) => void;
-  onSave?: () => void;
   connectedDetails: OutputConnectedDetails;
   disabled?: boolean;
-  onCancel?: () => void;
+  onClose?: () => void;
 }
 
 export const OutputNameEditor = ({
   output,
-  onSave,
-  onCancel,
   disabled,
   connectedDetails,
+  onClose,
 }: OutputNameEditorProps) => {
   const { setComponentSpec, componentSpec } = useComponentSpec();
   const [outputName, setOutputName] = useState(output.name);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  const hasChanges = useCallback(() => {
+    return outputName !== output.name;
+  }, [outputName, output.name]);
 
   const handleOutputNameChange = useCallback(
     (oldName: string, newName: string) => {
@@ -48,6 +50,30 @@ export const OutputNameEditor = ({
     [componentSpec, setComponentSpec],
   );
 
+  const saveChanges = useCallback(() => {
+    if (!hasChanges() || validationError) return;
+
+    const updatedComponentSpecWithValues = handleOutputNameChange(
+      output.name,
+      outputName,
+    );
+
+    if (updatedComponentSpecWithValues) {
+      setComponentSpec(updatedComponentSpecWithValues);
+    }
+  }, [
+    hasChanges,
+    validationError,
+    handleOutputNameChange,
+    output.name,
+    outputName,
+    setComponentSpec,
+  ]);
+
+  const handleBlur = useCallback(() => {
+    saveChanges();
+  }, [saveChanges]);
+
   const handleNameChange = (value: string) => {
     setOutputName(value);
 
@@ -58,17 +84,15 @@ export const OutputNameEditor = ({
 
     setValidationError(null);
   };
-  const handleSave = () => {
-    const updatedComponentSpecWithValues = handleOutputNameChange(
-      output.name,
-      outputName,
-    );
 
-    if (updatedComponentSpecWithValues) {
-      setComponentSpec(updatedComponentSpecWithValues);
-    }
-    onSave?.();
+  const handleClose = () => {
+    saveChanges();
+    onClose?.();
   };
+
+  useEffect(() => {
+    setOutputName(output.name);
+  }, [output.name]);
 
   return (
     <div className="flex flex-col gap-3 p-4">
@@ -83,13 +107,14 @@ export const OutputNameEditor = ({
           <NameField
             inputName={outputName}
             onNameChange={handleNameChange}
+            onBlur={handleBlur}
             disabled={disabled}
             error={validationError}
           />
         </div>
         <div className="w-36">
           <TypeField
-            inputValue={connectedDetails.outputType || "Any"}
+            inputValue={connectedDetails.outputType ?? "Any"}
             onInputChange={() => {}}
             placeholder="Any"
             disabled
@@ -98,11 +123,8 @@ export const OutputNameEditor = ({
         </div>
       </div>
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button onClick={handleSave} disabled={!!validationError || disabled}>
-          Save
+        <Button variant="outline" onClick={handleClose}>
+          Close
         </Button>
       </div>
     </div>
