@@ -6,7 +6,9 @@ import { PublishedComponentBadge } from "@/components/shared/ManageComponent/Pub
 import { trimDigest } from "@/components/shared/ManageComponent/utils/digest";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BlockStack } from "@/components/ui/layout";
 import { QuickTooltip } from "@/components/ui/tooltip";
+import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
@@ -46,7 +48,7 @@ const TaskNodeCard = () => {
   const [expandedInputs, setExpandedInputs] = useState(false);
   const [expandedOutputs, setExpandedOutputs] = useState(false);
 
-  const { name, state, callbacks, nodeId, taskSpec } = taskNode;
+  const { name, state, callbacks, nodeId, taskSpec, taskId } = taskNode;
   const { dimensions, selected, highlighted, isCustomComponent } = state;
 
   const onNotify = useCallback((message: NotifyMessage) => {
@@ -170,9 +172,18 @@ const TaskNodeCard = () => {
       ref={nodeRef}
     >
       <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
-        <CardTitle className="break-words text-left text-xs text-slate-900">
-          {name}
-        </CardTitle>
+        <BlockStack>
+          <CardTitle className="break-words text-left text-xs text-slate-900">
+            {name}
+          </CardTitle>
+          {taskId &&
+            taskId !== name &&
+            !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
+              <Text size="xs" tone="subdued" className="font-light">
+                {taskId}
+              </Text>
+            )}
+        </BlockStack>
 
         {isRemoteComponentLibrarySearchEnabled ? (
           <PublishedComponentBadge componentRef={taskSpec.componentRef}>
