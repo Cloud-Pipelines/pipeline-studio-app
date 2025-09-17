@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { updateInputNameOnComponentSpec } from "@/components/Editor/utils/updateInputNameOnComponentSpec";
 import { InfoBox } from "@/components/shared/InfoBox";
-import { Button } from "@/components/ui/button";
-import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { BlockStack } from "@/components/ui/layout";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import useToastNotification from "@/hooks/useToastNotification";
@@ -23,13 +22,11 @@ import { checkNameCollision } from "./FormFields/utils";
 interface InputValueEditorProps {
   input: InputSpec;
   disabled?: boolean;
-  onClose?: () => void;
 }
 
 export const InputValueEditor = ({
   input,
   disabled = false,
-  onClose,
 }: InputValueEditorProps) => {
   const notify = useToastNotification();
   const { transferSelection } = useNodeSelectionTransfer(inputNameToNodeId);
@@ -163,11 +160,6 @@ export const InputValueEditor = ({
     saveChanges();
   }, [saveChanges]);
 
-  const handleClose = useCallback(() => {
-    saveChanges();
-    onClose?.();
-  }, [saveChanges, onClose]);
-
   const handleCopyValue = useCallback(() => {
     if (inputValue) {
       void navigator.clipboard.writeText(inputValue);
@@ -243,12 +235,6 @@ export const InputValueEditor = ({
         inputValue={effectiveOptionalValue}
         disabled={isOptionalDisabled}
       />
-
-      <InlineStack align="end" className="w-full">
-        <Button variant="outline" onClick={handleClose}>
-          Close
-        </Button>
-      </InlineStack>
     </BlockStack>
   );
 };

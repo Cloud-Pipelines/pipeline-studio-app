@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
@@ -17,14 +16,12 @@ interface OutputNameEditorProps {
   output: OutputSpec;
   disabled?: boolean;
   connectedDetails: OutputConnectedDetails;
-  onClose?: () => void;
 }
 
 export const OutputNameEditor = ({
   output,
   disabled,
   connectedDetails,
-  onClose,
 }: OutputNameEditorProps) => {
   const { transferSelection } = useNodeSelectionTransfer(outputNameToNodeId);
   const { setComponentSpec, componentSpec } = useComponentSpec();
@@ -91,11 +88,6 @@ export const OutputNameEditor = ({
     [componentSpec, output.name],
   );
 
-  const handleClose = useCallback(() => {
-    saveChanges();
-    onClose?.();
-  }, [saveChanges, onClose]);
-
   useEffect(() => {
     setOutputName(output.name);
   }, [output.name]);
@@ -129,11 +121,6 @@ export const OutputNameEditor = ({
             inputName={output.name}
           />
         </div>
-      </InlineStack>
-      <InlineStack align="end" className="w-full">
-        <Button variant="outline" onClick={handleClose}>
-          Close
-        </Button>
       </InlineStack>
     </BlockStack>
   );
