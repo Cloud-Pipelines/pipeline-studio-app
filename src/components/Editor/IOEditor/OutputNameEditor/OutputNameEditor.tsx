@@ -77,21 +77,24 @@ export const OutputNameEditor = ({
     saveChanges();
   }, [saveChanges]);
 
-  const handleNameChange = (value: string) => {
-    setOutputName(value);
+  const handleNameChange = useCallback(
+    (value: string) => {
+      setOutputName(value);
 
-    if (checkNameCollision(value, output.name, componentSpec, "outputs")) {
-      setValidationError("An output with this name already exists");
-      return;
-    }
+      if (checkNameCollision(value, output.name, componentSpec, "outputs")) {
+        setValidationError("An output with this name already exists");
+        return;
+      }
 
-    setValidationError(null);
-  };
+      setValidationError(null);
+    },
+    [componentSpec, output.name],
+  );
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     saveChanges();
     onClose?.();
-  };
+  }, [saveChanges, onClose]);
 
   useEffect(() => {
     setOutputName(output.name);
