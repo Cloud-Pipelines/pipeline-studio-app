@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { updateInputNameOnComponentSpec } from "@/components/shared/ReactFlow/FlowCanvas/utils/updateInputNameOnComponentSpec";
+import { updateInputNameOnComponentSpec } from "@/components/Editor/utils/updateInputNameOnComponentSpec";
 import { Button } from "@/components/ui/button";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import useToastNotification from "@/hooks/useToastNotification";
@@ -30,13 +30,13 @@ export const InputValueEditor = ({
 }: InputValueEditorProps) => {
   const notify = useToastNotification();
   const { transferSelection } = useNodeSelectionTransfer(inputNameToNodeId);
+  const { componentSpec, setComponentSpec } = useComponentSpec();
 
   const [inputValue, setInputValue] = useState(input.value ?? "");
   const [inputName, setInputName] = useState(input.name);
   const [inputType, setInputType] = useState(input.type?.toString() ?? "any");
   const [inputOptional, setInputOptional] = useState(input.optional ?? true);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const { componentSpec, setComponentSpec } = useComponentSpec();
 
   // Check if this input is connected to any required fields
   const { isConnectedToRequired, connectedFields } = useMemo(() => {

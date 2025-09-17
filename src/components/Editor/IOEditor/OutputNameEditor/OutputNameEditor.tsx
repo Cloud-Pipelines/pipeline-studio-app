@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { type OutputConnectedDetails } from "@/components/shared/ReactFlow/FlowCanvas/utils/getOutputConnectedDetails";
-import { updateOutputNameOnComponentSpec } from "@/components/shared/ReactFlow/FlowCanvas/utils/updateOutputNameOnComponentSpec";
 import { Button } from "@/components/ui/button";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type OutputSpec } from "@/utils/componentSpec";
 import { outputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 
-import {
-  NameField,
-  TypeField,
-} from "../InputValueEditor/FormFields/FormFields";
+import { type OutputConnectedDetails } from "../../utils/getOutputConnectedDetails";
+import { updateOutputNameOnComponentSpec } from "../../utils/updateOutputNameOnComponentSpec";
+import { NameField, TypeField } from "../InputValueEditor/FormFields";
 import { checkNameCollision } from "../InputValueEditor/FormFields/utils";
 
 interface OutputNameEditorProps {
@@ -31,6 +28,7 @@ export const OutputNameEditor = ({
 }: OutputNameEditorProps) => {
   const { transferSelection } = useNodeSelectionTransfer(outputNameToNodeId);
   const { setComponentSpec, componentSpec } = useComponentSpec();
+
   const [outputName, setOutputName] = useState(output.name);
   const [validationError, setValidationError] = useState<string | null>(null);
 
