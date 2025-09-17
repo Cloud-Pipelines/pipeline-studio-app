@@ -1,4 +1,4 @@
-import type { Node, ReactFlowInstance } from "@xyflow/react";
+import { type Node, useReactFlow } from "@xyflow/react";
 import { useCallback } from "react";
 
 import { getDeleteConfirmationDetails } from "@/components/shared/ReactFlow/FlowCanvas/ConfirmationDialogs/DeleteConfirmation";
@@ -18,7 +18,6 @@ import type { TriggerDialogProps } from "./useConfirmationDialog";
 import useToastNotification from "./useToastNotification";
 
 interface UseNodeCallbacksProps {
-  reactFlowInstance: ReactFlowInstance | undefined;
   triggerConfirmation: (data: TriggerDialogProps) => Promise<boolean>;
   onElementsRemove: (params: NodesAndEdges) => void;
   updateOrAddNodes: (params: {
@@ -28,12 +27,12 @@ interface UseNodeCallbacksProps {
 }
 
 export const useNodeCallbacks = ({
-  reactFlowInstance,
   triggerConfirmation,
   onElementsRemove,
   updateOrAddNodes,
 }: UseNodeCallbacksProps) => {
   const notify = useToastNotification();
+  const reactFlowInstance = useReactFlow();
 
   const { graphSpec, updateGraphSpec, componentSpec, setComponentSpec } =
     useComponentSpec();

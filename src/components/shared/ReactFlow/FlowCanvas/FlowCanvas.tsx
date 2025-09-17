@@ -266,7 +266,6 @@ const FlowCanvas = ({
   );
 
   const nodeCallbacks = useNodeCallbacks({
-    reactFlowInstance,
     triggerConfirmation,
     onElementsRemove,
     updateOrAddNodes,
