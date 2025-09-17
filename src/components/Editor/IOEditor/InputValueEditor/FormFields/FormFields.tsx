@@ -61,12 +61,14 @@ const NameField = ({
   onBlur,
   error,
   disabled,
+  autoFocus = false,
 }: {
   inputName: string;
   onNameChange: (value: string) => void;
   onBlur?: () => void;
   error?: string | null;
   disabled?: boolean;
+  autoFocus?: boolean;
 }) => (
   <FormField label="Name" id={`input-name-${inputName}`}>
     <Input
@@ -79,6 +81,7 @@ const NameField = ({
       className={cn("text-sm", {
         "border-red-500 focus:border-red-500": !!error,
       })}
+      autoFocus={autoFocus}
     />
     {!!error && <div className="text-xs text-red-500 mt-1">{error}</div>}
   </FormField>
