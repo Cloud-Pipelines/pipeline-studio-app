@@ -91,6 +91,21 @@ describe("checkComponentSpecValidity", () => {
       );
     });
 
+    it("should return error for required input without a value", () => {
+      const componentSpec: ComponentSpec = {
+        name: "test-component",
+        implementation: { container: { image: "test-image" } },
+        inputs: [{ name: "no-value", type: "string", optional: false }],
+      };
+
+      const result = checkComponentSpecValidity(componentSpec);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Pipeline input "no-value" is required and does not have a value',
+      );
+    });
+
     it("should return error for output without name", () => {
       const componentSpec: ComponentSpec = {
         name: "test-component",
@@ -325,7 +340,7 @@ describe("checkComponentSpecValidity", () => {
     it("should validate input-output connections", () => {
       const componentSpec: ComponentSpec = {
         name: "test-component",
-        inputs: [{ name: "requiredInput", type: "string", optional: false }],
+        inputs: [{ name: "requiredInput", type: "string" }],
         outputs: [{ name: "requiredOutput", type: "string" }],
         implementation: {
           graph: {
@@ -348,7 +363,7 @@ describe("checkComponentSpecValidity", () => {
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain(
-        'Pipeline input "requiredInput" is required and does not have a value',
+        'Pipeline input "requiredInput" is not connected to any tasks',
       );
       expect(result.errors).toContain(
         'Pipeline output "requiredOutput" is not connected to any tasks',
@@ -409,7 +424,7 @@ describe("checkComponentSpecValidity", () => {
 
       const componentSpec: ComponentSpec = {
         name: "valid-component",
-        inputs: [{ name: "input1", type: "string", optional: false }],
+        inputs: [{ name: "input1", type: "string", value: "value1" }],
         outputs: [{ name: "output1", type: "string" }],
         implementation: {
           graph: {
@@ -476,7 +491,12 @@ describe("checkComponentSpecValidity", () => {
       const componentSpec: ComponentSpec = {
         name: "component-with-optional-input",
         inputs: [
-          { name: "requiredInput", type: "string", optional: false },
+          {
+            name: "requiredInput",
+            type: "string",
+            optional: false,
+            value: "required",
+          },
           { name: "optionalInput", type: "string", optional: true },
           {
             name: "inputWithDefault",

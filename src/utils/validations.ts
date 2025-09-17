@@ -85,6 +85,13 @@ const validateInputsAndOutputs = (componentSpec: ComponentSpec): string[] => {
         }
         inputNames.add(input.name);
       }
+
+      // Check that required inputs have a value or default
+      if (!input.optional && !input.default && !input.value) {
+        errors.push(
+          `Pipeline input "${input.name}" is required and does not have a value`,
+        );
+      }
     });
   }
 
@@ -341,25 +348,23 @@ const validateInputOutputConnections = (
   // Validate all required component inputs have corresponding graph inputs or default values
   if (componentSpec.inputs) {
     componentSpec.inputs.forEach((input) => {
-      if (!input.optional && !input.default) {
-        // Check if this required input is used in any task arguments
-        const isInputUsed = Object.values(graphSpec.tasks).some(
-          (task: TaskSpec) =>
-            task.arguments &&
-            Object.values(task.arguments).some(
-              (arg: ArgumentType) =>
-                typeof arg === "object" &&
-                arg !== null &&
-                "graphInput" in arg &&
-                arg.graphInput.inputName === input.name,
-            ),
-        );
+      // Check if this input is used in any task arguments
+      const isInputUsed = Object.values(graphSpec.tasks).some(
+        (task: TaskSpec) =>
+          task.arguments &&
+          Object.values(task.arguments).some(
+            (arg: ArgumentType) =>
+              typeof arg === "object" &&
+              arg !== null &&
+              "graphInput" in arg &&
+              arg.graphInput.inputName === input.name,
+          ),
+      );
 
-        if (!isInputUsed) {
-          errors.push(
-            `Pipeline input "${input.name}" is required and does not have a value`,
-          );
-        }
+      if (!isInputUsed) {
+        errors.push(
+          `Pipeline input "${input.name}" is not connected to any tasks`,
+        );
       }
     });
   }
