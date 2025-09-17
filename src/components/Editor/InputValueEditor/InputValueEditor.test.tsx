@@ -1,11 +1,15 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { InputSpec } from "@/utils/componentSpec";
+import type { ComponentSpec, InputSpec } from "@/utils/componentSpec";
 
 import { InputValueEditor } from "./InputValueEditor";
 
-// Mock the ComponentSpecProvider
+// Mock all the dependencies
+const mockSetComponentSpec = vi.fn();
+const mockTransferSelection = vi.fn();
+const mockNotify = vi.fn();
+
 vi.mock("@/providers/ComponentSpecProvider", () => ({
   useComponentSpec: () => ({
     componentSpec: {
@@ -19,8 +23,43 @@ vi.mock("@/providers/ComponentSpecProvider", () => ({
         },
       },
     },
-    setComponentSpec: vi.fn(),
+    setComponentSpec: mockSetComponentSpec,
   }),
+}));
+
+vi.mock("@/hooks/useNodeSelectionTransfer", () => ({
+  useNodeSelectionTransfer: () => ({
+    transferSelection: mockTransferSelection,
+  }),
+}));
+
+vi.mock("@/hooks/useToastNotification", () => ({
+  default: () => mockNotify,
+}));
+
+vi.mock("@/utils/inputConnectionUtils", () => ({
+  checkInputConnectionToRequiredFields: () => ({
+    isConnectedToRequired: false,
+    connectedFields: [],
+  }),
+}));
+
+vi.mock("@/utils/componentSpecValidation", () => ({
+  checkNameCollision: (
+    newName: string,
+    currentName: string,
+    _: ComponentSpec,
+    type: string,
+  ) => {
+    if (
+      type === "inputs" &&
+      newName === "ExistingInput" &&
+      newName !== currentName
+    ) {
+      return true;
+    }
+    return false;
+  },
 }));
 
 describe("InputValueEditor", () => {
@@ -51,6 +90,9 @@ describe("InputValueEditor", () => {
     ) as HTMLTextAreaElement;
     fireEvent.change(valueInput, { target: { value: "new value" } });
     fireEvent.blur(valueInput);
+
+    // Verify that the component spec was updated
+    expect(mockSetComponentSpec).toHaveBeenCalled();
   });
 
   it("calls onNameChange when input name changes", () => {
@@ -58,6 +100,10 @@ describe("InputValueEditor", () => {
     const nameInput = screen.getAllByRole("textbox")[0] as HTMLInputElement;
     fireEvent.change(nameInput, { target: { value: "NewName" } });
     fireEvent.blur(nameInput);
+
+    // Verify that the component spec was updated and selection was transferred
+    expect(mockSetComponentSpec).toHaveBeenCalled();
+    expect(mockTransferSelection).toHaveBeenCalledWith("TestInput", "NewName");
   });
 
   it("shows validation error when renaming to existing input name", () => {
@@ -69,7 +115,7 @@ describe("InputValueEditor", () => {
     // Should show error message
     expect(
       screen.getByText("An input with this name already exists"),
-    ).toBeDefined();
+    ).toBeInTheDocument();
 
     // Input should have red border
     expect(nameInput.className).toContain("border-red-500");
@@ -84,7 +130,7 @@ describe("InputValueEditor", () => {
     fireEvent.change(nameInput, { target: { value: "ExistingInput" } });
     expect(
       screen.getByText("An input with this name already exists"),
-    ).toBeDefined();
+    ).toBeInTheDocument();
 
     // Then, change to unique name
     fireEvent.change(nameInput, { target: { value: "UniqueName" } });

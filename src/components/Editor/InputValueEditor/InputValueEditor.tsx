@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { updateInputNameOnComponentSpec } from "@/components/shared/ReactFlow/FlowCanvas/utils/updateInputNameOnComponentSpec";
 import { Button } from "@/components/ui/button";
+import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type InputSpec } from "@/utils/componentSpec";
 import { checkInputConnectionToRequiredFields } from "@/utils/inputConnectionUtils";
+import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 
 import {
   NameField,
@@ -27,6 +29,7 @@ export const InputValueEditor = ({
   onClose,
 }: InputValueEditorProps) => {
   const notify = useToastNotification();
+  const { transferSelection } = useNodeSelectionTransfer(inputNameToNodeId);
 
   const [inputValue, setInputValue] = useState(input.value ?? "");
   const [inputName, setInputName] = useState(input.name);
@@ -114,11 +117,15 @@ export const InputValueEditor = ({
       inputs: updatedInputs,
     };
 
-    return updateInputNameOnComponentSpec(
+    const updatedComponentSpec = updateInputNameOnComponentSpec(
       updatedComponentSpecValues,
       oldName,
       newName,
     );
+
+    transferSelection(oldName, newName);
+
+    return updatedComponentSpec;
   };
 
   const handleValueChange = (value: string) => {
