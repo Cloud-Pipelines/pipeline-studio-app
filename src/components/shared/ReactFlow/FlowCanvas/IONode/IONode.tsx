@@ -1,4 +1,3 @@
-import { useLocation } from "@tanstack/react-router";
 import { Handle, Position } from "@xyflow/react";
 import { memo, useEffect, useMemo } from "react";
 
@@ -19,20 +18,20 @@ interface IONodeProps {
     value?: string;
     default?: string;
     type?: string;
+    readOnly?: boolean;
   };
   selected: boolean;
   deletable: boolean;
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
-  const location = useLocation();
   const { graphSpec, componentSpec } = useComponentSpec();
   const { setContent } = useContextPanel();
 
-  const isPipelineEditor = location.pathname.includes("/editor");
-
   const isInput = type === "input";
   const isOutput = type === "output";
+
+  const readOnly = !!data.readOnly;
 
   const handleType = isInput ? "source" : "target";
   const handlePosition = isInput ? Position.Right : Position.Left;
@@ -61,7 +60,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
           <InputValueEditor
             input={input}
             key={input.name}
-            disabled={!isPipelineEditor}
+            disabled={readOnly}
           />,
         );
       }
@@ -76,12 +75,12 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
             output={output}
             connectedDetails={outputConnectedDetails}
             key={output.name}
-            disabled={!isPipelineEditor}
+            disabled={readOnly}
           />,
         );
       }
     }
-  }, [input, output, selected]);
+  }, [input, output, selected, readOnly]);
 
   const connectedOutput = getOutputConnectedDetails(graphSpec, data.label);
   const outputConnectedValue = connectedOutput.outputName;

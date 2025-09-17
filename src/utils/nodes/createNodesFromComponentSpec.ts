@@ -1,7 +1,11 @@
 import { type Node } from "@xyflow/react";
 
 import type { TaskNodeData } from "@/types/taskNode";
-import type { ComponentSpec, GraphSpec } from "@/utils/componentSpec";
+import {
+  type ComponentSpec,
+  type GraphSpec,
+  isGraphImplementation,
+} from "@/utils/componentSpec";
 
 import { createInputNode } from "./createInputNode";
 import { createOutputNode } from "./createOutputNode";
@@ -11,14 +15,14 @@ const createNodesFromComponentSpec = (
   componentSpec: ComponentSpec,
   nodeData: TaskNodeData,
 ): Node[] => {
-  if (!("graph" in componentSpec.implementation)) {
+  if (!isGraphImplementation(componentSpec.implementation)) {
     return [];
   }
 
   const graphSpec = componentSpec.implementation.graph;
   const taskNodes = createTaskNodes(graphSpec, nodeData);
-  const inputNodes = createInputNodes(componentSpec);
-  const outputNodes = createOutputNodes(componentSpec);
+  const inputNodes = createInputNodes(componentSpec, nodeData);
+  const outputNodes = createOutputNodes(componentSpec, nodeData);
 
   return [...taskNodes, ...inputNodes, ...outputNodes];
 };
@@ -29,15 +33,21 @@ const createTaskNodes = (graphSpec: GraphSpec, nodeData: TaskNodeData) => {
   );
 };
 
-const createInputNodes = (componentSpec: ComponentSpec) => {
+const createInputNodes = (
+  componentSpec: ComponentSpec,
+  nodeData: TaskNodeData,
+) => {
   return (componentSpec.inputs ?? []).map((inputSpec) =>
-    createInputNode(inputSpec),
+    createInputNode(inputSpec, nodeData),
   );
 };
 
-const createOutputNodes = (componentSpec: ComponentSpec) => {
+const createOutputNodes = (
+  componentSpec: ComponentSpec,
+  nodeData: TaskNodeData,
+) => {
   return (componentSpec.outputs ?? []).map((outputSpec) =>
-    createOutputNode(outputSpec),
+    createOutputNode(outputSpec, nodeData),
   );
 };
 
