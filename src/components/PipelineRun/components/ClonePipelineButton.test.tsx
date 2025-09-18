@@ -20,23 +20,44 @@ describe("<ClonePipelineButton/>", () => {
   const mockClone = vi.fn();
   const componentSpec = { name: "Test Pipeline" } as any;
 
+  const basePipelineRunMock = {
+    details: undefined,
+    state: undefined,
+    metadata: null,
+    status: {
+      execution: "UNKNOWN",
+      map: new Map(),
+      counts: {
+        total: 0,
+        waiting: 0,
+        succeeded: 0,
+        failed: 0,
+        running: 0,
+        skipped: 0,
+        cancelled: 0,
+      },
+    },
+    isLoading: false,
+    isSubmitting: false,
+    isCancelling: false,
+    isCloning: false,
+    error: null,
+    rerun: vi.fn(),
+    cancel: vi.fn(),
+    clone: mockClone,
+  };
+
+  const mockUsePipelineRun = (overrides = {}) => {
+    vi.mocked(usePipelineRun).mockReturnValue({
+      ...basePipelineRunMock,
+      ...overrides,
+    });
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
-    vi.mocked(usePipelineRun).mockReturnValue({
-      details: undefined,
-      state: undefined,
-      metadata: null,
-      status: "RUNNING",
-      isLoading: false,
-      isSubmitting: false,
-      isCancelling: false,
-      isCloning: false,
-      error: null,
-      rerun: vi.fn(),
-      cancel: vi.fn(),
-      clone: mockClone,
-    });
+    mockUsePipelineRun();
   });
 
   const renderWithClient = (component: React.ReactElement) =>
@@ -56,20 +77,7 @@ describe("<ClonePipelineButton/>", () => {
     });
 
     test("shows disabled state when cloning", () => {
-      vi.mocked(usePipelineRun).mockReturnValue({
-        details: undefined,
-        state: undefined,
-        metadata: null,
-        status: "RUNNING",
-        isLoading: false,
-        isSubmitting: false,
-        isCancelling: false,
-        isCloning: true,
-        error: null,
-        rerun: vi.fn(),
-        cancel: vi.fn(),
-        clone: mockClone,
-      });
+      mockUsePipelineRun({ isCloning: true });
 
       renderWithClient(<ClonePipelineButton componentSpec={componentSpec} />);
 
