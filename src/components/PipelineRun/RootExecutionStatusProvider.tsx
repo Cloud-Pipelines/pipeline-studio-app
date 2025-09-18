@@ -11,7 +11,6 @@ import type {
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
-import { useBackend } from "@/providers/BackendProvider";
 import {
   countTaskStatuses,
   getRunStatus,
@@ -33,16 +32,11 @@ export function RootExecutionStatusProvider({
   rootExecutionId,
   children,
 }: PropsWithChildren<{ rootExecutionId: string }>) {
-  const { backendUrl, configured, available } = useBackend();
-
   const [isPolling, setIsPolling] = useState(true);
 
   const { data, isLoading, error } = useFetchExecutionInfo(
     rootExecutionId,
-    backendUrl,
     isPolling,
-    configured,
-    available,
   );
   const { details, state } = data;
   const runId = details?.pipeline_run_id;
