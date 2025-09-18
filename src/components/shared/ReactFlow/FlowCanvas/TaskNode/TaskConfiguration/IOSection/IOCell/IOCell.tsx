@@ -86,7 +86,12 @@ const IOCell = ({ io, artifactData }: IOCellProps) => {
   };
 
   return (
-    <Collapsible key={io.name} open={isOpen} onOpenChange={setIsOpen}>
+    <Collapsible
+      key={io.name}
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className="w-full"
+    >
       <IOCellHeader
         io={io}
         artifactData={artifactData}

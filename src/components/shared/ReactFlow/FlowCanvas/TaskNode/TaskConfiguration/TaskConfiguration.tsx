@@ -23,7 +23,7 @@ import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
 
 import { AnnotationsSection } from "../AnnotationsEditor/AnnotationsSection";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
-import Io from "./io";
+import IOSection from "./IOSection/IOSection";
 import Logs, { OpenLogsInNewWindowLink } from "./logs";
 import OutputsList from "./OutputsList";
 
@@ -139,7 +139,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
               </>
             )}
             {readOnly && (
-              <Io
+              <IOSection
                 taskSpec={taskSpec}
                 readOnly={readOnly}
                 executionId={taskSpec.annotations?.executionId as string}

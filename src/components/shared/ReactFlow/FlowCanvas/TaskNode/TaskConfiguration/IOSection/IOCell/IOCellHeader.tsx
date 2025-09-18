@@ -67,7 +67,7 @@ const IOCellHeader = ({
           >
             <TooltipTrigger className="text-left">
               <span
-                className="font-medium text-sm cursor-copy break-all hover:text-gray-500"
+                className="font-medium text-sm cursor-copy hover:text-gray-500"
                 onClick={handleCopyName}
               >
                 {io.name}
@@ -83,7 +83,7 @@ const IOCellHeader = ({
         </div>
 
         {artifactData && (
-          <InlineStack gap="2" className="flex-none">
+          <InlineStack gap="2">
             <InlineStack
               blockAlign="center"
               gap="1"
