@@ -71,7 +71,7 @@
     "@tanstack/react-router": "^1.131.41",
     "@tanstack/router-devtools": "^1.131.44",
     "@types/gapi": "^0.0.47",
-    "@xyflow/react": "^12.8.4",
+    "@xyflow/react": "^12.8.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
