@@ -189,6 +189,10 @@ export const isStatusComplete = (status: string = "") => {
   );
 };
 
+export const isStatusCancelled = (status: string = "") => {
+  return status === STATUS.CANCELLED;
+};
+
 /**
  * Count task statuses from API response
  */
