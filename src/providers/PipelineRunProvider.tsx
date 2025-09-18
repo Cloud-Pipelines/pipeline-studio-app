@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import {
   type ReactNode,
   useCallback,
@@ -30,10 +31,12 @@ import {
 } from "@/services/executionService";
 import {
   cancelPipelineRun,
+  copyRunToPipeline,
   fetchPipelineRunById,
 } from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
 import type { ComponentSpec } from "@/utils/componentSpec";
+import { getInitialName } from "@/utils/getComponentName";
 import { submitPipelineRun } from "@/utils/submitPipeline";
 
 type PipelineRunContextType = {
@@ -45,6 +48,7 @@ type PipelineRunContextType = {
   isLoading: boolean;
   isSubmitting: boolean;
   isCancelling: boolean;
+  isCloning: boolean;
   error: Error | null;
 
   rerun: (
@@ -55,6 +59,9 @@ type PipelineRunContextType = {
     },
   ) => Promise<void>;
   cancel: () => Promise<void>;
+  clone: (
+    componentSpec: ComponentSpec,
+  ) => Promise<{ name: string; url: string } | undefined>;
 };
 
 const PipelineRunContext = createRequiredContext<PipelineRunContextType>(
@@ -69,6 +76,7 @@ export const PipelineRunProvider = ({
   children: ReactNode;
 }) => {
   const { backendUrl, available } = useBackend();
+  const navigate = useNavigate();
   const notify = useToastNotification();
 
   const { awaitAuthorization, isAuthorized } = useAwaitAuthorization();
@@ -144,6 +152,7 @@ export const PipelineRunProvider = ({
           authorizationToken.current = token;
         }
       }
+
       await submitPipelineRun(componentSpec, backendUrl, {
         authorizationToken: authorizationToken.current,
         onSuccess: (data) => {
@@ -160,6 +169,26 @@ export const PipelineRunProvider = ({
     [isAuthorized, awaitAuthorization, backendUrl],
   );
 
+  const { mutate: cloneRun, isPending: isCloning } = useMutation({
+    mutationFn: async (componentSpec: ComponentSpec) => {
+      const name = getInitialName(componentSpec);
+      const copy = await copyRunToPipeline(componentSpec, name);
+
+      if (!copy.url) {
+        throw new Error("Failed to clone pipeline");
+      }
+
+      return copy;
+    },
+    onSuccess: (result) => {
+      notify(`Pipeline "${result.name}" cloned`, "success");
+      navigate({ to: result.url });
+    },
+    onError: (error) => {
+      notify(`Error cloning pipeline: ${error}`, "error");
+    },
+  });
+
   const cancel = useCallback(async () => {
     if (!runId) {
       notify(`Failed to cancel run. No run ID found.`, "warning");
@@ -175,6 +204,20 @@ export const PipelineRunProvider = ({
 
     cancelRun(runId);
   }, [runId, available, cancelRun, notify]);
+
+  const clone = useCallback(
+    async (componentSpec: ComponentSpec) => {
+      return new Promise<{ name: string; url: string } | undefined>(
+        (resolve, reject) => {
+          cloneRun(componentSpec, {
+            onSuccess: (result) => resolve(result),
+            onError: (error) => reject(error),
+          });
+        },
+      );
+    },
+    [cloneRun],
+  );
 
   useEffect(() => {
     if (executionError) {
@@ -218,9 +261,11 @@ export const PipelineRunProvider = ({
       isLoading,
       isSubmitting,
       isCancelling,
+      isCloning,
       error,
       rerun,
       cancel,
+      clone,
     }),
     [
       details,
@@ -230,9 +275,11 @@ export const PipelineRunProvider = ({
       isLoading,
       isSubmitting,
       isCancelling,
+      isCloning,
       error,
       rerun,
       cancel,
+      clone,
     ],
   );
 
