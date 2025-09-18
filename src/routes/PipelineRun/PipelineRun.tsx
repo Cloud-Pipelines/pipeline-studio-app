@@ -9,11 +9,17 @@ import type {
 import PipelineRunPage from "@/components/PipelineRun";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { Spinner } from "@/components/ui/spinner";
+import { faviconManager } from "@/favicon";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
-import { useFetchExecutionInfo } from "@/services/executionService";
+import {
+  countTaskStatuses,
+  getRunStatus,
+  STATUS,
+  useFetchExecutionInfo,
+} from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
@@ -30,6 +36,23 @@ const PipelineRun = () => {
   );
 
   const { details, state } = data;
+
+  // Update favicon based on pipeline status
+  useEffect(() => {
+    if (!details || !state) {
+      faviconManager.reset();
+      return;
+    }
+
+    const statusCounts = countTaskStatuses(details, state);
+    const pipelineStatus = getRunStatus(statusCounts);
+    const iconStatus = mapRunStatusToFavicon(pipelineStatus);
+    faviconManager.updateFavicon(iconStatus);
+
+    return () => {
+      faviconManager.reset();
+    };
+  }, [details, state]);
 
   useEffect(() => {
     if (details?.task_spec.componentRef.spec) {
@@ -219,4 +242,24 @@ const addExecutionIdToComponent = (
       },
     },
   };
+};
+
+export const mapRunStatusToFavicon = (
+  runStatus: string,
+): "success" | "failed" | "loading" | "paused" | "default" => {
+  switch (runStatus) {
+    case STATUS.SUCCEEDED:
+      return "success";
+    case STATUS.FAILED:
+      return "failed";
+    case STATUS.RUNNING:
+      return "loading";
+    case STATUS.WAITING:
+      return "paused";
+    case STATUS.CANCELLED:
+      return "paused";
+    case STATUS.UNKNOWN:
+    default:
+      return "default";
+  }
 };
