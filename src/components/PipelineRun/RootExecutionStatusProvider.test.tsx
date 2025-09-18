@@ -139,6 +139,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -158,6 +159,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -183,6 +185,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: true,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -201,6 +204,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: mockError,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -226,6 +230,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -233,8 +238,7 @@ describe("<RootExecutionStatusProvider />", () => {
       // Verify polling is initially enabled
       expect(mockUseFetchExecutionInfo).toHaveBeenCalledWith(
         "test-execution-id",
-        "http://localhost:8000",
-        true,
+        true, // poll
       );
     });
 
@@ -267,6 +271,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       const { rerender } = renderWithProvider("test-execution-id");
@@ -281,6 +286,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       // Trigger re-render to simulate data update
@@ -328,6 +334,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       const { rerender } = renderWithProvider("test-execution-id");
@@ -342,6 +349,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       rerender(
@@ -385,6 +393,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -408,6 +417,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -427,6 +437,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -463,6 +474,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -486,14 +498,14 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
 
       expect(mockUseFetchExecutionInfo).toHaveBeenCalledWith(
         "test-execution-id",
-        "http://localhost:8000",
-        true,
+        true, // poll
       );
     });
 
@@ -523,14 +535,14 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
 
       expect(mockUseFetchExecutionInfo).toHaveBeenCalledWith(
         "test-execution-id",
-        customBackendUrl,
-        true,
+        true, // poll
       );
     });
   });
