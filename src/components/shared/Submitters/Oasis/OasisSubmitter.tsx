@@ -41,9 +41,12 @@ const OasisSubmitter = ({
   );
 
   const handleViewRun = useCallback(
-    (runId: number) => {
-      if (runId) {
-        navigate({ to: `${APP_ROUTES.RUNS}/${runId}` });
+    (runId: number, newTab = false) => {
+      const href = `${APP_ROUTES.RUNS}/${runId}`;
+      if (newTab) {
+        window.open(href, "_blank");
+      } else {
+        navigate({ to: href });
       }
     },
     [navigate],
@@ -58,11 +61,9 @@ const OasisSubmitter = ({
               Pipeline successfully submitted
             </span>
           </div>
-          {!isAutoRedirect && (
-            <Button onClick={() => handleViewRun(runId)} className="w-full">
-              View Run
-            </Button>
-          )}
+          <Button onClick={() => handleViewRun(runId)} className="w-full">
+            View Run
+          </Button>
         </div>
       );
       notify(<SuccessComponent />, "success");
@@ -78,7 +79,7 @@ const OasisSubmitter = ({
       showSuccessNotification(response.root_execution_id);
 
       if (isAutoRedirect) {
-        handleViewRun(response.root_execution_id);
+        handleViewRun(response.root_execution_id, true);
       }
     },
     [
