@@ -12,7 +12,6 @@ import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 import { PipelineRunProvider } from "@/providers/PipelineRunProvider";
 
 import { CollapsibleContextPanel } from "../shared/ContextPanel/CollapsibleContextPanel";
-import { RootExecutionStatusProvider } from "./RootExecutionStatusProvider";
 import { RunDetails } from "./RunDetails";
 
 const GRID_SIZE = 10;
@@ -38,30 +37,28 @@ const PipelineRunPage = ({ rootExecutionId }: { rootExecutionId: string }) => {
 
   return (
     <PipelineRunProvider rootExecutionId={rootExecutionId}>
-      <RootExecutionStatusProvider rootExecutionId={rootExecutionId}>
-        <ContextPanelProvider defaultContent={<RunDetails />}>
-          <ComponentLibraryProvider>
-            <ResizablePanelGroup direction="horizontal">
-              <ResizablePanel>
-                <div className="reactflow-wrapper h-full w-full">
-                  <FlowCanvas {...flowConfig} readOnly>
-                    <MiniMap position="bottom-left" pannable />
-                    <FlowControls
-                      className="ml-[224px]! mb-[24px]!"
-                      config={flowConfig}
-                      updateConfig={updateFlowConfig}
-                      showInteractive={false}
-                    />
-                    <Background gap={GRID_SIZE} className="bg-slate-50!" />
-                  </FlowCanvas>
-                </div>
-              </ResizablePanel>
-              <ResizableHandle />
-              <CollapsibleContextPanel />
-            </ResizablePanelGroup>
-          </ComponentLibraryProvider>
-        </ContextPanelProvider>
-      </RootExecutionStatusProvider>
+      <ContextPanelProvider defaultContent={<RunDetails />}>
+        <ComponentLibraryProvider>
+          <ResizablePanelGroup direction="horizontal">
+            <ResizablePanel>
+              <div className="reactflow-wrapper h-full w-full">
+                <FlowCanvas {...flowConfig} readOnly>
+                  <MiniMap position="bottom-left" pannable />
+                  <FlowControls
+                    className="ml-[224px]! mb-[24px]!"
+                    config={flowConfig}
+                    updateConfig={updateFlowConfig}
+                    showInteractive={false}
+                  />
+                  <Background gap={GRID_SIZE} className="bg-slate-50!" />
+                </FlowCanvas>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle />
+            <CollapsibleContextPanel />
+          </ResizablePanelGroup>
+        </ComponentLibraryProvider>
+      </ContextPanelProvider>
     </PipelineRunProvider>
   );
 };
