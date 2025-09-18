@@ -2,14 +2,13 @@ import type { icons } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-export type FormFieldAction = {
+type FormFieldAction = {
   icon: keyof typeof icons;
   disabled?: boolean;
   hidden?: boolean;
@@ -121,37 +120,6 @@ const TextField = ({
   </FormField>
 );
 
-const OptionalField = ({
-  inputName,
-  onInputChange,
-  onBlur,
-  disabled = false,
-  inputValue,
-}: {
-  inputName: string;
-  onInputChange: (checked: boolean) => void;
-  onBlur?: () => void;
-  disabled?: boolean;
-  inputValue: boolean;
-}) => (
-  <div className="flex items-center gap-2 mt-2">
-    <Checkbox
-      id={`input-optional-${inputName}`}
-      checked={inputValue}
-      onCheckedChange={onInputChange}
-      onBlur={onBlur}
-      disabled={disabled}
-      className="h-5 w-5 border-gray-300 focus:ring-2 focus:ring-primary-500 transition-colors"
-    />
-    <label
-      htmlFor={`input-optional-${inputName}`}
-      className="text-sm text-muted-foreground cursor-pointer select-none"
-    >
-      Set as optional
-    </label>
-  </div>
-);
-
 const TypeField = ({
   inputValue,
   onInputChange,
@@ -180,4 +148,4 @@ const TypeField = ({
   </FormField>
 );
 
-export { NameField, OptionalField, TextField, TypeField };
+export { NameField, TextField, TypeField };
