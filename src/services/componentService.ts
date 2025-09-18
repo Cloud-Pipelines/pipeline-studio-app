@@ -1,6 +1,6 @@
 import yaml from "js-yaml";
 
-import { COMPONENT_LIBRARY_FILE } from "@/appSettings";
+import { getAppSettings } from "@/appSettings";
 import {
   type ComponentFolder,
   type ComponentLibrary,
@@ -41,7 +41,7 @@ export interface ExistingAndNewComponent {
   newComponent: ComponentSpec | undefined;
 }
 
-const COMPONENT_LIBRARY_URL = "/" + COMPONENT_LIBRARY_FILE;
+const COMPONENT_LIBRARY_URL = getAppSettings().componentLibraryUrl;
 
 /**
  * Generate a digest for a component

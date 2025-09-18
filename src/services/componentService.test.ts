@@ -29,6 +29,9 @@ vi.mock("@/utils/cache", () => ({
 
 vi.mock("@/appSettings", () => ({
   COMPONENT_LIBRARY_FILE: "component-library.yaml",
+  getAppSettings: vi.fn().mockReturnValue({
+    componentLibraryUrl: "/component-library.yaml",
+  }),
 }));
 
 const mockFetch = vi.fn();

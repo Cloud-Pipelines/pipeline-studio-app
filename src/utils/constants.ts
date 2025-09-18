@@ -11,6 +11,8 @@ export const PRIVACY_POLICY_URL =
   "https://cloud-pipelines.net/privacy_policy";
 
 export const API_URL = import.meta.env.VITE_BACKEND_API_URL || "";
+export const BASE_URL = import.meta.env.VITE_BASE_URL || "/";
+export const IS_GITHUB_PAGES = import.meta.env.VITE_GITHUB_PAGES === "true";
 
 export const GIT_REPO_URL =
   import.meta.env.VITE_GIT_REPO_URL ||

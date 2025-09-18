@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { List, Trash } from "lucide-react";
 import { type MouseEvent, useCallback, useMemo } from "react";
 
@@ -84,6 +84,15 @@ const PipelineRow = ({
     return formatDate(modificationTime.toISOString());
   }, [modificationTime]);
 
+  const linkProps = {
+    to: `${EDITOR_PATH}/$name`,
+    params: { name: name ?? "" },
+    className: "hover:underline",
+    onClick: (e: MouseEvent) => {
+      e.stopPropagation();
+    },
+  };
+
   return (
     <>
       <TableRow
@@ -99,9 +108,7 @@ const PipelineRow = ({
           />
         </TableCell>
         <TableCell>
-          <a href={`${EDITOR_PATH}/${name}`} className="hover:underline">
-            {name}
-          </a>
+          <Link {...linkProps}>{name}</Link>
         </TableCell>
         <TableCell className="text-muted-foreground text-xs">
           {formattedDate}
