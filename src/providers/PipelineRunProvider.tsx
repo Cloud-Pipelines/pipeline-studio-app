@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   type ReactNode,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -23,6 +24,7 @@ import {
 import useToastNotification from "@/hooks/useToastNotification";
 import { useBackend } from "@/providers/BackendProvider";
 import {
+  buildTaskStatusMap,
   countTaskStatuses,
   getRunStatus,
   isStatusCancelled,
@@ -44,6 +46,7 @@ type PipelineRunContextType = {
   state: GetGraphExecutionStateResponse | undefined;
   metadata: PipelineRun | null;
   status: string;
+  taskStatusMap: Map<string, string>;
 
   isLoading: boolean;
   isSubmitting: boolean;
@@ -84,6 +87,9 @@ export const PipelineRunProvider = ({
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
   const [status, setStatus] = useState<string>("UNKNOWN");
+  const [taskStatusMap, setTaskStatusMap] = useState<Map<string, string>>(
+    new Map(),
+  );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -230,6 +236,9 @@ export const PipelineRunProvider = ({
       const taskStatusCounts = countTaskStatuses(details, state);
       const runStatus = getRunStatus(taskStatusCounts);
       setStatus(runStatus);
+
+      const taskStatusMap = buildTaskStatusMap(details, state);
+      setTaskStatusMap(taskStatusMap);
     }
   }, [details, state]);
 
@@ -258,6 +267,7 @@ export const PipelineRunProvider = ({
       state,
       status,
       metadata,
+      taskStatusMap,
       isLoading,
       isSubmitting,
       isCancelling,
@@ -272,6 +282,7 @@ export const PipelineRunProvider = ({
       state,
       status,
       metadata,
+      taskStatusMap,
       isLoading,
       isSubmitting,
       isCancelling,
@@ -292,4 +303,8 @@ export const PipelineRunProvider = ({
 
 export const usePipelineRun = () => {
   return useRequiredContext(PipelineRunContext);
+};
+
+export const useTaskStatusMap = () => {
+  return useContext(PipelineRunContext)?.taskStatusMap;
 };
