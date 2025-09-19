@@ -4,7 +4,7 @@ import { memo, useMemo } from "react";
 import type { ContainerExecutionStatus } from "@/api/types.gen";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
-import type { TaskNodeData } from "@/types/taskNode";
+import type { TaskNodeData } from "@/types/nodes";
 import { isCacheDisabled } from "@/utils/cache";
 
 import { StatusIndicator } from "./StatusIndicator";

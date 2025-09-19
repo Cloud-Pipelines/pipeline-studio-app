@@ -1,6 +1,6 @@
 import { type Node } from "@xyflow/react";
 
-import type { NodeData } from "@/types/taskNode";
+import type { NodeData } from "@/types/nodes";
 import {
   type ComponentSpec,
   type GraphSpec,

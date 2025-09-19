@@ -1,7 +1,7 @@
 import type { Node } from "@xyflow/react";
 import { describe, expect, it, vi } from "vitest";
 
-import type { NodeCallbacks, TaskNodeData } from "@/types/taskNode";
+import type { TaskNodeData } from "@/types/nodes";
 import type {
   ComponentSpec,
   InputSpec,
@@ -86,15 +86,6 @@ const createMockTaskNodeCallbacks = () => ({
   onUpgrade: vi.fn(),
 });
 
-const createMockNodeCallbacks = (): NodeCallbacks => ({
-  setArguments: vi.fn(),
-  setAnnotations: vi.fn(),
-  setCacheStaleness: vi.fn(),
-  onDelete: vi.fn(),
-  onDuplicate: vi.fn(),
-  onUpgrade: vi.fn(),
-});
-
 const createMockTaskNode = (
   taskId: string,
   taskSpec: TaskSpec,
@@ -108,8 +99,10 @@ const createMockTaskNode = (
     taskId,
     label: "Test Task",
     highlighted: false,
+    readOnly: false,
+    isGhost: false,
+    connectable: true,
     callbacks: createMockTaskNodeCallbacks(),
-    nodeCallbacks: createMockNodeCallbacks(),
   },
   selected: false,
   dragging: false,

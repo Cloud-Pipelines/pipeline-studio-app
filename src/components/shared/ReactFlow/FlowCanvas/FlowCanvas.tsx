@@ -100,7 +100,7 @@ const useScheduleExecutionOnceWhenConditionMet = (
 };
 
 const FlowCanvas = ({
-  readOnly,
+  readOnly = false,
   nodesConnectable,
   children,
   ...rest
@@ -312,7 +312,7 @@ const FlowCanvas = ({
     () => ({
       connectable: !readOnly && !!nodesConnectable,
       readOnly,
-      nodeCallbacks,
+      callbacks: nodeCallbacks,
     }),
     [readOnly, nodesConnectable, nodeCallbacks],
   );
@@ -498,14 +498,14 @@ const FlowCanvas = ({
         return;
       }
 
-      const { taskSpec: droppedTask, taskType } = getTaskFromEvent(event);
+      const { taskSpec: droppedTask, nodeType } = getTaskFromEvent(event);
 
-      if (!taskType) {
+      if (!nodeType) {
         console.error("Dropped task type not identified.");
         return;
       }
 
-      if (!droppedTask && taskType === "task") {
+      if (!droppedTask && nodeType === "task") {
         console.error("Unable to find dropped task.");
         return;
       }
@@ -563,7 +563,7 @@ const FlowCanvas = ({
         const position = getPositionFromEvent(event, reactFlowInstance);
 
         const newSubgraphSpec = addTask(
-          taskType,
+          nodeType,
           droppedTask,
           position,
           currentSubgraphSpec,

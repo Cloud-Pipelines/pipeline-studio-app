@@ -1,12 +1,13 @@
 import type { XYPosition } from "@xyflow/react";
 
-import type { TaskType } from "@/types/taskNode";
-import type {
-  ComponentSpec,
-  GraphSpec,
-  InputSpec,
-  OutputSpec,
-  TaskSpec,
+import type { NodeType } from "@/types/nodes";
+import {
+  type ComponentSpec,
+  type GraphSpec,
+  type InputSpec,
+  isGraphImplementation,
+  type OutputSpec,
+  type TaskSpec,
 } from "@/utils/componentSpec";
 import { deepClone } from "@/utils/deepClone";
 import {
@@ -16,14 +17,14 @@ import {
 } from "@/utils/unique";
 
 const addTask = (
-  taskType: TaskType,
+  nodeType: NodeType,
   taskSpec: TaskSpec | null,
   position: XYPosition,
   componentSpec: ComponentSpec,
 ): ComponentSpec => {
   const newComponentSpec = deepClone(componentSpec);
 
-  if (!("graph" in newComponentSpec.implementation)) {
+  if (!isGraphImplementation(newComponentSpec.implementation)) {
     console.error("Implementation does not contain a graph.");
     return newComponentSpec;
   }
@@ -34,7 +35,7 @@ const addTask = (
     "editor.position": JSON.stringify(nodePosition),
   };
 
-  if (taskType === "task") {
+  if (nodeType === "task") {
     if (!taskSpec) {
       console.error("A taskSpec is required to create a task node.");
       return newComponentSpec;
@@ -77,7 +78,7 @@ const addTask = (
     newComponentSpec.implementation.graph = newGraphSpec;
   }
 
-  if (taskType === "input") {
+  if (nodeType === "input") {
     const inputId = getUniqueInputName(newComponentSpec);
     const inputSpec: InputSpec = {
       name: inputId,
@@ -88,7 +89,7 @@ const addTask = (
     newComponentSpec.inputs = inputs;
   }
 
-  if (taskType === "output") {
+  if (nodeType === "output") {
     const outputId = getUniqueOutputName(newComponentSpec);
     const outputSpec: OutputSpec = {
       name: outputId,
