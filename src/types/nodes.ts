@@ -1,27 +1,54 @@
+import type { Node } from "@xyflow/react";
+
 import type {
   ArgumentType,
   ComponentReference,
+  InputSpec,
+  OutputSpec,
   TaskSpec,
 } from "@/utils/componentSpec";
 
 import type { Annotations } from "./annotations";
 
-export type TaskType = "task" | "input" | "output";
+export type NodeType = "task" | "input" | "output";
+
+export const isTaskNode = (node: Node): node is Node<TaskNodeData> => {
+  return node.type === "task";
+};
+
+export const isInputNode = (node: Node): node is Node<IONodeData> => {
+  return node.type === "input";
+};
+
+export const isOutputNode = (node: Node): node is Node<IONodeData> => {
+  return node.type === "output";
+};
 
 export interface NodeData extends Record<string, unknown> {
-  readOnly?: boolean;
+  readOnly: boolean;
   connectable?: boolean;
-  nodeCallbacks?: NodeCallbacks;
+  callbacks?: NodeCallbacks;
 }
 
 export interface TaskNodeData extends Record<string, unknown> {
-  taskSpec?: TaskSpec;
-  taskId?: string;
-  readOnly?: boolean;
-  isGhost?: boolean;
-  connectable?: boolean;
-  highlighted?: boolean;
-  callbacks?: TaskCallbacks;
+  taskSpec: TaskSpec;
+  taskId: string;
+  readOnly: boolean;
+  isGhost: boolean;
+  connectable: boolean;
+  highlighted: boolean;
+  callbacks: TaskCallbacks;
+}
+
+export interface IONodeData extends Record<string, unknown> {
+  spec: InputSpec | OutputSpec;
+  readOnly: boolean;
+}
+
+export interface HintNodeData extends Record<string, unknown> {
+  key: string;
+  hint: string;
+  side: "left" | "right";
 }
 
 export type NodeAndTaskId = {

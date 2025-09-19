@@ -1,6 +1,6 @@
 import { type Node } from "@xyflow/react";
 
-import type { NodeData, TaskNodeData } from "@/types/taskNode";
+import type { NodeData, TaskNodeData } from "@/types/nodes";
 
 import type { TaskSpec } from "../componentSpec";
 import { extractPositionFromAnnotations } from "./extractPositionFromAnnotations";
@@ -12,7 +12,7 @@ export const createTaskNode = (
   nodeData: NodeData,
 ) => {
   const [taskId, taskSpec] = task;
-  const { nodeCallbacks, ...data } = nodeData;
+  const { callbacks, connectable = true, ...data } = nodeData;
 
   const position = extractPositionFromAnnotations(taskSpec.annotations);
   const nodeId = taskIdToNodeId(taskId);
@@ -20,14 +20,16 @@ export const createTaskNode = (
   // Inject the taskId and nodeId into the callbacks
   const taskCallbacks = convertNodeCallbacksToTaskCallbacks(
     { taskId, nodeId },
-    nodeCallbacks,
+    callbacks,
   );
 
   const taskNodeData: TaskNodeData = {
     ...data,
     taskSpec,
     taskId,
+    connectable,
     highlighted: false,
+    isGhost: false,
     callbacks: taskCallbacks,
   };
 
