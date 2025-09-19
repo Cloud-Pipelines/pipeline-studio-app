@@ -1,6 +1,6 @@
 import { type Node, type XYPosition } from "@xyflow/react";
 
-import type { TaskNodeData } from "@/types/taskNode";
+import type { IONodeData, NodeData, TaskNodeData } from "@/types/nodes";
 import {
   type ComponentSpec,
   type GraphInputArgument,
@@ -23,6 +23,7 @@ import {
   taskIdToNodeId,
 } from "@/utils/nodes/nodeIdUtils";
 import { setPositionInAnnotations } from "@/utils/nodes/setPositionInAnnotations";
+import { convertTaskCallbacksToNodeCallbacks } from "@/utils/nodes/taskCallbackUtils";
 import {
   getUniqueInputName,
   getUniqueOutputName,
@@ -277,17 +278,19 @@ export const duplicateNodes = (
         return null;
       }
 
-      const originalNodeData = originalNode.data as TaskNodeData;
-
       if (originalNode.type === "task") {
         const newTaskId = nodeIdToTaskId(newNodeId);
 
         const newTaskSpec = updatedGraphSpec.tasks[newTaskId];
 
-        const newNode = createTaskNode(
-          [newTaskId, newTaskSpec],
-          originalNodeData,
-        );
+        const taskData = originalNode.data as TaskNodeData;
+        const nodeData: NodeData = {
+          readOnly: taskData.readOnly,
+          connectable: taskData.connectable,
+          callbacks: convertTaskCallbacksToNodeCallbacks(taskData.callbacks),
+        };
+
+        const newNode = createTaskNode([newTaskId, newTaskSpec], nodeData);
 
         newNode.id = newNodeId;
         newNode.selected = false;
@@ -313,7 +316,12 @@ export const duplicateNodes = (
           return null;
         }
 
-        const newNode = createInputNode(newInputSpec, originalNodeData);
+        const inputData = originalNode.data as IONodeData;
+        const nodeData: NodeData = {
+          readOnly: inputData.readOnly,
+        };
+
+        const newNode = createInputNode(newInputSpec, nodeData);
 
         newNode.id = newNodeId;
         newNode.selected = false;
@@ -339,7 +347,12 @@ export const duplicateNodes = (
           return null;
         }
 
-        const newNode = createOutputNode(newOutputSpec, originalNodeData);
+        const outputData = originalNode.data as IONodeData;
+        const nodeData: NodeData = {
+          readOnly: outputData.readOnly,
+        };
+
+        const newNode = createOutputNode(newOutputSpec, nodeData);
 
         newNode.id = newNodeId;
 

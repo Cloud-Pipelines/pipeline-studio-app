@@ -1,12 +1,13 @@
 import type { XYPosition } from "@xyflow/react";
 
-import type { TaskType } from "@/types/taskNode";
-import type {
-  ComponentSpec,
-  GraphSpec,
-  InputSpec,
-  OutputSpec,
-  TaskSpec,
+import type { TaskType } from "@/types/nodes";
+import {
+  type ComponentSpec,
+  type GraphSpec,
+  type InputSpec,
+  isGraphImplementation,
+  type OutputSpec,
+  type TaskSpec,
 } from "@/utils/componentSpec";
 import {
   getUniqueInputName,
@@ -22,7 +23,7 @@ const addTask = (
 ): ComponentSpec => {
   const newComponentSpec = { ...componentSpec };
 
-  if (!("graph" in newComponentSpec.implementation)) {
+  if (!isGraphImplementation(newComponentSpec.implementation)) {
     console.error("Implementation does not contain a graph.");
     return newComponentSpec;
   }

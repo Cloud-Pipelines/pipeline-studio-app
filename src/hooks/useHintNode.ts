@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
-import type { HintNodeData } from "@/types/hintNode";
+import type { HintNodeData } from "@/types/nodes";
 
 const HINT_NODE_ID = "hint-node";
 

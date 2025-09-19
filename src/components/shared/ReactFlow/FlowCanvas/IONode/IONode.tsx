@@ -10,16 +10,12 @@ import { Paragraph } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
+import type { IONodeData } from "@/types/nodes";
+import type { InputSpec, TypeSpecType } from "@/utils/componentSpec";
 
 interface IONodeProps {
   type: "input" | "output";
-  data: {
-    label: string;
-    value?: string;
-    default?: string;
-    type?: string;
-    readOnly?: boolean;
-  };
+  data: IONodeData;
   selected: boolean;
   deletable: boolean;
 }
@@ -28,10 +24,12 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const { graphSpec, componentSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
+  const { spec, readOnly } = data;
+
   const isInput = type === "input";
   const isOutput = type === "output";
 
-  const readOnly = !!data.readOnly;
+  const inputSpec = isInput ? (spec as InputSpec) : null;
 
   const handleType = isInput ? "source" : "target";
   const handlePosition = isInput ? Position.Right : Position.Left;
@@ -44,13 +42,13 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const borderColor = selected ? selectedColor : defaultColor;
 
   const input = useMemo(
-    () => componentSpec.inputs?.find((input) => input.name === data.label),
-    [componentSpec.inputs, data.label],
+    () => componentSpec.inputs?.find((input) => input.name === spec.name),
+    [componentSpec.inputs, spec.name],
   );
 
   const output = useMemo(
-    () => componentSpec.outputs?.find((output) => output.name === data.label),
-    [componentSpec.outputs, data.label],
+    () => componentSpec.outputs?.find((output) => output.name === spec.name),
+    [componentSpec.outputs, spec.name],
   );
 
   useEffect(() => {
@@ -88,7 +86,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     };
   }, [input, output, selected, readOnly]);
 
-  const connectedOutput = getOutputConnectedDetails(graphSpec, data.label);
+  const connectedOutput = getOutputConnectedDetails(graphSpec, spec.name);
   const outputConnectedValue = connectedOutput.outputName;
   const outputConnectedType = connectedOutput.outputType;
   const outputConnectedTaskId = connectedOutput.taskId;
@@ -98,30 +96,28 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
 
   const handleClassName = isInput ? "translate-x-1.5" : "-translate-x-1.5";
 
-  const hasDataValue = !!data.value;
-  const hasDataDefault = !!data.default;
-
-  const inputValue = hasDataValue
-    ? data.value
-    : hasDataDefault
-      ? data.default
+  const inputValue = inputSpec?.value
+    ? inputSpec?.value
+    : inputSpec?.default
+      ? inputSpec?.default
       : null;
-
   const outputValue = outputConnectedValue ?? null;
-
   const value = isInput ? inputValue : outputValue;
+
+  const inputType = getTypeDisplayString(inputSpec?.type);
+  const outputType = getTypeDisplayString(outputConnectedType);
+  const typeValue = isInput ? inputType : outputType;
 
   return (
     <Card className={cn("border-2 max-w-[300px] p-0", borderColor)}>
       <CardHeader className="px-2 py-2.5">
-        <CardTitle className="break-words">{data.label}</CardTitle>
+        <CardTitle className="break-words">{spec.name}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 max-w-[250px]">
         <BlockStack gap="2">
           {/* type */}
           <Paragraph size="xs" font="mono" className="truncate text-slate-700">
-            <span className="font-bold">Type:</span>{" "}
-            {outputConnectedType ?? data.type ?? "Any"}
+            <span className="font-bold">Type:</span> {typeValue}
           </Paragraph>
 
           {!!outputConnectedTaskId && (
@@ -161,3 +157,13 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
 };
 
 export default memo(IONode);
+
+const getTypeDisplayString = (type: TypeSpecType | undefined): string => {
+  if (!type) return "Any";
+
+  if (typeof type === "string") {
+    return type;
+  }
+
+  return JSON.stringify(type);
+};
