@@ -3,8 +3,9 @@ import { memo, useMemo } from "react";
 
 import { cn } from "@/lib/utils";
 import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
-import type { TaskNodeData } from "@/types/taskNode";
+import type { TaskNodeData } from "@/types/nodes";
 import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
+import { createEmptyTaskCallbacks } from "@/utils/nodes/taskCallbackUtils";
 
 import { TaskNodeCard } from "../TaskNode/TaskNodeCard";
 
@@ -83,5 +84,9 @@ const generateGhostTaskNodeData = (
     taskSpec,
     taskId: ghostTaskId,
     isGhost: true,
+    readOnly: true,
+    highlighted: false,
+    connectable: false,
+    callbacks: createEmptyTaskCallbacks(),
   };
 };
