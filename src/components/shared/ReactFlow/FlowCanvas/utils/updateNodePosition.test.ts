@@ -1,11 +1,30 @@
 import type { Node } from "@xyflow/react";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import type { ComponentSpec } from "@/utils/componentSpec";
+import type { NodeManager } from "@/nodeManager";
+import {
+  type ComponentSpec,
+  isGraphImplementation,
+} from "@/utils/componentSpec";
 
 import { updateNodePositions } from "./updateNodePosition";
 
 describe("updateNodePositions", () => {
+  const mockNodeManager = {
+    getRefId: vi.fn(),
+  } as unknown as NodeManager;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(mockNodeManager.getRefId).mockImplementation((nodeId: string) => {
+      if (nodeId === "task_123") return "123";
+      if (nodeId === "input_test_input") return "test_input";
+      if (nodeId === "output_test_output") return "test_output";
+      return undefined;
+    });
+  });
+
   test("should throw an error if implementation is not graph", () => {
     const nodes: Node[] = [];
     const componentSpec: ComponentSpec = {
@@ -19,9 +38,9 @@ describe("updateNodePositions", () => {
       outputs: [],
     };
 
-    expect(() => updateNodePositions(nodes, componentSpec)).toThrow(
-      "Component spec is not a graph",
-    );
+    expect(() =>
+      updateNodePositions(nodes, componentSpec, mockNodeManager),
+    ).toThrow("Component spec is not a graph");
   });
 
   test("should update task node positions", () => {
@@ -48,21 +67,15 @@ describe("updateNodePositions", () => {
       },
     };
 
-    const result = updateNodePositions(nodes, componentSpec);
+    const result = updateNodePositions(nodes, componentSpec, mockNodeManager);
+    const graph = isGraphImplementation(result.implementation)
+      ? result.implementation.graph
+      : null;
+    expect(graph).not.toBeNull();
+    if (!graph) return;
 
-    expect(result).toMatchObject({
-      implementation: {
-        graph: {
-          tasks: {
-            "123": {
-              componentRef: {},
-              annotations: {
-                "editor.position": JSON.stringify({ x: 100, y: 200 }),
-              },
-            },
-          },
-        },
-      },
+    expect(graph.tasks["123"].annotations).toEqual({
+      "editor.position": JSON.stringify({ x: 100, y: 200 }),
     });
   });
 
@@ -88,18 +101,10 @@ describe("updateNodePositions", () => {
       ],
     };
 
-    const result = updateNodePositions(nodes, componentSpec);
+    const result = updateNodePositions(nodes, componentSpec, mockNodeManager);
 
-    expect(result).toMatchObject({
-      inputs: [
-        {
-          name: "test_input",
-          type: "string",
-          annotations: {
-            "editor.position": JSON.stringify({ x: 50, y: 100 }),
-          },
-        },
-      ],
+    expect(result.inputs![0].annotations).toEqual({
+      "editor.position": JSON.stringify({ x: 50, y: 100 }),
     });
   });
 
@@ -125,18 +130,10 @@ describe("updateNodePositions", () => {
       ],
     };
 
-    const result = updateNodePositions(nodes, componentSpec);
+    const result = updateNodePositions(nodes, componentSpec, mockNodeManager);
 
-    expect(result).toMatchObject({
-      outputs: [
-        {
-          name: "test_output",
-          type: "string",
-          annotations: {
-            "editor.position": JSON.stringify({ x: 300, y: 150 }),
-          },
-        },
-      ],
+    expect(result.outputs![0].annotations).toEqual({
+      "editor.position": JSON.stringify({ x: 300, y: 150 }),
     });
   });
 
@@ -190,35 +187,23 @@ describe("updateNodePositions", () => {
       ],
     };
 
-    const result = updateNodePositions(nodes, componentSpec);
+    const result = updateNodePositions(nodes, componentSpec, mockNodeManager);
+    const graph = isGraphImplementation(result.implementation)
+      ? result.implementation.graph
+      : null;
+    expect(graph).not.toBeNull();
+    if (!graph) return;
 
-    expect(result).toMatchObject({
-      implementation: {
-        graph: {
-          tasks: {
-            "123": expect.objectContaining({
-              componentRef: {},
-              annotations: {
-                "editor.position": JSON.stringify({ x: 100, y: 200 }),
-              },
-            }),
-          },
-        },
-      },
-      inputs: [
-        expect.objectContaining({
-          annotations: {
-            "editor.position": JSON.stringify({ x: 50, y: 100 }),
-          },
-        }),
-      ],
-      outputs: [
-        expect.objectContaining({
-          annotations: {
-            "editor.position": JSON.stringify({ x: 300, y: 150 }),
-          },
-        }),
-      ],
+    expect(graph.tasks["123"].annotations).toEqual({
+      "editor.position": JSON.stringify({ x: 100, y: 200 }),
+    });
+
+    expect(result.inputs![0].annotations).toEqual({
+      "editor.position": JSON.stringify({ x: 50, y: 100 }),
+    });
+
+    expect(result.outputs![0].annotations).toEqual({
+      "editor.position": JSON.stringify({ x: 300, y: 150 }),
     });
   });
 
@@ -248,22 +233,43 @@ describe("updateNodePositions", () => {
       },
     };
 
-    const result = updateNodePositions(nodes, componentSpec);
+    const result = updateNodePositions(nodes, componentSpec, mockNodeManager);
 
-    expect(result).toMatchObject({
+    const graph = isGraphImplementation(result.implementation)
+      ? result.implementation.graph
+      : null;
+    expect(graph).not.toBeNull();
+    if (!graph) return;
+
+    expect(graph.tasks["123"].annotations).toEqual({
+      "existing.annotation": "value",
+      "editor.position": JSON.stringify({ x: 100, y: 200 }),
+    });
+  });
+
+  test("should skip nodes with no ref ID", () => {
+    vi.mocked(mockNodeManager.getRefId).mockReturnValue(undefined);
+
+    const nodes: Node[] = [
+      {
+        id: "unknown_node",
+        type: "task",
+        position: { x: 100, y: 200 },
+        data: {},
+      },
+    ];
+
+    const componentSpec: ComponentSpec = {
+      name: "test",
       implementation: {
         graph: {
-          tasks: {
-            "123": {
-              componentRef: {},
-              annotations: {
-                "existing.annotation": "value",
-                "editor.position": JSON.stringify({ x: 100, y: 200 }),
-              },
-            },
-          },
+          tasks: {},
         },
       },
-    });
+    };
+
+    const result = updateNodePositions(nodes, componentSpec, mockNodeManager);
+
+    expect(result).toEqual(componentSpec);
   });
 });

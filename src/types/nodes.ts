@@ -1,5 +1,6 @@
 import type { Node } from "@xyflow/react";
 
+import type { NodeManager } from "@/nodeManager";
 import type {
   ArgumentType,
   ComponentReference,
@@ -28,6 +29,7 @@ export interface NodeData extends Record<string, unknown> {
   readOnly: boolean;
   connectable?: boolean;
   callbacks?: NodeCallbacks;
+  nodeManager: NodeManager;
 }
 
 export interface TaskNodeData extends Record<string, unknown> {
