@@ -1,6 +1,6 @@
 import type { DragEvent } from "react";
 
-import type { TaskType } from "@/types/taskNode";
+import type { TaskType } from "@/types/nodes";
 import type { TaskSpec } from "@/utils/componentSpec";
 
 export const getTaskFromEvent = (event: DragEvent) => {
