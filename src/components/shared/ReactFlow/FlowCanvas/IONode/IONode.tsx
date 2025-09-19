@@ -7,6 +7,7 @@ import { getOutputConnectedDetails } from "@/components/Editor/utils/getOutputCo
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Paragraph } from "@/components/ui/typography";
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
@@ -23,6 +24,7 @@ interface IONodeProps {
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const { currentGraphSpec, currentSubgraphSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
+  const { getHandleNodeId } = useNodeManager();
 
   const { spec, readOnly } = data;
 
@@ -48,6 +50,9 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
       currentSubgraphSpec.outputs?.find((output) => output.name === spec.name),
     [currentSubgraphSpec.outputs, spec.name],
   );
+
+  const handleNodeType = isInput ? "handle-out" : "handle-in";
+  const nodeHandleId = getHandleNodeId(spec.name, spec.name, handleNodeType);
 
   useEffect(() => {
     if (selected) {
@@ -144,6 +149,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
           </InlineStack>
         </BlockStack>
         <Handle
+          id={nodeHandleId}
           type={handleType}
           position={handlePosition}
           className={cn(handleDefaultClassName, handleClassName)}

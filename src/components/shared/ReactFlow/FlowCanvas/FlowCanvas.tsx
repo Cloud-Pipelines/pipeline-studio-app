@@ -119,6 +119,7 @@ const FlowCanvas = ({
     currentSubgraphSpec,
     updateGraphSpec,
     currentSubgraphPath,
+    nodeManager,
   } = useComponentSpec();
   const { preserveIOSelectionOnSpecChange, resetPrevSpec } =
     useIOSelectionPersistence();
@@ -285,10 +286,18 @@ const FlowCanvas = ({
       let updatedSubgraphSpec = { ...currentSubgraphSpec };
 
       for (const edge of params.edges) {
-        updatedSubgraphSpec = removeEdge(edge, updatedSubgraphSpec);
+        updatedSubgraphSpec = removeEdge(
+          edge,
+          updatedSubgraphSpec,
+          nodeManager,
+        );
       }
       for (const node of params.nodes) {
-        updatedSubgraphSpec = removeNode(node, updatedSubgraphSpec);
+        updatedSubgraphSpec = removeNode(
+          node,
+          updatedSubgraphSpec,
+          nodeManager,
+        );
       }
 
       const updatedRootSpec = updateSubgraphSpec(
@@ -299,7 +308,13 @@ const FlowCanvas = ({
 
       setComponentSpec(updatedRootSpec);
     },
-    [componentSpec, currentSubgraphSpec, currentSubgraphPath, setComponentSpec],
+    [
+      componentSpec,
+      currentSubgraphSpec,
+      currentSubgraphPath,
+      nodeManager,
+      setComponentSpec,
+    ],
   );
 
   const nodeCallbacks = useNodeCallbacks({
@@ -313,18 +328,23 @@ const FlowCanvas = ({
       connectable: !readOnly && !!nodesConnectable,
       readOnly,
       callbacks: nodeCallbacks,
+      nodeManager,
     }),
-    [readOnly, nodesConnectable, nodeCallbacks],
+    [readOnly, nodesConnectable, nodeCallbacks, nodeManager],
   );
 
   const onConnect = useCallback(
     (connection: Connection) => {
       if (connection.source === connection.target) return;
 
-      const updatedGraphSpec = handleConnection(currentGraphSpec, connection);
+      const updatedGraphSpec = handleConnection(
+        currentGraphSpec,
+        connection,
+        nodeManager,
+      );
       updateGraphSpec(updatedGraphSpec);
     },
-    [currentGraphSpec, handleConnection, updateGraphSpec],
+    [currentGraphSpec, nodeManager, handleConnection, updateGraphSpec],
   );
 
   const onConnectEnd = useCallback(
@@ -361,7 +381,11 @@ const FlowCanvas = ({
         );
 
       if (existingInputEdge) {
-        newComponentSpec = removeEdge(existingInputEdge, newComponentSpec);
+        newComponentSpec = removeEdge(
+          existingInputEdge,
+          newComponentSpec,
+          nodeManager,
+        );
       }
 
       const updatedComponentSpec = addAndConnectNode({
@@ -369,11 +393,18 @@ const FlowCanvas = ({
         fromHandle,
         position,
         componentSpec: newComponentSpec,
+        nodeManager,
       });
 
       setComponentSpec(updatedComponentSpec);
     },
-    [reactFlowInstance, componentSpec, setComponentSpec, updateOrAddNodes],
+    [
+      reactFlowInstance,
+      componentSpec,
+      nodeManager,
+      setComponentSpec,
+      updateOrAddNodes,
+    ],
   );
 
   useEffect(() => {
@@ -627,6 +658,7 @@ const FlowCanvas = ({
           const updatedSubgraphSpec = updateNodePositions(
             updatedNodes,
             currentSubgraphSpec,
+            nodeManager,
           );
 
           const updatedRootSpec = updateSubgraphSpec(
@@ -646,6 +678,7 @@ const FlowCanvas = ({
       componentSpec,
       currentSubgraphSpec,
       currentSubgraphPath,
+      nodeManager,
       setComponentSpec,
       onNodesChange,
     ],
@@ -677,7 +710,9 @@ const FlowCanvas = ({
       updatedComponentSpec: updatedSubgraphSpec,
       newNodes,
       updatedNodes,
-    } = duplicateNodes(currentSubgraphSpec, selectedNodes, { selected: true });
+    } = duplicateNodes(currentSubgraphSpec, selectedNodes, nodeManager, {
+      selected: true,
+    });
 
     const updatedRootSpec = updateSubgraphSpec(
       componentSpec,
@@ -696,6 +731,7 @@ const FlowCanvas = ({
     currentSubgraphSpec,
     currentSubgraphPath,
     selectedNodes,
+    nodeManager,
     setComponentSpec,
     setNodes,
   ]);
@@ -873,6 +909,7 @@ const FlowCanvas = ({
           const { newNodes, updatedComponentSpec } = duplicateNodes(
             componentSpec,
             nodesToPaste,
+            nodeManager,
             { position: reactFlowCenter, connection: "internal" },
           );
 
@@ -898,6 +935,7 @@ const FlowCanvas = ({
     nodes,
     reactFlowInstance,
     store,
+    nodeManager,
     updateOrAddNodes,
     setComponentSpec,
     readOnly,

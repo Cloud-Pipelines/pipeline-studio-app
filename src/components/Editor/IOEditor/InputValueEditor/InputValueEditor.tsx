@@ -9,13 +9,13 @@ import { Icon } from "@/components/ui/icon";
 import { BlockStack } from "@/components/ui/layout";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { type InputSpec } from "@/utils/componentSpec";
 import { checkInputConnectionToRequiredFields } from "@/utils/inputConnectionUtils";
-import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 import { updateSubgraphSpec } from "@/utils/subgraphUtils";
 
 import { NameField, TextField, TypeField } from "./FormFields/FormFields";
@@ -31,8 +31,10 @@ export const InputValueEditor = ({
   input,
   disabled = false,
 }: InputValueEditorProps) => {
+  const { getInputNodeId } = useNodeManager();
+
   const notify = useToastNotification();
-  const { transferSelection } = useNodeSelectionTransfer(inputNameToNodeId);
+  const { transferSelection } = useNodeSelectionTransfer(getInputNodeId);
   const {
     componentSpec,
     setComponentSpec,

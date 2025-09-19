@@ -42,6 +42,7 @@ export const useNodeCallbacks = ({
     updateGraphSpec,
     componentSpec,
     setComponentSpec,
+    nodeManager,
   } = useComponentSpec();
 
   // Workaround for nodes state being stale in task node callbacks
@@ -182,7 +183,9 @@ export const useNodeCallbacks = ({
         updatedComponentSpec: updatedSubgraphSpec,
         newNodes,
         updatedNodes,
-      } = duplicateNodes(currentSubgraphSpec, [node], { selected });
+      } = duplicateNodes(currentSubgraphSpec, [node], nodeManager, {
+        selected,
+      });
 
       const updatedRootSpec = updateSubgraphSpec(
         componentSpec,
@@ -201,6 +204,7 @@ export const useNodeCallbacks = ({
       componentSpec,
       currentSubgraphSpec,
       currentSubgraphPath,
+      nodeManager,
       getNodeById,
       setComponentSpec,
       updateOrAddNodes,

@@ -3,6 +3,7 @@ import { type ReactNode, useCallback, useMemo } from "react";
 
 import type { ContainerExecutionStatus } from "@/api/types.gen";
 import useComponentFromUrl from "@/hooks/useComponentFromUrl";
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { useTaskNodeDimensions } from "@/hooks/useTaskNodeDimensions";
 import useToastNotification from "@/hooks/useToastNotification";
 import type { Annotations } from "@/types/annotations";
@@ -15,7 +16,6 @@ import type {
   TaskSpec,
 } from "@/utils/componentSpec";
 import { getComponentName } from "@/utils/getComponentName";
-import { taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
 
 import {
   createRequiredContext,
@@ -72,10 +72,11 @@ export const TaskNodeProvider = ({
 }: TaskNodeProviderProps) => {
   const notify = useToastNotification();
   const reactFlowInstance = useReactFlow();
+  const { getTaskNodeId } = useNodeManager();
 
   const taskSpec = data.taskSpec;
   const taskId = data.taskId;
-  const nodeId = taskId ? taskIdToNodeId(taskId) : "";
+  const nodeId = getTaskNodeId(taskId);
 
   const componentRef = taskSpec?.componentRef || {};
   const inputs = componentRef.spec?.inputs || [];

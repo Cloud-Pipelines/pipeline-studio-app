@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { NodeManager } from "@/nodeManager";
+
 import type { ComponentSpec } from "../componentSpec";
 import { isGraphImplementation } from "../componentSpec";
 import createNodesFromComponentSpec from "./createNodesFromComponentSpec";
@@ -21,15 +23,26 @@ describe("createNodesFromComponentSpec", () => {
     onUpgrade: vi.fn(),
   };
 
+  const mockNodeManager = {
+    getNodeId: vi.fn((refId: string, type: string) => `${type}_${refId}`),
+    getHandleNodeId: vi.fn(),
+    getHandleInfo: vi.fn(),
+    getNodeType: vi.fn(),
+    getRefId: vi.fn(),
+    updateRefId: vi.fn(),
+  } as unknown as NodeManager;
+
   const readOnly = false;
 
   const mockNodeData = {
     readOnly,
-    nodeCallbacks: mockNodeCallbacks,
+    connectable: true,
+    callbacks: mockNodeCallbacks,
+    nodeManager: mockNodeManager,
   };
 
   beforeEach(() => {
-    mockNodeCallbacks.setArguments.mockClear();
+    vi.clearAllMocks();
   });
 
   it("returns empty array for non-graph implementations", () => {

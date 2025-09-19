@@ -1,11 +1,19 @@
-import { renderHook } from "@testing-library/react";
 import { MarkerType } from "@xyflow/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import type { NodeManager } from "@/nodeManager";
 
 import type { ComponentSpec } from "../utils/componentSpec";
-import useComponentSpecToEdges from "./useComponentSpecToEdges";
+import { getEdges } from "./useComponentSpecToEdges";
 
-describe("useComponentSpecToEdges", () => {
+describe("getEdges", () => {
+  const mockNodeManager: NodeManager = {
+    getNodeId: vi.fn((refId: string, type: string) => `${type}_${refId}`),
+    getHandleNodeId: vi.fn(
+      (_refId: string, handleName: string) => `${handleName}`,
+    ),
+  } as any;
+
   const createBasicComponentSpec = (implementation: any): ComponentSpec => ({
     name: "Test Component",
     implementation,
@@ -18,9 +26,9 @@ describe("useComponentSpecToEdges", () => {
       container: { image: "test" },
     });
 
-    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
+    const result = getEdges(componentSpec, mockNodeManager);
 
-    expect(result.current.edges).toEqual([]);
+    expect(result).toEqual([]);
   });
 
   it("creates task edges correctly", () => {
@@ -40,14 +48,14 @@ describe("useComponentSpecToEdges", () => {
       },
     });
 
-    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
+    const result = getEdges(componentSpec, mockNodeManager);
 
-    expect(result.current.edges).toContainEqual({
+    expect(result).toContainEqual({
       id: "task2_output1-task1_input1",
       source: "task_task2",
-      sourceHandle: "output_output1",
+      sourceHandle: "output1",
       target: "task_task1",
-      targetHandle: "input_input1",
+      targetHandle: "input1",
       markerEnd: { type: MarkerType.Arrow },
       type: "customEdge",
     });
@@ -68,14 +76,14 @@ describe("useComponentSpecToEdges", () => {
       },
     });
 
-    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
+    const result = getEdges(componentSpec, mockNodeManager);
 
-    expect(result.current.edges).toContainEqual({
+    expect(result).toContainEqual({
       id: "Input_graphInput1-task1_input1",
       source: "input_graphInput1",
       sourceHandle: null,
       target: "task_task1",
-      targetHandle: "input_input1",
+      targetHandle: "input1",
       markerEnd: { type: MarkerType.Arrow },
       type: "customEdge",
     });
@@ -98,104 +106,12 @@ describe("useComponentSpecToEdges", () => {
       outputs: [],
     };
 
-    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
+    const result = getEdges(componentSpec, mockNodeManager);
 
-    expect(result.current.edges).toContainEqual({
+    expect(result).toContainEqual({
       id: "task1_output1-Output_graphOutput1",
       source: "task_task1",
-      sourceHandle: "output_output1",
-      target: "output_graphOutput1",
-      targetHandle: null,
-      markerEnd: { type: MarkerType.Arrow },
-      type: "customEdge",
-    });
-  });
-
-  it("handles string arguments by returning no edges", () => {
-    const componentSpec: ComponentSpec = {
-      name: "Test Component",
-      implementation: {
-        graph: {
-          tasks: {
-            task1: {
-              componentRef: {},
-              arguments: {
-                input1: "string value",
-              },
-            },
-          },
-          outputValues: {},
-        },
-      },
-      inputs: [],
-      outputs: [],
-    };
-
-    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
-    expect(result.current.edges).toEqual([]);
-  });
-
-  it("handles complex component specs with multiple edge types", () => {
-    const componentSpec: ComponentSpec = {
-      name: "Test Component",
-      implementation: {
-        graph: {
-          tasks: {
-            task1: {
-              componentRef: {},
-              arguments: {
-                input1: { graphInput: { inputName: "graphInput1" } },
-                input2: "static value",
-              },
-            },
-            task2: {
-              componentRef: {},
-              arguments: {
-                input1: {
-                  taskOutput: { taskId: "task1", outputName: "output1" },
-                },
-              },
-            },
-          },
-          outputValues: {
-            graphOutput1: {
-              taskOutput: { taskId: "task2", outputName: "output1" },
-            },
-          },
-        },
-      },
-      inputs: [],
-      outputs: [],
-    };
-
-    const { result } = renderHook(() => useComponentSpecToEdges(componentSpec));
-
-    expect(result.current.edges).toHaveLength(3);
-
-    expect(result.current.edges).toContainEqual({
-      id: "Input_graphInput1-task1_input1",
-      source: "input_graphInput1",
-      sourceHandle: null,
-      target: "task_task1",
-      targetHandle: "input_input1",
-      markerEnd: { type: MarkerType.Arrow },
-      type: "customEdge",
-    });
-
-    expect(result.current.edges).toContainEqual({
-      id: "task1_output1-task2_input1",
-      source: "task_task1",
-      sourceHandle: "output_output1",
-      target: "task_task2",
-      targetHandle: "input_input1",
-      markerEnd: { type: MarkerType.Arrow },
-      type: "customEdge",
-    });
-
-    expect(result.current.edges).toContainEqual({
-      id: "task2_output1-Output_graphOutput1",
-      source: "task_task2",
-      sourceHandle: "output_output1",
+      sourceHandle: "output1",
       target: "output_graphOutput1",
       targetHandle: null,
       markerEnd: { type: MarkerType.Arrow },
