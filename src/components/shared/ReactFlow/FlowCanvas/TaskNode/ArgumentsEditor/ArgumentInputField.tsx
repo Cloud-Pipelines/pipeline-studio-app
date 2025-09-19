@@ -31,14 +31,10 @@ import {
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import type { ArgumentInput } from "@/types/arguments";
+import { typeSpecToString } from "@/utils/componentSpec";
 
 import { ArgumentInputDialog } from "./ArgumentInputDialog";
-import {
-  getDefaultValue,
-  getInputValue,
-  getPlaceholder,
-  typeSpecToString,
-} from "./utils";
+import { getDefaultValue, getInputValue, getPlaceholder } from "./utils";
 
 export const ArgumentInputField = ({
   argument,

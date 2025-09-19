@@ -490,3 +490,36 @@ export const isContainerImplementation = (
 export const isGraphImplementation = (
   implementation: ImplementationType,
 ): implementation is GraphImplementation => "graph" in implementation;
+
+export const isInputSpec = (
+  spec: InputSpec | OutputSpec,
+  type?: "input" | "output",
+): spec is InputSpec => {
+  return (
+    "value" in spec ||
+    "default" in spec ||
+    "optional" in spec ||
+    type === "input"
+  );
+};
+
+export const isOutputSpec = (
+  spec: InputSpec | OutputSpec,
+  type?: "input" | "output",
+): spec is OutputSpec => {
+  return (
+    !("value" in spec || "default" in spec || "optional" in spec) ||
+    type === "output"
+  );
+};
+
+// Conversions
+export const typeSpecToString = (typeSpec?: TypeSpecType): string => {
+  if (typeSpec === undefined) {
+    return "Any";
+  }
+  if (typeof typeSpec === "string") {
+    return typeSpec;
+  }
+  return JSON.stringify(typeSpec);
+};
