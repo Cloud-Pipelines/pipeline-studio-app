@@ -30,10 +30,6 @@ const TaskNodeCard = () => {
   const { registerNode } = useNodesOverlay();
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
-  const [updateOverlayDialogOpen, setUpdateOverlayDialogOpen] = useState<
-    UpdateOverlayMessage["data"] | undefined
-  >();
-  const [highlightedState, setHighlighted] = useState(false);
 
   const isDragging = useStore((state) => {
     const thisNode = state.nodes.find((node) => node.id === taskNode.nodeId);
@@ -42,6 +38,11 @@ const TaskNodeCard = () => {
 
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const [updateOverlayDialogOpen, setUpdateOverlayDialogOpen] = useState<
+    UpdateOverlayMessage["data"] | undefined
+  >();
+  const [highlightedState, setHighlighted] = useState(false);
 
   const [scrollHeight, setScrollHeight] = useState(0);
   const [condensed, setCondensed] = useState(false);
