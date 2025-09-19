@@ -278,7 +278,7 @@ const FlowCanvas = ({
   const nodeData = useMemo(
     () => ({
       connectable: !readOnly && !!nodesConnectable,
-      readOnly,
+      readOnly: !!readOnly,
       nodeCallbacks,
     }),
     [readOnly, nodesConnectable, nodeCallbacks],
