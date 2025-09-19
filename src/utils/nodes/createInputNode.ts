@@ -8,7 +8,10 @@ import { inputNameToNodeId } from "./nodeIdUtils";
 
 export const createInputNode = (input: InputSpec, nodeData: NodeData) => {
   const { name, annotations } = input;
-  const { readOnly } = nodeData;
+  const { nodeManager, readOnly } = nodeData;
+
+  const newNodeId = nodeManager?.getNodeId(name, "input");
+  console.log("Creating input node:", { name, nodeId: newNodeId });
 
   const position = extractPositionFromAnnotations(annotations);
   const nodeId = inputNameToNodeId(name);

@@ -12,7 +12,10 @@ export const createTaskNode = (
   nodeData: NodeData,
 ) => {
   const [taskId, taskSpec] = task;
-  const { callbacks, connectable, ...data } = nodeData;
+  const { nodeManager, callbacks, connectable, ...data } = nodeData;
+
+  const newNodeId = nodeManager?.getNodeId(taskId, "task");
+  console.log("Creating task node:", { taskId, nodeId: newNodeId });
 
   const position = extractPositionFromAnnotations(taskSpec.annotations);
   const nodeId = taskIdToNodeId(taskId);
