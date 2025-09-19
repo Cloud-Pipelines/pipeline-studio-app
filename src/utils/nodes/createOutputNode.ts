@@ -8,7 +8,10 @@ import { extractPositionFromAnnotations } from "./extractPositionFromAnnotations
 
 export const createOutputNode = (output: OutputSpec, nodeData: NodeData) => {
   const { name, annotations } = output;
-  const { readOnly } = nodeData;
+  const { nodeManager, readOnly } = nodeData;
+
+  const newNodeId = nodeManager?.getNodeId(name, "output");
+  console.log("Creating output node:", { name, nodeId: newNodeId });
 
   const position = extractPositionFromAnnotations(annotations);
   const outputId = outputNameToOutputId(name);

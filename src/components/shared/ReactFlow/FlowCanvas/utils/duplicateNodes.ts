@@ -1,5 +1,6 @@
 import { type Node, type XYPosition } from "@xyflow/react";
 
+import type { NodeManager } from "@/nodeManager";
 import type { IONodeData, NodeData, TaskNodeData } from "@/types/nodes";
 import {
   type ComponentSpec,
@@ -48,6 +49,7 @@ type ConnectionMode = "none" | "internal" | "external" | "all";
 export const duplicateNodes = (
   componentSpec: ComponentSpec,
   nodesToDuplicate: Node[],
+  nodeManager: NodeManager,
   config?: {
     selected?: boolean;
     position?: XYPosition;
@@ -295,6 +297,7 @@ export const duplicateNodes = (
           readOnly: taskData.readOnly,
           connectable: taskData.connectable,
           callbacks: convertTaskCallbacksToNodeCallbacks(taskData.callbacks),
+          nodeManager,
         };
 
         const newNode = createTaskNode([newTaskId, newTaskSpec], nodeData);
@@ -326,6 +329,7 @@ export const duplicateNodes = (
         const inputData = originalNode.data as IONodeData;
         const nodeData: NodeData = {
           readOnly: inputData.readOnly,
+          nodeManager,
         };
 
         const newNode = createInputNode(newInputSpec, nodeData);
@@ -357,6 +361,7 @@ export const duplicateNodes = (
         const outputData = originalNode.data as IONodeData;
         const nodeData: NodeData = {
           readOnly: outputData.readOnly,
+          nodeManager,
         };
 
         const newNode = createOutputNode(newOutputSpec, nodeData);
