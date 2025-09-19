@@ -103,8 +103,13 @@ const FlowCanvas = ({
   const { clearContent } = useContextPanel();
   const { setReactFlowInstance: setReactFlowInstanceForOverlay } =
     useNodesOverlay();
-  const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
-    useComponentSpec();
+  const {
+    componentSpec,
+    setComponentSpec,
+    graphSpec,
+    updateGraphSpec,
+    nodeManager,
+  } = useComponentSpec();
   const { preserveIOSelectionOnSpecChange, resetPrevSpec } =
     useIOSelectionPersistence();
 
@@ -280,8 +285,9 @@ const FlowCanvas = ({
       connectable: !readOnly && !!nodesConnectable,
       readOnly: !!readOnly,
       nodeCallbacks,
+      nodeManager,
     }),
-    [readOnly, nodesConnectable, nodeCallbacks],
+    [readOnly, nodesConnectable, nodeCallbacks, nodeManager],
   );
 
   const onConnect = useCallback(
@@ -622,6 +628,7 @@ const FlowCanvas = ({
     const { updatedComponentSpec, newNodes, updatedNodes } = duplicateNodes(
       componentSpec,
       selectedNodes,
+      nodeManager,
       { selected: true },
     );
 
@@ -631,7 +638,7 @@ const FlowCanvas = ({
       updatedNodes,
       newNodes,
     });
-  }, [componentSpec, selectedNodes, setComponentSpec, setNodes]);
+  }, [componentSpec, selectedNodes, setComponentSpec, setNodes, nodeManager]);
 
   const onUpgradeNodes = useCallback(async () => {
     let newGraphSpec = graphSpec;
@@ -790,6 +797,7 @@ const FlowCanvas = ({
           const { newNodes, updatedComponentSpec } = duplicateNodes(
             componentSpec,
             nodesToPaste,
+            nodeManager,
             { position: reactFlowCenter, connection: "internal" },
           );
 
@@ -815,6 +823,7 @@ const FlowCanvas = ({
     nodes,
     reactFlowInstance,
     store,
+    nodeManager,
     updateOrAddNodes,
     setComponentSpec,
     readOnly,
