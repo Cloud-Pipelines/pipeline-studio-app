@@ -6,7 +6,8 @@ import useComponentFromUrl from "@/hooks/useComponentFromUrl";
 import { useTaskNodeDimensions } from "@/hooks/useTaskNodeDimensions";
 import useToastNotification from "@/hooks/useToastNotification";
 import type { Annotations } from "@/types/annotations";
-import type { TaskNodeData, TaskNodeDimensions } from "@/types/taskNode";
+import type { TaskCallbacks, TaskNodeData } from "@/types/nodes";
+import type { TaskNodeDimensions } from "@/types/nodes";
 import type {
   ArgumentType,
   InputSpec,
@@ -32,14 +33,6 @@ type TaskNodeState = Readonly<{
   dimensions: TaskNodeDimensions;
 }>;
 
-type TaskNodeCallbacks = {
-  setArguments: (args: Record<string, ArgumentType>) => void;
-  setAnnotations: (annotations: Annotations) => void;
-  onDelete?: () => void;
-  onDuplicate?: () => void;
-  onUpgrade?: () => void;
-};
-
 type TaskNodeProviderProps = {
   children: ReactNode;
   data: TaskNodeData;
@@ -55,7 +48,7 @@ export type TaskNodeContextType = {
   outputs: OutputSpec[];
   name: string;
   state: TaskNodeState;
-  callbacks: TaskNodeCallbacks;
+  callbacks: TaskCallbacks;
   select: () => void;
 };
 
@@ -93,24 +86,24 @@ export const TaskNodeProvider = ({
 
   const handleSetArguments = useCallback(
     (args: Record<string, ArgumentType>) => {
-      data.callbacks?.setArguments(args);
+      data.callbacks.setArguments(args);
     },
     [data.callbacks],
   );
 
   const handleSetAnnotations = useCallback(
     (annotations: Annotations) => {
-      data.callbacks?.setAnnotations(annotations);
+      data.callbacks.setAnnotations(annotations);
     },
     [data.callbacks],
   );
 
   const handleDeleteTaskNode = useCallback(() => {
-    data.callbacks?.onDelete();
+    data.callbacks.onDelete();
   }, [data.callbacks]);
 
   const handleDuplicateTaskNode = useCallback(() => {
-    data.callbacks?.onDuplicate();
+    data.callbacks.onDuplicate();
   }, [data.callbacks]);
 
   const handleUpgradeTaskNode = useCallback(() => {
@@ -119,7 +112,7 @@ export const TaskNodeProvider = ({
       return;
     }
 
-    data.callbacks?.onUpgrade(mostRecentComponentRef);
+    data.callbacks.onUpgrade(mostRecentComponentRef);
   }, [data.callbacks, isOutdated, mostRecentComponentRef, notify]);
 
   const select = useCallback(() => {
