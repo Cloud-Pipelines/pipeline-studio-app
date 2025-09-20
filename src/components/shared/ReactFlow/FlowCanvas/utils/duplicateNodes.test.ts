@@ -1,6 +1,7 @@
 import type { Node } from "@xyflow/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { NodeManager } from "@/nodeManager";
 import type { TaskNodeData } from "@/types/nodes";
 import type {
   ComponentSpec,
@@ -16,6 +17,8 @@ import {
 } from "@/utils/nodes/nodeIdUtils";
 
 import { duplicateNodes } from "./duplicateNodes";
+
+const createMockNodeManager = () => new NodeManager();
 
 // Mock utility functions
 const mockTaskSpec: TaskSpec = {
@@ -153,8 +156,9 @@ describe("duplicateNodes", () => {
       };
 
       const nodes: Node[] = [];
+      const nodeManager = createMockNodeManager();
 
-      expect(() => duplicateNodes(componentSpec, nodes)).toThrow(
+      expect(() => duplicateNodes(componentSpec, nodes, nodeManager)).toThrow(
         "ComponentSpec does not contain a graph implementation.",
       );
     });
@@ -178,7 +182,9 @@ describe("duplicateNodes", () => {
         y: 100,
       });
 
-      const result = duplicateNodes(componentSpec, [taskNode]);
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, [taskNode], nodeManager);
 
       expect(result.newNodes).toHaveLength(1);
       expect(result.newNodes[0].type).toBe("task");
@@ -208,7 +214,9 @@ describe("duplicateNodes", () => {
 
       const inputNode = createMockInputNode("original-input", { x: 50, y: 50 });
 
-      const result = duplicateNodes(componentSpec, [inputNode]);
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, [inputNode], nodeManager);
 
       expect(result.newNodes).toHaveLength(1);
       expect(result.newNodes[0].type).toBe("input");
@@ -243,7 +251,9 @@ describe("duplicateNodes", () => {
         y: 300,
       });
 
-      const result = duplicateNodes(componentSpec, [outputNode]);
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, [outputNode], nodeManager);
 
       expect(result.newNodes).toHaveLength(1);
       expect(result.newNodes[0].type).toBe("output");
@@ -274,7 +284,9 @@ describe("duplicateNodes", () => {
         createMockTaskNode("task2", taskSpec2, { x: 200, y: 200 }),
       ];
 
-      const result = duplicateNodes(componentSpec, nodes);
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, nodes, nodeManager);
 
       expect(result.newNodes).toHaveLength(2);
       expect(result.newNodes.map((n) => n.id)).toEqual([
@@ -293,7 +305,9 @@ describe("duplicateNodes", () => {
       const taskNode = createMockTaskNode("original-task", mockTaskSpec);
       taskNode.selected = true;
 
-      const result = duplicateNodes(componentSpec, [taskNode], {
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, [taskNode], nodeManager, {
         selected: false,
       });
 
@@ -317,7 +331,9 @@ describe("duplicateNodes", () => {
 
       const taskNode = createMockTaskNode("original-task", taskSpecWithStatus);
 
-      const result = duplicateNodes(componentSpec, [taskNode], {
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, [taskNode], nodeManager, {
         status: false,
       });
 
@@ -343,7 +359,9 @@ describe("duplicateNodes", () => {
         createMockTaskNode("task2", mockTaskSpec, { x: 200, y: 200 }),
       ];
 
-      const result = duplicateNodes(componentSpec, nodes, {
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, nodes, nodeManager, {
         position: { x: 500, y: 500 },
       });
 
@@ -399,7 +417,9 @@ describe("duplicateNodes", () => {
         createMockTaskNode("task2", task2),
       ];
 
-      const result = duplicateNodes(componentSpec, nodes, {
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, nodes, nodeManager, {
         connection: "none",
       });
 
@@ -422,7 +442,9 @@ describe("duplicateNodes", () => {
         createMockTaskNode("task2", task2),
       ];
 
-      const result = duplicateNodes(componentSpec, nodes, {
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, nodes, nodeManager, {
         connection: "internal",
       });
 
@@ -474,7 +496,9 @@ describe("duplicateNodes", () => {
         createMockTaskNode("task2", task2WithConnections),
       ];
 
-      const result = duplicateNodes(componentSpec, nodes, {
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, nodes, nodeManager, {
         connection: "external",
       });
 
@@ -507,7 +531,9 @@ describe("duplicateNodes", () => {
         createMockTaskNode("task2", task2),
       ];
 
-      const result = duplicateNodes(componentSpec, nodes, {
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, nodes, nodeManager, {
         connection: "all",
       });
 
@@ -549,7 +575,9 @@ describe("duplicateNodes", () => {
         createMockTaskNode("task1", taskSpec),
       ];
 
-      const result = duplicateNodes(componentSpec, nodes, {
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, nodes, nodeManager, {
         connection: "all",
       });
 
@@ -586,7 +614,9 @@ describe("duplicateNodes", () => {
         createMockOutputNode("graph-output"),
       ];
 
-      const result = duplicateNodes(componentSpec, nodes, {
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, nodes, nodeManager, {
         connection: "all",
       });
 
@@ -609,7 +639,8 @@ describe("duplicateNodes", () => {
   describe("edge cases", () => {
     it("should handle empty node array", () => {
       const componentSpec = createMockComponentSpec();
-      const result = duplicateNodes(componentSpec, []);
+      const nodeManager = createMockNodeManager();
+      const result = duplicateNodes(componentSpec, [], nodeManager);
 
       expect(result.newNodes).toHaveLength(0);
       expect(result.nodeIdMap).toEqual({});
@@ -623,7 +654,9 @@ describe("duplicateNodes", () => {
       const taskNode = createMockTaskNode("original-task", mockTaskSpec);
       taskNode.measured = { width: 300, height: 200 };
 
-      const result = duplicateNodes(componentSpec, [taskNode]);
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, [taskNode], nodeManager);
 
       expect(result.newNodes[0].measured).toEqual({ width: 300, height: 200 });
     });
@@ -643,7 +676,9 @@ describe("duplicateNodes", () => {
         taskSpecWithoutPosition,
       );
 
-      const result = duplicateNodes(componentSpec, [taskNode]);
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, [taskNode], nodeManager);
 
       expect(result.newNodes).toHaveLength(1);
       expect(result.newNodes[0].position).toEqual({ x: 110, y: 110 });
@@ -658,7 +693,9 @@ describe("duplicateNodes", () => {
 
       const taskNode = createMockTaskNode("original-task", mockTaskSpec);
 
-      const result = duplicateNodes(componentSpec, [taskNode]);
+      const nodeManager = createMockNodeManager();
+
+      const result = duplicateNodes(componentSpec, [taskNode], nodeManager);
 
       expect(result).toHaveProperty("updatedComponentSpec");
       expect(result).toHaveProperty("nodeIdMap");
