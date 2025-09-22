@@ -183,169 +183,174 @@ const ImportComponent = ({
     </Button>
   );
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{ButtonComponent}</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Component</DialogTitle>
-          <DialogDescription>
-            Create a new component, or import from a file or a URL.
-          </DialogDescription>
-          <Tabs
-            value={tab}
-            className="w-full"
-            onValueChange={(value) => handleTabChange(value as TabType)}
-          >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value={TabType.File}>File</TabsTrigger>
-              <TabsTrigger value={TabType.URL}>URL</TabsTrigger>
-              <TabsTrigger value={TabType.New}>New</TabsTrigger>
-            </TabsList>
-            <TabsContent value={TabType.File}>
-              <div className="grid w-full items-center gap-4 py-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="file">Component YAML File</Label>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <Input
-                        id="file"
-                        type="file"
-                        accept=".yaml"
-                        onChange={handleFileChange}
-                        disabled={isLoading || isSubmitting}
-                        ref={fileInputRef}
-                        className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${selectedFileName ? "hidden" : ""}`}
-                      />
-                      {!selectedFileName && (
-                        <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-                          <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                          <p className="text-sm text-gray-600">
-                            Drop your YAML file here or click to browse
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Supports .yaml files
-                          </p>
-                        </div>
-                      )}
+    <>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+        <DialogTrigger asChild>{ButtonComponent}</DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Component</DialogTitle>
+            <DialogDescription>
+              Create a new component, or import from a file or a URL.
+            </DialogDescription>
+            <Tabs
+              value={tab}
+              className="w-full"
+              onValueChange={(value) => handleTabChange(value as TabType)}
+            >
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value={TabType.File}>File</TabsTrigger>
+                <TabsTrigger value={TabType.URL}>URL</TabsTrigger>
+                <TabsTrigger value={TabType.New}>New</TabsTrigger>
+              </TabsList>
+              <TabsContent value={TabType.File}>
+                <div className="grid w-full items-center gap-4 py-4">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="file">Component YAML File</Label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          id="file"
+                          type="file"
+                          accept=".yaml"
+                          onChange={handleFileChange}
+                          disabled={isLoading || isSubmitting}
+                          ref={fileInputRef}
+                          className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${selectedFileName ? "hidden" : ""}`}
+                        />
+                        {!selectedFileName && (
+                          <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                            <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                            <p className="text-sm text-gray-600">
+                              Drop your YAML file here or click to browse
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Supports .yaml files
+                            </p>
+                          </div>
+                        )}
+                        {selectedFileName && (
+                          <div className="flex flex-1 items-center border rounded-md px-3 py-2 text-sm">
+                            <span className="flex-1 truncate max-w-[325px]">
+                              {selectedFileName}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={clearSelectedFile}
+                              className="h-6 w-6 p-0 ml-1 rounded-full"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                              <span className="sr-only">Clear file</span>
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                       {selectedFileName && (
-                        <div className="flex flex-1 items-center border rounded-md px-3 py-2 text-sm">
-                          <span className="flex-1 truncate max-w-[325px]">
-                            {selectedFileName}
-                          </span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={clearSelectedFile}
-                            className="h-6 w-6 p-0 ml-1 rounded-full"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                            <span className="sr-only">Clear file</span>
-                          </Button>
-                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          Change
+                        </Button>
                       )}
                     </div>
-                    {selectedFileName && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        Change
-                      </Button>
-                    )}
+                    <p className="text-sm text-gray-500">
+                      Select a YAML file containing a pipeline component
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-500">
-                    Select a YAML file containing a pipeline component
-                  </p>
                 </div>
-              </div>
-            </TabsContent>
-            <TabsContent value={TabType.URL}>
-              <div className="grid w-full items-center gap-4 py-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="url">Component URL</Label>
-                  <Input
-                    id="url"
-                    type="url"
-                    placeholder="https://raw.githubusercontent.com/.../component.yaml"
-                    value={url}
-                    onChange={handleUrlChange}
-                    disabled={isLoading || isSubmitting}
-                  />
-                  <p className="text-sm text-gray-500">
-                    Enter the URL of a component YAML file
-                  </p>
+              </TabsContent>
+              <TabsContent value={TabType.URL}>
+                <div className="grid w-full items-center gap-4 py-4">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="url">Component URL</Label>
+                    <Input
+                      id="url"
+                      type="url"
+                      placeholder="https://raw.githubusercontent.com/.../component.yaml"
+                      value={url}
+                      onChange={handleUrlChange}
+                      disabled={isLoading || isSubmitting}
+                    />
+                    <p className="text-sm text-gray-500">
+                      Enter the URL of a component YAML file
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </TabsContent>
-            <TabsContent value={TabType.New}>
-              <BlockStack gap="2" className="py-4">
-                <Heading level={2}>New Component</Heading>
-                <Paragraph tone="subdued">
-                  Create a new component using the in-app editor
-                </Paragraph>
-                <Heading level={3}>Select a Template</Heading>
-                <div className="grid grid-cols-3 border-1 rounded-md p-2 w-full">
-                  {SUPPORTED_TEMPLATES.map((template) => (
-                    <Button
-                      key={template.name}
-                      variant="ghost"
-                      className="p-0 h-full w-full"
-                      onClick={() => setIsComponentEditorDialogOpen(true)}
-                    >
-                      <BlockStack
-                        gap="1"
-                        align="center"
-                        inlineAlign="space-between"
-                        className="p-2"
+              </TabsContent>
+              <TabsContent value={TabType.New}>
+                <BlockStack gap="2" className="py-4">
+                  <Heading level={2}>New Component</Heading>
+                  <Paragraph tone="subdued">
+                    Create a new component using the in-app editor
+                  </Paragraph>
+                  <Heading level={3}>Select a Template</Heading>
+                  <div className="grid grid-cols-3 border-1 rounded-md p-2 w-full">
+                    {SUPPORTED_TEMPLATES.map((template) => (
+                      <Button
+                        key={template.name}
+                        variant="ghost"
+                        className="p-0 h-full w-full"
+                        onClick={() => setIsComponentEditorDialogOpen(true)}
                       >
-                        <InlineStack
+                        <BlockStack
+                          gap="1"
                           align="center"
-                          blockAlign="center"
-                          className="bg-gray-200 rounded-md p-4 mb-2 w-full h-24"
+                          inlineAlign="space-between"
+                          className="p-2"
                         >
-                          {!!template.icon && (
-                            <Icon
-                              name={template.icon}
-                              size="fill"
-                              className={cn("text-foreground", template.color)}
-                            />
-                          )}
-                        </InlineStack>
-                        <Paragraph>{template.name}</Paragraph>
-                      </BlockStack>
-                    </Button>
-                  ))}
-                </div>
-              </BlockStack>
-              <ComponentEditorDialog
-                visible={isComponentEditorDialogOpen}
-                onClose={handleComponentEditorDialogClose}
-              />
-            </TabsContent>
-          </Tabs>
-        </DialogHeader>
+                          <InlineStack
+                            align="center"
+                            blockAlign="center"
+                            className="bg-gray-200 rounded-md p-4 mb-2 w-full h-24"
+                          >
+                            {!!template.icon && (
+                              <Icon
+                                name={template.icon}
+                                size="fill"
+                                className={cn(
+                                  "text-foreground",
+                                  template.color,
+                                )}
+                              />
+                            )}
+                          </InlineStack>
+                          <Paragraph>{template.name}</Paragraph>
+                        </BlockStack>
+                      </Button>
+                    ))}
+                  </div>
+                </BlockStack>
+              </TabsContent>
+            </Tabs>
+          </DialogHeader>
 
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button type="button" variant="secondary">
-              Close
-            </Button>
-          </DialogClose>
-          {tab !== TabType.New && (
-            <Button
-              type="submit"
-              onClick={handleImport}
-              disabled={isButtonDisabled}
-            >
-              Import
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+            {tab !== TabType.New && (
+              <Button
+                type="submit"
+                onClick={handleImport}
+                disabled={isButtonDisabled}
+              >
+                Import
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <ComponentEditorDialog
+        visible={isComponentEditorDialogOpen}
+        onClose={handleComponentEditorDialogClose}
+      />
+    </>
   );
 };
 
