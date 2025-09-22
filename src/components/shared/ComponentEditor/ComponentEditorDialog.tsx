@@ -1,13 +1,18 @@
 import MonacoEditor from "@monaco-editor/react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Heading, Text } from "@/components/ui/typography";
+import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
+import { hydrateComponentReference } from "@/services/componentService";
+import type { TaskNodeData } from "@/types/taskNode";
+import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
 
 import { FullscreenElement } from "../FullscreenElement";
+import { TaskNodeCard } from "../ReactFlow/FlowCanvas/TaskNode/TaskNodeCard";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
 
 const ComponentEditorDialogSkeleton = () => {
@@ -96,9 +101,29 @@ export const ComponentEditorDialog = withSuspenseWrapper(
     visible: boolean;
     onClose: (componentText: string) => void;
   }) => {
+    const [componentRef, setComponentRef] = useState<
+      ComponentReference | undefined
+    >(undefined);
+
+    const previewNodeData = useMemo(() => {
+      if (!componentRef) return undefined;
+
+      return generatePreviewTaskNodeData(componentRef);
+    }, [componentRef]);
+
     const handleClose = useCallback(() => {
       onClose(dummyComponentText);
     }, [onClose]);
+
+    useEffect(() => {
+      let cancelled = false;
+      hydrateComponentReference({ text: dummyComponentText }).then((ref) => {
+        if (!cancelled && ref) setComponentRef(ref);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, []);
 
     if (!visible) {
       return null;
@@ -137,6 +162,18 @@ export const ComponentEditorDialog = withSuspenseWrapper(
             </BlockStack>
             <BlockStack className="flex-1 h-full">
               <Heading level={2}>Preview</Heading>
+
+              <BlockStack gap="2" align="center" className="w-full p-2">
+                {previewNodeData && (
+                  <TaskNodeProvider
+                    data={previewNodeData}
+                    selected={false}
+                    runStatus={undefined}
+                  >
+                    <TaskNodeCard />
+                  </TaskNodeProvider>
+                )}
+              </BlockStack>
             </BlockStack>
           </div>
         </BlockStack>
@@ -145,3 +182,30 @@ export const ComponentEditorDialog = withSuspenseWrapper(
   },
   ComponentEditorDialogSkeleton,
 );
+
+const generateTaskSpec = (componentRef: ComponentReference): TaskSpec => {
+  return {
+    componentRef,
+    annotations: {
+      "editor.position.x": "0",
+      "editor.position.y": "0",
+    } as { [k: string]: unknown },
+  };
+};
+
+const generatePreviewTaskNodeData = (
+  componentRef: ComponentReference,
+  taskId?: string,
+): TaskNodeData => {
+  const previewTaskId =
+    taskId ||
+    `preview-${componentRef.name ?? componentRef.spec?.name ?? "unknown"}`;
+  const taskSpec = generateTaskSpec(componentRef);
+
+  return {
+    taskSpec,
+    taskId: previewTaskId,
+    isGhost: false,
+    readOnly: true,
+  };
+};
