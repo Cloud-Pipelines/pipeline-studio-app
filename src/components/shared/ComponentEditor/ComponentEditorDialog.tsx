@@ -36,10 +36,68 @@ const ComponentEditorDialogSkeleton = () => {
   );
 };
 
+const dummyComponentText = `name: Filter text using Ruby
+inputs:
+- {name: Text}
+- {name: Pattern, default: '.*'}
+outputs:
+- {name: Filtered text}
+metadata:
+  annotations:
+    author: Alexey Volkov <alexey.volkov@ark-kun.com>
+    canonical_location: 'https://raw.githubusercontent.com/Ark-kun/pipeline_components/master/components/sample/Ruby_script/component.yaml'
+implementation:
+  container:
+    image: ruby:3.4.3
+    command:
+    - sh
+    - -ec
+    - |
+      # This is how additional gems can be installed dynamically
+      # gem install something
+      # Run the rest of the command after installing the gems.
+      "$0" "$@"
+    - ruby
+    - -e
+    - |
+      require 'fileutils'
+
+      text_path = ARGV[0]
+      pattern = ARGV[1]
+      filtered_text_path = ARGV[2]
+
+      regex = Regexp.new(pattern)
+
+      # Create the directory for the output file if it doesn't exist
+      FileUtils.mkdir_p(File.dirname(filtered_text_path))
+
+      # Open the input file for reading
+      File.open(text_path, 'r') do |reader|
+        # Open the output file for writing
+        File.open(filtered_text_path, 'w') do |writer|
+          reader.each_line do |line|
+            if regex.match(line)
+              writer.write(line)
+            end
+          end
+        end
+      end
+
+    - {inputPath: Text}
+    - {inputValue: Pattern}
+    - {outputPath: Filtered text}
+`;
+
 export const ComponentEditorDialog = withSuspenseWrapper(
-  ({ visible, onClose }: { visible: boolean; onClose: () => void }) => {
+  ({
+    visible,
+    onClose,
+  }: {
+    visible: boolean;
+    onClose: (componentText: string) => void;
+  }) => {
     const handleClose = useCallback(() => {
-      onClose();
+      onClose(dummyComponentText);
     }, [onClose]);
 
     if (!visible) {
@@ -63,10 +121,9 @@ export const ComponentEditorDialog = withSuspenseWrapper(
           <div className="w-full flex flex-row h-full">
             <BlockStack className="flex-1 h-full">
               <MonacoEditor
-                key={"Test code"} // force re-render when code changes
                 defaultLanguage={"yaml"}
                 theme="vs-dark"
-                defaultValue={"Test code"}
+                defaultValue={dummyComponentText}
                 options={{
                   minimap: {
                     enabled: true,
