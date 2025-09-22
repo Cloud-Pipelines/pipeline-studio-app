@@ -1,4 +1,4 @@
-import { PackagePlus, X } from "lucide-react";
+import { icons, PackagePlus, X } from "lucide-react";
 import { Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 
@@ -13,16 +13,35 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Heading, Paragraph } from "@/components/ui/typography";
 import useImportComponent from "@/hooks/useImportComponent";
 import useToastNotification from "@/hooks/useToastNotification";
+import { cn } from "@/lib/utils";
 
 enum TabType {
   URL = "URL",
   File = "File",
+  New = "New",
 }
+
+type Template = {
+  name: string;
+  icon?: keyof typeof icons;
+  color?: string;
+};
+
+const SUPPORTED_TEMPLATES: Template[] = [
+  { name: "Empty" },
+  { name: "Ruby", icon: "Gem", color: "text-red-400" },
+  { name: "Python", icon: "Worm", color: "text-green-400" },
+  { name: "JavaScript", icon: "Hexagon", color: "text-yellow-400" },
+  { name: "Bash", icon: "Terminal", color: "text-gray-400" },
+];
 
 const ImportComponent = ({
   triggerComponent,
@@ -131,18 +150,19 @@ const ImportComponent = ({
       <DialogTrigger asChild>{ButtonComponent}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Import Component</DialogTitle>
+          <DialogTitle>Add Component</DialogTitle>
           <DialogDescription>
-            Import a component from a file or a URL.
+            Create a new component, or import from a file or a URL.
           </DialogDescription>
           <Tabs
             value={tab}
             className="w-full"
             onValueChange={(value) => handleTabChange(value as TabType)}
           >
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value={TabType.File}>File</TabsTrigger>
               <TabsTrigger value={TabType.URL}>URL</TabsTrigger>
+              <TabsTrigger value={TabType.New}>New</TabsTrigger>
             </TabsList>
             <TabsContent value={TabType.File}>
               <div className="grid w-full items-center gap-4 py-4">
@@ -223,6 +243,41 @@ const ImportComponent = ({
                 </div>
               </div>
             </TabsContent>
+            <TabsContent value={TabType.New}>
+              <BlockStack gap="2" className="py-4">
+                <Heading level={2}>New Component</Heading>
+                <Paragraph tone="subdued">
+                  Create a new component using the in-app editor
+                </Paragraph>
+                <Heading level={3}>Select a Template</Heading>
+                <div className="grid grid-cols-3 border-1 rounded-md p-2 w-full">
+                  {SUPPORTED_TEMPLATES.map((template) => (
+                    <BlockStack
+                      key={template.name}
+                      gap="1"
+                      align="center"
+                      inlineAlign="space-between"
+                      className="cursor-pointer hover:bg-gray-100 p-2 rounded-md transition-colors"
+                    >
+                      <InlineStack
+                        align="center"
+                        blockAlign="center"
+                        className="bg-gray-200 rounded-md p-4 mb-2 w-full h-24"
+                      >
+                        {!!template.icon && (
+                          <Icon
+                            name={template.icon}
+                            size="fill"
+                            className={cn("text-foreground", template.color)}
+                          />
+                        )}
+                      </InlineStack>
+                      <Paragraph>{template.name}</Paragraph>
+                    </BlockStack>
+                  ))}
+                </div>
+              </BlockStack>
+            </TabsContent>
           </Tabs>
         </DialogHeader>
 
@@ -232,13 +287,15 @@ const ImportComponent = ({
               Close
             </Button>
           </DialogClose>
-          <Button
-            type="submit"
-            onClick={handleImport}
-            disabled={isButtonDisabled}
-          >
-            Import
-          </Button>
+          {tab !== TabType.New && (
+            <Button
+              type="submit"
+              onClick={handleImport}
+              disabled={isButtonDisabled}
+            >
+              Import
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
