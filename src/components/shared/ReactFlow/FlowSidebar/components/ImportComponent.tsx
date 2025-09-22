@@ -2,6 +2,7 @@ import { icons, PackagePlus, X } from "lucide-react";
 import { Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 
+import { ComponentEditorDialog } from "@/components/shared/ComponentEditor/ComponentEditorDialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -56,6 +57,9 @@ const ImportComponent = ({
   );
   const [selectedFileName, setSelectedFileName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isComponentEditorDialogOpen, setIsComponentEditorDialogOpen] =
+    useState(false);
 
   const { onImportFromUrl, onImportFromFile, isLoading } = useImportComponent({
     successCallback: () => {
@@ -256,6 +260,7 @@ const ImportComponent = ({
                         align="center"
                         inlineAlign="space-between"
                         className="cursor-pointer hover:bg-gray-100 p-2 rounded-md transition-colors gap-2"
+                        onClick={() => setIsComponentEditorDialogOpen(true)}
                       >
                         <InlineStack
                           align="center"
@@ -274,6 +279,10 @@ const ImportComponent = ({
                   </div>
                 </div>
               </div>
+              <ComponentEditorDialog
+                visible={isComponentEditorDialogOpen}
+                onClose={() => setIsComponentEditorDialogOpen(false)}
+              />
             </TabsContent>
           </Tabs>
         </DialogHeader>
