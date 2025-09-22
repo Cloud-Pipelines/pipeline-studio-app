@@ -101,6 +101,15 @@ export const ComponentEditorDialog = withSuspenseWrapper(
     visible: boolean;
     onClose: (componentText: string) => void;
   }) => {
+    const [componentText, setComponentText] = useState(dummyComponentText);
+
+    const handleComponentTextChange = useCallback(
+      (value: string | undefined) => {
+        setComponentText(value ?? "");
+      },
+      [],
+    );
+
     const [componentRef, setComponentRef] = useState<
       ComponentReference | undefined
     >(undefined);
@@ -112,18 +121,18 @@ export const ComponentEditorDialog = withSuspenseWrapper(
     }, [componentRef]);
 
     const handleClose = useCallback(() => {
-      onClose(dummyComponentText);
-    }, [onClose]);
+      onClose(componentText);
+    }, [onClose, componentText]);
 
     useEffect(() => {
       let cancelled = false;
-      hydrateComponentReference({ text: dummyComponentText }).then((ref) => {
+      hydrateComponentReference({ text: componentText }).then((ref) => {
         if (!cancelled && ref) setComponentRef(ref);
       });
       return () => {
         cancelled = true;
       };
-    }, []);
+    }, [componentText]);
 
     if (!visible) {
       return null;
@@ -148,7 +157,8 @@ export const ComponentEditorDialog = withSuspenseWrapper(
               <MonacoEditor
                 defaultLanguage={"yaml"}
                 theme="vs-dark"
-                defaultValue={dummyComponentText}
+                value={componentText}
+                onChange={handleComponentTextChange}
                 options={{
                   minimap: {
                     enabled: true,
