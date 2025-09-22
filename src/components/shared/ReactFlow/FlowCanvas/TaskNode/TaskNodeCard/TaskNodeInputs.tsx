@@ -121,6 +121,8 @@ export function TaskNodeInputs({
   );
 
   useEffect(() => {
+    if (state.preview) return;
+
     // Highlight relevant Handles when the user drags a new connection
     const { fromHandle, from, to, inProgress } = connection;
 
@@ -153,6 +155,7 @@ export function TaskNodeInputs({
     toggleHighlightRelatedHandles(true, input);
     setIsDragging(true);
   }, [
+    state.preview,
     connection,
     inputs,
     isDragging,
