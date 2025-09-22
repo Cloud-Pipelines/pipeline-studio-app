@@ -11,6 +11,7 @@ interface CodeViewerProps {
   language?: string;
   title?: string;
   filename?: string;
+  readOnly?: boolean;
 }
 
 const DEFAULT_HEIGHT = 128;
@@ -19,6 +20,7 @@ const CodeViewer = ({
   code,
   language = "yaml",
   filename = "",
+  readOnly = true,
 }: CodeViewerProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -68,7 +70,7 @@ const CodeViewer = ({
             className="absolute inset-0 overflow-y-auto bg-slate-900"
             style={{ willChange: "transform", minHeight: DEFAULT_HEIGHT }}
           >
-            <CodeSyntaxHighlighter code={code} language={language} />
+            <CodeSyntaxHighlighter code={code} language={language} readOnly={readOnly} />
           </div>
         </div>
       </div>
