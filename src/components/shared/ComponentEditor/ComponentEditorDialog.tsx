@@ -14,6 +14,7 @@ import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
 import { FullscreenElement } from "../FullscreenElement";
 import { TaskNodeCard } from "../ReactFlow/FlowCanvas/TaskNode/TaskNodeCard";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
+import { useTemplateCodeByName } from "./useTemplateCodeByName";
 
 const ComponentEditorDialogSkeleton = () => {
   return (
@@ -41,67 +42,17 @@ const ComponentEditorDialogSkeleton = () => {
   );
 };
 
-const dummyComponentText = `name: Filter text using Ruby
-inputs:
-- {name: Text}
-- {name: Pattern, default: '.*'}
-outputs:
-- {name: Filtered text}
-metadata:
-  annotations:
-    author: Alexey Volkov <alexey.volkov@ark-kun.com>
-    canonical_location: 'https://raw.githubusercontent.com/Ark-kun/pipeline_components/master/components/sample/Ruby_script/component.yaml'
-implementation:
-  container:
-    image: ruby:3.4.3
-    command:
-    - sh
-    - -ec
-    - |
-      # This is how additional gems can be installed dynamically
-      # gem install something
-      # Run the rest of the command after installing the gems.
-      "$0" "$@"
-    - ruby
-    - -e
-    - |
-      require 'fileutils'
-
-      text_path = ARGV[0]
-      pattern = ARGV[1]
-      filtered_text_path = ARGV[2]
-
-      regex = Regexp.new(pattern)
-
-      # Create the directory for the output file if it doesn't exist
-      FileUtils.mkdir_p(File.dirname(filtered_text_path))
-
-      # Open the input file for reading
-      File.open(text_path, 'r') do |reader|
-        # Open the output file for writing
-        File.open(filtered_text_path, 'w') do |writer|
-          reader.each_line do |line|
-            if regex.match(line)
-              writer.write(line)
-            end
-          end
-        end
-      end
-
-    - {inputPath: Text}
-    - {inputValue: Pattern}
-    - {outputPath: Filtered text}
-`;
-
 export const ComponentEditorDialog = withSuspenseWrapper(
   ({
-    visible,
     onClose,
+    templateName = "empty",
   }: {
-    visible: boolean;
     onClose: (componentText: string) => void;
+    templateName: string;
   }) => {
-    const [componentText, setComponentText] = useState(dummyComponentText);
+    const { data: templateCode } = useTemplateCodeByName(templateName);
+
+    const [componentText, setComponentText] = useState(templateCode);
 
     const handleComponentTextChange = useCallback(
       (value: string | undefined) => {
@@ -133,10 +84,6 @@ export const ComponentEditorDialog = withSuspenseWrapper(
         cancelled = true;
       };
     }, [componentText]);
-
-    if (!visible) {
-      return null;
-    }
 
     return (
       <FullscreenElement fullscreen={true}>
