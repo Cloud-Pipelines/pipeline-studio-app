@@ -52,14 +52,14 @@ export const typeSpecToString = (typeSpec?: TypeSpecType): string => {
 
 export const getPlaceholder = (argument: ArgumentType) => {
   if (typeof argument === "string" || !argument) {
-    return "";
+    return null;
   }
 
   if (argument && "taskOutput" in argument) {
-    return `<from task ${argument.taskOutput.taskId} / ${argument.taskOutput.outputName}>`;
+    return `<from task: ${argument.taskOutput.taskId} / ${argument.taskOutput.outputName}>`;
   }
   if (argument && "graphInput" in argument) {
-    return `<from graph input ${argument.graphInput.inputName}>`;
+    return `<from graph input: ${argument.graphInput.inputName}>`;
   }
   return "<reference>";
 };
