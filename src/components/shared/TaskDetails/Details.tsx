@@ -1,11 +1,6 @@
-import {
-  ChevronsUpDown,
-  ClipboardIcon,
-  DownloadIcon,
-  ExternalLink,
-  TrashIcon,
-} from "lucide-react";
-import { type ReactNode, useCallback, useState } from "react";
+import yaml from "js-yaml";
+import { ChevronsUpDown, ClipboardIcon, ExternalLink } from "lucide-react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { FaPython } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +9,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Icon } from "@/components/ui/icon";
+import { InlineStack } from "@/components/ui/layout";
 import {
   Tooltip,
   TooltipContent,
@@ -22,7 +19,10 @@ import {
 import { useCopyToClipboard } from "@/hooks/useCopyToClip";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
+import { useComponentLibrary } from "@/providers/ComponentLibraryProvider/ComponentLibraryProvider";
+import { hydrateComponentReference } from "@/services/componentService";
 import type { ComponentSpec } from "@/utils/componentSpec";
+import { saveComponent } from "@/utils/localforage";
 import {
   convertGithubUrlToDirectoryUrl,
   downloadYamlFromComponentText,
@@ -30,6 +30,8 @@ import {
 } from "@/utils/URL";
 import copyToYaml from "@/utils/yaml";
 
+import TooltipButton from "../Buttons/TooltipButton";
+import { ComponentEditorDialog } from "../ComponentEditor/ComponentEditorDialog";
 import { ExecutionDetails } from "../ExecutionDetails/ExecutionDetails";
 
 interface TaskDetailsProps {
@@ -65,10 +67,59 @@ const TaskDetails = ({
   readOnly = false,
   additionalSection = [],
 }: TaskDetailsProps) => {
+  const { addToComponentLibrary } = useComponentLibrary();
   const notify = useToastNotification();
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const { isCopied, isTooltipOpen, handleCopy, handleTooltipOpen } =
     useCopyToClipboard(componentDigest);
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const componentText = useMemo(
+    () =>
+      yaml.dump(componentSpec, {
+        lineWidth: 80,
+        noRefs: true,
+        indent: 2,
+      }),
+    [componentSpec],
+  );
+
+  const handleEditComponent = useCallback(() => {
+    setIsEditDialogOpen(true);
+  }, []);
+
+  const handleComponentEditorDialogClose = useCallback(() => {
+    setIsEditDialogOpen(false);
+  }, []);
+
+  const handleComponentEditorDialogSave = useCallback(
+    async (componentText: string) => {
+      const hydratedComponent = await hydrateComponentReference({
+        text: componentText,
+      });
+
+      if (hydratedComponent) {
+        await saveComponent({
+          id: `component-${hydratedComponent.digest}`,
+          url: "",
+          data: componentText,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await addToComponentLibrary(hydratedComponent);
+
+        setIsEditDialogOpen(false);
+
+        notify(
+          `Component ${hydratedComponent.name} saved successfully`,
+          "success",
+        );
+      }
+    },
+    [notify],
+  );
 
   const canonicalUrl = componentSpec?.metadata?.annotations?.canonical_location;
   const pythonOriginalCode = (componentSpec?.metadata?.annotations
@@ -142,179 +193,191 @@ const TaskDetails = ({
   }, [onDelete, confirmDelete, hasDeletionConfirmation]);
 
   return (
-    <div className="h-full overflow-auto hide-scrollbar">
-      <div className="border rounded-md divide-y w-full h-full">
-        {taskId && (
-          <div className="flex flex-col px-3 py-2">
-            <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
-              Task ID
-            </div>
-            <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
-              {taskId}
-            </div>
-          </div>
-        )}
-        {runStatus && (
-          <div className="flex flex-col px-3 py-2">
-            <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
-              Run Status
-            </div>
-            <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
-              {runStatus}
-            </div>
-          </div>
-        )}
-
-        {executionId && <ExecutionDetails executionId={executionId} />}
-
-        {componentSpec?.metadata?.annotations?.author && (
-          <div className="flex flex-col px-3 py-2">
-            <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
-              Author
-            </div>
-            <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
-              {componentSpec.metadata.annotations?.author}
-            </div>
-          </div>
-        )}
-
-        <LinkBlock
-          url={url && url.length > 0 ? url : reconstructedUrl}
-          canonicalUrl={canonicalUrl}
-        />
-
-        {componentSpec?.description && (
-          <div className="flex flex-col px-3 py-2">
-            <Collapsible>
-              <div className="font-medium text-sm text-gray-700 flex items-center gap-1">
-                Description
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <ChevronsUpDown className="h-4 w-4" />
-                    <span className="sr-only">Toggle</span>
-                  </Button>
-                </CollapsibleTrigger>
+    <>
+      <div className="h-full overflow-auto hide-scrollbar">
+        <div className="border rounded-md divide-y w-full h-full">
+          {taskId && (
+            <div className="flex flex-col px-3 py-2">
+              <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
+                Task ID
               </div>
-
-              <CollapsibleContent className="mt-1">
-                <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
-                  {componentSpec.description}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        )}
-
-        {componentDigest && (
-          <div className="flex flex-col px-3 py-2">
-            <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
-              Digest
+              <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
+                {taskId}
+              </div>
             </div>
-            <div
-              className="flex items-center gap-2 cursor-pointer"
-              onClick={handleCopy}
-            >
-              <span className="font-mono text-xs truncate">
-                {componentDigest}
-              </span>
-              <Tooltip
-                delayDuration={300}
-                open={isTooltipOpen}
-                onOpenChange={handleTooltipOpen}
-              >
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                    <ClipboardIcon className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent
-                  arrowClassName={cn(
-                    isCopied && "bg-emerald-200 fill-emerald-200",
-                  )}
-                  className={cn(isCopied && "bg-emerald-200 text-emerald-800")}
-                >
-                  {isCopied ? "Copied" : "Copy Digest"}
-                </TooltipContent>
-              </Tooltip>
+          )}
+          {runStatus && (
+            <div className="flex flex-col px-3 py-2">
+              <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
+                Run Status
+              </div>
+              <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
+                {runStatus}
+              </div>
             </div>
-          </div>
-        )}
-        {additionalSection.map((section) => (
-          <div className="flex flex-col px-3 py-2" key={section.title}>
-            <Collapsible defaultOpen={!section.isCollapsed}>
-              <CollapsibleTrigger asChild>
+          )}
+
+          {executionId && <ExecutionDetails executionId={executionId} />}
+
+          {componentSpec?.metadata?.annotations?.author && (
+            <div className="flex flex-col px-3 py-2">
+              <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
+                Author
+              </div>
+              <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
+                {componentSpec.metadata.annotations?.author}
+              </div>
+            </div>
+          )}
+
+          <LinkBlock
+            url={url && url.length > 0 ? url : reconstructedUrl}
+            canonicalUrl={canonicalUrl}
+          />
+
+          {componentSpec?.description && (
+            <div className="flex flex-col px-3 py-2">
+              <Collapsible>
                 <div className="font-medium text-sm text-gray-700 flex items-center gap-1">
-                  {section.title}
-
-                  <Button variant="ghost" size="sm">
-                    <ChevronsUpDown className="h-4 w-4" />
-                    <span className="sr-only">Toggle</span>
-                  </Button>
+                  Description
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <ChevronsUpDown className="h-4 w-4" />
+                      <span className="sr-only">Toggle</span>
+                    </Button>
+                  </CollapsibleTrigger>
                 </div>
-              </CollapsibleTrigger>
 
-              <CollapsibleContent className="mt-1 min-h-0 flex-1 h-full">
-                {section.component}
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        ))}
-
-        <div className="px-3 py-2 flex flex-row gap-2" key={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="secondary" onClick={handleDownloadYaml}>
-                <DownloadIcon />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Download YAML</TooltipContent>
-          </Tooltip>
-          {pythonOriginalCode && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="secondary"
-                  onClick={stringToPythonCodeDownload}
-                >
-                  <FaPython className="mr-1" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Download Python Code</TooltipContent>
-            </Tooltip>
-          )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="secondary" onClick={handleCopyYaml}>
-                <ClipboardIcon />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Copy YAML</TooltipContent>
-          </Tooltip>
-
-          {!readOnly && actions}
-
-          {onDelete && !readOnly && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="destructive" onClick={handleDelete}>
-                  <div className="flex items-center gap-2">
-                    <TrashIcon />
-                    {confirmDelete && hasDeletionConfirmation && (
-                      <span className="text-xs">Confirm Delete</span>
-                    )}
+                <CollapsibleContent className="mt-1">
+                  <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
+                    {componentSpec.description}
                   </div>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {confirmDelete || !hasDeletionConfirmation
-                  ? "Confirm Delete. This action cannot be undone."
-                  : "Delete Component"}
-              </TooltipContent>
-            </Tooltip>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
           )}
+
+          {componentDigest && (
+            <div className="flex flex-col px-3 py-2">
+              <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
+                Digest
+              </div>
+              <div
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={handleCopy}
+              >
+                <span className="font-mono text-xs truncate">
+                  {componentDigest}
+                </span>
+                <Tooltip
+                  delayDuration={300}
+                  open={isTooltipOpen}
+                  onOpenChange={handleTooltipOpen}
+                >
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                      <ClipboardIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    arrowClassName={cn(
+                      isCopied && "bg-emerald-200 fill-emerald-200",
+                    )}
+                    className={cn(
+                      isCopied && "bg-emerald-200 text-emerald-800",
+                    )}
+                  >
+                    {isCopied ? "Copied" : "Copy Digest"}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          )}
+          {additionalSection.map((section) => (
+            <div className="flex flex-col px-3 py-2" key={section.title}>
+              <Collapsible defaultOpen={!section.isCollapsed}>
+                <CollapsibleTrigger asChild>
+                  <div className="font-medium text-sm text-gray-700 flex items-center gap-1">
+                    {section.title}
+
+                    <Button variant="ghost" size="sm">
+                      <ChevronsUpDown className="h-4 w-4" />
+                      <span className="sr-only">Toggle</span>
+                    </Button>
+                  </div>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent className="mt-1 min-h-0 flex-1 h-full">
+                  {section.component}
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          ))}
+
+          <InlineStack gap="2" className="px-3 py-2" key={0}>
+            <TooltipButton
+              variant="secondary"
+              onClick={handleDownloadYaml}
+              tooltip="Download YAML"
+            >
+              <Icon name="Download" />
+            </TooltipButton>
+            {pythonOriginalCode && (
+              <TooltipButton
+                variant="secondary"
+                onClick={stringToPythonCodeDownload}
+                tooltip="Download Python Code"
+              >
+                <FaPython className="mr-1" />
+              </TooltipButton>
+            )}
+            <TooltipButton
+              variant="secondary"
+              onClick={handleCopyYaml}
+              tooltip="Copy YAML"
+            >
+              <Icon name="Clipboard" />
+            </TooltipButton>
+
+            {!readOnly && actions}
+
+            {!readOnly && (
+              <TooltipButton
+                variant="secondary"
+                onClick={handleEditComponent}
+                tooltip="Edit Component Definition"
+              >
+                <Icon name="FilePenLine" />
+              </TooltipButton>
+            )}
+
+            {onDelete && !readOnly && (
+              <TooltipButton
+                variant="destructive"
+                onClick={handleDelete}
+                tooltip={
+                  confirmDelete || !hasDeletionConfirmation
+                    ? "Confirm Delete. This action cannot be undone."
+                    : "Delete Component"
+                }
+              >
+                <Icon name="Trash" />
+                {confirmDelete && hasDeletionConfirmation && (
+                  <span className="text-xs">Confirm Delete</span>
+                )}
+              </TooltipButton>
+            )}
+          </InlineStack>
         </div>
       </div>
-    </div>
+      {isEditDialogOpen && (
+        <ComponentEditorDialog
+          text={componentText}
+          onClose={handleComponentEditorDialogClose}
+          onSave={handleComponentEditorDialogSave}
+        />
+      )}
+    </>
   );
 };
 
