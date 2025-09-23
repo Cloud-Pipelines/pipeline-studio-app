@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heading, Text } from "@/components/ui/typography";
+import { Heading, Paragraph } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
 import { hydrateComponentReference } from "@/services/componentService";
 import type { TaskNodeData } from "@/types/taskNode";
-import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
+import type { ComponentReference } from "@/utils/componentSpec";
+import { generateTaskSpec } from "@/utils/nodes/generateTaskSpec";
 
 import { FullscreenElement } from "../FullscreenElement";
 import { TaskNodeCard } from "../ReactFlow/FlowCanvas/TaskNode/TaskNodeCard";
@@ -24,20 +26,30 @@ const TogglePreview = ({
   setShowPreview: (showPreview: boolean) => void;
 }) => {
   return (
-    <InlineStack gap="3" align="center">
-      <Text>Component preview:</Text>
+    <InlineStack gap="1" blockAlign="center">
+      <Paragraph>Preview:</Paragraph>
       <Button
         variant="link"
-        className={`p-1 h-auto cursor-pointer ${showPreview ? "text-blue-400" : ""}`}
+        className={cn(
+          showPreview
+            ? "hover:no-underline text-blue-400 disabled:opacity-100"
+            : "text-muted-foreground",
+        )}
         onClick={() => setShowPreview(true)}
+        disabled={showPreview}
       >
         Card
       </Button>
-      <Text>/</Text>
+      <Paragraph>|</Paragraph>
       <Button
         variant="link"
-        className={`p-1 h-auto cursor-pointer ${showPreview ? "" : "text-blue-400"}`}
+        className={cn(
+          showPreview
+            ? "text-muted-foreground"
+            : "hover:no-underline text-blue-400 disabled:opacity-100",
+        )}
         onClick={() => setShowPreview(false)}
+        disabled={!showPreview}
       >
         YAML
       </Button>
@@ -123,15 +135,24 @@ export const ComponentEditorDialog = withSuspenseWrapper(
       };
     }, [componentText]);
 
+    const title = text ? "Edit Component" : "New Component";
+
     return (
       <FullscreenElement fullscreen={true}>
-        <BlockStack gap="0" className="h-full w-full p-2 bg-white">
+        <BlockStack className="h-full w-full p-2 bg-white">
           <InlineStack
             className="w-full py-3 px-4 border-b-3 border-gray-100"
             blockAlign="center"
             align="space-between"
           >
-            <Heading level={1}>New Component</Heading>
+            <InlineStack gap="2" blockAlign="center">
+              <Heading level={1}>{title}</Heading>
+              {templateName !== "empty" && (
+                <Paragraph size="sm" tone="subdued">
+                  {`(${templateName} template)`}
+                </Paragraph>
+              )}
+            </InlineStack>
             <TogglePreview
               showPreview={showPreview}
               setShowPreview={setShowPreview}
@@ -144,7 +165,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
                 <Icon name="X" />
               </Button>
             </InlineStack>
-          </InlineStack >
+          </InlineStack>
           <InlineStack className="w-full h-full">
             <BlockStack className="flex-1 h-full">
               <MonacoEditor
@@ -200,22 +221,12 @@ export const ComponentEditorDialog = withSuspenseWrapper(
               </BlockStack>
             </BlockStack>
           </InlineStack>
-        </BlockStack >
-      </FullscreenElement >
+        </BlockStack>
+      </FullscreenElement>
     );
   },
   ComponentEditorDialogSkeleton,
 );
-
-const generateTaskSpec = (componentRef: ComponentReference): TaskSpec => {
-  return {
-    componentRef,
-    annotations: {
-      "editor.position.x": "0",
-      "editor.position.y": "0",
-    } as { [k: string]: unknown },
-  };
-};
 
 const generatePreviewTaskNodeData = (
   componentRef: ComponentReference,
