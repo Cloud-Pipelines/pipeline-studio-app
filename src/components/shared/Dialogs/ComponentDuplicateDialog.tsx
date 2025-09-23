@@ -13,8 +13,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BlockStack } from "@/components/ui/layout";
-import { generateDigest } from "@/services/componentService";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import {
+  generateDigest,
+  hydrateComponentReference,
+} from "@/services/componentService";
+import type {
+  ComponentSpec,
+  HydratedComponentReference,
+} from "@/utils/componentSpec";
 import { deleteComponentFileFromList } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 import type { UserComponent } from "@/utils/localforage";
@@ -37,9 +43,12 @@ const ComponentDuplicateDialog = ({
   const [newName, setNewName] = useState("");
   const [newDigest, setNewDigest] = useState("");
 
-  const open = !!existingComponent && !!newComponent && !!newName;
+  const [existingUserComponent, setExistingUserComponent] =
+    useState<HydratedComponentReference | null>(null);
+
+  const open = !!existingUserComponent && !!newComponent && !!newName;
   const disableImportAsNew =
-    !newName || newName.trim() === existingComponent?.name?.trim();
+    !newName || newName.trim() === existingUserComponent?.name?.trim();
 
   const generateNewDigestOnBlur = useCallback(async () => {
     if (
@@ -89,7 +98,7 @@ const ComponentDuplicateDialog = ({
     const yamlString = yaml.dump(newComponent);
     await deleteComponentFileFromList(
       USER_COMPONENTS_LIST_NAME,
-      existingComponent?.name ?? "",
+      existingUserComponent?.name ?? "",
     );
     handleImportComponent(yamlString);
 
@@ -118,7 +127,18 @@ const ComponentDuplicateDialog = ({
     }
 
     generateNewDigest();
-  }, [existingComponent, newComponent]);
+  }, [existingUserComponent, newComponent]);
+
+  useEffect(() => {
+    const hydrateExistingComponent = async () => {
+      if (existingComponent && existingComponent.componentRef)
+        setExistingUserComponent(
+          await hydrateComponentReference(existingComponent.componentRef),
+        );
+    };
+
+    hydrateExistingComponent();
+  }, [existingComponent]);
 
   return (
     <Dialog open={open} onOpenChange={handleOnOpenChange}>
@@ -137,13 +157,13 @@ const ComponentDuplicateDialog = ({
           <BlockStack gap="2" className="w-full">
             <Label className="text-xs font-medium">Name</Label>
             <Input
-              value={existingComponent?.name ?? ""}
+              value={existingUserComponent?.name ?? ""}
               readOnly
               className="text-xs border-blue-200 bg-blue-100/50"
             />
             <Label className="text-xs font-medium">Digest</Label>
             <Input
-              value={existingComponent?.componentRef.digest ?? ""}
+              value={existingUserComponent?.digest ?? ""}
               readOnly
               className="text-xs border-blue-200 bg-blue-100/50"
             />
