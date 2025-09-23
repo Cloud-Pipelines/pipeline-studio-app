@@ -29,9 +29,6 @@ import { Heading, Paragraph } from "@/components/ui/typography";
 import useImportComponent from "@/hooks/useImportComponent";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
-import { useComponentLibrary } from "@/providers/ComponentLibraryProvider/ComponentLibraryProvider";
-import { hydrateComponentReference } from "@/services/componentService";
-import { saveComponent } from "@/utils/localforage";
 
 enum TabType {
   URL = "URL",
@@ -75,7 +72,6 @@ const ImportComponent = ({
   triggerComponent?: ReactNode;
 }) => {
   const notify = useToastNotification();
-  const { addToComponentLibrary } = useComponentLibrary();
 
   const [url, setUrl] = useState("");
   const [tab, setTab] = useState<TabType>(TabType.File);
@@ -85,45 +81,15 @@ const ImportComponent = ({
     null,
   );
   const [selectedFileName, setSelectedFileName] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [componentEditorTemplateSelected, setComponentEditorTemplateSelected] =
     useState<string | undefined>();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleComponentEditorDialogClose = useCallback(() => {
+  const handleComponentEditorDialogClose = () => {
     setComponentEditorTemplateSelected(undefined);
     setIsOpen(false);
-  }, []);
-
-  const handleComponentEditorDialogSave = useCallback(
-    async (componentText: string) => {
-      setComponentEditorTemplateSelected(undefined);
-
-      const hydratedComponent = await hydrateComponentReference({
-        text: componentText,
-      });
-
-      if (hydratedComponent) {
-        await saveComponent({
-          id: `component-${hydratedComponent.digest}`,
-          url: "",
-          data: componentText,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await addToComponentLibrary(hydratedComponent);
-
-        setIsOpen(false);
-
-        notify(
-          `Component ${hydratedComponent.name} imported successfully`,
-          "success",
-        );
-      }
-    },
-    [],
-  );
+  }
 
   const { onImportFromUrl, onImportFromFile, isLoading } = useImportComponent({
     successCallback: () => {
@@ -392,7 +358,7 @@ const ImportComponent = ({
         <ComponentEditorDialog
           key={componentEditorTemplateSelected}
           onClose={handleComponentEditorDialogClose}
-          onSave={handleComponentEditorDialogSave}
+          onSave={handleComponentEditorDialogClose}
           templateName={componentEditorTemplateSelected ?? "empty"}
         />
       )}
