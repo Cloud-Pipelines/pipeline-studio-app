@@ -83,7 +83,12 @@ const ImportComponent = ({
   const [componentEditorTemplateSelected, setComponentEditorTemplateSelected] =
     useState<string | undefined>();
 
-  const handleComponentEditorDialogClose = useCallback(
+  const handleComponentEditorDialogClose = useCallback(() => {
+    setComponentEditorTemplateSelected(undefined);
+    setIsOpen(false);
+  }, []);
+
+  const handleComponentEditorDialogSave = useCallback(
     async (componentText: string) => {
       setComponentEditorTemplateSelected(undefined);
       // saveNewComponentToFile
@@ -371,6 +376,7 @@ const ImportComponent = ({
         <ComponentEditorDialog
           key={componentEditorTemplateSelected}
           onClose={handleComponentEditorDialogClose}
+          onSave={handleComponentEditorDialogSave}
           templateName={componentEditorTemplateSelected ?? "empty"}
         />
       )}

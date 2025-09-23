@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heading, Text } from "@/components/ui/typography";
+import { Heading } from "@/components/ui/typography";
 import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
 import { hydrateComponentReference } from "@/services/componentService";
 import type { TaskNodeData } from "@/types/taskNode";
@@ -44,10 +44,12 @@ const ComponentEditorDialogSkeleton = () => {
 
 export const ComponentEditorDialog = withSuspenseWrapper(
   ({
+    onSave,
     onClose,
     templateName = "empty",
   }: {
-    onClose: (componentText: string) => void;
+    onSave: (componentText: string) => void;
+    onClose: () => void;
     templateName: string;
   }) => {
     const { data: templateCode } = useTemplateCodeByName(templateName);
@@ -71,9 +73,13 @@ export const ComponentEditorDialog = withSuspenseWrapper(
       return generatePreviewTaskNodeData(componentRef);
     }, [componentRef]);
 
+    const handleSave = useCallback(() => {
+      onSave(componentText);
+    }, [onSave, componentText]);
+
     const handleClose = useCallback(() => {
-      onClose(componentText);
-    }, [onClose, componentText]);
+      onClose();
+    }, [onClose]);
 
     useEffect(() => {
       let cancelled = false;
@@ -87,37 +93,45 @@ export const ComponentEditorDialog = withSuspenseWrapper(
 
     return (
       <FullscreenElement fullscreen={true}>
-        <BlockStack gap="3" className="h-full w-full bg-white">
+        <BlockStack gap="3" className="h-full w-full p-2 bg-white">
           <InlineStack
             gap="3"
             className="w-full"
             blockAlign="center"
             align="space-between"
           >
-            <Text>Component Editor</Text>
-            <Button variant="ghost" size="icon" onClick={handleClose}>
-              <Icon name="X" />
-            </Button>
+            <Heading level={1}>New Component</Heading>
+            <InlineStack gap="2" blockAlign="center">
+              <Button variant="secondary" onClick={handleSave}>
+                <Icon name="Save" /> Save
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleClose}>
+                <Icon name="X" />
+              </Button>
+            </InlineStack>
           </InlineStack>
-          <div className="w-full flex flex-row h-full">
-            <BlockStack className="flex-1 h-full">
-              <MonacoEditor
-                defaultLanguage={"yaml"}
-                theme="vs-dark"
-                value={componentText}
-                onChange={handleComponentTextChange}
-                options={{
-                  minimap: {
-                    enabled: true,
-                  },
-                  scrollBeyondLastLine: false,
-                  lineNumbers: "on",
-                  wordWrap: "on",
-                  automaticLayout: true,
-                }}
-              />
+          <InlineStack className="w-full h-full">
+            <BlockStack className="flex-1 h-full p-2">
+              <Heading level={2}>Component Editor</Heading>
+              <BlockStack className="flex-1 h-full">
+                <MonacoEditor
+                  defaultLanguage={"yaml"}
+                  theme="vs-dark"
+                  value={componentText}
+                  onChange={handleComponentTextChange}
+                  options={{
+                    minimap: {
+                      enabled: true,
+                    },
+                    scrollBeyondLastLine: false,
+                    lineNumbers: "on",
+                    wordWrap: "on",
+                    automaticLayout: true,
+                  }}
+                />
+              </BlockStack>
             </BlockStack>
-            <BlockStack className="flex-1 h-full">
+            <BlockStack className="flex-1 h-full p-2">
               <Heading level={2}>Preview</Heading>
 
               <BlockStack gap="2" align="center" className="w-full p-2">
@@ -132,7 +146,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
                 )}
               </BlockStack>
             </BlockStack>
-          </div>
+          </InlineStack>
         </BlockStack>
       </FullscreenElement>
     );
