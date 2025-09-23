@@ -4,7 +4,8 @@ import { memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
 import type { TaskNodeData } from "@/types/taskNode";
-import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
+import type { ComponentReference } from "@/utils/componentSpec";
+import { generateTaskSpec } from "@/utils/nodes/generateTaskSpec";
 
 import { TaskNodeCard } from "../TaskNode/TaskNodeCard";
 
@@ -59,16 +60,6 @@ const GhostNode = memo(({ data }: NodeProps) => {
 GhostNode.displayName = "GhostNode";
 
 export default GhostNode;
-
-const generateTaskSpec = (componentRef: ComponentReference): TaskSpec => {
-  return {
-    componentRef,
-    annotations: {
-      "editor.position.x": "0",
-      "editor.position.y": "0",
-    } as { [k: string]: unknown },
-  };
-};
 
 const generateGhostTaskNodeData = (
   componentRef: ComponentReference,

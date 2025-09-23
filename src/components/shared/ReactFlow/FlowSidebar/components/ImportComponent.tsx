@@ -1,6 +1,12 @@
 import { icons, PackagePlus, X } from "lucide-react";
 import { Upload } from "lucide-react";
-import { type ChangeEvent, useCallback, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type ReactNode,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
 
 import { ComponentEditorDialog } from "@/components/shared/ComponentEditor/ComponentEditorDialog";
 import { Button } from "@/components/ui/button";
@@ -66,9 +72,11 @@ const SUPPORTED_TEMPLATES: Template[] = [
 const ImportComponent = ({
   triggerComponent,
 }: {
-  triggerComponent?: React.ReactNode;
+  triggerComponent?: ReactNode;
 }) => {
   const notify = useToastNotification();
+  const { addToComponentLibrary } = useComponentLibrary();
+
   const [url, setUrl] = useState("");
   const [tab, setTab] = useState<TabType>(TabType.File);
   const [isOpen, setIsOpen] = useState(false);
@@ -77,11 +85,10 @@ const ImportComponent = ({
     null,
   );
   const [selectedFileName, setSelectedFileName] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const { addToComponentLibrary } = useComponentLibrary();
   const [componentEditorTemplateSelected, setComponentEditorTemplateSelected] =
     useState<string | undefined>();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleComponentEditorDialogClose = useCallback(() => {
     setComponentEditorTemplateSelected(undefined);
@@ -91,7 +98,7 @@ const ImportComponent = ({
   const handleComponentEditorDialogSave = useCallback(
     async (componentText: string) => {
       setComponentEditorTemplateSelected(undefined);
-      // saveNewComponentToFile
+
       const hydratedComponent = await hydrateComponentReference({
         text: componentText,
       });
@@ -133,63 +140,72 @@ const ImportComponent = ({
     },
   });
 
-  const handleTabChange = (value: TabType) => {
+  const handleTabChange = useCallback((value: TabType) => {
     setTab(value);
-  };
+  }, []);
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    // Don't clear the file if the user cancels the dialog
-    if (!files || files.length === 0) {
-      return;
-    }
-
-    const file = files[0];
-    setSelectedFileName(file.name);
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result;
-      if (content) {
-        setSelectedFile(content);
+  const handleFileChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const files = event.target.files;
+      // Don't clear the file if the user cancels the dialog
+      if (!files || files.length === 0) {
+        return;
       }
-    };
 
-    reader.readAsText(file);
-  };
+      const file = files[0];
+      setSelectedFileName(file.name);
 
-  const clearSelectedFile = () => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result;
+        if (content) {
+          setSelectedFile(content);
+        }
+      };
+
+      reader.readAsText(file);
+    },
+    [],
+  );
+
+  const clearSelectedFile = useCallback(() => {
     setSelectedFile(null);
     setSelectedFileName("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  };
+  }, []);
 
-  const handleImport = () => {
+  const handleImport = useCallback(() => {
     setIsSubmitting(true);
     if (tab === TabType.URL) {
       onImportFromUrl(url);
     } else if (tab === TabType.File && selectedFile) {
       onImportFromFile(selectedFile as string);
     }
-  };
+  }, [tab, url, selectedFile]);
 
-  const handleUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setUrl(event.target.value);
-  };
+  const handleUrlChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setUrl(event.target.value);
+    },
+    [],
+  );
 
-  const handleOpenChange = (open: boolean) => {
-    if (!open && (isLoading || isSubmitting)) return;
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open && (isLoading || isSubmitting)) return;
 
-    if (!open) {
-      setUrl("");
-      setSelectedFile(null);
-      setSelectedFileName("");
-      setIsSubmitting(false);
-    }
-    setIsOpen(open);
-  };
+      if (!open) {
+        setUrl("");
+        setSelectedFile(null);
+        setSelectedFileName("");
+        setIsSubmitting(false);
+      }
+      setIsOpen(open);
+    },
+    [isLoading, isSubmitting],
+  );
 
   const isButtonDisabled =
     isLoading ||
