@@ -1,6 +1,5 @@
-import yaml from "js-yaml";
 import { ChevronsUpDown, ClipboardIcon, ExternalLink } from "lucide-react";
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 import { FaPython } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
@@ -19,10 +18,7 @@ import {
 import { useCopyToClipboard } from "@/hooks/useCopyToClip";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
-import { useComponentLibrary } from "@/providers/ComponentLibraryProvider/ComponentLibraryProvider";
-import { hydrateComponentReference } from "@/services/componentService";
 import type { ComponentSpec } from "@/utils/componentSpec";
-import { saveComponent } from "@/utils/localforage";
 import {
   convertGithubUrlToDirectoryUrl,
   downloadYamlFromComponentText,
@@ -31,7 +27,6 @@ import {
 import copyToYaml from "@/utils/yaml";
 
 import TooltipButton from "../Buttons/TooltipButton";
-import { ComponentEditorDialog } from "../ComponentEditor/ComponentEditorDialog";
 import { ExecutionDetails } from "../ExecutionDetails/ExecutionDetails";
 
 interface TaskDetailsProps {
@@ -67,59 +62,11 @@ const TaskDetails = ({
   readOnly = false,
   additionalSection = [],
 }: TaskDetailsProps) => {
-  const { addToComponentLibrary } = useComponentLibrary();
   const notify = useToastNotification();
   const { isCopied, isTooltipOpen, handleCopy, handleTooltipOpen } =
     useCopyToClipboard(componentDigest);
 
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-
-  const componentText = useMemo(
-    () =>
-      yaml.dump(componentSpec, {
-        lineWidth: 80,
-        noRefs: true,
-        indent: 2,
-      }),
-    [componentSpec],
-  );
-
-  const handleEditComponent = useCallback(() => {
-    setIsEditDialogOpen(true);
-  }, []);
-
-  const handleComponentEditorDialogClose = useCallback(() => {
-    setIsEditDialogOpen(false);
-  }, []);
-
-  const handleComponentEditorDialogSave = useCallback(
-    async (componentText: string) => {
-      const hydratedComponent = await hydrateComponentReference({
-        text: componentText,
-      });
-
-      if (hydratedComponent) {
-        await saveComponent({
-          id: `component-${hydratedComponent.digest}`,
-          url: "",
-          data: componentText,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await addToComponentLibrary(hydratedComponent);
-
-        setIsEditDialogOpen(false);
-
-        notify(
-          `Component ${hydratedComponent.name} saved successfully`,
-          "success",
-        );
-      }
-    },
-    [notify],
-  );
 
   const canonicalUrl = componentSpec?.metadata?.annotations?.canonical_location;
   const pythonOriginalCode = (componentSpec?.metadata?.annotations
@@ -341,16 +288,6 @@ const TaskDetails = ({
 
             {!readOnly && actions}
 
-            {!readOnly && (
-              <TooltipButton
-                variant="secondary"
-                onClick={handleEditComponent}
-                tooltip="Edit Component Definition"
-              >
-                <Icon name="FilePenLine" />
-              </TooltipButton>
-            )}
-
             {onDelete && !readOnly && (
               <TooltipButton
                 variant="destructive"
@@ -370,13 +307,6 @@ const TaskDetails = ({
           </InlineStack>
         </div>
       </div>
-      {isEditDialogOpen && (
-        <ComponentEditorDialog
-          text={componentText}
-          onClose={handleComponentEditorDialogClose}
-          onSave={handleComponentEditorDialogSave}
-        />
-      )}
     </>
   );
 };
