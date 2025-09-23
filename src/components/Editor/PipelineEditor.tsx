@@ -9,7 +9,6 @@ import {
   FlowControls,
   FlowSidebar,
 } from "@/components/shared/ReactFlow";
-import { UndoRedo } from "@/components/shared/UndoRedo";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -27,12 +26,18 @@ import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
 
 import { NodesOverlayProvider } from "../shared/ReactFlow/NodesOverlay/NodesOverlayProvider";
+import EditorToolbar from "../shared/ReactFlow/Toolbar/EditorToolbar";
 import PipelineDetails from "./PipelineDetails";
 
 const GRID_SIZE = 10;
 
 const PipelineEditor = () => {
   const { componentSpec, isLoading } = useComponentSpec();
+
+  const [isCommenting, setIsCommenting] = useState(false);
+  const toggleCommentMode = useCallback(() => {
+    setIsCommenting((prev) => !prev);
+  }, []);
 
   const [flowConfig, setFlowConfig] = useState<ReactFlowProps>({
     snapGrid: [GRID_SIZE, GRID_SIZE],
@@ -73,7 +78,7 @@ const PipelineEditor = () => {
                 <ResizablePanelGroup direction="horizontal">
                   <ResizablePanel>
                     <div className="reactflow-wrapper relative">
-                      <FlowCanvas {...flowConfig}>
+                      <FlowCanvas {...flowConfig} isCommenting={isCommenting}>
                         <MiniMap position="bottom-left" pannable />
                         <FlowControls
                           className="ml-[224px]! mb-[24px]!"
@@ -84,9 +89,11 @@ const PipelineEditor = () => {
                         <Background gap={GRID_SIZE} className="bg-slate-50!" />
                       </FlowCanvas>
 
-                      <div className="absolute bottom-0 right-0 p-4">
-                        <UndoRedo />
-                      </div>
+                      <EditorToolbar
+                        position="bottom-right"
+                        isCommenting={isCommenting}
+                        toggleCommentMode={toggleCommentMode}
+                      />
                     </div>
                   </ResizablePanel>
                   <ResizableHandle />
