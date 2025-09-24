@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heading } from "@/components/ui/typography";
+import { Heading, Text } from "@/components/ui/typography";
 import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
 import { hydrateComponentReference } from "@/services/componentService";
 import type { TaskNodeData } from "@/types/taskNode";
@@ -15,6 +15,35 @@ import { FullscreenElement } from "../FullscreenElement";
 import { TaskNodeCard } from "../ReactFlow/FlowCanvas/TaskNode/TaskNodeCard";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
 import { useTemplateCodeByName } from "./useTemplateCodeByName";
+
+const TogglePreview = ({
+  showPreview,
+  setShowPreview,
+}: {
+  showPreview: boolean;
+  setShowPreview: (showPreview: boolean) => void;
+}) => {
+  return (
+    <InlineStack gap="3" align="center">
+      <Text>Component preview:</Text>
+      <Button
+        variant="link"
+        className={`p-1 h-auto cursor-pointer ${showPreview ? "text-blue-400" : ""}`}
+        onClick={() => setShowPreview(true)}
+      >
+        Card
+      </Button>
+      <Text>/</Text>
+      <Button
+        variant="link"
+        className={`p-1 h-auto cursor-pointer ${showPreview ? "" : "text-blue-400"}`}
+        onClick={() => setShowPreview(false)}
+      >
+        YAML
+      </Button>
+    </InlineStack>
+  );
+};
 
 const ComponentEditorDialogSkeleton = () => {
   return (
@@ -55,6 +84,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
     onClose: () => void;
   }) => {
     const { data: templateCode } = useTemplateCodeByName(templateName);
+    const [showPreview, setShowPreview] = useState(true);
 
     const [componentText, setComponentText] = useState(text ?? templateCode);
 
@@ -95,14 +125,17 @@ export const ComponentEditorDialog = withSuspenseWrapper(
 
     return (
       <FullscreenElement fullscreen={true}>
-        <BlockStack gap="3" className="h-full w-full p-2 bg-white">
+        <BlockStack gap="0" className="h-full w-full p-2 bg-white">
           <InlineStack
-            gap="3"
-            className="w-full"
+            className="w-full py-3 px-4 border-b-3 border-gray-100"
             blockAlign="center"
             align="space-between"
           >
             <Heading level={1}>New Component</Heading>
+            <TogglePreview
+              showPreview={showPreview}
+              setShowPreview={setShowPreview}
+            />
             <InlineStack gap="2" blockAlign="center">
               <Button variant="secondary" onClick={handleSave}>
                 <Icon name="Save" /> Save
@@ -111,33 +144,33 @@ export const ComponentEditorDialog = withSuspenseWrapper(
                 <Icon name="X" />
               </Button>
             </InlineStack>
-          </InlineStack>
+          </InlineStack >
           <InlineStack className="w-full h-full">
-            <BlockStack className="flex-1 h-full p-2">
-              <Heading level={2}>Component Editor</Heading>
-              <BlockStack className="flex-1 h-full">
-                <MonacoEditor
-                  defaultLanguage={"yaml"}
-                  theme="vs-dark"
-                  value={componentText}
-                  onChange={handleComponentTextChange}
-                  options={{
-                    minimap: {
-                      enabled: true,
-                    },
-                    scrollBeyondLastLine: false,
-                    lineNumbers: "on",
-                    wordWrap: "on",
-                    automaticLayout: true,
-                  }}
-                />
-              </BlockStack>
+            <BlockStack className="flex-1 h-full">
+              <MonacoEditor
+                defaultLanguage={"yaml"}
+                theme="vs-dark"
+                value={componentText}
+                onChange={handleComponentTextChange}
+                options={{
+                  minimap: {
+                    enabled: true,
+                  },
+                  scrollBeyondLastLine: false,
+                  lineNumbers: "on",
+                  wordWrap: "on",
+                  automaticLayout: true,
+                }}
+              />
             </BlockStack>
-            <BlockStack className="flex-1 h-full p-2">
-              <Heading level={2}>Preview</Heading>
 
-              <BlockStack gap="2" align="center" className="w-full p-2">
-                {previewNodeData && (
+            <BlockStack className="flex-1 h-full">
+              <BlockStack
+                align="center"
+                inlineAlign="center"
+                className="w-full h-full"
+              >
+                {previewNodeData && showPreview && (
                   <TaskNodeProvider
                     data={previewNodeData}
                     selected={false}
@@ -147,11 +180,28 @@ export const ComponentEditorDialog = withSuspenseWrapper(
                     <TaskNodeCard />
                   </TaskNodeProvider>
                 )}
+                {!showPreview && (
+                  <MonacoEditor
+                    defaultLanguage={"yaml"}
+                    theme="vs-dark"
+                    value={componentText}
+                    onChange={handleComponentTextChange}
+                    options={{
+                      minimap: {
+                        enabled: true,
+                      },
+                      scrollBeyondLastLine: false,
+                      lineNumbers: "on",
+                      wordWrap: "on",
+                      automaticLayout: true,
+                    }}
+                  />
+                )}
               </BlockStack>
             </BlockStack>
           </InlineStack>
-        </BlockStack>
-      </FullscreenElement>
+        </BlockStack >
+      </FullscreenElement >
     );
   },
   ComponentEditorDialogSkeleton,
