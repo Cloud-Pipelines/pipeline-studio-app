@@ -4,11 +4,13 @@ import { memo } from "react";
 interface CodeSyntaxHighlighterProps {
   code: string;
   language: string;
+  readOnly?: boolean;
 }
 
 const CodeSyntaxHighlighter = memo(function CodeSyntaxHighlighter({
   code,
   language,
+  readOnly = true,
 }: CodeSyntaxHighlighterProps) {
   return (
     <MonacoEditor
@@ -17,7 +19,7 @@ const CodeSyntaxHighlighter = memo(function CodeSyntaxHighlighter({
       theme="vs-dark"
       defaultValue={code}
       options={{
-        readOnly: true,
+        readOnly: readOnly,
         minimap: {
           enabled: false,
         },

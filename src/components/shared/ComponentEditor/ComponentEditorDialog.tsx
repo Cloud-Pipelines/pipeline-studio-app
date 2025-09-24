@@ -1,4 +1,3 @@
-import MonacoEditor from "@monaco-editor/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { hydrateComponentReference } from "@/services/componentService";
 import type { TaskNodeData } from "@/types/taskNode";
 import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
 
+import CodeSyntaxHighlighter from "../CodeViewer/CodeSyntaxHighlighter";
 import { FullscreenElement } from "../FullscreenElement";
 import { TaskNodeCard } from "../ReactFlow/FlowCanvas/TaskNode/TaskNodeCard";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
@@ -145,20 +145,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
           </InlineStack>
           <div className="w-full flex flex-row h-full">
             <BlockStack className="flex-1 h-full">
-              <MonacoEditor
-                defaultLanguage={"yaml"}
-                theme="vs-dark"
-                defaultValue={dummyComponentText}
-                options={{
-                  minimap: {
-                    enabled: true,
-                  },
-                  scrollBeyondLastLine: false,
-                  lineNumbers: "on",
-                  wordWrap: "on",
-                  automaticLayout: true,
-                }}
-              />
+              <CodeSyntaxHighlighter code={dummyComponentText} language="yaml" readOnly={false} />
             </BlockStack>
             <BlockStack className="flex-1 h-full">
               <Heading level={2}>Preview</Heading>
