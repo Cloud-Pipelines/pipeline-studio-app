@@ -6,11 +6,14 @@ import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Heading, Paragraph } from "@/components/ui/typography";
+import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
+import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
 import { hydrateComponentReference } from "@/services/componentService";
 import type { TaskNodeData } from "@/types/taskNode";
 import type { ComponentReference } from "@/utils/componentSpec";
+import { saveComponent } from "@/utils/localforage";
 import { generateTaskSpec } from "@/utils/nodes/generateTaskSpec";
 
 import { FullscreenElement } from "../FullscreenElement";
@@ -95,6 +98,8 @@ export const ComponentEditorDialog = withSuspenseWrapper(
     onSave: (componentText: string) => void;
     onClose: () => void;
   }) => {
+    const notify = useToastNotification();
+    const { addToComponentLibrary } = useComponentLibrary();
     const { data: templateCode } = useTemplateCodeByName(templateName);
     const [showPreview, setShowPreview] = useState(true);
 
@@ -107,6 +112,34 @@ export const ComponentEditorDialog = withSuspenseWrapper(
       [],
     );
 
+    const handleSave = async () => {
+      console.log("handleSave");
+      const hydratedComponent = await hydrateComponentReference({
+        text: componentText,
+      });
+
+      if (hydratedComponent) {
+        await saveComponent({
+          id: `component-${hydratedComponent.digest}`,
+          url: "",
+          data: componentText,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        addToComponentLibrary(hydratedComponent);
+
+        onClose();
+
+        notify(
+          `Component ${hydratedComponent.name} imported successfully`,
+          "success",
+        );
+        onSave(componentText);
+      }
+    };
+
+
     const [componentRef, setComponentRef] = useState<
       ComponentReference | undefined
     >(undefined);
@@ -117,19 +150,17 @@ export const ComponentEditorDialog = withSuspenseWrapper(
       return generatePreviewTaskNodeData(componentRef);
     }, [componentRef]);
 
-    const handleSave = useCallback(() => {
-      onSave(componentText);
-    }, [onSave, componentText]);
-
     const handleClose = useCallback(() => {
       onClose();
     }, [onClose]);
 
     useEffect(() => {
       let cancelled = false;
-      hydrateComponentReference({ text: componentText }).then((ref) => {
+      const handleHydrate = async () => {
+        const ref = await hydrateComponentReference({ text: componentText })
         if (!cancelled && ref) setComponentRef(ref);
-      });
+      }
+      handleHydrate();
       return () => {
         cancelled = true;
       };

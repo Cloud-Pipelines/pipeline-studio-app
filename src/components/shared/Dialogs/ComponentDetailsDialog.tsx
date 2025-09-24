@@ -17,6 +17,8 @@ import { useHydrateComponentReference } from "@/hooks/useHydrateComponentReferen
 import type { ComponentReference } from "@/utils/componentSpec";
 
 import InfoIconButton from "../Buttons/InfoIconButton";
+import TooltipButton from "../Buttons/TooltipButton";
+import { ComponentEditorDialog } from "../ComponentEditor/ComponentEditorDialog";
 import { InfoBox } from "../InfoBox";
 import { PublishComponent } from "../ManageComponent/PublishComponent";
 import { PublishedComponentDetails } from "../ManageComponent/PublishedComponentDetails";
@@ -176,6 +178,7 @@ const ComponentDetails = ({
   onClose,
   onDelete,
 }: ComponentDetailsProps) => {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const dialogTriggerButton = trigger || <InfoIconButton />;
 
@@ -196,38 +199,68 @@ const ComponentDetails = ({
     [],
   );
 
+  const handleEditComponent = () => {
+    setIsEditDialogOpen(true)
+  };
+  const EditButton = <TooltipButton
+    variant="secondary"
+    onClick={handleEditComponent}
+    tooltip="Edit Component Definition"
+  >
+    <Icon name="FilePenLine" />
+  </TooltipButton>
+
+  const actionsWithEdit = useMemo(() => {
+    return [...actions, EditButton];
+  }, [actions]);
+
+  const componentText = component.text;
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false)
+  }
+
   return (
-    <Dialog modal open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{dialogTriggerButton}</DialogTrigger>
+    <>
+      <Dialog modal open={open} onOpenChange={onOpenChange}>
+        <DialogTrigger asChild>{dialogTriggerButton}</DialogTrigger>
 
-      <DialogDescription
-        className="hidden"
-        aria-label={`${displayName} component details`}
-      >
-        {`${displayName} component details`}
-      </DialogDescription>
-      <DialogContent
-        className="max-w-2xl min-w-2xl overflow-hidden"
-        aria-label={`${displayName} component details`}
-      >
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 mr-5">
-            <span>{displayName}</span>
-          </DialogTitle>
-        </DialogHeader>
+        <DialogDescription
+          className="hidden"
+          aria-label={`${displayName} component details`}
+        >
+          {`${displayName} component details`}
+        </DialogDescription>
+        <DialogContent
+          className="max-w-2xl min-w-2xl overflow-hidden"
+          aria-label={`${displayName} component details`}
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 mr-5">
+              <span>{displayName}</span>
+            </DialogTitle>
+          </DialogHeader>
 
-        <DialogContext.Provider value={dialogContextValue}>
-          <ComponentDetailsDialogContent
-            component={component}
-            displayName={displayName}
-            trigger={dialogTriggerButton}
-            actions={actions}
-            onClose={onClose}
-            onDelete={onDelete}
-          />
-        </DialogContext.Provider>
-      </DialogContent>
-    </Dialog>
+          <DialogContext.Provider value={dialogContextValue}>
+            <ComponentDetailsDialogContent
+              component={component}
+              displayName={displayName}
+              trigger={dialogTriggerButton}
+              actions={actionsWithEdit}
+              onClose={onClose}
+              onDelete={onDelete}
+            />
+          </DialogContext.Provider>
+        </DialogContent>
+      </Dialog>
+      {isEditDialogOpen && (
+        <ComponentEditorDialog
+          text={componentText}
+          onClose={handleCloseEditDialog}
+          onSave={handleCloseEditDialog}
+        />
+      )}
+    </>
   );
 };
 
