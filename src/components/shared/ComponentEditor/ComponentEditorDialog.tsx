@@ -1,3 +1,4 @@
+import MonacoEditor from "@monaco-editor/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -101,6 +102,15 @@ export const ComponentEditorDialog = withSuspenseWrapper(
     visible: boolean;
     onClose: (componentText: string) => void;
   }) => {
+    const [componentText, setComponentText] = useState(dummyComponentText);
+
+    const handleComponentTextChange = useCallback(
+      (value: string | undefined) => {
+        setComponentText(value ?? "");
+      },
+      [],
+    );
+
     const [componentRef, setComponentRef] = useState<
       ComponentReference | undefined
     >(undefined);
@@ -112,18 +122,18 @@ export const ComponentEditorDialog = withSuspenseWrapper(
     }, [componentRef]);
 
     const handleClose = useCallback(() => {
-      onClose(dummyComponentText);
-    }, [onClose]);
+      onClose(componentText);
+    }, [onClose, componentText]);
 
     useEffect(() => {
       let cancelled = false;
-      hydrateComponentReference({ text: dummyComponentText }).then((ref) => {
+      hydrateComponentReference({ text: componentText }).then((ref) => {
         if (!cancelled && ref) setComponentRef(ref);
       });
       return () => {
         cancelled = true;
       };
-    }, []);
+    }, [componentText]);
 
     if (!visible) {
       return null;
@@ -145,7 +155,21 @@ export const ComponentEditorDialog = withSuspenseWrapper(
           </InlineStack>
           <div className="w-full flex flex-row h-full">
             <BlockStack className="flex-1 h-full">
-              <CodeSyntaxHighlighter code={dummyComponentText} language="yaml" readOnly={false} />
+              <MonacoEditor
+                defaultLanguage={"yaml"}
+                theme="vs-dark"
+                value={componentText}
+                onChange={handleComponentTextChange}
+                options={{
+                  minimap: {
+                    enabled: true,
+                  },
+                  scrollBeyondLastLine: false,
+                  lineNumbers: "on",
+                  wordWrap: "on",
+                  automaticLayout: true,
+                }}
+              />
             </BlockStack>
             <BlockStack className="flex-1 h-full">
               <Heading level={2}>Preview</Heading>
