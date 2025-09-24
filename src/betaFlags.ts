@@ -26,4 +26,11 @@ export const ExistingBetaFlags = {
       "Automatically select the 'Created by me' filter when viewing the pipeline run list.",
     default: false,
   } as BetaFlag,
+
+  ["in-app-component-editor"]: {
+    name: "In-app component editor",
+    description:
+      "Enable the in-app component editor for creating and editing Oasis components.",
+    default: false,
+  } as BetaFlag,
 };
