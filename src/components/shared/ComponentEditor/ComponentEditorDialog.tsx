@@ -44,17 +44,19 @@ const ComponentEditorDialogSkeleton = () => {
 
 export const ComponentEditorDialog = withSuspenseWrapper(
   ({
+    text,
+    templateName = "empty",
     onSave,
     onClose,
-    templateName = "empty",
   }: {
+    text?: string;
+    templateName?: string;
     onSave: (componentText: string) => void;
     onClose: () => void;
-    templateName: string;
   }) => {
     const { data: templateCode } = useTemplateCodeByName(templateName);
 
-    const [componentText, setComponentText] = useState(templateCode);
+    const [componentText, setComponentText] = useState(text ?? templateCode);
 
     const handleComponentTextChange = useCallback(
       (value: string | undefined) => {
