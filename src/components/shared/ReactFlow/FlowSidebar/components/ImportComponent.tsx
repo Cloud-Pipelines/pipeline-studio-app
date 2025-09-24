@@ -370,7 +370,6 @@ const ImportComponent = ({
         <ComponentEditorDialog
           key={componentEditorTemplateSelected}
           onClose={handleComponentEditorDialogClose}
-          onSave={handleComponentEditorDialogClose}
           templateName={componentEditorTemplateSelected ?? "empty"}
         />
       )}

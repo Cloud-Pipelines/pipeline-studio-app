@@ -1,5 +1,5 @@
 import { Code, InfoIcon, ListFilter } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 
 import {
   Dialog,
@@ -201,9 +201,10 @@ const ComponentDetails = ({
     [],
   );
 
-  const handleEditComponent = () => {
+  const handleEditComponent = useCallback(() => {
     setIsEditDialogOpen(true);
-  };
+  }, []);
+
   const EditButton = (
     <TooltipButton
       variant="secondary"
@@ -222,9 +223,9 @@ const ComponentDetails = ({
 
   const componentText = component.text;
 
-  const handleCloseEditDialog = () => {
+  const handleCloseEditDialog = useCallback(() => {
     setIsEditDialogOpen(false);
-  };
+  }, []);
 
   return (
     <>
@@ -263,7 +264,6 @@ const ComponentDetails = ({
         <ComponentEditorDialog
           text={componentText}
           onClose={handleCloseEditDialog}
-          onSave={handleCloseEditDialog}
         />
       )}
     </>
