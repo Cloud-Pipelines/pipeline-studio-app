@@ -55,7 +55,7 @@ const SUPPORTED_TEMPLATES: Template[] = [
   },
   {
     name: "JavaScript",
-    icon: "Hexagon",
+    icon: "Coffee",
     color: "text-yellow-400",
     templateName: "javascript",
   },
