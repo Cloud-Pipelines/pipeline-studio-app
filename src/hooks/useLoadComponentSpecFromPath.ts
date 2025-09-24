@@ -9,7 +9,11 @@ import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 import { getIdOrTitleFromPath } from "@/utils/URL";
 
-export const useLoadComponentSpecFromPath = (backendUrl: string) => {
+export const useLoadComponentSpecFromPath = (
+  backendUrl: string,
+  url?: string,
+  disabled: boolean = false,
+) => {
   const location = useLocation();
 
   const { setComponentSpec, clearComponentSpec, componentSpec } =
@@ -18,7 +22,10 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
   const [isLoadingPipeline, setIsLoadingPipeline] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const pathname = useMemo(() => location.pathname, [location.pathname]);
+  const pathname = useMemo(
+    () => url ?? location.pathname,
+    [url, location.pathname],
+  );
   const isRunPath = pathname.includes(RUNS_BASE_PATH);
 
   const { title, id } = useMemo(
@@ -31,6 +38,8 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
       setError(null);
 
       if (!title && !id) {
+        if (url) return;
+
         clearComponentSpec();
         return;
       }
@@ -66,9 +75,10 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
             }
           }
         }
-
-        clearComponentSpec();
         setError("No component spec found for the current path.");
+
+        if (url) return;
+        clearComponentSpec();
       } catch (error) {
         console.error("Error loading pipeline from storage:", error);
         if (error instanceof Error) {
@@ -79,11 +89,14 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
       }
     };
 
+    if (disabled) return;
+
     loadPipelineFromStorage();
     return () => {
+      if (url) return;
       clearComponentSpec();
     };
-  }, [id, title, setComponentSpec, clearComponentSpec]);
+  }, [id, title, url, disabled, setComponentSpec, clearComponentSpec]);
 
   return {
     componentSpec,

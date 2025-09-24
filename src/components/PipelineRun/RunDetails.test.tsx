@@ -8,6 +8,7 @@ import type {
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
 import { useExecutionStatusQuery } from "@/hooks/useExecutionStatusQuery";
+import { useLoadComponentSpecFromPath } from "@/hooks/useLoadComponentSpecFromPath";
 import { useBackend } from "@/providers/BackendProvider";
 import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
 import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
@@ -23,9 +24,17 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   return {
     ...(await importOriginal()),
     useNavigate: () => vi.fn(),
+    useLocation: () => ({
+      pathname: "/runs/test-run-id-123",
+      search: {},
+      hash: "",
+      href: "/runs/test-run-id-123",
+      state: {},
+    }),
   };
 });
 vi.mock("@/hooks/useExecutionStatusQuery");
+vi.mock("@/hooks/useLoadComponentSpecFromPath");
 vi.mock("@/services/executionService", async (importOriginal) => {
   return {
     ...(await importOriginal()),
@@ -100,6 +109,20 @@ describe("<RunDetails/>", () => {
     },
   };
 
+  const mockEmptyComponentSpec: ComponentSpec = {
+    name: "",
+    description: "",
+    inputs: [],
+    outputs: [],
+    implementation: {
+      container: {
+        image: "",
+        command: [],
+        args: [],
+      },
+    },
+  };
+
   const mockPipelineRun = {
     id: 123,
     root_execution_id: 456,
@@ -136,6 +159,13 @@ describe("<RunDetails/>", () => {
       setBackendUrl: vi.fn(),
       ping: vi.fn(),
     });
+
+    vi.mocked(useLoadComponentSpecFromPath).mockReturnValue({
+      componentSpec: mockComponentSpec,
+      isLoading: false,
+      enableApi: true,
+      error: null,
+    });
   });
 
   afterEach(() => {
@@ -165,6 +195,13 @@ describe("<RunDetails/>", () => {
   describe("Inspect Pipeline Button", () => {
     test("should render inspect button", async () => {
       // arrange
+      vi.mocked(useLoadComponentSpecFromPath).mockReturnValue({
+        componentSpec: mockComponentSpec,
+        isLoading: false,
+        enableApi: true,
+        error: null,
+      });
+
       vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
         data: {
           details: mockExecutionDetails,
@@ -183,6 +220,64 @@ describe("<RunDetails/>", () => {
       // assert
       const inspect = screen.getByTestId("inspect-pipeline-button");
       expect(inspect).toBeInTheDocument();
+    });
+
+    test("should NOT render inspect button when pipeline loading", async () => {
+      // arrange
+      vi.mocked(useLoadComponentSpecFromPath).mockReturnValue({
+        componentSpec: mockEmptyComponentSpec,
+        isLoading: true,
+        enableApi: true,
+        error: null,
+      });
+
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        refetch: () => {},
+        enabled: true,
+      });
+
+      // act
+      await act(async () => renderWithQueryClient(<RunDetails />));
+
+      // assert
+      const inspect = screen.queryByTestId("inspect-pipeline-button");
+      expect(inspect).not.toBeInTheDocument();
+    });
+
+    test("should NOT render inspect button when pipeline has error", async () => {
+      // arrange
+      vi.mocked(useLoadComponentSpecFromPath).mockReturnValue({
+        componentSpec: mockEmptyComponentSpec,
+        isLoading: false,
+        enableApi: true,
+        error: "Pipeline not found",
+      });
+
+      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
+        data: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        refetch: () => {},
+        enabled: true,
+      });
+
+      // act
+      await act(async () => renderWithQueryClient(<RunDetails />));
+
+      // assert
+      const inspect = screen.queryByTestId("inspect-pipeline-button");
+      expect(inspect).not.toBeInTheDocument();
     });
   });
 
