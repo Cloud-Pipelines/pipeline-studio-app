@@ -1,6 +1,6 @@
 import { icons, PackagePlus, X } from "lucide-react";
 import { Upload } from "lucide-react";
-import { type ChangeEvent, useRef, useState } from "react";
+import { type ChangeEvent, useCallback, useRef, useState } from "react";
 
 import { ComponentEditorDialog } from "@/components/shared/ComponentEditor/ComponentEditorDialog";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,9 @@ import { Heading, Paragraph } from "@/components/ui/typography";
 import useImportComponent from "@/hooks/useImportComponent";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
+import { useComponentLibrary } from "@/providers/ComponentLibraryProvider/ComponentLibraryProvider";
+import { hydrateComponentReference } from "@/services/componentService";
+import { saveComponent } from "@/utils/localforage";
 
 enum TabType {
   URL = "URL",
@@ -60,8 +63,38 @@ const ImportComponent = ({
   const [selectedFileName, setSelectedFileName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { addToComponentLibrary } = useComponentLibrary();
   const [isComponentEditorDialogOpen, setIsComponentEditorDialogOpen] =
     useState(false);
+  const handleComponentEditorDialogClose = useCallback(
+    async (componentText: string) => {
+      setIsComponentEditorDialogOpen(false);
+      // saveNewComponentToFile
+      const hydratedComponent = await hydrateComponentReference({
+        text: componentText,
+      });
+
+      if (hydratedComponent) {
+        await saveComponent({
+          id: `component-${hydratedComponent.digest}`,
+          url: "",
+          data: componentText,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await addToComponentLibrary(hydratedComponent);
+
+        setIsOpen(false);
+
+        notify(
+          `Component ${hydratedComponent.name} imported successfully`,
+          "success",
+        );
+      }
+    },
+    [],
+  );
 
   const { onImportFromUrl, onImportFromFile, isLoading } = useImportComponent({
     successCallback: () => {
@@ -289,7 +322,7 @@ const ImportComponent = ({
               </BlockStack>
               <ComponentEditorDialog
                 visible={isComponentEditorDialogOpen}
-                onClose={() => setIsComponentEditorDialogOpen(false)}
+                onClose={handleComponentEditorDialogClose}
               />
             </TabsContent>
           </Tabs>
