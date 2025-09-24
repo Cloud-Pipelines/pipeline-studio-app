@@ -22,9 +22,16 @@ export const PublishedComponentBadge = withSuspenseWrapper(
   ({
     children,
     componentRef,
-  }: PropsWithChildren<{ componentRef: ComponentReference }>) => {
+    disabled = false,
+  }: PropsWithChildren<{
+    componentRef: ComponentReference;
+    disabled?: boolean;
+  }>) => {
     const { data: outdatedComponents } = useOutdatedComponents([componentRef]);
-    const { data: isPublished } = useHasPublishedComponent(componentRef);
+    const { data: isPublished } = useHasPublishedComponent(
+      componentRef,
+      !disabled,
+    );
 
     const isOutdated = outdatedComponents.length > 0;
 
@@ -43,6 +50,7 @@ export const PublishedComponentBadge = withSuspenseWrapper(
                   ? "text-orange-500 hover:text-orange-700"
                   : "text-muted-foreground hover:text-gray-800",
               )}
+              disabled={disabled}
             >
               <InlineStack gap="1">
                 <Icon

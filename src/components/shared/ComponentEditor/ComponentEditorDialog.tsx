@@ -11,7 +11,6 @@ import { hydrateComponentReference } from "@/services/componentService";
 import type { TaskNodeData } from "@/types/taskNode";
 import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
 
-import CodeSyntaxHighlighter from "../CodeViewer/CodeSyntaxHighlighter";
 import { FullscreenElement } from "../FullscreenElement";
 import { TaskNodeCard } from "../ReactFlow/FlowCanvas/TaskNode/TaskNodeCard";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
@@ -180,6 +179,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
                     data={previewNodeData}
                     selected={false}
                     runStatus={undefined}
+                    preview
                   >
                     <TaskNodeCard />
                   </TaskNodeProvider>
@@ -209,8 +209,7 @@ const generatePreviewTaskNodeData = (
   taskId?: string,
 ): TaskNodeData => {
   const previewTaskId =
-    taskId ||
-    `preview-${componentRef.name ?? componentRef.spec?.name ?? "unknown"}`;
+    taskId || `${componentRef.name ?? componentRef.spec?.name ?? "unknown"}`;
   const taskSpec = generateTaskSpec(componentRef);
 
   return {

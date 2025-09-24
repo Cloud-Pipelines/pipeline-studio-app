@@ -49,7 +49,8 @@ const TaskNodeCard = () => {
   const [expandedOutputs, setExpandedOutputs] = useState(false);
 
   const { name, state, callbacks, nodeId, taskSpec, taskId } = taskNode;
-  const { dimensions, selected, highlighted, isCustomComponent } = state;
+  const { dimensions, selected, highlighted, isCustomComponent, preview } =
+    state;
 
   const onNotify = useCallback((message: NotifyMessage) => {
     switch (message.type) {
@@ -186,7 +187,10 @@ const TaskNodeCard = () => {
         </BlockStack>
 
         {isRemoteComponentLibrarySearchEnabled ? (
-          <PublishedComponentBadge componentRef={taskSpec.componentRef}>
+          <PublishedComponentBadge
+            componentRef={taskSpec.componentRef}
+            disabled={preview}
+          >
             {digestMarkup}
           </PublishedComponentBadge>
         ) : (

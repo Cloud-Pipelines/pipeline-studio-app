@@ -30,6 +30,7 @@ type TaskNodeState = Readonly<{
   runStatus?: ContainerExecutionStatus;
   isCustomComponent: boolean;
   dimensions: TaskNodeDimensions;
+  preview?: boolean;
 }>;
 
 type TaskNodeCallbacks = {
@@ -44,6 +45,7 @@ type TaskNodeProviderProps = {
   children: ReactNode;
   data: TaskNodeData;
   selected: boolean;
+  preview?: boolean;
   runStatus?: ContainerExecutionStatus;
 };
 
@@ -66,6 +68,7 @@ export const TaskNodeProvider = ({
   children,
   data,
   selected,
+  preview = false,
   runStatus,
 }: TaskNodeProviderProps) => {
   const notify = useToastNotification();
@@ -140,6 +143,7 @@ export const TaskNodeProvider = ({
       disabled: data.isGhost ?? false,
       isCustomComponent,
       dimensions,
+      preview,
     }),
     [
       selected,
@@ -149,6 +153,7 @@ export const TaskNodeProvider = ({
       runStatus,
       isCustomComponent,
       dimensions,
+      preview,
     ],
   );
 

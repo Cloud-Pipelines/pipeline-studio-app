@@ -53,6 +53,9 @@ export const InputHandle = ({
   const handleHandleClick = useCallback(
     (e: ReactMouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
+
+      if (state.preview) return;
+
       setSelected(!selected);
     },
     [selected],
@@ -62,6 +65,9 @@ export const InputHandle = ({
     (e: ReactMouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
       e.preventDefault();
+
+      if (state.preview) return;
+
       onLabelClick?.(e);
       setSelected(!selected);
     },
@@ -129,27 +135,39 @@ export const InputHandle = ({
       data-active={active}
     >
       <div className="absolute -translate-x-6 flex items-center h-3 w-3">
-        <Handle
-          ref={handleRef}
-          type="target"
-          id={handleId}
-          position={Position.Left}
-          isConnectable={true}
-          className={cn(
-            "border-0! h-full! w-full! transform-none!",
-            missing,
-            (selected || active) && "bg-blue-500!",
-            highlight && "bg-green-500!",
-            state.readOnly && "cursor-pointer!",
-          )}
-          onClick={handleHandleClick}
-          data-invalid={invalid}
-          data-testid={`input-handle-${input.name}`}
-        />
+        {state.preview ? (
+          <div
+            className={cn(
+              "absolute rounded-full w-3 h-3 top-1.5",
+              missing,
+              (selected || active) && "bg-blue-500!",
+              highlight && "bg-green-500!",
+            )}
+          />
+        ) : (
+          <Handle
+            ref={handleRef}
+            type="target"
+            id={handleId}
+            position={Position.Left}
+            isConnectable={true}
+            className={cn(
+              "border-0! h-full! w-full! transform-none!",
+              missing,
+              (selected || active) && "bg-blue-500!",
+              highlight && "bg-green-500!",
+              state.readOnly && "cursor-pointer!",
+            )}
+            onClick={handleHandleClick}
+            data-invalid={invalid}
+            data-testid={`input-handle-${input.name}`}
+          />
+        )}
       </div>
       <div
         className={cn(
-          "flex flex-row items-center rounded-md cursor-pointer relative",
+          "flex flex-row items-center rounded-md relative",
+          !state.preview && "cursor-pointer",
         )}
         data-testid={`input-handle-label-${input.name}`}
       >
@@ -163,7 +181,11 @@ export const InputHandle = ({
             <div
               className={cn(
                 "text-xs text-gray-800! rounded-md px-2 py-1 truncate",
-                onLabelClick && !selected && !highlight && "hover:bg-gray-300",
+                onLabelClick &&
+                  !selected &&
+                  !highlight &&
+                  !state.preview &&
+                  "hover:bg-gray-300",
                 selected || active ? "bg-blue-200" : "bg-gray-200",
                 highlight && "bg-green-200",
                 !hasValue && hasDefault && "opacity-50 italic",
@@ -236,19 +258,24 @@ export const OutputHandle = ({
   const handleHandleClick = useCallback(
     (e: ReactMouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
+      if (state.preview) return;
+
       setSelected(!selected);
     },
-    [selected],
+    [selected, state.preview],
   );
 
   const handleLabelClick = useCallback(
     (e: ReactMouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
       e.preventDefault();
+
+      if (state.preview) return;
+
       onLabelClick?.(e);
       setSelected(!selected);
     },
-    [onLabelClick, selected],
+    [onLabelClick, selected, state.preview],
   );
 
   useEffect(() => {
@@ -304,7 +331,10 @@ export const OutputHandle = ({
 
   return (
     <div
-      className="flex items-center justify-end w-full cursor-pointer"
+      className={cn(
+        "flex items-center justify-end w-full",
+        !state.preview && "cursor-pointer",
+      )}
       key={output.name}
       data-testid={`output-connection-${output.name}`}
       data-highlighted={highlight}
@@ -314,14 +344,19 @@ export const OutputHandle = ({
       <div className="flex flex-row-reverse w-full gap-0.5 items-center justify-between">
         <div
           className={cn(
-            "translate-x-3 min-w-0 inline-block",
+            "min-w-0 inline-block",
             !value ? "max-w-full" : "max-w-3/4",
+            !state.preview && "translate-x-3",
           )}
         >
           <div
             className={cn(
               "text-xs text-gray-800! rounded-md px-2 py-1 truncate",
-              onLabelClick && !selected && !highlight && "hover:bg-gray-300",
+              onLabelClick &&
+                !selected &&
+                !highlight &&
+                !state.preview &&
+                "hover:bg-gray-300",
               selected || active ? "bg-blue-200" : "bg-gray-200",
               highlight && "bg-green-200",
             )}
@@ -336,21 +371,32 @@ export const OutputHandle = ({
           </div>
         )}
       </div>
-      <Handle
-        ref={handleRef}
-        type="source"
-        id={handleId}
-        position={Position.Right}
-        isConnectable={true}
-        onClick={handleHandleClick}
-        className={cn(
-          "relative! border-0! !w-[12px] !h-[12px] transform-none! translate-x-6 cursor-pointer bg-gray-500!",
-          (selected || active) && "bg-blue-500!",
-          highlight && "bg-green-500!",
-          state.readOnly && "cursor-pointer!",
-        )}
-        data-testid={`output-handle-${output.name}`}
-      />
+
+      {state.preview ? (
+        <div
+          className={cn(
+            "absolute rounded-full w-3 h-3 translate-x-6 bg-gray-500",
+            (selected || active) && "bg-blue-500!",
+            highlight && "bg-green-500!",
+          )}
+        />
+      ) : (
+        <Handle
+          ref={handleRef}
+          type="source"
+          id={handleId}
+          position={Position.Right}
+          isConnectable={true}
+          onClick={handleHandleClick}
+          className={cn(
+            "relative! border-0! !w-[12px] !h-[12px] transform-none! translate-x-6 bg-gray-500!",
+            (selected || active) && "bg-blue-500!",
+            highlight && "bg-green-500!",
+            state.readOnly && "cursor-pointer!",
+          )}
+          data-testid={`output-handle-${output.name}`}
+        />
+      )}
     </div>
   );
 };
