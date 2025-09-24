@@ -1,9 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 
-const cachedTemplates = new Map<string, Promise<string>>([
-  ["empty", Promise.resolve("")],
-]);
-
 const availableTemplates = import.meta.glob("./templates/*.yaml", {
   query: "?raw",
   import: "default",

@@ -16,7 +16,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  assetsInclude: ["**/*.yaml"],
+  assetsInclude: ["**/*.yaml", "**/*.py"],
   test: {
     globals: true,
     environment: "jsdom",
