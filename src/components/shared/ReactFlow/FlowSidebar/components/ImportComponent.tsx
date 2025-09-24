@@ -89,7 +89,7 @@ const ImportComponent = ({
   const handleComponentEditorDialogClose = () => {
     setComponentEditorTemplateSelected(undefined);
     setIsOpen(false);
-  }
+  };
 
   const { onImportFromUrl, onImportFromFile, isLoading } = useImportComponent({
     successCallback: () => {

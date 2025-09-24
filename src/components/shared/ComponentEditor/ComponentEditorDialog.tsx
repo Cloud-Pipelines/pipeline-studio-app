@@ -1,4 +1,5 @@
 import MonacoEditor from "@monaco-editor/react";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { generateTaskSpec } from "@/utils/nodes/generateTaskSpec";
 import { FullscreenElement } from "../FullscreenElement";
 import { TaskNodeCard } from "../ReactFlow/FlowCanvas/TaskNode/TaskNodeCard";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
+import { usePythonYamlGenerator } from "./generators/python";
 import { useTemplateCodeByName } from "./useTemplateCodeByName";
 
 const TogglePreview = ({
@@ -35,8 +37,8 @@ const TogglePreview = ({
         variant="link"
         className={cn(
           showPreview
-            ? "hover:no-underline text-blue-400 disabled:opacity-100"
-            : "text-muted-foreground",
+            ? "text-bold"
+            : "hover:no-underline text-blue-400 disabled:opacity-100",
         )}
         onClick={() => setShowPreview(true)}
         disabled={showPreview}
@@ -48,8 +50,8 @@ const TogglePreview = ({
         variant="link"
         className={cn(
           showPreview
-            ? "text-muted-foreground"
-            : "hover:no-underline text-blue-400 disabled:opacity-100",
+            ? "hover:no-underline text-blue-400 disabled:opacity-100"
+            : "text-bold",
         )}
         onClick={() => setShowPreview(false)}
         disabled={!showPreview}
@@ -86,6 +88,229 @@ const ComponentEditorDialogSkeleton = () => {
   );
 };
 
+const usePreviewTaskNodeData = (componentText: string) => {
+  const [componentRef, setComponentRef] = useState<
+    ComponentReference | undefined
+  >(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    hydrateComponentReference({ text: componentText }).then((ref) => {
+      if (!cancelled && ref) setComponentRef(ref);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [componentText]);
+
+  return useMemo(() => {
+    if (!componentRef) return undefined;
+
+    return generatePreviewTaskNodeData(componentRef);
+  }, [componentRef]);
+};
+
+const defaultPythonFunctionText = `from cloud_pipelines import components
+
+def filter_text(
+    # The InputPath() annotation makes the system pass a local input path where the function can read the input data.
+    text_path: components.InputPath(),
+    # The OutputPath() annotation makes the system pass a local output path where the function should write the output data.
+    filtered_text_path: components.OutputPath(),
+    pattern: str = ".*",
+):
+    """Filters text.
+
+    Filtering is performed using regular expressions.
+
+    Args:
+        text_path: The source text
+        pattern: The regular expression pattern
+        filtered_text_path: The filtered text
+    """
+    # Function must be self-contained.
+    # So all import statements must be inside the function.
+    import os
+    import re
+
+    regex = re.compile(pattern)
+
+    os.makedirs(os.path.dirname(filtered_text_path), exist_ok=True)
+    with open(text_path, "r") as reader:
+        with open(filtered_text_path, "w") as writer:
+            for line in reader:
+                if regex.search(line):
+                    writer.write(line)
+`;
+
+/**
+ * A dialog for editing a Python function.
+ */
+export const PythonComponentEditor = withSuspenseWrapper(
+  ({
+    text,
+    onComponentTextChange,
+  }: {
+    text: string;
+    onComponentTextChange: (yaml: string) => void;
+  }) => {
+    const [componentText, setComponentText] = useState("");
+    const [showPreview, setShowPreview] = useState(true);
+    const yamlGenerator = usePythonYamlGenerator();
+
+    const handleFunctionTextChange = useCallback(
+      async (value: string | undefined) => {
+        const yaml = await yamlGenerator(value ?? "").catch((error) => {
+          return `❌ Error In Component Code ❌ \n\n ${error instanceof Error ? error.message : String(error)}`;
+        });
+        setComponentText(yaml);
+        onComponentTextChange(yaml);
+      },
+      [yamlGenerator, onComponentTextChange],
+    );
+
+    useEffect(() => {
+      // first time loading
+      handleFunctionTextChange(text);
+    }, [text, handleFunctionTextChange]);
+
+    const previewNodeData = usePreviewTaskNodeData(componentText);
+
+    return (
+      <InlineStack className="w-full h-full" gap="4">
+        <BlockStack className="flex-1 h-full pt-7">
+          <MonacoEditor
+            defaultLanguage={"python"}
+            theme="vs-dark"
+            value={text}
+            onChange={handleFunctionTextChange}
+            options={{
+              minimap: {
+                enabled: false,
+              },
+              scrollBeyondLastLine: false,
+              lineNumbers: "on",
+              wordWrap: "on",
+              automaticLayout: true,
+            }}
+          />
+        </BlockStack>
+
+        <BlockStack className="flex-1 h-full">
+          <BlockStack className="w-full h-full">
+            <TogglePreview
+              showPreview={showPreview}
+              setShowPreview={setShowPreview}
+            />
+            <BlockStack
+              className="w-full h-full"
+              align="center"
+              inlineAlign="center"
+            >
+              {previewNodeData && showPreview && (
+                <TaskNodeProvider
+                  data={previewNodeData}
+                  selected={false}
+                  runStatus={undefined}
+                  preview
+                >
+                  <TaskNodeCard />
+                </TaskNodeProvider>
+              )}
+              {!showPreview && (
+                <MonacoEditor
+                  defaultLanguage={"yaml"}
+                  theme="vs-dark"
+                  value={componentText}
+                  options={{
+                    minimap: {
+                      enabled: false,
+                    },
+                    readOnly: true,
+                    scrollBeyondLastLine: false,
+                    lineNumbers: "on",
+                    wordWrap: "on",
+                    automaticLayout: true,
+                  }}
+                />
+              )}
+            </BlockStack>
+          </BlockStack>
+        </BlockStack>
+      </InlineStack>
+    );
+  },
+);
+
+export const YamlComponentEditor = withSuspenseWrapper(
+  ({
+    text,
+    onComponentTextChange,
+  }: {
+    text: string;
+    onComponentTextChange: (yaml: string) => void;
+  }) => {
+    const [componentText, setComponentText] = useState(text);
+
+    const handleComponentTextChange = useCallback(
+      (value: string | undefined) => {
+        setComponentText(value ?? "");
+        onComponentTextChange(value ?? "");
+      },
+      [onComponentTextChange],
+    );
+
+    const previewNodeData = usePreviewTaskNodeData(componentText);
+
+    return (
+      <InlineStack className="w-full h-full" gap="4">
+        <BlockStack className="flex-1 h-full pt-7">
+          <MonacoEditor
+            defaultLanguage={"yaml"}
+            theme="vs-dark"
+            value={componentText}
+            onChange={handleComponentTextChange}
+            options={{
+              minimap: {
+                enabled: false,
+              },
+              scrollBeyondLastLine: false,
+              lineNumbers: "on",
+              wordWrap: "on",
+              automaticLayout: true,
+            }}
+          />
+        </BlockStack>
+
+        <BlockStack className="flex-1 h-full">
+          <BlockStack className="w-full h-full">
+            <BlockStack
+              className="w-full h-full"
+              align="center"
+              inlineAlign="center"
+            >
+              {previewNodeData ? (
+                <TaskNodeProvider
+                  data={previewNodeData}
+                  selected={false}
+                  runStatus={undefined}
+                  preview
+                >
+                  <TaskNodeCard />
+                </TaskNodeProvider>
+              ) : null}
+            </BlockStack>
+          </BlockStack>
+        </BlockStack>
+      </InlineStack>
+    );
+  },
+);
+
+type PythonCodeDetection =
+  | { isPython: true; pythonOriginalCode: string }
+  | { isPython: false };
+
 export const ComponentEditorDialog = withSuspenseWrapper(
   ({
     text,
@@ -101,9 +326,35 @@ export const ComponentEditorDialog = withSuspenseWrapper(
     const notify = useToastNotification();
     const { addToComponentLibrary } = useComponentLibrary();
     const { data: templateCode } = useTemplateCodeByName(templateName);
-    const [showPreview, setShowPreview] = useState(true);
-
     const [componentText, setComponentText] = useState(text ?? templateCode);
+
+    const { data: pythonCodeDetection } = useSuspenseQuery({
+      queryKey: ["isPython", `${templateName}-${JSON.stringify(text)}`],
+      queryFn: async (): Promise<PythonCodeDetection> => {
+        if (text) {
+          const hydratedComponent = await hydrateComponentReference({
+            text,
+          });
+
+          if (
+            !hydratedComponent?.spec?.metadata?.annotations
+              ?.python_original_code
+          ) {
+            return { isPython: false };
+          }
+
+          return {
+            isPython: true,
+            pythonOriginalCode: hydratedComponent?.spec?.metadata?.annotations
+              ?.python_original_code as string,
+          };
+        }
+
+        return templateName === "python"
+          ? { isPython: true, pythonOriginalCode: defaultPythonFunctionText }
+          : { isPython: false };
+      },
+    });
 
     const handleComponentTextChange = useCallback(
       (value: string | undefined) => {
@@ -113,7 +364,6 @@ export const ComponentEditorDialog = withSuspenseWrapper(
     );
 
     const handleSave = async () => {
-      console.log("handleSave");
       const hydratedComponent = await hydrateComponentReference({
         text: componentText,
       });
@@ -139,32 +389,9 @@ export const ComponentEditorDialog = withSuspenseWrapper(
       }
     };
 
-
-    const [componentRef, setComponentRef] = useState<
-      ComponentReference | undefined
-    >(undefined);
-
-    const previewNodeData = useMemo(() => {
-      if (!componentRef) return undefined;
-
-      return generatePreviewTaskNodeData(componentRef);
-    }, [componentRef]);
-
     const handleClose = useCallback(() => {
       onClose();
     }, [onClose]);
-
-    useEffect(() => {
-      let cancelled = false;
-      const handleHydrate = async () => {
-        const ref = await hydrateComponentReference({ text: componentText })
-        if (!cancelled && ref) setComponentRef(ref);
-      }
-      handleHydrate();
-      return () => {
-        cancelled = true;
-      };
-    }, [componentText]);
 
     const title = text ? "Edit Component" : "New Component";
 
@@ -184,10 +411,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
                 </Paragraph>
               )}
             </InlineStack>
-            <TogglePreview
-              showPreview={showPreview}
-              setShowPreview={setShowPreview}
-            />
+
             <InlineStack gap="2" blockAlign="center">
               <Button variant="secondary" onClick={handleSave}>
                 <Icon name="Save" /> Save
@@ -197,61 +421,18 @@ export const ComponentEditorDialog = withSuspenseWrapper(
               </Button>
             </InlineStack>
           </InlineStack>
-          <InlineStack className="w-full h-full">
-            <BlockStack className="flex-1 h-full">
-              <MonacoEditor
-                defaultLanguage={"yaml"}
-                theme="vs-dark"
-                value={componentText}
-                onChange={handleComponentTextChange}
-                options={{
-                  minimap: {
-                    enabled: true,
-                  },
-                  scrollBeyondLastLine: false,
-                  lineNumbers: "on",
-                  wordWrap: "on",
-                  automaticLayout: true,
-                }}
-              />
-            </BlockStack>
 
-            <BlockStack className="flex-1 h-full">
-              <BlockStack
-                align="center"
-                inlineAlign="center"
-                className="w-full h-full"
-              >
-                {previewNodeData && showPreview && (
-                  <TaskNodeProvider
-                    data={previewNodeData}
-                    selected={false}
-                    runStatus={undefined}
-                    preview
-                  >
-                    <TaskNodeCard />
-                  </TaskNodeProvider>
-                )}
-                {!showPreview && (
-                  <MonacoEditor
-                    defaultLanguage={"yaml"}
-                    theme="vs-dark"
-                    value={componentText}
-                    onChange={handleComponentTextChange}
-                    options={{
-                      minimap: {
-                        enabled: true,
-                      },
-                      scrollBeyondLastLine: false,
-                      lineNumbers: "on",
-                      wordWrap: "on",
-                      automaticLayout: true,
-                    }}
-                  />
-                )}
-              </BlockStack>
-            </BlockStack>
-          </InlineStack>
+          {pythonCodeDetection?.isPython ? (
+            <PythonComponentEditor
+              text={pythonCodeDetection.pythonOriginalCode}
+              onComponentTextChange={handleComponentTextChange}
+            />
+          ) : (
+            <YamlComponentEditor
+              text={componentText}
+              onComponentTextChange={handleComponentTextChange}
+            />
+          )}
         </BlockStack>
       </FullscreenElement>
     );
