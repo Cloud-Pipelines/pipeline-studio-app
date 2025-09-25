@@ -2,6 +2,7 @@ import { Frown, Videotape } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
+import { useLoadComponentSpecFromPath } from "@/hooks/useLoadComponentSpecFromPath";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import {
@@ -23,12 +24,18 @@ import { RerunPipelineButton } from "./components/RerunPipelineButton";
 import { useRootExecutionContext } from "./RootExecutionStatusProvider";
 
 export const RunDetails = () => {
+  const { configured, backendUrl } = useBackend();
+  const { componentSpec } = useComponentSpec();
   const { details, state, runId, isLoading, error } = useRootExecutionContext();
 
-  const { configured } = useBackend();
+  const editorRoute = `/editor/${componentSpec.name}`;
+
+  const { error: loadEditorError, isLoading: isLoadingEditor } =
+    useLoadComponentSpecFromPath(backendUrl, editorRoute, !componentSpec.name);
+
+  const hideInspectButton = !!isLoadingEditor || !!loadEditorError;
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
-  const { componentSpec } = useComponentSpec();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -130,7 +137,9 @@ export const RunDetails = () => {
 
       <div>
         <div className="flex gap-2">
-          <InspectPipelineButton pipelineName={componentSpec.name} />
+          {!hideInspectButton && (
+            <InspectPipelineButton pipelineName={componentSpec.name} />
+          )}
           <ClonePipelineButton componentSpec={componentSpec} />
           {isInProgress && <CancelPipelineRunButton runId={runId} />}
           {isComplete && <RerunPipelineButton componentSpec={componentSpec} />}
