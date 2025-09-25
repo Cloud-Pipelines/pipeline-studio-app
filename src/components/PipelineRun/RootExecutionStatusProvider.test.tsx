@@ -239,7 +239,8 @@ describe("<RootExecutionStatusProvider />", () => {
       // Verify polling is initially enabled
       expect(mockUseFetchExecutionInfo).toHaveBeenCalledWith(
         "test-execution-id",
-        true, // poll
+        "http://localhost:8000",
+        true,
       );
     });
 
@@ -506,7 +507,8 @@ describe("<RootExecutionStatusProvider />", () => {
 
       expect(mockUseFetchExecutionInfo).toHaveBeenCalledWith(
         "test-execution-id",
-        true, // poll
+        "http://localhost:8000",
+        true,
       );
     });
 
@@ -544,7 +546,8 @@ describe("<RootExecutionStatusProvider />", () => {
 
       expect(mockUseFetchExecutionInfo).toHaveBeenCalledWith(
         "test-execution-id",
-        true, // poll
+        customBackendUrl,
+        true,
       );
     });
   });

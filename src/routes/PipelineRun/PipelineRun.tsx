@@ -39,11 +39,7 @@ const PipelineRun = () => {
     error: executionError,
     refetch: refetchExecution,
     enabled,
-  } = useFetchExecutionInfo(
-    rootExecutionId,
-    false, // poll
-    !triedAsRunId, // enabled - disable if we've already tried as run_id
-  );
+  } = useFetchExecutionInfo(rootExecutionId, backendUrl, false, !triedAsRunId);
 
   // If fetching as root_execution_id fails, try as run_id
   const shouldFetchAsRunId = !!executionError && !triedAsRunId && enabled;
@@ -51,10 +47,7 @@ const PipelineRun = () => {
     data: pipelineRunData,
     isLoading: isPipelineRunLoading,
     error: pipelineRunError,
-  } = useFetchPipelineRun(
-    id,
-    shouldFetchAsRunId, // enabled
-  );
+  } = useFetchPipelineRun(id, backendUrl, shouldFetchAsRunId);
 
   // Update rootExecutionId when we get pipeline run data
   useEffect(() => {

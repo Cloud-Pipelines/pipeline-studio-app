@@ -8,7 +8,6 @@ import type {
   GetGraphExecutionStateResponse,
   PipelineRunResponse,
 } from "@/api/types.gen";
-import { useBackend } from "@/providers/BackendProvider";
 import type { TaskStatusCounts } from "@/types/pipelineRun";
 import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
@@ -59,26 +58,25 @@ export const useFetchContainerExecutionState = (
   });
 };
 
-export const useFetchPipelineRun = (runId: string, enabled: boolean = true) => {
-  const { backendUrl, configured, available } = useBackend();
-
+export const useFetchPipelineRun = (
+  runId: string,
+  backendUrl: string,
+  enabled: boolean = true,
+) => {
   return useQuery<PipelineRunResponse>({
     queryKey: ["pipeline-run", runId],
     queryFn: () => fetchPipelineRun(runId, backendUrl),
-    enabled: enabled && configured && available,
+    enabled,
     refetchOnWindowFocus: false,
   });
 };
 
 export const useFetchExecutionInfo = (
   executionId: string,
+  backendUrl: string,
   poll: boolean = false,
   enabled: boolean = true,
 ) => {
-  const { backendUrl, configured, available } = useBackend();
-
-  const queryEnabled = enabled && configured && available;
-
   const {
     data: details,
     isLoading: isDetailsLoading,
@@ -90,7 +88,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionDetails(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
-    enabled: queryEnabled,
+    enabled,
   });
 
   const {
@@ -104,7 +102,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionState(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
-    enabled: queryEnabled,
+    enabled,
   });
 
   const isLoading = isDetailsLoading || isStateLoading;
@@ -117,7 +115,7 @@ export const useFetchExecutionInfo = (
     refetchState();
   }, [refetchDetails, refetchState]);
 
-  return { data, isLoading, isFetching, error, refetch, enabled: queryEnabled };
+  return { data, isLoading, isFetching, error, refetch, enabled };
 };
 
 export const fetchExecutionStatus = async (
