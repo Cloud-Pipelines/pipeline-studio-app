@@ -3,16 +3,18 @@ import { AlertCircle } from "lucide-react";
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
+import { useForcedSearchContext } from "@/providers/ComponentLibraryProvider/ForcedSearchProvider";
+import { isValidFilterRequest } from "@/providers/ComponentLibraryProvider/types";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
 import type { InputSpec } from "@/utils/componentSpec";
-import { ComponentSearchFilter, DEFAULT_FILTERS } from "@/utils/constants";
+import { ComponentSearchFilter } from "@/utils/constants";
 import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
-import { getValue } from "@/utils/string";
 
 import { InputHandle } from "./Handles";
+import { getDisplayValue } from "./handleUtils";
 
 interface TaskNodeInputsProps {
   condensed: boolean;
@@ -26,14 +28,13 @@ export function TaskNodeInputs({
   onBackgroundClick,
 }: TaskNodeInputsProps) {
   const { inputs, taskSpec, state, select } = useTaskNode();
+  const { graphSpec } = useComponentSpec();
   const {
-    setSearchTerm,
-    setSearchFilters,
-    searchTerm,
-    searchFilters,
+    highlightSearchFilter,
+    resetSearchFilter,
+    currentSearchFilter,
     highlightSearchResults,
-    setHighlightSearchResults,
-  } = useComponentLibrary();
+  } = useForcedSearchContext();
 
   const connection = useConnection();
 
@@ -50,33 +51,23 @@ export function TaskNodeInputs({
       "taskOutput" in (values[input.name] as object),
   );
 
-  const resetHighlightRelatedHandles = useCallback(() => {
-    setSearchTerm("");
-    setSearchFilters(DEFAULT_FILTERS);
-    setHighlightSearchResults(false);
-  }, [setSearchTerm, setSearchFilters, setHighlightSearchResults]);
-
   const toggleHighlightRelatedHandles = useCallback(
     (selected: boolean, input?: InputSpec) => {
       if (selected && input) {
         const type = (input.type as string) || "[type undefined]";
 
-        setSearchTerm(type);
-        setSearchFilters([
-          ComponentSearchFilter.OUTPUTTYPE,
-          ComponentSearchFilter.EXACTMATCH,
-        ]);
-        setHighlightSearchResults(true);
+        highlightSearchFilter({
+          searchTerm: type,
+          filters: [
+            ComponentSearchFilter.OUTPUTTYPE,
+            ComponentSearchFilter.EXACTMATCH,
+          ],
+        });
       } else {
-        resetHighlightRelatedHandles();
+        resetSearchFilter();
       }
     },
-    [
-      setSearchTerm,
-      setSearchFilters,
-      setHighlightSearchResults,
-      resetHighlightRelatedHandles,
-    ],
+    [highlightSearchFilter, resetSearchFilter],
   );
 
   const handleBackgroundClick = useCallback(
@@ -96,29 +87,29 @@ export function TaskNodeInputs({
       const input = inputs.find((i) => i.name === inputName);
       toggleHighlightRelatedHandles(selected, input);
     },
-    [inputs, state, toggleHighlightRelatedHandles],
+    [inputs, state.readOnly, toggleHighlightRelatedHandles],
   );
 
   const checkHighlight = useCallback(
     (input: InputSpec) => {
       if (
         !highlightSearchResults ||
-        searchTerm.length < 1 ||
-        searchFilters.length < 1 ||
-        !searchFilters.includes(ComponentSearchFilter.INPUTTYPE)
+        !isValidFilterRequest(currentSearchFilter, {
+          includesFilter: ComponentSearchFilter.INPUTTYPE,
+        })
       ) {
         return false;
       }
 
       const matchFound = checkArtifactMatchesSearchFilters(
-        searchTerm,
-        searchFilters,
+        currentSearchFilter.searchTerm,
+        currentSearchFilter.filters,
         input,
       );
 
       return matchFound;
     },
-    [highlightSearchResults, searchTerm, searchFilters],
+    [currentSearchFilter, highlightSearchResults],
   );
 
   const handleLabelClick = useCallback(
@@ -134,7 +125,7 @@ export function TaskNodeInputs({
     const { fromHandle, from, to, inProgress } = connection;
 
     if (!inProgress) {
-      resetHighlightRelatedHandles();
+      resetSearchFilter();
       setIsDragging(false);
       return;
     }
@@ -161,7 +152,13 @@ export function TaskNodeInputs({
 
     toggleHighlightRelatedHandles(true, input);
     setIsDragging(true);
-  }, [connection, inputs, isDragging, toggleHighlightRelatedHandles]);
+  }, [
+    connection,
+    inputs,
+    isDragging,
+    resetSearchFilter,
+    toggleHighlightRelatedHandles,
+  ]);
 
   if (!inputs.length) return null;
 
@@ -218,7 +215,7 @@ export function TaskNodeInputs({
               key={input.name}
               input={input}
               invalid={invalidArguments.includes(input.name)}
-              value={getValue(values?.[input.name])}
+              value={getDisplayValue(values?.[input.name], graphSpec)}
               onHandleSelectionChange={handleSelectionChange}
               highlight={checkHighlight(input)}
               onLabelClick={handleLabelClick}

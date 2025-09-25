@@ -11,7 +11,7 @@ import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { PipelineNameDialog } from "../shared/Dialogs";
 
 const RenamePipeline = () => {
-  const { componentSpec } = useComponentSpec();
+  const { componentSpec, saveComponentSpec } = useComponentSpec();
   const notify = useToastNotification();
   const navigate = useNavigate();
 
@@ -36,6 +36,8 @@ const RenamePipeline = () => {
       name,
       pathname,
     );
+
+    await saveComponentSpec(name);
 
     const urlName = encodeURIComponent(name);
     const url = APP_ROUTES.PIPELINE_EDITOR.replace("$name", urlName);

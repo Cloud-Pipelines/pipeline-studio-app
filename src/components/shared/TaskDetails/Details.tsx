@@ -26,12 +26,16 @@ import type { ComponentSpec } from "@/utils/componentSpec";
 import {
   convertGithubUrlToDirectoryUrl,
   downloadYamlFromComponentText,
+  isGithubUrl,
 } from "@/utils/URL";
 import copyToYaml from "@/utils/yaml";
+
+import { ExecutionDetails } from "../ExecutionDetails/ExecutionDetails";
 
 interface TaskDetailsProps {
   displayName: string;
   componentSpec: ComponentSpec;
+  executionId?: string;
   taskId?: string;
   componentDigest?: string;
   url?: string;
@@ -50,6 +54,7 @@ interface TaskDetailsProps {
 const TaskDetails = ({
   displayName,
   componentSpec,
+  executionId,
   taskId,
   componentDigest,
   url,
@@ -61,7 +66,6 @@ const TaskDetails = ({
   additionalSection = [],
 }: TaskDetailsProps) => {
   const notify = useToastNotification();
-
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { isCopied, isTooltipOpen, handleCopy, handleTooltipOpen } =
     useCopyToClipboard(componentDigest);
@@ -140,24 +144,6 @@ const TaskDetails = ({
   return (
     <div className="h-full overflow-auto hide-scrollbar">
       <div className="border rounded-md divide-y w-full h-full">
-        <div className="flex flex-col px-3 py-2">
-          <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
-            Name
-          </div>
-          <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
-            {componentSpec?.name || displayName}
-          </div>
-        </div>
-        {runStatus && (
-          <div className="flex flex-col px-3 py-2">
-            <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
-              Run Status
-            </div>
-            <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
-              {runStatus}
-            </div>
-          </div>
-        )}
         {taskId && (
           <div className="flex flex-col px-3 py-2">
             <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
@@ -168,6 +154,18 @@ const TaskDetails = ({
             </div>
           </div>
         )}
+        {runStatus && (
+          <div className="flex flex-col px-3 py-2">
+            <div className="flex-shrink-0 font-medium text-sm text-gray-700 mb-1">
+              Run Status
+            </div>
+            <div className="text-xs text-gray-600 break-words whitespace-pre-wrap">
+              {runStatus}
+            </div>
+          </div>
+        )}
+
+        {executionId && <ExecutionDetails executionId={executionId} />}
 
         {componentSpec?.metadata?.annotations?.author && (
           <div className="flex flex-col px-3 py-2">
@@ -351,7 +349,9 @@ function LinkBlock({
           </div>
           <div className="text-sm break-all">
             <a
-              href={convertGithubUrlToDirectoryUrl(url)}
+              href={
+                isGithubUrl(url) ? convertGithubUrlToDirectoryUrl(url) : url
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="text-sky-500 hover:underline flex items-center gap-1"

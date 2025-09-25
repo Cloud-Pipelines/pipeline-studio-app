@@ -26,16 +26,16 @@ import {
 import { convertUTCToLocalTime, formatDate } from "@/utils/date";
 
 const RunRow = ({ run }: { run: PipelineRunResponse }) => {
-  const { backendUrl } = useBackend();
-
   const navigate = useNavigate();
   const notify = useToastNotification();
+  const { backendUrl } = useBackend();
 
   const executionId = `${run.root_execution_id}`;
 
   const { data, isLoading, error } = useFetchExecutionInfo(
     executionId,
     backendUrl,
+    false,
   );
   const { details, state } = data;
 

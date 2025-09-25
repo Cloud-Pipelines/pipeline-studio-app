@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle, Loader2, SendHorizonal } from "lucide-react";
 import { useCallback, useState } from "react";
 
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import useCooldownTimer from "@/hooks/useCooldownTimer";
@@ -12,6 +13,7 @@ import { usePipelineRuns } from "@/providers/PipelineRunsProvider";
 import { APP_ROUTES } from "@/routes/router";
 import type { PipelineRun } from "@/types/pipelineRun";
 import type { ComponentSpec } from "@/utils/componentSpec";
+import { checkComponentSpecValidity } from "@/utils/validations";
 
 interface OasisSubmitterProps {
   componentSpec?: ComponentSpec;
@@ -24,6 +26,7 @@ const OasisSubmitter = ({
 }: OasisSubmitterProps) => {
   const { configured, available } = useBackend();
   const { submit, isSubmitting } = usePipelineRuns();
+  const isAutoRedirect = useBetaFlagValue("redirect-on-new-pipeline-run");
 
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const { cooldownTime, setCooldownTime } = useCooldownTimer(0);
@@ -38,9 +41,12 @@ const OasisSubmitter = ({
   );
 
   const handleViewRun = useCallback(
-    (runId: number) => {
-      if (runId) {
-        navigate({ to: `${APP_ROUTES.RUNS}/${runId}` });
+    (runId: number, newTab = false) => {
+      const href = `${APP_ROUTES.RUNS}/${runId}`;
+      if (newTab) {
+        window.open(href, "_blank");
+      } else {
+        navigate({ to: href });
       }
     },
     [navigate],
@@ -71,8 +77,18 @@ const OasisSubmitter = ({
       setCooldownTime(3);
       onSubmitComplete?.();
       showSuccessNotification(response.root_execution_id);
+
+      if (isAutoRedirect) {
+        handleViewRun(response.root_execution_id, true);
+      }
     },
-    [setCooldownTime, onSubmitComplete, showSuccessNotification],
+    [
+      setCooldownTime,
+      onSubmitComplete,
+      showSuccessNotification,
+      isAutoRedirect,
+      handleViewRun,
+    ],
   );
 
   const onError = useCallback(
@@ -91,6 +107,15 @@ const OasisSubmitter = ({
   const handleSubmit = useCallback(async () => {
     if (!componentSpec) {
       handleError("No pipeline to submit");
+      return;
+    }
+
+    const { isValid } = checkComponentSpecValidity(componentSpec);
+
+    if (!isValid) {
+      handleError(
+        `Pipeline validation failed. Refer to details panel for more info.`,
+      );
       return;
     }
 

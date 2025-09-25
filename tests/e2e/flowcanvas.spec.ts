@@ -107,15 +107,14 @@ test.describe("FlowCanvas Basic Functionality", () => {
 
     await expect(outputPin).toBeInViewport();
     await expect(inputPin).toBeInViewport();
-    await expect(inputPin).toHaveClass(/\bbg-red-700\b/);
+    await expect(inputPin).toHaveAttribute("data-invalid", "true");
 
     await outputPin.hover();
     await page.mouse.down();
     await inputPin.hover();
     await page.mouse.up();
 
-    await expect(inputPin).not.toHaveClass(/\bbg-red-700\b/);
-    await expect(inputPin).toHaveClass(/\bbg-gray-500\b/);
+    await expect(inputPin).toHaveAttribute("data-invalid", "false");
 
     const edgesContainer = await page.locator(".react-flow__edges");
     const edge = await edgesContainer.locator(
@@ -129,12 +128,7 @@ test.describe("FlowCanvas Basic Functionality", () => {
     await expect(inputHandle).toBeVisible();
 
     await expect(
-      inputHandle.locator('[data-testid="input-handle-value-training_data"]'),
-    ).toHaveText(`{
-  "taskOutput": {
-    "taskId": "Chicago Taxi Trips dataset",
-    "outputName": "Table"
-  }
-}`);
+      nodeB.locator('[data-testid="input-handle-value-training_data"]'),
+    ).toHaveText(`→ Chicago Taxi Trips dataset.Table`);
   });
 });

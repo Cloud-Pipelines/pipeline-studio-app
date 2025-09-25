@@ -1,62 +1,54 @@
 import { type Node } from "@xyflow/react";
 
 import type { TaskNodeData } from "@/types/taskNode";
-import type { ComponentSpec, GraphSpec } from "@/utils/componentSpec";
-import { extractPositionFromAnnotations } from "@/utils/nodes/extractPositionFromAnnotations";
+import {
+  type ComponentSpec,
+  type GraphSpec,
+  isGraphImplementation,
+} from "@/utils/componentSpec";
 
+import { createInputNode } from "./createInputNode";
+import { createOutputNode } from "./createOutputNode";
 import { createTaskNode } from "./createTaskNode";
 
 const createNodesFromComponentSpec = (
   componentSpec: ComponentSpec,
   nodeData: TaskNodeData,
 ): Node[] => {
-  if (!("graph" in componentSpec.implementation)) {
+  if (!isGraphImplementation(componentSpec.implementation)) {
     return [];
   }
 
   const graphSpec = componentSpec.implementation.graph;
   const taskNodes = createTaskNodes(graphSpec, nodeData);
-  const inputNodes = createInputNodes(componentSpec);
-  const outputNodes = createOutputNodes(componentSpec);
+  const inputNodes = createInputNodes(componentSpec, nodeData);
+  const outputNodes = createOutputNodes(componentSpec, nodeData);
 
   return [...taskNodes, ...inputNodes, ...outputNodes];
 };
 
 const createTaskNodes = (graphSpec: GraphSpec, nodeData: TaskNodeData) => {
-  return Object.entries(graphSpec.tasks).map((task) => {
-    return createTaskNode(task, nodeData);
-  });
+  return Object.entries(graphSpec.tasks).map((task) =>
+    createTaskNode(task, nodeData),
+  );
 };
 
-const createInputNodes = (componentSpec: ComponentSpec) => {
-  return (componentSpec.inputs ?? []).map((inputSpec) => {
-    const position = extractPositionFromAnnotations(inputSpec.annotations);
-
-    return {
-      id: `input_${inputSpec.name}`,
-      data: {
-        label: inputSpec.name,
-        value: inputSpec.value,
-        default: inputSpec.default,
-        type: inputSpec.type,
-      },
-      position: position,
-      type: "input",
-    } as Node;
-  });
+const createInputNodes = (
+  componentSpec: ComponentSpec,
+  nodeData: TaskNodeData,
+) => {
+  return (componentSpec.inputs ?? []).map((inputSpec) =>
+    createInputNode(inputSpec, nodeData),
+  );
 };
 
-const createOutputNodes = (componentSpec: ComponentSpec) => {
-  return (componentSpec.outputs ?? []).map((outputSpec) => {
-    const position = extractPositionFromAnnotations(outputSpec.annotations);
-
-    return {
-      id: `output_${outputSpec.name}`,
-      data: { label: outputSpec.name, type: outputSpec.type },
-      position: position,
-      type: "output",
-    } as Node;
-  });
+const createOutputNodes = (
+  componentSpec: ComponentSpec,
+  nodeData: TaskNodeData,
+) => {
+  return (componentSpec.outputs ?? []).map((outputSpec) =>
+    createOutputNode(outputSpec, nodeData),
+  );
 };
 
 export default createNodesFromComponentSpec;

@@ -1,4 +1,4 @@
-import type { Node, ReactFlowInstance } from "@xyflow/react";
+import { type Node, useReactFlow } from "@xyflow/react";
 import { useCallback } from "react";
 
 import { getDeleteConfirmationDetails } from "@/components/shared/ReactFlow/FlowCanvas/ConfirmationDialogs/DeleteConfirmation";
@@ -11,14 +11,13 @@ import { replaceTaskNode } from "@/components/shared/ReactFlow/FlowCanvas/utils/
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { Annotations } from "@/types/annotations";
 import type { NodeAndTaskId } from "@/types/taskNode";
-import type { ComponentReference } from "@/utils/componentSpec";
+import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
 import type { ArgumentType } from "@/utils/componentSpec";
 
 import type { TriggerDialogProps } from "./useConfirmationDialog";
 import useToastNotification from "./useToastNotification";
 
 interface UseNodeCallbacksProps {
-  reactFlowInstance: ReactFlowInstance | undefined;
   triggerConfirmation: (data: TriggerDialogProps) => Promise<boolean>;
   onElementsRemove: (params: NodesAndEdges) => void;
   updateOrAddNodes: (params: {
@@ -28,14 +27,15 @@ interface UseNodeCallbacksProps {
 }
 
 export const useNodeCallbacks = ({
-  reactFlowInstance,
   triggerConfirmation,
   onElementsRemove,
   updateOrAddNodes,
 }: UseNodeCallbacksProps) => {
   const notify = useToastNotification();
+  const reactFlowInstance = useReactFlow();
 
-  const { graphSpec, updateGraphSpec } = useComponentSpec();
+  const { graphSpec, updateGraphSpec, componentSpec, setComponentSpec } =
+    useComponentSpec();
 
   // Workaround for nodes state being stale in task node callbacks
   const getNodeById = useCallback(
@@ -136,20 +136,20 @@ export const useNodeCallbacks = ({
         return;
       }
 
-      const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
-        graphSpec,
+      const { updatedComponentSpec, newNodes, updatedNodes } = duplicateNodes(
+        componentSpec,
         [node],
         { selected },
       );
 
-      updateGraphSpec(updatedGraphSpec);
+      setComponentSpec(updatedComponentSpec);
 
       updateOrAddNodes({
         updatedNodes,
         newNodes,
       });
     },
-    [graphSpec, getNodeById, updateGraphSpec, updateOrAddNodes],
+    [componentSpec, getNodeById, setComponentSpec, updateOrAddNodes],
   );
 
   const onUpgrade = useCallback(
@@ -163,7 +163,7 @@ export const useNodeCallbacks = ({
       }
 
       const { updatedGraphSpec, lostInputs } = replaceTaskNode(
-        node,
+        node.data.taskId as string,
         newComponentRef,
         graphSpec,
       );
@@ -174,7 +174,8 @@ export const useNodeCallbacks = ({
       }
 
       const dialogData = getUpgradeConfirmationDetails(
-        node,
+        node.data.taskId as string,
+        node.data.taskSpec as TaskSpec | undefined,
         newComponentRef.digest,
         lostInputs,
       );

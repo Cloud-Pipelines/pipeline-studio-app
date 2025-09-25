@@ -6,6 +6,11 @@ import {
 } from "react";
 import { useEffect, useRef } from "react";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
@@ -115,7 +120,14 @@ export const InputHandle = ({
   }, [selected]);
 
   return (
-    <div className="relative w-full h-fit" key={input.name}>
+    <div
+      className="relative w-full h-fit"
+      key={input.name}
+      data-testid={`input-connection-${input.name}`}
+      data-highlighted={highlight}
+      data-selected={selected}
+      data-active={active}
+    >
       <div className="absolute -translate-x-6 flex items-center h-3 w-3">
         <Handle
           ref={handleRef}
@@ -131,13 +143,15 @@ export const InputHandle = ({
             state.readOnly && "cursor-pointer!",
           )}
           onClick={handleHandleClick}
+          data-invalid={invalid}
+          data-testid={`input-handle-${input.name}`}
         />
       </div>
       <div
         className={cn(
           "flex flex-row items-center rounded-md cursor-pointer relative",
         )}
-        data-testid={`input-handle-${input.name}`}
+        data-testid={`input-handle-label-${input.name}`}
       >
         <div className="flex flex-row w-full gap-0.5 items-center justify-between">
           <div
@@ -164,14 +178,23 @@ export const InputHandle = ({
               className="flex w-fit max-w-1/2 min-w-0"
               data-testid={`input-handle-value-${input.name}`}
             >
-              <div
-                className={cn(
-                  "text-xs text-gray-800! truncate inline-block text-right pr-2",
-                  !hasValue && "text-gray-400! italic",
-                )}
-              >
-                {hasValue ? value : input.default}
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    className={cn(
+                      "text-xs text-gray-800! truncate inline-block text-right pr-2",
+                      !hasValue && "text-gray-400! italic",
+                    )}
+                  >
+                    {hasValue ? value : input.default}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <div className="text-xs">
+                    {hasValue ? value : input.default}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
         </div>
@@ -283,6 +306,10 @@ export const OutputHandle = ({
     <div
       className="flex items-center justify-end w-full cursor-pointer"
       key={output.name}
+      data-testid={`output-connection-${output.name}`}
+      data-highlighted={highlight}
+      data-selected={selected}
+      data-active={active}
     >
       <div className="flex flex-row-reverse w-full gap-0.5 items-center justify-between">
         <div
@@ -322,6 +349,7 @@ export const OutputHandle = ({
           highlight && "bg-green-500!",
           state.readOnly && "cursor-pointer!",
         )}
+        data-testid={`output-handle-${output.name}`}
       />
     </div>
   );

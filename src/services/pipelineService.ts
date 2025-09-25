@@ -18,10 +18,10 @@ import {
 } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
-export const deletePipeline = async (name: string, onDelete: () => void) => {
+export const deletePipeline = async (name: string, onDelete?: () => void) => {
   try {
     await deleteComponentFileFromList(USER_PIPELINES_LIST_NAME, name);
-    onDelete();
+    onDelete?.();
   } catch (error) {
     console.error("Error deleting pipeline:", error);
   }
@@ -294,4 +294,8 @@ export async function importPipelineFromFile(
       errorMessage,
     };
   }
+}
+
+export function getPipelineFile(pipelineName: string) {
+  return getComponentFileFromList(USER_PIPELINES_LIST_NAME, pipelineName);
 }

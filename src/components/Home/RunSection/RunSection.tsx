@@ -1,11 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocation, useNavigate, useSearch } from "@tanstack/react-router";
+import { ChevronFirst, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { ListPipelineJobsResponse } from "@/api/types.gen";
 import { InfoBox } from "@/components/shared/InfoBox";
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InlineStack } from "@/components/ui/layout";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -16,6 +20,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useBackend } from "@/providers/BackendProvider";
+import { getBackendStatusString } from "@/utils/backend";
+import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
 import RunRow from "./RunRow";
 
@@ -24,63 +30,170 @@ const PAGE_TOKEN_QUERY_KEY = "page_token";
 const FILTER_QUERY_KEY = "filter";
 const CREATED_BY_ME_FILTER = "created_by:me";
 
-export const RunSection = () => {
-  const { backendUrl, configured, available } = useBackend();
+type RunSectionSearch = { page_token?: string; filter?: string };
 
-  const [useCreatedByMe, setUseCreatedByMe] = useState(false);
-  const [pageToken, setPageToken] = useState<string | undefined>();
+export const RunSection = () => {
+  const { backendUrl, configured, available, ready } = useBackend();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const search = useSearch({ strict: false }) as RunSectionSearch;
+  const isCreatedByMeDefault = useBetaFlagValue("created-by-me-default");
+
+  // Parse filter into a dictionary
+  const parseFilter = (filter?: string): Record<string, string> => {
+    if (!filter) return {};
+
+    const filterDict: Record<string, string> = {};
+    const parts = filter.split(",");
+
+    for (const part of parts) {
+      const [key, value] = part.split(":");
+      if (key && value) {
+        filterDict[key.trim()] = value.trim();
+      }
+    }
+
+    return filterDict;
+  };
+
+  const filterDict = parseFilter(search.filter);
+  const createdByValue = filterDict.created_by;
+
+  const [searchUser, setSearchUser] = useState(createdByValue ?? "");
+
+  // Determine if toggle should be on and what text to show
+  const useCreatedByMe = createdByValue !== undefined;
+  const toggleText = createdByValue
+    ? `Created by ${createdByValue}`
+    : "Created by me";
+
+  const pageToken = search.page_token;
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
-  const { data, isLoading, isFetching, error, refetch } =
+  const { data, isLoading, isFetching, error } =
     useQuery<ListPipelineJobsResponse>({
-      queryKey: ["runs", pageToken],
+      queryKey: ["runs", backendUrl, pageToken, search.filter],
       refetchOnWindowFocus: false,
+      enabled: configured && available,
       queryFn: async () => {
         const u = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
         if (pageToken) u.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
-        if (useCreatedByMe)
-          u.searchParams.set(FILTER_QUERY_KEY, CREATED_BY_ME_FILTER);
+        if (search.filter) u.searchParams.set(FILTER_QUERY_KEY, search.filter);
 
-        try {
-          const response = await fetch(u.toString());
-          if (!response.ok) {
-            throw new Error(
-              `Failed to fetch pipeline runs: ${response.statusText}`,
-            );
-          }
-          return response.json();
-        } catch (error) {
-          if (error instanceof Error) {
-            throw new Error(error.message);
-          } else {
-            throw new Error("An unknown error occurred");
-          }
+        if (!available) {
+          throw new Error("Backend is not available");
         }
+
+        return fetchWithErrorHandling(u.toString());
       },
     });
 
   useEffect(() => {
-    refetch();
-  }, [backendUrl, useCreatedByMe, refetch]);
+    if (!search.page_token && search.filter === undefined) {
+      handleFilterChange(isCreatedByMeDefault);
+    }
+  }, [isCreatedByMeDefault]);
 
   const handleFilterChange = (value: boolean) => {
-    setUseCreatedByMe(value);
-    setPageToken(undefined);
+    const nextSearch: RunSectionSearch = { ...search };
+    delete nextSearch.page_token;
+
+    if (value) {
+      // If there's already a created_by filter, keep it; otherwise use "created_by:me"
+      if (!filterDict.created_by) {
+        nextSearch.filter = CREATED_BY_ME_FILTER;
+        setSearchUser("");
+      }
+    } else {
+      // Remove created_by from filter, but keep other filters
+      const updatedFilterDict = { ...filterDict };
+      delete updatedFilterDict.created_by;
+
+      // Convert back to string format
+      const remainingFilters = Object.entries(updatedFilterDict)
+        .map(([key, value]) => `${key}:${value}`)
+        .join(",");
+
+      if (remainingFilters) {
+        nextSearch.filter = remainingFilters;
+      } else {
+        if (isCreatedByMeDefault) {
+          nextSearch.filter = "";
+        } else {
+          delete nextSearch.filter;
+        }
+      }
+    }
+
     setPreviousPageTokens([]);
+    navigate({ to: pathname, search: nextSearch });
+  };
+
+  const handleUserSearch = () => {
+    if (!searchUser.trim()) return;
+
+    const nextSearch: RunSectionSearch = { ...search };
+    delete nextSearch.page_token;
+
+    // Create or update the created_by filter
+    const updatedFilterDict = { ...filterDict };
+    updatedFilterDict.created_by = searchUser.trim();
+
+    // Convert back to string format
+    const newFilter = Object.entries(updatedFilterDict)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(",");
+
+    nextSearch.filter = newFilter;
+
+    setPreviousPageTokens([]);
+    navigate({ to: pathname, search: nextSearch });
   };
 
   const handleNextPage = () => {
     if (data?.next_page_token) {
       setPreviousPageTokens([...previousPageTokens, pageToken || ""]);
-      setPageToken(data.next_page_token);
+      navigate({
+        to: pathname,
+        search: { ...search, page_token: data.next_page_token },
+      });
     }
   };
 
   const handlePreviousPage = () => {
     const previousToken = previousPageTokens[previousPageTokens.length - 1];
     setPreviousPageTokens(previousPageTokens.slice(0, -1));
-    setPageToken(previousToken);
+    const nextSearch: RunSectionSearch = { ...search };
+    if (previousToken) {
+      nextSearch.page_token = previousToken;
+    } else {
+      delete nextSearch.page_token;
+    }
+    navigate({ to: pathname, search: nextSearch });
   };
+
+  const handleFirstPage = () => {
+    setPreviousPageTokens([]);
+    const nextSearch: RunSectionSearch = { ...search };
+    delete nextSearch.page_token;
+    navigate({ to: pathname, search: nextSearch });
+  };
+
+  if (!available) {
+    return (
+      <InfoBox title="Backend not available" variant="warning">
+        The configured backend is currently unavailable.
+      </InfoBox>
+    );
+  }
+
+  if (isLoading || isFetching || !ready) {
+    return (
+      <div className="flex gap-2 items-center">
+        <Spinner /> Loading...
+      </div>
+    );
+  }
 
   if (!configured) {
     return (
@@ -90,25 +203,8 @@ export const RunSection = () => {
     );
   }
 
-  if (isLoading || isFetching) {
-    return (
-      <div className="flex gap-2 items-center">
-        <Spinner /> Loading...
-      </div>
-    );
-  }
-
   if (error) {
-    const backendNotConfigured = "The backend is not configured.";
-    const backendUnavailable =
-      "The configured backend is currently unavailable.";
-    const backendAvailableString = "The configured backend is available.";
-    const backendStatusString = configured
-      ? available
-        ? backendAvailableString
-        : backendUnavailable
-      : backendNotConfigured;
-
+    const backendStatusString = getBackendStatusString(configured, available);
     return (
       <InfoBox title="Error loading runs" variant="error">
         <div className="mb-2">{error.message}</div>
@@ -118,35 +214,58 @@ export const RunSection = () => {
   }
 
   if (!data) {
-    return <div>Failed to load runs.</div>;
+    return (
+      <InfoBox title="Failed to load runs" variant="error">
+        No data was returned from the backend.
+      </InfoBox>
+    );
   }
+
+  const searchMarkup = (
+    <InlineStack gap="4" blockAlign="center">
+      <InlineStack gap="2" blockAlign="center">
+        <Switch
+          id="created-by-me"
+          checked={useCreatedByMe}
+          onCheckedChange={handleFilterChange}
+        />
+        <Label htmlFor="created-by-me">{toggleText}</Label>
+      </InlineStack>
+      <InlineStack gap="1" blockAlign="center" wrap="nowrap">
+        <Input
+          placeholder="Search by user"
+          value={searchUser}
+          onChange={(e) => setSearchUser(e.target.value)}
+        />
+        <Button
+          variant="outline"
+          onClick={handleUserSearch}
+          disabled={!searchUser.trim()}
+        >
+          Search
+        </Button>
+      </InlineStack>
+    </InlineStack>
+  );
 
   if (!data?.pipeline_runs || data?.pipeline_runs?.length === 0) {
     return (
       <div className="flex flex-col gap-2">
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="created-by-me"
-            checked={useCreatedByMe}
-            onCheckedChange={handleFilterChange}
-          />
-          <Label htmlFor="created-by-me">Created by me</Label>
-        </div>
-        <div>No runs found. Run a pipeline to see it here.</div>
+        {searchMarkup}
+        {createdByValue ? (
+          <div>
+            No runs found for user: <strong>{createdByValue}</strong>.
+          </div>
+        ) : (
+          <div>No runs found. Run a pipeline to see it here.</div>
+        )}
       </div>
     );
   }
 
   return (
     <div>
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="created-by-me"
-          checked={useCreatedByMe}
-          onCheckedChange={handleFilterChange}
-        />
-        <Label htmlFor="created-by-me">Created by me</Label>
-      </div>
+      {searchMarkup}
       <Table>
         <TableHeader>
           <TableRow className="text-xs">
@@ -165,18 +284,27 @@ export const RunSection = () => {
 
       {(data.next_page_token || previousPageTokens.length > 0) && (
         <div className="flex justify-between items-center mt-4">
-          <Button
-            variant="outline"
-            onClick={handlePreviousPage}
-            disabled={previousPageTokens.length === 0}
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleFirstPage}
+              disabled={!pageToken}
+            >
+              <ChevronFirst className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handlePreviousPage}
+              disabled={previousPageTokens.length === 0}
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Previous
+            </Button>
+          </div>
           <Button
             variant="outline"
             onClick={handleNextPage}
-            disabled={!data?.next_page_token}
+            disabled={!data.next_page_token}
           >
             Next
             <ChevronRight className="h-4 w-4 ml-2" />

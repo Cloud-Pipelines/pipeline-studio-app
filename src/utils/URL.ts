@@ -58,6 +58,13 @@ const convertWebUrlToDirectoryUrl = (webUrl: string) => {
   }
 };
 
+const isGithubUrl = (url: string) => {
+  return (
+    url.startsWith("https://raw.githubusercontent.com/") ||
+    url.startsWith("https://github.com/")
+  );
+};
+
 const convertGithubUrlToDirectoryUrl = (url: string) => {
   if (url.startsWith("https://raw.githubusercontent.com/")) {
     return convertRawUrlToDirectoryUrl(url);
@@ -127,5 +134,6 @@ export {
   convertGithubUrlToDirectoryUrl,
   downloadYamlFromComponentText,
   getIdOrTitleFromPath,
+  isGithubUrl,
   normalizeUrl,
 };

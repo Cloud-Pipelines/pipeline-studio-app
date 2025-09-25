@@ -12,11 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BlockStack } from "@/components/ui/layout";
 import { generateDigest } from "@/services/componentService";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import { deleteComponentFileFromList } from "@/utils/componentStore";
 import { USER_COMPONENTS_LIST_NAME } from "@/utils/constants";
 import type { UserComponent } from "@/utils/localforage";
+
+import { InfoBox } from "../InfoBox";
 
 const ComponentDuplicateDialog = ({
   existingComponent,
@@ -33,27 +36,10 @@ const ComponentDuplicateDialog = ({
 }) => {
   const [newName, setNewName] = useState("");
   const [newDigest, setNewDigest] = useState("");
+
   const open = !!existingComponent && !!newComponent && !!newName;
-
-  useEffect(() => {
-    const generateNewDigest = async () => {
-      if (newComponent) {
-        const digest = await generateDigest(yaml.dump(newComponent));
-        setNewDigest(digest);
-      }
-    };
-
-    if (newComponent && newComponent?.name) {
-      setNewName(newComponent?.name);
-    }
-
-    if (newComponentDigest) {
-      setNewDigest(newComponentDigest);
-      return;
-    }
-
-    generateNewDigest();
-  }, [existingComponent, newComponent]);
+  const disableImportAsNew =
+    !newName || newName.trim() === existingComponent?.name?.trim();
 
   const generateNewDigestOnBlur = useCallback(async () => {
     if (
@@ -114,8 +100,25 @@ const ComponentDuplicateDialog = ({
     setClose();
   }, [setClose]);
 
-  const disableImportAsNew =
-    !newName || newName.trim() === existingComponent?.name?.trim();
+  useEffect(() => {
+    const generateNewDigest = async () => {
+      if (newComponent) {
+        const digest = await generateDigest(yaml.dump(newComponent));
+        setNewDigest(digest);
+      }
+    };
+
+    if (newComponent && newComponent?.name) {
+      setNewName(newComponent?.name);
+    }
+
+    if (newComponentDigest) {
+      setNewDigest(newComponentDigest);
+      return;
+    }
+
+    generateNewDigest();
+  }, [existingComponent, newComponent]);
 
   return (
     <Dialog open={open} onOpenChange={handleOnOpenChange}>
@@ -130,37 +133,35 @@ const ComponentDuplicateDialog = ({
             Note: &quot;Replace existing&quot; will use the existing name.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-4 rounded-md border border-gray-200 p-4 bg-gray-100">
-          <div className="text-sm font-medium">Existing Component</div>
-          <Label className="text-xs font-medium">Name</Label>
-          <Input
-            value={existingComponent?.name ?? ""}
-            readOnly
-            className="text-xs text-gray-500 bg-gray-100 cursor-not-allowed"
-          />
-          <Label className="text-xs font-medium">Digest</Label>
-          <Input
-            value={existingComponent?.componentRef.digest ?? ""}
-            readOnly
-            className="text-xs text-gray-500 bg-gray-100 cursor-not-allowed"
-          />
-        </div>
-        <div className="flex flex-col gap-3 rounded-md border border-gray-200 p-4">
-          <div className="text-sm font-medium">New Component</div>
-          <Label className="text-xs font-medium">Name</Label>
-          <Input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            autoFocus={true}
-            onBlur={generateNewDigestOnBlur}
-          />
-          <Label className="text-xs font-medium">Digest</Label>
-          <Input
-            value={newDigest}
-            readOnly
-            className="text-xs text-gray-500 bg-gray-100 cursor-not-allowed"
-          />
-        </div>
+        <InfoBox title="Existing Component" className="p-2">
+          <BlockStack gap="2" className="w-full">
+            <Label className="text-xs font-medium">Name</Label>
+            <Input
+              value={existingComponent?.name ?? ""}
+              readOnly
+              className="text-xs border-blue-200 bg-blue-100/50"
+            />
+            <Label className="text-xs font-medium">Digest</Label>
+            <Input
+              value={existingComponent?.componentRef.digest ?? ""}
+              readOnly
+              className="text-xs border-blue-200 bg-blue-100/50"
+            />
+          </BlockStack>
+        </InfoBox>
+        <InfoBox title="New Component" variant="ghost" className="p-2">
+          <BlockStack gap="2" className="w-full">
+            <Label className="text-xs font-medium">Name</Label>
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              autoFocus={true}
+              onBlur={generateNewDigestOnBlur}
+            />
+            <Label className="text-xs font-medium">Digest</Label>
+            <Input value={newDigest} readOnly className="text-xs" />
+          </BlockStack>
+        </InfoBox>
 
         <DialogFooter>
           <Button

@@ -69,11 +69,44 @@ function createStringList(
   );
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  } else if (typeof error === "string") {
+    return error;
+  } else {
+    return "An unknown error occurred";
+  }
+}
+
+function pluralize(count: number, singular: string, plural?: string) {
+  return count === 1 ? singular : plural || `${singular}s`;
+}
+
+function safeJsonParse(value: unknown): {
+  parsed: unknown;
+  isValidJson: boolean;
+} {
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return { parsed, isValidJson: true };
+    } catch {
+      return { parsed: value, isValidJson: false };
+    }
+  }
+
+  return { parsed: value, isValidJson: false };
+}
+
 export {
   copyToClipboard,
   createStringList,
   formatBytes,
   formatJsonValue,
+  getErrorMessage,
   getValue,
+  pluralize,
   removeTrailingDateFromTitle,
+  safeJsonParse,
 };

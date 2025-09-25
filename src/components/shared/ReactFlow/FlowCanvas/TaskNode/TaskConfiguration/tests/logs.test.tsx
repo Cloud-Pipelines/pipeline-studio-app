@@ -15,6 +15,7 @@ describe("OpenLogsInNewWindowLink", () => {
   const defaultBackend = {
     configured: true,
     available: true,
+    ready: true,
     backendUrl: defaultBackendUrl,
     isConfiguredFromEnv: false,
     isConfiguredFromRelativePath: false,

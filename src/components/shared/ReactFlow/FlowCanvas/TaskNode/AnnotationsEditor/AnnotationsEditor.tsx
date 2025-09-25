@@ -1,18 +1,21 @@
-import { TrashIcon } from "lucide-react";
+import { PlusCircleIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import type { AnnotationConfig, Annotations } from "@/types/annotations";
 
 import { AnnotationsInput } from "./AnnotationsInput";
 import { COMPUTE_RESOURCES } from "./ComputeResourcesEditor";
+import { NewAnnotationRow } from "./NewAnnotationRow";
 
 interface AnnotationsEditorProps {
   annotations: Annotations;
   onChange: (key: string, value: string | undefined) => void;
+  onBlur: (key: string, value: string | undefined) => void;
+  onRemove: (key: string) => void;
   newRows: Array<{ key: string; value: string }>;
-  onNewRowChange: (idx: number, field: "key" | "value", value: string) => void;
+  onNewRowBlur: (idx: number, newRow: { key: string; value: string }) => void;
   onRemoveNewRow: (idx: number) => void;
+  onAddNewRow: () => void;
 }
 
 const COMMON_ANNOTATIONS: AnnotationConfig[] = [
@@ -29,9 +32,12 @@ const COMMON_ANNOTATIONS: AnnotationConfig[] = [
 export const AnnotationsEditor = ({
   annotations,
   onChange,
+  onBlur,
+  onRemove,
   newRows,
-  onNewRowChange,
+  onNewRowBlur,
   onRemoveNewRow,
+  onAddNewRow,
 }: AnnotationsEditorProps) => {
   const remainingAnnotations = Object.entries(annotations).filter(
     ([key]) =>
@@ -39,17 +45,21 @@ export const AnnotationsEditor = ({
       !COMMON_ANNOTATIONS.some((common) => common.annotation === key),
   );
 
-  const handleValueChange = (key: string, value: string) => {
-    onChange(key, value);
-  };
-
-  const handleRemove = (key: string) => {
-    onChange(key, undefined);
-  };
-
   return (
     <div className="h-auto flex flex-col gap-2">
-      <h3>Other Annotations</h3>
+      <div className="flex justify-between items-center">
+        <h3>Other Annotations</h3>
+
+        <Button
+          onClick={onAddNewRow}
+          variant="ghost"
+          className="w-fit"
+          type="button"
+        >
+          <PlusCircleIcon className="h-4 w-4" />
+          New
+        </Button>
+      </div>
 
       {COMMON_ANNOTATIONS.map((config) => (
         <div key={config.annotation} className="flex items-center gap-2">
@@ -60,9 +70,8 @@ export const AnnotationsEditor = ({
           <AnnotationsInput
             key={config.annotation}
             value={annotations[config.annotation]}
-            onChange={(newValue) =>
-              handleValueChange(config.annotation, newValue)
-            }
+            onChange={(newValue) => onChange(config.annotation, newValue)}
+            onBlur={(newValue) => onBlur(config.annotation, newValue)}
             annotations={annotations}
             config={config}
           />
@@ -78,37 +87,23 @@ export const AnnotationsEditor = ({
           <AnnotationsInput
             key={key}
             value={value}
-            onChange={(newValue) => handleValueChange(key, newValue)}
-            onDelete={() => handleRemove(key)}
+            onChange={(newValue) => onChange(key, newValue)}
+            onBlur={(newValue) => onBlur(key, newValue)}
+            onDelete={() => onRemove(key)}
             annotations={annotations}
             deletable
           />
         </div>
       ))}
+
       {newRows.map((row, idx) => (
-        <div key={idx} className="flex items-center gap-2 mt-2">
-          <Input
-            placeholder="New annotation"
-            value={row.key}
-            onChange={(e) => onNewRowChange(idx, "key", e.target.value)}
-            className="w-39 ml-1"
-            autoFocus={idx === newRows.length - 1}
-          />
-          <Input
-            placeholder="value"
-            value={row.value}
-            onChange={(e) => onNewRowChange(idx, "value", e.target.value)}
-            className="flex-1"
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onRemoveNewRow(idx)}
-            title="Remove new annotation"
-          >
-            <TrashIcon className="h-4 w-4 text-destructive" />
-          </Button>
-        </div>
+        <NewAnnotationRow
+          key={row.key + idx}
+          row={row}
+          autofocus={idx === newRows.length - 1}
+          onBlur={(newRow) => onNewRowBlur(idx, newRow)}
+          onRemove={() => onRemoveNewRow(idx)}
+        />
       ))}
     </div>
   );

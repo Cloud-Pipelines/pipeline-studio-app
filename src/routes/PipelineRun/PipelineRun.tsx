@@ -1,6 +1,6 @@
 import { DndContext } from "@dnd-kit/core";
 import { ReactFlowProvider } from "@xyflow/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import type {
   GetExecutionInfoResponse,
@@ -9,27 +9,84 @@ import type {
 import PipelineRunPage from "@/components/PipelineRun";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { Spinner } from "@/components/ui/spinner";
+import { faviconManager } from "@/favicon";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
-import { useFetchExecutionInfo } from "@/services/executionService";
+import {
+  countTaskStatuses,
+  getRunStatus,
+  STATUS,
+  useFetchExecutionInfo,
+  useFetchPipelineRun,
+} from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
 const PipelineRun = () => {
   const { setComponentSpec, clearComponentSpec, componentSpec } =
     useComponentSpec();
-  const { backendUrl, configured, available } = useBackend();
-  const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
+  const { backendUrl, configured, available, ready } = useBackend();
+  const { id } = runDetailRoute.useParams() as RunDetailParams;
+  const [rootExecutionId, setRootExecutionId] = useState<string>(id);
+  const [triedAsRunId, setTriedAsRunId] = useState<boolean>(false);
 
-  const { data, isLoading, error, refetch } = useFetchExecutionInfo(
-    rootExecutionId,
-    backendUrl,
-    false,
-  );
+  // First try to fetch as root_execution_id
+  const {
+    data: executionData,
+    isLoading: isExecutionLoading,
+    error: executionError,
+    refetch: refetchExecution,
+    enabled,
+  } = useFetchExecutionInfo(rootExecutionId, backendUrl, false, !triedAsRunId);
+
+  // If fetching as root_execution_id fails, try as run_id
+  const shouldFetchAsRunId = !!executionError && !triedAsRunId && enabled;
+  const {
+    data: pipelineRunData,
+    isLoading: isPipelineRunLoading,
+    error: pipelineRunError,
+  } = useFetchPipelineRun(id, backendUrl, shouldFetchAsRunId);
+
+  // Update rootExecutionId when we get pipeline run data
+  useEffect(() => {
+    if (
+      pipelineRunData?.root_execution_id &&
+      pipelineRunData.root_execution_id !== rootExecutionId
+    ) {
+      setRootExecutionId(pipelineRunData.root_execution_id);
+      setTriedAsRunId(true);
+    }
+  }, [pipelineRunData, rootExecutionId]);
+
+  // Determine which data and loading state to use
+  const isLoading =
+    isExecutionLoading || (shouldFetchAsRunId && isPipelineRunLoading);
+  const error = triedAsRunId
+    ? executionError
+    : executionError && pipelineRunError;
+  const data = executionData;
+  const refetch = refetchExecution;
 
   const { details, state } = data;
+
+  // Update favicon based on pipeline status
+  useEffect(() => {
+    if (!details || !state) {
+      faviconManager.reset();
+      return;
+    }
+
+    const statusCounts = countTaskStatuses(details, state);
+    const pipelineStatus = getRunStatus(statusCounts);
+    const iconStatus = mapRunStatusToFavicon(pipelineStatus);
+    faviconManager.updateFavicon(iconStatus);
+
+    return () => {
+      faviconManager.reset();
+    };
+  }, [details, state]);
 
   useEffect(() => {
     if (details?.task_spec.componentRef.spec) {
@@ -54,7 +111,7 @@ const PipelineRun = () => {
     refetch();
   }, [backendUrl, refetch]);
 
-  if (isLoading) {
+  if (isLoading || !ready) {
     return (
       <div className="flex items-center justify-center h-full w-full gap-2">
         <Spinner /> Loading Pipeline Run...
@@ -72,10 +129,22 @@ const PipelineRun = () => {
     );
   }
 
+  if (!available) {
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <InfoBox title="Backend not available" variant="error">
+          The configured backend is not available.
+        </InfoBox>
+      </div>
+    );
+  }
+
   if (!componentSpec) {
     return (
       <div className="flex items-center justify-center h-full w-full">
-        No pipeline data available
+        <InfoBox title="Error loading pipeline run" variant="error">
+          No pipeline data available.
+        </InfoBox>
       </div>
     );
   }
@@ -207,4 +276,24 @@ const addExecutionIdToComponent = (
       },
     },
   };
+};
+
+export const mapRunStatusToFavicon = (
+  runStatus: string,
+): "success" | "failed" | "loading" | "paused" | "default" => {
+  switch (runStatus) {
+    case STATUS.SUCCEEDED:
+      return "success";
+    case STATUS.FAILED:
+      return "failed";
+    case STATUS.RUNNING:
+      return "loading";
+    case STATUS.WAITING:
+      return "paused";
+    case STATUS.CANCELLED:
+      return "paused";
+    case STATUS.UNKNOWN:
+    default:
+      return "default";
+  }
 };

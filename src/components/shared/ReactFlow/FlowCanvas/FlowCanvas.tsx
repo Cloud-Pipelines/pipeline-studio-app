@@ -22,21 +22,25 @@ import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useCopyPaste } from "@/hooks/useCopyPaste";
 import { useGhostNode } from "@/hooks/useGhostNode";
 import { useHintNode } from "@/hooks/useHintNode";
+import { useIOSelectionPersistence } from "@/hooks/useIOSelectionPersistence";
 import { useNodeCallbacks } from "@/hooks/useNodeCallbacks";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
-import type {
-  ComponentReference,
-  ComponentSpec,
-  InputSpec,
-  TaskSpec,
+import { hydrateComponentReference } from "@/services/componentService";
+import {
+  type ComponentReference,
+  type ComponentSpec,
+  type InputSpec,
+  isNotMaterializedComponentReference,
+  type TaskSpec,
 } from "@/utils/componentSpec";
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
 import createNodesFromComponentSpec from "@/utils/nodes/createNodesFromComponentSpec";
 
 import ComponentDuplicateDialog from "../../Dialogs/ComponentDuplicateDialog";
+import { useNodesOverlay } from "../NodesOverlay/NodesOverlayProvider";
 import { getBulkUpdateConfirmationDetails } from "./ConfirmationDialogs/BulkUpdateConfirmationDialog";
 import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfirmation";
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
@@ -66,6 +70,11 @@ const nodeTypes: Record<string, ComponentType<any>> = {
   input: IONode,
   output: IONode,
 };
+
+const SELECTABLE_NODES = new Set(["task", "input", "output"]);
+const UPGRADEABLE_NODES = new Set(["task"]);
+const REPLACEABLE_NODES = new Set(["task"]);
+
 const edgeTypes: Record<string, ComponentType<any>> = {
   customEdge: SmoothEdge,
 };
@@ -92,8 +101,13 @@ const FlowCanvas = ({
   const initialCanvasLoaded = useRef(false);
 
   const { clearContent } = useContextPanel();
+  const { setReactFlowInstance: setReactFlowInstanceForOverlay } =
+    useNodesOverlay();
   const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
     useComponentSpec();
+  const { preserveIOSelectionOnSpecChange, resetPrevSpec } =
+    useIOSelectionPersistence();
+
   const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 
@@ -182,6 +196,7 @@ const FlowCanvas = ({
 
   const onInit: OnInit = (instance) => {
     setReactFlowInstance(instance);
+    setReactFlowInstanceForOverlay(instance);
   };
 
   const updateOrAddNodes = useCallback(
@@ -211,7 +226,10 @@ const FlowCanvas = ({
   );
 
   const selectedNodes = useMemo(
-    () => nodes.filter((node) => node.selected && node.type === "task"),
+    () =>
+      nodes.filter(
+        (node) => node.selected && node.type && SELECTABLE_NODES.has(node.type),
+      ),
     [nodes],
   );
   const selectedEdges = useMemo(
@@ -225,6 +243,14 @@ const FlowCanvas = ({
       edges: selectedEdges,
     }),
     [selectedNodes, selectedEdges],
+  );
+
+  const canUpgrade = useMemo(
+    () =>
+      selectedNodes.some(
+        (node) => node.type && UPGRADEABLE_NODES.has(node.type),
+      ),
+    [selectedNodes],
   );
 
   const onElementsRemove = useCallback(
@@ -244,7 +270,6 @@ const FlowCanvas = ({
   );
 
   const nodeCallbacks = useNodeCallbacks({
-    reactFlowInstance,
     triggerConfirmation,
     onElementsRemove,
     updateOrAddNodes,
@@ -426,6 +451,10 @@ const FlowCanvas = ({
         );
 
         if (hoveredNode?.id === replaceTarget?.id) return;
+        if (hoveredNode?.type && !REPLACEABLE_NODES.has(hoveredNode.type)) {
+          setReplaceTarget(null);
+          return;
+        }
 
         setReplaceTarget(hoveredNode || null);
       }
@@ -455,6 +484,23 @@ const FlowCanvas = ({
         return;
       }
 
+      if (isNotMaterializedComponentReference(droppedTask?.componentRef)) {
+        // load spec
+        const hydratedComponentRef = await hydrateComponentReference(
+          droppedTask.componentRef,
+        );
+
+        if (hydratedComponentRef) {
+          droppedTask.componentRef = hydratedComponentRef;
+        } else {
+          notify(
+            "Failed to add component to canvas. Please, try again.",
+            "error",
+          );
+          return;
+        }
+      }
+
       // Replacing an existing node
       if (replaceTarget) {
         if (!droppedTask) {
@@ -465,7 +511,7 @@ const FlowCanvas = ({
         }
 
         const { updatedGraphSpec, lostInputs, newTaskId } = replaceTaskNode(
-          replaceTarget,
+          replaceTarget.data.taskId as string,
           droppedTask.componentRef,
           graphSpec,
         );
@@ -579,19 +625,19 @@ const FlowCanvas = ({
   };
 
   const onDuplicateNodes = useCallback(() => {
-    const { updatedGraphSpec, newNodes, updatedNodes } = duplicateNodes(
-      graphSpec,
+    const { updatedComponentSpec, newNodes, updatedNodes } = duplicateNodes(
+      componentSpec,
       selectedNodes,
       { selected: true },
     );
 
-    updateGraphSpec(updatedGraphSpec);
+    setComponentSpec(updatedComponentSpec);
 
     updateOrAddNodes({
       updatedNodes,
       newNodes,
     });
-  }, [graphSpec, selectedNodes, updateGraphSpec, setNodes]);
+  }, [componentSpec, selectedNodes, setComponentSpec, setNodes]);
 
   const onUpgradeNodes = useCallback(async () => {
     let newGraphSpec = graphSpec;
@@ -600,11 +646,16 @@ const FlowCanvas = ({
     const excludedNodes: Node[] = [];
 
     selectedNodes.forEach((node) => {
+      if (node.type && !UPGRADEABLE_NODES.has(node.type)) {
+        excludedNodes.push(node);
+        return;
+      }
+
       const taskSpec = node.data.taskSpec as TaskSpec | undefined;
       // Custom components don't have a componentRef.url so they are currently excluded from bulk operations
       if (taskSpec?.componentRef && taskSpec.componentRef.url) {
         const { updatedGraphSpec, lostInputs } = replaceTaskNode(
-          node,
+          node.data.taskId as string,
           taskSpec.componentRef,
           newGraphSpec,
         );
@@ -619,6 +670,11 @@ const FlowCanvas = ({
         excludedNodes.push(node);
       }
     });
+
+    if (includedNodes.length === 0) {
+      notify("Selected nodes are not upgradeable", "info");
+      return;
+    }
 
     const dialogData = getBulkUpdateConfirmationDetails(
       includedNodes,
@@ -669,10 +725,15 @@ const FlowCanvas = ({
   );
 
   useEffect(() => {
-    // Update ReactFlow based on the component spec
+    preserveIOSelectionOnSpecChange(componentSpec);
     updateReactFlow(componentSpec);
     initialCanvasLoaded.current = true;
-  }, [componentSpec, replaceTarget]);
+  }, [componentSpec, preserveIOSelectionOnSpecChange]);
+
+  // Reset when loading a new component file
+  useEffect(() => {
+    resetPrevSpec();
+  }, [componentSpec?.name, resetPrevSpec]);
 
   const fitView = useCallback(() => {
     if (reactFlowInstance) {
@@ -732,8 +793,8 @@ const FlowCanvas = ({
             y: center?.y || 0,
           };
 
-          const { newNodes, updatedGraphSpec } = duplicateNodes(
-            graphSpec,
+          const { newNodes, updatedComponentSpec } = duplicateNodes(
+            componentSpec,
             nodesToPaste,
             { position: reactFlowCenter, connection: "internal" },
           );
@@ -749,13 +810,21 @@ const FlowCanvas = ({
             newNodes,
           });
 
-          updateGraphSpec(updatedGraphSpec);
+          setComponentSpec(updatedComponentSpec);
         }
       } catch (err) {
         console.error("Failed to paste nodes from clipboard:", err);
       }
     });
-  }, [graphSpec, nodes, reactFlowInstance, store, updateOrAddNodes]);
+  }, [
+    componentSpec,
+    nodes,
+    reactFlowInstance,
+    store,
+    updateOrAddNodes,
+    setComponentSpec,
+    readOnly,
+  ]);
 
   useCopyPaste({
     onCopy,
@@ -806,7 +875,7 @@ const FlowCanvas = ({
             onDelete={!readOnly ? onRemoveNodes : undefined}
             onDuplicate={!readOnly ? onDuplicateNodes : undefined}
             onCopy={!readOnly ? undefined : onCopy}
-            onUpgrade={!readOnly ? onUpgradeNodes : undefined}
+            onUpgrade={!readOnly && canUpgrade ? onUpgradeNodes : undefined}
           />
         </NodeToolbar>
         {children}

@@ -9,6 +9,8 @@
 import yaml from "js-yaml";
 import localForage from "localforage";
 
+import { fetchComponentTextFromUrl } from "@/services/componentService";
+
 import type { DownloadDataType } from "./cache";
 import { downloadDataWithCache } from "./cache";
 import type { ComponentReference, ComponentSpec } from "./componentSpec";
@@ -235,8 +237,10 @@ const storeComponentFromUrl = async (
   }
 
   // TODO: Think about whether to directly use fetch here.
-  const response = await fetch(url);
-  const componentData = await response.arrayBuffer();
+  const componentData = await fetchComponentTextFromUrl(url);
+  if (!componentData) {
+    throw new Error(`Failed to fetch component text: ${url}`);
+  }
   const componentRef = await storeComponentText(componentData);
   componentRef.url = url;
   const digest = componentRef.digest;
@@ -428,6 +432,7 @@ const findDuplicateComponent = async (
       const existingComponentName = fileEntry.componentRef.spec.name;
 
       if (existingComponentName === targetComponentName) {
+        // TODO: This check causing some behavior divergence with ComponentService.
         // Found a component with the same name, now check if content is identical
         if (fileEntry.componentRef.text === componentRef.text) {
           return fileEntry; // Exact duplicate found

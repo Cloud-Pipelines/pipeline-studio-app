@@ -7,14 +7,7 @@
  */
 
 import equal from "fast-deep-equal";
-import {
-  Delete,
-  HelpCircle,
-  Info,
-  ListRestart,
-  Maximize2,
-  PlusSquare,
-} from "lucide-react";
+import { HelpCircle, Info, Maximize2, PlusSquare } from "lucide-react";
 import {
   type ChangeEvent,
   type MouseEvent,
@@ -24,14 +17,18 @@ import {
   useState,
 } from "react";
 
+import TooltipButton from "@/components/shared/Buttons/TooltipButton";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import type { ArgumentInput } from "@/types/arguments";
 
@@ -52,6 +49,8 @@ export const ArgumentInputField = ({
   disabled?: boolean;
   onSave: (argument: ArgumentInput) => void;
 }) => {
+  const notify = useToastNotification();
+
   const [inputValue, setInputValue] = useState(getInputValue(argument) ?? "");
   const [showDescription, setShowDescription] = useState(false);
   const [lastSubmittedValue, setLastSubmittedValue] = useState<string>(
@@ -157,6 +156,25 @@ export const ArgumentInputField = ({
     setIsTextareaDialogOpen(false);
   }, []);
 
+  const handleCopy = useCallback(() => {
+    if (disabled || argument.isRemoved) return;
+
+    void navigator.clipboard
+      .writeText(inputValue)
+      .then(() => {
+        notify(
+          `Argument "${argument.inputSpec.name}" copied to clipboard`,
+          "success",
+        );
+      })
+      .catch((err) => {
+        notify(
+          `Failed to copy text: ${err instanceof Error ? err.message : String(err)}`,
+          "error",
+        );
+      });
+  }, [inputValue, disabled, argument]);
+
   const canUndo = useMemo(
     () => !equal(argument, undoValue),
     [argument, undoValue],
@@ -182,14 +200,32 @@ export const ArgumentInputField = ({
     }
   }, [argument]);
 
+  const disabledCopy = useMemo(
+    () => disabled || argument.isRemoved || inputValue === "",
+    [inputValue, argument.isRemoved, disabled],
+  );
+
+  const disabledReset = useMemo(
+    () =>
+      disabled ||
+      argument.isRemoved ||
+      argument.value === getDefaultValue(argument),
+    [argument, disabled],
+  );
+
   return (
     <>
-      <div className="relative w-full flex-col gap-2">
+      <BlockStack gap="2" className="relative w-full">
         <div
           className="flex w-full items-center justify-between gap-2 py-1 rounded-md hover:bg-secondary/70 cursor-pointer"
           onClick={handleBackgroundClick}
         >
-          <div className="flex items-center gap-2 justify-between w-40 pr-2">
+          <InlineStack
+            blockAlign="center"
+            align="space-between"
+            gap="2"
+            className="w-32 pr-2"
+          >
             <div className="flex items-center gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -206,12 +242,7 @@ export const ArgumentInputField = ({
                   Recently changed
                 </TooltipContent>
               </Tooltip>
-              <div
-                className={cn(
-                  "flex flex-col",
-                  argument.isRemoved && "opacity-50",
-                )}
-              >
+              <BlockStack className={cn(argument.isRemoved && "opacity-50")}>
                 <Label
                   htmlFor={argument.inputSpec.name}
                   className="text-sm break-words"
@@ -225,7 +256,7 @@ export const ArgumentInputField = ({
                   ({typeSpecToString(argument.inputSpec.type)}
                   {!argument.inputSpec.optional ? "*" : ""})
                 </span>
-              </div>
+              </BlockStack>
             </div>
             {!!hint && (
               <Tooltip>
@@ -235,7 +266,7 @@ export const ArgumentInputField = ({
                 <TooltipContent className="z-9999">{hint}</TooltipContent>
               </Tooltip>
             )}
-          </div>
+          </InlineStack>
 
           <div className="relative min-w-24 grow group">
             <Tooltip>
@@ -278,52 +309,60 @@ export const ArgumentInputField = ({
             </Button>
           </div>
 
-          <div className="flex gap-1 items-center w-24 justify-end">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  onClick={handleRemove}
-                  disabled={disabled}
-                  variant="ghost"
-                  size="icon"
-                >
-                  {argument.isRemoved ? (
-                    <PlusSquare className="h-4 w-4" />
-                  ) : (
-                    <Delete className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="z-9999">
-                {argument.isRemoved ? "Include Argument" : "Exclude Argument"}
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  onClick={handleReset}
-                  className={cn(argument.isRemoved ? "invisible" : "")}
-                  disabled={
-                    disabled ||
-                    argument.isRemoved ||
-                    argument.value === getDefaultValue(argument)
-                  }
-                  variant="ghost"
-                  size="icon"
-                >
-                  <ListRestart className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                className={cn("z-9999", argument.isRemoved ? "invisible" : "")}
+          <InlineStack align="end" blockAlign="center">
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={cn(disabledCopy && "cursor-default")}
+            >
+              <TooltipButton
+                onClick={handleCopy}
+                className={cn(argument.isRemoved ? "invisible" : "")}
+                disabled={disabledCopy}
+                variant="ghost"
+                size="icon"
+                tooltip="Copy Value"
               >
-                Reset to Default
-              </TooltipContent>
-            </Tooltip>
-          </div>
+                <Icon name="Copy" />
+              </TooltipButton>
+            </div>
+
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={cn(disabledReset && "cursor-default")}
+            >
+              <TooltipButton
+                onClick={handleReset}
+                className={cn(argument.isRemoved ? "invisible" : "")}
+                disabled={disabledReset}
+                variant="ghost"
+                size="icon"
+                tooltip="Reset to Default"
+              >
+                <Icon name="ListRestart" />
+              </TooltipButton>
+            </div>
+
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={cn(disabled && "cursor-default")}
+            >
+              <TooltipButton
+                onClick={handleRemove}
+                disabled={disabled}
+                variant="ghost"
+                size="icon"
+                tooltip={
+                  argument.isRemoved ? "Include Argument" : "Exclude Argument"
+                }
+              >
+                {argument.isRemoved ? (
+                  <PlusSquare className="h-4 w-4" />
+                ) : (
+                  <Icon name="Delete" />
+                )}
+              </TooltipButton>
+            </div>
+          </InlineStack>
         </div>
         {showDescription && (
           <div className="z-50 bg-gray-50 text-secondary-foreground p-2 rounded-md w-full mb-2">
@@ -333,7 +372,7 @@ export const ArgumentInputField = ({
             </p>
           </div>
         )}
-      </div>
+      </BlockStack>
 
       <ArgumentInputDialog
         argument={argument}

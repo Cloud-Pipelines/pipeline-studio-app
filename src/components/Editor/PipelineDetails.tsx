@@ -1,9 +1,15 @@
-import { useReactFlow } from "@xyflow/react";
 import { Frown, Network } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { getOutputConnectedDetails } from "@/components/shared/ReactFlow/FlowCanvas/utils/getOutputConnectedDetails";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Icon } from "@/components/ui/icon";
+import { InlineStack } from "@/components/ui/layout";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
@@ -14,20 +20,21 @@ import {
 } from "@/utils/componentSpec";
 import { getComponentFileFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
-import { deselectAllNodes } from "@/utils/flowUtils";
 
+import { InfoBox } from "../shared/InfoBox";
 import { TaskImplementation } from "../shared/TaskDetails";
-import { InputValueEditor } from "./InputValueEditor/InputValueEditor";
-import { OutputNameEditor } from "./OutputNameEditor";
+import { InputValueEditor } from "./IOEditor/InputValueEditor";
+import { OutputNameEditor } from "./IOEditor/OutputNameEditor";
 import RenamePipeline from "./RenamePipeline";
+import { getOutputConnectedDetails } from "./utils/getOutputConnectedDetails";
 
 const PipelineDetails = () => {
-  const { setNodes } = useReactFlow();
-
-  const { setContent, clearContent } = useContextPanel();
-  const { componentSpec, graphSpec } = useComponentSpec();
+  const { setContent } = useContextPanel();
+  const { componentSpec, graphSpec, isValid, errors } = useComponentSpec();
 
   const notify = useToastNotification();
+
+  const [isYamlOpen, setIsYamlOpen] = useState(false);
 
   // Utility function to convert TypeSpecType to string
   const typeSpecToString = (typeSpec?: TypeSpecType): string => {
@@ -40,10 +47,6 @@ const PipelineDetails = () => {
     return JSON.stringify(typeSpec);
   };
 
-  const handleCancel = () => {
-    deselectNode();
-  };
-
   // State for file metadata
   const [fileMeta, setFileMeta] = useState<{
     creationTime?: Date;
@@ -51,11 +54,6 @@ const PipelineDetails = () => {
     createdBy?: string;
     digest?: string;
   }>({});
-
-  const deselectNode = useCallback(() => {
-    setNodes(deselectAllNodes);
-    clearContent();
-  }, [setNodes]);
 
   // Fetch file metadata on mount or when componentSpec.name changes
   useEffect(() => {
@@ -80,14 +78,7 @@ const PipelineDetails = () => {
   }, [componentSpec?.name]);
 
   const handleInputEdit = (input: InputSpec) => {
-    setContent(
-      <InputValueEditor
-        key={input.name}
-        input={input}
-        onSave={deselectNode}
-        onCancel={handleCancel}
-      />,
-    );
+    setContent(<InputValueEditor key={input.name} input={input} />);
   };
 
   const handleOutputEdit = (output: OutputSpec) => {
@@ -100,10 +91,20 @@ const PipelineDetails = () => {
         connectedDetails={outputConnectedDetails}
         key={output.name}
         output={output}
-        onSave={deselectNode}
-        onCancel={handleCancel}
       />,
     );
+  };
+
+  const handleInputCopy = (input: InputSpec) => {
+    const value = input.value ?? input.default;
+
+    if (!value) {
+      notify("Copy failed: Input has no value", "error");
+      return;
+    }
+
+    void navigator.clipboard.writeText(value);
+    notify("Input value copied to clipboard", "success");
   };
 
   if (!componentSpec) {
@@ -228,15 +229,31 @@ const PipelineDetails = () => {
                         <span className="font-semibold">Type:</span>{" "}
                         {typeSpecToString(input?.type)}
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="text-xs text-muted-foreground cursor-pointer hover:bg-transparent"
-                        size="sm"
-                        onClick={() => handleInputEdit(input)}
+                      <InlineStack
+                        className="min-w-24"
+                        align="end"
+                        blockAlign="center"
                       >
-                        Edit
-                      </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="min"
+                          onClick={() => handleInputCopy(input)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <Icon name="Copy" className="size-3" />
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="text-xs text-muted-foreground cursor-pointer hover:bg-transparent"
+                          size="sm"
+                          onClick={() => handleInputEdit(input)}
+                        >
+                          Edit
+                        </Button>
+                      </InlineStack>
                     </div>
                   );
                 })}
@@ -269,15 +286,17 @@ const PipelineDetails = () => {
                       )}
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="text-xs text-muted-foreground cursor-pointer hover:bg-transparent"
-                      size="sm"
-                      onClick={() => handleOutputEdit(output)}
-                    >
-                      Edit
-                    </Button>
+                    <InlineStack className="min-w-24" align={"end"}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-xs text-muted-foreground cursor-pointer hover:bg-transparent"
+                        size="sm"
+                        onClick={() => handleOutputEdit(output)}
+                      >
+                        Edit
+                      </Button>
+                    </InlineStack>
                   </div>
                 ))}
               </div>
@@ -288,18 +307,62 @@ const PipelineDetails = () => {
         </div>
       </div>
 
+      {/* Validations */}
+      <div>
+        <h3 className="text-md font-medium mb-1">Validations</h3>
+        {isValid ? (
+          <InfoBox variant="success" title="No validation errors found">
+            Pipeline is ready for submission
+          </InfoBox>
+        ) : (
+          <InfoBox
+            variant="error"
+            title={`${errors.length} validation error${errors.length > 1 ? "s" : ""} found:`}
+          >
+            <ScrollArea className="max-h-80 overflow-y-auto">
+              <ul className="text-xs space-y-1">
+                {errors.map((error) => (
+                  <li key={error}>
+                    <InlineStack
+                      gap="2"
+                      blockAlign="start"
+                      align="start"
+                      wrap="nowrap"
+                    >
+                      <span className="text-destructive flex-shrink-0">•</span>
+                      <span className="break-words">{error}</span>
+                    </InlineStack>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          </InfoBox>
+        )}
+      </div>
+
       {/* Pipeline YAML */}
-      <div className="flex flex-col h-full">
-        <div className="font-medium text-md flex items-center gap-1 cursor-pointer">
-          Pipeline YAML
-        </div>
-        <div className="mt-1 h-full min-h-0 flex-1">
+      <Collapsible
+        open={isYamlOpen}
+        onOpenChange={setIsYamlOpen}
+        className="h-full"
+      >
+        <CollapsibleTrigger asChild>
+          <InlineStack
+            gap="1"
+            blockAlign="center"
+            className="font-medium text-md cursor-pointer"
+          >
+            <Icon name={isYamlOpen ? "ChevronDown" : "ChevronRight"} />
+            Pipeline YAML
+          </InlineStack>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-1 h-9/10 flex-1 min-h-0">
           <TaskImplementation
             displayName={componentSpec.name ?? "Pipeline"}
             componentSpec={componentSpec}
           />
-        </div>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };

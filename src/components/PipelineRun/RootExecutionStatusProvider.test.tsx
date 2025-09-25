@@ -104,6 +104,7 @@ describe("<RootExecutionStatusProvider />", () => {
     vi.mocked(useBackend).mockReturnValue({
       configured: true,
       available: true,
+      ready: true,
       backendUrl: "http://localhost:8000",
       isConfiguredFromEnv: false,
       isConfiguredFromRelativePath: false,
@@ -139,6 +140,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -158,6 +160,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -183,6 +186,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: true,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -201,6 +205,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: mockError,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -226,6 +231,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -267,6 +273,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       const { rerender } = renderWithProvider("test-execution-id");
@@ -281,6 +288,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       // Trigger re-render to simulate data update
@@ -328,6 +336,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       const { rerender } = renderWithProvider("test-execution-id");
@@ -342,6 +351,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       rerender(
@@ -385,6 +395,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -408,6 +419,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -427,6 +439,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -463,6 +476,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -486,6 +500,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -502,6 +517,7 @@ describe("<RootExecutionStatusProvider />", () => {
       vi.mocked(useBackend).mockReturnValue({
         configured: true,
         available: true,
+        ready: true,
         backendUrl: customBackendUrl,
         isConfiguredFromEnv: false,
         isConfiguredFromRelativePath: false,
@@ -523,6 +539,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");

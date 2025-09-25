@@ -2,43 +2,80 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 import type {
+  GetArtifactsApiExecutionsIdArtifactsGetResponse,
+  GetContainerExecutionStateResponse,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
+  PipelineRunResponse,
 } from "@/api/types.gen";
 import type { TaskStatusCounts } from "@/types/pipelineRun";
+import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
 export const fetchExecutionState = async (
   executionId: string,
   backendUrl: string,
 ) => {
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/state`,
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch execution state: ${response.statusText}`);
-  }
-  return response.json();
+  const url = `${backendUrl}/api/executions/${executionId}/state`;
+  return fetchWithErrorHandling(url);
 };
 
 export const fetchExecutionDetails = async (
   executionId: string,
   backendUrl: string,
 ): Promise<GetExecutionInfoResponse> => {
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/details`,
-  );
+  const url = `${backendUrl}/api/executions/${executionId}/details`;
+  return fetchWithErrorHandling(url);
+};
+
+export const fetchPipelineRun = async (
+  runId: string,
+  backendUrl: string,
+): Promise<PipelineRunResponse> => {
+  const response = await fetch(`${backendUrl}/api/pipeline_runs/${runId}`);
   if (!response.ok) {
-    throw new Error(
-      `Failed to fetch execution details: ${response.statusText}`,
-    );
+    throw new Error(`Failed to fetch pipeline run: ${response.statusText}`);
   }
   return response.json();
+};
+
+const fetchContainerExecutionState = async (
+  executionId: string,
+  backendUrl: string,
+): Promise<GetContainerExecutionStateResponse> => {
+  const url = `${backendUrl}/api/executions/${executionId}/container_state`;
+  return fetchWithErrorHandling(url);
+};
+
+export const useFetchContainerExecutionState = (
+  executionId: string | undefined,
+  backendUrl: string,
+) => {
+  return useQuery<GetContainerExecutionStateResponse>({
+    queryKey: ["container-execution-state", executionId],
+    queryFn: () => fetchContainerExecutionState(executionId!, backendUrl),
+    enabled: !!executionId,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useFetchPipelineRun = (
+  runId: string,
+  backendUrl: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<PipelineRunResponse>({
+    queryKey: ["pipeline-run", runId],
+    queryFn: () => fetchPipelineRun(runId, backendUrl),
+    enabled,
+    refetchOnWindowFocus: false,
+  });
 };
 
 export const useFetchExecutionInfo = (
   executionId: string,
   backendUrl: string,
   poll: boolean = false,
+  enabled: boolean = true,
 ) => {
   const {
     data: details,
@@ -51,6 +88,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionDetails(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
+    enabled,
   });
 
   const {
@@ -64,6 +102,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionState(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
+    enabled,
   });
 
   const isLoading = isDetailsLoading || isStateLoading;
@@ -76,7 +115,7 @@ export const useFetchExecutionInfo = (
     refetchState();
   }, [refetchDetails, refetchState]);
 
-  return { data, isLoading, isFetching, error, refetch };
+  return { data, isLoading, isFetching, error, refetch, enabled };
 };
 
 export const fetchExecutionStatus = async (
@@ -84,26 +123,14 @@ export const fetchExecutionStatus = async (
   backendUrl: string,
 ) => {
   try {
-    const response = await fetch(
-      `${backendUrl}/api/executions/${executionId}/details`,
+    const details: GetExecutionInfoResponse = await fetchExecutionDetails(
+      executionId,
+      backendUrl,
     );
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch execution details: ${response.statusText}`,
-      );
-    }
-    const details: GetExecutionInfoResponse = await response.json();
-
-    const stateResponse = await fetch(
-      `${backendUrl}/api/executions/${executionId}/state`,
+    const stateData: GetGraphExecutionStateResponse = await fetchExecutionState(
+      executionId,
+      backendUrl,
     );
-    if (!stateResponse.ok) {
-      throw new Error(
-        `Failed to fetch execution state: ${stateResponse.statusText}`,
-      );
-    }
-    const stateData: GetGraphExecutionStateResponse =
-      await stateResponse.json();
 
     const taskStatuses = countTaskStatuses(details, stateData);
     const runStatus = getRunStatus(taskStatuses);
@@ -114,6 +141,7 @@ export const fetchExecutionStatus = async (
       `Error fetching task statuses for run ${executionId}:`,
       error,
     );
+    throw error;
   }
 };
 
@@ -219,4 +247,19 @@ export const countTaskStatuses = (
 
   const total = succeeded + failed + running + waiting + skipped + cancelled;
   return { total, succeeded, failed, running, waiting, skipped, cancelled };
+};
+
+export const getExecutionArtifacts = async (
+  executionId: string,
+  backendUrl: string,
+) => {
+  if (!executionId) return null;
+  const response = await fetch(
+    `${backendUrl}/api/executions/${executionId}/artifacts`,
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch artifacts: ${response.statusText}`);
+  }
+  return response.json() as Promise<GetArtifactsApiExecutionsIdArtifactsGetResponse>;
 };
