@@ -145,6 +145,18 @@ const FlowCanvas = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      const isInputFocused =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable ||
+        target.closest('[data-slot="input"]');
+
+      // Skip canvas shortcuts if an input is focused
+      if (isInputFocused) {
+        return;
+      }
+
       if (event.key === "Shift") {
         setShiftKeyPressed(true);
       }
