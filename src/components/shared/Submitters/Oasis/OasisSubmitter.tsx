@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle, Loader2, SendHorizonal } from "lucide-react";
 import { useCallback, useState } from "react";
 
+import { BETA_FLAG_KEYS } from "@/betaFlags";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
@@ -26,7 +27,9 @@ const OasisSubmitter = ({
 }: OasisSubmitterProps) => {
   const { configured, available } = useBackend();
   const { submit, isSubmitting } = usePipelineRuns();
-  const isAutoRedirect = useBetaFlagValue("redirect-on-new-pipeline-run");
+  const isAutoRedirect = useBetaFlagValue(
+    BETA_FLAG_KEYS.redirectOnNewPipelineRun,
+  );
 
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const { cooldownTime, setCooldownTime } = useCooldownTimer(0);

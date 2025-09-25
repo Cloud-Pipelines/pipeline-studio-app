@@ -1,6 +1,7 @@
 import { Code, InfoIcon, ListFilter } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 
+import { BETA_FLAG_KEYS } from "@/betaFlags";
 import {
   Dialog,
   DialogContent,
@@ -68,7 +69,7 @@ const ComponentDetailsDialogContent = withSuspenseWrapper(
     onDelete,
   }: ComponentDetailsProps) => {
     const remoteComponentLibrarySearchEnabled = useBetaFlagValue(
-      "remote-component-library-search",
+      BETA_FLAG_KEYS.remoteComponentLibrarySearch,
     );
 
     const componentRef = useHydrateComponentReference(component);

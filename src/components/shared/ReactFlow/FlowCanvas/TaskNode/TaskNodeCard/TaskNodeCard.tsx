@@ -2,6 +2,7 @@ import { useStore } from "@xyflow/react";
 import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { BETA_FLAG_KEYS } from "@/betaFlags";
 import { PublishedComponentBadge } from "@/components/shared/ManageComponent/PublishedComponentBadge";
 import { trimDigest } from "@/components/shared/ManageComponent/utils/digest";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
@@ -25,7 +26,7 @@ import { UpgradeNodePopover } from "./UpgradeNodePopover";
 
 const TaskNodeCard = () => {
   const isRemoteComponentLibrarySearchEnabled = useBetaFlagValue(
-    "remote-component-library-search",
+    BETA_FLAG_KEYS.remoteComponentLibrarySearch,
   );
   const { registerNode } = useNodesOverlay();
   const taskNode = useTaskNode();

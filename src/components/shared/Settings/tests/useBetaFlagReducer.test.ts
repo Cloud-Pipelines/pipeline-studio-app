@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { BetaFlag } from "@/types/betaFlags";
+import type { BetaFlags } from "@/types/betaFlags";
 
 import { useBetaFlagsReducer } from "../useBetaFlagReducer";
 
@@ -15,7 +15,7 @@ describe("useBetaFlagsReducer", () => {
     localStorage.clear();
   });
 
-  const mockBetaFlags: Record<string, BetaFlag> = {
+  const mockBetaFlags: BetaFlags = {
     feature1: {
       name: "Feature 1",
       description: "First feature flag",

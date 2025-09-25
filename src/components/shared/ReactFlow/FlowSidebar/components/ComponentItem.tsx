@@ -1,6 +1,7 @@
 import type { ComponentProps, DragEvent } from "react";
 import { useCallback, useMemo, useRef } from "react";
 
+import { BETA_FLAG_KEYS } from "@/betaFlags";
 import { ComponentDetailsDialog } from "@/components/shared/Dialogs";
 import { ComponentFavoriteToggle } from "@/components/shared/FavoriteComponentToggle";
 import { useOutdatedComponents } from "@/components/shared/ManageComponent/hooks/useOutdatedComponents";
@@ -56,10 +57,10 @@ const ComponentMarkup = ({
   error,
 }: ComponentMarkupProps) => {
   const isHighlightTasksOnComponentHoverEnabled = useBetaFlagValue(
-    "highlight-node-on-component-hover",
+    BETA_FLAG_KEYS.highlightNodeOnComponentHover,
   );
   const isRemoteComponentLibrarySearchEnabled = useBetaFlagValue(
-    "remote-component-library-search",
+    BETA_FLAG_KEYS.remoteComponentLibrarySearch,
   );
 
   // TODO: respect selected node as a starting point
