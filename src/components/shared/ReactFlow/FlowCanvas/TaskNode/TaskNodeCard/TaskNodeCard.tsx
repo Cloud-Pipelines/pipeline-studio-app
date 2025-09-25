@@ -20,7 +20,9 @@ import {
   type UpdateOverlayMessage,
   useNodesOverlay,
 } from "../../../NodesOverlay/NodesOverlayProvider";
-import TaskConfiguration from "../TaskConfiguration";
+import TaskConfiguration, {
+  type TaskConfigurationAction,
+} from "../TaskConfiguration";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
 import { UpgradeNodePopover } from "./UpgradeNodePopover";
@@ -53,6 +55,13 @@ const TaskNodeCard = () => {
   const { name, state, callbacks, nodeId, taskSpec, taskId } = taskNode;
   const { dimensions, selected, highlighted, isCustomComponent } = state;
   const implementation = taskSpec.componentRef.spec?.implementation;
+  const isGraph = implementation
+    ? isGraphImplementation(implementation)
+    : false;
+
+  const onOpenGraph = () => {
+    console.log("onOpenGraph");
+  };
 
   const onNotify = useCallback((message: NotifyMessage) => {
     switch (message.type) {
@@ -92,29 +101,43 @@ const TaskNodeCard = () => {
       <TaskConfiguration
         taskNode={taskNode}
         key={nodeId}
-        actions={[
-          {
-            children: (
-              <div className="flex items-center gap-2">
-                <CopyIcon />
-              </div>
-            ),
-            variant: "secondary",
-            tooltip: "Duplicate Task",
-            onClick: callbacks.onDuplicate,
-          },
-          {
-            children: (
-              <div className="flex items-center gap-2">
-                <CircleFadingArrowUp />
-              </div>
-            ),
-            variant: "secondary",
-            className: cn(isCustomComponent && "hidden"),
-            tooltip: "Update Task from Source URL",
-            onClick: callbacks.onUpgrade,
-          },
-        ]}
+        actions={
+          [
+            {
+              children: (
+                <div className="flex items-center gap-2">
+                  <CopyIcon />
+                </div>
+              ),
+              variant: "secondary",
+              tooltip: "Duplicate Task",
+              onClick: callbacks.onDuplicate,
+            },
+            {
+              children: (
+                <div className="flex items-center gap-2">
+                  <CircleFadingArrowUp />
+                </div>
+              ),
+              variant: "secondary",
+              className: cn(isCustomComponent && "hidden"),
+              tooltip: "Update Task from Source URL",
+              onClick: callbacks.onUpgrade,
+            },
+            isGraph
+              ? {
+                children: (
+                  <div className="flex items-center gap-2">
+                    <Icon name="Workflow" size="md" />
+                  </div>
+                ),
+                variant: "secondary",
+                tooltip: "View Subgraph",
+                onClick: onOpenGraph,
+              }
+              : null,
+          ].filter(Boolean) as TaskConfigurationAction[]
+        }
       />
     ),
     [nodeId, callbacks.onDuplicate, callbacks.onUpgrade, isCustomComponent],
@@ -159,9 +182,6 @@ const TaskNodeCard = () => {
       </div>
     </QuickTooltip>
   );
-
-
-  const isGraph = implementation ? isGraphImplementation(implementation) : false;
 
   return (
     <Card

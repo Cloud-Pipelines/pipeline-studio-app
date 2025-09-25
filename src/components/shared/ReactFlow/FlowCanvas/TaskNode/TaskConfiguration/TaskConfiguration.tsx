@@ -27,12 +27,12 @@ import IOSection from "./IOSection/IOSection";
 import Logs, { OpenLogsInNewWindowLink } from "./logs";
 import OutputsList from "./OutputsList";
 
-interface ButtonPropsWithTooltip extends ButtonProps {
+export interface TaskConfigurationAction extends ButtonProps {
   tooltip?: string;
 }
 interface TaskConfigurationProps {
   taskNode: TaskNodeContextType;
-  actions?: ButtonPropsWithTooltip[];
+  actions?: TaskConfigurationAction[];
 }
 
 const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
