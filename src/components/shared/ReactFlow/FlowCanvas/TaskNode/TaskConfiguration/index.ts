@@ -1,1 +1,1 @@
-export { default } from "./TaskConfiguration";
+export { default, type TaskConfigurationAction } from "./TaskConfiguration";
