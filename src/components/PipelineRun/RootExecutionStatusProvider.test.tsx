@@ -140,6 +140,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -159,6 +160,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -184,6 +186,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: true,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -202,6 +205,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: mockError,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -227,6 +231,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -268,6 +273,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       const { rerender } = renderWithProvider("test-execution-id");
@@ -282,6 +288,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       // Trigger re-render to simulate data update
@@ -329,6 +336,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       const { rerender } = renderWithProvider("test-execution-id");
@@ -343,6 +351,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       rerender(
@@ -386,6 +395,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -409,6 +419,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -428,6 +439,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -464,6 +476,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -487,6 +500,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");
@@ -525,6 +539,7 @@ describe("<RootExecutionStatusProvider />", () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
+        enabled: true,
       });
 
       renderWithProvider("test-execution-id");

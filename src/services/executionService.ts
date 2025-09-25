@@ -6,6 +6,7 @@ import type {
   GetContainerExecutionStateResponse,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
+  PipelineRunResponse,
 } from "@/api/types.gen";
 import type { TaskStatusCounts } from "@/types/pipelineRun";
 import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
@@ -24,6 +25,17 @@ export const fetchExecutionDetails = async (
 ): Promise<GetExecutionInfoResponse> => {
   const url = `${backendUrl}/api/executions/${executionId}/details`;
   return fetchWithErrorHandling(url);
+};
+
+export const fetchPipelineRun = async (
+  runId: string,
+  backendUrl: string,
+): Promise<PipelineRunResponse> => {
+  const response = await fetch(`${backendUrl}/api/pipeline_runs/${runId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch pipeline run: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 const fetchContainerExecutionState = async (
@@ -46,10 +58,24 @@ export const useFetchContainerExecutionState = (
   });
 };
 
+export const useFetchPipelineRun = (
+  runId: string,
+  backendUrl: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<PipelineRunResponse>({
+    queryKey: ["pipeline-run", runId],
+    queryFn: () => fetchPipelineRun(runId, backendUrl),
+    enabled,
+    refetchOnWindowFocus: false,
+  });
+};
+
 export const useFetchExecutionInfo = (
   executionId: string,
   backendUrl: string,
   poll: boolean = false,
+  enabled: boolean = true,
 ) => {
   const {
     data: details,
@@ -62,6 +88,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionDetails(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
+    enabled,
   });
 
   const {
@@ -75,6 +102,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionState(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
+    enabled,
   });
 
   const isLoading = isDetailsLoading || isStateLoading;
@@ -87,7 +115,7 @@ export const useFetchExecutionInfo = (
     refetchState();
   }, [refetchDetails, refetchState]);
 
-  return { data, isLoading, isFetching, error, refetch };
+  return { data, isLoading, isFetching, error, refetch, enabled };
 };
 
 export const fetchExecutionStatus = async (
