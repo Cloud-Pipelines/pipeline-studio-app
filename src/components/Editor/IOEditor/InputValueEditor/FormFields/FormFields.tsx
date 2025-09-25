@@ -35,20 +35,22 @@ const FormField = ({
       <label htmlFor={id} className="text-xs text-muted-foreground">
         {label}
       </label>
-      {actions?.map(
-        (action) =>
-          !action.hidden && (
-            <Button
-              key={action.icon}
-              variant="ghost"
-              onClick={action.onClick}
-              disabled={action.disabled}
-              size="min"
-            >
-              <Icon name={action.icon} size="xs" />
-            </Button>
-          ),
-      )}
+      <InlineStack blockAlign="center" gap="1">
+        {actions?.map(
+          (action) =>
+            !action.hidden && (
+              <Button
+                key={action.icon}
+                variant="ghost"
+                onClick={action.onClick}
+                disabled={action.disabled}
+                size="min"
+              >
+                <Icon name={action.icon} size="xs" />
+              </Button>
+            ),
+        )}
+      </InlineStack>
     </InlineStack>
     {children}
   </BlockStack>

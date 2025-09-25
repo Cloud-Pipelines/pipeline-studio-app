@@ -18,6 +18,7 @@ import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 
 import { NameField, TextField, TypeField } from "./FormFields/FormFields";
 import { checkNameCollision } from "./FormFields/utils";
+import { InputValueDialog } from "./InputValueDialog";
 
 interface InputValueEditorProps {
   input: InputSpec;
@@ -37,6 +38,9 @@ export const InputValueEditor = ({
     triggerDialog: triggerConfirmation,
     ...confirmationProps
   } = useConfirmationDialog();
+
+  const [isValueDialogOpen, setIsValueDialogOpen] = useState(false);
+  const [triggerSave, setTriggerSave] = useState(false);
 
   const initialInputValue = input.value ?? input.default ?? "";
   const initialIsOptional = false; // When optional inputs are permitted again change to: input.optional ?? true
@@ -203,6 +207,22 @@ export const InputValueEditor = ({
     triggerConfirmation,
   ]);
 
+  const handleExpandValueEditor = useCallback(() => {
+    if (disabled) return;
+
+    setIsValueDialogOpen(true);
+  }, [disabled]);
+
+  const handleDialogCancel = useCallback(() => {
+    setIsValueDialogOpen(false);
+  }, []);
+
+  const handleDialogConfirm = useCallback((value: string) => {
+    setInputValue(value);
+    setIsValueDialogOpen(false);
+    setTriggerSave(true);
+  }, []);
+
   useEffect(() => {
     setInputValue(initialInputValue);
     setInputName(input.name);
@@ -210,6 +230,13 @@ export const InputValueEditor = ({
     setInputOptional(initialIsOptional);
     setValidationError(null);
   }, [input, initialInputValue, initialIsOptional]);
+
+  useEffect(() => {
+    if (triggerSave) {
+      saveChanges();
+      setTriggerSave(false);
+    }
+  }, [triggerSave, saveChanges]);
 
   const placeholder = input.default ?? `Enter ${input.name}...`;
 
@@ -240,6 +267,11 @@ export const InputValueEditor = ({
         disabled={disabled}
         inputName={input.name}
         actions={[
+          {
+            icon: "Maximize2",
+            hidden: disabled,
+            onClick: handleExpandValueEditor,
+          },
           {
             icon: "Copy",
             hidden: !disabled && !inputValue,
@@ -273,6 +305,15 @@ export const InputValueEditor = ({
         {...confirmationProps}
         onConfirm={() => confirmationHandlers?.onConfirm()}
         onCancel={() => confirmationHandlers?.onCancel()}
+      />
+
+      <InputValueDialog
+        input={input}
+        value={inputValue}
+        placeholder={placeholder}
+        open={isValueDialogOpen}
+        onCancel={handleDialogCancel}
+        onConfirm={handleDialogConfirm}
       />
     </BlockStack>
   );
