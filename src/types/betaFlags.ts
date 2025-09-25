@@ -3,3 +3,5 @@ export interface BetaFlag {
   description: string;
   default: boolean;
 }
+
+export type BetaFlags = Record<string, BetaFlag>;
