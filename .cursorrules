@@ -1,0 +1,212 @@
+# Cursor AI Rules for Pipeline Studio App
+
+## Project Overview
+
+This is a React + TypeScript application for building and running Machine Learning pipelines using drag and drop. The app uses Vite, TailwindCSS v4, ShadCN, Radix UI, React Flow, and Monaco Editor.
+
+## Core Technologies & Standards
+
+### TypeScript
+
+- Use strict TypeScript with proper typing
+- Prefer explicit types over `any` (only use `any` when absolutely necessary)
+- Use interface for object shapes, type for unions/primitives
+- Follow existing patterns for type definitions in `src/types/`
+- **Avoid unsafe type casting**: Don't use type assertions (`as`) unless absolutely necessary. Instead prefer:
+  - Type guards and runtime validation
+  - Proper typing from the source
+  - Union types and type narrowing
+  - Schema validation libraries (e.g., zod) for external data
+  - Example: Instead of `const something: string = myjson as string`, use type guards or validate the data
+
+### React Patterns
+
+- Use functional components with hooks exclusively
+- Use proper dependency arrays in useEffect and useMemo
+- Follow the existing component structure
+- Do not use barrel exports
+- Use React 19 features and patterns
+- **Import modules from React**: `import module from react`. Do not use inline `React.[module]`
+
+### File Structure & Imports
+
+- Use absolute imports with `@/` prefix for src directory
+- Follow existing folder structure:
+  - `src/components/` for all React components
+  - `src/hooks/` for custom hooks
+  - `src/types/` for TypeScript definitions
+  - `src/utils/` for utility functions
+  - `src/services/` for API and business logic
+- **Import order**: external packages → internal modules → relative imports
+- Use simple-import-sort rules (already configured in ESLint)
+- Do not use barrel exports
+
+### UI Components & Styling
+
+- Use ShadCN / Radix UI components from `@/components/ui/` for all UI primitives
+- Use TailwindCSS v4 for styling (not CSS modules or styled-components)
+- **Do not use inline styling** (`style={styles}`) except where strictly necessary
+- Follow existing design patterns in the codebase
+- Use `cn()` utility for conditional classes (from `@/lib/utils`)
+- Prefer composition over prop drilling for complex components
+- **Suggest abstractions for repeated Tailwind patterns**: When you see similar Tailwind class combinations used multiple times (especially for buttons, cards, inputs, wrappers, etc), suggest creating reusable components or utility classes. For example:
+  - Multiple buttons with similar styling → Create a Button variant or new component
+  - Repeated container/card patterns → Abstract into reusable Card component
+  - Common spacing/layout patterns → Suggest utility classes or component abstractions
+  - Similar form field styling → Create form field components
+
+### State Management
+
+- Use Tanstack Query for server state
+- Use Tanstack Router for routing
+- Use React hooks for local component state
+- Use Context providers for app-wide state (see existing providers)
+- Follow existing patterns in `src/providers/`
+- **Use `useRequiredContext`** to simplify context usage and avoid null checks
+
+### Code Quality
+
+- Follow ESLint rules (configured in eslint.config.js)
+- Use Prettier for formatting
+- Write tests using Vitest for unit tests, Playwright for E2E
+- Use descriptive variable and function names
+- Add JSDoc comments for complex functions
+- Prefer early returns to reduce nesting
+
+### API & Data
+
+- Use the generated API client in `src/api/`
+- Follow existing service patterns in `src/services/`
+- Use proper error handling with try/catch
+- **Prefer domain types**: Use types from `src/utils/componentSpec.ts`, `src/types/`, etc. for core business logic
+- **Use generated API types**: Only use `src/api/types.gen.ts` when directly interfacing with APIs or when domain types don't exist
+- **Avoid unsafe type casting**: Don't use type assertions (`as`) unless absolutely necessary. Instead prefer:
+  - Type guards and runtime validation
+  - Proper typing from the source
+  - Union types and type narrowing
+  - Schema validation libraries for external data
+  - Example: Instead of `const something: string = myjson as string`, use type guards or validate the data
+
+### React Flow Specific
+
+- Use `@xyflow/react` for flow diagrams
+- Follow existing node types and edge patterns
+- Keep flow state management consistent with existing patterns
+- Use proper node and edge typing
+
+### Testing
+
+- Write unit tests for utilities and hooks
+- Write component tests for complex components
+- Use Playwright helpers from `tests/e2e/helpers.ts`
+- Follow existing test patterns and naming
+
+### Performance
+
+- Use memo for expensive components
+- Use useMemo and useCallback appropriately
+- Lazy load heavy components when possible
+- Follow existing patterns for optimization
+
+## Component Architecture
+
+### Component Structure
+
+```typescript
+// ComponentName/index.ts
+export { ComponentName } from './ComponentName';
+
+// ComponentName/ComponentName.tsx
+interface ComponentNameProps {
+  // props
+}
+
+export const ComponentName = ({ }: ComponentNameProps) => {
+  // component logic
+  return (
+    // JSX
+  );
+};
+```
+
+### Custom Hooks
+
+- Prefix with `use`
+- Return objects for multiple values, not arrays
+- Use proper TypeScript return types
+- Follow existing patterns in `src/hooks/`
+
+### Provider Pattern
+
+```typescript
+const Context = createContext<ContextType | null>(null);
+
+export const Provider = ({ children }: { children: ReactNode }) => {
+  // provider logic
+  return <Context.Provider value={value}>{children}</Context.Provider>;
+};
+
+export const useContext = () => {
+  const context = useContext(Context);
+  if (!context) throw new Error('useContext must be used within Provider');
+  return context;
+};
+```
+
+## Naming Conventions
+
+- Components: PascalCase
+- Files: PascalCase for components, camelCase for utilities
+- Variables/functions: camelCase
+- Constants: SCREAMING_SNAKE_CASE
+- Types/Interfaces: PascalCase
+- Directories: camelCase or PascalCase for component folders
+
+## Error Handling
+
+- Use proper error boundaries
+- Handle async errors with try/catch
+- Use toast notifications for user-facing errors
+- Log errors appropriately
+- Follow existing error patterns
+
+## Comments & Documentation
+
+- Use JSDoc for public APIs
+- Add comments for complex business logic
+- **Explain "why" not "what" in comments**
+- **Keep comments up to date with code changes**
+- Avoid writing redundant comments for functions and variables that are self-explanatory
+
+## Specific Project Patterns
+
+- Use Monaco Editor for code editing features
+- Follow React Flow patterns for pipeline visualization
+- Use localforage for client-side storage
+- Follow existing authentication patterns
+- Use proper task node and pipeline handling patterns
+- Follow the existing component library structure
+- **Do not modify componentSpec structure** without express permission beforehand
+
+## Don't Do
+
+- Don't use CSS-in-JS or styled-components
+- Don't use inline styling (`style={styles}`) except where strictly necessary
+- Don't use class components
+- Don't ignore TypeScript errors
+- Don't use relative imports for `@/components/ui`
+- Don't create new global state without good reason
+- Don't bypass existing abstractions without discussion
+- Don't use `any` type without explicit justification
+- Don't use unsafe type casting (`as`) unless absolutely necessary
+- Don't create side effects in render functions
+- Don't use barrel exports
+- Don't modify componentSpec structure without express permission
+
+## Other rules
+
+- Prioritize readability over complexity
+- Reuse existing components, types, and styles whenever possible, and avoid over-generating new ones.
+- Avoid writing redundant comments for functions and variables that are self-explanatory.
+
+When suggesting code changes, always follow these patterns and maintain consistency with the existing codebase.
