@@ -181,6 +181,11 @@ export const ArgumentInputField = ({
   );
 
   const placeholder = useMemo(() => {
+    const inputPlaceholder = getPlaceholder(argument.value);
+    if (inputPlaceholder) {
+      return inputPlaceholder;
+    }
+
     if (argument.inputSpec.default !== undefined) {
       return argument.inputSpec.default;
     }
@@ -189,7 +194,7 @@ export const ArgumentInputField = ({
       return "";
     }
 
-    return getPlaceholder(argument.value);
+    return "";
   }, [argument]);
 
   useEffect(() => {
