@@ -6,12 +6,14 @@ import { PublishedComponentBadge } from "@/components/shared/ManageComponent/Pub
 import { trimDigest } from "@/components/shared/ManageComponent/utils/digest";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Icon } from "@/components/ui/icon";
 import { BlockStack } from "@/components/ui/layout";
 import { QuickTooltip } from "@/components/ui/tooltip";
 import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
+import { isGraphImplementation } from "@/utils/componentSpec";
 
 import {
   type NotifyMessage,
@@ -50,6 +52,7 @@ const TaskNodeCard = () => {
 
   const { name, state, callbacks, nodeId, taskSpec, taskId } = taskNode;
   const { dimensions, selected, highlighted, isCustomComponent } = state;
+  const implementation = taskSpec.componentRef.spec?.implementation;
 
   const onNotify = useCallback((message: NotifyMessage) => {
     switch (message.type) {
@@ -157,6 +160,9 @@ const TaskNodeCard = () => {
     </QuickTooltip>
   );
 
+
+  const isGraph = implementation ? isGraphImplementation(implementation) : false;
+
   return (
     <Card
       className={cn(
@@ -173,8 +179,8 @@ const TaskNodeCard = () => {
     >
       <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
         <BlockStack>
-          <CardTitle className="break-words text-left text-xs text-slate-900">
-            {name}
+          <CardTitle className="break-words text-left text-xs text-slate-900 flex gap-2">
+            {isGraph && <Icon name="Workflow" size="md" />} {name}
           </CardTitle>
           {taskId &&
             taskId !== name &&
