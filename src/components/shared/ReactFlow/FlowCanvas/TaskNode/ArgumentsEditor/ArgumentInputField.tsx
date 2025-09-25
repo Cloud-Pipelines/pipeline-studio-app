@@ -199,7 +199,7 @@ export const ArgumentInputField = ({
 
   useEffect(() => {
     const value = getInputValue(argument);
-    if (value) {
+    if (value !== undefined && value !== inputValue) {
       setInputValue(value);
       setLastSubmittedValue(value);
     }
