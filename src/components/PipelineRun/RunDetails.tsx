@@ -2,7 +2,7 @@ import { Frown, Videotape } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
-import { useLoadComponentSpecFromPath } from "@/hooks/useLoadComponentSpecFromPath";
+import { useCheckComponentSpecFromPath } from "@/hooks/useCheckComponentSpecFromPath";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import {
@@ -30,10 +30,17 @@ export const RunDetails = () => {
 
   const editorRoute = `/editor/${componentSpec.name}`;
 
-  const { error: loadEditorError, isLoading: isLoadingEditor } =
-    useLoadComponentSpecFromPath(backendUrl, editorRoute, !componentSpec.name);
+  const {
+    exists: specExists,
+    isChecking: isCheckingSpec,
+    error: specCheckError,
+  } = useCheckComponentSpecFromPath(
+    backendUrl,
+    editorRoute,
+    !componentSpec.name,
+  );
 
-  const hideInspectButton = !!isLoadingEditor || !!loadEditorError;
+  const hideInspectButton = isCheckingSpec || specCheckError || !specExists;
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
 
