@@ -99,6 +99,10 @@ const FlowCanvas = ({
   ...rest
 }: ReactFlowProps & { readOnly?: boolean }) => {
   const initialCanvasLoaded = useRef(false);
+  const hasUserInteractedWithView = useRef(false);
+  const hasFittedOnce = useRef(false);
+  const [shouldFitOnVisibilityChange, setShouldFitOnVisibilityChange] =
+    useState(false);
 
   const { clearContent } = useContextPanel();
   const { setReactFlowInstance: setReactFlowInstanceForOverlay } =
@@ -752,8 +756,48 @@ const FlowCanvas = ({
       reactFlowInstance.fitView({
         maxZoom: 1,
       });
+      hasFittedOnce.current = true;
     }
   }, [reactFlowInstance]);
+
+  // Track user interactions that should prevent auto-fitting
+  const handleMoveStart = useCallback(() => {
+    hasUserInteractedWithView.current = true;
+  }, []);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (
+        !document.hidden &&
+        initialCanvasLoaded.current &&
+        !hasUserInteractedWithView.current
+      ) {
+        setShouldFitOnVisibilityChange(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // Execute scheduled fitView when nodes are ready
+  useEffect(() => {
+    if (shouldFitOnVisibilityChange && reactFlowInstance && nodes.length > 0) {
+      setTimeout(() => {
+        fitView();
+        setShouldFitOnVisibilityChange(false);
+      }, 100);
+    }
+  }, [shouldFitOnVisibilityChange, reactFlowInstance, nodes.length, fitView]);
+
+  // Reset interaction state when component spec changes (new pipeline loaded)
+  useEffect(() => {
+    hasUserInteractedWithView.current = false;
+    hasFittedOnce.current = false;
+  }, [componentSpec?.name]);
 
   useScheduleExecutionOnceWhenConditionMet(
     initialCanvasLoaded.current && !!reactFlowInstance,
@@ -872,6 +916,8 @@ const FlowCanvas = ({
         onSelectionEnd={handleSelectionEnd}
         nodesConnectable={readOnly ? false : nodesConnectable}
         connectOnClick={!readOnly}
+        onMoveStart={handleMoveStart}
+        onMove={handleMoveStart}
         className={cn(
           (rest.selectionOnDrag || (shiftKeyPressed && !isConnecting)) &&
             "cursor-crosshair",
