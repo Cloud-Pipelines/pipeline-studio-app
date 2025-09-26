@@ -7,8 +7,8 @@ import type {
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
+import { useCheckComponentSpecFromPath } from "@/hooks/useCheckComponentSpecFromPath";
 import { useExecutionStatusQuery } from "@/hooks/useExecutionStatusQuery";
-import { useLoadComponentSpecFromPath } from "@/hooks/useLoadComponentSpecFromPath";
 import { useBackend } from "@/providers/BackendProvider";
 import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
 import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
@@ -34,7 +34,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   };
 });
 vi.mock("@/hooks/useExecutionStatusQuery");
-vi.mock("@/hooks/useLoadComponentSpecFromPath");
+vi.mock("@/hooks/useCheckComponentSpecFromPath");
 vi.mock("@/services/executionService", async (importOriginal) => {
   return {
     ...(await importOriginal()),
@@ -109,20 +109,6 @@ describe("<RunDetails/>", () => {
     },
   };
 
-  const mockEmptyComponentSpec: ComponentSpec = {
-    name: "",
-    description: "",
-    inputs: [],
-    outputs: [],
-    implementation: {
-      container: {
-        image: "",
-        command: [],
-        args: [],
-      },
-    },
-  };
-
   const mockPipelineRun = {
     id: 123,
     root_execution_id: 456,
@@ -160,12 +146,7 @@ describe("<RunDetails/>", () => {
       ping: vi.fn(),
     });
 
-    vi.mocked(useLoadComponentSpecFromPath).mockReturnValue({
-      componentSpec: mockComponentSpec,
-      isLoading: false,
-      enableApi: true,
-      error: null,
-    });
+    vi.mocked(useCheckComponentSpecFromPath).mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -193,14 +174,9 @@ describe("<RunDetails/>", () => {
   };
 
   describe("Inspect Pipeline Button", () => {
-    test("should render inspect button", async () => {
+    test("should render inspect button when pipeline exists", async () => {
       // arrange
-      vi.mocked(useLoadComponentSpecFromPath).mockReturnValue({
-        componentSpec: mockComponentSpec,
-        isLoading: false,
-        enableApi: true,
-        error: null,
-      });
+      vi.mocked(useCheckComponentSpecFromPath).mockReturnValue(true);
 
       vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
         data: {
@@ -222,43 +198,9 @@ describe("<RunDetails/>", () => {
       expect(inspect).toBeInTheDocument();
     });
 
-    test("should NOT render inspect button when pipeline loading", async () => {
+    test("should NOT render inspect button when pipeline does not exist", async () => {
       // arrange
-      vi.mocked(useLoadComponentSpecFromPath).mockReturnValue({
-        componentSpec: mockEmptyComponentSpec,
-        isLoading: true,
-        enableApi: true,
-        error: null,
-      });
-
-      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
-        data: {
-          details: mockExecutionDetails,
-          state: mockRunningExecutionState,
-        },
-        isLoading: false,
-        error: null,
-        isFetching: false,
-        refetch: () => {},
-        enabled: true,
-      });
-
-      // act
-      await act(async () => renderWithQueryClient(<RunDetails />));
-
-      // assert
-      const inspect = screen.queryByTestId("inspect-pipeline-button");
-      expect(inspect).not.toBeInTheDocument();
-    });
-
-    test("should NOT render inspect button when pipeline has error", async () => {
-      // arrange
-      vi.mocked(useLoadComponentSpecFromPath).mockReturnValue({
-        componentSpec: mockEmptyComponentSpec,
-        isLoading: false,
-        enableApi: true,
-        error: "Pipeline not found",
-      });
+      vi.mocked(useCheckComponentSpecFromPath).mockReturnValue(false);
 
       vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
         data: {
