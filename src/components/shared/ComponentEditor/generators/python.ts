@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { loadPyodide, version as pyodideVersion } from "pyodide";
 
-type YamlGenerator = (text: string) => Promise<string>;
+// type YamlGenerator = (text: string) => Promise<string>;
 
 export function usePythonYamlGenerator() {
   const { data: yamlGenerator } = useSuspenseQuery({
