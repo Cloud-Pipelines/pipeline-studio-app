@@ -3,7 +3,7 @@ import localForage from "localforage";
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
 import { APP_ROUTES } from "@/routes/router";
 import type { PipelineRun } from "@/types/pipelineRun";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import type { ComponentSpec, TaskSpec } from "@/utils/componentSpec";
 import {
   componentSpecToYaml,
   getComponentFileFromList,
@@ -88,9 +88,14 @@ export const copyRunToPipeline = async (
       cleanComponentSpec.implementation?.graph?.tasks
     ) {
       Object.values(cleanComponentSpec.implementation.graph.tasks).forEach(
-        (task: any) => {
-          if (task.annotations && "status" in task.annotations) {
-            delete task.annotations.status;
+        (task: TaskSpec) => {
+          if (task.annotations) {
+            if ("status" in task.annotations) {
+              delete task.annotations.status;
+            }
+            if ("executionId" in task.annotations) {
+              delete task.annotations.executionId;
+            }
           }
         },
       );
