@@ -163,11 +163,11 @@ export const ComponentLibraryProvider = ({
   const refreshComponentLibrary = useCallback(async () => {
     const { data: updatedLibrary } = await refetchLibrary();
 
-    if (updatedLibrary) {
-      populateComponentRefs(updatedLibrary).then((result) => {
-        setComponentLibrary(result);
-      });
-    }
+    // if (updatedLibrary) {
+    //   populateComponentRefs(updatedLibrary).then((result) => {
+    //     setComponentLibrary(result);
+    //   });
+    // }
   }, [refetchLibrary]);
 
   const refreshUserComponents = useCallback(async () => {
@@ -454,9 +454,7 @@ export const ComponentLibraryProvider = ({
       setComponentLibrary(undefined);
       return;
     }
-    populateComponentRefs(rawComponentLibrary).then((result) => {
-      setComponentLibrary(result);
-    });
+    setComponentLibrary(rawComponentLibrary);
   }, [rawComponentLibrary]);
 
   useEffect(() => {
