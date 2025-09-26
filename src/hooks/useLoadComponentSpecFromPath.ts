@@ -9,11 +9,7 @@ import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 import { getIdOrTitleFromPath } from "@/utils/URL";
 
-export const useLoadComponentSpecFromPath = (
-  backendUrl: string,
-  url?: string,
-  disabled: boolean = false,
-) => {
+export const useLoadComponentSpecFromPath = (backendUrl: string) => {
   const location = useLocation();
 
   const { setComponentSpec, clearComponentSpec, componentSpec } =
@@ -22,10 +18,7 @@ export const useLoadComponentSpecFromPath = (
   const [isLoadingPipeline, setIsLoadingPipeline] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const pathname = useMemo(
-    () => url ?? location.pathname,
-    [url, location.pathname],
-  );
+  const pathname = useMemo(() => location.pathname, [location.pathname]);
   const isRunPath = pathname.includes(RUNS_BASE_PATH);
 
   const { title, id } = useMemo(
@@ -38,8 +31,6 @@ export const useLoadComponentSpecFromPath = (
       setError(null);
 
       if (!title && !id) {
-        if (url) return;
-
         clearComponentSpec();
         return;
       }
@@ -75,9 +66,8 @@ export const useLoadComponentSpecFromPath = (
             }
           }
         }
-        setError("No component spec found for the current path.");
 
-        if (url) return;
+        setError("No component spec found for the current path.");
         clearComponentSpec();
       } catch (error) {
         console.error("Error loading pipeline from storage:", error);
@@ -89,14 +79,11 @@ export const useLoadComponentSpecFromPath = (
       }
     };
 
-    if (disabled) return;
-
     loadPipelineFromStorage();
     return () => {
-      if (url) return;
       clearComponentSpec();
     };
-  }, [id, title, url, disabled, setComponentSpec, clearComponentSpec]);
+  }, [id, title, backendUrl, isRunPath, setComponentSpec, clearComponentSpec]);
 
   return {
     componentSpec,
