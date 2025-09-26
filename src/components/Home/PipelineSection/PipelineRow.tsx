@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { List, Trash } from "lucide-react";
 import { type MouseEvent, useCallback, useMemo } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
@@ -7,6 +6,8 @@ import RunOverview from "@/components/shared/RunOverview";
 import StatusIcon from "@/components/shared/Status/StatusIcon";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Icon } from "@/components/ui/icon";
+import { InlineStack } from "@/components/ui/layout";
 import {
   Popover,
   PopoverContent,
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { Heading, Paragraph } from "@/components/ui/typography";
 import useLoadPipelineRuns from "@/hooks/useLoadPipelineRuns";
 import { useBackend } from "@/providers/BackendProvider";
 import { EDITOR_PATH } from "@/routes/router";
@@ -110,21 +112,21 @@ const PipelineRow = ({
         <TableCell>
           <Link {...linkProps}>{name}</Link>
         </TableCell>
-        <TableCell className="text-muted-foreground text-xs">
-          {formattedDate}
+        <TableCell>
+          <Paragraph tone="subdued" size="xs">
+            {formattedDate}
+          </Paragraph>
         </TableCell>
-        <TableCell className="text-muted-foreground text-xs">
-          {latestRun ? (
-            <div className="flex items-center gap-2">
+        <TableCell>
+          {!!latestRun && (
+            <InlineStack gap="2" blockAlign="center">
               <StatusIcon status={latestRun.status} />
-              <span>
+              <Paragraph tone="subdued" size="xs">
                 {formatDate(
                   convertUTCToLocalTime(latestRun.created_at).toISOString(),
                 )}
-              </span>
-            </div>
-          ) : (
-            "-"
+              </Paragraph>
+            </InlineStack>
           )}
         </TableCell>
         <TableCell>
@@ -134,15 +136,13 @@ const PipelineRow = ({
                 data-popover-trigger
                 className="cursor-pointer text-gray-500 border border-gray-200 rounded-md p-1 hover:bg-gray-200"
               >
-                <List className="w-4 h-4" />
+                <Icon name="List" />
               </PopoverTrigger>
               <PopoverContent className="w-[500px]">
-                <div className="text-sm mb-2">
-                  <span className="font-bold">
-                    {pipelineRuns[0].pipeline_name}
-                  </span>{" "}
-                  - {pipelineRuns.length} runs
-                </div>
+                <InlineStack gap="2" blockAlign="center" className="mb-4">
+                  <Heading level={2}>{pipelineRuns[0].pipeline_name}</Heading>
+                  <Paragraph size="sm">- {pipelineRuns.length} runs</Paragraph>
+                </InlineStack>
                 <ScrollArea className="h-[300px]">
                   {pipelineRuns.map((run) => (
                     <RunOverview key={run.id} run={run} />
@@ -160,7 +160,7 @@ const PipelineRow = ({
                 size="icon"
                 className="opacity-0 group-hover:opacity-100 cursor-pointer text-destructive-foreground hover:text-destructive-foreground"
               >
-                <Trash className="h-4 w-4" />
+                <Icon name="Trash" />
               </Button>
             }
             title={`Delete pipeline "${name}"?`}
