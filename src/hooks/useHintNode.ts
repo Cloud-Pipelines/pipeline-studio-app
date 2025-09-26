@@ -2,6 +2,7 @@ import type { Node } from "@xyflow/react";
 import { useConnection } from "@xyflow/react";
 import { useMemo } from "react";
 
+import { BETA_FLAG_KEYS } from "@/betaFlags";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import type { HintNodeData } from "@/types/hintNode";
@@ -10,7 +11,7 @@ const HINT_NODE_ID = "hint-node";
 
 export const useHintNode = ({ key, hint }: { key: string; hint: string }) => {
   const isRemoteComponentLibraryEnabled = useBetaFlagValue(
-    "remote-component-library-search",
+    BETA_FLAG_KEYS.remoteComponentLibrarySearch,
   );
 
   const connectionTo = useConnection((connection) => connection.to);

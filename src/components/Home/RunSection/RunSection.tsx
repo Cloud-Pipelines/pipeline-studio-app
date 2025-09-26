@@ -4,6 +4,7 @@ import { ChevronFirst, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { ListPipelineJobsResponse } from "@/api/types.gen";
+import { BETA_FLAG_KEYS } from "@/betaFlags";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,9 @@ export const RunSection = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const search = useSearch({ strict: false }) as RunSectionSearch;
-  const isCreatedByMeDefault = useBetaFlagValue("created-by-me-default");
+  const isCreatedByMeDefault = useBetaFlagValue(
+    BETA_FLAG_KEYS.createdByMeDefault,
+  );
 
   // Parse filter into a dictionary
   const parseFilter = (filter?: string): Record<string, string> => {

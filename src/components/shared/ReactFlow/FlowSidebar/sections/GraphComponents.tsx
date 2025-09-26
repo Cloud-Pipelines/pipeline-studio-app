@@ -1,6 +1,7 @@
 import { PackagePlus } from "lucide-react";
 import { type ChangeEvent, useCallback, useMemo } from "react";
 
+import { BETA_FLAG_KEYS } from "@/betaFlags";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { BlockStack } from "@/components/ui/layout";
 import { Separator } from "@/components/ui/separator";
@@ -34,7 +35,7 @@ import { UpgradeAvailableAlertBox } from "../components/UpgradeAvailableAlertBox
 
 const GraphComponents = ({ isOpen }: { isOpen: boolean }) => {
   const remoteComponentLibrarySearchEnabled = useBetaFlagValue(
-    "remote-component-library-search",
+    BETA_FLAG_KEYS.remoteComponentLibrarySearch,
   );
 
   const { updateSearchFilter, currentSearchFilter } = useForcedSearchContext();

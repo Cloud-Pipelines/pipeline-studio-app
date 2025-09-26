@@ -278,7 +278,7 @@ const addExecutionIdToComponent = (
   };
 };
 
-export const mapRunStatusToFavicon = (
+const mapRunStatusToFavicon = (
   runStatus: string,
 ): "success" | "failed" | "loading" | "paused" | "default" => {
   switch (runStatus) {
