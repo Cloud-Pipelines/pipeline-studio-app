@@ -352,13 +352,7 @@ const FlowCanvas = ({
 
       setComponentSpec(updatedComponentSpec);
     },
-    [
-      reactFlowInstance,
-      componentSpec,
-      nodeData,
-      setComponentSpec,
-      updateOrAddNodes,
-    ],
+    [reactFlowInstance, componentSpec, setComponentSpec, updateOrAddNodes],
   );
 
   useEffect(() => {
