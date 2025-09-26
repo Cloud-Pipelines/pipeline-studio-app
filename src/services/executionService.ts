@@ -188,6 +188,29 @@ export const isStatusComplete = (status: string = "") => {
   );
 };
 
+const mapStatus = (status: string) => {
+  switch (status) {
+    case "SUCCEEDED":
+      return "succeeded";
+    case "FAILED":
+    case "SYSTEM_ERROR":
+    case "INVALID":
+    case "UPSTREAM_FAILED":
+      return "failed";
+    case "UPSTREAM_FAILED_OR_SKIPPED":
+    case "CANCELLING":
+    case "SKIPPED":
+      return "skipped";
+    case "RUNNING":
+    case "STARTING":
+      return "running";
+    case "CANCELLED":
+      return "cancelled";
+    default:
+      return "waiting";
+  }
+};
+
 /**
  * Count task statuses from API response
  */
@@ -195,12 +218,15 @@ export const countTaskStatuses = (
   details: GetExecutionInfoResponse,
   stateData: GetGraphExecutionStateResponse,
 ): TaskStatusCounts => {
-  let succeeded = 0,
-    failed = 0,
-    running = 0,
-    waiting = 0,
-    skipped = 0,
-    cancelled = 0;
+  const statusCounts = {
+    total: 0,
+    succeeded: 0,
+    failed: 0,
+    running: 0,
+    waiting: 0,
+    skipped: 0,
+    cancelled: 0,
+  };
 
   if (
     details.child_task_execution_ids &&
@@ -213,40 +239,23 @@ export const countTaskStatuses = (
 
       if (statusStats) {
         const status = Object.keys(statusStats)[0];
-
-        switch (status) {
-          case "SUCCEEDED":
-            succeeded++;
-            break;
-          case "FAILED":
-          case "SYSTEM_ERROR":
-          case "INVALID":
-          case "UPSTREAM_FAILED":
-            failed++;
-            break;
-          case "UPSTREAM_FAILED_OR_SKIPPED":
-          case "CANCELLING":
-            skipped++;
-            break;
-          case "RUNNING":
-          case "STARTING":
-            running++;
-            break;
-          case "CANCELLED":
-            cancelled++;
-            break;
-          default:
-            waiting++;
-            break;
-        }
+        const mappedStatus = mapStatus(status);
+        statusCounts[mappedStatus as keyof TaskStatusCounts]++;
       } else {
-        waiting++;
+        statusCounts.waiting++;
       }
     });
   }
 
-  const total = succeeded + failed + running + waiting + skipped + cancelled;
-  return { total, succeeded, failed, running, waiting, skipped, cancelled };
+  const total =
+    statusCounts.succeeded +
+    statusCounts.failed +
+    statusCounts.running +
+    statusCounts.waiting +
+    statusCounts.skipped +
+    statusCounts.cancelled;
+
+  return { ...statusCounts, total };
 };
 
 export const getExecutionArtifacts = async (
@@ -262,4 +271,37 @@ export const getExecutionArtifacts = async (
     throw new Error(`Failed to fetch artifacts: ${response.statusText}`);
   }
   return response.json() as Promise<GetArtifactsApiExecutionsIdArtifactsGetResponse>;
+};
+
+export const convertExecutionStatsToStatusCounts = (
+  stats: { [key: string]: number } | null | undefined,
+): TaskStatusCounts => {
+  const statusCounts = {
+    total: 0,
+    succeeded: 0,
+    failed: 0,
+    running: 0,
+    waiting: 0,
+    skipped: 0,
+    cancelled: 0,
+  };
+
+  if (!stats) {
+    return statusCounts;
+  }
+
+  Object.entries(stats).forEach(([status, count]) => {
+    const mappedStatus = mapStatus(status);
+    statusCounts[mappedStatus as keyof TaskStatusCounts] += count;
+  });
+
+  const total =
+    statusCounts.succeeded +
+    statusCounts.failed +
+    statusCounts.running +
+    statusCounts.waiting +
+    statusCounts.skipped +
+    statusCounts.cancelled;
+
+  return { ...statusCounts, total };
 };
