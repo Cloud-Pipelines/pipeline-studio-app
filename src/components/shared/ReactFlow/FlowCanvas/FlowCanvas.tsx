@@ -38,6 +38,7 @@ import {
 } from "@/utils/componentSpec";
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
 import createNodesFromComponentSpec from "@/utils/nodes/createNodesFromComponentSpec";
+import { getSubgraphComponentSpec } from "@/utils/subgraphUtils";
 
 import ComponentDuplicateDialog from "../../Dialogs/ComponentDuplicateDialog";
 import { useNodesOverlay } from "../NodesOverlay/NodesOverlayProvider";
@@ -103,8 +104,13 @@ const FlowCanvas = ({
   const { clearContent } = useContextPanel();
   const { setReactFlowInstance: setReactFlowInstanceForOverlay } =
     useNodesOverlay();
-  const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
-    useComponentSpec();
+  const {
+    componentSpec,
+    setComponentSpec,
+    graphSpec,
+    updateGraphSpec,
+    currentSubgraphPath,
+  } = useComponentSpec();
   const { preserveIOSelectionOnSpecChange, resetPrevSpec } =
     useIOSelectionPersistence();
 
@@ -592,9 +598,9 @@ const FlowCanvas = ({
               const node = nodes.find((n) => n.id === change.id);
               return node
                 ? {
-                    ...node,
-                    position: { x: change.position.x, y: change.position.y },
-                  }
+                  ...node,
+                  position: { x: change.position.x, y: change.position.y },
+                }
                 : null;
             }
             return null;
@@ -714,7 +720,15 @@ const FlowCanvas = ({
 
   const updateReactFlow = useCallback(
     (newComponentSpec: ComponentSpec) => {
-      const newNodes = createNodesFromComponentSpec(newComponentSpec, nodeData);
+      // Get the ComponentSpec for the current subgraph
+      const currentSubgraphSpec = getSubgraphComponentSpec(
+        newComponentSpec,
+        currentSubgraphPath,
+      );
+      const newNodes = createNodesFromComponentSpec(
+        currentSubgraphSpec,
+        nodeData,
+      );
 
       const updatedNewNodes = newNodes.map((node) => ({
         ...node,
@@ -733,14 +747,14 @@ const FlowCanvas = ({
         return updatedNodes;
       });
     },
-    [setNodes, nodeData, replaceTarget],
+    [setNodes, nodeData, replaceTarget, currentSubgraphPath],
   );
 
   useEffect(() => {
     preserveIOSelectionOnSpecChange(componentSpec);
     updateReactFlow(componentSpec);
     initialCanvasLoaded.current = true;
-  }, [componentSpec, preserveIOSelectionOnSpecChange]);
+  }, [componentSpec, currentSubgraphPath, preserveIOSelectionOnSpecChange]);
 
   // Reset when loading a new component file
   useEffect(() => {
@@ -874,7 +888,7 @@ const FlowCanvas = ({
         connectOnClick={!readOnly}
         className={cn(
           (rest.selectionOnDrag || (shiftKeyPressed && !isConnecting)) &&
-            "cursor-crosshair",
+          "cursor-crosshair",
         )}
       >
         <NodeToolbar

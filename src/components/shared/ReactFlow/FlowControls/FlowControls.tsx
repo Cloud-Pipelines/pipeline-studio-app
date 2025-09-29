@@ -5,6 +5,7 @@ import {
   type ReactFlowProps,
 } from "@xyflow/react";
 import {
+  ChevronLeft,
   LockKeyhole,
   LockKeyholeOpen,
   SquareDashedMousePointerIcon,
@@ -12,6 +13,7 @@ import {
 import { useCallback, useState } from "react";
 
 import { cn } from "@/lib/utils";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 
 interface FlowControlsProps extends ControlProps {
   config: ReactFlowProps;
@@ -23,6 +25,7 @@ export default function FlowControls({
   updateConfig,
   ...props
 }: FlowControlsProps) {
+  const { canNavigateBack, navigateBack } = useComponentSpec();
   const [multiSelectActive, setMultiSelectActive] = useState(false);
   const [lockActive, setLockActive] = useState(!config.nodesDraggable);
 
@@ -43,6 +46,11 @@ export default function FlowControls({
 
   return (
     <Controls {...props}>
+      {canNavigateBack && (
+        <ControlButton onClick={navigateBack} title="Back to parent graph">
+          <ChevronLeft className="scale-120" />
+        </ControlButton>
+      )}
       {!props.showInteractive && (
         <ControlButton
           onClick={handleLockChange}

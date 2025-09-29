@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { TaskSpec } from "./componentSpec";
 import {
+  getSubgraphComponentSpec,
   getSubgraphDescription,
   getSubgraphTaskCount,
   isSubgraph,
@@ -125,6 +126,63 @@ describe("subgraphUtils", () => {
       const taskSpec = createNestedGraphTaskSpec();
       const description = getSubgraphDescription(taskSpec);
       expect(description).toBe("2 tasks");
+    });
+  });
+
+  describe("getSubgraphComponentSpec", () => {
+    const createRootComponentSpec = () => ({
+      name: "root-component",
+      inputs: [{ name: "rootInput", type: "string" }],
+      outputs: [{ name: "rootOutput", type: "string" }],
+      implementation: {
+        graph: {
+          tasks: {
+            task1: createContainerTaskSpec(),
+            subgraph1: createGraphTaskSpec(2),
+          },
+          outputValues: {},
+        },
+      },
+    });
+
+    it("should return original spec for root path", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = getSubgraphComponentSpec(rootSpec, ["root"]);
+      expect(result).toBe(rootSpec);
+    });
+
+    it("should return original spec for empty path", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = getSubgraphComponentSpec(rootSpec, []);
+      expect(result).toBe(rootSpec);
+    });
+
+    it("should navigate to subgraph", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = getSubgraphComponentSpec(rootSpec, ["root", "subgraph1"]);
+
+      // Should return the subgraph's component spec
+      expect(result.name).toBe("test-graph-component");
+      expect(result.implementation).toHaveProperty("graph");
+    });
+
+    it("should handle invalid task ID gracefully", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = getSubgraphComponentSpec(rootSpec, [
+        "root",
+        "nonexistent",
+      ]);
+
+      // Should return original spec when navigation fails
+      expect(result).toBe(rootSpec);
+    });
+
+    it("should handle non-subgraph task gracefully", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = getSubgraphComponentSpec(rootSpec, ["root", "task1"]);
+
+      // Should return original spec when trying to navigate into non-subgraph
+      expect(result).toBe(rootSpec);
     });
   });
 });
