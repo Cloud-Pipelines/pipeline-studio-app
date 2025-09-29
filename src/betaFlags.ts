@@ -26,4 +26,10 @@ export const ExistingBetaFlags = {
       "Automatically select the 'Created by me' filter when viewing the pipeline run list.",
     default: false,
   } as BetaFlag,
+
+  ["subgraph-navigation"]: {
+    name: "Subgraph Navigation",
+    description: "Enable the Subgraph Navigation feature.",
+    default: false,
+  } as BetaFlag,
 };
