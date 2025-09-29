@@ -144,6 +144,34 @@ const FlowCanvas = ({
 
   const latestFlowPosRef = useRef<{ x: number; y: number } | null>(null);
 
+  /* Migrate Node Ids */
+  const [migrationCompleted, setMigrationCompleted] = useState(false);
+
+  useEffect(() => {
+    if (!initialCanvasLoaded.current || migrationCompleted) return;
+
+    const needsMigration = nodes.some(
+      (node) =>
+        !nodeManager.isManaged(node.id) &&
+        (node.id.startsWith("task_") ||
+          node.id.startsWith("input_") ||
+          node.id.startsWith("output_")),
+    );
+
+    if (needsMigration) {
+      console.log("Migrating legacy node IDs to stable IDs...");
+      const { updatedNodes, migrationMap } =
+        nodeManager.migrateExistingNodes(nodes);
+
+      setNodes(updatedNodes);
+      setMigrationCompleted(true);
+
+      console.log("Migration completed:", migrationMap);
+    } else {
+      setMigrationCompleted(true);
+    }
+  }, [nodes, nodeManager, migrationCompleted]);
+
   const [showToolbar, setShowToolbar] = useState(false);
   const [replaceTarget, setReplaceTarget] = useState<Node | null>(null);
   const [shiftKeyPressed, setShiftKeyPressed] = useState(false);

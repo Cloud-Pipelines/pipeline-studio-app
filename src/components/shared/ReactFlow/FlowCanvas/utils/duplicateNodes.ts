@@ -60,7 +60,6 @@ export const duplicateNodes = (
   const graphSpec = componentSpec.implementation.graph;
 
   const nodeIdMap: Record<string, string> = {};
-
   const newTasks: Record<string, TaskSpec> = {};
   const newInputs: Record<string, InputSpec> = {};
   const newOutputs: Record<string, OutputSpec> = {};
