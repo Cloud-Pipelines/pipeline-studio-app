@@ -27,7 +27,7 @@ import IOSection from "./IOSection/IOSection";
 import Logs, { OpenLogsInNewWindowLink } from "./logs";
 import OutputsList from "./OutputsList";
 
-interface ButtonPropsWithTooltip extends ButtonProps {
+export interface ButtonPropsWithTooltip extends ButtonProps {
   tooltip?: string;
 }
 interface TaskConfigurationProps {
