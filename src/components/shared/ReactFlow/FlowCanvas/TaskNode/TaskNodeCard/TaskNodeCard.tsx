@@ -6,12 +6,14 @@ import { PublishedComponentBadge } from "@/components/shared/ManageComponent/Pub
 import { trimDigest } from "@/components/shared/ManageComponent/utils/digest";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BlockStack } from "@/components/ui/layout";
+import { Icon } from "@/components/ui/icon";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { QuickTooltip } from "@/components/ui/tooltip";
 import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
+import { getSubgraphDescription, isSubgraph } from "@/utils/subgraphUtils";
 
 import {
   type NotifyMessage,
@@ -27,6 +29,7 @@ const TaskNodeCard = () => {
   const isRemoteComponentLibrarySearchEnabled = useBetaFlagValue(
     "remote-component-library-search",
   );
+  const isSubgraphNavigationEnabled = useBetaFlagValue("subgraph-navigation");
   const { registerNode } = useNodesOverlay();
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
@@ -51,6 +54,12 @@ const TaskNodeCard = () => {
 
   const { name, state, callbacks, nodeId, taskSpec, taskId } = taskNode;
   const { dimensions, selected, highlighted, isCustomComponent } = state;
+
+  const isSubgraphNode = useMemo(() => isSubgraph(taskSpec), [taskSpec]);
+  const subgraphDescription = useMemo(
+    () => getSubgraphDescription(taskSpec),
+    [taskSpec],
+  );
 
   const onNotify = useCallback((message: NotifyMessage) => {
     switch (message.type) {
@@ -174,9 +183,16 @@ const TaskNodeCard = () => {
     >
       <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
         <BlockStack>
-          <CardTitle className="break-words text-left text-xs text-slate-900">
-            {name}
-          </CardTitle>
+          <InlineStack gap="2" blockAlign="center">
+            {isSubgraphNode && isSubgraphNavigationEnabled && (
+              <QuickTooltip content={`Subgraph: ${subgraphDescription}`}>
+                <Icon name="Workflow" size="sm" className="text-blue-600" />
+              </QuickTooltip>
+            )}
+            <CardTitle className="break-words text-left text-xs text-slate-900">
+              {name}
+            </CardTitle>
+          </InlineStack>
           {taskId &&
             taskId !== name &&
             !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
