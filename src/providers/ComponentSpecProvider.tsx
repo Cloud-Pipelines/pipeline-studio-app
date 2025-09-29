@@ -44,6 +44,11 @@ interface ComponentSpecContextType {
   taskStatusMap: Map<string, string>;
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
   undoRedo: UndoRedo;
+
+  currentSubgraphPath: string[];
+  navigateToSubgraph: (taskId: string) => void;
+  navigateBack: () => void;
+  canNavigateBack: boolean;
 }
 
 const ComponentSpecContext = createRequiredContext<ComponentSpecContextType>(
@@ -69,6 +74,10 @@ export const ComponentSpecProvider = ({
 
   const [isLoading, setIsLoading] = useState(!!spec);
 
+  const [currentSubgraphPath, setCurrentSubgraphPath] = useState<string[]>([
+    "root",
+  ]);
+
   const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
   const undoRedoRef = useRef(undoRedo);
   undoRedoRef.current = undoRedo;
@@ -82,6 +91,7 @@ export const ComponentSpecProvider = ({
     setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
     setTaskStatusMap(new Map());
     setIsLoading(false);
+    setCurrentSubgraphPath(["root"]);
     undoRedoRef.current.clearHistory();
   }, []);
 
@@ -152,6 +162,16 @@ export const ComponentSpecProvider = ({
     }));
   }, []);
 
+  const navigateToSubgraph = useCallback((taskId: string) => {
+    setCurrentSubgraphPath((prev) => [...prev, taskId]);
+  }, []);
+
+  const navigateBack = useCallback(() => {
+    setCurrentSubgraphPath((prev) => prev.slice(0, -1));
+  }, []);
+
+  const canNavigateBack = currentSubgraphPath.length > 1;
+
   const value = useMemo(
     () => ({
       componentSpec,
@@ -167,6 +187,11 @@ export const ComponentSpecProvider = ({
       updateGraphSpec,
       setTaskStatusMap,
       undoRedo,
+
+      currentSubgraphPath,
+      navigateToSubgraph,
+      navigateBack,
+      canNavigateBack,
     }),
     [
       componentSpec,
@@ -182,6 +207,11 @@ export const ComponentSpecProvider = ({
       updateGraphSpec,
       setTaskStatusMap,
       undoRedo,
+
+      currentSubgraphPath,
+      navigateToSubgraph,
+      navigateBack,
+      canNavigateBack,
     ],
   );
 
