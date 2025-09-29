@@ -1,12 +1,17 @@
 import { useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle, Loader2, SendHorizonal } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
+import { BlockStack } from "@/components/ui/layout";
+import {
+  type NotificationType,
+  PopupNotification,
+} from "@/components/ui/popupnotification";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { Paragraph } from "@/components/ui/typography";
 import useCooldownTimer from "@/hooks/useCooldownTimer";
-import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useBackend } from "@/providers/BackendProvider";
 import { usePipelineRuns } from "@/providers/PipelineRunsProvider";
@@ -20,6 +25,8 @@ interface OasisSubmitterProps {
   onSubmitComplete?: () => void;
 }
 
+const timeout = 1000 * 3; // 3 seconds
+
 const OasisSubmitter = ({
   componentSpec,
   onSubmitComplete,
@@ -27,18 +34,24 @@ const OasisSubmitter = ({
   const { configured, available } = useBackend();
   const { submit, isSubmitting } = usePipelineRuns();
   const isAutoRedirect = useBetaFlagValue("redirect-on-new-pipeline-run");
+  const navigate = useNavigate();
+
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
   const { cooldownTime, setCooldownTime } = useCooldownTimer(0);
-  const notify = useToastNotification();
-  const navigate = useNavigate();
+  const [notification, setNotification] = useState<{
+    content: React.ReactNode;
+    type: NotificationType;
+  } | null>(null);
 
-  const handleError = useCallback(
-    (message: string) => {
-      notify(message, "error");
-    },
-    [notify],
-  );
+  const handleError = useCallback((message: string) => {
+    setNotification({
+      content: <div className="text-sm text-red-700">{message}</div>,
+      type: "error",
+    });
+    setTimeout(() => setNotification(null), timeout);
+  }, []);
 
   const handleViewRun = useCallback(
     (runId: number, newTab = false) => {
@@ -55,20 +68,25 @@ const OasisSubmitter = ({
   const showSuccessNotification = useCallback(
     (runId: number) => {
       const SuccessComponent = () => (
-        <div className="flex flex-col gap-3 py-2">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">
-              Pipeline successfully submitted
-            </span>
-          </div>
-          <Button onClick={() => handleViewRun(runId)} className="w-full">
+        <BlockStack gap="1">
+          <Paragraph size="xs">Pipeline successfully submitted</Paragraph>
+          <Button
+            onClick={() => handleViewRun(runId)}
+            className="w-full"
+            size="xs"
+          >
             View Run
           </Button>
-        </div>
+        </BlockStack>
       );
-      notify(<SuccessComponent />, "success");
+
+      setNotification({
+        content: <SuccessComponent />,
+        type: "success",
+      });
+      setTimeout(() => setNotification(null), timeout);
     },
-    [notify, handleViewRun],
+    [handleViewRun],
   );
 
   const onSuccess = useCallback(
@@ -151,32 +169,44 @@ const OasisSubmitter = ({
   };
 
   return (
-    <SidebarMenuButton
-      asChild
-      tooltip="Submit Run"
-      forceTooltip
-      tooltipPosition="right"
-    >
-      <Button
-        onClick={handleSubmit}
-        className="w-full justify-start"
-        variant="ghost"
-        disabled={isButtonDisabled || !available}
+    <div className="relative">
+      <SidebarMenuButton
+        asChild
+        tooltip="Submit Run"
+        forceTooltip
+        tooltipPosition="right"
       >
-        {getButtonIcon()}
-        <span className="font-normal text-xs">{getButtonText()}</span>
-        {!available && (
-          <div
-            className={cn(
-              "text-xs font-light -ml-1",
-              configured ? "text-red-700" : "text-yellow-700",
-            )}
-          >
-            {`(backend ${configured ? "unavailable" : "unconfigured"})`}
-          </div>
-        )}
-      </Button>
-    </SidebarMenuButton>
+        <Button
+          ref={buttonRef}
+          onClick={handleSubmit}
+          className="w-full justify-start"
+          variant="ghost"
+          disabled={isButtonDisabled || !available}
+        >
+          {getButtonIcon()}
+          <span className="font-normal text-xs">{getButtonText()}</span>
+          {!available && (
+            <div
+              className={cn(
+                "text-xs font-light -ml-1",
+                configured ? "text-red-700" : "text-yellow-700",
+              )}
+            >
+              {`(backend ${configured ? "unavailable" : "unconfigured"})`}
+            </div>
+          )}
+        </Button>
+      </SidebarMenuButton>
+
+      <PopupNotification
+        isOpen={!!notification}
+        onClose={() => setNotification(null)}
+        triggerRef={buttonRef}
+        content={notification?.content}
+        type={notification?.type || "success"}
+        position="right"
+      />
+    </div>
   );
 };
 
