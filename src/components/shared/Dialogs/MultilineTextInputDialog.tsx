@@ -67,7 +67,7 @@ export const MultilineTextInputDialog = ({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder={placeholder}
-          className="min-h-32"
+          className="min-h-32 max-h-[80vh]"
         />
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>
