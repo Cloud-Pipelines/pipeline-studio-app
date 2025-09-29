@@ -10,8 +10,8 @@ import PipelineRunPage from "@/components/PipelineRun";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { Spinner } from "@/components/ui/spinner";
 import { faviconManager } from "@/favicon";
+import { useCurrentLevelExecutionData } from "@/hooks/useCurrentLevelExecutionData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { usePipelineRunData } from "@/hooks/usePipelineRunData";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
@@ -29,9 +29,16 @@ const PipelineRun = () => {
   const { configured, available, ready } = useBackend();
   const { id } = runDetailRoute.useParams() as RunDetailParams;
 
-  const { executionData, isLoading, error } = usePipelineRunData(id);
+  const {
+    details,
+    state,
+    isLoading: isLoadingCurrentLevelData,
+    error: currentLevelError,
+    rootDetails,
+  } = useCurrentLevelExecutionData(id || "");
 
-  const { details, state } = executionData || {};
+  const isLoading = isLoadingCurrentLevelData;
+  const error = currentLevelError;
 
   useEffect(() => {
     if (!details || !state) {
@@ -50,10 +57,10 @@ const PipelineRun = () => {
   }, [details, state]);
 
   useEffect(() => {
-    if (details?.task_spec.componentRef.spec) {
+    if (rootDetails?.task_spec.componentRef.spec) {
       const componentSpecWithExecutionIds = addExecutionIdToComponent(
-        details.task_spec.componentRef.spec as ComponentSpec,
-        details,
+        rootDetails.task_spec.componentRef.spec as ComponentSpec,
+        rootDetails,
       );
 
       setComponentSpec(componentSpecWithExecutionIds);
@@ -61,7 +68,7 @@ const PipelineRun = () => {
     return () => {
       clearComponentSpec();
     };
-  }, [details, setComponentSpec, clearComponentSpec]);
+  }, [rootDetails, setComponentSpec, clearComponentSpec]);
 
   useDocumentTitle({
     "/runs/$id": (params) =>
