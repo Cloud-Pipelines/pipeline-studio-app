@@ -33,4 +33,11 @@ export const ExistingBetaFlags = {
       "Enable the in-app component editor for creating and editing Oasis components.",
     default: false,
   } as BetaFlag,
+
+  ["subgraph-navigation"]: {
+    name: "Subgraph Navigation",
+    description:
+      "⚠️ Experimental ⚠️ feature for viewing subgraphs. Navigate into nested pipeline components by double-clicking.",
+    default: false,
+  } as BetaFlag,
 };
