@@ -16,6 +16,7 @@ import type { ComponentType, DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
+import { BlockStack } from "@/components/ui/layout";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useComponentUploader from "@/hooks/useComponentUploader";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
@@ -24,6 +25,7 @@ import { useGhostNode } from "@/hooks/useGhostNode";
 import { useHintNode } from "@/hooks/useHintNode";
 import { useIOSelectionPersistence } from "@/hooks/useIOSelectionPersistence";
 import { useNodeCallbacks } from "@/hooks/useNodeCallbacks";
+import { useSubgraphKeyboardNavigation } from "@/hooks/useSubgraphKeyboardNavigation";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
@@ -50,6 +52,7 @@ import GhostNode from "./GhostNode/GhostNode";
 import HintNode from "./GhostNode/HintNode";
 import IONode from "./IONode/IONode";
 import SelectionToolbar from "./SelectionToolbar";
+import { SubgraphBreadcrumbs } from "./SubgraphBreadcrumbs/SubgraphBreadcrumbs";
 import TaskNode from "./TaskNode/TaskNode";
 import type { NodesAndEdges } from "./types";
 import { addAndConnectNode } from "./utils/addAndConnectNode";
@@ -102,6 +105,8 @@ const FlowCanvas = ({
   const initialCanvasLoaded = useRef(false);
 
   const { clearContent } = useContextPanel();
+
+  useSubgraphKeyboardNavigation();
   const { setReactFlowInstance: setReactFlowInstanceForOverlay } =
     useNodesOverlay();
   const {
@@ -861,7 +866,9 @@ const FlowCanvas = ({
   };
 
   return (
-    <>
+    <BlockStack gap="0" className="h-full w-full">
+      <SubgraphBreadcrumbs />
+
       <ReactFlow
         {...rest}
         nodes={allNodes}
@@ -905,6 +912,7 @@ const FlowCanvas = ({
         </NodeToolbar>
         {children}
       </ReactFlow>
+
       <ConfirmationDialog
         {...confirmationProps}
         onConfirm={() => confirmationHandlers?.onConfirm()}
@@ -916,7 +924,7 @@ const FlowCanvas = ({
         setClose={handleCancelUpload}
         handleImportComponent={handleImportComponent}
       />
-    </>
+    </BlockStack>
   );
 };
 
