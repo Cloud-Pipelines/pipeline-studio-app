@@ -24,6 +24,7 @@ import { useGhostNode } from "@/hooks/useGhostNode";
 import { useHintNode } from "@/hooks/useHintNode";
 import { useIOSelectionPersistence } from "@/hooks/useIOSelectionPersistence";
 import { useNodeCallbacks } from "@/hooks/useNodeCallbacks";
+import { useSubgraphKeyboardNavigation } from "@/hooks/useSubgraphKeyboardNavigation";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
@@ -50,6 +51,7 @@ import GhostNode from "./GhostNode/GhostNode";
 import HintNode from "./GhostNode/HintNode";
 import IONode from "./IONode/IONode";
 import SelectionToolbar from "./SelectionToolbar";
+import { SubgraphBreadcrumbs } from "./SubgraphBreadcrumbs/SubgraphBreadcrumbs";
 import TaskNode from "./TaskNode/TaskNode";
 import type { NodesAndEdges } from "./types";
 import { addAndConnectNode } from "./utils/addAndConnectNode";
@@ -102,6 +104,8 @@ const FlowCanvas = ({
   const initialCanvasLoaded = useRef(false);
 
   const { clearContent } = useContextPanel();
+
+  useSubgraphKeyboardNavigation();
   const { setReactFlowInstance: setReactFlowInstanceForOverlay } =
     useNodesOverlay();
   const {
@@ -598,9 +602,9 @@ const FlowCanvas = ({
               const node = nodes.find((n) => n.id === change.id);
               return node
                 ? {
-                  ...node,
-                  position: { x: change.position.x, y: change.position.y },
-                }
+                    ...node,
+                    position: { x: change.position.x, y: change.position.y },
+                  }
                 : null;
             }
             return null;
@@ -862,50 +866,53 @@ const FlowCanvas = ({
   };
 
   return (
-    <>
-      <ReactFlow
-        {...rest}
-        nodes={allNodes}
-        edges={edges}
-        minZoom={0.01}
-        maxZoom={3}
-        onNodesChange={handleOnNodesChange}
-        onEdgesChange={onEdgesChange}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        onConnect={onConnect}
-        onConnectEnd={onConnectEnd}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
-        onPaneClick={onPaneClick}
-        onBeforeDelete={handleBeforeDelete}
-        onDelete={onElementsRemove}
-        onInit={onInit}
-        deleteKeyCode={["Delete", "Backspace"]}
-        onSelectionChange={handleSelectionChange}
-        onSelectionEnd={handleSelectionEnd}
-        nodesConnectable={readOnly ? false : nodesConnectable}
-        connectOnClick={!readOnly}
-        className={cn(
-          (rest.selectionOnDrag || (shiftKeyPressed && !isConnecting)) &&
-          "cursor-crosshair",
-        )}
-      >
-        <NodeToolbar
-          nodeId={selectedNodes.map((node) => node.id)}
-          isVisible={showToolbar}
-          offset={0}
-          align="end"
+    <div className="flex flex-col h-full w-full">
+      <SubgraphBreadcrumbs />
+      <div className="flex-1 transition-opacity duration-200 ease-in-out">
+        <ReactFlow
+          {...rest}
+          nodes={allNodes}
+          edges={edges}
+          minZoom={0.01}
+          maxZoom={3}
+          onNodesChange={handleOnNodesChange}
+          onEdgesChange={onEdgesChange}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          onConnect={onConnect}
+          onConnectEnd={onConnectEnd}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+          onPaneClick={onPaneClick}
+          onBeforeDelete={handleBeforeDelete}
+          onDelete={onElementsRemove}
+          onInit={onInit}
+          deleteKeyCode={["Delete", "Backspace"]}
+          onSelectionChange={handleSelectionChange}
+          onSelectionEnd={handleSelectionEnd}
+          nodesConnectable={readOnly ? false : nodesConnectable}
+          connectOnClick={!readOnly}
+          className={cn(
+            (rest.selectionOnDrag || (shiftKeyPressed && !isConnecting)) &&
+              "cursor-crosshair",
+          )}
         >
-          <SelectionToolbar
-            onDelete={!readOnly ? onRemoveNodes : undefined}
-            onDuplicate={!readOnly ? onDuplicateNodes : undefined}
-            onCopy={!readOnly ? undefined : onCopy}
-            onUpgrade={!readOnly && canUpgrade ? onUpgradeNodes : undefined}
-          />
-        </NodeToolbar>
-        {children}
-      </ReactFlow>
+          <NodeToolbar
+            nodeId={selectedNodes.map((node) => node.id)}
+            isVisible={showToolbar}
+            offset={0}
+            align="end"
+          >
+            <SelectionToolbar
+              onDelete={!readOnly ? onRemoveNodes : undefined}
+              onDuplicate={!readOnly ? onDuplicateNodes : undefined}
+              onCopy={!readOnly ? undefined : onCopy}
+              onUpgrade={!readOnly && canUpgrade ? onUpgradeNodes : undefined}
+            />
+          </NodeToolbar>
+          {children}
+        </ReactFlow>
+      </div>
       <ConfirmationDialog
         {...confirmationProps}
         onConfirm={() => confirmationHandlers?.onConfirm()}
@@ -917,7 +924,7 @@ const FlowCanvas = ({
         setClose={handleCancelUpload}
         handleImportComponent={handleImportComponent}
       />
-    </>
+    </div>
   );
 };
 

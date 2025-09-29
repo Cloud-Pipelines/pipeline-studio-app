@@ -48,6 +48,7 @@ interface ComponentSpecContextType {
   currentSubgraphPath: string[];
   navigateToSubgraph: (taskId: string) => void;
   navigateBack: () => void;
+  navigateToPath: (targetPath: string[]) => void;
   canNavigateBack: boolean;
 }
 
@@ -172,6 +173,10 @@ export const ComponentSpecProvider = ({
     setCurrentSubgraphPath((prev) => prev.slice(0, -1));
   }, []);
 
+  const navigateToPath = useCallback((targetPath: string[]) => {
+    setCurrentSubgraphPath(targetPath);
+  }, []);
+
   const canNavigateBack = currentSubgraphPath.length > 1;
 
   const value = useMemo(
@@ -193,6 +198,7 @@ export const ComponentSpecProvider = ({
       currentSubgraphPath,
       navigateToSubgraph,
       navigateBack,
+      navigateToPath,
       canNavigateBack,
     }),
     [
@@ -213,6 +219,7 @@ export const ComponentSpecProvider = ({
       currentSubgraphPath,
       navigateToSubgraph,
       navigateBack,
+      navigateToPath,
       canNavigateBack,
     ],
   );
