@@ -50,7 +50,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
     return null;
   }
 
-  const executionId = taskSpec.annotations?.executionId as string | undefined;
+  const executionId = taskSpec.annotations?.executionId as string;
 
   return (
     <div
