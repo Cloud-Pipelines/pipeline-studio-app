@@ -291,7 +291,7 @@ const TaskDetails = ({
             <TooltipContent>Copy YAML</TooltipContent>
           </Tooltip>
 
-          {!readOnly && actions}
+          {actions}
 
           {onDelete && !readOnly && (
             <Tooltip>
