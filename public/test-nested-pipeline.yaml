@@ -1,0 +1,379 @@
+name: Deep Nested Pipeline Test
+metadata:
+  annotations:
+    sdk: https://cloud-pipelines.net/pipeline-editor/
+    editor.flow-direction: left-to-right
+    description: "5-level deep nested pipeline for testing hierarchical IDs"
+inputs:
+  - name: InitialValue
+    type: String
+    default: "start"
+    annotations:
+      editor.position: '{"x":100,"y":100}'
+outputs:
+  - name: FinalResult
+    annotations:
+      editor.position: '{"x":900,"y":500}'
+implementation:
+  graph:
+    tasks:
+      # Level 0 -> Level 1
+      Level1Container:
+        componentRef:
+          name: Level 1 Deep Container
+          spec:
+            name: Level 1 Deep Container
+            inputs:
+              - name: Input
+                type: String
+                default: "level1"
+            outputs:
+              - name: Output
+            implementation:
+              graph:
+                tasks:
+                  # Level 1 -> Level 2
+                  Level2Container:
+                    componentRef:
+                      name: Level 2 Deep Container
+                      spec:
+                        name: Level 2 Deep Container
+                        inputs:
+                          - name: Input
+                            type: String
+                            default: "level2"
+                        outputs:
+                          - name: Output
+                        implementation:
+                          graph:
+                            tasks:
+                              # Level 2 -> Level 3
+                              Level3Container:
+                                componentRef:
+                                  name: Level 3 Deep Container
+                                  spec:
+                                    name: Level 3 Deep Container
+                                    inputs:
+                                      - name: Input
+                                        type: String
+                                        default: "level3"
+                                    outputs:
+                                      - name: Output
+                                    implementation:
+                                      graph:
+                                        tasks:
+                                          # Level 3 -> Level 4
+                                          Level4Container:
+                                            componentRef:
+                                              name: Level 4 Deep Container
+                                              spec:
+                                                name: Level 4 Deep Container
+                                                inputs:
+                                                  - name: Input
+                                                    type: String
+                                                    default: "level4"
+                                                outputs:
+                                                  - name: Output
+                                                implementation:
+                                                  graph:
+                                                    tasks:
+                                                      # Level 4 -> Level 5 (Deepest)
+                                                      Level5Container:
+                                                        componentRef:
+                                                          name: Level 5 Deep Container
+                                                          spec:
+                                                            name: Level 5 Deep Container
+                                                            inputs:
+                                                              - name: Input
+                                                                type: String
+                                                                default: "level5"
+                                                            outputs:
+                                                              - name: Output
+                                                            implementation:
+                                                              container:
+                                                                image: alpine
+                                                                command:
+                                                                  - sh
+                                                                  - '-c'
+                                                                  - |
+                                                                    echo "Reached level 5! Input: $0" > $1
+                                                                  - inputValue: Input
+                                                                  - outputPath: Output
+                                                        arguments:
+                                                          Input:
+                                                            graphInput:
+                                                              inputName: Input
+                                                        annotations:
+                                                          editor.position: '{"x":300,"y":200}'
+                                                      # Additional task at level 5
+                                                      Level5Processor:
+                                                        componentRef:
+                                                          name: Level 5 Processor
+                                                          spec:
+                                                            name: Level 5 Processor
+                                                            inputs:
+                                                              - name: Data
+                                                                type: String
+                                                            outputs:
+                                                              - name: ProcessedData
+                                                            implementation:
+                                                              container:
+                                                                image: alpine
+                                                                command:
+                                                                  - sh
+                                                                  - '-c'
+                                                                  - |
+                                                                    echo "Processing: $0" | tr '[:lower:]' '[:upper:]' > $1
+                                                                  - inputValue: Data
+                                                                  - outputPath: ProcessedData
+                                                        arguments:
+                                                          Data:
+                                                            taskOutput:
+                                                              taskId: Level5Container
+                                                              outputName: Output
+                                                        annotations:
+                                                          editor.position: '{"x":500,"y":200}'
+                                                    outputValues:
+                                                      Output:
+                                                        taskOutput:
+                                                          taskId: Level5Processor
+                                                          outputName: ProcessedData
+                                            arguments:
+                                              Input:
+                                                graphInput:
+                                                  inputName: Input
+                                            annotations:
+                                              editor.position: '{"x":300,"y":200}'
+                                          # Additional task at level 4
+                                          Level4Validator:
+                                            componentRef:
+                                              name: Level 4 Validator
+                                              spec:
+                                                name: Level 4 Validator
+                                                inputs:
+                                                  - name: ValidationData
+                                                    type: String
+                                                outputs:
+                                                  - name: IsValid
+                                                implementation:
+                                                  container:
+                                                    image: alpine
+                                                    command:
+                                                      - sh
+                                                      - '-c'
+                                                      - |
+                                                        if [ -n "$0" ]; then
+                                                          echo "true" > $1
+                                                        else
+                                                          echo "false" > $1
+                                                        fi
+                                                      - inputValue: ValidationData
+                                                      - outputPath: IsValid
+                                            arguments:
+                                              ValidationData:
+                                                taskOutput:
+                                                  taskId: Level4Container
+                                                  outputName: Output
+                                            annotations:
+                                              editor.position: '{"x":500,"y":200}'
+                                        outputValues:
+                                          Output:
+                                            taskOutput:
+                                              taskId: Level4Container
+                                              outputName: Output
+                                arguments:
+                                  Input:
+                                    graphInput:
+                                      inputName: Input
+                                annotations:
+                                  editor.position: '{"x":300,"y":200}'
+                              # Additional task at level 3
+                              Level3Logger:
+                                componentRef:
+                                  name: Level 3 Logger
+                                  spec:
+                                    name: Level 3 Logger
+                                    inputs:
+                                      - name: LogData
+                                        type: String
+                                    outputs:
+                                      - name: LoggedData
+                                    implementation:
+                                      container:
+                                        image: alpine
+                                        command:
+                                          - sh
+                                          - '-c'
+                                          - |
+                                            timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+                                            echo "[$timestamp] Level 3: $0" > $1
+                                          - inputValue: LogData
+                                          - outputPath: LoggedData
+                                arguments:
+                                  LogData:
+                                    taskOutput:
+                                      taskId: Level3Container
+                                      outputName: Output
+                                annotations:
+                                  editor.position: '{"x":500,"y":200}'
+                            outputValues:
+                              Output:
+                                taskOutput:
+                                  taskId: Level3Container
+                                  outputName: Output
+                        arguments:
+                          Input:
+                            graphInput:
+                              inputName: Input
+                        annotations:
+                          editor.position: '{"x":300,"y":200}'
+                  # Additional task at level 2
+                  Level2Transformer:
+                    componentRef:
+                      name: Level 2 Transformer
+                      spec:
+                        name: Level 2 Transformer
+                        inputs:
+                          - name: TransformData
+                            type: String
+                        outputs:
+                          - name: TransformedData
+                        implementation:
+                          container:
+                            image: alpine
+                            command:
+                              - sh
+                              - '-c'
+                              - |
+                                echo "Transformed: $0" | sed 's/level/LEVEL/g' > $1
+                              - inputValue: TransformData
+                              - outputPath: TransformedData
+                    arguments:
+                      TransformData:
+                        taskOutput:
+                          taskId: Level2Container
+                          outputName: Output
+                    annotations:
+                      editor.position: '{"x":500,"y":200}'
+                outputValues:
+                  Output:
+                    taskOutput:
+                      taskId: Level2Container
+                      outputName: Output
+        arguments:
+          Input:
+            graphInput:
+              inputName: InitialValue
+        annotations:
+          editor.position: '{"x":300,"y":200}'
+
+      # Root level simple task
+      RootProcessor:
+        componentRef:
+          name: Root Level Processor
+          spec:
+            name: Root Level Processor
+            inputs:
+              - name: ProcessInput
+                type: String
+            outputs:
+              - name: ProcessOutput
+            implementation:
+              container:
+                image: alpine
+                command:
+                  - sh
+                  - '-c'
+                  - |
+                    echo "Root processed: $0" > $1
+                  - inputValue: ProcessInput
+                  - outputPath: ProcessOutput
+        arguments:
+          ProcessInput:
+            taskOutput:
+              taskId: Level1Container
+              outputName: Output
+        annotations:
+          editor.position: '{"x":600,"y":200}'
+
+      # Another nested branch for complexity
+      ParallelBranch:
+        componentRef:
+          name: Parallel Processing Branch
+          spec:
+            name: Parallel Processing Branch
+            inputs:
+              - name: BranchInput
+                type: String
+            outputs:
+              - name: BranchOutput
+            implementation:
+              graph:
+                tasks:
+                  BranchLevel2:
+                    componentRef:
+                      name: Branch Level 2
+                      spec:
+                        name: Branch Level 2
+                        inputs:
+                          - name: Input
+                            type: String
+                        outputs:
+                          - name: Output
+                        implementation:
+                          graph:
+                            tasks:
+                              BranchLevel3:
+                                componentRef:
+                                  name: Branch Level 3
+                                  spec:
+                                    name: Branch Level 3
+                                    inputs:
+                                      - name: Input
+                                        type: String
+                                    outputs:
+                                      - name: Output
+                                    implementation:
+                                      container:
+                                        image: alpine
+                                        command:
+                                          - sh
+                                          - '-c'
+                                          - |
+                                            echo "Branch Level 3: $0" > $1
+                                          - inputValue: Input
+                                          - outputPath: Output
+                                arguments:
+                                  Input:
+                                    graphInput:
+                                      inputName: Input
+                                annotations:
+                                  editor.position: '{"x":300,"y":100}'
+                            outputValues:
+                              Output:
+                                taskOutput:
+                                  taskId: BranchLevel3
+                                  outputName: Output
+                    arguments:
+                      Input:
+                        graphInput:
+                          inputName: BranchInput
+                    annotations:
+                      editor.position: '{"x":200,"y":100}'
+                outputValues:
+                  BranchOutput:
+                    taskOutput:
+                      taskId: BranchLevel2
+                      outputName: Output
+        arguments:
+          BranchInput:
+            graphInput:
+              inputName: InitialValue
+        annotations:
+          editor.position: '{"x":300,"y":400}'
+
+    outputValues:
+      FinalResult:
+        taskOutput:
+          taskId: RootProcessor
+          outputName: ProcessOutput
