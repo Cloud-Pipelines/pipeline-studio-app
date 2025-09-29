@@ -56,7 +56,7 @@ vi.mock("@/services/executionService", () => ({
     isLoading: false,
     error: null,
     isFetching: false,
-    refetch: () => {},
+    refetch: () => { },
     enabled: false,
   }),
   countTaskStatuses: vi.fn(),
@@ -81,11 +81,11 @@ vi.mock("@/providers/ComponentSpecProvider", async (importOriginal) => {
 });
 
 vi.mock("@/hooks/useDocumentTitle", () => ({
-  useDocumentTitle: () => {},
+  useDocumentTitle: () => { },
 }));
 
 vi.mock("@/hooks/useFavicon", () => ({
-  useFavicon: () => {},
+  useFavicon: () => { },
 }));
 
 describe("<PipelineRun/>", () => {
@@ -180,7 +180,7 @@ describe("<PipelineRun/>", () => {
       isLoading: false,
       error: null,
       isFetching: false,
-      refetch: () => {},
+      refetch: () => { },
     });
   });
 
@@ -198,6 +198,20 @@ describe("<PipelineRun/>", () => {
         setComponentSpec: setComponentSpecSpy,
         clearComponentSpec: vi.fn(),
         setTaskStatusMap: vi.fn(),
+        currentSubgraphPath: ["root"],
+        navigateToSubgraph: vi.fn(),
+        navigateBack: vi.fn(),
+        navigateToPath: vi.fn(),
+        canNavigateBack: false,
+        taskStatusMap: new Map(),
+        graphSpec: {} as never,
+        isLoading: false,
+        isValid: true,
+        errors: [],
+        refetch: vi.fn(),
+        updateGraphSpec: vi.fn(),
+        saveComponentSpec: vi.fn(),
+        undoRedo: {} as never,
       });
 
       // act
@@ -242,6 +256,20 @@ describe("<PipelineRun/>", () => {
         setComponentSpec: setComponentSpecSpy,
         clearComponentSpec: vi.fn(),
         setTaskStatusMap: vi.fn(),
+        currentSubgraphPath: ["root"],
+        navigateToSubgraph: vi.fn(),
+        navigateBack: vi.fn(),
+        navigateToPath: vi.fn(),
+        canNavigateBack: false,
+        taskStatusMap: new Map(),
+        graphSpec: {} as never,
+        isLoading: false,
+        isValid: true,
+        errors: [],
+        refetch: vi.fn(),
+        updateGraphSpec: vi.fn(),
+        saveComponentSpec: vi.fn(),
+        undoRedo: {} as never,
       });
 
       const mockExecutionDetailsWithoutIds = {
@@ -257,7 +285,7 @@ describe("<PipelineRun/>", () => {
         isLoading: false,
         error: null,
         isFetching: false,
-        refetch: () => {},
+        refetch: () => { },
       });
 
       // act
