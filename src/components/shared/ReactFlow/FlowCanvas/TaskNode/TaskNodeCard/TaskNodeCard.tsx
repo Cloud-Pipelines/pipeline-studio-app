@@ -11,6 +11,7 @@ import { BlockStack } from "@/components/ui/layout";
 import { QuickTooltip } from "@/components/ui/tooltip";
 import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { getSubgraphDescription, isSubgraph } from "@/utils/subgraphUtils";
@@ -32,6 +33,7 @@ const TaskNodeCard = () => {
   const { registerNode } = useNodesOverlay();
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
+  const { navigateToSubgraph } = useComponentSpec();
 
   const isDragging = useStore((state) => {
     const thisNode = state.nodes.find((node) => node.id === taskNode.nodeId);
@@ -52,7 +54,8 @@ const TaskNodeCard = () => {
   const [expandedOutputs, setExpandedOutputs] = useState(false);
 
   const { name, state, callbacks, nodeId, taskSpec, taskId } = taskNode;
-  const { dimensions, selected, highlighted, isCustomComponent } = state;
+  const { dimensions, selected, highlighted, isCustomComponent, readOnly } =
+    state;
 
   // Subgraph detection
   const isSubgraphNode = useMemo(() => isSubgraph(taskSpec), [taskSpec]);
@@ -94,38 +97,64 @@ const TaskNodeCard = () => {
     }
   }, []);
 
-  const taskConfigMarkup = useMemo(
-    () => (
-      <TaskConfiguration
-        taskNode={taskNode}
-        key={nodeId}
-        actions={[
-          {
-            children: (
-              <div className="flex items-center gap-2">
-                <CopyIcon />
-              </div>
-            ),
-            variant: "secondary",
-            tooltip: "Duplicate Task",
-            onClick: callbacks.onDuplicate,
-          },
-          {
-            children: (
-              <div className="flex items-center gap-2">
-                <CircleFadingArrowUp />
-              </div>
-            ),
-            variant: "secondary",
-            className: cn(isCustomComponent && "hidden"),
-            tooltip: "Update Task from Source URL",
-            onClick: callbacks.onUpgrade,
-          },
-        ]}
-      />
-    ),
-    [nodeId, callbacks.onDuplicate, callbacks.onUpgrade, isCustomComponent],
-  );
+  const taskConfigMarkup = useMemo(() => {
+    const actions = [];
+
+    // Add editing actions only in non-readOnly mode
+    if (!readOnly) {
+      actions.push(
+        {
+          children: (
+            <div className="flex items-center gap-2">
+              <CopyIcon />
+            </div>
+          ),
+          variant: "secondary" as const,
+          tooltip: "Duplicate Task",
+          onClick: callbacks.onDuplicate,
+        },
+        {
+          children: (
+            <div className="flex items-center gap-2">
+              <CircleFadingArrowUp />
+            </div>
+          ),
+          variant: "secondary" as const,
+          className: cn(isCustomComponent && "hidden"),
+          tooltip: "Update Task from Source URL",
+          onClick: callbacks.onUpgrade,
+        },
+      );
+    }
+
+    // Add subgraph navigation action if this is a subgraph node (always show, even in readOnly)
+    if (isSubgraphNode && taskId) {
+      actions.push({
+        children: (
+          <div className="flex items-center gap-2">
+            <Icon name="Workflow" size="sm" />
+          </div>
+        ),
+        variant: "secondary" as const,
+        tooltip: `Enter Subgraph: ${subgraphDescription}`,
+        onClick: () => navigateToSubgraph(taskId),
+      });
+    }
+
+    return (
+      <TaskConfiguration taskNode={taskNode} key={nodeId} actions={actions} />
+    );
+  }, [
+    nodeId,
+    readOnly,
+    callbacks.onDuplicate,
+    callbacks.onUpgrade,
+    isCustomComponent,
+    isSubgraphNode,
+    taskId,
+    subgraphDescription,
+    navigateToSubgraph,
+  ]);
 
   const handleInputSectionClick = useCallback(() => {
     setExpandedInputs((prev) => !prev);
