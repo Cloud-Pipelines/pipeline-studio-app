@@ -1,4 +1,4 @@
-import { icons, PackagePlus, X } from "lucide-react";
+import { PackagePlus, X } from "lucide-react";
 import { Upload } from "lucide-react";
 import {
   type ChangeEvent,
@@ -7,6 +7,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { FaPython } from "react-icons/fa";
+import { SiGnubash, SiRuby } from "react-icons/si";
+import { TbBrandJavascript } from "react-icons/tb";
 
 import { ComponentEditorDialog } from "@/components/shared/ComponentEditor/ComponentEditorDialog";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
@@ -21,7 +24,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
@@ -39,29 +41,34 @@ enum TabType {
 
 type Template = {
   name: string;
-  icon?: keyof typeof icons;
+  icon?: ReactNode;
   color?: string;
   templateName: string;
 };
 
 const SUPPORTED_TEMPLATES: Template[] = [
   { name: "Empty", templateName: "empty" },
-  { name: "Ruby", icon: "Gem", color: "text-red-400", templateName: "ruby" },
+  {
+    name: "Ruby",
+    icon: <SiRuby size={48} className="text-red-400 scale-300" />,
+    color: "text-red-400",
+    templateName: "ruby",
+  },
   {
     name: "Python",
-    icon: "Worm",
+    icon: <FaPython size={48} className="text-green-400 scale-300" />,
     color: "text-green-400",
     templateName: "python",
   },
   {
     name: "JavaScript",
-    icon: "Coffee",
+    icon: <TbBrandJavascript size={48} className="text-yellow-400 scale-300" />,
     color: "text-yellow-400",
     templateName: "javascript",
   },
   {
     name: "Bash",
-    icon: "Terminal",
+    icon: <SiGnubash size={48} className="text-gray-400 scale-300" />,
     color: "text-gray-400",
     templateName: "bash",
   },
@@ -326,16 +333,7 @@ const ImportComponent = ({
                               blockAlign="center"
                               className="bg-gray-200 rounded-md p-4 mb-2 w-full h-24"
                             >
-                              {!!template.icon && (
-                                <Icon
-                                  name={template.icon}
-                                  size="fill"
-                                  className={cn(
-                                    "text-foreground",
-                                    template.color,
-                                  )}
-                                />
-                              )}
+                              {!!template.icon && template.icon}
                             </InlineStack>
                             <Paragraph>{template.name}</Paragraph>
                           </BlockStack>
