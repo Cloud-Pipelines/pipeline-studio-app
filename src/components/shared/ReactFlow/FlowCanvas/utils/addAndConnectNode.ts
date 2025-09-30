@@ -118,7 +118,7 @@ export function addAndConnectNode({
     }
 
     const inputId = inputNameToInputId(handleName);
-    targetHandleId = nodeManager.getNodeId(inputId, "input");
+    targetHandleId = nodeManager.getNodeId(inputId, "taskInput");
   } else if (toHandleType === "output") {
     const handleName = componentRef.spec?.outputs?.find(
       (io) => io.type === connectionType,
@@ -128,7 +128,7 @@ export function addAndConnectNode({
     }
 
     const outputId = outputNameToOutputId(handleName);
-    targetHandleId = nodeManager.getNodeId(outputId, "output");
+    targetHandleId = nodeManager.getNodeId(outputId, "taskOutput");
   }
 
   // 4. Build a Connection object and use handleConnection to add the edge
