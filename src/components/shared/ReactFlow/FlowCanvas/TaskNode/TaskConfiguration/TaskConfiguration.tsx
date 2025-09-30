@@ -33,9 +33,14 @@ export interface ButtonPropsWithTooltip extends ButtonProps {
 interface TaskConfigurationProps {
   taskNode: TaskNodeContextType;
   actions?: ButtonPropsWithTooltip[];
+  isSubgraphNode?: boolean;
 }
 
-const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
+const TaskConfiguration = ({
+  taskNode,
+  actions,
+  isSubgraphNode,
+}: TaskConfigurationProps) => {
   const { name, taskSpec, taskId, state, callbacks } = taskNode;
 
   const { readOnly, runStatus } = state;
@@ -51,6 +56,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
   }
 
   const executionId = taskSpec.annotations?.executionId as string | undefined;
+  const defaultTab = isSubgraphNode ? "details" : "io";
 
   return (
     <div
@@ -63,7 +69,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
       </div>
 
       <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4 h-full">
-        <Tabs defaultValue="io" className="h-full">
+        <Tabs defaultValue={defaultTab} className="h-full">
           <TabsList className="mb-2">
             <TabsTrigger value="io" className="flex-1">
               {readOnly ? (

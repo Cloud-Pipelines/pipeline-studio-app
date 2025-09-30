@@ -152,7 +152,6 @@ const PipelineRunContent = ({
   details?: GetExecutionInfoResponse;
   state?: GetGraphExecutionStateResponse;
 }) => {
-  // Use the hook to handle dynamic execution data fetching for the current level
   useCurrentLevelExecutionData(rootExecutionId, details, state);
 
   return <PipelineRunPage rootExecutionId={rootExecutionId} />;
