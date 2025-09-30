@@ -2,6 +2,7 @@ import { useConnection } from "@xyflow/react";
 import { AlertCircle } from "lucide-react";
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
 
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { cn } from "@/lib/utils";
 import { useForcedSearchContext } from "@/providers/ComponentLibraryProvider/ForcedSearchProvider";
 import { isValidFilterRequest } from "@/providers/ComponentLibraryProvider/types";
@@ -10,7 +11,7 @@ import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
 import type { InputSpec } from "@/utils/componentSpec";
 import { ComponentSearchFilter } from "@/utils/constants";
-import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
+import { inputNameToInputId } from "@/utils/nodes/nodeIdUtils";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
 
 import { InputHandle } from "./Handles";
@@ -27,6 +28,7 @@ export function TaskNodeInputs({
   expanded,
   onBackgroundClick,
 }: TaskNodeInputsProps) {
+  const { getInputNodeId } = useNodeManager();
   const { inputs, taskSpec, state, select } = useTaskNode();
   const { graphSpec } = useComponentSpec();
   const {
@@ -145,7 +147,7 @@ export function TaskNodeInputs({
     }
 
     const input = inputs.find(
-      (i) => inputNameToNodeId(i.name) === fromHandle?.id,
+      (i) => getInputNodeId(inputNameToInputId(i.name)) === fromHandle?.id,
     );
 
     if (!input) return;
