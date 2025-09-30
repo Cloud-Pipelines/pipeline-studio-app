@@ -1,5 +1,5 @@
 import { Handle, Position } from "@xyflow/react";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 
 import { InputValueEditor } from "@/components/Editor/IOEditor/InputValueEditor";
 import { OutputNameEditor } from "@/components/Editor/IOEditor/OutputNameEditor";
@@ -12,6 +12,14 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import type { IONodeData } from "@/types/nodes";
 import type { InputSpec, TypeSpecType } from "@/utils/componentSpec";
+import { ENABLE_DEBUG_MODE } from "@/utils/constants";
+import {
+  inputIdToNodeId,
+  inputNameToInputId,
+  outputIdToNodeId,
+  outputNameToOutputId,
+} from "@/utils/nodes/conversions";
+import { sentenceCase } from "@/utils/string";
 
 interface IONodeProps {
   type: "input" | "output";
@@ -50,6 +58,22 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     () => componentSpec.outputs?.find((output) => output.name === spec.name),
     [componentSpec.outputs, spec.name],
   );
+
+  const nodeId = isInput
+    ? inputIdToNodeId(inputNameToInputId(spec.name))
+    : outputIdToNodeId(outputNameToOutputId(spec.name));
+
+  const nodeHandleId = `${nodeId}_handle`;
+
+  const handleHandleClick = useCallback(() => {
+    if (ENABLE_DEBUG_MODE) {
+      console.log(`${sentenceCase(type)} Node Handle clicked:`, {
+        name: spec.name,
+        nodeId,
+        handleId: nodeHandleId,
+      });
+    }
+  }, [spec, nodeId, nodeHandleId]);
 
   useEffect(() => {
     if (selected) {
@@ -112,6 +136,11 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     <Card className={cn("border-2 max-w-[300px] p-0", borderColor)}>
       <CardHeader className="px-2 py-2.5">
         <CardTitle className="break-words">{spec.name}</CardTitle>
+        {ENABLE_DEBUG_MODE && (
+          <Paragraph size="xs" tone="subdued">
+            Node Id: {nodeId}
+          </Paragraph>
+        )}
       </CardHeader>
       <CardContent className="p-2 max-w-[250px]">
         <BlockStack gap="2">
@@ -150,6 +179,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
           type={handleType}
           position={handlePosition}
           className={cn(handleDefaultClassName, handleClassName)}
+          onClick={handleHandleClick}
         />
       </CardContent>
     </Card>

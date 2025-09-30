@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
+import { ENABLE_DEBUG_MODE } from "@/utils/constants";
 import { getSubgraphDescription, isSubgraph } from "@/utils/subgraphUtils";
 
 import {
@@ -209,34 +210,49 @@ const TaskNodeCard = () => {
       }}
       ref={nodeRef}
     >
-      <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
+      <CardHeader className="border-b border-slate-200 px-2 py-2.5 items-start">
         <BlockStack>
-          <InlineStack gap="2" blockAlign="center">
-            {isSubgraphNode && isSubgraphNavigationEnabled && (
-              <QuickTooltip content={`Subgraph: ${subgraphDescription}`}>
-                <Icon name="Workflow" size="sm" className="text-blue-600" />
-              </QuickTooltip>
-            )}
-            <CardTitle className="break-words text-left text-xs text-slate-900">
-              {name}
-            </CardTitle>
-          </InlineStack>
-          {taskId &&
-            taskId !== name &&
-            !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
-              <Text size="xs" tone="subdued" className="font-light">
-                {taskId}
-              </Text>
-            )}
-        </BlockStack>
+          <BlockStack>
+            <InlineStack
+              gap="2"
+              align="space-between"
+              blockAlign="start"
+              wrap="nowrap"
+              className="w-full"
+            >
+              <InlineStack gap="2" blockAlign="center">
+                {isSubgraphNode && isSubgraphNavigationEnabled && (
+                  <QuickTooltip content={`Subgraph: ${subgraphDescription}`}>
+                    <Icon name="Workflow" size="sm" className="text-blue-600" />
+                  </QuickTooltip>
+                )}
+                <CardTitle className="break-words text-left text-xs text-slate-900">
+                  {name}
+                </CardTitle>
+              </InlineStack>
+              {isRemoteComponentLibrarySearchEnabled ? (
+                <PublishedComponentBadge componentRef={taskSpec.componentRef}>
+                  {digestMarkup}
+                </PublishedComponentBadge>
+              ) : (
+                digestMarkup
+              )}
+            </InlineStack>
+            {taskId &&
+              taskId !== name &&
+              !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
+                <Text size="xs" tone="subdued" className="font-light">
+                  {taskId}
+                </Text>
+              )}
+          </BlockStack>
 
-        {isRemoteComponentLibrarySearchEnabled ? (
-          <PublishedComponentBadge componentRef={taskSpec.componentRef}>
-            {digestMarkup}
-          </PublishedComponentBadge>
-        ) : (
-          digestMarkup
-        )}
+          {ENABLE_DEBUG_MODE && (
+            <Text size="xs" tone="subdued">
+              Node Id: {nodeId}
+            </Text>
+          )}
+        </BlockStack>
       </CardHeader>
       <CardContent className="p-2 flex flex-col gap-2">
         <div
