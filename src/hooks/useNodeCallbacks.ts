@@ -13,6 +13,11 @@ import type { Annotations } from "@/types/annotations";
 import type { NodeAndTaskId } from "@/types/taskNode";
 import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
 import type { ArgumentType } from "@/utils/componentSpec";
+import { isGraphImplementation } from "@/utils/componentSpec";
+import {
+  getSubgraphComponentSpec,
+  updateSubgraphInComponentSpec,
+} from "@/utils/subgraphUtils";
 
 import type { TriggerDialogProps } from "./useConfirmationDialog";
 import useToastNotification from "./useToastNotification";
@@ -34,8 +39,13 @@ export const useNodeCallbacks = ({
   const notify = useToastNotification();
   const reactFlowInstance = useReactFlow();
 
-  const { graphSpec, updateGraphSpec, componentSpec, setComponentSpec } =
-    useComponentSpec();
+  const {
+    graphSpec,
+    updateGraphSpec,
+    componentSpec,
+    setComponentSpec,
+    currentSubgraphPath,
+  } = useComponentSpec();
 
   // Workaround for nodes state being stale in task node callbacks
   const getNodeById = useCallback(
@@ -136,20 +146,45 @@ export const useNodeCallbacks = ({
         return;
       }
 
-      const { updatedComponentSpec, newNodes, updatedNodes } = duplicateNodes(
+      // Get the current subgraph's component spec for duplication
+      const currentSubgraphSpec = getSubgraphComponentSpec(
         componentSpec,
-        [node],
-        { selected },
+        currentSubgraphPath,
       );
 
-      setComponentSpec(updatedComponentSpec);
+      const {
+        updatedComponentSpec: updatedSubgraphSpec,
+        newNodes,
+        updatedNodes,
+      } = duplicateNodes(currentSubgraphSpec, [node], { selected });
+
+      // If we're at root, update directly
+      if (currentSubgraphPath.length <= 1) {
+        setComponentSpec(updatedSubgraphSpec);
+      } else {
+        // Otherwise, update the nested subgraph within the main component spec
+        if (isGraphImplementation(updatedSubgraphSpec.implementation)) {
+          const newComponentSpec = updateSubgraphInComponentSpec(
+            componentSpec,
+            currentSubgraphPath,
+            updatedSubgraphSpec.implementation.graph,
+          );
+          setComponentSpec(newComponentSpec);
+        }
+      }
 
       updateOrAddNodes({
         updatedNodes,
         newNodes,
       });
     },
-    [componentSpec, getNodeById, setComponentSpec, updateOrAddNodes],
+    [
+      componentSpec,
+      currentSubgraphPath,
+      getNodeById,
+      setComponentSpec,
+      updateOrAddNodes,
+    ],
   );
 
   const onUpgrade = useCallback(
