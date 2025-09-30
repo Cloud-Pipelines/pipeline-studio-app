@@ -1,5 +1,5 @@
 import { Handle, Position } from "@xyflow/react";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 
 import { InputValueEditor } from "@/components/Editor/IOEditor/InputValueEditor";
 import { OutputNameEditor } from "@/components/Editor/IOEditor/OutputNameEditor";
@@ -7,11 +7,17 @@ import { getOutputConnectedDetails } from "@/components/Editor/utils/getOutputCo
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Paragraph } from "@/components/ui/typography";
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import type { IONodeData } from "@/types/nodes";
 import type { InputSpec, TypeSpecType } from "@/utils/componentSpec";
+import { ENABLE_DEBUG_MODE } from "@/utils/constants";
+import {
+  inputNameToInputId,
+  outputNameToOutputId,
+} from "@/utils/nodes/nodeIdUtils";
 
 interface IONodeProps {
   type: "input" | "output";
@@ -21,6 +27,7 @@ interface IONodeProps {
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
+  const { getInputNodeId, getOutputNodeId } = useNodeManager();
   const { graphSpec, componentSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
@@ -50,6 +57,24 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     () => componentSpec.outputs?.find((output) => output.name === spec.name),
     [componentSpec.outputs, spec.name],
   );
+
+  const nodeId = isInput
+    ? getInputNodeId(inputNameToInputId(spec.name))
+    : getOutputNodeId(outputNameToOutputId(spec.name));
+
+  const nodeHandleId = isInput
+    ? getInputNodeId(inputNameToInputId(spec.name + "handle"))
+    : getOutputNodeId(outputNameToOutputId(spec.name + "handle"));
+
+  const handleHandleClick = useCallback(() => {
+    if (ENABLE_DEBUG_MODE) {
+      console.log(`${isInput ? "Input" : "Output"} Handle clicked:`, {
+        name: isInput ? input?.name : output?.name,
+        nodeId,
+        handleId: nodeHandleId,
+      });
+    }
+  }, [isInput, input, output, nodeId, nodeHandleId]);
 
   useEffect(() => {
     if (selected) {
@@ -112,6 +137,11 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     <Card className={cn("border-2 max-w-[300px] p-0", borderColor)}>
       <CardHeader className="px-2 py-2.5">
         <CardTitle className="break-words">{spec.name}</CardTitle>
+        {ENABLE_DEBUG_MODE && (
+          <Paragraph size="xs" tone="subdued">
+            Node Id: {nodeId}
+          </Paragraph>
+        )}
       </CardHeader>
       <CardContent className="p-2 max-w-[250px]">
         <BlockStack gap="2">
@@ -147,9 +177,11 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
           </InlineStack>
         </BlockStack>
         <Handle
+          id={nodeHandleId}
           type={handleType}
           position={handlePosition}
           className={cn(handleDefaultClassName, handleClassName)}
+          onClick={handleHandleClick}
         />
       </CardContent>
     </Card>
