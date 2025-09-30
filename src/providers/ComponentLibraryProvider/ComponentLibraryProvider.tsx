@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type ReactNode,
   useCallback,
@@ -89,18 +89,6 @@ const ComponentLibraryContext =
     "ComponentLibraryProvider",
   );
 
-const componentLibraries = new Map<AvailableComponentLibraries, Library>([
-  ["published_components", new PublishedComponentsLibrary()],
-]);
-
-function getComponentLibraryObject(libraryName: AvailableComponentLibraries) {
-  if (!componentLibraries.has(libraryName)) {
-    throw new Error(`Component library "${libraryName}" is not supported.`);
-  }
-
-  return componentLibraries.get(libraryName) as Library;
-}
-
 export const ComponentLibraryProvider = ({
   children,
 }: {
@@ -108,6 +96,26 @@ export const ComponentLibraryProvider = ({
 }) => {
   const { graphSpec } = useComponentSpec();
   const { currentSearchFilter } = useForcedSearchContext();
+  const queryClient = useQueryClient();
+
+  const componentLibraries = useMemo(
+    () =>
+      new Map<AvailableComponentLibraries, Library>([
+        ["published_components", new PublishedComponentsLibrary(queryClient)],
+      ]),
+    [queryClient],
+  );
+
+  const getComponentLibraryObject = useCallback(
+    (libraryName: AvailableComponentLibraries) => {
+      if (!componentLibraries.has(libraryName)) {
+        throw new Error(`Component library "${libraryName}" is not supported.`);
+      }
+
+      return componentLibraries.get(libraryName) as Library;
+    },
+    [componentLibraries],
+  );
 
   const [componentLibrary, setComponentLibrary] = useState<ComponentLibrary>();
   const [userComponentsFolder, setUserComponentsFolder] =
