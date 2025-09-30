@@ -6,12 +6,13 @@ import { PublishedComponentBadge } from "@/components/shared/ManageComponent/Pub
 import { trimDigest } from "@/components/shared/ManageComponent/utils/digest";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BlockStack } from "@/components/ui/layout";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { QuickTooltip } from "@/components/ui/tooltip";
 import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
+import { ENABLE_DEBUG_MODE } from "@/utils/constants";
 
 import {
   type NotifyMessage,
@@ -172,27 +173,42 @@ const TaskNodeCard = () => {
       }}
       ref={nodeRef}
     >
-      <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
+      <CardHeader className="border-b border-slate-200 px-2 py-2.5 items-start">
         <BlockStack>
-          <CardTitle className="break-words text-left text-xs text-slate-900">
-            {name}
-          </CardTitle>
-          {taskId &&
-            taskId !== name &&
-            !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
-              <Text size="xs" tone="subdued" className="font-light">
-                {taskId}
-              </Text>
-            )}
-        </BlockStack>
+          <InlineStack
+            align="space-between"
+            blockAlign="start"
+            wrap="nowrap"
+            className="w-full"
+          >
+            <BlockStack>
+              <CardTitle className="break-words text-left text-xs text-slate-900">
+                {name}
+              </CardTitle>
+              {taskId &&
+                taskId !== name &&
+                !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
+                  <Text size="xs" tone="subdued" className="font-light">
+                    {taskId}
+                  </Text>
+                )}
+            </BlockStack>
 
-        {isRemoteComponentLibrarySearchEnabled ? (
-          <PublishedComponentBadge componentRef={taskSpec.componentRef}>
-            {digestMarkup}
-          </PublishedComponentBadge>
-        ) : (
-          digestMarkup
-        )}
+            {isRemoteComponentLibrarySearchEnabled ? (
+              <PublishedComponentBadge componentRef={taskSpec.componentRef}>
+                {digestMarkup}
+              </PublishedComponentBadge>
+            ) : (
+              digestMarkup
+            )}
+          </InlineStack>
+
+          {ENABLE_DEBUG_MODE && (
+            <Text size="xs" tone="subdued">
+              Node Id: {nodeId}
+            </Text>
+          )}
+        </BlockStack>
       </CardHeader>
       <CardContent className="p-2 flex flex-col gap-2">
         <div

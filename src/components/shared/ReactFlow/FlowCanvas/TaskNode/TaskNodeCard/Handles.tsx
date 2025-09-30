@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
+import { ENABLE_DEBUG_MODE } from "@/utils/constants";
 
 type InputHandleProps = {
   input: InputSpec;
@@ -32,7 +33,7 @@ export const InputHandle = ({
   onLabelClick,
   onHandleSelectionChange,
 }: InputHandleProps) => {
-  const { nodeId, state } = useTaskNode();
+  const { nodeId, state, name } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
   const toHandle = useConnection((connection) => connection.toHandle?.id);
@@ -54,8 +55,17 @@ export const InputHandle = ({
     (e: ReactMouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
       setSelected(!selected);
+
+      if (ENABLE_DEBUG_MODE) {
+        console.log("Input Handle clicked:", {
+          name: input.name,
+          handleId,
+          nodeId,
+          taskName: name,
+        });
+      }
     },
-    [selected],
+    [selected, name, input, handleId, nodeId],
   );
 
   const handleLabelClick = useCallback(
@@ -218,7 +228,7 @@ export const OutputHandle = ({
   onLabelClick,
   onHandleSelectionChange,
 }: OutputHandleProps) => {
-  const { nodeId, state } = useTaskNode();
+  const { nodeId, state, name } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
   const toHandle = useConnection((connection) => connection.toHandle?.id);
@@ -237,8 +247,17 @@ export const OutputHandle = ({
     (e: ReactMouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
       setSelected(!selected);
+
+      if (ENABLE_DEBUG_MODE) {
+        console.log("Output Handle clicked:", {
+          name: output.name,
+          handleId,
+          nodeId,
+          taskName: name,
+        });
+      }
     },
-    [selected],
+    [selected, output, handleId, nodeId, name],
   );
 
   const handleLabelClick = useCallback(
