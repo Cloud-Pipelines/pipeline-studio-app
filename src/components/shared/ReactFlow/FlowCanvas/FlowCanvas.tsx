@@ -618,17 +618,64 @@ const FlowCanvas = ({
           .filter(Boolean) as Node[];
 
         if (updatedNodes.length > 0) {
-          const updatedComponentSpec = updateNodePositions(
-            updatedNodes,
+          // Get the current subgraph's spec
+          const currentSpec = getSubgraphComponentSpec(
             componentSpec,
+            currentSubgraphPath,
           );
-          setComponentSpec(updatedComponentSpec);
+
+          // Update positions in the current subgraph
+          const updatedSubgraphSpec = updateNodePositions(
+            updatedNodes,
+            currentSpec,
+          );
+
+          // If we're at root, update directly
+          if (currentSubgraphPath.length <= 1) {
+            setComponentSpec(updatedSubgraphSpec);
+          } else {
+            // Otherwise, we need to merge the entire updated subgraph spec (not just the graph)
+            // because inputs and outputs may have been updated too
+            // We'll use updateSubgraphInComponentSpec but need to also handle inputs/outputs
+            const newComponentSpec = JSON.parse(
+              JSON.stringify(componentSpec),
+            ) as ComponentSpec;
+
+            // Navigate to the parent subgraph and replace the task's spec
+            let currentSpec = newComponentSpec;
+            for (let i = 1; i < currentSubgraphPath.length; i++) {
+              const taskId = currentSubgraphPath[i];
+              if (
+                "graph" in currentSpec.implementation &&
+                currentSpec.implementation.graph
+              ) {
+                const task = currentSpec.implementation.graph.tasks[taskId];
+                if (task && task.componentRef.spec) {
+                  if (i === currentSubgraphPath.length - 1) {
+                    // This is the target subgraph, replace its spec
+                    task.componentRef.spec = updatedSubgraphSpec;
+                  } else {
+                    // Navigate deeper
+                    currentSpec = task.componentRef.spec;
+                  }
+                }
+              }
+            }
+
+            setComponentSpec(newComponentSpec);
+          }
         }
       }
 
       onNodesChange(changes);
     },
-    [nodes, componentSpec, setComponentSpec, onNodesChange],
+    [
+      nodes,
+      componentSpec,
+      currentSubgraphPath,
+      setComponentSpec,
+      onNodesChange,
+    ],
   );
 
   const handleBeforeDelete = async (params: NodesAndEdges) => {
