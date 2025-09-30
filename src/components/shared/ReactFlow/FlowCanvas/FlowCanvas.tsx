@@ -156,34 +156,6 @@ const FlowCanvas = ({
 
   const latestFlowPosRef = useRef<{ x: number; y: number } | null>(null);
 
-  /* Migrate Node Ids */
-  const [migrationCompleted, setMigrationCompleted] = useState(false);
-
-  useEffect(() => {
-    if (!initialCanvasLoaded.current || migrationCompleted) return;
-
-    const needsMigration = nodes.some(
-      (node) =>
-        !nodeManager.isManaged(node.id) &&
-        (node.id.startsWith("task_") ||
-          node.id.startsWith("input_") ||
-          node.id.startsWith("output_")),
-    );
-
-    if (needsMigration) {
-      console.log("Migrating legacy node IDs to stable IDs...");
-      const { updatedNodes, migrationMap } =
-        nodeManager.migrateExistingNodes(nodes);
-
-      setNodes(updatedNodes);
-      setMigrationCompleted(true);
-
-      console.log("Migration completed:", migrationMap);
-    } else {
-      setMigrationCompleted(true);
-    }
-  }, [nodes, nodeManager, migrationCompleted]);
-
   const [showToolbar, setShowToolbar] = useState(false);
   const [replaceTarget, setReplaceTarget] = useState<Node | null>(null);
   const [shiftKeyPressed, setShiftKeyPressed] = useState(false);
@@ -315,15 +287,23 @@ const FlowCanvas = ({
       let updatedComponentSpec = { ...componentSpec };
 
       for (const edge of params.edges) {
-        updatedComponentSpec = removeEdge(edge, updatedComponentSpec);
+        updatedComponentSpec = removeEdge(
+          edge,
+          updatedComponentSpec,
+          nodeManager,
+        );
       }
       for (const node of params.nodes) {
-        updatedComponentSpec = removeNode(node, updatedComponentSpec);
+        updatedComponentSpec = removeNode(
+          node,
+          updatedComponentSpec,
+          nodeManager,
+        );
       }
 
       setComponentSpec(updatedComponentSpec);
     },
-    [componentSpec, setComponentSpec],
+    [componentSpec, nodeManager, setComponentSpec],
   );
 
   const nodeCallbacks = useNodeCallbacks({
@@ -346,7 +326,11 @@ const FlowCanvas = ({
     (connection: Connection) => {
       if (connection.source === connection.target) return;
 
-      const updatedGraphSpec = handleConnection(graphSpec, connection);
+      const updatedGraphSpec = handleConnection(
+        graphSpec,
+        connection,
+        nodeManager,
+      );
       updateGraphSpec(updatedGraphSpec);
     },
     [graphSpec, handleConnection, updateGraphSpec],
@@ -386,7 +370,11 @@ const FlowCanvas = ({
         );
 
       if (existingInputEdge) {
-        newComponentSpec = removeEdge(existingInputEdge, newComponentSpec);
+        newComponentSpec = removeEdge(
+          existingInputEdge,
+          newComponentSpec,
+          nodeManager,
+        );
       }
 
       const updatedComponentSpec = addAndConnectNode({
@@ -394,11 +382,18 @@ const FlowCanvas = ({
         fromHandle,
         position,
         componentSpec: newComponentSpec,
+        nodeManager,
       });
 
       setComponentSpec(updatedComponentSpec);
     },
-    [reactFlowInstance, componentSpec, setComponentSpec, updateOrAddNodes],
+    [
+      reactFlowInstance,
+      componentSpec,
+      nodeManager,
+      setComponentSpec,
+      updateOrAddNodes,
+    ],
   );
 
   useEffect(() => {
@@ -645,6 +640,7 @@ const FlowCanvas = ({
           const updatedComponentSpec = updateNodePositions(
             updatedNodes,
             componentSpec,
+            nodeManager,
           );
           setComponentSpec(updatedComponentSpec);
         }
@@ -652,7 +648,7 @@ const FlowCanvas = ({
 
       onNodesChange(changes);
     },
-    [nodes, componentSpec, setComponentSpec, onNodesChange],
+    [nodes, componentSpec, nodeManager, setComponentSpec, onNodesChange],
   );
 
   const handleBeforeDelete = async (params: NodesAndEdges) => {
