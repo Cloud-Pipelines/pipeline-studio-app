@@ -9,6 +9,7 @@ import {
   type OutputSpec,
   type TaskSpec,
 } from "@/utils/componentSpec";
+import { taskNameToTaskId } from "@/utils/nodes/conversions";
 import {
   getUniqueInputName,
   getUniqueOutputName,
@@ -61,10 +62,12 @@ const addTask = (
       arguments: taskArguments ?? {},
     };
 
-    const taskId = getUniqueTaskName(
+    const uniqueTaskName = getUniqueTaskName(
       graphSpec,
       taskSpec.componentRef.spec?.name ?? "Task",
     );
+
+    const taskId = taskNameToTaskId(uniqueTaskName);
 
     const newGraphSpec: GraphSpec = {
       ...graphSpec,
@@ -78,9 +81,9 @@ const addTask = (
   }
 
   if (taskType === "input") {
-    const inputId = getUniqueInputName(componentSpec);
+    const uniqueInputName = getUniqueInputName(componentSpec);
     const inputSpec: InputSpec = {
-      name: inputId,
+      name: uniqueInputName,
       annotations: positionAnnotations,
     };
     const inputs = (componentSpec.inputs ?? []).concat([inputSpec]);
@@ -89,9 +92,9 @@ const addTask = (
   }
 
   if (taskType === "output") {
-    const outputId = getUniqueOutputName(componentSpec);
+    const uniqueOutputName = getUniqueOutputName(componentSpec);
     const outputSpec: OutputSpec = {
-      name: outputId,
+      name: uniqueOutputName,
       annotations: positionAnnotations,
     };
 
