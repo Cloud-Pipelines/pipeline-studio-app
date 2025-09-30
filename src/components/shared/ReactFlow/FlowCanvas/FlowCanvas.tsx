@@ -608,9 +608,9 @@ const FlowCanvas = ({
               const node = nodes.find((n) => n.id === change.id);
               return node
                 ? {
-                    ...node,
-                    position: { x: change.position.x, y: change.position.y },
-                  }
+                  ...node,
+                  position: { x: change.position.x, y: change.position.y },
+                }
                 : null;
             }
             return null;
@@ -762,6 +762,15 @@ const FlowCanvas = ({
     initialCanvasLoaded.current = true;
   }, [componentSpec, currentSubgraphPath, preserveIOSelectionOnSpecChange]);
 
+  useEffect(() => {
+    if (!reactFlowInstance) return;
+
+    reactFlowInstance.fitView({
+      maxZoom: 1,
+      duration: 300,
+    });
+  }, [currentSubgraphPath, reactFlowInstance]);
+
   // Reset when loading a new component file
   useEffect(() => {
     resetPrevSpec();
@@ -895,7 +904,7 @@ const FlowCanvas = ({
         connectOnClick={!readOnly}
         className={cn(
           (rest.selectionOnDrag || (shiftKeyPressed && !isConnecting)) &&
-            "cursor-crosshair",
+          "cursor-crosshair",
         )}
       >
         <NodeToolbar

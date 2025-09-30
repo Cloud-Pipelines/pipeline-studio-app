@@ -56,7 +56,7 @@ vi.mock("@/services/executionService", () => ({
     isLoading: false,
     error: null,
     isFetching: false,
-    refetch: () => { },
+    refetch: () => {},
     enabled: false,
   }),
   countTaskStatuses: vi.fn(),
@@ -81,11 +81,11 @@ vi.mock("@/providers/ComponentSpecProvider", async (importOriginal) => {
 });
 
 vi.mock("@/hooks/useDocumentTitle", () => ({
-  useDocumentTitle: () => { },
+  useDocumentTitle: () => {},
 }));
 
 vi.mock("@/hooks/useFavicon", () => ({
-  useFavicon: () => { },
+  useFavicon: () => {},
 }));
 
 describe("<PipelineRun/>", () => {
@@ -180,7 +180,7 @@ describe("<PipelineRun/>", () => {
       isLoading: false,
       error: null,
       isFetching: false,
-      refetch: () => { },
+      refetch: () => {},
     });
   });
 
@@ -285,7 +285,7 @@ describe("<PipelineRun/>", () => {
         isLoading: false,
         error: null,
         isFetching: false,
-        refetch: () => { },
+        refetch: () => {},
       });
 
       // act
