@@ -1,4 +1,7 @@
 /* Environment Config */
+export const ENABLE_DEBUG_MODE =
+  import.meta.env.VITE_ENABLE_DEBUG_MODE === "true";
+
 export const ABOUT_URL =
   import.meta.env.VITE_ABOUT_URL || "https://cloud-pipelines.net/";
 

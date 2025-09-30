@@ -17,6 +17,7 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { isCacheDisabled } from "@/utils/cache";
+import { ENABLE_DEBUG_MODE } from "@/utils/constants";
 import { getSubgraphDescription, isSubgraph } from "@/utils/subgraphUtils";
 
 import {
@@ -254,25 +255,40 @@ const TaskNodeCard = () => {
         ref={nodeRef}
         onDoubleClick={handleDoubleClick}
       >
-        <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
+        <CardHeader className="border-b border-slate-200 px-2 py-2.5 items-start">
           <BlockStack>
-            <InlineStack gap="2" blockAlign="center" wrap="nowrap">
-              {isSubgraphNode && isSubgraphNavigationEnabled && (
-                <QuickTooltip content={`Subgraph: ${subgraphDescription}`}>
-                  <Icon name="Workflow" size="sm" className="text-blue-600" />
-                </QuickTooltip>
+            <InlineStack
+              gap="2"
+              align="space-between"
+              blockAlign="start"
+              wrap="nowrap"
+              className="w-full"
+            >
+              <InlineStack gap="2" blockAlign="center" wrap="nowrap">
+                {isSubgraphNode && isSubgraphNavigationEnabled && (
+                  <QuickTooltip content={`Subgraph: ${subgraphDescription}`}>
+                    <Icon name="Workflow" size="sm" className="text-blue-600" />
+                  </QuickTooltip>
+                )}
+                {disabledCache && !readOnly && (
+                  <QuickTooltip
+                    content="Cache Disabled"
+                    className="whitespace-nowrap"
+                  >
+                    <Icon name="ZapOff" size="sm" className="text-orange-400" />
+                  </QuickTooltip>
+                )}
+                <CardTitle className="break-words text-left text-xs text-slate-900">
+                  {name}
+                </CardTitle>
+              </InlineStack>
+              {isRemoteComponentLibrarySearchEnabled ? (
+                <PublishedComponentBadge componentRef={taskSpec.componentRef}>
+                  {digestMarkup}
+                </PublishedComponentBadge>
+              ) : (
+                digestMarkup
               )}
-              {disabledCache && !readOnly && (
-                <QuickTooltip
-                  content="Cache Disabled"
-                  className="whitespace-nowrap"
-                >
-                  <Icon name="ZapOff" size="sm" className="text-orange-400" />
-                </QuickTooltip>
-              )}
-              <CardTitle className="break-words text-left text-xs text-slate-900">
-                {name}
-              </CardTitle>
             </InlineStack>
             {taskId &&
               taskId !== name &&
@@ -283,12 +299,10 @@ const TaskNodeCard = () => {
               )}
           </BlockStack>
 
-          {isRemoteComponentLibrarySearchEnabled ? (
-            <PublishedComponentBadge componentRef={taskSpec.componentRef}>
-              {digestMarkup}
-            </PublishedComponentBadge>
-          ) : (
-            digestMarkup
+          {ENABLE_DEBUG_MODE && (
+            <Text size="xs" tone="subdued">
+              Node Id: {nodeId}
+            </Text>
           )}
         </CardHeader>
         <CardContent className="p-2 flex flex-col gap-2">
