@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
+import { ENABLE_DEBUG_MODE } from "@/utils/constants";
 
 type InputHandleProps = {
   input: InputSpec;
@@ -32,7 +33,7 @@ export const InputHandle = ({
   onLabelClick,
   onHandleSelectionChange,
 }: InputHandleProps) => {
-  const { nodeId, state } = useTaskNode();
+  const { nodeId, state, name } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
   const toHandle = useConnection((connection) => connection.toHandle?.id);
@@ -129,23 +130,33 @@ export const InputHandle = ({
       data-active={active}
     >
       <div className="absolute -translate-x-6 flex items-center h-3 w-3">
-        <Handle
-          ref={handleRef}
-          type="target"
-          id={handleId}
-          position={Position.Left}
-          isConnectable={true}
-          className={cn(
-            "border-0! h-full! w-full! transform-none!",
-            missing,
-            (selected || active) && "bg-blue-500!",
-            highlight && "bg-green-500!",
-            state.readOnly && "cursor-pointer!",
-          )}
-          onClick={handleHandleClick}
-          data-invalid={invalid}
-          data-testid={`input-handle-${input.name}`}
-        />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Handle
+              ref={handleRef}
+              type="target"
+              id={handleId}
+              position={Position.Left}
+              isConnectable={true}
+              className={cn(
+                "border-0! h-full! w-full! transform-none!",
+                missing,
+                (selected || active) && "bg-blue-500!",
+                highlight && "bg-green-500!",
+                state.readOnly && "cursor-pointer!",
+              )}
+              onClick={handleHandleClick}
+              data-invalid={invalid}
+              data-testid={`input-handle-${input.name}`}
+            />
+          </TooltipTrigger>
+          <TooltipContent disabled={!ENABLE_DEBUG_MODE}>
+            <div>Task Name: {name}</div>
+            <div>Handle Name: {input.name}</div>
+            <div>parentNodeId: {nodeId}</div>
+            <div>handleNodeId: {handleId}</div>
+          </TooltipContent>
+        </Tooltip>
       </div>
       <div
         className={cn(
@@ -218,7 +229,7 @@ export const OutputHandle = ({
   onLabelClick,
   onHandleSelectionChange,
 }: OutputHandleProps) => {
-  const { nodeId, state } = useTaskNode();
+  const { nodeId, state, name } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
   const toHandle = useConnection((connection) => connection.toHandle?.id);
@@ -336,21 +347,31 @@ export const OutputHandle = ({
           </div>
         )}
       </div>
-      <Handle
-        ref={handleRef}
-        type="source"
-        id={handleId}
-        position={Position.Right}
-        isConnectable={true}
-        onClick={handleHandleClick}
-        className={cn(
-          "relative! border-0! !w-[12px] !h-[12px] transform-none! translate-x-6 cursor-pointer bg-gray-500!",
-          (selected || active) && "bg-blue-500!",
-          highlight && "bg-green-500!",
-          state.readOnly && "cursor-pointer!",
-        )}
-        data-testid={`output-handle-${output.name}`}
-      />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Handle
+            ref={handleRef}
+            type="source"
+            id={handleId}
+            position={Position.Right}
+            isConnectable={true}
+            onClick={handleHandleClick}
+            className={cn(
+              "relative! border-0! !w-[12px] !h-[12px] transform-none! translate-x-6 cursor-pointer bg-gray-500!",
+              (selected || active) && "bg-blue-500!",
+              highlight && "bg-green-500!",
+              state.readOnly && "cursor-pointer!",
+            )}
+            data-testid={`output-handle-${output.name}`}
+          />
+        </TooltipTrigger>
+        <TooltipContent disabled={!ENABLE_DEBUG_MODE}>
+          <div>Task Name: {name}</div>
+          <div>Handle Name: {output.name}</div>
+          <div>parentNodeId: {nodeId}</div>
+          <div>handleNodeId: {handleId}</div>
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 };
