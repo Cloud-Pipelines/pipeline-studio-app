@@ -163,6 +163,12 @@ const TaskNodeCard = () => {
     setExpandedOutputs((prev) => !prev);
   }, []);
 
+  const handleDoubleClick = useCallback(() => {
+    if (isSubgraphNode && taskId && isSubgraphNavigationEnabled) {
+      navigateToSubgraph(taskId);
+    }
+  }, [isSubgraphNode, taskId, navigateToSubgraph, isSubgraphNavigationEnabled]);
+
   useEffect(() => {
     if (nodeRef.current) {
       setScrollHeight(nodeRef.current.scrollHeight);
@@ -201,6 +207,7 @@ const TaskNodeCard = () => {
         "rounded-2xl border-gray-200 border-2 break-words p-0 drop-shadow-none gap-2",
         selected ? "border-gray-500" : "hover:border-slate-200",
         (highlighted || highlightedState) && "border-orange-500!",
+        isSubgraphNode && "cursor-pointer",
       )}
       style={{
         width: dimensions.w + "px",
@@ -208,6 +215,7 @@ const TaskNodeCard = () => {
         transition: "height 0.2s",
       }}
       ref={nodeRef}
+      onDoubleClick={handleDoubleClick}
     >
       <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
         <BlockStack>
