@@ -14,7 +14,6 @@ export const createTaskNode = (
   const { nodeManager, callbacks, connectable, ...data } = nodeData;
 
   const nodeId = nodeManager.getNodeId(taskId, "task");
-  console.log("Creating task node:", { taskId, nodeId });
 
   const position = extractPositionFromAnnotations(taskSpec.annotations);
 

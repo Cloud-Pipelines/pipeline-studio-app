@@ -7,6 +7,7 @@ import { getOutputConnectedDetails } from "@/components/Editor/utils/getOutputCo
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Paragraph } from "@/components/ui/typography";
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
@@ -14,9 +15,7 @@ import type { IONodeData } from "@/types/nodes";
 import type { InputSpec, TypeSpecType } from "@/utils/componentSpec";
 import { ENABLE_DEBUG_MODE } from "@/utils/constants";
 import {
-  inputIdToNodeId,
   inputNameToInputId,
-  outputIdToNodeId,
   outputNameToOutputId,
 } from "@/utils/nodes/conversions";
 
@@ -28,6 +27,7 @@ interface IONodeProps {
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
+  const { getInputNodeId, getOutputNodeId } = useNodeManager();
   const { graphSpec, componentSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
@@ -59,8 +59,8 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
   );
 
   const nodeId = isInput
-    ? inputIdToNodeId(inputNameToInputId(spec.name))
-    : outputIdToNodeId(outputNameToOutputId(spec.name));
+    ? getInputNodeId(inputNameToInputId(spec.name))
+    : getOutputNodeId(outputNameToOutputId(spec.name));
 
   const nodeHandleId = `${nodeId}_handle`;
 

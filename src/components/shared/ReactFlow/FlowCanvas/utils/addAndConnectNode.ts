@@ -1,19 +1,17 @@
 import type { Connection, Handle } from "@xyflow/react";
 
-import type {
-  ComponentReference,
-  ComponentSpec,
-  TaskSpec,
-  TypeSpecType,
+import type { NodeManager } from "@/nodeManager";
+import {
+  type ComponentReference,
+  type ComponentSpec,
+  isGraphImplementation,
+  type TaskSpec,
+  type TypeSpecType,
 } from "@/utils/componentSpec";
 import { DEFAULT_NODE_DIMENSIONS } from "@/utils/constants";
 import {
-  inputIdToNodeId,
   inputNameToInputId,
-  nodeIdToTaskId,
-  outputIdToNodeId,
   outputNameToOutputId,
-  taskIdToNodeId,
 } from "@/utils/nodes/conversions";
 
 import addTask from "./addTask";
@@ -24,6 +22,7 @@ type AddAndConnectNodeParams = {
   fromHandle: Handle | null;
   position: { x: number; y: number };
   componentSpec: ComponentSpec;
+  nodeManager: NodeManager;
 };
 
 export function addAndConnectNode({
@@ -31,6 +30,7 @@ export function addAndConnectNode({
   fromHandle,
   position,
   componentSpec,
+  nodeManager,
 }: AddAndConnectNodeParams): ComponentSpec {
   // 1. Add the new node
   const taskSpec: TaskSpec = {
@@ -38,7 +38,7 @@ export function addAndConnectNode({
     componentRef: { ...componentRef },
   };
 
-  if (!("graph" in componentSpec.implementation)) {
+  if (!isGraphImplementation(componentSpec.implementation)) {
     return componentSpec;
   }
 
@@ -60,7 +60,7 @@ export function addAndConnectNode({
   );
 
   // 2. Find the new node
-  if (!("graph" in newComponentSpec.implementation)) {
+  if (!isGraphImplementation(newComponentSpec.implementation)) {
     return newComponentSpec;
   }
 
@@ -74,14 +74,17 @@ export function addAndConnectNode({
     return newComponentSpec;
   }
 
-  const newNodeId = taskIdToNodeId(newTaskId);
+  const newNodeId = nodeManager.getNodeId(newTaskId, "task");
 
   // 3. Determine the connection data type and find the first matching handle on the new node
   if (!fromHandle) {
     return newComponentSpec;
   }
 
-  const fromTaskId = nodeIdToTaskId(fromHandle.nodeId);
+  const fromTaskId = nodeManager.getTaskId(fromHandle.nodeId);
+  if (!fromTaskId) {
+    return newComponentSpec;
+  }
 
   const fromTaskSpec = graphSpec.tasks[fromTaskId];
   const fromComponentSpec = fromTaskSpec?.componentRef.spec;
@@ -114,7 +117,8 @@ export function addAndConnectNode({
       return newComponentSpec;
     }
 
-    targetHandleId = inputIdToNodeId(inputNameToInputId(handleName));
+    const inputId = inputNameToInputId(handleName);
+    targetHandleId = nodeManager.getNodeId(inputId, "input");
   } else if (toHandleType === "output") {
     const handleName = componentRef.spec?.outputs?.find(
       (io) => io.type === connectionType,
@@ -123,7 +127,8 @@ export function addAndConnectNode({
       return newComponentSpec;
     }
 
-    targetHandleId = outputIdToNodeId(outputNameToOutputId(handleName));
+    const outputId = outputNameToOutputId(handleName);
+    targetHandleId = nodeManager.getNodeId(outputId, "output");
   }
 
   // 4. Build a Connection object and use handleConnection to add the edge
@@ -146,7 +151,11 @@ export function addAndConnectNode({
           targetHandle: targetHandleId,
         };
 
-    const updatedGraphSpec = handleConnection(graphSpec, connection);
+    const updatedGraphSpec = handleConnection(
+      graphSpec,
+      connection,
+      nodeManager,
+    );
 
     return {
       ...newComponentSpec,

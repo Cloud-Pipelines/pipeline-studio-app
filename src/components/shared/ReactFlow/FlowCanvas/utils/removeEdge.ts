@@ -1,16 +1,17 @@
 import type { Edge } from "@xyflow/react";
 
+import type { NodeManager } from "@/nodeManager";
 import type { ComponentSpec, GraphImplementation } from "@/utils/componentSpec";
-import {
-  nodeIdToInputId,
-  nodeIdToOutputId,
-  nodeIdToTaskId,
-} from "@/utils/nodes/conversions";
+import { outputIdToOutputName } from "@/utils/nodes/conversions";
 
 import { setGraphOutputValue } from "./setGraphOutputValue";
 import { setTaskArgument } from "./setTaskArgument";
 
-export const removeEdge = (edge: Edge, componentSpec: ComponentSpec) => {
+export const removeEdge = (
+  edge: Edge,
+  componentSpec: ComponentSpec,
+  nodeManager: NodeManager,
+) => {
   const graphSpec = (componentSpec.implementation as GraphImplementation)
     ?.graph;
 
@@ -18,14 +19,16 @@ export const removeEdge = (edge: Edge, componentSpec: ComponentSpec) => {
     return componentSpec;
   }
 
-  const inputName = nodeIdToInputId(edge.targetHandle);
+  const inputName = nodeManager.getHandleInfo(edge.targetHandle)?.handleName;
 
   const updatedComponentSpec = {
     ...componentSpec,
   };
 
+  const taskId = nodeManager.getTaskId(edge.target);
+  if (!taskId) return componentSpec;
+
   if (inputName !== undefined && graphSpec) {
-    const taskId = nodeIdToTaskId(edge.target);
     const newGraphSpec = setTaskArgument(graphSpec, taskId, inputName);
     updatedComponentSpec.implementation = {
       ...updatedComponentSpec.implementation,
@@ -34,8 +37,8 @@ export const removeEdge = (edge: Edge, componentSpec: ComponentSpec) => {
 
     return updatedComponentSpec;
   } else {
-    const outputId = nodeIdToOutputId(edge.target);
-    const newGraphSpec = setGraphOutputValue(graphSpec, outputId);
+    const outputName = outputIdToOutputName(taskId);
+    const newGraphSpec = setGraphOutputValue(graphSpec, outputName);
     updatedComponentSpec.implementation = {
       ...updatedComponentSpec.implementation,
       graph: newGraphSpec,

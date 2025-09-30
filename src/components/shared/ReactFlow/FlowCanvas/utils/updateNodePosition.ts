@@ -1,14 +1,12 @@
 import type { Node } from "@xyflow/react";
 
+import type { NodeManager } from "@/nodeManager";
 import {
   type ComponentSpec,
   isGraphImplementation,
 } from "@/utils/componentSpec";
 import {
   inputIdToInputName,
-  nodeIdToInputId,
-  nodeIdToOutputId,
-  nodeIdToTaskId,
   outputIdToOutputName,
 } from "@/utils/nodes/conversions";
 import { setPositionInAnnotations } from "@/utils/nodes/setPositionInAnnotations";
@@ -16,6 +14,7 @@ import { setPositionInAnnotations } from "@/utils/nodes/setPositionInAnnotations
 export const updateNodePositions = (
   updatedNodes: Node[],
   componentSpec: ComponentSpec,
+  nodeManager: NodeManager,
 ) => {
   const newComponentSpec = { ...componentSpec };
 
@@ -33,10 +32,13 @@ export const updateNodePositions = (
       y: node.position.y,
     };
 
+    const id = nodeManager.getTaskId(node.id);
+
+    if (!id) continue;
+
     if (node.type === "task") {
-      const taskId = nodeIdToTaskId(node.id);
-      if (updatedGraphSpec.tasks[taskId]) {
-        const taskSpec = { ...updatedGraphSpec.tasks[taskId] };
+      if (updatedGraphSpec.tasks[id]) {
+        const taskSpec = { ...updatedGraphSpec.tasks[id] };
 
         const annotations = taskSpec.annotations || {};
 
@@ -50,12 +52,12 @@ export const updateNodePositions = (
           annotations: updatedAnnotations,
         };
 
-        updatedGraphSpec.tasks[taskId] = newTaskSpec;
+        updatedGraphSpec.tasks[id] = newTaskSpec;
 
         newComponentSpec.implementation.graph = updatedGraphSpec;
       }
     } else if (node.type === "input") {
-      const inputName = inputIdToInputName(nodeIdToInputId(node.id));
+      const inputName = inputIdToInputName(id);
       const inputs = [...(newComponentSpec.inputs || [])];
       const inputIndex = inputs.findIndex((input) => input.name === inputName);
 
@@ -75,7 +77,7 @@ export const updateNodePositions = (
         newComponentSpec.inputs = inputs;
       }
     } else if (node.type === "output") {
-      const outputName = outputIdToOutputName(nodeIdToOutputId(node.id));
+      const outputName = outputIdToOutputName(id);
       const outputs = [...(newComponentSpec.outputs || [])];
       const outputIndex = outputs.findIndex(
         (output) => output.name === outputName,
