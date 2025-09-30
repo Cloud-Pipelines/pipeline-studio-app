@@ -8,7 +8,6 @@ import { isValidFilterRequest } from "@/providers/ComponentLibraryProvider/types
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import type { OutputSpec } from "@/utils/componentSpec";
 import { ComponentSearchFilter } from "@/utils/constants";
-import { outputNameToOutputId } from "@/utils/nodes/conversions";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
 
 import { OutputHandle } from "./Handles";
@@ -24,8 +23,8 @@ export function TaskNodeOutputs({
   expanded,
   onBackgroundClick,
 }: TaskNodeOutputsProps) {
-  const { getOutputNodeId } = useNodeManager();
-  const { nodeId, outputs, state, select } = useTaskNode();
+  const { getTaskOutputNodeId } = useNodeManager();
+  const { taskId, nodeId, outputs, state, select } = useTaskNode();
   const {
     highlightSearchFilter,
     resetSearchFilter,
@@ -42,8 +41,7 @@ export function TaskNodeOutputs({
     edges.some(
       (edge) =>
         edge.source === nodeId &&
-        edge.sourceHandle ===
-          getOutputNodeId(outputNameToOutputId(output.name)),
+        edge.sourceHandle === getTaskOutputNodeId(taskId, output.name),
     ),
   );
 
@@ -141,7 +139,7 @@ export function TaskNodeOutputs({
     }
 
     const output = outputs.find(
-      (o) => getOutputNodeId(outputNameToOutputId(o.name)) === fromHandle?.id,
+      (o) => getTaskOutputNodeId(taskId, o.name) === fromHandle?.id,
     );
 
     if (!output) return;

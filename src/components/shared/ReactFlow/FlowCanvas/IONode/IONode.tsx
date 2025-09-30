@@ -176,6 +176,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
           </InlineStack>
         </BlockStack>
         <Handle
+          id={nodeHandleId}
           type={handleType}
           position={handlePosition}
           className={cn(handleDefaultClassName, handleClassName)}

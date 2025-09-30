@@ -11,6 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { cn } from "@/lib/utils";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
@@ -33,7 +34,8 @@ export const InputHandle = ({
   onLabelClick,
   onHandleSelectionChange,
 }: InputHandleProps) => {
-  const { nodeId, state, name } = useTaskNode();
+  const { getTaskInputNodeId } = useNodeManager();
+  const { taskId, nodeId, state, name } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
   const toHandle = useConnection((connection) => connection.toHandle?.id);
@@ -45,7 +47,7 @@ export const InputHandle = ({
   const [selected, setSelected] = useState(false);
   const [active, setActive] = useState(false);
 
-  const handleId = getInputHandleId(input.name);
+  const handleId = getTaskInputNodeId(taskId, input.name);
 
   const missing = invalid ? "bg-red-700!" : "bg-gray-500!";
   const hasValue = value !== undefined && value !== null;
@@ -228,7 +230,8 @@ export const OutputHandle = ({
   onLabelClick,
   onHandleSelectionChange,
 }: OutputHandleProps) => {
-  const { nodeId, state, name } = useTaskNode();
+  const { getTaskOutputNodeId } = useNodeManager();
+  const { taskId, nodeId, state, name } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
   const toHandle = useConnection((connection) => connection.toHandle?.id);
@@ -240,7 +243,7 @@ export const OutputHandle = ({
   const [selected, setSelected] = useState(false);
   const [active, setActive] = useState(false);
 
-  const handleId = getOutputHandleId(output.name);
+  const handleId = getTaskOutputNodeId(taskId, output.name);
   const hasValue = value !== undefined && value !== "" && value !== null;
 
   const handleHandleClick = useCallback(
@@ -372,14 +375,6 @@ export const OutputHandle = ({
       />
     </div>
   );
-};
-
-const getOutputHandleId = (outputName: string) => {
-  return `output_${outputName}`;
-};
-
-const getInputHandleId = (inputName: string) => {
-  return `input_${inputName}`;
 };
 
 const skipHandleDeselect = (e: MouseEvent) => {
