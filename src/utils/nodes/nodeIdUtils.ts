@@ -1,34 +1,43 @@
-/**
- * Utility functions for converting between node IDs and their corresponding names/identifiers
- */
+import type { NodeManager, NodeType } from "@/nodeManager";
 
-/**
- * Extracts the task ID from a task node ID by removing the "task_" prefix
- */
-export const nodeIdToTaskId = (id: string) => id.replace(/^task_/, "");
+// DEPRECATED: Legacy functions - use NodeManager instead
+export const taskIdToNodeId = (taskId: string): string => `task_${taskId}`; // Legacy
+export const inputNameToNodeId = (inputName: string): string =>
+  `input_${inputName}`; // Legacy
+export const outputNameToNodeId = (outputName: string): string =>
+  `output_${outputName}`; // Legacy
 
-/**
- * Extracts the input name from an input node ID by removing the "input_" prefix
- */
-export const nodeIdToInputName = (id: string) => id.replace(/^input_/, "");
+// RENAMED: For backwards compatibility and clarity
+export const inputNameToInputId = (inputName: string): string => inputName; // 1:1 mapping
+export const outputNameToOutputId = (outputName: string): string => outputName; // 1:1 mapping
+export const inputIdToInputName = (inputId: string): string => inputId; // 1:1 mapping
+export const outputIdToOutputName = (outputId: string): string => outputId; // 1:1 mapping
 
-/**
- * Extracts the output name from an output node ID by removing the "output_" prefix
- */
-export const nodeIdToOutputName = (id: string) => id.replace(/^output_/, "");
+// LEGACY: Keep for backwards compatibility
+export const nodeIdToTaskId = (nodeId: string): string => {
+  return nodeId.replace(/^task_/, "");
+};
 
-/**
- * Creates a task node ID by adding the "task_" prefix to a task ID
- */
-export const taskIdToNodeId = (taskId: string) => `task_${taskId}`;
+export const nodeIdToInputName = (nodeId: string): string => {
+  return nodeId.replace(/^input_/, "");
+};
 
-/**
- * Creates an input node ID by adding the "input_" prefix to an input name
- */
-export const inputNameToNodeId = (inputName: string) => `input_${inputName}`;
+export const nodeIdToOutputName = (nodeId: string): string => {
+  return nodeId.replace(/^output_/, "");
+};
 
-/**
- * Creates an output node ID by adding the "output_" prefix to an output name
- */
-export const outputNameToNodeId = (outputName: string) =>
-  `output_${outputName}`;
+// NEW: NodeManager-aware functions
+export const getTaskIdFromNodeId = (
+  nodeId: string,
+  nodeManager: NodeManager,
+): string | undefined => {
+  return nodeManager.getTaskId(nodeId);
+};
+
+export const getStableNodeId = (
+  taskId: string,
+  nodeType: NodeType,
+  nodeManager: NodeManager,
+): string => {
+  return nodeManager.getNodeId(taskId, nodeType);
+};

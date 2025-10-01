@@ -1,3 +1,4 @@
+import { type Node } from "@xyflow/react";
 import { nanoid } from "nanoid";
 
 import {
@@ -97,5 +98,67 @@ export class NodeManager {
   // Get all mappings (for debugging/persistence)
   getAllMappings(): NodeMapping[] {
     return Array.from(this.mappings.values());
+  }
+
+  // Migration method for existing nodes
+  migrateExistingNodes(nodes: Node[]): {
+    updatedNodes: Node[];
+    migrationMap: Record<string, string>;
+  } {
+    const updatedNodes: Node[] = [];
+    const migrationMap: Record<string, string> = {};
+
+    for (const node of nodes) {
+      const oldNodeId = node.id;
+      let taskId: string;
+      let nodeType: NodeType;
+
+      // Extract task ID and node type from legacy node ID
+      if (oldNodeId.startsWith("task_")) {
+        taskId = oldNodeId.replace(/^task_/, "");
+        nodeType = "task";
+      } else if (oldNodeId.startsWith("input_")) {
+        taskId = oldNodeId.replace(/^input_/, "");
+        nodeType = "input";
+      } else if (oldNodeId.startsWith("output_")) {
+        taskId = oldNodeId.replace(/^output_/, "");
+        nodeType = "output";
+      } else {
+        // Already migrated or unknown format
+        updatedNodes.push(node);
+        continue;
+      }
+
+      // Get or create stable node ID
+      const stableNodeId = this.getNodeId(taskId, nodeType);
+      migrationMap[oldNodeId] = stableNodeId;
+
+      // Update node with stable ID
+      updatedNodes.push({
+        ...node,
+        id: stableNodeId,
+      });
+    }
+
+    return { updatedNodes, migrationMap };
+  }
+
+  // Batch update for task renames
+  batchUpdateTaskIds(
+    updates: Array<{ oldTaskId: string; newTaskId: string }>,
+  ): void {
+    for (const { oldTaskId, newTaskId } of updates) {
+      this.updateTaskId(oldTaskId, newTaskId);
+    }
+  }
+
+  // Check if a node ID is managed by this NodeManager
+  isManaged(nodeId: string): boolean {
+    return this.mappings.has(nodeId);
+  }
+
+  // Get node type from node ID
+  getNodeType(nodeId: string): NodeType | undefined {
+    return this.mappings.get(nodeId)?.nodeType;
   }
 }
