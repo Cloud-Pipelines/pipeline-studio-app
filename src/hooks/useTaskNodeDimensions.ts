@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import type { TaskNodeDimensions } from "@/types/taskNode";
+import type { TaskNodeDimensions } from "@/types/nodes";
 import type { TaskSpec } from "@/utils/componentSpec";
 import { DEFAULT_NODE_DIMENSIONS } from "@/utils/constants";
 

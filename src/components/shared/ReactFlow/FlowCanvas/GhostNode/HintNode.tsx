@@ -2,7 +2,7 @@ import { type NodeProps, useReactFlow } from "@xyflow/react";
 import { memo, type PropsWithChildren, useMemo } from "react";
 
 import { cn } from "@/lib/utils";
-import type { HintNodeData } from "@/types/hintNode";
+import type { HintNodeData } from "@/types/nodes";
 
 const HintNode = ({ data }: NodeProps) => {
   const { getZoom } = useReactFlow();
