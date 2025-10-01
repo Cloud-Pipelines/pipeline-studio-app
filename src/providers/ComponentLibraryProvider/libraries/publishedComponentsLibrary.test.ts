@@ -1,3 +1,4 @@
+import { QueryClient } from "@tanstack/react-query";
 import yaml from "js-yaml";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -108,9 +109,33 @@ describe("PublishedComponentsLibrary", () => {
   });
 
   let library: PublishedComponentsLibrary;
+  let mockQueryClient: QueryClient;
 
   beforeEach(() => {
-    library = new PublishedComponentsLibrary();
+    mockQueryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+    // Mock the fetchQuery method
+    vi.spyOn(mockQueryClient, "fetchQuery").mockImplementation(
+      async ({ queryFn, queryKey }) => {
+        return typeof queryFn === "function"
+          ? await queryFn({
+              queryKey,
+              signal: new AbortController().signal,
+              client: mockQueryClient,
+              pageParam: undefined,
+              direction: "forward" as const,
+              meta: undefined,
+            })
+          : undefined;
+      },
+    );
+
+    library = new PublishedComponentsLibrary(mockQueryClient);
     vi.clearAllMocks();
 
     // Default fetch mock

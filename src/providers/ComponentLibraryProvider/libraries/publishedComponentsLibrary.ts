@@ -1,3 +1,5 @@
+import type { QueryClient } from "@tanstack/react-query";
+
 import {
   getApiComponentsDigestGet,
   listApiPublishedComponentsGet,
@@ -16,7 +18,7 @@ import {
   isDiscoverableComponentReference,
 } from "@/utils/componentSpec";
 import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
-import { API_URL } from "@/utils/constants";
+import { API_URL, TWENTY_FOUR_HOURS_IN_MS } from "@/utils/constants";
 
 import { isValidFilterRequest, type LibraryFilterRequest } from "../types";
 import {
@@ -57,8 +59,10 @@ class BackendLibraryError extends Error {
 
 export class PublishedComponentsLibrary implements Library {
   #knownDigests: Set<string> = new Set();
+  #queryClient: QueryClient;
 
-  constructor() {
+  constructor(queryClient: QueryClient) {
+    this.#queryClient = queryClient;
     // load known digests from storage
     // todo: prefetch components?
   }
@@ -75,10 +79,13 @@ export class PublishedComponentsLibrary implements Library {
       return true;
     }
 
-    const getComponentResult = await getApiComponentsDigestGet({
-      path: {
-        digest: component.digest,
-      },
+    const getComponentResult = await this.#queryClient.fetchQuery({
+      queryKey: ["componentDigest", component.digest],
+      queryFn: () =>
+        getApiComponentsDigestGet({
+          path: { digest: component.digest },
+        }),
+      staleTime: TWENTY_FOUR_HOURS_IN_MS,
     });
 
     if (getComponentResult.response.status !== 200) {
