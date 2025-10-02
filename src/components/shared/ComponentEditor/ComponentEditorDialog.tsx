@@ -54,12 +54,10 @@ export const ComponentEditorDialog = withSuspenseWrapper(
   ({
     text,
     templateName = "empty",
-    onSave,
     onClose,
   }: {
     text?: string;
     templateName?: string;
-    onSave: (componentText: string) => void;
     onClose: () => void;
   }) => {
     const notify = useToastNotification();
@@ -112,7 +110,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
       [],
     );
 
-    const handleSave = async () => {
+    const handleSave = useCallback(async () => {
       const hydratedComponent = await hydrateComponentReference({
         text: componentText,
       });
@@ -134,9 +132,8 @@ export const ComponentEditorDialog = withSuspenseWrapper(
           `Component ${hydratedComponent.name} imported successfully`,
           "success",
         );
-        onSave(componentText);
       }
-    };
+    }, [componentText, addToComponentLibrary, notify, onClose]);
 
     const handleClose = useCallback(() => {
       onClose();
