@@ -27,7 +27,7 @@ export const fetchExecutionDetails = async (
   return fetchWithErrorHandling(url);
 };
 
-export const fetchPipelineRun = async (
+const fetchPipelineRun = async (
   runId: string,
   backendUrl: string,
 ): Promise<PipelineRunResponse> => {

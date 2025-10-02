@@ -8,7 +8,6 @@
     "vite.config.ghpages.js"
   ],
   "ignoreDependencies": [
-    "@hey-api/client-fetch",
     "@radix-ui/react-accordion",
     "@tanstack/react-query-devtools",
     "tailwindcss",
