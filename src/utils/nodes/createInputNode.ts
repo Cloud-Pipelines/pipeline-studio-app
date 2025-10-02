@@ -12,7 +12,6 @@ export const createInputNode = (input: InputSpec, nodeData: NodeData) => {
 
   const inputId = inputNameToInputId(name);
   const nodeId = nodeManager.getNodeId(inputId, "input");
-  console.log("Creating input node:", { name, nodeId });
 
   const position = extractPositionFromAnnotations(annotations);
 

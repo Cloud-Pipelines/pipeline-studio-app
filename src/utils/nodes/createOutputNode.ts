@@ -12,7 +12,6 @@ export const createOutputNode = (output: OutputSpec, nodeData: NodeData) => {
 
   const outputId = outputNameToOutputId(name);
   const nodeId = nodeManager.getNodeId(outputId, "output");
-  console.log("Creating output node:", { name, nodeId });
 
   const position = extractPositionFromAnnotations(annotations);
 
