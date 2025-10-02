@@ -94,9 +94,7 @@ describe("InputValueEditor", () => {
   it("calls onChange when input value changes", () => {
     render(<InputValueEditor input={mockInput} />);
 
-    const valueInput = screen.getByLabelText(
-      "Default Value",
-    ) as HTMLTextAreaElement;
+    const valueInput = screen.getByLabelText("Value") as HTMLTextAreaElement;
     fireEvent.change(valueInput, { target: { value: "new value" } });
     fireEvent.blur(valueInput);
 
