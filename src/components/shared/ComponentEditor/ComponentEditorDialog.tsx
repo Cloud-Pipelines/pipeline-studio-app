@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import useToastNotification from "@/hooks/useToastNotification";
@@ -22,27 +23,39 @@ import { useTemplateCodeByName } from "./useTemplateCodeByName";
 
 const ComponentEditorDialogSkeleton = () => {
   return (
-    <BlockStack className="h-full" gap="3">
-      <BlockStack>
-        <InlineStack gap="2" align="space-between" className="w-full">
-          <Skeleton size="lg" shape="button" />
-          <Skeleton size="lg" shape="button" />
+    <FullscreenElement fullscreen={true}>
+      <BlockStack className="h-full w-full p-2 bg-white" align="start" gap="2">
+        <InlineStack
+          className="w-full h-13"
+          gap="4"
+          blockAlign="center"
+          align="space-between"
+          wrap="nowrap"
+        >
+          <Skeleton size="lg" />
           <Skeleton size="lg" shape="button" />
         </InlineStack>
+        <Separator />
+        <InlineStack
+          className="w-full h-full flex-1"
+          gap="4"
+          blockAlign="start"
+          align="space-between"
+          wrap="nowrap"
+        >
+          <BlockStack gap="2" align="start" className="flex-1">
+            <Skeleton size="full" />
+            <Skeleton size="half" />
+            <Skeleton size="full" />
+          </BlockStack>
+          <BlockStack gap="2" align="start" className="flex-1">
+            <Skeleton size="full" />
+            <Skeleton size="half" />
+            <Skeleton size="full" />
+          </BlockStack>
+        </InlineStack>
       </BlockStack>
-      <BlockStack className="h-[40vh] mt-4" gap="2" inlineAlign="space-between">
-        <BlockStack gap="2">
-          <Skeleton size="full" />
-          <Skeleton size="half" />
-          <Skeleton size="full" />
-          <Skeleton size="half" />
-          <Skeleton size="full" />
-        </BlockStack>
-        <BlockStack gap="2" align="end">
-          <Skeleton size="lg" shape="button" />
-        </BlockStack>
-      </BlockStack>
-    </BlockStack>
+    </FullscreenElement>
   );
 };
 
@@ -145,7 +158,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
       <FullscreenElement fullscreen={true}>
         <BlockStack className="h-full w-full p-2 bg-white">
           <InlineStack
-            className="w-full py-3 px-4 border-b-3 border-gray-100"
+            className="w-full py-3 border-b-3 border-gray-100"
             blockAlign="center"
             align="space-between"
           >

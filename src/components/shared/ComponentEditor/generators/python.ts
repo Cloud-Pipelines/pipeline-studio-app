@@ -13,7 +13,7 @@ export function usePythonYamlGenerator() {
   return yamlGenerator;
 }
 
-async function initializePythonYamlGenerator() {
+async function initializePythonYamlGenerator(): Promise<YamlGenerator> {
   try {
     const createComponentFromPythonFunctionText = (
       await import("./create_component_from_python_function_text.py?raw")
