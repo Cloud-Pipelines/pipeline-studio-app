@@ -3,7 +3,11 @@ import localForage from "localforage";
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
 import { APP_ROUTES } from "@/routes/router";
 import type { PipelineRun } from "@/types/pipelineRun";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import {
+  type ComponentSpec,
+  isGraphImplementation,
+  type TaskSpec,
+} from "@/utils/componentSpec";
 import {
   componentSpecToYaml,
   getComponentFileFromList,
@@ -14,6 +18,8 @@ import {
   PIPELINE_RUNS_STORE_NAME,
   USER_PIPELINES_LIST_NAME,
 } from "@/utils/constants";
+
+const ANNOTATIONS_NOT_COPIED = new Set(["status", "executionId"]);
 
 export const createPipelineRun = async (
   payload: BodyCreateApiPipelineRunsPost,
@@ -84,13 +90,17 @@ export const copyRunToPipeline = async (
     const cleanComponentSpec = structuredClone(componentSpec);
 
     if (
-      "graph" in cleanComponentSpec.implementation &&
+      isGraphImplementation(cleanComponentSpec.implementation) &&
       cleanComponentSpec.implementation?.graph?.tasks
     ) {
       Object.values(cleanComponentSpec.implementation.graph.tasks).forEach(
-        (task: any) => {
-          if (task.annotations && "status" in task.annotations) {
-            delete task.annotations.status;
+        (task: TaskSpec) => {
+          if (task.annotations) {
+            for (const key of ANNOTATIONS_NOT_COPIED) {
+              if (key in task.annotations) {
+                delete task.annotations[key];
+              }
+            }
           }
         },
       );
