@@ -29,6 +29,8 @@ const COMMON_ANNOTATIONS: AnnotationConfig[] = [
   },
 ];
 
+const HIDDEN_ANNOTATIONS = new Set(["executionId"]);
+
 export const AnnotationsEditor = ({
   annotations,
   onChange,
@@ -42,7 +44,8 @@ export const AnnotationsEditor = ({
   const remainingAnnotations = Object.entries(annotations).filter(
     ([key]) =>
       !COMPUTE_RESOURCES.some((resource) => resource.annotation === key) &&
-      !COMMON_ANNOTATIONS.some((common) => common.annotation === key),
+      !COMMON_ANNOTATIONS.some((common) => common.annotation === key) &&
+      !HIDDEN_ANNOTATIONS.has(key),
   );
 
   return (
