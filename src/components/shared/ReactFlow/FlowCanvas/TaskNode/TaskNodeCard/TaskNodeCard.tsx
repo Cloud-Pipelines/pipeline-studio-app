@@ -23,6 +23,7 @@ import {
 } from "../../../NodesOverlay/NodesOverlayProvider";
 import TaskConfiguration from "../TaskConfiguration";
 import type { ButtonPropsWithTooltip } from "../TaskConfiguration/TaskConfiguration";
+import { SubgraphPreviewTooltip } from "./SubgraphPreviewTooltip";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
 import { UpgradeNodePopover } from "./UpgradeNodePopover";
@@ -219,16 +220,24 @@ const TaskNodeCard = () => {
     >
       <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
         <BlockStack>
-          <InlineStack gap="2" blockAlign="center">
-            {isSubgraphNode && isSubgraphNavigationEnabled && (
-              <QuickTooltip content={`Subgraph: ${subgraphDescription}`}>
+          <SubgraphPreviewTooltip
+            subgraphSpec={taskSpec.componentRef?.spec || null}
+            subgraphName={name}
+            enabled={isSubgraphNavigationEnabled && isSubgraphNode}
+          >
+            <InlineStack gap="2" blockAlign="center" >
+
+              {isSubgraphNode && (
+
                 <Icon name="Workflow" size="sm" className="text-blue-600" />
-              </QuickTooltip>
-            )}
-            <CardTitle className="break-words text-left text-xs text-slate-900">
-              {name}
-            </CardTitle>
-          </InlineStack>
+
+              )}
+
+              <CardTitle className="break-words text-left text-xs text-slate-900">
+                {name}
+              </CardTitle>
+            </InlineStack>
+          </SubgraphPreviewTooltip>
           {taskId &&
             taskId !== name &&
             !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
@@ -277,6 +286,7 @@ const TaskNodeCard = () => {
         ) : null}
       </CardContent>
     </Card>
+
   );
 };
 
