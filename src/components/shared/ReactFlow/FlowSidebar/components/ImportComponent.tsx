@@ -37,14 +37,30 @@ type Template = {
   name: string;
   icon?: keyof typeof icons;
   color?: string;
+  templateName: string;
 };
 
 const SUPPORTED_TEMPLATES: Template[] = [
-  { name: "Empty" },
-  { name: "Ruby", icon: "Gem", color: "text-red-400" },
-  { name: "Python", icon: "Worm", color: "text-green-400" },
-  { name: "JavaScript", icon: "Hexagon", color: "text-yellow-400" },
-  { name: "Bash", icon: "Terminal", color: "text-gray-400" },
+  { name: "Empty", templateName: "empty" },
+  { name: "Ruby", icon: "Gem", color: "text-red-400", templateName: "ruby" },
+  {
+    name: "Python",
+    icon: "Worm",
+    color: "text-green-400",
+    templateName: "python",
+  },
+  {
+    name: "JavaScript",
+    icon: "Hexagon",
+    color: "text-yellow-400",
+    templateName: "javascript",
+  },
+  {
+    name: "Bash",
+    icon: "Terminal",
+    color: "text-gray-400",
+    templateName: "bash",
+  },
 ];
 
 const ImportComponent = ({
@@ -64,11 +80,12 @@ const ImportComponent = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { addToComponentLibrary } = useComponentLibrary();
-  const [isComponentEditorDialogOpen, setIsComponentEditorDialogOpen] =
-    useState(false);
+  const [componentEditorTemplateSelected, setComponentEditorTemplateSelected] =
+    useState<string | undefined>();
+
   const handleComponentEditorDialogClose = useCallback(
     async (componentText: string) => {
-      setIsComponentEditorDialogOpen(false);
+      setComponentEditorTemplateSelected(undefined);
       // saveNewComponentToFile
       const hydratedComponent = await hydrateComponentReference({
         text: componentText,
@@ -294,7 +311,11 @@ const ImportComponent = ({
                         key={template.name}
                         variant="ghost"
                         className="p-0 h-full w-full"
-                        onClick={() => setIsComponentEditorDialogOpen(true)}
+                        onClick={() =>
+                          setComponentEditorTemplateSelected(
+                            template.templateName,
+                          )
+                        }
                       >
                         <BlockStack
                           gap="1"
@@ -346,10 +367,13 @@ const ImportComponent = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <ComponentEditorDialog
-        visible={isComponentEditorDialogOpen}
-        onClose={handleComponentEditorDialogClose}
-      />
+      {componentEditorTemplateSelected !== undefined && (
+        <ComponentEditorDialog
+          key={componentEditorTemplateSelected}
+          onClose={handleComponentEditorDialogClose}
+          templateName={componentEditorTemplateSelected ?? "empty"}
+        />
+      )}
     </>
   );
 };
