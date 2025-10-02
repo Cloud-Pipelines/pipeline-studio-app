@@ -27,12 +27,7 @@ interface IONodeProps {
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
-  const {
-    getInputNodeId,
-    getOutputNodeId,
-    getTaskInputNodeId,
-    getTaskOutputNodeId,
-  } = useNodeManager();
+  const { getInputNodeId, getOutputNodeId } = useNodeManager();
   const { graphSpec, componentSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
@@ -63,13 +58,12 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     [componentSpec.outputs, spec.name],
   );
 
-  const nodeId = isInput
-    ? getInputNodeId(inputNameToInputId(spec.name))
-    : getOutputNodeId(outputNameToOutputId(spec.name));
+  const inputId = inputNameToInputId(spec.name);
+  const outputId = outputNameToOutputId(spec.name);
 
-  const nodeHandleId = isInput
-    ? getTaskOutputNodeId(inputNameToInputId(spec.name))
-    : getTaskInputNodeId(outputNameToOutputId(spec.name));
+  const nodeId = isInput ? getInputNodeId(inputId) : getOutputNodeId(outputId);
+
+  const nodeHandleId = `${nodeId}_handle`;
 
   const handleHandleClick = useCallback(() => {
     if (ENABLE_DEBUG_MODE) {

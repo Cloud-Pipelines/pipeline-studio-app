@@ -11,7 +11,6 @@ import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
 import type { InputSpec } from "@/utils/componentSpec";
 import { ComponentSearchFilter } from "@/utils/constants";
-import { inputNameToInputId } from "@/utils/nodes/conversions";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
 
 import { InputHandle } from "./Handles";
@@ -28,8 +27,8 @@ export function TaskNodeInputs({
   expanded,
   onBackgroundClick,
 }: TaskNodeInputsProps) {
-  const { getInputNodeId } = useNodeManager();
-  const { inputs, taskSpec, state, select } = useTaskNode();
+  const { getTaskInputNodeId } = useNodeManager();
+  const { taskId, inputs, taskSpec, state, select } = useTaskNode();
   const { graphSpec } = useComponentSpec();
   const {
     highlightSearchFilter,
@@ -147,7 +146,7 @@ export function TaskNodeInputs({
     }
 
     const input = inputs.find(
-      (i) => getInputNodeId(inputNameToInputId(i.name)) === fromHandle?.id,
+      (i) => getTaskInputNodeId(taskId, i.name) === fromHandle?.id,
     );
 
     if (!input) return;

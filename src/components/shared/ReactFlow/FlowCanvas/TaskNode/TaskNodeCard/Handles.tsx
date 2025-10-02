@@ -16,10 +16,6 @@ import { cn } from "@/lib/utils";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
 import { ENABLE_DEBUG_MODE } from "@/utils/constants";
-import {
-  inputNameToInputId,
-  outputNameToOutputId,
-} from "@/utils/nodes/conversions";
 
 type InputHandleProps = {
   input: InputSpec;
@@ -39,7 +35,7 @@ export const InputHandle = ({
   onHandleSelectionChange,
 }: InputHandleProps) => {
   const { getTaskInputNodeId } = useNodeManager();
-  const { nodeId, state, name } = useTaskNode();
+  const { taskId, nodeId, state, name } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
   const toHandle = useConnection((connection) => connection.toHandle?.id);
@@ -51,7 +47,7 @@ export const InputHandle = ({
   const [selected, setSelected] = useState(false);
   const [active, setActive] = useState(false);
 
-  const handleId = getTaskInputNodeId(inputNameToInputId(input.name));
+  const handleId = getTaskInputNodeId(taskId, input.name);
 
   const missing = invalid ? "bg-red-700!" : "bg-gray-500!";
   const hasValue = value !== undefined && value !== null;
@@ -235,7 +231,7 @@ export const OutputHandle = ({
   onHandleSelectionChange,
 }: OutputHandleProps) => {
   const { getTaskOutputNodeId } = useNodeManager();
-  const { nodeId, state, name } = useTaskNode();
+  const { taskId, nodeId, state, name } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
   const toHandle = useConnection((connection) => connection.toHandle?.id);
@@ -247,7 +243,7 @@ export const OutputHandle = ({
   const [selected, setSelected] = useState(false);
   const [active, setActive] = useState(false);
 
-  const handleId = getTaskOutputNodeId(outputNameToOutputId(output.name));
+  const handleId = getTaskOutputNodeId(taskId, output.name);
   const hasValue = value !== undefined && value !== "" && value !== null;
 
   const handleHandleClick = useCallback(
