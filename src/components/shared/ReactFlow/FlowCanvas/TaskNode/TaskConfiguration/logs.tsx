@@ -113,6 +113,7 @@ const Logs = ({
     log_text?: string;
     system_error_exception_full?: string;
   }>();
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["logs", executionId],
     queryFn: () => getLogs(String(executionId), backendUrl),
