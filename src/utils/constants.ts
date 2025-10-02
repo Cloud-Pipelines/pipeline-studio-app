@@ -73,3 +73,5 @@ export const KEYBOARD_SHORTCUTS = {
 
 // Container exit codes
 export const EXIT_CODE_OOM = 137; // SIGKILL (128 + 9) - Out of Memory
+
+export const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;

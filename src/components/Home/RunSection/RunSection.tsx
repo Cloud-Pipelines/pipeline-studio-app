@@ -29,6 +29,8 @@ const PIPELINE_RUNS_QUERY_URL = "/api/pipeline_runs/";
 const PAGE_TOKEN_QUERY_KEY = "page_token";
 const FILTER_QUERY_KEY = "filter";
 const CREATED_BY_ME_FILTER = "created_by:me";
+const INCLUDE_PIPELINE_NAME_QUERY_KEY = "include_pipeline_names";
+const INCLUDE_EXECUTION_STATS_QUERY_KEY = "include_execution_stats";
 
 type RunSectionSearch = { page_token?: string; filter?: string };
 
@@ -79,6 +81,9 @@ export const RunSection = () => {
         const u = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
         if (pageToken) u.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
         if (search.filter) u.searchParams.set(FILTER_QUERY_KEY, search.filter);
+
+        u.searchParams.set(INCLUDE_PIPELINE_NAME_QUERY_KEY, "true");
+        u.searchParams.set(INCLUDE_EXECUTION_STATS_QUERY_KEY, "true");
 
         if (!available) {
           throw new Error("Backend is not available");
