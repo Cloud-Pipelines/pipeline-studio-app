@@ -50,6 +50,8 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
     return null;
   }
 
+  const executionId = taskSpec.annotations?.executionId as string | undefined;
+
   return (
     <div
       className="flex flex-col h-full"
@@ -92,7 +94,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
           <TabsContent value="details" className="h-full">
             <TaskDetails
               displayName={name}
-              executionId={taskSpec.annotations?.executionId as string}
+              executionId={executionId}
               componentSpec={componentSpec}
               taskId={taskId}
               componentDigest={taskSpec.componentRef.digest}
@@ -142,22 +144,21 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
               <IOSection
                 taskSpec={taskSpec}
                 readOnly={readOnly}
-                executionId={taskSpec.annotations?.executionId as string}
+                executionId={executionId}
               />
             )}
           </TabsContent>
           {readOnly && (
             <TabsContent value="logs" className="h-full">
-              <div className="flex w-full justify-end pr-4">
-                <OpenLogsInNewWindowLink
-                  executionId={taskSpec.annotations?.executionId as string}
-                  status={runStatus}
-                />
-              </div>
-              <Logs
-                executionId={taskSpec.annotations?.executionId as string}
-                status={runStatus}
-              />
+              {!!executionId && (
+                <div className="flex w-full justify-end pr-4">
+                  <OpenLogsInNewWindowLink
+                    executionId={executionId}
+                    status={runStatus}
+                  />
+                </div>
+              )}
+              <Logs executionId={executionId} status={runStatus} />
             </TabsContent>
           )}
           {!readOnly && (
