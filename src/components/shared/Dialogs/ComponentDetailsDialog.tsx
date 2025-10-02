@@ -178,6 +178,8 @@ const ComponentDetails = ({
   onClose,
   onDelete,
 }: ComponentDetailsProps) => {
+  const hasEnabledInAppEditor = useBetaFlagValue("in-app-component-editor");
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const dialogTriggerButton = trigger || <InfoIconButton />;
@@ -200,25 +202,29 @@ const ComponentDetails = ({
   );
 
   const handleEditComponent = () => {
-    setIsEditDialogOpen(true)
+    setIsEditDialogOpen(true);
   };
-  const EditButton = <TooltipButton
-    variant="secondary"
-    onClick={handleEditComponent}
-    tooltip="Edit Component Definition"
-  >
-    <Icon name="FilePenLine" />
-  </TooltipButton>
+  const EditButton = (
+    <TooltipButton
+      variant="secondary"
+      onClick={handleEditComponent}
+      tooltip="Edit Component Definition"
+    >
+      <Icon name="FilePenLine" />
+    </TooltipButton>
+  );
 
   const actionsWithEdit = useMemo(() => {
+    if (!hasEnabledInAppEditor) return actions;
+
     return [...actions, EditButton];
-  }, [actions]);
+  }, [actions, hasEnabledInAppEditor]);
 
   const componentText = component.text;
 
   const handleCloseEditDialog = () => {
-    setIsEditDialogOpen(false)
-  }
+    setIsEditDialogOpen(false);
+  };
 
   return (
     <>

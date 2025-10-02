@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { ComponentEditorDialog } from "@/components/shared/ComponentEditor/ComponentEditorDialog";
+import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -72,6 +73,8 @@ const ImportComponent = ({
   triggerComponent?: ReactNode;
 }) => {
   const notify = useToastNotification();
+
+  const hasEnabledInAppEditor = useBetaFlagValue("in-app-component-editor");
 
   const [url, setUrl] = useState("");
   const [tab, setTab] = useState<TabType>(TabType.File);
@@ -201,10 +204,17 @@ const ImportComponent = ({
               className="w-full"
               onValueChange={(value) => handleTabChange(value as TabType)}
             >
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList
+                className={cn(
+                  "grid w-full",
+                  hasEnabledInAppEditor ? "grid-cols-3" : "grid-cols-2",
+                )}
+              >
                 <TabsTrigger value={TabType.File}>File</TabsTrigger>
                 <TabsTrigger value={TabType.URL}>URL</TabsTrigger>
-                <TabsTrigger value={TabType.New}>New</TabsTrigger>
+                {hasEnabledInAppEditor && (
+                  <TabsTrigger value={TabType.New}>New</TabsTrigger>
+                )}
               </TabsList>
               <TabsContent value={TabType.File}>
                 <div className="grid w-full items-center gap-4 py-4">
@@ -285,54 +295,56 @@ const ImportComponent = ({
                   </div>
                 </div>
               </TabsContent>
-              <TabsContent value={TabType.New}>
-                <BlockStack gap="2" className="py-4">
-                  <Heading level={2}>New Component</Heading>
-                  <Paragraph tone="subdued">
-                    Create a new component using the in-app editor
-                  </Paragraph>
-                  <Heading level={3}>Select a Template</Heading>
-                  <div className="grid grid-cols-3 border-1 rounded-md p-2 w-full">
-                    {SUPPORTED_TEMPLATES.map((template) => (
-                      <Button
-                        key={template.name}
-                        variant="ghost"
-                        className="p-0 h-full w-full"
-                        onClick={() =>
-                          setComponentEditorTemplateSelected(
-                            template.templateName,
-                          )
-                        }
-                      >
-                        <BlockStack
-                          gap="1"
-                          align="center"
-                          inlineAlign="space-between"
-                          className="p-2"
+              {hasEnabledInAppEditor && (
+                <TabsContent value={TabType.New}>
+                  <BlockStack gap="2" className="py-4">
+                    <Heading level={2}>New Component</Heading>
+                    <Paragraph tone="subdued">
+                      Create a new component using the in-app editor
+                    </Paragraph>
+                    <Heading level={3}>Select a Template</Heading>
+                    <div className="grid grid-cols-3 border-1 rounded-md p-2 w-full">
+                      {SUPPORTED_TEMPLATES.map((template) => (
+                        <Button
+                          key={template.name}
+                          variant="ghost"
+                          className="p-0 h-full w-full"
+                          onClick={() =>
+                            setComponentEditorTemplateSelected(
+                              template.templateName,
+                            )
+                          }
                         >
-                          <InlineStack
+                          <BlockStack
+                            gap="1"
                             align="center"
-                            blockAlign="center"
-                            className="bg-gray-200 rounded-md p-4 mb-2 w-full h-24"
+                            inlineAlign="space-between"
+                            className="p-2"
                           >
-                            {!!template.icon && (
-                              <Icon
-                                name={template.icon}
-                                size="fill"
-                                className={cn(
-                                  "text-foreground",
-                                  template.color,
-                                )}
-                              />
-                            )}
-                          </InlineStack>
-                          <Paragraph>{template.name}</Paragraph>
-                        </BlockStack>
-                      </Button>
-                    ))}
-                  </div>
-                </BlockStack>
-              </TabsContent>
+                            <InlineStack
+                              align="center"
+                              blockAlign="center"
+                              className="bg-gray-200 rounded-md p-4 mb-2 w-full h-24"
+                            >
+                              {!!template.icon && (
+                                <Icon
+                                  name={template.icon}
+                                  size="fill"
+                                  className={cn(
+                                    "text-foreground",
+                                    template.color,
+                                  )}
+                                />
+                              )}
+                            </InlineStack>
+                            <Paragraph>{template.name}</Paragraph>
+                          </BlockStack>
+                        </Button>
+                      ))}
+                    </div>
+                  </BlockStack>
+                </TabsContent>
+              )}
             </Tabs>
           </DialogHeader>
 
