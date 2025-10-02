@@ -6,6 +6,7 @@ import type {
   GetContainerExecutionStateResponse,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
+  PipelineRunResponse,
 } from "@/api/types.gen";
 import type { TaskStatusCounts } from "@/types/pipelineRun";
 import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
@@ -24,6 +25,17 @@ export const fetchExecutionDetails = async (
 ): Promise<GetExecutionInfoResponse> => {
   const url = `${backendUrl}/api/executions/${executionId}/details`;
   return fetchWithErrorHandling(url);
+};
+
+export const fetchPipelineRun = async (
+  runId: string,
+  backendUrl: string,
+): Promise<PipelineRunResponse> => {
+  const response = await fetch(`${backendUrl}/api/pipeline_runs/${runId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch pipeline run: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 const fetchContainerExecutionState = async (

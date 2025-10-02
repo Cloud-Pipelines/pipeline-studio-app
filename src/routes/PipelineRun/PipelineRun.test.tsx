@@ -8,7 +8,6 @@ import type {
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
 import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
-import * as executionService from "@/services/executionService";
 
 import PipelineRun from "./PipelineRun";
 
@@ -50,15 +49,6 @@ vi.mock("@/providers/BackendProvider", () => ({
 }));
 
 vi.mock("@/services/executionService", () => ({
-  useFetchExecutionInfo: vi.fn(),
-  useFetchPipelineRun: () => ({
-    data: null,
-    isLoading: false,
-    error: null,
-    isFetching: false,
-    refetch: () => {},
-    enabled: false,
-  }),
   countTaskStatuses: vi.fn(),
   getRunStatus: vi.fn(),
   STATUS: {
@@ -69,6 +59,11 @@ vi.mock("@/services/executionService", () => ({
     CANCELLED: "CANCELLED",
     UNKNOWN: "UNKNOWN",
   },
+}));
+
+const mockUsePipelineRunData = vi.fn();
+vi.mock("@/hooks/usePipelineRunData", () => ({
+  usePipelineRunData: () => mockUsePipelineRunData(),
 }));
 
 const mockUseComponentSpec = vi.fn();
@@ -172,15 +167,14 @@ describe("<PipelineRun/>", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
-      data: {
+    mockUsePipelineRunData.mockReturnValue({
+      executionData: {
         details: mockExecutionDetails,
         state: mockExecutionState,
       },
+      rootExecutionId: "test-execution-id",
       isLoading: false,
       error: null,
-      isFetching: false,
-      refetch: () => {},
     });
   });
 
@@ -249,15 +243,14 @@ describe("<PipelineRun/>", () => {
         child_task_execution_ids: {},
       };
 
-      vi.mocked(executionService.useFetchExecutionInfo).mockReturnValue({
-        data: {
+      mockUsePipelineRunData.mockReturnValue({
+        executionData: {
           details: mockExecutionDetailsWithoutIds,
           state: mockExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
-        isFetching: false,
-        refetch: () => {},
       });
 
       // act

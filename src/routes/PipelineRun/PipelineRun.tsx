@@ -11,6 +11,7 @@ import { InfoBox } from "@/components/shared/InfoBox";
 import { Spinner } from "@/components/ui/spinner";
 import { faviconManager } from "@/favicon";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { usePipelineRunData } from "@/hooks/usePipelineRunData";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
@@ -18,7 +19,6 @@ import {
   countTaskStatuses,
   getRunStatus,
   STATUS,
-  useFetchExecutionInfo,
 } from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
@@ -26,18 +26,14 @@ import type { ComponentSpec } from "@/utils/componentSpec";
 const PipelineRun = () => {
   const { setComponentSpec, clearComponentSpec, componentSpec } =
     useComponentSpec();
-  const { backendUrl, configured, available, ready } = useBackend();
-  const { id: rootExecutionId } = runDetailRoute.useParams() as RunDetailParams;
+  const { configured, available, ready } = useBackend();
+  const { id } = runDetailRoute.useParams() as RunDetailParams;
 
-  const { data, isLoading, error, refetch } = useFetchExecutionInfo(
-    rootExecutionId,
-    backendUrl,
-    false,
-  );
+  const { executionData, rootExecutionId, isLoading, error } =
+    usePipelineRunData(id);
 
-  const { details, state } = data;
+  const { details, state } = executionData || {};
 
-  // Update favicon based on pipeline status
   useEffect(() => {
     if (!details || !state) {
       faviconManager.reset();
@@ -72,10 +68,6 @@ const PipelineRun = () => {
     "/runs/$id": (params) =>
       `Oasis - ${componentSpec?.name || ""} - ${params.id}`,
   });
-
-  useEffect(() => {
-    refetch();
-  }, [backendUrl, refetch]);
 
   if (isLoading || !ready) {
     return (
