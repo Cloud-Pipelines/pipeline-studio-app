@@ -126,15 +126,23 @@ export const useNodeManager = () => {
   );
 
   const getTaskInputNodeId = useCallback(
-    (inputName: string): string => {
-      return nodeManager.getNodeId(inputName, "taskInput");
+    (taskId: string, inputName: string): string => {
+      return nodeManager.getTaskHandleNodeId(taskId, inputName, "taskInput");
     },
     [nodeManager],
   );
 
   const getTaskOutputNodeId = useCallback(
-    (outputName: string): string => {
-      return nodeManager.getNodeId(outputName, "taskOutput");
+    (taskId: string, outputName: string): string => {
+      return nodeManager.getTaskHandleNodeId(taskId, outputName, "taskOutput");
+    },
+    [nodeManager],
+  );
+
+  // Helper to get handle info from node ID
+  const getHandleInfo = useCallback(
+    (nodeId: string): { taskId: string; handleName: string } | undefined => {
+      return nodeManager.getHandleInfo(nodeId);
     },
     [nodeManager],
   );
@@ -186,6 +194,7 @@ export const useNodeManager = () => {
       getTaskNodeId,
       getTaskInputNodeId,
       getTaskOutputNodeId,
+      getHandleInfo,
 
       // Renaming
       renameTask,
@@ -210,6 +219,7 @@ export const useNodeManager = () => {
       getTaskNodeId,
       getTaskInputNodeId,
       getTaskOutputNodeId,
+      getHandleInfo,
       renameTask,
       renameInput,
       renameOutput,

@@ -16,8 +16,11 @@ import { setTaskArgument } from "./setTaskArgument";
 
 type NodeInfo = {
   id: string;
-  handle?: string;
   type?: NodeType;
+  handle?: {
+    taskId: string;
+    handleName: string;
+  };
 };
 
 export const handleConnection = (
@@ -25,39 +28,48 @@ export const handleConnection = (
   connection: Connection,
   nodeManager: NodeManager,
 ) => {
-  const sourceId = nodeManager.getTaskId(connection.source);
-  const targetId = nodeManager.getTaskId(connection.target);
+  const sourceId = nodeManager.getTaskId(connection.source!);
+  const sourceType = nodeManager.getNodeType(connection.source!);
 
-  if (!sourceId || !targetId) {
-    console.warn("Source or Target ID is missing in the connection.");
+  const targetId = nodeManager.getTaskId(connection.target!);
+  const targetType = nodeManager.getNodeType(connection.target!);
+
+  if (!sourceId || !targetId || !sourceType || !targetType) {
+    console.error("Could not resolve node information:", {
+      sourceId,
+      sourceType,
+      targetId,
+      targetType,
+    });
     return graphSpec;
   }
 
   if (sourceId === targetId) {
-    console.warn(
-      "Source and Target IDs are the same. Self-connections are not allowed.",
-    );
+    console.warn("Cannot connect node to itself");
     return graphSpec;
   }
 
-  const sourceHandleId = connection.sourceHandle
-    ? nodeManager.getTaskId(connection.sourceHandle)
-    : undefined;
+  let sourceHandleInfo: { taskId: string; handleName: string } | undefined;
+  let targetHandleInfo: { taskId: string; handleName: string } | undefined;
 
-  const targetHandleId = connection.targetHandle
-    ? nodeManager.getTaskId(connection.targetHandle)
-    : undefined;
+  if (connection.sourceHandle) {
+    sourceHandleInfo = nodeManager.getHandleInfo(connection.sourceHandle);
+  }
+
+  if (connection.targetHandle) {
+    targetHandleInfo = nodeManager.getHandleInfo(connection.targetHandle);
+  }
 
   const source: NodeInfo = {
     id: sourceId,
-    handle: sourceHandleId,
-    type: nodeManager.getNodeType(connection.source),
+    type: sourceType,
+    handle: sourceHandleInfo,
   };
 
   const target: NodeInfo = {
     id: targetId,
-    handle: targetHandleId,
-    type: nodeManager.getNodeType(connection.target),
+    type: targetType,
+    handle: targetHandleInfo,
   };
 
   const connectionType = `${source.type}_to_${target.type}` as const;
@@ -73,7 +85,7 @@ export const handleConnection = (
       return handleTaskToGraphOutput(graphSpec, source, target);
 
     default:
-      console.warn("Unsupported connection pattern:", connectionType);
+      console.error("Unsupported connection pattern:", connectionType);
       return graphSpec;
   }
 };
@@ -83,16 +95,19 @@ const handleGraphInputToTask = (
   source: NodeInfo,
   target: NodeInfo,
 ): GraphSpec => {
-  if (!target.handle) {
-    console.warn("Handle ID is missing for target task node.");
+  if (!target.handle?.handleName) {
+    console.error(
+      "Target handle name missing for graph input to task connection",
+    );
     return graphSpec;
   }
 
-  const sourceInputName = inputIdToInputName(source.id);
-  const targetInputName = inputIdToInputName(target.handle);
+  const inputId = source.id;
+  const inputName = inputIdToInputName(inputId);
+  const targetInputName = target.handle.handleName;
 
   const graphInputArgument: GraphInputArgument = {
-    graphInput: { inputName: sourceInputName },
+    graphInput: { inputName },
   };
 
   return setTaskArgument(
@@ -108,18 +123,18 @@ const handleTaskToTask = (
   source: NodeInfo,
   target: NodeInfo,
 ): GraphSpec => {
-  if (!source.handle) {
-    console.warn("Handle ID is missing for source task node.");
+  if (!source.handle?.handleName) {
+    console.error("Source handle name missing for task to task connection");
     return graphSpec;
   }
 
-  if (!target.handle) {
-    console.warn("Handle ID is missing for target task node.");
+  if (!target.handle?.handleName) {
+    console.error("Target handle name missing for task to task connection");
     return graphSpec;
   }
 
-  const sourceOutputName = outputIdToOutputName(source.handle);
-  const targetInputName = inputIdToInputName(target.handle);
+  const sourceOutputName = source.handle.handleName;
+  const targetInputName = target.handle.handleName;
 
   const taskOutputArgument: TaskOutputArgument = {
     taskOutput: {
@@ -141,12 +156,16 @@ const handleTaskToGraphOutput = (
   source: NodeInfo,
   target: NodeInfo,
 ): GraphSpec => {
-  if (!source.handle) {
-    console.warn("Handle ID is missing for source task node.");
+  if (!source.handle?.handleName) {
+    console.error(
+      "Source handle name missing for task to graph output connection",
+    );
     return graphSpec;
   }
 
-  const sourceOutputName = outputIdToOutputName(source.handle);
+  const sourceOutputName = source.handle.handleName;
+  const outputId = target.id;
+  const outputName = outputIdToOutputName(outputId);
 
   const taskOutputArgument: TaskOutputArgument = {
     taskOutput: {
@@ -155,5 +174,5 @@ const handleTaskToGraphOutput = (
     },
   };
 
-  return setGraphOutputValue(graphSpec, target.id, taskOutputArgument);
+  return setGraphOutputValue(graphSpec, outputName, taskOutputArgument);
 };

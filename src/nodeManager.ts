@@ -13,17 +13,37 @@ interface NodeMapping {
   taskId: string;
   nodeType: NodeType;
   createdAt: number;
+  // For TaskInput & TaskOutput:
+  parentTaskId?: string;
+  handleName?: string;
 }
+
+/* 
+Manages stable node IDs for tasks and their inputs/outputs in the graph.
+- Each task gets a stable node ID based on its task ID and type.
+- Each task input/output handle also gets a stable node ID based on task ID and handle name.
+- If a task is renamed, its node ID remains the same.
+- If a task is deleted, its node and all associated handles are removed.
+- Input and Output node handles are not managed here, as they are static.
+*/
 
 export class NodeManager {
   private mappings = new Map<string, NodeMapping>();
   private taskToNodeMap = new Map<string, Map<string, string>>();
+  private taskHandleMap = new Map<string, Map<string, string>>();
 
   private getTaskMapForType(nodeType: NodeType): Map<string, string> {
     if (!this.taskToNodeMap.has(nodeType)) {
       this.taskToNodeMap.set(nodeType, new Map<string, string>());
     }
     return this.taskToNodeMap.get(nodeType)!;
+  }
+
+  private getTaskHandleMapForTask(taskId: string): Map<string, string> {
+    if (!this.taskHandleMap.has(taskId)) {
+      this.taskHandleMap.set(taskId, new Map<string, string>());
+    }
+    return this.taskHandleMap.get(taskId)!;
   }
 
   // Get stable node ID for a task/input/output
@@ -50,6 +70,36 @@ export class NodeManager {
     return nodeId;
   }
 
+  getTaskHandleNodeId(
+    taskId: string,
+    handleName: string,
+    handleType: "taskInput" | "taskOutput",
+  ): string {
+    const taskHandleMap = this.getTaskHandleMapForTask(taskId);
+    const handleKey = `${handleType}:${handleName}`;
+    const existing = taskHandleMap.get(handleKey);
+
+    if (existing) {
+      return existing;
+    }
+
+    // Generate new stable ID
+    const nodeId = `${handleType}_${nanoid()}`;
+    const mapping: NodeMapping = {
+      nodeId,
+      taskId: handleKey, // Use handleKey as taskId for lookup
+      nodeType: handleType,
+      createdAt: Date.now(),
+      parentTaskId: taskId,
+      handleName,
+    };
+
+    this.mappings.set(nodeId, mapping);
+    taskHandleMap.set(handleKey, nodeId);
+
+    return nodeId;
+  }
+
   // Update task ID when name changes (keeps same node ID)
   updateTaskId(
     oldTaskId: string,
@@ -65,6 +115,7 @@ export class NodeManager {
           return;
         }
       }
+      this.updateTaskHandleMappings(oldTaskId, newTaskId);
       return;
     }
 
@@ -83,6 +134,25 @@ export class NodeManager {
     this.mappings.set(nodeId, mapping);
   }
 
+  private updateTaskHandleMappings(oldTaskId: string, newTaskId: string): void {
+    const oldHandleMap = this.taskHandleMap.get(oldTaskId);
+    if (!oldHandleMap) return;
+
+    // Move all handle mappings to new task ID
+    const newHandleMap = new Map(oldHandleMap);
+    this.taskHandleMap.set(newTaskId, newHandleMap);
+    this.taskHandleMap.delete(oldTaskId);
+
+    // Update all handle node mappings to point to new parent task
+    for (const nodeId of oldHandleMap.values()) {
+      const mapping = this.mappings.get(nodeId);
+      if (mapping) {
+        mapping.parentTaskId = newTaskId;
+        this.mappings.set(nodeId, mapping);
+      }
+    }
+  }
+
   // Remove node when task is deleted
   removeNode(taskId: string, nodeType?: NodeType): void {
     // If nodeType not provided, search across all types
@@ -90,9 +160,10 @@ export class NodeManager {
       for (const [type, taskMap] of this.taskToNodeMap) {
         if (taskMap.has(taskId)) {
           this.removeNode(taskId, type as NodeType);
-          return;
         }
       }
+      // Also remove task handle mappings
+      this.removeTaskHandles(taskId);
       return;
     }
 
@@ -104,9 +175,43 @@ export class NodeManager {
     taskMap.delete(taskId);
   }
 
+  private removeTaskHandles(taskId: string): void {
+    const handleMap = this.taskHandleMap.get(taskId);
+    if (!handleMap) return;
+
+    // Remove all handle node mappings
+    for (const nodeId of handleMap.values()) {
+      this.mappings.delete(nodeId);
+    }
+
+    // Remove the task handle map
+    this.taskHandleMap.delete(taskId);
+  }
+
   // Get task ID from node ID
   getTaskId(nodeId: string): string | undefined {
     return this.mappings.get(nodeId)?.taskId;
+  }
+
+  getParentTaskId(nodeId: string): string | undefined {
+    return this.mappings.get(nodeId)?.parentTaskId;
+  }
+
+  getHandleName(nodeId: string): string | undefined {
+    return this.mappings.get(nodeId)?.handleName;
+  }
+
+  getHandleInfo(
+    nodeId: string,
+  ): { taskId: string; handleName: string } | undefined {
+    const mapping = this.mappings.get(nodeId);
+    if (!mapping || !mapping.parentTaskId || !mapping.handleName) {
+      return undefined;
+    }
+    return {
+      taskId: mapping.parentTaskId,
+      handleName: mapping.handleName,
+    };
   }
 
   hasTaskId(taskId: string, nodeType: NodeType): boolean {
@@ -115,21 +220,45 @@ export class NodeManager {
   }
 
   // Sync with component spec to handle external changes
+  // Update the NodeManager to sync taskInput/taskOutput with component spec
   syncWithComponentSpec(componentSpec: ComponentSpec): void {
     const currentTasks = new Map<NodeType, Set<string>>();
     currentTasks.set("task", new Set());
     currentTasks.set("input", new Set());
     currentTasks.set("output", new Set());
 
+    const currentTaskHandles = new Map<string, Set<string>>();
+
     // Collect all current task IDs from spec by type
     if (isGraphImplementation(componentSpec.implementation)) {
-      Object.keys(componentSpec.implementation.graph.tasks).forEach(
-        (taskId) => {
-          currentTasks.get("task")!.add(taskId);
-        },
-      );
+      const graphSpec = componentSpec.implementation.graph;
+
+      // Regular tasks
+      Object.keys(graphSpec.tasks).forEach((taskId) => {
+        currentTasks.get("task")!.add(taskId);
+      });
+
+      // Task inputs and outputs from task specs
+      Object.entries(graphSpec.tasks).forEach(([taskId, taskSpec]) => {
+        const inputs = taskSpec.componentRef.spec?.inputs || [];
+        const outputs = taskSpec.componentRef.spec?.outputs || [];
+
+        if (!currentTaskHandles.has(taskId)) {
+          currentTaskHandles.set(taskId, new Set());
+        }
+        const taskHandleSet = currentTaskHandles.get(taskId)!;
+
+        inputs.forEach((input) => {
+          taskHandleSet.add(`taskInput:${input.name}`);
+        });
+
+        outputs.forEach((output) => {
+          taskHandleSet.add(`taskOutput:${output.name}`);
+        });
+      });
     }
 
+    // Graph-level inputs and outputs
     componentSpec.inputs?.forEach((input) =>
       currentTasks.get("input")!.add(input.name),
     );
@@ -145,6 +274,25 @@ export class NodeManager {
       for (const [taskId] of taskMap) {
         if (!currentTasksForType.has(taskId)) {
           this.removeNode(taskId, nodeType as NodeType);
+        }
+      }
+    }
+
+    // Clean up task handles
+    for (const [taskId, handleMap] of this.taskHandleMap) {
+      const currentHandlesForTask = currentTaskHandles.get(taskId);
+
+      if (!currentHandlesForTask) {
+        // Task was deleted, remove all handles
+        this.removeTaskHandles(taskId);
+        continue;
+      }
+
+      // Remove handles that no longer exist
+      for (const [handleKey, nodeId] of handleMap) {
+        if (!currentHandlesForTask.has(handleKey)) {
+          this.mappings.delete(nodeId);
+          handleMap.delete(handleKey);
         }
       }
     }
