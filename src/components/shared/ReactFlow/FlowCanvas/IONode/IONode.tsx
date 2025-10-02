@@ -28,7 +28,7 @@ interface IONodeProps {
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
-  const { getInputNodeId, getOutputNodeId } = useNodeManager();
+  const { getNodeId, getHandleNodeId } = useNodeManager();
   const { graphSpec, componentSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
@@ -59,11 +59,13 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     [componentSpec.outputs, spec.name],
   );
 
-  const nodeId = isInput
-    ? getInputNodeId(inputNameToInputId(spec.name))
-    : getOutputNodeId(outputNameToOutputId(spec.name));
+  const inputId = inputNameToInputId(spec.name);
+  const outputId = outputNameToOutputId(spec.name);
+  const id = isInput ? inputId : outputId;
 
-  const nodeHandleId = `${nodeId}_handle`;
+  const nodeId = getNodeId(id, type);
+  const handleNodeType = isInput ? "outputHandle" : "inputHandle";
+  const nodeHandleId = getHandleNodeId(id, spec.name, handleNodeType);
 
   const handleHandleClick = useCallback(() => {
     if (ENABLE_DEBUG_MODE) {

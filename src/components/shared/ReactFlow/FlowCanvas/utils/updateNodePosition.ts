@@ -32,7 +32,7 @@ export const updateNodePositions = (
       y: node.position.y,
     };
 
-    const id = nodeManager.getTaskId(node.id);
+    const id = nodeManager.getRefId(node.id);
 
     if (!id) continue;
 

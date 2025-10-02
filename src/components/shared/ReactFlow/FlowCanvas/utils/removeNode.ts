@@ -18,7 +18,7 @@ export const removeNode = (
   componentSpec: ComponentSpec,
   nodeManager: NodeManager,
 ) => {
-  const id = nodeManager.getTaskId(node.id);
+  const id = nodeManager.getRefId(node.id);
 
   if (!id) return componentSpec;
 

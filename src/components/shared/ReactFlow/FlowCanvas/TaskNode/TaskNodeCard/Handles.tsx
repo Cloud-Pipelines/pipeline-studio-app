@@ -34,7 +34,7 @@ export const InputHandle = ({
   onLabelClick,
   onHandleSelectionChange,
 }: InputHandleProps) => {
-  const { getTaskInputNodeId } = useNodeManager();
+  const { getInputHandleNodeId } = useNodeManager();
   const { taskId, nodeId, state, name } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
@@ -47,7 +47,7 @@ export const InputHandle = ({
   const [selected, setSelected] = useState(false);
   const [active, setActive] = useState(false);
 
-  const handleId = getTaskInputNodeId(taskId, input.name);
+  const handleId = getInputHandleNodeId(taskId, input.name);
 
   const missing = invalid ? "bg-red-700!" : "bg-gray-500!";
   const hasValue = value !== undefined && value !== null;
@@ -230,7 +230,7 @@ export const OutputHandle = ({
   onLabelClick,
   onHandleSelectionChange,
 }: OutputHandleProps) => {
-  const { getTaskOutputNodeId } = useNodeManager();
+  const { getOutputHandleNodeId } = useNodeManager();
   const { taskId, nodeId, state, name } = useTaskNode();
 
   const fromHandle = useConnection((connection) => connection.fromHandle?.id);
@@ -243,7 +243,7 @@ export const OutputHandle = ({
   const [selected, setSelected] = useState(false);
   const [active, setActive] = useState(false);
 
-  const handleId = getTaskOutputNodeId(taskId, output.name);
+  const handleId = getOutputHandleNodeId(taskId, output.name);
   const hasValue = value !== undefined && value !== "" && value !== null;
 
   const handleHandleClick = useCallback(

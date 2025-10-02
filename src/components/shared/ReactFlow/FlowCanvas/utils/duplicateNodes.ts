@@ -72,7 +72,7 @@ export const duplicateNodes = (
     const oldNodeId = node.id;
 
     if (node.type === "task") {
-      const oldTaskId = nodeManager.getTaskId(oldNodeId);
+      const oldTaskId = nodeManager.getRefId(oldNodeId);
       if (!oldTaskId) {
         console.warn("Could not find taskId for node:", node);
         return;
@@ -215,7 +215,7 @@ export const duplicateNodes = (
         return;
       }
 
-      const oldOutputId = nodeManager.getTaskId(oldNodeId);
+      const oldOutputId = nodeManager.getRefId(oldNodeId);
 
       if (!graphSpec.outputValues || !oldOutputId) {
         return;
@@ -240,7 +240,7 @@ export const duplicateNodes = (
           const oldTaskId = updatedOutputValue.taskOutput.taskId;
           const oldTaskNodeId = nodeManager.getNodeId(oldTaskId, "task");
           if (oldTaskNodeId in nodeIdMap) {
-            const newTaskId = nodeManager.getTaskId(nodeIdMap[oldTaskNodeId]);
+            const newTaskId = nodeManager.getRefId(nodeIdMap[oldTaskNodeId]);
             if (!newTaskId) {
               return;
             }
@@ -295,7 +295,7 @@ export const duplicateNodes = (
         return null;
       }
 
-      const newId = nodeManager.getTaskId(newNodeId);
+      const newId = nodeManager.getRefId(newNodeId);
 
       if (!newId) {
         return null;
@@ -412,7 +412,7 @@ export const duplicateNodes = (
         y: node.position.y + offset.y,
       };
 
-      const newId = nodeManager.getTaskId(node.id);
+      const newId = nodeManager.getRefId(node.id);
 
       if (!newId) {
         return null;
@@ -516,13 +516,13 @@ function reconfigureConnections(
   mode: ConnectionMode,
   nodeManager: NodeManager,
 ) {
-  const oldNodeId = undefined;
-  let newArgId = undefined;
+  let oldNodeId: string | undefined = undefined;
+  let newArgId: string | undefined = undefined;
   let isExternal = false;
 
   if ("taskOutput" in argument) {
     const oldTaskId = argument.taskOutput.taskId;
-    const oldNodeId = nodeManager.getNodeId(oldTaskId, "task");
+    oldNodeId = nodeManager.getNodeId(oldTaskId, "task");
 
     if (!isGraphImplementation(componentSpec.implementation)) {
       throw new Error("ComponentSpec does not contain a graph implementation.");
@@ -537,12 +537,12 @@ function reconfigureConnections(
       return reconfigureExternalConnection(taskSpec, argKey, mode);
     }
 
-    const newTaskId = nodeManager.getTaskId(newNodeId);
+    const newTaskId = nodeManager.getRefId(newNodeId);
 
     newArgId = newTaskId;
   } else if ("graphInput" in argument) {
     const oldInputId = argument.graphInput.inputName;
-    const oldNodeId = nodeManager.getNodeId(oldInputId, "input");
+    oldNodeId = nodeManager.getNodeId(oldInputId, "input");
 
     if (!("inputs" in componentSpec)) {
       throw new Error("ComponentSpec does not contain inputs.");
@@ -557,7 +557,7 @@ function reconfigureConnections(
       return reconfigureExternalConnection(taskSpec, argKey, mode);
     }
 
-    const newInputId = nodeManager.getTaskId(newNodeId);
+    const newInputId = nodeManager.getRefId(newNodeId);
 
     newArgId = newInputId;
   }
