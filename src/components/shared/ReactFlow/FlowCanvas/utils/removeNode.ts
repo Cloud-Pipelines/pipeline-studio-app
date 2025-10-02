@@ -1,6 +1,9 @@
 import { type Node } from "@xyflow/react";
 
-import type { ComponentSpec } from "@/utils/componentSpec";
+import {
+  type ComponentSpec,
+  isGraphImplementation,
+} from "@/utils/componentSpec";
 import {
   nodeIdToInputName,
   nodeIdToOutputName,
@@ -18,24 +21,22 @@ export const removeNode = (node: Node, componentSpec: ComponentSpec) => {
 
   if (node.type === "input") {
     const inputName = nodeIdToInputName(node.id);
-    return removeComponentInput(inputName, componentSpec);
+    return removeGraphInput(inputName, componentSpec);
   }
 
   if (node.type === "output") {
     const outputName = nodeIdToOutputName(node.id);
-    return removeComponentOutput(outputName, componentSpec);
+    return removeGraphOutput(outputName, componentSpec);
   }
 
   return componentSpec;
 };
 
-const removeComponentInput = (
+export const removeGraphInput = (
   inputNameToRemove: string,
   componentSpec: ComponentSpec,
 ) => {
-  // Removing the outcoming edges
-  // Not really needed since react-flow sends the node's incoming and outcoming edges for deletion when a node is deleted
-  if ("graph" in componentSpec.implementation) {
+  if (isGraphImplementation(componentSpec.implementation)) {
     const graphSpec = componentSpec.implementation.graph;
     for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
       for (const [inputName, argument] of Object.entries(
@@ -58,11 +59,11 @@ const removeComponentInput = (
   return { ...componentSpec, inputs: newInputs };
 };
 
-const removeComponentOutput = (
+export const removeGraphOutput = (
   outputNameToRemove: string,
   componentSpec: ComponentSpec,
 ) => {
-  if ("graph" in componentSpec.implementation) {
+  if (isGraphImplementation(componentSpec.implementation)) {
     const graphSpec = componentSpec.implementation.graph;
     const newGraphSpec = setGraphOutputValue(graphSpec, outputNameToRemove);
     componentSpec.implementation.graph = newGraphSpec;
@@ -78,7 +79,7 @@ const removeComponentOutput = (
 };
 
 const removeTask = (taskIdToRemove: string, componentSpec: ComponentSpec) => {
-  if ("graph" in componentSpec.implementation) {
+  if (isGraphImplementation(componentSpec.implementation)) {
     const graphSpec = componentSpec.implementation.graph;
 
     // Step 1: Remove any connections where this task is used as a source
