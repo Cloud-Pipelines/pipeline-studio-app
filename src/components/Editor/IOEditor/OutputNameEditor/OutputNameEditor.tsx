@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import ConfirmationDialog from "@/components/shared/Dialogs/ConfirmationDialog";
+import { removeGraphOutput } from "@/components/shared/ReactFlow/FlowCanvas/utils/removeNode";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
@@ -110,14 +111,7 @@ export const OutputNameEditor = ({
 
     if (!confirmed) return;
 
-    const updatedOutputs = componentSpec.outputs.filter(
-      (componentOutput) => componentOutput.name !== output.name,
-    );
-
-    const updatedComponentSpec = {
-      ...componentSpec,
-      outputs: updatedOutputs,
-    };
+    const updatedComponentSpec = removeGraphOutput(output.name, componentSpec);
 
     setComponentSpec(updatedComponentSpec);
 

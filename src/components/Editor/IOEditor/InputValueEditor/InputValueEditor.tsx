@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { updateInputNameOnComponentSpec } from "@/components/Editor/utils/updateInputNameOnComponentSpec";
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import { InfoBox } from "@/components/shared/InfoBox";
+import { removeGraphInput } from "@/components/shared/ReactFlow/FlowCanvas/utils/removeNode";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack } from "@/components/ui/layout";
@@ -187,14 +188,7 @@ export const InputValueEditor = ({
 
     if (!confirmed) return;
 
-    const updatedInputs = componentSpec.inputs.filter(
-      (componentInput) => componentInput.name !== input.name,
-    );
-
-    const updatedComponentSpec = {
-      ...componentSpec,
-      inputs: updatedInputs,
-    };
+    const updatedComponentSpec = removeGraphInput(inputName, componentSpec);
 
     setComponentSpec(updatedComponentSpec);
 
