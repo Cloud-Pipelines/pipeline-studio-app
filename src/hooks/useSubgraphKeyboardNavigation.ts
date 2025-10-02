@@ -5,9 +5,10 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 /**
  * Hook to handle keyboard navigation for subgraphs
  * - Escape: Navigate back to parent subgraph
+ * - Command+Escape (or Ctrl+Escape): Navigate to root
  */
 export const useSubgraphKeyboardNavigation = () => {
-  const { canNavigateBack, navigateBack } = useComponentSpec();
+  const { canNavigateBack, navigateBack, navigateToPath } = useComponentSpec();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -25,7 +26,13 @@ export const useSubgraphKeyboardNavigation = () => {
 
       if (event.key === "Escape") {
         event.preventDefault();
-        navigateBack();
+
+        // Command+Escape (Mac) or Ctrl+Escape (Windows/Linux) navigates to root
+        if (event.metaKey || event.ctrlKey) {
+          navigateToPath(["root"]);
+        } else {
+          navigateBack();
+        }
       }
     };
 
@@ -34,5 +41,5 @@ export const useSubgraphKeyboardNavigation = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [canNavigateBack, navigateBack]);
+  }, [canNavigateBack, navigateBack, navigateToPath]);
 };
