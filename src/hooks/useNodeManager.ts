@@ -74,6 +74,14 @@ export const useNodeManager = () => {
         case "output":
           taskId = legacyNodeId.replace(/^output_/, "");
           break;
+        case "taskInput":
+          taskId = legacyNodeId.replace(/^taskInput_/, "");
+          break;
+        case "taskOutput":
+          taskId = legacyNodeId.replace(/^taskOutput_/, "");
+          break;
+        default:
+          throw new Error(`Unknown node type: ${nodeType}`);
       }
 
       return nodeManager.getNodeId(taskId, nodeType);
@@ -83,7 +91,13 @@ export const useNodeManager = () => {
 
   // Batch operations
   const batchUpdateTaskIds = useCallback(
-    (updates: Array<{ oldTaskId: string; newTaskId: string }>): void => {
+    (
+      updates: Array<{
+        oldTaskId: string;
+        newTaskId: string;
+        nodeType: NodeType;
+      }>,
+    ): void => {
       nodeManager.batchUpdateTaskIds(updates);
     },
     [nodeManager],
@@ -107,6 +121,20 @@ export const useNodeManager = () => {
   const getTaskNodeId = useCallback(
     (taskId: string): string => {
       return nodeManager.getNodeId(taskId, "task");
+    },
+    [nodeManager],
+  );
+
+  const getTaskInputNodeId = useCallback(
+    (inputName: string): string => {
+      return nodeManager.getNodeId(inputName, "taskInput");
+    },
+    [nodeManager],
+  );
+
+  const getTaskOutputNodeId = useCallback(
+    (outputName: string): string => {
+      return nodeManager.getNodeId(outputName, "taskOutput");
     },
     [nodeManager],
   );
@@ -156,6 +184,8 @@ export const useNodeManager = () => {
       getInputNodeId,
       getOutputNodeId,
       getTaskNodeId,
+      getTaskInputNodeId,
+      getTaskOutputNodeId,
 
       // Renaming
       renameTask,
@@ -178,6 +208,8 @@ export const useNodeManager = () => {
       getInputNodeId,
       getOutputNodeId,
       getTaskNodeId,
+      getTaskInputNodeId,
+      getTaskOutputNodeId,
       renameTask,
       renameInput,
       renameOutput,

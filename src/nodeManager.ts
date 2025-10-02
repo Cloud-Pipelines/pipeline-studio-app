@@ -6,7 +6,7 @@ import {
   isGraphImplementation,
 } from "./utils/componentSpec";
 
-export type NodeType = "task" | "input" | "output";
+export type NodeType = "task" | "input" | "output" | "taskInput" | "taskOutput";
 
 interface NodeMapping {
   nodeId: string;
@@ -17,11 +17,20 @@ interface NodeMapping {
 
 export class NodeManager {
   private mappings = new Map<string, NodeMapping>();
-  private taskToNodeMap = new Map<string, string>();
+  private taskToNodeMap = new Map<string, Map<string, string>>();
+
+  private getTaskMapForType(nodeType: NodeType): Map<string, string> {
+    if (!this.taskToNodeMap.has(nodeType)) {
+      this.taskToNodeMap.set(nodeType, new Map<string, string>());
+    }
+    return this.taskToNodeMap.get(nodeType)!;
+  }
 
   // Get stable node ID for a task/input/output
   getNodeId(taskId: string, nodeType: NodeType): string {
-    const existing = this.taskToNodeMap.get(taskId);
+    const taskMap = this.getTaskMapForType(nodeType);
+    const existing = taskMap.get(taskId);
+
     if (existing) {
       return existing;
     }
@@ -36,34 +45,63 @@ export class NodeManager {
     };
 
     this.mappings.set(nodeId, mapping);
-    this.taskToNodeMap.set(taskId, nodeId);
+    taskMap.set(taskId, nodeId);
 
     return nodeId;
   }
 
   // Update task ID when name changes (keeps same node ID)
-  updateTaskId(oldTaskId: string, newTaskId: string): void {
-    const nodeId = this.taskToNodeMap.get(oldTaskId);
+  updateTaskId(
+    oldTaskId: string,
+    newTaskId: string,
+    nodeType?: NodeType,
+  ): void {
+    // If nodeType not provided, search across all types
+    if (!nodeType) {
+      for (const [type, taskMap] of this.taskToNodeMap) {
+        const nodeId = taskMap.get(oldTaskId);
+        if (nodeId) {
+          this.updateTaskId(oldTaskId, newTaskId, type as NodeType);
+          return;
+        }
+      }
+      return;
+    }
+
+    const taskMap = this.getTaskMapForType(nodeType);
+    const nodeId = taskMap.get(oldTaskId);
     if (!nodeId) return;
 
     const mapping = this.mappings.get(nodeId);
     if (!mapping) return;
 
     // Update mappings
-    this.taskToNodeMap.delete(oldTaskId);
-    this.taskToNodeMap.set(newTaskId, nodeId);
+    taskMap.delete(oldTaskId);
+    taskMap.set(newTaskId, nodeId);
 
     mapping.taskId = newTaskId;
     this.mappings.set(nodeId, mapping);
   }
 
   // Remove node when task is deleted
-  removeNode(taskId: string): void {
-    const nodeId = this.taskToNodeMap.get(taskId);
+  removeNode(taskId: string, nodeType?: NodeType): void {
+    // If nodeType not provided, search across all types
+    if (!nodeType) {
+      for (const [type, taskMap] of this.taskToNodeMap) {
+        if (taskMap.has(taskId)) {
+          this.removeNode(taskId, type as NodeType);
+          return;
+        }
+      }
+      return;
+    }
+
+    const taskMap = this.getTaskMapForType(nodeType);
+    const nodeId = taskMap.get(taskId);
     if (!nodeId) return;
 
     this.mappings.delete(nodeId);
-    this.taskToNodeMap.delete(taskId);
+    taskMap.delete(taskId);
   }
 
   // Get task ID from node ID
@@ -71,26 +109,43 @@ export class NodeManager {
     return this.mappings.get(nodeId)?.taskId;
   }
 
+  hasTaskId(taskId: string, nodeType: NodeType): boolean {
+    const taskMap = this.getTaskMapForType(nodeType);
+    return taskMap.has(taskId);
+  }
+
   // Sync with component spec to handle external changes
   syncWithComponentSpec(componentSpec: ComponentSpec): void {
-    const currentTasks = new Set<string>();
+    const currentTasks = new Map<NodeType, Set<string>>();
+    currentTasks.set("task", new Set());
+    currentTasks.set("input", new Set());
+    currentTasks.set("output", new Set());
 
-    // Collect all current task IDs from spec
+    // Collect all current task IDs from spec by type
     if (isGraphImplementation(componentSpec.implementation)) {
       Object.keys(componentSpec.implementation.graph.tasks).forEach(
         (taskId) => {
-          currentTasks.add(taskId);
+          currentTasks.get("task")!.add(taskId);
         },
       );
     }
 
-    componentSpec.inputs?.forEach((input) => currentTasks.add(input.name));
-    componentSpec.outputs?.forEach((output) => currentTasks.add(output.name));
+    componentSpec.inputs?.forEach((input) =>
+      currentTasks.get("input")!.add(input.name),
+    );
+    componentSpec.outputs?.forEach((output) =>
+      currentTasks.get("output")!.add(output.name),
+    );
 
-    // Remove mappings for deleted tasks
-    for (const [taskId] of this.taskToNodeMap) {
-      if (!currentTasks.has(taskId)) {
-        this.removeNode(taskId);
+    // Remove mappings for deleted tasks by type
+    for (const [nodeType, taskMap] of this.taskToNodeMap) {
+      const currentTasksForType = currentTasks.get(nodeType as NodeType);
+      if (!currentTasksForType) continue;
+
+      for (const [taskId] of taskMap) {
+        if (!currentTasksForType.has(taskId)) {
+          this.removeNode(taskId, nodeType as NodeType);
+        }
       }
     }
   }
@@ -98,6 +153,12 @@ export class NodeManager {
   // Get all mappings (for debugging/persistence)
   getAllMappings(): NodeMapping[] {
     return Array.from(this.mappings.values());
+  }
+
+  getMappingsForType(nodeType: NodeType): NodeMapping[] {
+    return Array.from(this.mappings.values()).filter(
+      (mapping) => mapping.nodeType === nodeType,
+    );
   }
 
   // Migration method for existing nodes
@@ -145,10 +206,14 @@ export class NodeManager {
 
   // Batch update for task renames
   batchUpdateTaskIds(
-    updates: Array<{ oldTaskId: string; newTaskId: string }>,
+    updates: Array<{
+      oldTaskId: string;
+      newTaskId: string;
+      nodeType: NodeType;
+    }>,
   ): void {
-    for (const { oldTaskId, newTaskId } of updates) {
-      this.updateTaskId(oldTaskId, newTaskId);
+    for (const { oldTaskId, newTaskId, nodeType } of updates) {
+      this.updateTaskId(oldTaskId, newTaskId, nodeType);
     }
   }
 

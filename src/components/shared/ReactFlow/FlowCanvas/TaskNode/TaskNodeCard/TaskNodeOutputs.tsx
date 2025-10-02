@@ -24,7 +24,7 @@ export function TaskNodeOutputs({
   expanded,
   onBackgroundClick,
 }: TaskNodeOutputsProps) {
-  const { getOutputNodeId } = useNodeManager();
+  const { getTaskOutputNodeId } = useNodeManager();
   const { nodeId, outputs, state, select } = useTaskNode();
   const {
     highlightSearchFilter,
@@ -43,7 +43,7 @@ export function TaskNodeOutputs({
       (edge) =>
         edge.source === nodeId &&
         edge.sourceHandle ===
-          getOutputNodeId(outputNameToOutputId(output.name)),
+          getTaskOutputNodeId(outputNameToOutputId(output.name)),
     ),
   );
 
@@ -141,7 +141,8 @@ export function TaskNodeOutputs({
     }
 
     const output = outputs.find(
-      (o) => getOutputNodeId(outputNameToOutputId(o.name)) === fromHandle?.id,
+      (o) =>
+        getTaskOutputNodeId(outputNameToOutputId(o.name)) === fromHandle?.id,
     );
 
     if (!output) return;

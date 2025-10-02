@@ -111,10 +111,13 @@ const createTaskOutputEdge = (
 ): Edge => {
   const sourceNodeId = nodeManager.getNodeId(taskOutput.taskId, "task");
   const sourceOutputId = outputNameToOutputId(taskOutput.outputName);
-  const sourceHandleNodeId = nodeManager.getNodeId(sourceOutputId, "output");
+  const sourceHandleNodeId = nodeManager.getNodeId(
+    sourceOutputId,
+    "taskOutput",
+  );
   const targetNodeId = nodeManager.getNodeId(taskId, "task");
   const targetInputId = inputNameToInputId(inputName);
-  const targetHandleNodeId = nodeManager.getNodeId(targetInputId, "input");
+  const targetHandleNodeId = nodeManager.getNodeId(targetInputId, "taskInput");
 
   return {
     id: `${taskOutput.taskId}_${sourceOutputId}-${taskId}_${targetInputId}`,
@@ -137,7 +140,7 @@ const createGraphInputEdge = (
   const sourceNodeId = nodeManager.getNodeId(inputId, "input");
   const targetNodeId = nodeManager.getNodeId(taskId, "task");
   const targetInputId = inputNameToInputId(inputName);
-  const targetHandleNodeId = nodeManager.getNodeId(targetInputId, "input");
+  const targetHandleNodeId = nodeManager.getNodeId(targetInputId, "taskInput");
 
   return {
     id: `Input_${inputId}-${taskId}_${targetInputId}`,
@@ -162,10 +165,12 @@ const createOutputEdgesFromGraphSpec = (
       const sourceOutputId = outputNameToOutputId(taskOutput.outputName);
       const sourceHandleNodeId = nodeManager.getNodeId(
         sourceOutputId,
-        "output",
+        "taskOutput",
       );
       const targetOutputId = outputNameToOutputId(outputName);
       const targetNodeId = nodeManager.getNodeId(targetOutputId, "output");
+
+      // console.log({ sourceNodeId, targetNodeId, sourceHandleNodeId });
 
       const edge: Edge = {
         id: `${taskOutput.taskId}_${sourceOutputId}-Output_${targetOutputId}`,
