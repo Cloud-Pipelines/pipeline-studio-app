@@ -181,7 +181,6 @@ describe("<PipelineRun/>", () => {
       error: null,
       isFetching: false,
       refetch: () => {},
-      enabled: true,
     });
   });
 
@@ -259,7 +258,6 @@ describe("<PipelineRun/>", () => {
         error: null,
         isFetching: false,
         refetch: () => {},
-        enabled: true,
       });
 
       // act
