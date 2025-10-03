@@ -1,0 +1,1020 @@
+name: Ultra Complex Multi-Branch Deep Nested Pipeline (2025-10-03T09:45:00.000Z)
+metadata:
+  annotations:
+    sdk: https://cloud-pipelines.net/pipeline-editor/
+    editor.flow-direction: left-to-right
+    description: Demonstrates 5-level nesting, component reuse, and parallel branching
+inputs:
+  - name: dataset_path
+    type: string
+    default: /data/input.csv
+    annotations:
+      editor.position: '{"x":-400,"y":-100}'
+  - name: model_type
+    type: string
+    default: neural_network
+    annotations:
+      editor.position: '{"x":-400,"y":0}'
+  - name: batch_size
+    type: Integer
+    default: '32'
+    annotations:
+      editor.position: '{"x":-400,"y":100}'
+  - name: validation_split
+    type: Float
+    default: '0.2'
+    annotations:
+      editor.position: '{"x":-400,"y":200}'
+outputs:
+  - name: final_model
+    annotations:
+      editor.position: '{"x":2800,"y":200}'
+  - name: evaluation_report
+    annotations:
+      editor.position: '{"x":2800,"y":300}'
+  - name: inference_results
+    annotations:
+      editor.position: '{"x":2800,"y":400}'
+implementation:
+  graph:
+    tasks:
+      # ==================== BRANCH A: DATA PROCESSING ====================
+      DataProcessing_Branch:
+        componentRef:
+          name: Data Processing Branch
+          spec:
+            name: Data Processing Branch
+            metadata:
+              annotations:
+                sdk: https://cloud-pipelines.net/pipeline-editor/
+                editor.flow-direction: left-to-right
+            inputs:
+              - name: raw_data_path
+                type: string
+              - name: batch_size
+                type: Integer
+            outputs:
+              - name: processed_data
+              - name: statistics
+            implementation:
+              graph:
+                tasks:
+                  # Level 1: Initial Validation
+                  ValidateData:
+                    componentRef:
+                      name: Data Validator
+                      spec:
+                        name: Data Validator
+                        inputs:
+                          - name: data_path
+                            type: string
+                          - name: strict_mode
+                            type: Boolean
+                            default: 'true'
+                        outputs:
+                          - name: validated_data
+                          - name: validation_report
+                        implementation:
+                          container:
+                            image: python:3.9
+                            command:
+                              - python
+                              - '-c'
+                              - |
+                                data_path = '$0'
+                                strict_mode = '$1'
+                                print(f"Validating data at {data_path} (strict={strict_mode})")
+                                import time; time.sleep(2)
+                                # Write outputs
+                                with open('$2', 'w') as f: f.write(f"validated:{data_path}")
+                                with open('$3', 'w') as f: f.write("validation:passed")
+                              - inputValue: data_path
+                              - inputValue: strict_mode
+                              - outputPath: validated_data
+                              - outputPath: validation_report
+                    arguments:
+                      data_path:
+                        graphInput:
+                          inputName: raw_data_path
+                    annotations:
+                      editor.position: '{"x":200,"y":-100}'
+
+                  # Level 1: Transform in Parallel
+                  TransformData:
+                    componentRef:
+                      name: Data Transformer
+                      spec:
+                        name: Data Transformer
+                        inputs:
+                          - name: input_data
+                            type: string
+                          - name: transform_type
+                            type: string
+                            default: normalize
+                        outputs:
+                          - name: transformed_data
+                        implementation:
+                          container:
+                            image: python:3.9
+                            command:
+                              - python
+                              - '-c'
+                              - |
+                                input_data = '$0'
+                                transform_type = '$1'
+                                print(f"Transforming {input_data} using {transform_type}")
+                                import time; time.sleep(2)
+                                with open('$2', 'w') as f: f.write(f"transformed:{input_data}")
+                              - inputValue: input_data
+                              - inputValue: transform_type
+                              - outputPath: transformed_data
+                    arguments:
+                      input_data:
+                        graphInput:
+                          inputName: raw_data_path
+                    annotations:
+                      editor.position: '{"x":200,"y":300}'
+
+                  # Level 2: Feature Engineering (DEEP NESTED SUBGRAPH)
+                  FeatureEngineering_Pipeline:
+                    componentRef:
+                      name: Feature Engineering Pipeline
+                      spec:
+                        name: Feature Engineering Pipeline
+                        metadata:
+                          annotations:
+                            editor.flow-direction: left-to-right
+                        inputs:
+                          - name: validated_data
+                            type: string
+                          - name: transformed_data
+                            type: string
+                        outputs:
+                          - name: engineered_features
+                          - name: feature_importance
+                        implementation:
+                          graph:
+                            tasks:
+                              # Level 2: Extract Features
+                              ExtractFeatures:
+                                componentRef:
+                                  name: Feature Extractor
+                                  spec:
+                                    name: Feature Extractor
+                                    inputs:
+                                      - name: data
+                                        type: string
+                                    outputs:
+                                      - name: features
+                                    implementation:
+                                      container:
+                                        image: python:3.9
+                                        command:
+                                          - python
+                                          - '-c'
+                                          - |
+                                            print("Extracting features from $0")
+                                            import time; time.sleep(1)
+                                            with open('$1', 'w') as f: f.write("features:extracted")
+                                          - inputValue: data
+                                          - outputPath: features
+                                arguments:
+                                  data:
+                                    graphInput:
+                                      inputName: validated_data
+                                annotations:
+                                  editor.position: '{"x":250,"y":0}'
+
+                              # Level 3: ADVANCED TRANSFORM (ANOTHER NESTED SUBGRAPH!)
+                              AdvancedTransform_Pipeline:
+                                componentRef:
+                                  name: Advanced Transform Pipeline
+                                  spec:
+                                    name: Advanced Transform Pipeline
+                                    inputs:
+                                      - name: features
+                                        type: string
+                                      - name: base_data
+                                        type: string
+                                    outputs:
+                                      - name: advanced_features
+                                    implementation:
+                                      graph:
+                                        tasks:
+                                          # Level 3: PCA
+                                          ApplyPCA:
+                                            componentRef:
+                                              name: PCA Transformer
+                                              spec:
+                                                name: PCA Transformer
+                                                inputs:
+                                                  - name: input_features
+                                                    type: string
+                                                outputs:
+                                                  - name: reduced_features
+                                                implementation:
+                                                  container:
+                                                    image: python:3.9
+                                                    command:
+                                                      - sh
+                                                      - '-c'
+                                                      - |
+                                                        echo "L3: Applying PCA to $0"
+                                                        sleep 1
+                                                        echo "pca:applied" > $1
+                                                      - inputValue: input_features
+                                                      - outputPath: reduced_features
+                                            arguments:
+                                              input_features:
+                                                graphInput:
+                                                  inputName: features
+                                            annotations:
+                                              editor.position: '{"x":250,"y":-50}'
+
+                                          # Level 4: DEEP TRANSFORM (EVEN DEEPER!)
+                                          DeepTransform_Pipeline:
+                                            componentRef:
+                                              name: Deep Transform Pipeline
+                                              spec:
+                                                name: Deep Transform Pipeline
+                                                inputs:
+                                                  - name: reduced_features
+                                                    type: string
+                                                outputs:
+                                                  - name: deep_features
+                                                implementation:
+                                                  graph:
+                                                    tasks:
+                                                      # Level 4: Normalize
+                                                      NormalizeDeep:
+                                                        componentRef:
+                                                          name: Deep Normalizer
+                                                          spec:
+                                                            name: Deep Normalizer
+                                                            inputs:
+                                                              - name: input
+                                                                type: string
+                                                            outputs:
+                                                              - name: normalized
+                                                            implementation:
+                                                              container:
+                                                                image: alpine
+                                                                command:
+                                                                  - sh
+                                                                  - '-c'
+                                                                  - |
+                                                                    echo "L4: Deep normalizing $0"
+                                                                    sleep 1
+                                                                    echo "normalized:deep" > $1
+                                                                  - inputValue: input
+                                                                  - outputPath: normalized
+                                                        arguments:
+                                                          input:
+                                                            graphInput:
+                                                              inputName: reduced_features
+                                                        annotations:
+                                                          editor.position: '{"x":250,"y":0}'
+
+                                                      # Level 5: DEEPEST SCALING (MAX DEPTH!)
+                                                      DeepestScale_Pipeline:
+                                                        componentRef:
+                                                          name: Deepest Scale Pipeline
+                                                          spec:
+                                                            name: Deepest Scale Pipeline
+                                                            inputs:
+                                                              - name: normalized_data
+                                                                type: string
+                                                            outputs:
+                                                              - name: scaled_data
+                                                            implementation:
+                                                              container:
+                                                                image: alpine
+                                                                command:
+                                                                  - sh
+                                                                  - '-c'
+                                                                  - |
+                                                                    echo "L5: 🎯 DEEPEST LEVEL - Scaling $0"
+                                                                    sleep 1
+                                                                    echo "scaled:deepest-level" > $1
+                                                                  - inputValue: normalized_data
+                                                                  - outputPath: scaled_data
+                                                        arguments:
+                                                          normalized_data:
+                                                            taskOutput:
+                                                              taskId: NormalizeDeep
+                                                              outputName: normalized
+                                                        annotations:
+                                                          editor.position: '{"x":550,"y":50}'
+                                                    outputValues:
+                                                      deep_features:
+                                                        taskOutput:
+                                                          taskId: DeepestScale_Pipeline
+                                                          outputName: scaled_data
+                                            arguments:
+                                              reduced_features:
+                                                taskOutput:
+                                                  taskId: ApplyPCA
+                                                  outputName: reduced_features
+                                            annotations:
+                                              editor.position: '{"x":600,"y":100}'
+                                        outputValues:
+                                          advanced_features:
+                                            taskOutput:
+                                              taskId: DeepTransform_Pipeline
+                                              outputName: deep_features
+                                arguments:
+                                  features:
+                                    taskOutput:
+                                      taskId: ExtractFeatures
+                                      outputName: features
+                                  base_data:
+                                    graphInput:
+                                      inputName: transformed_data
+                                annotations:
+                                  editor.position: '{"x":650,"y":200}'
+
+                              # Level 2: Feature Selection
+                              SelectFeatures:
+                                componentRef:
+                                  name: Feature Selector
+                                  spec:
+                                    name: Feature Selector
+                                    inputs:
+                                      - name: all_features
+                                        type: string
+                                    outputs:
+                                      - name: selected_features
+                                      - name: importance_scores
+                                    implementation:
+                                      container:
+                                        image: python:3.9
+                                        command:
+                                          - sh
+                                          - '-c'
+                                          - |
+                                            echo "Selecting best features from $0"
+                                            sleep 1
+                                            echo "selected:top_features" > $1
+                                            echo "importance:0.95" > $2
+                                          - inputValue: all_features
+                                          - outputPath: selected_features
+                                          - outputPath: importance_scores
+                                arguments:
+                                  all_features:
+                                    taskOutput:
+                                      taskId: AdvancedTransform_Pipeline
+                                      outputName: advanced_features
+                                annotations:
+                                  editor.position: '{"x":1050,"y":300}'
+                            outputValues:
+                              engineered_features:
+                                taskOutput:
+                                  taskId: SelectFeatures
+                                  outputName: selected_features
+                              feature_importance:
+                                taskOutput:
+                                  taskId: SelectFeatures
+                                  outputName: importance_scores
+                    arguments:
+                      validated_data:
+                        taskOutput:
+                          taskId: ValidateData
+                          outputName: validated_data
+                      transformed_data:
+                        taskOutput:
+                          taskId: TransformData
+                          outputName: transformed_data
+                    annotations:
+                      editor.position: '{"x":650,"y":100}'
+                outputValues:
+                  processed_data:
+                    taskOutput:
+                      taskId: FeatureEngineering_Pipeline
+                      outputName: engineered_features
+                  statistics:
+                    taskOutput:
+                      taskId: FeatureEngineering_Pipeline
+                      outputName: feature_importance
+        arguments:
+          raw_data_path:
+            graphInput:
+              inputName: dataset_path
+          batch_size:
+            graphInput:
+              inputName: batch_size
+        annotations:
+          editor.position: '{"x":400,"y":-100}'
+
+      # ==================== BRANCH B: MODEL TRAINING ====================
+      ModelTraining_Branch:
+        componentRef:
+          name: Model Training Branch
+          spec:
+            name: Model Training Branch
+            metadata:
+              annotations:
+                editor.flow-direction: left-to-right
+            inputs:
+              - name: training_data
+                type: string
+              - name: model_type
+                type: string
+              - name: validation_split
+                type: Float
+            outputs:
+              - name: trained_model
+              - name: training_metrics
+            implementation:
+              graph:
+                tasks:
+                  # Shared Component: Data Loader (REUSED!)
+                  LoadTrainingData:
+                    componentRef:
+                      name: Shared Data Loader
+                      spec:
+                        name: Shared Data Loader
+                        inputs:
+                          - name: data_path
+                            type: string
+                          - name: split_ratio
+                            type: Float
+                        outputs:
+                          - name: loaded_data
+                        implementation:
+                          container:
+                            image: python:3.9
+                            command:
+                              - sh
+                              - '-c'
+                              - |
+                                echo "📦 SHARED LOADER: Loading $0 with split $1"
+                                sleep 2
+                                echo "loaded:training_data" > $2
+                              - inputValue: data_path
+                              - inputValue: split_ratio
+                              - outputPath: loaded_data
+                    arguments:
+                      data_path:
+                        graphInput:
+                          inputName: training_data
+                      split_ratio:
+                        graphInput:
+                          inputName: validation_split
+                    annotations:
+                      editor.position: '{"x":250,"y":-50}'
+
+                  # Level 2: Training Pipeline (NESTED)
+                  Training_Pipeline:
+                    componentRef:
+                      name: Training Pipeline
+                      spec:
+                        name: Training Pipeline
+                        inputs:
+                          - name: data
+                            type: string
+                          - name: model_arch
+                            type: string
+                        outputs:
+                          - name: model
+                          - name: metrics
+                        implementation:
+                          graph:
+                            tasks:
+                              TrainModel:
+                                componentRef:
+                                  name: Model Trainer
+                                  spec:
+                                    name: Model Trainer
+                                    inputs:
+                                      - name: dataset
+                                        type: string
+                                      - name: architecture
+                                        type: string
+                                    outputs:
+                                      - name: trained_weights
+                                    implementation:
+                                      container:
+                                        image: tensorflow/tensorflow:latest
+                                        command:
+                                          - python
+                                          - '-c'
+                                          - |
+                                            print(f"Training {input('$1')} model on {input('$0')}")
+                                            import time; time.sleep(3)
+                                            with open('$2', 'w') as f: f.write("model:trained")
+                                          - inputValue: dataset
+                                          - inputValue: architecture
+                                          - outputPath: trained_weights
+                                arguments:
+                                  dataset:
+                                    graphInput:
+                                      inputName: data
+                                  architecture:
+                                    graphInput:
+                                      inputName: model_arch
+                                annotations:
+                                  editor.position: '{"x":250,"y":0}'
+
+                              # Level 3: Evaluation (NESTED DEEPER)
+                              Evaluation_Pipeline:
+                                componentRef:
+                                  name: Evaluation Pipeline
+                                  spec:
+                                    name: Evaluation Pipeline
+                                    inputs:
+                                      - name: model_weights
+                                        type: string
+                                    outputs:
+                                      - name: eval_metrics
+                                    implementation:
+                                      graph:
+                                        tasks:
+                                          ValidateModel:
+                                            componentRef:
+                                              name: Model Validator
+                                              spec:
+                                                name: Model Validator
+                                                inputs:
+                                                  - name: weights
+                                                    type: string
+                                                outputs:
+                                                  - name: validation_score
+                                                implementation:
+                                                  container:
+                                                    image: python:3.9
+                                                    command:
+                                                      - sh
+                                                      - '-c'
+                                                      - |
+                                                        echo "Validating model $0"
+                                                        sleep 2
+                                                        echo "accuracy:0.94" > $1
+                                                      - inputValue: weights
+                                                      - outputPath: validation_score
+                                            arguments:
+                                              weights:
+                                                graphInput:
+                                                  inputName: model_weights
+                                            annotations:
+                                              editor.position: '{"x":250,"y":0}'
+
+                                          # Level 4: Metrics Calculation (DEEPER!)
+                                          Metrics_Pipeline:
+                                            componentRef:
+                                              name: Metrics Pipeline
+                                              spec:
+                                                name: Metrics Pipeline
+                                                inputs:
+                                                  - name: validation_results
+                                                    type: string
+                                                outputs:
+                                                  - name: detailed_metrics
+                                                implementation:
+                                                  graph:
+                                                    tasks:
+                                                      CalculateMetrics:
+                                                        componentRef:
+                                                          name: Metrics Calculator
+                                                          spec:
+                                                            name: Metrics Calculator
+                                                            inputs:
+                                                              - name: results
+                                                                type: string
+                                                            outputs:
+                                                              - name: metrics
+                                                            implementation:
+                                                              container:
+                                                                image: python:3.9
+                                                                command:
+                                                                  - sh
+                                                                  - '-c'
+                                                                  - |
+                                                                    echo "L4: Computing metrics for $0"
+                                                                    sleep 1
+                                                                    echo "precision:0.92,recall:0.91" > $1
+                                                                  - inputValue: results
+                                                                  - outputPath: metrics
+                                                        arguments:
+                                                          results:
+                                                            graphInput:
+                                                              inputName: validation_results
+                                                        annotations:
+                                                          editor.position: '{"x":250,"y":0}'
+
+                                                      # Level 5: Advanced Metrics (DEEPEST!)
+                                                      AdvancedMetrics:
+                                                        componentRef:
+                                                          name: Advanced Metrics Computer
+                                                          spec:
+                                                            name: Advanced Metrics Computer
+                                                            inputs:
+                                                              - name: base_metrics
+                                                                type: string
+                                                            outputs:
+                                                              - name: advanced_metrics
+                                                            implementation:
+                                                              container:
+                                                                image: python:3.9
+                                                                command:
+                                                                  - sh
+                                                                  - '-c'
+                                                                  - |
+                                                                    echo "L5: 🎯 DEEPEST - Computing F1, ROC-AUC from $0"
+                                                                    sleep 1
+                                                                    echo "f1:0.915,roc_auc:0.96" > $1
+                                                                  - inputValue: base_metrics
+                                                                  - outputPath: advanced_metrics
+                                                        arguments:
+                                                          base_metrics:
+                                                            taskOutput:
+                                                              taskId: CalculateMetrics
+                                                              outputName: metrics
+                                                        annotations:
+                                                          editor.position: '{"x":550,"y":50}'
+                                                    outputValues:
+                                                      detailed_metrics:
+                                                        taskOutput:
+                                                          taskId: AdvancedMetrics
+                                                          outputName: advanced_metrics
+                                            arguments:
+                                              validation_results:
+                                                taskOutput:
+                                                  taskId: ValidateModel
+                                                  outputName: validation_score
+                                            annotations:
+                                              editor.position: '{"x":600,"y":100}'
+                                        outputValues:
+                                          eval_metrics:
+                                            taskOutput:
+                                              taskId: Metrics_Pipeline
+                                              outputName: detailed_metrics
+                                arguments:
+                                  model_weights:
+                                    taskOutput:
+                                      taskId: TrainModel
+                                      outputName: trained_weights
+                                annotations:
+                                  editor.position: '{"x":600,"y":200}'
+                            outputValues:
+                              model:
+                                taskOutput:
+                                  taskId: TrainModel
+                                  outputName: trained_weights
+                              metrics:
+                                taskOutput:
+                                  taskId: Evaluation_Pipeline
+                                  outputName: eval_metrics
+                    arguments:
+                      data:
+                        taskOutput:
+                          taskId: LoadTrainingData
+                          outputName: loaded_data
+                      model_arch:
+                        graphInput:
+                          inputName: model_type
+                    annotations:
+                      editor.position: '{"x":650,"y":150}'
+
+                  SaveModel:
+                    componentRef:
+                      name: Model Saver
+                      spec:
+                        name: Model Saver
+                        inputs:
+                          - name: model
+                            type: string
+                        outputs:
+                          - name: saved_path
+                        implementation:
+                          container:
+                            image: python:3.9
+                            command:
+                              - sh
+                              - '-c'
+                              - |
+                                echo "Saving model $0"
+                                sleep 1
+                                echo "saved:/models/final.h5" > $1
+                              - inputValue: model
+                              - outputPath: saved_path
+                    arguments:
+                      model:
+                        taskOutput:
+                          taskId: Training_Pipeline
+                          outputName: model
+                    annotations:
+                      editor.position: '{"x":1050,"y":250}'
+                outputValues:
+                  trained_model:
+                    taskOutput:
+                      taskId: SaveModel
+                      outputName: saved_path
+                  training_metrics:
+                    taskOutput:
+                      taskId: Training_Pipeline
+                      outputName: metrics
+        arguments:
+          training_data:
+            taskOutput:
+              taskId: DataProcessing_Branch
+              outputName: processed_data
+          model_type:
+            graphInput:
+              inputName: model_type
+          validation_split:
+            graphInput:
+              inputName: validation_split
+        annotations:
+          editor.position: '{"x":1200,"y":100}'
+
+      # ==================== BRANCH C: INFERENCE (REUSES SHARED LOADER!) ====================
+      Inference_Branch:
+        componentRef:
+          name: Inference Branch
+          spec:
+            name: Inference Branch
+            inputs:
+              - name: model_path
+                type: string
+              - name: test_data
+                type: string
+            outputs:
+              - name: predictions
+            implementation:
+              graph:
+                tasks:
+                  # REUSED: Same Data Loader as Training Branch!
+                  LoadTestData:
+                    componentRef:
+                      name: Shared Data Loader
+                      spec:
+                        name: Shared Data Loader
+                        inputs:
+                          - name: data_path
+                            type: string
+                          - name: split_ratio
+                            type: Float
+                        outputs:
+                          - name: loaded_data
+                        implementation:
+                          container:
+                            image: python:3.9
+                            command:
+                              - sh
+                              - '-c'
+                              - |
+                                echo "📦 SHARED LOADER (REUSED): Loading $0 with split $1"
+                                sleep 2
+                                echo "loaded:test_data" > $2
+                              - inputValue: data_path
+                              - inputValue: split_ratio
+                              - outputPath: loaded_data
+                    arguments:
+                      data_path:
+                        graphInput:
+                          inputName: test_data
+                      split_ratio: '1.0'
+                    annotations:
+                      editor.position: '{"x":250,"y":0}'
+
+                  # Level 2: Inference Pipeline
+                  Inference_Pipeline:
+                    componentRef:
+                      name: Inference Pipeline
+                      spec:
+                        name: Inference Pipeline
+                        inputs:
+                          - name: model
+                            type: string
+                          - name: data
+                            type: string
+                        outputs:
+                          - name: raw_predictions
+                        implementation:
+                          graph:
+                            tasks:
+                              RunInference:
+                                componentRef:
+                                  name: Inference Engine
+                                  spec:
+                                    name: Inference Engine
+                                    inputs:
+                                      - name: model_path
+                                        type: string
+                                      - name: input_data
+                                        type: string
+                                    outputs:
+                                      - name: predictions
+                                    implementation:
+                                      container:
+                                        image: tensorflow/tensorflow:latest
+                                        command:
+                                          - sh
+                                          - '-c'
+                                          - |
+                                            echo "Running inference with $0 on $1"
+                                            sleep 2
+                                            echo "predictions:[0.8,0.2]" > $2
+                                          - inputValue: model_path
+                                          - inputValue: input_data
+                                          - outputPath: predictions
+                                arguments:
+                                  model_path:
+                                    graphInput:
+                                      inputName: model
+                                  input_data:
+                                    graphInput:
+                                      inputName: data
+                                annotations:
+                                  editor.position: '{"x":250,"y":0}'
+
+                              # Level 3: Post-processing
+                              PostProcessing_Pipeline:
+                                componentRef:
+                                  name: Post Processing Pipeline
+                                  spec:
+                                    name: Post Processing Pipeline
+                                    inputs:
+                                      - name: raw_preds
+                                        type: string
+                                    outputs:
+                                      - name: processed_preds
+                                    implementation:
+                                      graph:
+                                        tasks:
+                                          ApplyThreshold:
+                                            componentRef:
+                                              name: Threshold Applier
+                                              spec:
+                                                name: Threshold Applier
+                                                inputs:
+                                                  - name: predictions
+                                                    type: string
+                                                outputs:
+                                                  - name: thresholded
+                                                implementation:
+                                                  container:
+                                                    image: python:3.9
+                                                    command:
+                                                      - sh
+                                                      - '-c'
+                                                      - |
+                                                        echo "L3: Applying threshold to $0"
+                                                        sleep 1
+                                                        echo "thresholded:[1,0]" > $1
+                                                      - inputValue: predictions
+                                                      - outputPath: thresholded
+                                            arguments:
+                                              predictions:
+                                                graphInput:
+                                                  inputName: raw_preds
+                                            annotations:
+                                              editor.position: '{"x":250,"y":0}'
+
+                                          FormatResults:
+                                            componentRef:
+                                              name: Result Formatter
+                                              spec:
+                                                name: Result Formatter
+                                                inputs:
+                                                  - name: data
+                                                    type: string
+                                                outputs:
+                                                  - name: formatted
+                                                implementation:
+                                                  container:
+                                                    image: python:3.9
+                                                    command:
+                                                      - sh
+                                                      - '-c'
+                                                      - |
+                                                        echo "L3: Formatting $0"
+                                                        sleep 1
+                                                        echo "formatted:json" > $1
+                                                      - inputValue: data
+                                                      - outputPath: formatted
+                                            arguments:
+                                              data:
+                                                taskOutput:
+                                                  taskId: ApplyThreshold
+                                                  outputName: thresholded
+                                            annotations:
+                                              editor.position: '{"x":550,"y":50}'
+                                        outputValues:
+                                          processed_preds:
+                                            taskOutput:
+                                              taskId: FormatResults
+                                              outputName: formatted
+                                arguments:
+                                  raw_preds:
+                                    taskOutput:
+                                      taskId: RunInference
+                                      outputName: predictions
+                                annotations:
+                                  editor.position: '{"x":600,"y":100}'
+                            outputValues:
+                              raw_predictions:
+                                taskOutput:
+                                  taskId: PostProcessing_Pipeline
+                                  outputName: processed_preds
+                    arguments:
+                      model:
+                        graphInput:
+                          inputName: model_path
+                      data:
+                        taskOutput:
+                          taskId: LoadTestData
+                          outputName: loaded_data
+                    annotations:
+                      editor.position: '{"x":650,"y":150}'
+                outputValues:
+                  predictions:
+                    taskOutput:
+                      taskId: Inference_Pipeline
+                      outputName: raw_predictions
+        arguments:
+          model_path:
+            taskOutput:
+              taskId: ModelTraining_Branch
+              outputName: trained_model
+          test_data:
+            graphInput:
+              inputName: dataset_path
+        annotations:
+          editor.position: '{"x":1800,"y":300}'
+
+      # ==================== MERGE ALL BRANCHES ====================
+      MergeResults:
+        componentRef:
+          name: Results Merger
+          spec:
+            name: Results Merger
+            inputs:
+              - name: data_stats
+                type: string
+              - name: model_path
+                type: string
+              - name: metrics
+                type: string
+              - name: predictions
+                type: string
+            outputs:
+              - name: final_model
+              - name: final_report
+              - name: final_predictions
+            implementation:
+              container:
+                image: python:3.9
+                command:
+                  - python
+                  - '-c'
+                  - |
+                    print("🎉 Merging all branch results:")
+                    print(f"  Stats: {input('$0')}")
+                    print(f"  Model: {input('$1')}")
+                    print(f"  Metrics: {input('$2')}")
+                    print(f"  Predictions: {input('$3')}")
+                    import time; time.sleep(2)
+                    with open('$4', 'w') as f: f.write(input('$1'))
+                    with open('$5', 'w') as f: f.write("report:complete")
+                    with open('$6', 'w') as f: f.write(input('$3'))
+                  - inputValue: data_stats
+                  - inputValue: model_path
+                  - inputValue: metrics
+                  - inputValue: predictions
+                  - outputPath: final_model
+                  - outputPath: final_report
+                  - outputPath: final_predictions
+        arguments:
+          data_stats:
+            taskOutput:
+              taskId: DataProcessing_Branch
+              outputName: statistics
+          model_path:
+            taskOutput:
+              taskId: ModelTraining_Branch
+              outputName: trained_model
+          metrics:
+            taskOutput:
+              taskId: ModelTraining_Branch
+              outputName: training_metrics
+          predictions:
+            taskOutput:
+              taskId: Inference_Branch
+              outputName: predictions
+        annotations:
+          editor.position: '{"x":2400,"y":200}'
+    outputValues:
+      final_model:
+        taskOutput:
+          taskId: MergeResults
+          outputName: final_model
+      evaluation_report:
+        taskOutput:
+          taskId: MergeResults
+          outputName: final_report
+      inference_results:
+        taskOutput:
+          taskId: MergeResults
+          outputName: final_predictions
+
