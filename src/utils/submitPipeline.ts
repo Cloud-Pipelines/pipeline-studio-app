@@ -9,7 +9,6 @@ import {
 import type { PipelineRun } from "@/types/pipelineRun";
 
 import type { ComponentReference, ComponentSpec } from "./componentSpec";
-import { getInitialName } from "./getComponentName";
 
 export async function submitPipelineRun(
   componentSpec: ComponentSpec,
@@ -20,7 +19,7 @@ export async function submitPipelineRun(
     onError?: (error: Error) => void;
   },
 ) {
-  const pipelineName = getInitialName(componentSpec);
+  const pipelineName = componentSpec.name ?? "Pipeline";
 
   try {
     const specCopy = structuredClone(componentSpec);
