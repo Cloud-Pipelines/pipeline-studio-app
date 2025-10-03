@@ -608,9 +608,9 @@ const FlowCanvas = ({
               const node = nodes.find((n) => n.id === change.id);
               return node
                 ? {
-                    ...node,
-                    position: { x: change.position.x, y: change.position.y },
-                  }
+                  ...node,
+                  position: { x: change.position.x, y: change.position.y },
+                }
                 : null;
             }
             return null;
@@ -867,8 +867,10 @@ const FlowCanvas = ({
     clearContent();
   };
 
+  const isInSubgraph = currentSubgraphPath.length > 1;
+
   return (
-    <BlockStack gap="0" className="h-full w-full">
+    <BlockStack gap="0" className={cn("h-full w-full", isInSubgraph && "border-3 border-blue-400 bg-blue-400")}>
       <SubgraphBreadcrumbs />
       <ReactFlow
         {...rest}
@@ -895,7 +897,7 @@ const FlowCanvas = ({
         connectOnClick={!readOnly}
         className={cn(
           (rest.selectionOnDrag || (shiftKeyPressed && !isConnecting)) &&
-            "cursor-crosshair",
+          "cursor-crosshair",
         )}
       >
         <NodeToolbar
