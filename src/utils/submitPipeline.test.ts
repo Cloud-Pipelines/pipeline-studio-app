@@ -6,7 +6,6 @@ import * as pipelineRunService from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
 
 import { type ComponentSpec, isGraphImplementation } from "./componentSpec";
-import * as getComponentName from "./getComponentName";
 import { submitPipelineRun } from "./submitPipeline";
 
 // Mock dependencies
@@ -21,10 +20,6 @@ vi.mock(
     getArgumentsFromInputs: vi.fn(),
   }),
 );
-
-vi.mock("./getComponentName", () => ({
-  getInitialName: vi.fn(),
-}));
 
 describe("submitPipelineRun", () => {
   const mockBackendUrl = "https://api.example.com";
@@ -49,7 +44,6 @@ describe("submitPipelineRun", () => {
     global.fetch = mockFetch;
 
     // Setup default mocks
-    vi.mocked(getComponentName.getInitialName).mockReturnValue("test-pipeline");
     vi.mocked(getArgumentsFromInputs.getArgumentsFromInputs).mockReturnValue(
       {},
     );
@@ -102,7 +96,7 @@ describe("submitPipelineRun", () => {
       );
       expect(pipelineRunService.savePipelineRun).toHaveBeenCalledWith(
         mockPipelineRun,
-        "test-pipeline",
+        "simple-component",
         undefined,
       );
       expect(mockOnSuccess).toHaveBeenCalledWith(mockPipelineRun);
@@ -153,6 +147,22 @@ describe("submitPipelineRun", () => {
       expect(pipelineRunService.createPipelineRun).toHaveBeenCalledWith(
         expect.any(Object),
         mockBackendUrl,
+        undefined,
+      );
+    });
+
+    it("should use 'Pipeline' as default name when componentSpec.name is undefined", async () => {
+      const componentSpec: ComponentSpec = {
+        implementation: { container: { image: "test:latest" } },
+      };
+
+      // Act
+      await submitPipelineRun(componentSpec, mockBackendUrl);
+
+      // Assert
+      expect(pipelineRunService.savePipelineRun).toHaveBeenCalledWith(
+        mockPipelineRun,
+        "Pipeline",
         undefined,
       );
     });
@@ -716,7 +726,7 @@ describe("submitPipelineRun", () => {
       // Assert
       expect(pipelineRunService.savePipelineRun).toHaveBeenCalledWith(
         expect.any(Object),
-        "test-pipeline",
+        "digest-component",
         testDigest,
       );
     });
