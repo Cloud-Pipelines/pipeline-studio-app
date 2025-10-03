@@ -1,4 +1,12 @@
-import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
 import { loadPipelineByName } from "@/services/pipelineService";
@@ -69,6 +77,9 @@ export const ComponentSpecProvider = ({
   readOnly?: boolean;
   children: ReactNode;
 }) => {
+  const navigate = useNavigate();
+  const search = useSearch({ strict: false }) as { subgraph?: string };
+
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
     spec ?? EMPTY_GRAPH_COMPONENT_SPEC,
   );
@@ -79,9 +90,16 @@ export const ComponentSpecProvider = ({
 
   const [isLoading, setIsLoading] = useState(!!spec);
 
-  const [currentSubgraphPath, setCurrentSubgraphPath] = useState<string[]>([
-    "root",
-  ]);
+  // Initialize from URL on mount
+  const initialSubgraphPath = useMemo(() => {
+    if (search.subgraph) {
+      return search.subgraph.split(".");
+    }
+    return ["root"];
+  }, [search.subgraph]);
+
+  const [currentSubgraphPath, setCurrentSubgraphPath] =
+    useState<string[]>(initialSubgraphPath);
 
   const undoRedo = useUndoRedo(componentSpec, setComponentSpec);
   const undoRedoRef = useRef(undoRedo);
@@ -189,19 +207,89 @@ export const ComponentSpecProvider = ({
     [currentSubgraphPath],
   );
 
-  const navigateToSubgraph = useCallback((taskId: string) => {
-    setCurrentSubgraphPath((prev) => [...prev, taskId]);
-  }, []);
+  const navigateToSubgraph = useCallback(
+    (taskId: string) => {
+      setCurrentSubgraphPath((prev) => {
+        const newPath = [...prev, taskId];
+        // Update URL - Dynamic search params work at runtime but aren't type-safe
+        (navigate as any)({
+          search: (old: Record<string, unknown>) => ({
+            ...old,
+            subgraph: newPath.join("."),
+          }),
+          replace: false,
+        });
+        return newPath;
+      });
+    },
+    [navigate],
+  );
 
   const navigateBack = useCallback(() => {
-    setCurrentSubgraphPath((prev) => prev.slice(0, -1));
-  }, []);
+    setCurrentSubgraphPath((prev) => {
+      const newPath = prev.slice(0, -1);
+      // Update URL
+      if (newPath.length <= 1) {
+        // Remove subgraph param when going back to root
+        (navigate as any)({
+          search: (old: Record<string, unknown>) => {
+            const { subgraph, ...rest } = old as { subgraph?: string };
+            return rest;
+          },
+          replace: false,
+        });
+      } else {
+        (navigate as any)({
+          search: (old: Record<string, unknown>) => ({
+            ...old,
+            subgraph: newPath.join("."),
+          }),
+          replace: false,
+        });
+      }
+      return newPath;
+    });
+  }, [navigate]);
 
-  const navigateToPath = useCallback((targetPath: string[]) => {
-    setCurrentSubgraphPath(targetPath);
-  }, []);
+  const navigateToPath = useCallback(
+    (targetPath: string[]) => {
+      setCurrentSubgraphPath(targetPath);
+      // Update URL
+      if (targetPath.length <= 1) {
+        // Remove subgraph param when at root
+        (navigate as any)({
+          search: (old: Record<string, unknown>) => {
+            const { subgraph, ...rest } = old as { subgraph?: string };
+            return rest;
+          },
+          replace: false,
+        });
+      } else {
+        (navigate as any)({
+          search: (old: Record<string, unknown>) => ({
+            ...old,
+            subgraph: targetPath.join("."),
+          }),
+          replace: false,
+        });
+      }
+    },
+    [navigate],
+  );
 
   const canNavigateBack = currentSubgraphPath.length > 1;
+
+  // Sync URL changes (browser back/forward) to state
+  useEffect(() => {
+    const urlPath = search.subgraph ? search.subgraph.split(".") : ["root"];
+    const urlPathString = urlPath.join(".");
+    const currentPathString = currentSubgraphPath.join(".");
+
+    // Only update if the URL path is different from current state
+    if (urlPathString !== currentPathString) {
+      setCurrentSubgraphPath(urlPath);
+    }
+  }, [search.subgraph, currentSubgraphPath]);
 
   const value = useMemo(
     () => ({
