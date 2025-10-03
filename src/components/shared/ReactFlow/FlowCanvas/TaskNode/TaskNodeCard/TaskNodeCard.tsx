@@ -11,6 +11,7 @@ import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { QuickTooltip } from "@/components/ui/tooltip";
 import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
+import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { getSubgraphDescription, isSubgraph } from "@/utils/subgraphUtils";
@@ -21,6 +22,7 @@ import {
   useNodesOverlay,
 } from "../../../NodesOverlay/NodesOverlayProvider";
 import TaskConfiguration from "../TaskConfiguration";
+import type { ButtonPropsWithTooltip } from "../TaskConfiguration/TaskConfiguration";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
 import { UpgradeNodePopover } from "./UpgradeNodePopover";
@@ -33,6 +35,7 @@ const TaskNodeCard = () => {
   const { registerNode } = useNodesOverlay();
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
+  const { navigateToSubgraph } = useComponentSpec();
 
   const isDragging = useStore((state) => {
     const thisNode = state.nodes.find((node) => node.id === taskNode.nodeId);
@@ -53,7 +56,8 @@ const TaskNodeCard = () => {
   const [expandedOutputs, setExpandedOutputs] = useState(false);
 
   const { name, state, callbacks, nodeId, taskSpec, taskId } = taskNode;
-  const { dimensions, selected, highlighted, isCustomComponent } = state;
+  const { dimensions, selected, highlighted, isCustomComponent, readOnly } =
+    state;
 
   const isSubgraphNode = useMemo(() => isSubgraph(taskSpec), [taskSpec]);
   const subgraphDescription = useMemo(
@@ -94,38 +98,62 @@ const TaskNodeCard = () => {
     }
   }, []);
 
-  const taskConfigMarkup = useMemo(
-    () => (
-      <TaskConfiguration
-        taskNode={taskNode}
-        key={nodeId}
-        actions={[
-          {
-            children: (
-              <div className="flex items-center gap-2">
-                <CopyIcon />
-              </div>
-            ),
-            variant: "secondary",
-            tooltip: "Duplicate Task",
-            onClick: callbacks.onDuplicate,
-          },
-          {
-            children: (
-              <div className="flex items-center gap-2">
-                <CircleFadingArrowUp />
-              </div>
-            ),
-            variant: "secondary",
-            className: cn(isCustomComponent && "hidden"),
-            tooltip: "Update Task from Source URL",
-            onClick: callbacks.onUpgrade,
-          },
-        ]}
-      />
-    ),
-    [nodeId, callbacks.onDuplicate, callbacks.onUpgrade, isCustomComponent],
-  );
+  const taskConfigMarkup = useMemo(() => {
+    const actions: Array<ButtonPropsWithTooltip> = [];
+
+    if (!readOnly) {
+      actions.push(
+        {
+          children: (
+            <div className="flex items-center gap-2">
+              <CopyIcon />
+            </div>
+          ),
+          variant: "secondary",
+          tooltip: "Duplicate Task",
+          onClick: callbacks.onDuplicate,
+        },
+        {
+          children: (
+            <div className="flex items-center gap-2">
+              <CircleFadingArrowUp />
+            </div>
+          ),
+          variant: "secondary",
+          className: cn(isCustomComponent && "hidden"),
+          tooltip: "Update Task from Source URL",
+          onClick: callbacks.onUpgrade,
+        },
+      );
+    }
+
+    if (isSubgraphNode && taskId && isSubgraphNavigationEnabled) {
+      actions.push({
+        children: (
+          <div className="flex items-center gap-2">
+            <Icon name="Workflow" size="sm" />
+          </div>
+        ),
+        variant: "secondary",
+        tooltip: `Enter Subgraph: ${subgraphDescription}`,
+        onClick: () => navigateToSubgraph(taskId),
+      });
+    }
+
+    return (
+      <TaskConfiguration taskNode={taskNode} key={nodeId} actions={actions} />
+    );
+  }, [
+    nodeId,
+    readOnly,
+    callbacks.onDuplicate,
+    callbacks.onUpgrade,
+    isCustomComponent,
+    isSubgraphNode,
+    taskId,
+    subgraphDescription,
+    navigateToSubgraph,
+  ]);
 
   const handleInputSectionClick = useCallback(() => {
     setExpandedInputs((prev) => !prev);
