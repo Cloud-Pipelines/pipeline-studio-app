@@ -870,7 +870,6 @@ const FlowCanvas = ({
   return (
     <BlockStack gap="0" className="h-full w-full">
       <SubgraphBreadcrumbs />
-
       <ReactFlow
         {...rest}
         nodes={allNodes}
