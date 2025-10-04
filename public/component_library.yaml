@@ -7,6 +7,16 @@ folders:
       - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/96a177dd71d54c98573c4101d9a05ac801f1fa54/components/XGBoost/Train/component.yaml"
       - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/96a177dd71d54c98573c4101d9a05ac801f1fa54/components/XGBoost/Predict/component.yaml"
 
+  - name: "Basics"
+    components:
+      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/c36d9a4893c3caae0d166d9e783af28fcd3cdfe4/components/basics/Format_date_time/component.yaml"
+      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/37d98d43ad3193cf3516c134899f272d9643117c/components/basics/Calculate_hash/component.yaml"
+    folders:
+      - name: File system
+        components:
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/605cefc151797369752b51530a91cc02e7f913f8/components/filesystem/create_directory/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/filesystem/get_file/component.yaml"
+
   - name: "Datasets"
     components:
       # - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/8dda6ec74d859a0112907fab8bc987a177b9fa4b/components/datasets/Chicago_Taxi_Trips/component.yaml"
