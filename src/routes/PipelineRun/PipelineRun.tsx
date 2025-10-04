@@ -77,6 +77,11 @@ const PipelineRun = () => {
     refetch();
   }, [backendUrl, refetch]);
 
+  useEffect(() => {
+    setRootExecutionId(id);
+    setTriedAsRunId(false);
+  }, [id]);
+
   if (isLoading || !ready) {
     return (
       <div className="flex items-center justify-center h-full w-full gap-2">
