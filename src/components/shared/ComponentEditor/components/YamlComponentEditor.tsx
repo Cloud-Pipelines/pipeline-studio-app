@@ -7,6 +7,7 @@ import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
 
 import { usePreviewTaskNodeData } from "../usePreviewTaskNodeData";
+import { PointersEventBlock } from "./PointersEventBlock";
 
 export const YamlComponentEditor = withSuspenseWrapper(
   ({
@@ -56,14 +57,15 @@ export const YamlComponentEditor = withSuspenseWrapper(
               inlineAlign="center"
             >
               {previewNodeData ? (
-                <TaskNodeProvider
-                  data={previewNodeData}
-                  selected={false}
-                  runStatus={undefined}
-                  preview
-                >
-                  <TaskNodeCard />
-                </TaskNodeProvider>
+                <PointersEventBlock>
+                  <TaskNodeProvider
+                    data={previewNodeData}
+                    selected={false}
+                    runStatus={undefined}
+                  >
+                    <TaskNodeCard />
+                  </TaskNodeProvider>
+                </PointersEventBlock>
               ) : null}
             </BlockStack>
           </BlockStack>

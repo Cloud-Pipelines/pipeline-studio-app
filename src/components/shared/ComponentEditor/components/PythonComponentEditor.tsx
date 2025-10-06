@@ -10,6 +10,7 @@ import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
 
 import { usePythonYamlGenerator } from "../generators/python";
 import { usePreviewTaskNodeData } from "../usePreviewTaskNodeData";
+import { PointersEventBlock } from "./PointersEventBlock";
 import { TogglePreview } from "./TogglePreview";
 
 const PythonComponentEditorSkeleton = () => {
@@ -107,14 +108,7 @@ export const PythonComponentEditor = withSuspenseWrapper(
               inlineAlign="center"
             >
               {previewNodeData && showPreview && (
-                /**
-                 * protects the preview from being clicked
-                 */
-                <BlockStack
-                  className="!pointer-events-none isolate select-none relative before:absolute before:inset-0 before:content-[''] before:pointer-events-auto before:z-10"
-                  align="center"
-                  inlineAlign="center"
-                >
+                <PointersEventBlock>
                   <TaskNodeProvider
                     data={previewNodeData}
                     selected={false}
@@ -122,7 +116,7 @@ export const PythonComponentEditor = withSuspenseWrapper(
                   >
                     <TaskNodeCard />
                   </TaskNodeProvider>
-                </BlockStack>
+                </PointersEventBlock>
               )}
               {!showPreview && (
                 <MonacoEditor

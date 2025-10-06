@@ -7,11 +7,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { FaPython } from "react-icons/fa";
-import { SiGnubash, SiRuby } from "react-icons/si";
-import { TbBrandJavascript } from "react-icons/tb";
 
 import { ComponentEditorDialog } from "@/components/shared/ComponentEditor/ComponentEditorDialog";
+import { NewComponentTemplateSelector } from "@/components/shared/ComponentEditor/components/NewComponentTemplateSelector";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,9 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heading, Paragraph } from "@/components/ui/typography";
 import useImportComponent from "@/hooks/useImportComponent";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
@@ -38,41 +34,6 @@ enum TabType {
   File = "File",
   New = "New",
 }
-
-type Template = {
-  name: string;
-  icon?: ReactNode;
-  color?: string;
-  templateName: string;
-};
-
-const SUPPORTED_TEMPLATES: Template[] = [
-  { name: "Empty", templateName: "empty" },
-  {
-    name: "Ruby",
-    icon: <SiRuby size={48} className="text-red-400 scale-300" />,
-    color: "text-red-400",
-    templateName: "ruby",
-  },
-  {
-    name: "Python",
-    icon: <FaPython size={48} className="text-green-400 scale-300" />,
-    color: "text-green-400",
-    templateName: "python",
-  },
-  {
-    name: "JavaScript",
-    icon: <TbBrandJavascript size={48} className="text-yellow-400 scale-300" />,
-    color: "text-yellow-400",
-    templateName: "javascript",
-  },
-  {
-    name: "Bash",
-    icon: <SiGnubash size={48} className="text-gray-400 scale-300" />,
-    color: "text-gray-400",
-    templateName: "bash",
-  },
-];
 
 const ImportComponent = ({
   triggerComponent,
@@ -196,6 +157,11 @@ const ImportComponent = ({
       <PackagePlus className="w-4 h-4" />
     </Button>
   );
+
+  const dialogDescription = hasEnabledInAppEditor
+    ? "Create a new component, or import from a file or a URL."
+    : "Import a new component from a file or a URL.";
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -203,9 +169,7 @@ const ImportComponent = ({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Component</DialogTitle>
-            <DialogDescription>
-              Create a new component, or import from a file or a URL.
-            </DialogDescription>
+            <DialogDescription>{dialogDescription}</DialogDescription>
             <Tabs
               value={tab}
               className="w-full"
@@ -304,43 +268,9 @@ const ImportComponent = ({
               </TabsContent>
               {hasEnabledInAppEditor && (
                 <TabsContent value={TabType.New}>
-                  <BlockStack gap="2" className="py-4">
-                    <Heading level={2}>New Component</Heading>
-                    <Paragraph tone="subdued">
-                      Create a new component using the in-app editor
-                    </Paragraph>
-                    <Heading level={3}>Select a Template</Heading>
-                    <div className="grid grid-cols-3 border-1 rounded-md p-2 w-full">
-                      {SUPPORTED_TEMPLATES.map((template) => (
-                        <Button
-                          key={template.name}
-                          variant="ghost"
-                          className="p-0 h-full w-full"
-                          onClick={() =>
-                            setComponentEditorTemplateSelected(
-                              template.templateName,
-                            )
-                          }
-                        >
-                          <BlockStack
-                            gap="1"
-                            align="center"
-                            inlineAlign="space-between"
-                            className="p-2"
-                          >
-                            <InlineStack
-                              align="center"
-                              blockAlign="center"
-                              className="bg-gray-200 rounded-md p-4 mb-2 w-full h-24"
-                            >
-                              {!!template.icon && template.icon}
-                            </InlineStack>
-                            <Paragraph>{template.name}</Paragraph>
-                          </BlockStack>
-                        </Button>
-                      ))}
-                    </div>
-                  </BlockStack>
+                  <NewComponentTemplateSelector
+                    onTemplateSelected={setComponentEditorTemplateSelected}
+                  />
                 </TabsContent>
               )}
             </Tabs>
