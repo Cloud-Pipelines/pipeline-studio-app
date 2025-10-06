@@ -1,5 +1,5 @@
 import type { icons } from "lucide-react";
-import type { ReactNode } from "react";
+import { Activity, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -90,7 +90,9 @@ const NameField = ({
       })}
       autoFocus={autoFocus}
     />
-    {!!error && <div className="text-xs text-red-500 mt-1">{error}</div>}
+    <Activity mode={error ? "visible" : "hidden"}>
+      <div className="text-xs text-red-500 mt-1">{error}</div>
+    </Activity>
   </FormField>
 );
 

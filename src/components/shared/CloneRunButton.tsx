@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { RUNS_BASE_PATH } from "@/routes/router";
 import { copyRunToPipeline } from "@/services/pipelineRunService";
 import type { ComponentSpec } from "@/utils/componentSpec";
-import { removeTrailingDateFromTitle } from "@/utils/string";
+import { getInitialName } from "@/utils/getComponentName";
 
 const CloneRunButtonInner = ({
   componentSpec,
@@ -14,15 +14,8 @@ const CloneRunButtonInner = ({
 }) => {
   const navigate = useNavigate();
 
-  const getInitialName = () => {
-    const dateTime = new Date().toISOString();
-    const baseName = componentSpec?.name || "Pipeline";
-
-    return `${removeTrailingDateFromTitle(baseName)} (${dateTime})`;
-  };
-
   const handleClone = async () => {
-    const name = getInitialName();
+    const name = getInitialName(componentSpec);
     if (!componentSpec) {
       console.error("No component spec found");
       return;
