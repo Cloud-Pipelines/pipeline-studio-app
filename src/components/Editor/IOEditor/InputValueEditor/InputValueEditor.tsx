@@ -69,6 +69,11 @@ export const InputValueEditor = ({
     ) => {
       if (!componentSpec.inputs) return;
 
+      if (newName === "") {
+        setValidationError("Input name cannot be empty");
+        return;
+      }
+
       const updatedInputs = componentSpec.inputs.map((componentInput) => {
         if (componentInput.name === oldName) {
           return {
@@ -146,7 +151,7 @@ export const InputValueEditor = ({
     const updatedComponentSpecWithValues = handleInputChange(
       input.name,
       inputValue.trim(),
-      inputName,
+      inputName.trim(),
       effectiveOptionalValue,
       inputType as string,
     );
