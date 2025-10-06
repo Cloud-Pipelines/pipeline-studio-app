@@ -7,7 +7,7 @@ import TooltipButton from "@/components/shared/Buttons/TooltipButton";
 import useToastNotification from "@/hooks/useToastNotification";
 import { copyRunToPipeline } from "@/services/pipelineRunService";
 import type { ComponentSpec } from "@/utils/componentSpec";
-import { removeTrailingDateFromTitle } from "@/utils/string";
+import { getInitialName } from "@/utils/getComponentName";
 
 type ClonePipelineButtonProps = {
   componentSpec: ComponentSpec;
@@ -50,10 +50,3 @@ export const ClonePipelineButton = ({
     </TooltipButton>
   );
 };
-
-function getInitialName(componentSpec: ComponentSpec): string {
-  const dateTime = new Date().toISOString();
-  const baseName = componentSpec?.name || "Pipeline";
-
-  return `${removeTrailingDateFromTitle(baseName)} (${dateTime})`;
-}
