@@ -42,7 +42,7 @@ export const OutputNameEditor = ({
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const hasChanges = useCallback(() => {
-    return outputName !== output.name;
+    return outputName.trim() !== output.name;
   }, [outputName, output.name]);
 
   const handleOutputNameChange = useCallback(
@@ -65,9 +65,14 @@ export const OutputNameEditor = ({
   const saveChanges = useCallback(() => {
     if (!hasChanges() || validationError) return;
 
+    if (outputName.trim() === "") {
+      setValidationError("Output name cannot be empty");
+      return;
+    }
+
     const updatedComponentSpecWithValues = handleOutputNameChange(
       output.name,
-      outputName,
+      outputName.trim(),
     );
 
     if (updatedComponentSpecWithValues) {
