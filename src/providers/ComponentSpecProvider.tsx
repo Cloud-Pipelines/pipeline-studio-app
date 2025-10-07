@@ -1,6 +1,14 @@
-import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
+import { NodeManager } from "@/nodeManager";
 import { loadPipelineByName } from "@/services/pipelineService";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
@@ -56,6 +64,8 @@ interface ComponentSpecContextType {
   navigateBack: () => void;
   navigateToPath: (targetPath: string[]) => void;
   canNavigateBack: boolean;
+
+  nodeManager: NodeManager;
 }
 
 const ComponentSpecContext = createRequiredContext<ComponentSpecContextType>(
@@ -71,6 +81,7 @@ export const ComponentSpecProvider = ({
   readOnly?: boolean;
   children: ReactNode;
 }) => {
+  const [nodeManager] = useState(() => new NodeManager());
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
     spec ?? EMPTY_GRAPH_COMPONENT_SPEC,
   );
@@ -214,6 +225,10 @@ export const ComponentSpecProvider = ({
 
   const canNavigateBack = currentSubgraphPath.length > 1;
 
+  useEffect(() => {
+    nodeManager.syncWithComponentSpec(componentSpec);
+  }, [componentSpec, nodeManager]);
+
   const value = useMemo(
     () => ({
       componentSpec,
@@ -237,6 +252,8 @@ export const ComponentSpecProvider = ({
       navigateBack,
       navigateToPath,
       canNavigateBack,
+
+      nodeManager,
     }),
     [
       componentSpec,
@@ -260,6 +277,8 @@ export const ComponentSpecProvider = ({
       navigateBack,
       navigateToPath,
       canNavigateBack,
+
+      nodeManager,
     ],
   );
 
