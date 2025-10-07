@@ -1,11 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Network } from "lucide-react";
 import { useCallback } from "react";
 
 import TooltipButton from "@/components/shared/Buttons/TooltipButton";
+import { Icon } from "@/components/ui/icon";
 
 type InspectPipelineButtonProps = {
-  pipelineName?: string;
+  pipelineName: string;
 };
 
 export const InspectPipelineButton = ({
@@ -14,7 +14,7 @@ export const InspectPipelineButton = ({
   const navigate = useNavigate();
 
   const handleInspect = useCallback(() => {
-    navigate({ to: `/editor/${pipelineName}` });
+    navigate({ to: `/editor/${encodeURIComponent(pipelineName)}` });
   }, [pipelineName, navigate]);
 
   return (
@@ -24,7 +24,7 @@ export const InspectPipelineButton = ({
       tooltip="Inspect pipeline"
       data-testid="inspect-pipeline-button"
     >
-      <Network className="w-4 h-4 rotate-270" />
+      <Icon name="Network" className="rotate-270" />
     </TooltipButton>
   );
 };

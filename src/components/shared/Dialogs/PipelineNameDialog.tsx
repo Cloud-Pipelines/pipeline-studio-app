@@ -1,4 +1,10 @@
-import { type ChangeEvent, type ReactNode, useCallback, useState } from "react";
+import {
+  Activity,
+  type ChangeEvent,
+  type ReactNode,
+  useCallback,
+  useState,
+} from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,7 +22,6 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { BlockStack } from "@/components/ui/layout";
 import useLoadUserPipelines from "@/hooks/useLoadUserPipelines";
-import { VALID_NAME_MESSAGE, VALID_NAME_REGEX } from "@/utils/constants";
 
 interface PipelineNameDialogProps {
   trigger: ReactNode;
@@ -57,9 +62,11 @@ const PipelineNameDialog = ({
         Array.from(userPipelines.keys()).map((name) => name.toLowerCase()),
       );
 
-      if (!VALID_NAME_REGEX.test(newName)) {
-        setError(VALID_NAME_MESSAGE);
-      } else if (existingPipelineNames.has(newName.trim().toLowerCase())) {
+      const normalizedNewName = newName.trim().toLowerCase();
+
+      if (normalizedNewName === "") {
+        setError("Name cannot be empty");
+      } else if (existingPipelineNames.has(normalizedNewName)) {
         setError("Name already exists");
       } else {
         setError(null);
@@ -84,7 +91,7 @@ const PipelineNameDialog = ({
   );
 
   const handleSubmit = useCallback(() => {
-    onSubmit(name);
+    onSubmit(name.trim());
   }, [name, onSubmit]);
 
   const isDisabled =
@@ -103,19 +110,12 @@ const PipelineNameDialog = ({
         </DialogHeader>
         <BlockStack gap="2">
           <Input value={name} onChange={handleOnChange} />
-          <Alert variant={error ? "destructive" : "default"}>
-            {error ? (
-              <>
-                <Icon name="CircleAlert" />
-                <AlertDescription>{error}</AlertDescription>
-              </>
-            ) : (
-              <>
-                <Icon name="Info" />
-                <AlertDescription>{VALID_NAME_MESSAGE}</AlertDescription>
-              </>
-            )}
-          </Alert>
+          <Activity mode={error ? "visible" : "hidden"}>
+            <Alert variant="destructive">
+              <Icon name="CircleAlert" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </Activity>
         </BlockStack>
         <DialogFooter className="sm:justify-end">
           <DialogClose asChild>

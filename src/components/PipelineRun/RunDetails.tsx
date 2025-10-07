@@ -28,7 +28,9 @@ export const RunDetails = () => {
   const { componentSpec } = useComponentSpec();
   const { details, state, runId, isLoading, error } = useRootExecutionContext();
 
-  const editorRoute = `/editor/${componentSpec.name}`;
+  const editorRoute = componentSpec.name
+    ? `/editor/${encodeURIComponent(componentSpec.name)}`
+    : "";
 
   const canAccessEditorSpec = useCheckComponentSpecFromPath(
     editorRoute,
@@ -137,7 +139,7 @@ export const RunDetails = () => {
 
       <div>
         <div className="flex gap-2">
-          {canAccessEditorSpec && (
+          {canAccessEditorSpec && componentSpec.name && (
             <InspectPipelineButton pipelineName={componentSpec.name} />
           )}
           <ClonePipelineButton componentSpec={componentSpec} />
