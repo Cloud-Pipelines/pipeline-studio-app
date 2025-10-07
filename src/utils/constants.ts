@@ -34,10 +34,6 @@ implementation:
     outputValues: {}
 `;
 
-export const VALID_NAME_REGEX = /^[a-zA-Z0-9\s]+$/;
-export const VALID_NAME_MESSAGE =
-  "Name must be unique and contain only alphanumeric characters and spaces";
-
 // IndexedDB constants
 export const DB_NAME = "components";
 export const PIPELINE_RUNS_STORE_NAME = "pipeline_runs";
