@@ -1,6 +1,14 @@
-import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
+import { NodeManager } from "@/nodeManager";
 import { loadPipelineByName } from "@/services/pipelineService";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
@@ -44,6 +52,7 @@ interface ComponentSpecContextType {
   taskStatusMap: Map<string, string>;
   setTaskStatusMap: (taskStatusMap: Map<string, string>) => void;
   undoRedo: UndoRedo;
+  nodeManager: NodeManager;
 }
 
 const ComponentSpecContext = createRequiredContext<ComponentSpecContextType>(
@@ -59,6 +68,7 @@ export const ComponentSpecProvider = ({
   readOnly?: boolean;
   children: ReactNode;
 }) => {
+  const [nodeManager] = useState(() => new NodeManager());
   const [componentSpec, setComponentSpec] = useState<ComponentSpec>(
     spec ?? EMPTY_GRAPH_COMPONENT_SPEC,
   );
@@ -152,6 +162,10 @@ export const ComponentSpecProvider = ({
     }));
   }, []);
 
+  useEffect(() => {
+    nodeManager.syncWithComponentSpec(componentSpec);
+  }, [componentSpec, nodeManager]);
+
   const value = useMemo(
     () => ({
       componentSpec,
@@ -167,6 +181,7 @@ export const ComponentSpecProvider = ({
       updateGraphSpec,
       setTaskStatusMap,
       undoRedo,
+      nodeManager,
     }),
     [
       componentSpec,
@@ -182,6 +197,7 @@ export const ComponentSpecProvider = ({
       updateGraphSpec,
       setTaskStatusMap,
       undoRedo,
+      nodeManager,
     ],
   );
 
