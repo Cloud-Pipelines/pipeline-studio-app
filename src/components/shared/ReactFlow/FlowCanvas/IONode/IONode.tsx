@@ -27,7 +27,7 @@ interface IONodeProps {
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
-  const { getInputNodeId, getOutputNodeId } = useNodeManager();
+  const { getNodeId, getHandleNodeId } = useNodeManager();
   const { graphSpec, componentSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
@@ -58,21 +58,24 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     [componentSpec.outputs, spec.name],
   );
 
-  const nodeId = isInput
-    ? getInputNodeId(inputNameToInputId(spec.name))
-    : getOutputNodeId(outputNameToOutputId(spec.name));
+  const inputId = inputNameToInputId(spec.name);
+  const outputId = outputNameToOutputId(spec.name);
+  const id = isInput ? inputId : outputId;
 
-  const nodeHandleId = `${nodeId}_handle`;
+  const nodeId = getNodeId(id, type);
+
+  const handleNodeType = isInput ? "outputHandle" : "inputHandle";
+  const nodeHandleId = getHandleNodeId(id, "handle", handleNodeType);
 
   const handleHandleClick = useCallback(() => {
     if (ENABLE_DEBUG_MODE) {
-      console.log(`${isInput ? "Input" : "Output"} Node Handle clicked:`, {
-        name: isInput ? input?.name : output?.name,
+      console.log(`${type} Node Handle clicked:`, {
+        name: spec.name,
         nodeId,
         handleId: nodeHandleId,
       });
     }
-  }, [isInput, input, output, nodeId, nodeHandleId]);
+  }, [spec, nodeId, nodeHandleId]);
 
   useEffect(() => {
     if (selected) {
