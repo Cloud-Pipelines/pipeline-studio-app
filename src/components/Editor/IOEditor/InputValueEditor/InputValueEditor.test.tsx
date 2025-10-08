@@ -36,12 +36,6 @@ vi.mock("@/providers/ContextPanelProvider", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useNodeSelectionTransfer", () => ({
-  useNodeSelectionTransfer: () => ({
-    transferSelection: mockTransferSelection,
-  }),
-}));
-
 vi.mock("@/hooks/useToastNotification", () => ({
   default: () => mockNotify,
 }));

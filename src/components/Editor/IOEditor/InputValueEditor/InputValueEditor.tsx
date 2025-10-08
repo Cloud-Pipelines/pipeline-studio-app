@@ -10,7 +10,6 @@ import { BlockStack } from "@/components/ui/layout";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useNodeManager } from "@/hooks/useNodeManager";
-import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
@@ -31,19 +30,9 @@ export const InputValueEditor = ({
   input,
   disabled = false,
 }: InputValueEditorProps) => {
-  const { getInputNodeId } = useNodeManager();
-
-  const inputNameToNodeId = useCallback(
-    (inputName: string): string => {
-      const inputId = inputNameToInputId(inputName);
-      return getInputNodeId(inputId);
-    },
-    [getInputNodeId],
-  );
+  const { updateTaskId } = useNodeManager();
 
   const notify = useToastNotification();
-
-  const { transferSelection } = useNodeSelectionTransfer(inputNameToNodeId);
   const { componentSpec, setComponentSpec } = useComponentSpec();
   const { clearContent } = useContextPanel();
   const {
@@ -111,11 +100,13 @@ export const InputValueEditor = ({
         newName,
       );
 
-      transferSelection(oldName, newName);
+      const oldInputId = inputNameToInputId(oldName);
+      const newInputId = inputNameToInputId(newName);
+      updateTaskId(oldInputId, newInputId);
 
       return updatedComponentSpec;
     },
-    [componentSpec, transferSelection],
+    [componentSpec, updateTaskId],
   );
 
   const handleValueChange = useCallback((value: string) => {
@@ -267,7 +258,6 @@ export const InputValueEditor = ({
         onBlur={handleBlur}
         error={validationError}
         disabled={disabled}
-        autoFocus={!disabled}
       />
 
       <TextField

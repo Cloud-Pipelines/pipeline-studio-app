@@ -8,10 +8,10 @@ import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useNodeManager } from "@/hooks/useNodeManager";
-import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { type OutputSpec } from "@/utils/componentSpec";
+import { outputNameToOutputId } from "@/utils/nodes/conversions";
 
 import { type OutputConnectedDetails } from "../../utils/getOutputConnectedDetails";
 import { updateOutputNameOnComponentSpec } from "../../utils/updateOutputNameOnComponentSpec";
@@ -29,17 +29,8 @@ export const OutputNameEditor = ({
   disabled,
   connectedDetails,
 }: OutputNameEditorProps) => {
-  const { getOutputNodeId } = useNodeManager();
+  const { updateTaskId } = useNodeManager();
 
-  const outputNameToNodeId = useCallback(
-    (outputName: string): string => {
-      const outputId = outputNameToNodeId(outputName);
-      return getOutputNodeId(outputId);
-    },
-    [getOutputNodeId],
-  );
-
-  const { transferSelection } = useNodeSelectionTransfer(outputNameToNodeId);
   const { setComponentSpec, componentSpec } = useComponentSpec();
   const { clearContent } = useContextPanel();
   const {
@@ -65,11 +56,13 @@ export const OutputNameEditor = ({
         newName,
       );
 
-      transferSelection(oldName, newName);
+      const oldInputId = outputNameToOutputId(oldName);
+      const newInputId = outputNameToOutputId(newName);
+      updateTaskId(oldInputId, newInputId);
 
       return updatedComponentSpec;
     },
-    [componentSpec, setComponentSpec],
+    [componentSpec, updateTaskId],
   );
 
   const saveChanges = useCallback(() => {
