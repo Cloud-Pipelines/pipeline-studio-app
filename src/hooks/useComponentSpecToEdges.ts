@@ -112,16 +112,16 @@ const createTaskOutputEdge = (
   const sourceNodeId = nodeManager.getNodeId(taskOutput.taskId, "task");
   const targetNodeId = nodeManager.getNodeId(taskId, "task");
 
-  const sourceHandleNodeId = nodeManager.getTaskHandleNodeId(
+  const sourceHandleNodeId = nodeManager.getHandleNodeId(
     taskOutput.taskId,
     taskOutput.outputName,
-    "taskOutput",
+    "outputHandle",
   );
 
-  const targetHandleNodeId = nodeManager.getTaskHandleNodeId(
+  const targetHandleNodeId = nodeManager.getHandleNodeId(
     taskId,
     inputName,
-    "taskInput",
+    "inputHandle",
   );
 
   return {
@@ -145,10 +145,10 @@ const createGraphInputEdge = (
   const sourceNodeId = nodeManager.getNodeId(inputId, "input");
   const targetNodeId = nodeManager.getNodeId(taskId, "task");
 
-  const targetHandleNodeId = nodeManager.getTaskHandleNodeId(
+  const targetHandleNodeId = nodeManager.getHandleNodeId(
     taskId,
     inputName,
-    "taskInput",
+    "inputHandle",
   );
 
   return {
@@ -174,10 +174,10 @@ const createOutputEdgesFromGraphSpec = (
       const targetOutputId = outputNameToOutputId(outputName);
       const targetNodeId = nodeManager.getNodeId(targetOutputId, "output");
 
-      const sourceHandleNodeId = nodeManager.getTaskHandleNodeId(
+      const sourceHandleNodeId = nodeManager.getHandleNodeId(
         taskOutput.taskId,
         taskOutput.outputName,
-        "taskOutput",
+        "outputHandle",
       );
 
       const edge: Edge = {

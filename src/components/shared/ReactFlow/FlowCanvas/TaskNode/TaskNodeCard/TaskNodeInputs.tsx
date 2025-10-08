@@ -27,7 +27,7 @@ export function TaskNodeInputs({
   expanded,
   onBackgroundClick,
 }: TaskNodeInputsProps) {
-  const { getTaskInputNodeId } = useNodeManager();
+  const { getInputHandleNodeId } = useNodeManager();
   const { taskId, inputs, taskSpec, state, select } = useTaskNode();
   const { graphSpec } = useComponentSpec();
   const {
@@ -146,7 +146,7 @@ export function TaskNodeInputs({
     }
 
     const input = inputs.find(
-      (i) => getTaskInputNodeId(taskId, i.name) === fromHandle?.id,
+      (i) => getInputHandleNodeId(taskId, i.name) === fromHandle?.id,
     );
 
     if (!input) return;
