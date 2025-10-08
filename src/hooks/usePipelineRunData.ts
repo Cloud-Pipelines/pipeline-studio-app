@@ -38,16 +38,6 @@ export const usePipelineRunData = (id: string) => {
   } = useQuery({
     queryKey: ["pipeline-run", id],
     queryFn: async () => {
-      // id is root_execution_id
-      const executionDetails = await fetchPipelineExecutionInfo(
-        id,
-        backendUrl,
-      ).catch((_) => undefined);
-
-      if (executionDetails?.rootExecutionId) {
-        return executionDetails;
-      }
-
       // id is run_id
       const executionDetailsDerivedFromRun = await fetchPipelineRun(
         id,
@@ -60,6 +50,16 @@ export const usePipelineRunData = (id: string) => {
 
       if (executionDetailsDerivedFromRun?.rootExecutionId) {
         return executionDetailsDerivedFromRun;
+      }
+
+      // id is root_execution_id
+      const executionDetailsDerivedFromExecution =
+        await fetchPipelineExecutionInfo(id, backendUrl).catch(
+          (_) => undefined,
+        );
+
+      if (executionDetailsDerivedFromExecution?.rootExecutionId) {
+        return executionDetailsDerivedFromExecution;
       }
 
       throw new Error("No pipeline run or execution details found");

@@ -76,10 +76,10 @@ const OasisSubmitter = ({
       setSubmitSuccess(true);
       setCooldownTime(3);
       onSubmitComplete?.();
-      showSuccessNotification(response.root_execution_id);
+      showSuccessNotification(response.id);
 
       if (isAutoRedirect) {
-        handleViewRun(response.root_execution_id, true);
+        handleViewRun(response.id, true);
       }
     },
     [

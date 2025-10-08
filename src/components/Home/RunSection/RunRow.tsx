@@ -27,7 +27,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
   const navigate = useNavigate();
   const notify = useToastNotification();
 
-  const executionId = `${run.root_execution_id}`;
+  const runId = `${run.id}`;
 
   const name = run.pipeline_name ?? "Unknown pipeline";
 
@@ -48,7 +48,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
     run.execution_status_stats,
   );
 
-  const clickThroughUrl = `${APP_ROUTES.RUNS}/${executionId}`;
+  const clickThroughUrl = `${APP_ROUTES.RUNS}/${runId}`;
 
   const LinkProps = {
     to: clickThroughUrl,
@@ -89,7 +89,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
       <TableCell className="text-sm flex items-center gap-2">
         <StatusIcon status={getRunStatus(statusCounts)} />
         <Link {...LinkProps}>{name}</Link>
-        <span>{`#${executionId}`}</span>
+        <span>{`#${runId}`}</span>
       </TableCell>
       <TableCell>
         <HoverCard openDelay={100}>
