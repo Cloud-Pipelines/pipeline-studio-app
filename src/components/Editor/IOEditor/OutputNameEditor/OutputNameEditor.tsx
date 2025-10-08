@@ -8,7 +8,6 @@ import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useNodeManager } from "@/hooks/useNodeManager";
-import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { type OutputSpec } from "@/utils/componentSpec";
@@ -30,8 +29,7 @@ export const OutputNameEditor = ({
   disabled,
   connectedDetails,
 }: OutputNameEditorProps) => {
-  const { getOutputNodeId } = useNodeManager();
-  const { transferSelection } = useNodeSelectionTransfer(getOutputNodeId);
+  const { updateRefId } = useNodeManager();
   const {
     setComponentSpec,
     componentSpec,
@@ -62,11 +60,11 @@ export const OutputNameEditor = ({
         newName,
       );
 
-      transferSelection(oldName, newName);
+      updateRefId(oldName, newName);
 
       return updatedComponentSpec;
     },
-    [currentSubgraphSpec, transferSelection],
+    [currentSubgraphSpec, updateRefId],
   );
 
   const saveChanges = useCallback(() => {

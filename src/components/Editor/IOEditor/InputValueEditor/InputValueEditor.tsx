@@ -10,7 +10,6 @@ import { BlockStack } from "@/components/ui/layout";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useNodeManager } from "@/hooks/useNodeManager";
-import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
@@ -31,10 +30,9 @@ export const InputValueEditor = ({
   input,
   disabled = false,
 }: InputValueEditorProps) => {
-  const { getInputNodeId } = useNodeManager();
+  const { updateRefId } = useNodeManager();
 
   const notify = useToastNotification();
-  const { transferSelection } = useNodeSelectionTransfer(getInputNodeId);
   const {
     componentSpec,
     setComponentSpec,
@@ -110,11 +108,11 @@ export const InputValueEditor = ({
         newName,
       );
 
-      transferSelection(oldName, newName);
+      updateRefId(oldName, newName);
 
       return updatedComponentSpec;
     },
-    [currentSubgraphSpec, transferSelection],
+    [currentSubgraphSpec, updateRefId],
   );
 
   const handleValueChange = useCallback((value: string) => {
@@ -292,7 +290,6 @@ export const InputValueEditor = ({
         onBlur={handleBlur}
         error={validationError}
         disabled={disabled}
-        autoFocus={!disabled}
       />
 
       <TextField
