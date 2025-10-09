@@ -119,7 +119,12 @@ const FlowCanvas = ({
   const { preserveIOSelectionOnSpecChange, resetPrevSpec } =
     useIOSelectionPersistence();
 
-  const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
+  const currentSubgraphSpec = useMemo(
+    () => getSubgraphComponentSpec(componentSpec, currentSubgraphPath),
+    [componentSpec, currentSubgraphPath],
+  );
+
+  const { edges, onEdgesChange } = useComponentSpecToEdges(currentSubgraphSpec);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 
   const isConnecting = useConnection((connection) => connection.inProgress);
@@ -725,15 +730,12 @@ const FlowCanvas = ({
 
   const updateReactFlow = useCallback(
     (newComponentSpec: ComponentSpec) => {
-      const currentSubgraphSpec = getSubgraphComponentSpec(
+      const subgraphSpec = getSubgraphComponentSpec(
         newComponentSpec,
         currentSubgraphPath,
         notify,
       );
-      const newNodes = createNodesFromComponentSpec(
-        currentSubgraphSpec,
-        nodeData,
-      );
+      const newNodes = createNodesFromComponentSpec(subgraphSpec, nodeData);
 
       const updatedNewNodes = newNodes.map((node) => ({
         ...node,
