@@ -6,10 +6,11 @@ import type {
   TaskOutputArgument,
 } from "@/utils/componentSpec";
 import {
-  nodeIdToInputName,
-  nodeIdToOutputName,
+  inputIdToInputName,
+  nodeIdToInputId,
+  nodeIdToOutputId,
   nodeIdToTaskId,
-} from "@/utils/nodes/nodeIdUtils";
+} from "@/utils/nodes/conversions";
 
 import { setGraphOutputValue } from "./setGraphOutputValue";
 import { setTaskArgument } from "./setTaskArgument";
@@ -39,13 +40,15 @@ export const handleConnection = (
     } else {
       return setGraphOutputValue(
         graphSpec,
-        nodeIdToOutputName(connection.target),
+        nodeIdToOutputId(connection.target),
         taskOutputArgument,
       );
       // TODO: Perhaps propagate type information
     }
   } else {
-    const graphInputName = nodeIdToInputName(connection.source);
+    const graphInputName = inputIdToInputName(
+      nodeIdToInputId(connection.source),
+    );
     const graphInputArgument: GraphInputArgument = {
       graphInput: {
         inputName: graphInputName,

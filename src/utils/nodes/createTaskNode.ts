@@ -3,8 +3,8 @@ import { type Node } from "@xyflow/react";
 import type { NodeData, TaskNodeData } from "@/types/nodes";
 
 import type { TaskSpec } from "../componentSpec";
+import { taskIdToNodeId } from "./conversions";
 import { extractPositionFromAnnotations } from "./extractPositionFromAnnotations";
-import { taskIdToNodeId } from "./nodeIdUtils";
 import { convertNodeCallbacksToTaskCallbacks } from "./taskCallbackUtils";
 
 export const createTaskNode = (

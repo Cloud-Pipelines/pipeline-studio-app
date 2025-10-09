@@ -3,15 +3,16 @@ import { type Node } from "@xyflow/react";
 import type { IONodeData, NodeData } from "@/types/nodes";
 
 import type { OutputSpec } from "../componentSpec";
+import { outputIdToNodeId, outputNameToOutputId } from "./conversions";
 import { extractPositionFromAnnotations } from "./extractPositionFromAnnotations";
-import { outputNameToNodeId } from "./nodeIdUtils";
 
 export const createOutputNode = (output: OutputSpec, nodeData: NodeData) => {
   const { name, annotations } = output;
   const { readOnly } = nodeData;
 
   const position = extractPositionFromAnnotations(annotations);
-  const nodeId = outputNameToNodeId(name);
+  const outputId = outputNameToOutputId(name);
+  const nodeId = outputIdToNodeId(outputId);
 
   const outputNodeData: IONodeData = {
     spec: output,

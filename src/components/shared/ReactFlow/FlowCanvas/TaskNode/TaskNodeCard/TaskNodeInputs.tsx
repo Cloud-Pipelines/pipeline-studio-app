@@ -10,7 +10,7 @@ import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { inputsWithInvalidArguments } from "@/services/componentService";
 import type { InputSpec } from "@/utils/componentSpec";
 import { ComponentSearchFilter } from "@/utils/constants";
-import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
+import { inputIdToNodeId, inputNameToInputId } from "@/utils/nodes/conversions";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
 
 import { InputHandle } from "./Handles";
@@ -145,7 +145,7 @@ export function TaskNodeInputs({
     }
 
     const input = inputs.find(
-      (i) => inputNameToNodeId(i.name) === fromHandle?.id,
+      (i) => inputIdToNodeId(inputNameToInputId(i.name)) === fromHandle?.id,
     );
 
     if (!input) return;

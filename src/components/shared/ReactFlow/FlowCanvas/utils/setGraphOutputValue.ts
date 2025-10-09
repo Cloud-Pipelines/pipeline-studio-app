@@ -2,7 +2,7 @@ import type { GraphSpec, TaskOutputArgument } from "@/utils/componentSpec";
 
 export const setGraphOutputValue = (
   graphSpec: GraphSpec,
-  outputName: string,
+  outputId: string,
   outputValue?: TaskOutputArgument,
 ) => {
   let newGraphOutputValues;
@@ -10,12 +10,11 @@ export const setGraphOutputValue = (
   if (outputValue) {
     newGraphOutputValues = {
       ...graphSpec.outputValues,
-      [outputName]: outputValue,
+      [outputId]: outputValue,
     };
   } else {
     // Remove the output value (for edge deletion)
-    const { [outputName]: removed, ...remaining } =
-      graphSpec.outputValues || {};
+    const { [outputId]: removed, ...remaining } = graphSpec.outputValues || {};
     newGraphOutputValues = remaining;
   }
 
