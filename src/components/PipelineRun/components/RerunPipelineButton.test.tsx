@@ -131,7 +131,7 @@ describe("<RerunPipelineButton/>", () => {
 
   test("calls submitPipelineRun on click", async () => {
     mockSubmitPipelineRun.mockImplementation(async (_, __, { onSuccess }) => {
-      onSuccess({ root_execution_id: 123 });
+      onSuccess({ id: 123 });
     });
 
     await act(async () => {
@@ -161,7 +161,7 @@ describe("<RerunPipelineButton/>", () => {
 
   test("handles successful rerun", async () => {
     mockSubmitPipelineRun.mockImplementation(async (_, __, { onSuccess }) => {
-      onSuccess({ root_execution_id: 123 });
+      onSuccess({ id: 123 });
     });
 
     await act(async () => {
@@ -235,7 +235,7 @@ describe("<RerunPipelineButton/>", () => {
     });
 
     await act(async () => {
-      resolveSubmit!({ root_execution_id: 123 });
+      resolveSubmit!({ id: 123 });
     });
   });
 
@@ -244,7 +244,7 @@ describe("<RerunPipelineButton/>", () => {
     mockIsAuthorized.mockReturnValue(false);
     mockAwaitAuthorization.mockResolvedValue("new-token");
     mockSubmitPipelineRun.mockImplementation(async (_, __, { onSuccess }) => {
-      onSuccess({ root_execution_id: 123 });
+      onSuccess({ id: 123 });
     });
 
     await act(async () => {
@@ -279,7 +279,7 @@ describe("<RerunPipelineButton/>", () => {
     mockIsAuthorized.mockReturnValue(false);
     mockAwaitAuthorization.mockResolvedValue(null);
     mockSubmitPipelineRun.mockImplementation(async (_, __, { onSuccess }) => {
-      onSuccess({ root_execution_id: 123 });
+      onSuccess({ id: 123 });
     });
 
     await act(async () => {
