@@ -8,11 +8,13 @@ import type {
 } from "@/utils/componentSpec";
 import { DEFAULT_NODE_DIMENSIONS } from "@/utils/constants";
 import {
-  inputNameToNodeId,
+  inputIdToNodeId,
+  inputNameToInputId,
   nodeIdToTaskId,
-  outputNameToNodeId,
+  outputIdToNodeId,
+  outputNameToOutputId,
   taskIdToNodeId,
-} from "@/utils/nodes/nodeIdUtils";
+} from "@/utils/nodes/conversions";
 
 import addTask from "./addTask";
 import { handleConnection } from "./handleConnection";
@@ -112,7 +114,7 @@ export function addAndConnectNode({
       return newComponentSpec;
     }
 
-    targetHandleId = inputNameToNodeId(handleName);
+    targetHandleId = inputIdToNodeId(inputNameToInputId(handleName));
   } else if (toHandleType === "output") {
     const handleName = componentRef.spec?.outputs?.find(
       (io) => io.type === connectionType,
@@ -121,7 +123,7 @@ export function addAndConnectNode({
       return newComponentSpec;
     }
 
-    targetHandleId = outputNameToNodeId(handleName);
+    targetHandleId = outputIdToNodeId(outputNameToOutputId(handleName));
   }
 
   // 4. Build a Connection object and use handleConnection to add the edge

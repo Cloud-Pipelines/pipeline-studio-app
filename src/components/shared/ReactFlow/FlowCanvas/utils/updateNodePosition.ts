@@ -5,10 +5,12 @@ import {
   isGraphImplementation,
 } from "@/utils/componentSpec";
 import {
-  nodeIdToInputName,
-  nodeIdToOutputName,
+  inputIdToInputName,
+  nodeIdToInputId,
+  nodeIdToOutputId,
   nodeIdToTaskId,
-} from "@/utils/nodes/nodeIdUtils";
+  outputIdToOutputName,
+} from "@/utils/nodes/conversions";
 import { setPositionInAnnotations } from "@/utils/nodes/setPositionInAnnotations";
 
 export const updateNodePositions = (
@@ -53,7 +55,7 @@ export const updateNodePositions = (
         newComponentSpec.implementation.graph = updatedGraphSpec;
       }
     } else if (node.type === "input") {
-      const inputName = nodeIdToInputName(node.id);
+      const inputName = inputIdToInputName(nodeIdToInputId(node.id));
       const inputs = [...(newComponentSpec.inputs || [])];
       const inputIndex = inputs.findIndex((input) => input.name === inputName);
 
@@ -73,7 +75,7 @@ export const updateNodePositions = (
         newComponentSpec.inputs = inputs;
       }
     } else if (node.type === "output") {
-      const outputName = nodeIdToOutputName(node.id);
+      const outputName = outputIdToOutputName(nodeIdToOutputId(node.id));
       const outputs = [...(newComponentSpec.outputs || [])];
       const outputIndex = outputs.findIndex(
         (output) => output.name === outputName,

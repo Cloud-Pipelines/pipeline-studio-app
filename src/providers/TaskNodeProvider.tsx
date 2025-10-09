@@ -15,7 +15,7 @@ import type {
   TaskSpec,
 } from "@/utils/componentSpec";
 import { getComponentName } from "@/utils/getComponentName";
-import { taskIdToNodeId } from "@/utils/nodes/nodeIdUtils";
+import { taskIdToNodeId } from "@/utils/nodes/conversions";
 
 import {
   createRequiredContext,

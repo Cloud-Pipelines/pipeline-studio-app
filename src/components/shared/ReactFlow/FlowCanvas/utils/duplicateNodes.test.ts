@@ -10,10 +10,12 @@ import type {
   TaskSpec,
 } from "@/utils/componentSpec";
 import {
-  inputNameToNodeId,
-  outputNameToNodeId,
+  inputIdToNodeId,
+  inputNameToInputId,
+  outputIdToNodeId,
+  outputNameToOutputId,
   taskIdToNodeId,
-} from "@/utils/nodes/nodeIdUtils";
+} from "@/utils/nodes/conversions";
 
 import { duplicateNodes } from "./duplicateNodes";
 
@@ -112,7 +114,7 @@ const createMockInputNode = (
   inputName: string,
   position = { x: 50, y: 50 },
 ): Node => ({
-  id: inputNameToNodeId(inputName),
+  id: inputIdToNodeId(inputNameToInputId(inputName)),
   type: "input",
   position,
   data: {
@@ -128,7 +130,7 @@ const createMockOutputNode = (
   outputName: string,
   position = { x: 300, y: 300 },
 ): Node => ({
-  id: outputNameToNodeId(outputName),
+  id: outputIdToNodeId(outputNameToOutputId(outputName)),
   type: "output",
   position,
   data: {
@@ -212,7 +214,9 @@ describe("duplicateNodes", () => {
 
       expect(result.newNodes).toHaveLength(1);
       expect(result.newNodes[0].type).toBe("input");
-      expect(result.newNodes[0].id).toBe(inputNameToNodeId("original-input 2"));
+      expect(result.newNodes[0].id).toBe(
+        inputIdToNodeId(inputNameToInputId("original-input 2")),
+      );
       expect(result.newNodes[0].position).toEqual({ x: 60, y: 60 });
 
       expect(result.updatedComponentSpec.inputs).toHaveLength(2);
@@ -248,7 +252,7 @@ describe("duplicateNodes", () => {
       expect(result.newNodes).toHaveLength(1);
       expect(result.newNodes[0].type).toBe("output");
       expect(result.newNodes[0].id).toBe(
-        outputNameToNodeId("original-output 2"),
+        outputIdToNodeId(outputNameToOutputId("original-output 2")),
       );
       expect(result.newNodes[0].position).toEqual({ x: 310, y: 310 });
 

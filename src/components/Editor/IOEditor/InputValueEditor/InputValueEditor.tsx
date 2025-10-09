@@ -15,7 +15,7 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { type InputSpec } from "@/utils/componentSpec";
 import { checkInputConnectionToRequiredFields } from "@/utils/inputConnectionUtils";
-import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
+import { inputIdToNodeId, inputNameToInputId } from "@/utils/nodes/conversions";
 
 import { NameField, TextField, TypeField } from "./FormFields/FormFields";
 import { checkNameCollision } from "./FormFields/utils";
@@ -31,6 +31,12 @@ export const InputValueEditor = ({
   disabled = false,
 }: InputValueEditorProps) => {
   const notify = useToastNotification();
+
+  const inputNameToNodeId = useCallback((inputName: string): string => {
+    const inputId = inputNameToInputId(inputName);
+    return inputIdToNodeId(inputId);
+  }, []);
+
   const { transferSelection } = useNodeSelectionTransfer(inputNameToNodeId);
   const { componentSpec, setComponentSpec } = useComponentSpec();
   const { clearContent } = useContextPanel();

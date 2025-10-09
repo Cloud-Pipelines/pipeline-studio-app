@@ -1,7 +1,11 @@
 import type { Edge } from "@xyflow/react";
 
 import type { ComponentSpec, GraphImplementation } from "@/utils/componentSpec";
-import { nodeIdToOutputName, nodeIdToTaskId } from "@/utils/nodes/nodeIdUtils";
+import {
+  nodeIdToInputId,
+  nodeIdToOutputId,
+  nodeIdToTaskId,
+} from "@/utils/nodes/conversions";
 
 import { setGraphOutputValue } from "./setGraphOutputValue";
 import { setTaskArgument } from "./setTaskArgument";
@@ -10,7 +14,11 @@ export const removeEdge = (edge: Edge, componentSpec: ComponentSpec) => {
   const graphSpec = (componentSpec.implementation as GraphImplementation)
     ?.graph;
 
-  const inputName = edge.targetHandle?.replace(/^input_/, "");
+  if (!edge.targetHandle) {
+    return componentSpec;
+  }
+
+  const inputName = nodeIdToInputId(edge.targetHandle);
 
   const updatedComponentSpec = {
     ...componentSpec,
@@ -26,8 +34,8 @@ export const removeEdge = (edge: Edge, componentSpec: ComponentSpec) => {
 
     return updatedComponentSpec;
   } else {
-    const outputName = nodeIdToOutputName(edge.target);
-    const newGraphSpec = setGraphOutputValue(graphSpec, outputName);
+    const outputId = nodeIdToOutputId(edge.target);
+    const newGraphSpec = setGraphOutputValue(graphSpec, outputId);
     updatedComponentSpec.implementation = {
       ...updatedComponentSpec.implementation,
       graph: newGraphSpec,

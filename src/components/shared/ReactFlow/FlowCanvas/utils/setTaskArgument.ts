@@ -5,16 +5,16 @@ import replaceTaskArgumentsInGraphSpec from "./replaceTaskArgumentsInGraphSpec";
 export const setTaskArgument = (
   graphSpec: GraphSpec,
   taskId: string,
-  inputName: string,
+  inputId: string,
   argument?: ArgumentType,
 ) => {
   const oldTaskSpec = graphSpec.tasks[taskId];
   const oldTaskSpecArguments = oldTaskSpec.arguments || {};
 
-  const nonNullArgumentObject = argument ? { [inputName]: argument } : {};
+  const nonNullArgumentObject = argument ? { [inputId]: argument } : {};
   const newTaskSpecArguments = {
     ...Object.fromEntries(
-      Object.entries(oldTaskSpecArguments).filter(([key]) => key !== inputName),
+      Object.entries(oldTaskSpecArguments).filter(([key]) => key !== inputId),
     ),
     ...nonNullArgumentObject,
   };
