@@ -33,7 +33,7 @@ export const getUniqueOutputName = (
   );
 };
 
-export const getUniqueTaskName = (
+export const getUniqueTaskId = (
   graphSpec: GraphSpec,
   name: string = "Task",
 ) => {
