@@ -1,5 +1,5 @@
 import { Code, InfoIcon, ListFilter } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 
 import {
   Dialog,
@@ -17,6 +17,8 @@ import { useHydrateComponentReference } from "@/hooks/useHydrateComponentReferen
 import type { ComponentReference } from "@/utils/componentSpec";
 
 import InfoIconButton from "../Buttons/InfoIconButton";
+import TooltipButton from "../Buttons/TooltipButton";
+import { ComponentEditorDialog } from "../ComponentEditor/ComponentEditorDialog";
 import { InfoBox } from "../InfoBox";
 import { PublishComponent } from "../ManageComponent/PublishComponent";
 import { PublishedComponentDetails } from "../ManageComponent/PublishedComponentDetails";
@@ -176,6 +178,9 @@ const ComponentDetails = ({
   onClose,
   onDelete,
 }: ComponentDetailsProps) => {
+  const hasEnabledInAppEditor = useBetaFlagValue("in-app-component-editor");
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const dialogTriggerButton = trigger || <InfoIconButton />;
 
@@ -196,38 +201,72 @@ const ComponentDetails = ({
     [],
   );
 
+  const handleEditComponent = useCallback(() => {
+    setIsEditDialogOpen(true);
+  }, []);
+
+  const actionsWithEdit = useMemo(() => {
+    if (!hasEnabledInAppEditor) return actions;
+
+    const EditButton = (
+      <TooltipButton
+        variant="secondary"
+        onClick={handleEditComponent}
+        tooltip="Edit Component Definition"
+      >
+        <Icon name="FilePenLine" />
+      </TooltipButton>
+    );
+
+    return [...actions, EditButton];
+  }, [actions, hasEnabledInAppEditor, handleEditComponent]);
+
+  const componentText = component.text;
+
+  const handleCloseEditDialog = useCallback(() => {
+    setIsEditDialogOpen(false);
+  }, []);
+
   return (
-    <Dialog modal open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{dialogTriggerButton}</DialogTrigger>
+    <>
+      <Dialog modal open={open} onOpenChange={onOpenChange}>
+        <DialogTrigger asChild>{dialogTriggerButton}</DialogTrigger>
 
-      <DialogDescription
-        className="hidden"
-        aria-label={`${displayName} component details`}
-      >
-        {`${displayName} component details`}
-      </DialogDescription>
-      <DialogContent
-        className="max-w-2xl min-w-2xl overflow-hidden"
-        aria-label={`${displayName} component details`}
-      >
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 mr-5">
-            <span>{displayName}</span>
-          </DialogTitle>
-        </DialogHeader>
+        <DialogDescription
+          className="hidden"
+          aria-label={`${displayName} component details`}
+        >
+          {`${displayName} component details`}
+        </DialogDescription>
+        <DialogContent
+          className="max-w-2xl min-w-2xl overflow-hidden"
+          aria-label={`${displayName} component details`}
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 mr-5">
+              <span>{displayName}</span>
+            </DialogTitle>
+          </DialogHeader>
 
-        <DialogContext.Provider value={dialogContextValue}>
-          <ComponentDetailsDialogContent
-            component={component}
-            displayName={displayName}
-            trigger={dialogTriggerButton}
-            actions={actions}
-            onClose={onClose}
-            onDelete={onDelete}
-          />
-        </DialogContext.Provider>
-      </DialogContent>
-    </Dialog>
+          <DialogContext.Provider value={dialogContextValue}>
+            <ComponentDetailsDialogContent
+              component={component}
+              displayName={displayName}
+              trigger={dialogTriggerButton}
+              actions={actionsWithEdit}
+              onClose={onClose}
+              onDelete={onDelete}
+            />
+          </DialogContext.Provider>
+        </DialogContent>
+      </Dialog>
+      {isEditDialogOpen && (
+        <ComponentEditorDialog
+          text={componentText}
+          onClose={handleCloseEditDialog}
+        />
+      )}
+    </>
   );
 };
 
