@@ -6,13 +6,14 @@ import {
 } from "@xyflow/react";
 import { useEffect } from "react";
 
-import type {
-  ArgumentType,
-  ComponentSpec,
-  GraphInputArgument,
-  GraphSpec,
-  TaskOutputArgument,
-  TaskSpec,
+import {
+  type ArgumentType,
+  type ComponentSpec,
+  type GraphInputArgument,
+  type GraphSpec,
+  isGraphImplementation,
+  type TaskOutputArgument,
+  type TaskSpec,
 } from "@/utils/componentSpec";
 import {
   inputNameToNodeId,
@@ -42,7 +43,7 @@ const useComponentSpecToEdges = (
 };
 
 const getEdges = (componentSpec: ComponentSpec) => {
-  if (!("graph" in componentSpec.implementation)) {
+  if (!isGraphImplementation(componentSpec.implementation)) {
     return [];
   }
 
