@@ -12,7 +12,7 @@ import type { TaskStatusCounts } from "@/types/pipelineRun";
 import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
 export const fetchExecutionState = async (
-  executionId: string,
+  executionId: string | undefined,
   backendUrl: string,
 ) => {
   const url = `${backendUrl}/api/executions/${executionId}/state`;
@@ -20,7 +20,7 @@ export const fetchExecutionState = async (
 };
 
 export const fetchExecutionDetails = async (
-  executionId: string,
+  executionId: string | undefined,
   backendUrl: string,
 ): Promise<GetExecutionInfoResponse> => {
   const url = `${backendUrl}/api/executions/${executionId}/details`;
@@ -59,7 +59,7 @@ export const useFetchContainerExecutionState = (
 };
 
 export const useFetchExecutionInfo = (
-  executionId: string,
+  executionId: string | undefined,
   backendUrl: string,
   poll: boolean = false,
 ) => {
@@ -74,6 +74,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionDetails(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
+    enabled: !!executionId,
   });
 
   const {
@@ -87,6 +88,7 @@ export const useFetchExecutionInfo = (
     refetchOnWindowFocus: false,
     queryFn: () => fetchExecutionState(executionId, backendUrl),
     refetchInterval: poll ? 5000 : false,
+    enabled: !!executionId,
   });
 
   const isLoading = isDetailsLoading || isStateLoading;

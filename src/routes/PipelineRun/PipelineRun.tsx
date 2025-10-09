@@ -19,6 +19,7 @@ import {
   countTaskStatuses,
   getRunStatus,
   STATUS,
+  useFetchExecutionInfo,
 } from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
@@ -26,13 +27,24 @@ import type { ComponentSpec } from "@/utils/componentSpec";
 const PipelineRun = () => {
   const { setComponentSpec, clearComponentSpec, componentSpec } =
     useComponentSpec();
-  const { configured, available, ready } = useBackend();
+  const { backendUrl, configured, available, ready } = useBackend();
   const { id } = runDetailRoute.useParams() as RunDetailParams;
 
-  const { executionData, rootExecutionId, isLoading, error } =
-    usePipelineRunData(id);
+  const {
+    rootExecutionId,
+    isLoading: isLoadingRootExecutionId,
+    error: rootExecutionIdError,
+  } = usePipelineRunData(id);
 
-  const { details, state } = executionData || {};
+  const {
+    data,
+    isLoading: isLoadingExecutionInfo,
+    error: executionInfoError,
+  } = useFetchExecutionInfo(rootExecutionId, backendUrl, false);
+
+  const { details, state } = data || {};
+  const isLoading = isLoadingRootExecutionId || isLoadingExecutionInfo;
+  const error = rootExecutionIdError || executionInfoError;
 
   useEffect(() => {
     if (!details || !state) {
