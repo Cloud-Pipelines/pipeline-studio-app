@@ -873,8 +873,10 @@ const FlowCanvas = ({
     clearContent();
   };
 
+  const isInSubgraph = currentSubgraphPath.length > 1;
+
   return (
-    <BlockStack gap="0" className="h-full w-full">
+    <BlockStack gap="0" className={cn("h-full w-full", isInSubgraph && "border-3 border-blue-400 bg-blue-400")}>
       <SubgraphBreadcrumbs />
       <ReactFlow
         {...rest}
