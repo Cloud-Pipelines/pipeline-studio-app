@@ -10,11 +10,8 @@ import {
   FlowSidebar,
 } from "@/components/shared/ReactFlow";
 import { UndoRedo } from "@/components/shared/UndoRedo";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { ResizeHandle } from "@/components/ui/resize-handle";
 import { Spinner } from "@/components/ui/spinner";
 import { AutoSaveProvider } from "@/providers/AutoSaveProvider";
 import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
@@ -70,8 +67,9 @@ const PipelineEditor = () => {
             <ForcedSearchProvider>
               <ComponentLibraryProvider>
                 <FlowSidebar />
-                <ResizablePanelGroup direction="horizontal">
-                  <ResizablePanel>
+
+                <InlineStack className="w-full h-full" align="start">
+                  <BlockStack className="flex-1 h-full">
                     <div className="reactflow-wrapper relative">
                       <FlowCanvas {...flowConfig}>
                         <MiniMap position="bottom-left" pannable />
@@ -88,10 +86,12 @@ const PipelineEditor = () => {
                         <UndoRedo />
                       </div>
                     </div>
-                  </ResizablePanel>
-                  <ResizableHandle />
-                  <CollapsibleContextPanel />
-                </ResizablePanelGroup>
+                  </BlockStack>
+                  <InlineStack className="w-[430px] h-full min-w-[200px] max-w-[600px] relative">
+                    <ResizeHandle />
+                    <CollapsibleContextPanel />
+                  </InlineStack>
+                </InlineStack>
               </ComponentLibraryProvider>
             </ForcedSearchProvider>
           </ContextPanelProvider>
