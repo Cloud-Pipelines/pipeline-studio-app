@@ -29,8 +29,7 @@ const PipelineRun = () => {
   const { configured, available, ready } = useBackend();
   const { id } = runDetailRoute.useParams() as RunDetailParams;
 
-  const { executionData, rootExecutionId, isLoading, error } =
-    usePipelineRunData(id);
+  const { executionData, isLoading, error } = usePipelineRunData(id);
 
   const { details, state } = executionData || {};
 
@@ -124,7 +123,7 @@ const PipelineRun = () => {
       <DndContext>
         <ReactFlowProvider>
           <PipelineRunContent
-            rootExecutionId={rootExecutionId}
+            pipelineRunId={id}
             details={details}
             state={state}
           />
@@ -135,11 +134,11 @@ const PipelineRun = () => {
 };
 
 const PipelineRunContent = ({
-  rootExecutionId,
+  pipelineRunId,
   details,
   state,
 }: {
-  rootExecutionId: string;
+  pipelineRunId: string;
   details?: GetExecutionInfoResponse;
   state?: GetGraphExecutionStateResponse;
 }) => {
@@ -150,7 +149,7 @@ const PipelineRunContent = ({
     setTaskStatusMap(taskStatusMap);
   }, [details, state, setTaskStatusMap]);
 
-  return <PipelineRunPage rootExecutionId={rootExecutionId} />;
+  return <PipelineRunPage pipelineRunId={pipelineRunId} />;
 };
 
 export default PipelineRun;
