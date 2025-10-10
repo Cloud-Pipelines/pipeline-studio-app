@@ -2,11 +2,7 @@ import { Background, MiniMap, type ReactFlowProps } from "@xyflow/react";
 import { useCallback, useState } from "react";
 
 import { FlowCanvas, FlowControls } from "@/components/shared/ReactFlow";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
 import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 
@@ -39,9 +35,9 @@ const PipelineRunPage = ({ pipelineRunId }: { pipelineRunId: string }) => {
     <RootExecutionStatusProvider pipelineRunId={pipelineRunId}>
       <ContextPanelProvider defaultContent={<RunDetails />}>
         <ComponentLibraryProvider>
-          <ResizablePanelGroup direction="horizontal">
-            <ResizablePanel>
-              <div className="reactflow-wrapper h-full w-full">
+          <InlineStack className="w-full h-full" align="start">
+            <BlockStack className="flex-1 h-full">
+              <div className="reactflow-wrapper relative">
                 <FlowCanvas {...flowConfig} readOnly>
                   <MiniMap position="bottom-left" pannable />
                   <FlowControls
@@ -53,10 +49,9 @@ const PipelineRunPage = ({ pipelineRunId }: { pipelineRunId: string }) => {
                   <Background gap={GRID_SIZE} className="bg-slate-50!" />
                 </FlowCanvas>
               </div>
-            </ResizablePanel>
-            <ResizableHandle />
+            </BlockStack>
             <CollapsibleContextPanel />
-          </ResizablePanelGroup>
+          </InlineStack>
         </ComponentLibraryProvider>
       </ContextPanelProvider>
     </RootExecutionStatusProvider>
