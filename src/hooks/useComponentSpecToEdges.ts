@@ -15,10 +15,12 @@ import type {
   TaskSpec,
 } from "@/utils/componentSpec";
 import {
-  inputNameToNodeId,
-  outputNameToNodeId,
+  inputIdToNodeId,
+  inputNameToInputId,
+  outputIdToNodeId,
+  outputNameToOutputId,
   taskIdToNodeId,
-} from "@/utils/nodes/nodeIdUtils";
+} from "@/utils/nodes/conversions";
 
 const useComponentSpecToEdges = (
   componentSpec: ComponentSpec,
@@ -95,9 +97,9 @@ const createTaskOutputEdge = (
   return {
     id: `${taskOutput.taskId}_${taskOutput.outputName}-${taskId}_${inputName}`,
     source: taskIdToNodeId(taskOutput.taskId),
-    sourceHandle: outputNameToNodeId(taskOutput.outputName),
+    sourceHandle: outputIdToNodeId(outputNameToOutputId(taskOutput.outputName)),
     target: taskIdToNodeId(taskId),
-    targetHandle: inputNameToNodeId(inputName),
+    targetHandle: inputIdToNodeId(inputNameToInputId(inputName)),
     markerEnd: { type: MarkerType.Arrow },
     type: "customEdge",
   };
@@ -110,10 +112,10 @@ const createGraphInputEdge = (
 ): Edge => {
   return {
     id: `Input_${graphInput.inputName}-${taskId}_${inputName}`,
-    source: inputNameToNodeId(graphInput.inputName),
+    source: inputIdToNodeId(inputNameToInputId(graphInput.inputName)),
     sourceHandle: null,
     target: taskIdToNodeId(taskId),
-    targetHandle: inputNameToNodeId(inputName),
+    targetHandle: inputIdToNodeId(inputNameToInputId(inputName)),
     type: "customEdge",
     markerEnd: { type: MarkerType.Arrow },
   };
@@ -126,8 +128,10 @@ const createOutputEdgesFromGraphSpec = (graphSpec: GraphSpec) => {
       const edge: Edge = {
         id: `${taskOutput.taskId}_${taskOutput.outputName}-Output_${outputName}`,
         source: taskIdToNodeId(taskOutput.taskId),
-        sourceHandle: outputNameToNodeId(taskOutput.outputName),
-        target: outputNameToNodeId(outputName),
+        sourceHandle: outputIdToNodeId(
+          outputNameToOutputId(taskOutput.outputName),
+        ),
+        target: outputIdToNodeId(outputNameToOutputId(outputName)),
         targetHandle: null,
         type: "customEdge",
         markerEnd: { type: MarkerType.Arrow },

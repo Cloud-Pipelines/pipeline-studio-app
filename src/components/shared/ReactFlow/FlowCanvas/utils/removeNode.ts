@@ -5,10 +5,12 @@ import {
   isGraphImplementation,
 } from "@/utils/componentSpec";
 import {
-  nodeIdToInputName,
-  nodeIdToOutputName,
+  inputIdToInputName,
+  nodeIdToInputId,
+  nodeIdToOutputId,
   nodeIdToTaskId,
-} from "@/utils/nodes/nodeIdUtils";
+  outputIdToOutputName,
+} from "@/utils/nodes/conversions";
 
 import { setGraphOutputValue } from "./setGraphOutputValue";
 import { setTaskArgument } from "./setTaskArgument";
@@ -20,12 +22,12 @@ export const removeNode = (node: Node, componentSpec: ComponentSpec) => {
   }
 
   if (node.type === "input") {
-    const inputName = nodeIdToInputName(node.id);
+    const inputName = inputIdToInputName(nodeIdToInputId(node.id));
     return removeGraphInput(inputName, componentSpec);
   }
 
   if (node.type === "output") {
-    const outputName = nodeIdToOutputName(node.id);
+    const outputName = outputIdToOutputName(nodeIdToOutputId(node.id));
     return removeGraphOutput(outputName, componentSpec);
   }
 
