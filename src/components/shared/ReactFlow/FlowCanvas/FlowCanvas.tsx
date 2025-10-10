@@ -763,17 +763,22 @@ const FlowCanvas = ({
     initialCanvasLoaded.current = true;
   }, [componentSpec, currentSubgraphPath, preserveIOSelectionOnSpecChange]);
 
+  useEffect(() => {
+    reactFlowInstance?.fitView({
+      maxZoom: 1,
+      duration: 300,
+    });
+  }, [currentSubgraphPath, reactFlowInstance]);
+
   // Reset when loading a new component file
   useEffect(() => {
     resetPrevSpec();
   }, [componentSpec?.name, resetPrevSpec]);
 
   const fitView = useCallback(() => {
-    if (reactFlowInstance) {
-      reactFlowInstance.fitView({
-        maxZoom: 1,
-      });
-    }
+    reactFlowInstance?.fitView({
+      maxZoom: 1,
+    });
   }, [reactFlowInstance]);
 
   useScheduleExecutionOnceWhenConditionMet(

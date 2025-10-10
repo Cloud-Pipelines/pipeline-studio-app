@@ -49,6 +49,15 @@ vi.mock("@/providers/BackendProvider", () => ({
 }));
 
 vi.mock("@/services/executionService", () => ({
+  useFetchExecutionInfo: vi.fn(),
+  useFetchPipelineRun: () => ({
+    data: null,
+    isLoading: false,
+    error: null,
+    isFetching: false,
+    refetch: () => {},
+    enabled: false,
+  }),
   countTaskStatuses: vi.fn(),
   getRunStatus: vi.fn(),
   STATUS: {
