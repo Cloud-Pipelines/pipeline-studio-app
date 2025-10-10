@@ -1,16 +1,13 @@
 import { useConnection, useEdges } from "@xyflow/react";
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
 
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { cn } from "@/lib/utils";
 import { useForcedSearchContext } from "@/providers/ComponentLibraryProvider/ForcedSearchProvider";
 import { isValidFilterRequest } from "@/providers/ComponentLibraryProvider/types";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import type { OutputSpec } from "@/utils/componentSpec";
 import { ComponentSearchFilter } from "@/utils/constants";
-import {
-  outputIdToNodeId,
-  outputNameToOutputId,
-} from "@/utils/nodes/conversions";
 import { checkArtifactMatchesSearchFilters } from "@/utils/searchUtils";
 
 import { OutputHandle } from "./Handles";
@@ -26,7 +23,8 @@ export function TaskNodeOutputs({
   expanded,
   onBackgroundClick,
 }: TaskNodeOutputsProps) {
-  const { nodeId, outputs, state, select } = useTaskNode();
+  const { getOutputHandleNodeId } = useNodeManager();
+  const { taskId, nodeId, outputs, state, select } = useTaskNode();
   const {
     highlightSearchFilter,
     resetSearchFilter,
@@ -43,8 +41,7 @@ export function TaskNodeOutputs({
     edges.some(
       (edge) =>
         edge.source === nodeId &&
-        edge.sourceHandle ===
-          outputIdToNodeId(outputNameToOutputId(output.name)),
+        edge.sourceHandle === getOutputHandleNodeId(taskId, output.name),
     ),
   );
 
@@ -142,7 +139,7 @@ export function TaskNodeOutputs({
     }
 
     const output = outputs.find(
-      (o) => outputIdToNodeId(outputNameToOutputId(o.name)) === fromHandle?.id,
+      (o) => getOutputHandleNodeId(taskId, o.name) === fromHandle?.id,
     );
 
     if (!output) return;

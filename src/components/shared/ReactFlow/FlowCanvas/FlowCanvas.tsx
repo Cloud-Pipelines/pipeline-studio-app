@@ -115,6 +115,7 @@ const FlowCanvas = ({
     graphSpec,
     updateGraphSpec,
     currentSubgraphPath,
+    nodeManager,
   } = useComponentSpec();
   const { preserveIOSelectionOnSpecChange, resetPrevSpec } =
     useIOSelectionPersistence();
@@ -286,15 +287,23 @@ const FlowCanvas = ({
       let updatedComponentSpec = { ...componentSpec };
 
       for (const edge of params.edges) {
-        updatedComponentSpec = removeEdge(edge, updatedComponentSpec);
+        updatedComponentSpec = removeEdge(
+          edge,
+          updatedComponentSpec,
+          nodeManager,
+        );
       }
       for (const node of params.nodes) {
-        updatedComponentSpec = removeNode(node, updatedComponentSpec);
+        updatedComponentSpec = removeNode(
+          node,
+          updatedComponentSpec,
+          nodeManager,
+        );
       }
 
       setComponentSpec(updatedComponentSpec);
     },
-    [componentSpec, setComponentSpec],
+    [componentSpec, nodeManager, setComponentSpec],
   );
 
   const nodeCallbacks = useNodeCallbacks({
@@ -308,15 +317,20 @@ const FlowCanvas = ({
       connectable: !readOnly && !!nodesConnectable,
       readOnly: !!readOnly,
       nodeCallbacks,
+      nodeManager,
     }),
-    [readOnly, nodesConnectable, nodeCallbacks],
+    [readOnly, nodesConnectable, nodeCallbacks, nodeManager],
   );
 
   const onConnect = useCallback(
     (connection: Connection) => {
       if (connection.source === connection.target) return;
 
-      const updatedGraphSpec = handleConnection(graphSpec, connection);
+      const updatedGraphSpec = handleConnection(
+        graphSpec,
+        connection,
+        nodeManager,
+      );
       updateGraphSpec(updatedGraphSpec);
     },
     [graphSpec, handleConnection, updateGraphSpec],
@@ -356,7 +370,11 @@ const FlowCanvas = ({
         );
 
       if (existingInputEdge) {
-        newComponentSpec = removeEdge(existingInputEdge, newComponentSpec);
+        newComponentSpec = removeEdge(
+          existingInputEdge,
+          newComponentSpec,
+          nodeManager,
+        );
       }
 
       const updatedComponentSpec = addAndConnectNode({
@@ -364,11 +382,18 @@ const FlowCanvas = ({
         fromHandle,
         position,
         componentSpec: newComponentSpec,
+        nodeManager,
       });
 
       setComponentSpec(updatedComponentSpec);
     },
-    [reactFlowInstance, componentSpec, setComponentSpec, updateOrAddNodes],
+    [
+      reactFlowInstance,
+      componentSpec,
+      nodeManager,
+      setComponentSpec,
+      updateOrAddNodes,
+    ],
   );
 
   useEffect(() => {
@@ -615,6 +640,7 @@ const FlowCanvas = ({
           const updatedComponentSpec = updateNodePositions(
             updatedNodes,
             componentSpec,
+            nodeManager,
           );
           setComponentSpec(updatedComponentSpec);
         }
@@ -622,7 +648,7 @@ const FlowCanvas = ({
 
       onNodesChange(changes);
     },
-    [nodes, componentSpec, setComponentSpec, onNodesChange],
+    [nodes, componentSpec, nodeManager, setComponentSpec, onNodesChange],
   );
 
   const handleBeforeDelete = async (params: NodesAndEdges) => {
@@ -650,6 +676,7 @@ const FlowCanvas = ({
     const { updatedComponentSpec, newNodes, updatedNodes } = duplicateNodes(
       componentSpec,
       selectedNodes,
+      nodeManager,
       { selected: true },
     );
 
@@ -659,7 +686,7 @@ const FlowCanvas = ({
       updatedNodes,
       newNodes,
     });
-  }, [componentSpec, selectedNodes, setComponentSpec, setNodes]);
+  }, [componentSpec, selectedNodes, nodeManager, setComponentSpec, setNodes]);
 
   const onUpgradeNodes = useCallback(async () => {
     let newGraphSpec = graphSpec;
@@ -823,6 +850,7 @@ const FlowCanvas = ({
           const { newNodes, updatedComponentSpec } = duplicateNodes(
             componentSpec,
             nodesToPaste,
+            nodeManager,
             { position: reactFlowCenter, connection: "internal" },
           );
 
@@ -848,6 +876,7 @@ const FlowCanvas = ({
     nodes,
     reactFlowInstance,
     store,
+    nodeManager,
     updateOrAddNodes,
     setComponentSpec,
     readOnly,

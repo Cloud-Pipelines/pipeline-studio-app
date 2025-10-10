@@ -1,5 +1,6 @@
 import { type Node, type XYPosition } from "@xyflow/react";
 
+import type { NodeManager } from "@/nodeManager";
 import type { IONodeData, NodeData, TaskNodeData } from "@/types/nodes";
 import {
   type ComponentSpec,
@@ -11,16 +12,10 @@ import {
   type TaskSpec,
 } from "@/utils/componentSpec";
 import {
-  inputIdToInputName,
-  inputIdToNodeId,
   inputNameToInputId,
-  nodeIdToInputId,
-  nodeIdToOutputId,
-  nodeIdToTaskId,
-  outputIdToNodeId,
-  outputIdToOutputName,
   outputNameToOutputId,
-  taskIdToNodeId,
+  taskIdToTaskName,
+  taskNameToTaskId,
 } from "@/utils/nodes/conversions";
 import { createInputNode } from "@/utils/nodes/createInputNode";
 import { createOutputNode } from "@/utils/nodes/createOutputNode";
@@ -48,6 +43,7 @@ type ConnectionMode = "none" | "internal" | "external" | "all";
 export const duplicateNodes = (
   componentSpec: ComponentSpec,
   nodesToDuplicate: Node[],
+  nodeManager: NodeManager,
   config?: {
     selected?: boolean;
     position?: XYPosition;
@@ -62,7 +58,6 @@ export const duplicateNodes = (
   const graphSpec = componentSpec.implementation.graph;
 
   const nodeIdMap: Record<string, string> = {};
-
   const newTasks: Record<string, TaskSpec> = {};
   const newInputs: Record<string, InputSpec> = {};
   const newOutputs: Record<string, OutputSpec> = {};
@@ -77,9 +72,16 @@ export const duplicateNodes = (
     const oldNodeId = node.id;
 
     if (node.type === "task") {
-      const oldTaskId = nodeIdToTaskId(oldNodeId);
-      const newTaskId = getUniqueTaskName(graphSpec, oldTaskId);
-      const newNodeId = taskIdToNodeId(newTaskId);
+      const oldTaskId = nodeManager.getRefId(oldNodeId);
+      if (!oldTaskId) {
+        console.warn("Could not find taskId for node:", node);
+        return;
+      }
+
+      const oldTaskName = taskIdToTaskName(oldTaskId);
+      const newTaskName = getUniqueTaskName(graphSpec, oldTaskName);
+      const newTaskId = taskNameToTaskId(newTaskName);
+      const newNodeId = nodeManager.getNodeId(newTaskId, "task");
 
       nodeIdMap[oldNodeId] = newNodeId;
 
@@ -106,9 +108,12 @@ export const duplicateNodes = (
         (input) => input.name === node.data.label,
       );
 
-      const newInputName = getUniqueInputName(componentSpec, inputSpec?.name);
-      const newInputId = inputNameToInputId(newInputName);
-      const newNodeId = inputIdToNodeId(newInputId);
+      const uniqueInputName = getUniqueInputName(
+        componentSpec,
+        inputSpec?.name,
+      );
+      const newInputId = inputNameToInputId(uniqueInputName);
+      const newNodeId = nodeManager.getNodeId(newInputId, "input");
 
       nodeIdMap[oldNodeId] = newNodeId;
 
@@ -121,22 +126,22 @@ export const duplicateNodes = (
 
       const newInputSpec = {
         ...inputSpec,
-        name: newInputName,
+        name: uniqueInputName,
         annotations: updatedAnnotations,
       };
 
-      newInputs[newInputId] = newInputSpec;
+      newInputs[uniqueInputName] = newInputSpec; // tbc if this should be uniqueInputName or newInputId
     } else if (node.type === "output") {
       const outputSpec = componentSpec.outputs?.find(
         (output) => output.name === node.data.label,
       );
 
-      const newOutputName = getUniqueOutputName(
+      const uniqueOutputName = getUniqueOutputName(
         componentSpec,
         outputSpec?.name,
       );
-      const newOutputId = outputNameToOutputId(newOutputName);
-      const newNodeId = outputIdToNodeId(newOutputId);
+      const newOutputId = outputNameToOutputId(uniqueOutputName);
+      const newNodeId = nodeManager.getNodeId(newOutputId, "output");
 
       nodeIdMap[oldNodeId] = newNodeId;
 
@@ -149,11 +154,11 @@ export const duplicateNodes = (
 
       const newOutputSpec = {
         ...outputSpec,
-        name: newOutputName,
+        name: uniqueOutputName,
         annotations: updatedAnnotations,
       };
 
-      newOutputs[newOutputId] = newOutputSpec;
+      newOutputs[uniqueOutputName] = newOutputSpec; // tbc if this should be uniqueOutputName or newOutputId
     }
   });
 
@@ -179,6 +184,7 @@ export const duplicateNodes = (
             nodesToDuplicate,
             componentSpec,
             connection,
+            nodeManager,
           );
         } else {
           // If the Argument is not a TaskOutput or GraphInput, copy it over
@@ -200,7 +206,7 @@ export const duplicateNodes = (
     /* Reconfigure Outputs */
     Object.entries(newOutputs).forEach((output) => {
       const [outputId] = output;
-      const newNodeId = outputIdToNodeId(outputId);
+      const newNodeId = nodeManager.getNodeId(outputId, "output");
       const oldNodeId = Object.keys(nodeIdMap).find(
         (key) => nodeIdMap[key] === newNodeId,
       );
@@ -209,9 +215,9 @@ export const duplicateNodes = (
         return;
       }
 
-      const oldOutputId = nodeIdToOutputId(oldNodeId);
+      const oldOutputId = nodeManager.getRefId(oldNodeId);
 
-      if (!graphSpec.outputValues) {
+      if (!graphSpec.outputValues || !oldOutputId) {
         return;
       }
 
@@ -232,9 +238,13 @@ export const duplicateNodes = (
       ) {
         if ("taskOutput" in updatedOutputValue) {
           const oldTaskId = updatedOutputValue.taskOutput.taskId;
-          const oldTaskNodeId = taskIdToNodeId(oldTaskId);
+          const oldTaskNodeId = nodeManager.getNodeId(oldTaskId, "task");
           if (oldTaskNodeId in nodeIdMap) {
-            const newTaskId = nodeIdToTaskId(nodeIdMap[oldTaskNodeId]);
+            const newTaskId = nodeManager.getRefId(nodeIdMap[oldTaskNodeId]);
+            if (!newTaskId) {
+              return;
+            }
+
             updatedOutputValue.taskOutput = {
               ...updatedOutputValue.taskOutput,
               taskId: newTaskId,
@@ -285,19 +295,24 @@ export const duplicateNodes = (
         return null;
       }
 
-      if (originalNode.type === "task") {
-        const newTaskId = nodeIdToTaskId(newNodeId);
+      const newId = nodeManager.getRefId(newNodeId);
 
-        const newTaskSpec = updatedGraphSpec.tasks[newTaskId];
+      if (!newId) {
+        return null;
+      }
+
+      if (originalNode.type === "task") {
+        const newTaskSpec = updatedGraphSpec.tasks[newId];
 
         const taskData = originalNode.data as TaskNodeData;
         const nodeData: NodeData = {
           readOnly: taskData.readOnly,
           connectable: taskData.connectable,
           callbacks: convertTaskCallbacksToNodeCallbacks(taskData.callbacks),
+          nodeManager,
         };
 
-        const newNode = createTaskNode([newTaskId, newTaskSpec], nodeData);
+        const newNode = createTaskNode([newId, newTaskSpec], nodeData);
 
         newNode.id = newNodeId;
         newNode.selected = false;
@@ -314,9 +329,8 @@ export const duplicateNodes = (
 
         return newNode;
       } else if (originalNode.type === "input") {
-        const newInputName = inputIdToInputName(nodeIdToInputId(newNodeId));
         const newInputSpec = updatedInputs.find(
-          (input) => input.name === newInputName,
+          (input) => input.name === newId,
         );
 
         if (!newInputSpec) {
@@ -326,6 +340,7 @@ export const duplicateNodes = (
         const inputData = originalNode.data as IONodeData;
         const nodeData: NodeData = {
           readOnly: inputData.readOnly,
+          nodeManager,
         };
 
         const newNode = createInputNode(newInputSpec, nodeData);
@@ -345,9 +360,8 @@ export const duplicateNodes = (
 
         return newNode;
       } else if (originalNode.type === "output") {
-        const newOutputName = outputIdToOutputName(nodeIdToOutputId(newNodeId));
         const newOutputSpec = updatedOutputs.find(
-          (output) => output.name === newOutputName,
+          (output) => output.name === newId,
         );
 
         if (!newOutputSpec) {
@@ -357,6 +371,7 @@ export const duplicateNodes = (
         const outputData = originalNode.data as IONodeData;
         const nodeData: NodeData = {
           readOnly: outputData.readOnly,
+          nodeManager,
         };
 
         const newNode = createOutputNode(newOutputSpec, nodeData);
@@ -397,9 +412,13 @@ export const duplicateNodes = (
         y: node.position.y + offset.y,
       };
 
-      if (node.type === "task") {
-        const taskId = nodeIdToTaskId(node.id);
+      const newId = nodeManager.getRefId(node.id);
 
+      if (!newId) {
+        return null;
+      }
+
+      if (node.type === "task") {
         const taskSpec = node.data.taskSpec as TaskSpec;
         const annotations = taskSpec.annotations || {};
 
@@ -413,13 +432,9 @@ export const duplicateNodes = (
           annotations: updatedAnnotations,
         };
 
-        updatedGraphSpec.tasks[taskId] = newTaskSpec;
+        updatedGraphSpec.tasks[newId] = newTaskSpec;
       } else if (node.type === "input") {
-        const newInputName = inputIdToInputName(nodeIdToInputId(node.id));
-
-        const inputSpec = updatedInputs.find(
-          (input) => input.name === newInputName,
-        );
+        const inputSpec = updatedInputs.find((input) => input.name === newId);
 
         if (!inputSpec) {
           return;
@@ -438,17 +453,15 @@ export const duplicateNodes = (
         };
 
         const updatedInputIndex = updatedInputs.findIndex(
-          (input) => input.name === newInputName,
+          (input) => input.name === newId,
         );
 
         if (updatedInputIndex !== -1) {
           updatedInputs[updatedInputIndex] = newInputSpec;
         }
       } else if (node.type === "output") {
-        const newOutputName = outputIdToOutputName(nodeIdToOutputId(node.id));
-
         const outputSpec = updatedOutputs.find(
-          (output) => output.name === newOutputName,
+          (output) => output.name === newId,
         );
 
         if (!outputSpec) {
@@ -468,7 +481,7 @@ export const duplicateNodes = (
         };
 
         const updatedOutputIndex = updatedOutputs.findIndex(
-          (output) => output.name === newOutputName,
+          (output) => output.name === newId,
         );
 
         if (updatedOutputIndex !== -1) {
@@ -501,14 +514,15 @@ function reconfigureConnections(
   nodes: Node[],
   componentSpec: ComponentSpec,
   mode: ConnectionMode,
+  nodeManager: NodeManager,
 ) {
-  let oldNodeId = undefined;
-  let newArgId = undefined;
+  let oldNodeId: string | undefined = undefined;
+  let newArgId: string | undefined = undefined;
   let isExternal = false;
 
   if ("taskOutput" in argument) {
     const oldTaskId = argument.taskOutput.taskId;
-    oldNodeId = taskIdToNodeId(oldTaskId);
+    oldNodeId = nodeManager.getNodeId(oldTaskId, "task");
 
     if (!isGraphImplementation(componentSpec.implementation)) {
       throw new Error("ComponentSpec does not contain a graph implementation.");
@@ -523,19 +537,19 @@ function reconfigureConnections(
       return reconfigureExternalConnection(taskSpec, argKey, mode);
     }
 
-    const newTaskId = nodeIdToTaskId(newNodeId);
+    const newTaskId = nodeManager.getRefId(newNodeId);
 
     newArgId = newTaskId;
   } else if ("graphInput" in argument) {
-    const oldInputName = argument.graphInput.inputName;
-    oldNodeId = inputIdToNodeId(inputNameToInputId(oldInputName));
+    const oldInputId = argument.graphInput.inputName;
+    oldNodeId = nodeManager.getNodeId(oldInputId, "input");
 
     if (!("inputs" in componentSpec)) {
       throw new Error("ComponentSpec does not contain inputs.");
     }
 
     const inputs = componentSpec.inputs || [];
-    isExternal = inputs.some((input) => input.name === oldInputName);
+    isExternal = inputs.some((input) => input.name === oldInputId);
 
     const newNodeId = nodeIdMap[oldNodeId];
 
@@ -543,7 +557,7 @@ function reconfigureConnections(
       return reconfigureExternalConnection(taskSpec, argKey, mode);
     }
 
-    const newInputId = nodeIdToInputId(newNodeId);
+    const newInputId = nodeManager.getRefId(newNodeId);
 
     newArgId = newInputId;
   }

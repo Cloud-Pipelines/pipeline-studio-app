@@ -7,6 +7,7 @@ import { getOutputConnectedDetails } from "@/components/Editor/utils/getOutputCo
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Paragraph } from "@/components/ui/typography";
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
@@ -14,9 +15,7 @@ import type { IONodeData } from "@/types/nodes";
 import type { InputSpec, TypeSpecType } from "@/utils/componentSpec";
 import { ENABLE_DEBUG_MODE } from "@/utils/constants";
 import {
-  inputIdToNodeId,
   inputNameToInputId,
-  outputIdToNodeId,
   outputNameToOutputId,
 } from "@/utils/nodes/conversions";
 import { sentenceCase } from "@/utils/string";
@@ -29,6 +28,7 @@ interface IONodeProps {
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
+  const { getNodeId, getHandleNodeId } = useNodeManager();
   const { graphSpec, componentSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
@@ -59,11 +59,13 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     [componentSpec.outputs, spec.name],
   );
 
-  const nodeId = isInput
-    ? inputIdToNodeId(inputNameToInputId(spec.name))
-    : outputIdToNodeId(outputNameToOutputId(spec.name));
+  const inputId = inputNameToInputId(spec.name);
+  const outputId = outputNameToOutputId(spec.name);
+  const id = isInput ? inputId : outputId;
 
-  const nodeHandleId = `${nodeId}_handle`;
+  const nodeId = getNodeId(id, type);
+  const handleNodeType = isInput ? "outputHandle" : "inputHandle";
+  const nodeHandleId = getHandleNodeId(id, spec.name, handleNodeType);
 
   const handleHandleClick = useCallback(() => {
     if (ENABLE_DEBUG_MODE) {
@@ -176,6 +178,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
           </InlineStack>
         </BlockStack>
         <Handle
+          id={nodeHandleId}
           type={handleType}
           position={handlePosition}
           className={cn(handleDefaultClassName, handleClassName)}
