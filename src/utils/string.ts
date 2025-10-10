@@ -83,6 +83,11 @@ function pluralize(count: number, singular: string, plural?: string) {
   return count === 1 ? singular : plural || `${singular}s`;
 }
 
+function sentenceCase(str: string) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
 function safeJsonParse(value: unknown): {
   parsed: unknown;
   isValidJson: boolean;
@@ -109,4 +114,5 @@ export {
   pluralize,
   removeTrailingDateFromTitle,
   safeJsonParse,
+  sentenceCase,
 };
