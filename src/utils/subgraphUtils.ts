@@ -1,5 +1,5 @@
-import type { ComponentSpec, TaskSpec } from "./componentSpec";
-import type { GraphSpec } from "./componentSpec";
+import type { ComponentSpec, GraphSpec, TaskSpec } from "@/utils/componentSpec";
+
 import { isGraphImplementation } from "./componentSpec";
 import { ROOT_TASK_ID } from "./constants";
 import { pluralize } from "./string";
