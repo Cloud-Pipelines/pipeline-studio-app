@@ -1,74 +1,94 @@
-import { useQuery } from "@tanstack/react-query";
+import { Query, useQuery } from "@tanstack/react-query";
 
+import { HOURS } from "@/components/shared/ComponentEditor/constants";
 import { useBackend } from "@/providers/BackendProvider";
 import {
+  countTaskStatuses,
   fetchExecutionDetails,
   fetchExecutionState,
   fetchPipelineRun,
+  getRunStatus,
+  isStatusComplete,
 } from "@/services/executionService";
 
-async function fetchPipelineExecutionInfo(
-  rootExecutionId: string,
-  backendUrl: string,
-) {
-  const data = await Promise.all([
-    fetchExecutionDetails(rootExecutionId, backendUrl),
-    fetchExecutionState(rootExecutionId, backendUrl),
-  ]).catch((_) => undefined);
+const useRootExecutionId = (id: string) => {
+  const { backendUrl } = useBackend();
+  const { data: rootExecutionId } = useQuery({
+    queryKey: ["pipeline-run-execution-id", id],
+    queryFn: async () => {
+      const rootExecutionId = await fetchPipelineRun(id, backendUrl)
+        .then((res) => res.root_execution_id)
+        .catch((_) => undefined);
 
-  if (data) {
-    return {
-      rootExecutionId,
-      details: data[0],
-      state: data[1],
-    };
-  }
+      if (rootExecutionId) {
+        return rootExecutionId;
+      }
 
-  return undefined;
-}
+      // assuming id is root_execution_id
+      return id;
+    },
+    staleTime: Infinity,
+  });
+
+  return rootExecutionId;
+};
 
 /* Accepts root_execution_id or run_id and returns execution details and state */
 export const usePipelineRunData = (id: string) => {
   const { backendUrl } = useBackend();
+
+  const rootExecutionId = useRootExecutionId(id);
+
+  const { data: executionDetails } = useQuery({
+    enabled: !!rootExecutionId,
+    queryKey: ["execution-details", rootExecutionId],
+    queryFn: async () => {
+      if (!rootExecutionId) {
+        throw new Error("No root execution id found");
+      }
+
+      return fetchExecutionDetails(rootExecutionId, backendUrl);
+    },
+    staleTime: 1 * HOURS,
+  });
 
   const {
     data: executionData,
     error,
     isLoading,
   } = useQuery({
-    queryKey: ["pipeline-run", id],
+    enabled: !!rootExecutionId && !!executionDetails,
+    queryKey: ["pipeline-run", rootExecutionId],
     queryFn: async () => {
-      // id is run_id
-      const executionDetailsDerivedFromRun = await fetchPipelineRun(
-        id,
-        backendUrl,
-      )
-        .then((res) =>
-          fetchPipelineExecutionInfo(res.root_execution_id, backendUrl),
-        )
-        .catch((_) => undefined);
-
-      if (executionDetailsDerivedFromRun?.rootExecutionId) {
-        return executionDetailsDerivedFromRun;
+      if (!rootExecutionId) {
+        throw new Error("No root execution id found");
       }
 
-      // id is root_execution_id
-      const executionDetailsDerivedFromExecution =
-        await fetchPipelineExecutionInfo(id, backendUrl).catch(
-          (_) => undefined,
-        );
+      const state = await fetchExecutionState(rootExecutionId, backendUrl);
 
-      if (executionDetailsDerivedFromExecution?.rootExecutionId) {
-        return executionDetailsDerivedFromExecution;
-      }
-
-      throw new Error("No pipeline run or execution details found");
+      return {
+        details: executionDetails,
+        state,
+      };
     },
+    refetchInterval: (data) => {
+      if (data instanceof Query) {
+        const { details, state } = data.state.data || {};
+        if (!details || !state) {
+          return false;
+        }
+        const statusCounts = countTaskStatuses(details, state);
+        const status = getRunStatus(statusCounts);
+
+        return isStatusComplete(status) ? false : 5000;
+      }
+      return false;
+    },
+    staleTime: 5000,
   });
 
   return {
     executionData,
-    rootExecutionId: executionData?.rootExecutionId ?? "",
     isLoading,
     error,
   };

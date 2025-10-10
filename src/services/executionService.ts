@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
 
 import type {
   GetArtifactsApiExecutionsIdArtifactsGetResponse,
@@ -56,50 +55,6 @@ export const useFetchContainerExecutionState = (
     enabled: !!executionId,
     refetchOnWindowFocus: false,
   });
-};
-
-export const useFetchExecutionInfo = (
-  executionId: string,
-  backendUrl: string,
-  poll: boolean = false,
-) => {
-  const {
-    data: details,
-    isLoading: isDetailsLoading,
-    isFetching: isDetailsFetching,
-    error: detailsError,
-    refetch: refetchDetails,
-  } = useQuery<GetExecutionInfoResponse>({
-    queryKey: ["pipeline-run-details", executionId],
-    refetchOnWindowFocus: false,
-    queryFn: () => fetchExecutionDetails(executionId, backendUrl),
-    refetchInterval: poll ? 5000 : false,
-  });
-
-  const {
-    data: state,
-    isLoading: isStateLoading,
-    isFetching: isStateFetching,
-    error: stateError,
-    refetch: refetchState,
-  } = useQuery<GetGraphExecutionStateResponse>({
-    queryKey: ["pipeline-run-state", executionId],
-    refetchOnWindowFocus: false,
-    queryFn: () => fetchExecutionState(executionId, backendUrl),
-    refetchInterval: poll ? 5000 : false,
-  });
-
-  const isLoading = isDetailsLoading || isStateLoading;
-  const isFetching = isDetailsFetching || isStateFetching;
-  const error = detailsError || stateError;
-  const data = { state, details };
-
-  const refetch = useCallback(() => {
-    refetchDetails();
-    refetchState();
-  }, [refetchDetails, refetchState]);
-
-  return { data, isLoading, isFetching, error, refetch };
 };
 
 export const fetchExecutionStatus = async (

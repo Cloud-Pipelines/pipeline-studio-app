@@ -16,7 +16,7 @@ import { RunDetails } from "./RunDetails";
 
 const GRID_SIZE = 10;
 
-const PipelineRunPage = ({ rootExecutionId }: { rootExecutionId: string }) => {
+const PipelineRunPage = ({ pipelineRunId }: { pipelineRunId: string }) => {
   const [flowConfig, setFlowConfig] = useState<ReactFlowProps>({
     snapGrid: [GRID_SIZE, GRID_SIZE],
     snapToGrid: true,
@@ -36,7 +36,7 @@ const PipelineRunPage = ({ rootExecutionId }: { rootExecutionId: string }) => {
   );
 
   return (
-    <RootExecutionStatusProvider rootExecutionId={rootExecutionId}>
+    <RootExecutionStatusProvider pipelineRunId={pipelineRunId}>
       <ContextPanelProvider defaultContent={<RunDetails />}>
         <ComponentLibraryProvider>
           <ResizablePanelGroup direction="horizontal">
