@@ -20,6 +20,10 @@ import {
   componentSpecToYaml,
   writeComponentToFileListFromText,
 } from "../utils/componentStore";
+import {
+  getSubgraphComponentSpec,
+  updateSubgraphInComponentSpec,
+} from "../utils/subgraphUtils";
 
 const EMPTY_GRAPH_SPEC: GraphSpec = {
   tasks: {},
@@ -96,13 +100,19 @@ export const ComponentSpecProvider = ({
     undoRedoRef.current.clearHistory();
   }, []);
 
+  // Get the GraphSpec for the currently viewed subgraph
   const graphSpec = useMemo(() => {
-    if (isGraphImplementation(componentSpec.implementation)) {
-      return componentSpec.implementation.graph;
+    const currentSpec = getSubgraphComponentSpec(
+      componentSpec,
+      currentSubgraphPath,
+    );
+
+    if (isGraphImplementation(currentSpec.implementation)) {
+      return currentSpec.implementation.graph;
     }
 
     return EMPTY_GRAPH_SPEC;
-  }, [componentSpec]);
+  }, [componentSpec, currentSubgraphPath]);
 
   const loadPipeline = useCallback(
     async (newName?: string) => {
@@ -153,15 +163,31 @@ export const ComponentSpecProvider = ({
     [componentSpec, readOnly],
   );
 
-  const updateGraphSpec = useCallback((newGraphSpec: GraphSpec) => {
-    setComponentSpec((prevSpec) => ({
-      ...prevSpec,
-      implementation: {
-        ...prevSpec.implementation,
-        graph: newGraphSpec,
-      },
-    }));
-  }, []);
+  // Update the GraphSpec for the currently viewed subgraph
+  const updateGraphSpec = useCallback(
+    (newGraphSpec: GraphSpec) => {
+      setComponentSpec((prevSpec) => {
+        // If we're at root, update directly
+        if (currentSubgraphPath.length <= 1) {
+          return {
+            ...prevSpec,
+            implementation: {
+              ...prevSpec.implementation,
+              graph: newGraphSpec,
+            },
+          };
+        }
+
+        // Otherwise, update the nested subgraph
+        return updateSubgraphInComponentSpec(
+          prevSpec,
+          currentSubgraphPath,
+          newGraphSpec,
+        );
+      });
+    },
+    [currentSubgraphPath],
+  );
 
   const navigateToSubgraph = useCallback((taskId: string) => {
     setCurrentSubgraphPath((prev) => [...prev, taskId]);
