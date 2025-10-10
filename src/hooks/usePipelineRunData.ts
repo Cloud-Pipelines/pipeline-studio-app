@@ -89,6 +89,7 @@ export const usePipelineRunData = (id: string) => {
 
   return {
     executionData,
+    rootExecutionId,
     isLoading,
     error,
   };

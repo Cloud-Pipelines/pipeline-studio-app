@@ -117,6 +117,7 @@ describe("<RootExecutionStatusProvider />", () => {
           details: undefined,
           state: undefined,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: true,
         error: null,
       });
@@ -134,6 +135,7 @@ describe("<RootExecutionStatusProvider />", () => {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });
@@ -157,6 +159,7 @@ describe("<RootExecutionStatusProvider />", () => {
           details: undefined,
           state: undefined,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: true,
         error: null,
       });
@@ -173,6 +176,7 @@ describe("<RootExecutionStatusProvider />", () => {
           details: undefined,
           state: undefined,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: mockError,
       });
@@ -193,6 +197,7 @@ describe("<RootExecutionStatusProvider />", () => {
           details: undefined,
           state: undefined,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });
@@ -210,6 +215,7 @@ describe("<RootExecutionStatusProvider />", () => {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });
@@ -244,6 +250,7 @@ describe("<RootExecutionStatusProvider />", () => {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });
