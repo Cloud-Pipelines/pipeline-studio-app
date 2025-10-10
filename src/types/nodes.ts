@@ -1,28 +1,41 @@
 import type {
   ArgumentType,
   ComponentReference,
+  InputSpec,
+  OutputSpec,
   TaskSpec,
 } from "@/utils/componentSpec";
 
 import type { Annotations } from "./annotations";
 
-export type TaskType = "task" | "input" | "output";
-
 export interface NodeData extends Record<string, unknown> {
-  readOnly?: boolean;
+  readOnly: boolean;
   connectable?: boolean;
-  nodeCallbacks?: NodeCallbacks;
+  callbacks?: NodeCallbacks;
 }
 
 export interface TaskNodeData extends Record<string, unknown> {
-  taskSpec?: TaskSpec;
-  taskId?: string;
-  readOnly?: boolean;
-  isGhost?: boolean;
-  connectable?: boolean;
-  highlighted?: boolean;
-  callbacks?: TaskCallbacks;
+  taskSpec: TaskSpec;
+  taskId: string;
+  readOnly: boolean;
+  isGhost: boolean;
+  connectable: boolean;
+  highlighted: boolean;
+  callbacks: TaskCallbacks;
 }
+
+export interface IONodeData extends Record<string, unknown> {
+  spec: InputSpec | OutputSpec;
+  readOnly: boolean;
+}
+
+export interface HintNodeData extends Record<string, unknown> {
+  key: string;
+  hint: string;
+  side: "left" | "right";
+}
+
+export type TaskType = "task" | "input" | "output";
 
 export type NodeAndTaskId = {
   taskId: string;
