@@ -178,6 +178,7 @@ describe("<RunDetails/>", () => {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });
@@ -199,6 +200,7 @@ describe("<RunDetails/>", () => {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });
@@ -220,6 +222,7 @@ describe("<RunDetails/>", () => {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });
@@ -241,6 +244,7 @@ describe("<RunDetails/>", () => {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });
@@ -260,6 +264,7 @@ describe("<RunDetails/>", () => {
           details: mockExecutionDetails,
           state: mockCancelledExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });
@@ -281,6 +286,7 @@ describe("<RunDetails/>", () => {
           details: mockExecutionDetails,
           state: mockCancelledExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });
@@ -300,6 +306,7 @@ describe("<RunDetails/>", () => {
           details: mockExecutionDetails,
           state: mockRunningExecutionState,
         },
+        rootExecutionId: "test-execution-id",
         isLoading: false,
         error: null,
       });

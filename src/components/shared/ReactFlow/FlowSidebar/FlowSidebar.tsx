@@ -22,7 +22,7 @@ const FlowSidebar = () => {
   const requiresAuthorization = isAuthorizationRequired();
 
   const sidebarTriggerClasses = cn(
-    "absolute top-[65px] z-1 transition-all duration-300 bg-white rounded-r-md shadow-md p-0.5 pr-1",
+    "absolute top-[65px] z-1 transition-all duration-300 bg-white mt-8 rounded-r-md shadow-md p-0.5 pr-1",
     isOpen ? "left-[255px]" : "left-[47px]",
   );
 
