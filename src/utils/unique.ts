@@ -4,11 +4,12 @@ const makeNameUniqueByAddingIndex = (
   name: string,
   existingNames: Set<string>,
 ): string => {
-  let finalName = name;
+  const baseName = name.replace(/ \(\d+\)$/, "");
+  let finalName = baseName;
   let index = 1;
   while (existingNames.has(finalName)) {
     index++;
-    finalName = name + " " + index.toString();
+    finalName = baseName + " (" + index.toString() + ")";
   }
   return finalName;
 };
