@@ -26,10 +26,10 @@ vi.mock("@/hooks/usePipelineRunData", () => ({
 import { usePipelineRunData } from "@/hooks/usePipelineRunData";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { getTaskStatus } from "@/providers/CurrentExecutionProvider";
 
 describe("useCurrentLevelExecutionData", () => {
   let queryClient: QueryClient;
-  const mockSetTaskStatusMap = vi.fn();
 
   const createWrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -90,7 +90,6 @@ describe("useCurrentLevelExecutionData", () => {
 
     vi.mocked(useComponentSpec).mockReturnValue({
       currentSubgraphPath: ["root"],
-      setTaskStatusMap: mockSetTaskStatusMap,
       componentSpec: {} as never,
       setComponentSpec: vi.fn(),
       clearComponentSpec: vi.fn(),
@@ -106,7 +105,6 @@ describe("useCurrentLevelExecutionData", () => {
       navigateBack: vi.fn(),
       navigateToPath: vi.fn(),
       canNavigateBack: false,
-      taskStatusMap: new Map(),
     });
 
     // Default mock for usePipelineRunData
@@ -137,7 +135,7 @@ describe("useCurrentLevelExecutionData", () => {
       expect(result.current.currentExecutionId).toBe("root-exec-123");
     });
 
-    it("should build task status map with default status", async () => {
+    it("should return details and state that can be used to get task status", async () => {
       // Mock with no status stats - should use default status
       vi.mocked(usePipelineRunData).mockReturnValue({
         executionData: {
@@ -151,31 +149,41 @@ describe("useCurrentLevelExecutionData", () => {
         error: null,
       });
 
-      renderHook(() => useCurrentLevelExecutionData("root-exec-123"), {
-        wrapper: createWrapper,
-      });
+      const { result } = renderHook(
+        () => useCurrentLevelExecutionData("root-exec-123"),
+        {
+          wrapper: createWrapper,
+        },
+      );
 
       await waitFor(() => {
-        expect(mockSetTaskStatusMap).toHaveBeenCalled();
+        expect(result.current.details).toBeDefined();
       });
 
-      const statusMap = mockSetTaskStatusMap.mock.calls[0][0];
-      expect(statusMap.get("task-1")).toBe("WAITING_FOR_UPSTREAM");
-      expect(statusMap.get("task-2")).toBe("WAITING_FOR_UPSTREAM");
+      const { details, state } = result.current;
+      expect(getTaskStatus(details, state, "task-1")).toBe(
+        "WAITING_FOR_UPSTREAM",
+      );
+      expect(getTaskStatus(details, state, "task-2")).toBe(
+        "WAITING_FOR_UPSTREAM",
+      );
     });
 
-    it("should build task status map with actual statuses", async () => {
-      renderHook(() => useCurrentLevelExecutionData("root-exec-123"), {
-        wrapper: createWrapper,
-      });
+    it("should return details and state with actual statuses", async () => {
+      const { result } = renderHook(
+        () => useCurrentLevelExecutionData("root-exec-123"),
+        {
+          wrapper: createWrapper,
+        },
+      );
 
       await waitFor(() => {
-        expect(mockSetTaskStatusMap).toHaveBeenCalled();
+        expect(result.current.details).toBeDefined();
       });
 
-      const statusMap = mockSetTaskStatusMap.mock.calls[0][0];
-      expect(statusMap.get("task-1")).toBe("RUNNING");
-      expect(statusMap.get("task-2")).toBe("SUCCEEDED");
+      const { details, state } = result.current;
+      expect(getTaskStatus(details, state, "task-1")).toBe("RUNNING");
+      expect(getTaskStatus(details, state, "task-2")).toBe("SUCCEEDED");
     });
   });
 
@@ -183,7 +191,6 @@ describe("useCurrentLevelExecutionData", () => {
     it("should find execution ID one level deep", () => {
       vi.mocked(useComponentSpec).mockReturnValue({
         currentSubgraphPath: ["root", "task-1"],
-        setTaskStatusMap: mockSetTaskStatusMap,
         componentSpec: {} as never,
         setComponentSpec: vi.fn(),
         clearComponentSpec: vi.fn(),
@@ -199,7 +206,6 @@ describe("useCurrentLevelExecutionData", () => {
         navigateBack: vi.fn(),
         navigateToPath: vi.fn(),
         canNavigateBack: false,
-        taskStatusMap: new Map(),
       });
 
       // Mock both root and nested calls
@@ -247,7 +253,6 @@ describe("useCurrentLevelExecutionData", () => {
     it("should use fetched data for nested subgraphs", async () => {
       vi.mocked(useComponentSpec).mockReturnValue({
         currentSubgraphPath: ["root", "task-1"],
-        setTaskStatusMap: mockSetTaskStatusMap,
         componentSpec: {} as never,
         setComponentSpec: vi.fn(),
         clearComponentSpec: vi.fn(),
@@ -263,7 +268,6 @@ describe("useCurrentLevelExecutionData", () => {
         navigateBack: vi.fn(),
         navigateToPath: vi.fn(),
         canNavigateBack: false,
-        taskStatusMap: new Map(),
       });
 
       // Mock both root and nested calls
@@ -300,17 +304,20 @@ describe("useCurrentLevelExecutionData", () => {
         },
       );
 
-      renderHook(() => useCurrentLevelExecutionData("root-exec-123"), {
-        wrapper: createWrapper,
-      });
+      const { result } = renderHook(
+        () => useCurrentLevelExecutionData("root-exec-123"),
+        {
+          wrapper: createWrapper,
+        },
+      );
 
       await waitFor(() => {
-        expect(mockSetTaskStatusMap).toHaveBeenCalled();
+        expect(result.current.details).toBeDefined();
       });
 
-      const statusMap = mockSetTaskStatusMap.mock.calls[0][0];
-      expect(statusMap.get("child-1")).toBe("RUNNING");
-      expect(statusMap.get("child-2")).toBe("SUCCEEDED");
+      const { details, state } = result.current;
+      expect(getTaskStatus(details, state, "child-1")).toBe("RUNNING");
+      expect(getTaskStatus(details, state, "child-2")).toBe("SUCCEEDED");
     });
   });
 
@@ -367,22 +374,27 @@ describe("useCurrentLevelExecutionData", () => {
         error: null,
       });
 
-      renderHook(() => useCurrentLevelExecutionData("root-exec-123"), {
-        wrapper: createWrapper,
-      });
+      const { result } = renderHook(
+        () => useCurrentLevelExecutionData("root-exec-123"),
+        {
+          wrapper: createWrapper,
+        },
+      );
 
       await waitFor(() => {
-        expect(mockSetTaskStatusMap).toHaveBeenCalled();
+        expect(result.current.details).toBeDefined();
       });
 
-      const statusMap = mockSetTaskStatusMap.mock.calls[0][0];
-      expect(statusMap.size).toBe(0);
+      const { details, state } = result.current;
+      // With empty child_task_execution_ids, any task should return default status
+      expect(getTaskStatus(details, state, "any-task")).toBe(
+        "WAITING_FOR_UPSTREAM",
+      );
     });
 
     it("should handle undefined root details", () => {
       vi.mocked(useComponentSpec).mockReturnValue({
         currentSubgraphPath: ["root", "task-1"],
-        setTaskStatusMap: mockSetTaskStatusMap,
         componentSpec: {} as never,
         setComponentSpec: vi.fn(),
         clearComponentSpec: vi.fn(),
@@ -398,7 +410,6 @@ describe("useCurrentLevelExecutionData", () => {
         navigateBack: vi.fn(),
         navigateToPath: vi.fn(),
         canNavigateBack: false,
-        taskStatusMap: new Map(),
       });
 
       vi.mocked(usePipelineRunData).mockReturnValue({

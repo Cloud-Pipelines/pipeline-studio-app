@@ -14,7 +14,6 @@ interface CachedExecutionData {
   state: GetGraphExecutionStateResponse;
 }
 
-const DEFAULT_TASK_STATUS = "WAITING_FOR_UPSTREAM";
 const PATH_DELIMITER = ".";
 const ROOT_PATH_START_INDEX = 1;
 
@@ -69,45 +68,6 @@ const findExecutionIdAtPath = (
 };
 
 /**
- * Extracts task status from execution state
- * The API returns status as an object with a single key (the status string)
- * and value (the count). We only need the status key.
- * Example: { "RUNNING": 1 } -> "RUNNING"
- */
-const extractStatusFromStats = (
-  statusStats: Record<string, number>,
-): string | undefined => {
-  const statuses = Object.keys(statusStats);
-  return statuses.length > 0 ? statuses[0] : undefined;
-};
-
-const buildTaskStatusMap = (
-  details?: GetExecutionInfoResponse,
-  state?: GetGraphExecutionStateResponse,
-): Map<string, string> => {
-  const taskStatusMap = new Map<string, string>();
-
-  if (!details?.child_task_execution_ids) {
-    return taskStatusMap;
-  }
-
-  Object.entries(details.child_task_execution_ids).forEach(
-    ([taskId, executionId]) => {
-      const executionIdStr = executionId;
-      const statusStats = state?.child_execution_status_stats?.[executionIdStr];
-
-      const status = statusStats
-        ? extractStatusFromStats(statusStats)
-        : undefined;
-
-      taskStatusMap.set(taskId, status ?? DEFAULT_TASK_STATUS);
-    },
-  );
-
-  return taskStatusMap;
-};
-
-/**
  * Hook that dynamically fetches execution data for the currently viewed level
  * Handles both root level and subgraph levels, ensuring task status is available
  * when navigating into nested subgraphs
@@ -116,7 +76,7 @@ const buildTaskStatusMap = (
  * to fetch execution data separately.
  */
 export const useCurrentLevelExecutionData = (rootExecutionOrRunId: string) => {
-  const { currentSubgraphPath, setTaskStatusMap } = useComponentSpec();
+  const { currentSubgraphPath } = useComponentSpec();
 
   const executionDataCache = useRef<Map<string, CachedExecutionData>>(
     new Map(),
@@ -179,11 +139,6 @@ export const useCurrentLevelExecutionData = (rootExecutionOrRunId: string) => {
     currentSubgraphPath,
     isAtRoot,
   ]);
-
-  useEffect(() => {
-    const taskStatusMap = buildTaskStatusMap(details, state);
-    setTaskStatusMap(taskStatusMap);
-  }, [details, state, setTaskStatusMap]);
 
   return {
     currentExecutionId,
