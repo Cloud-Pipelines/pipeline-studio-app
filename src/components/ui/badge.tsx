@@ -10,6 +10,7 @@ const badgeVariants = cva(
     variants: {
       size: {
         xs: "text-xs p-0.5 w-4 h-4",
+        sm: "text-xs",
         md: "text-sm",
       },
       position: {
