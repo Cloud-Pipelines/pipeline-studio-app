@@ -1,8 +1,11 @@
 import { Link } from "@tanstack/react-router";
+import { Sparkles } from "lucide-react";
 
 import logoAsset from "@/assets/logo.png";
 import ImportPipeline from "@/components/shared/ImportPipeline";
+import { Button } from "@/components/ui/button";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { APP_ROUTES } from "@/routes/router";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 
 import BackendStatus from "../shared/BackendStatus";
@@ -31,6 +34,12 @@ const AppMenu = () => {
         </div>
         <div className="flex flex-row gap-32 items-center">
           <div className="flex flex-row gap-2 items-center">
+            <Link to={APP_ROUTES.QUICK_START}>
+              <Button variant="secondary" className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Quick Start
+              </Button>
+            </Link>
             <CloneRunButton componentSpec={componentSpec} />
             <ImportPipeline />
             <NewPipelineButton />
