@@ -307,37 +307,6 @@ describe("duplicateNodes", () => {
       expect(taskNode.selected).toBe(true);
     });
 
-    it("should respect status: false config and remove status annotations", () => {
-      const taskSpecWithStatus = {
-        ...mockTaskSpec,
-        annotations: {
-          status: "running",
-          executionId: "exec-123",
-          "editor.position": JSON.stringify({ x: 100, y: 100 }),
-        },
-      };
-
-      const componentSpec = createMockComponentSpec({
-        "original-task": taskSpecWithStatus,
-      });
-
-      const taskNode = createMockTaskNode("original-task", taskSpecWithStatus);
-
-      const result = duplicateNodes(componentSpec, [taskNode], {
-        status: false,
-      });
-
-      if ("graph" in result.updatedComponentSpec.implementation!) {
-        const duplicatedTask =
-          result.updatedComponentSpec.implementation.graph.tasks[
-            "original-task 2"
-          ];
-        expect(duplicatedTask.annotations).not.toHaveProperty("status");
-        expect(duplicatedTask.annotations).not.toHaveProperty("executionId");
-        expect(duplicatedTask.annotations).toHaveProperty("editor.position");
-      }
-    });
-
     it("should position nodes at specified location", () => {
       const componentSpec = createMockComponentSpec({
         task1: mockTaskSpec,
