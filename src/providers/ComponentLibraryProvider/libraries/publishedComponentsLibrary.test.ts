@@ -226,9 +226,9 @@ describe("PublishedComponentsLibrary", () => {
       const invalidComponent = { name: "invalid" } as ComponentReference;
 
       // Act & Assert
-      await expect(library.hasComponent(invalidComponent)).rejects.toThrow(
-        InvalidComponentReferenceError,
-      );
+      const result = await library.hasComponent(invalidComponent);
+      expect(result).toBe(false);
+      expect(mockGetApiComponentsDigestGet).not.toHaveBeenCalled();
     });
 
     it("should throw BackendLibraryError for unexpected status codes", async () => {
