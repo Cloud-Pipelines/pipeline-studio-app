@@ -1,3 +1,4 @@
+import { useMatch } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef } from "react";
 
 import type {
@@ -5,6 +6,7 @@ import type {
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { runDetailRoute } from "@/routes/router";
 
 import { usePipelineRunData } from "./usePipelineRunData";
 
@@ -115,7 +117,10 @@ const buildTaskStatusMap = (
  * This hook manages all data fetching internally, so parent components don't need
  * to fetch execution data separately.
  */
-export const useCurrentLevelExecutionData = (rootExecutionOrRunId: string) => {
+export const useCurrentLevelExecutionData = () => {
+  const runMatch = useMatch({ from: runDetailRoute.id, shouldThrow: false });
+  const rootExecutionOrRunId = (runMatch?.params as { id?: string })?.id || "";
+
   const { currentSubgraphPath, setTaskStatusMap } = useComponentSpec();
 
   const executionDataCache = useRef<Map<string, CachedExecutionData>>(
