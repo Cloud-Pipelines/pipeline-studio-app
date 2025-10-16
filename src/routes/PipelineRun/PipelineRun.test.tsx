@@ -200,13 +200,11 @@ describe("<PipelineRun/>", () => {
       componentSpec: null,
       setComponentSpec: vi.fn(),
       clearComponentSpec: vi.fn(),
-      setTaskStatusMap: vi.fn(),
       currentSubgraphPath: ["root"],
       navigateToSubgraph: vi.fn(),
       navigateBack: vi.fn(),
       navigateToPath: vi.fn(),
       canNavigateBack: false,
-      taskStatusMap: new Map(),
       graphSpec: {} as never,
       isLoading: false,
       isValid: true,
@@ -229,7 +227,6 @@ describe("<PipelineRun/>", () => {
       refetch: vi.fn(),
     });
 
-    // act
     const { getByText } = render(
       <QueryClientProvider client={queryClient}>
         <ComponentSpecProvider spec={undefined}>
@@ -238,7 +235,6 @@ describe("<PipelineRun/>", () => {
       </QueryClientProvider>,
     );
 
-    // assert
     expect(getByText("Loading Pipeline Run...")).toBeInTheDocument();
   });
 });
