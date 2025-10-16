@@ -2,10 +2,6 @@ import { DndContext } from "@dnd-kit/core";
 import { ReactFlowProvider } from "@xyflow/react";
 import { useEffect } from "react";
 
-import type {
-  GetExecutionInfoResponse,
-  GetGraphExecutionStateResponse,
-} from "@/api/types.gen";
 import PipelineRunPage from "@/components/PipelineRun";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { Spinner } from "@/components/ui/spinner";
@@ -58,13 +54,11 @@ const PipelineRun = () => {
 
   useEffect(() => {
     if (rootDetails?.task_spec.componentRef.spec) {
-      const componentSpecWithExecutionIds = addExecutionIdToComponent(
+      setComponentSpec(
         rootDetails.task_spec.componentRef.spec as ComponentSpec,
-        rootDetails,
       );
-
-      setComponentSpec(componentSpecWithExecutionIds);
     }
+
     return () => {
       clearComponentSpec();
     };
@@ -129,118 +123,14 @@ const PipelineRun = () => {
     <div className="dndflow">
       <DndContext>
         <ReactFlowProvider>
-          <PipelineRunContent
-            pipelineRunId={id}
-            details={details}
-            state={state}
-          />
+          <PipelineRunPage pipelineRunId={id} />
         </ReactFlowProvider>
       </DndContext>
     </div>
   );
 };
 
-const PipelineRunContent = ({
-  pipelineRunId,
-  details,
-  state,
-}: {
-  pipelineRunId: string;
-  details?: GetExecutionInfoResponse;
-  state?: GetGraphExecutionStateResponse;
-}) => {
-  const { setTaskStatusMap } = useComponentSpec();
-
-  useEffect(() => {
-    const taskStatusMap = buildTaskStatusMap(details, state);
-    setTaskStatusMap(taskStatusMap);
-  }, [details, state, setTaskStatusMap]);
-
-  return <PipelineRunPage pipelineRunId={pipelineRunId} />;
-};
-
 export default PipelineRun;
-
-const buildTaskStatusMap = (
-  detailsData?: GetExecutionInfoResponse,
-  stateData?: GetGraphExecutionStateResponse,
-) => {
-  const taskStatusMap = new Map();
-  if (!detailsData) {
-    return taskStatusMap;
-  }
-
-  // If no state data is available, set all tasks to WAITING_FOR_UPSTREAM
-  if (!stateData && detailsData?.child_task_execution_ids) {
-    Object.keys(detailsData.child_task_execution_ids).forEach((taskId) => {
-      taskStatusMap.set(taskId, "WAITING_FOR_UPSTREAM");
-    });
-    return taskStatusMap;
-  }
-
-  if (
-    detailsData?.child_task_execution_ids &&
-    stateData?.child_execution_status_stats
-  ) {
-    Object.entries(detailsData.child_task_execution_ids).forEach(
-      ([taskId, executionId]) => {
-        const executionIdStr = String(executionId);
-        const statusStats =
-          stateData.child_execution_status_stats[executionIdStr];
-
-        if (statusStats) {
-          const status = Object.keys(statusStats)[0];
-          taskStatusMap.set(taskId, status);
-        } else {
-          // If this task doesn't have status in state data, mark as WAITING
-          taskStatusMap.set(taskId, "WAITING_FOR_UPSTREAM");
-        }
-      },
-    );
-  }
-
-  return taskStatusMap;
-};
-
-const addExecutionIdToComponent = (
-  componentSpec: ComponentSpec,
-  detailsData?: GetExecutionInfoResponse,
-): ComponentSpec => {
-  if (
-    !componentSpec ||
-    !("graph" in componentSpec.implementation) ||
-    !detailsData
-  ) {
-    return componentSpec;
-  }
-
-  const tasksWithExecutionId = Object.fromEntries(
-    Object.entries(componentSpec.implementation.graph.tasks).map(
-      ([taskId, taskSpec]) => {
-        const executionId = detailsData?.child_task_execution_ids?.[taskId];
-        const enhancedTaskSpec = {
-          ...taskSpec,
-          annotations: {
-            ...taskSpec.annotations,
-            executionId: executionId,
-          },
-        };
-        return [taskId, enhancedTaskSpec];
-      },
-    ),
-  );
-
-  return {
-    ...componentSpec,
-    implementation: {
-      ...componentSpec.implementation,
-      graph: {
-        ...componentSpec.implementation.graph,
-        tasks: tasksWithExecutionId,
-      },
-    },
-  };
-};
 
 const mapRunStatusToFavicon = (
   runStatus: string,

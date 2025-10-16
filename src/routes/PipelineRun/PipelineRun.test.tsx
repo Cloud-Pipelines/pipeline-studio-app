@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, render } from "@testing-library/react";
+import { cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type {
@@ -194,138 +194,51 @@ describe("<PipelineRun/>", () => {
     queryClient.clear();
   });
 
-  describe("Task Execution IDs", () => {
-    test("should add execution IDs to tasks when on runs route", async () => {
-      // arrange
-      const setComponentSpecSpy = vi.fn();
-      mockUseComponentSpec.mockReturnValue({
-        componentSpec: null,
-        setComponentSpec: setComponentSpecSpy,
-        clearComponentSpec: vi.fn(),
-        setTaskStatusMap: vi.fn(),
-        currentSubgraphPath: ["root"],
-        navigateToSubgraph: vi.fn(),
-        navigateBack: vi.fn(),
-        navigateToPath: vi.fn(),
-        canNavigateBack: false,
-        taskStatusMap: new Map(),
-        graphSpec: {} as never,
-        isLoading: false,
-        isValid: true,
-        errors: [],
-        refetch: vi.fn(),
-        updateGraphSpec: vi.fn(),
-        saveComponentSpec: vi.fn(),
-        undoRedo: {} as never,
-      });
-
-      // act
-      await act(async () =>
-        render(
-          <QueryClientProvider client={queryClient}>
-            <ComponentSpecProvider spec={undefined}>
-              <PipelineRun />
-            </ComponentSpecProvider>
-          </QueryClientProvider>,
-        ),
-      );
-
-      // assert - verify that setComponentSpec was called with execution IDs added
-      expect(setComponentSpecSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          implementation: expect.objectContaining({
-            graph: expect.objectContaining({
-              tasks: expect.objectContaining({
-                "task-1": expect.objectContaining({
-                  annotations: expect.objectContaining({
-                    executionId: "execution-1",
-                  }),
-                }),
-                "task-2": expect.objectContaining({
-                  annotations: expect.objectContaining({
-                    executionId: "execution-2",
-                  }),
-                }),
-              }),
-            }),
-          }),
-        }),
-      );
+  test("should render loading state initially", async () => {
+    // arrange
+    mockUseComponentSpec.mockReturnValue({
+      componentSpec: null,
+      setComponentSpec: vi.fn(),
+      clearComponentSpec: vi.fn(),
+      setTaskStatusMap: vi.fn(),
+      currentSubgraphPath: ["root"],
+      navigateToSubgraph: vi.fn(),
+      navigateBack: vi.fn(),
+      navigateToPath: vi.fn(),
+      canNavigateBack: false,
+      taskStatusMap: new Map(),
+      graphSpec: {} as never,
+      isLoading: false,
+      isValid: true,
+      errors: [],
+      refetch: vi.fn(),
+      updateGraphSpec: vi.fn(),
+      saveComponentSpec: vi.fn(),
+      undoRedo: {} as never,
     });
 
-    test("should not add execution IDs when child_task_execution_ids is missing", async () => {
-      // arrange
-      const setComponentSpecSpy = vi.fn();
-      mockUseComponentSpec.mockReturnValue({
-        componentSpec: null,
-        setComponentSpec: setComponentSpecSpy,
-        clearComponentSpec: vi.fn(),
-        setTaskStatusMap: vi.fn(),
-        currentSubgraphPath: ["root"],
-        navigateToSubgraph: vi.fn(),
-        navigateBack: vi.fn(),
-        navigateToPath: vi.fn(),
-        canNavigateBack: false,
-        taskStatusMap: new Map(),
-        graphSpec: {} as never,
-        isLoading: false,
-        isValid: true,
-        errors: [],
-        refetch: vi.fn(),
-        updateGraphSpec: vi.fn(),
-        saveComponentSpec: vi.fn(),
-        undoRedo: {} as never,
-      });
-
-      const mockExecutionDetailsWithoutIds = {
-        ...mockExecutionDetails,
-        child_task_execution_ids: {},
-      };
-
-      mockUsePipelineRunData.mockReturnValue({
-        executionData: {
-          details: mockExecutionDetailsWithoutIds,
-          state: mockExecutionState,
-        },
-        rootExecutionId: "test-execution-id",
-        isLoading: false,
-        error: null,
-        isFetching: false,
-        refetch: vi.fn(),
-      });
-
-      // act
-      await act(async () =>
-        render(
-          <QueryClientProvider client={queryClient}>
-            <ComponentSpecProvider spec={undefined}>
-              <PipelineRun />
-            </ComponentSpecProvider>
-          </QueryClientProvider>,
-        ),
-      );
-
-      // assert - verify that tasks don't have executionId annotations
-      expect(setComponentSpecSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          implementation: expect.objectContaining({
-            graph: expect.objectContaining({
-              tasks: expect.objectContaining({
-                "task-1": expect.not.objectContaining({
-                  annotations: expect.objectContaining({
-                    executionId: expect.anything(),
-                  }),
-                }),
-                "task-2": expect.not.objectContaining({
-                  annotations: expect.objectContaining({
-                    executionId: expect.anything(),
-                  }),
-                }),
-              }),
-            }),
-          }),
-        }),
-      );
+    mockUsePipelineRunData.mockReturnValue({
+      executionData: {
+        details: mockExecutionDetails,
+        state: mockExecutionState,
+      },
+      rootExecutionId: "test-execution-id",
+      isLoading: true,
+      error: null,
+      isFetching: false,
+      refetch: vi.fn(),
     });
+
+    // act
+    const { getByText } = render(
+      <QueryClientProvider client={queryClient}>
+        <ComponentSpecProvider spec={undefined}>
+          <PipelineRun />
+        </ComponentSpecProvider>
+      </QueryClientProvider>,
+    );
+
+    // assert
+    expect(getByText("Loading Pipeline Run...")).toBeInTheDocument();
   });
 });
