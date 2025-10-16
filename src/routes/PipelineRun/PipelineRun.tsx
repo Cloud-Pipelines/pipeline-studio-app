@@ -31,7 +31,7 @@ const PipelineRun = () => {
     isLoading: isLoadingCurrentLevelData,
     error: currentLevelError,
     rootDetails,
-  } = useCurrentLevelExecutionData(id || "");
+  } = useCurrentLevelExecutionData();
 
   const isLoading = isLoadingCurrentLevelData;
   const error = currentLevelError;
