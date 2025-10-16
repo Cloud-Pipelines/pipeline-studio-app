@@ -32,3 +32,24 @@ export function useHydrateComponentReference(component: ComponentReference) {
 
   return componentRef;
 }
+
+class ComponentHydrationError extends Error {
+  name = "ComponentHydrationError";
+
+  constructor(public readonly component: ComponentReference) {
+    super(
+      `Failed to hydrate component reference: ${component.digest ?? component.url ?? "unknown"}`,
+    );
+  }
+}
+
+export function useGuaranteedHydrateComponentReference(
+  component: ComponentReference,
+) {
+  const hydratedComponentRef = useHydrateComponentReference(component);
+  if (!hydratedComponentRef) {
+    throw new ComponentHydrationError(component);
+  }
+
+  return hydratedComponentRef;
+}
