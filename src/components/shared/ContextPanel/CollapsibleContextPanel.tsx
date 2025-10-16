@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/collapsible";
 import { Icon } from "@/components/ui/icon";
 import { VerticalResizeHandle } from "@/components/ui/resize-handle";
-import { cn } from "@/lib/utils";
 
 import { ContextPanel } from "./ContextPanel";
 
@@ -31,17 +30,15 @@ export function CollapsibleContextPanel({
         <Button
           variant="ghost"
           size="icon"
-          className={
-            "absolute top-[95px] z-0 transition-all duration-300 bg-white rounded-r-md shadow-md p-0.5 pr-1 -translate-x-8"
-          }
+          className="absolute top-[95px] z-0 transition-all duration-300 bg-white rounded-r-none shadow-md -translate-x-9"
           aria-label={open ? "Collapse context panel" : "Expand context panel"}
         >
           <Icon name={open ? "PanelRightClose" : "PanelRightOpen"} />
         </Button>
       </CollapsibleTrigger>
       <div
-        className={cn("relative h-full flex", !open && "!w-0")}
-        style={{ width: `${DEFAULT_WIDTH}px` }}
+        className="relative h-full flex"
+        style={{ width: open ? `${DEFAULT_WIDTH}px` : "0px" }}
       >
         {open && (
           <VerticalResizeHandle
