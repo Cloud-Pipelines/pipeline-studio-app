@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 
+import { useGuaranteedHydrateComponentReference } from "@/hooks/useHydrateComponentReference";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import type { ComponentReference } from "@/utils/componentSpec";
 
@@ -14,10 +15,14 @@ export const useHasPublishedComponent = (componentRef: ComponentReference) => {
     "published_components",
   );
 
+  const hydratedComponentRef =
+    useGuaranteedHydrateComponentReference(componentRef);
+
   return useSuspenseQuery({
     // todo: id of the component?
     // todo: consistent queryKey naming practice
-    queryKey: ["has-component", componentRef.digest],
-    queryFn: () => publishedComponentsLibrary.hasComponent(componentRef),
+    queryKey: ["has-component", hydratedComponentRef.digest],
+    queryFn: () =>
+      publishedComponentsLibrary.hasComponent(hydratedComponentRef),
   });
 };
