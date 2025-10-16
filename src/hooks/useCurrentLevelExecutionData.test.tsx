@@ -11,6 +11,15 @@ import type {
 import { useCurrentLevelExecutionData } from "./useCurrentLevelExecutionData";
 
 // Mock dependencies
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
+  return {
+    ...actual,
+    useMatch: vi.fn(),
+  };
+});
+
 vi.mock("@/providers/BackendProvider", () => ({
   useBackend: vi.fn(),
 }));
@@ -22,6 +31,8 @@ vi.mock("@/providers/ComponentSpecProvider", () => ({
 vi.mock("@/hooks/usePipelineRunData", () => ({
   usePipelineRunData: vi.fn(),
 }));
+
+import { useMatch } from "@tanstack/react-router";
 
 import { usePipelineRunData } from "@/hooks/usePipelineRunData";
 import { useBackend } from "@/providers/BackendProvider";
@@ -74,6 +85,10 @@ describe("useCurrentLevelExecutionData", () => {
         },
       },
     });
+
+    vi.mocked(useMatch).mockReturnValue({
+      params: { id: "root-exec-123" },
+    } as never);
 
     vi.mocked(useBackend).mockReturnValue({
       backendUrl: "http://test-backend.com",
@@ -129,10 +144,9 @@ describe("useCurrentLevelExecutionData", () => {
 
   describe("root level execution", () => {
     it("should return root execution ID at root level", () => {
-      const { result } = renderHook(
-        () => useCurrentLevelExecutionData("root-exec-123"),
-        { wrapper: createWrapper },
-      );
+      const { result } = renderHook(() => useCurrentLevelExecutionData(), {
+        wrapper: createWrapper,
+      });
 
       expect(result.current.currentExecutionId).toBe("root-exec-123");
     });
@@ -151,7 +165,7 @@ describe("useCurrentLevelExecutionData", () => {
         error: null,
       });
 
-      renderHook(() => useCurrentLevelExecutionData("root-exec-123"), {
+      renderHook(() => useCurrentLevelExecutionData(), {
         wrapper: createWrapper,
       });
 
@@ -165,7 +179,7 @@ describe("useCurrentLevelExecutionData", () => {
     });
 
     it("should build task status map with actual statuses", async () => {
-      renderHook(() => useCurrentLevelExecutionData("root-exec-123"), {
+      renderHook(() => useCurrentLevelExecutionData(), {
         wrapper: createWrapper,
       });
 
@@ -236,10 +250,9 @@ describe("useCurrentLevelExecutionData", () => {
         },
       );
 
-      const { result } = renderHook(
-        () => useCurrentLevelExecutionData("root-exec-123"),
-        { wrapper: createWrapper },
-      );
+      const { result } = renderHook(() => useCurrentLevelExecutionData(), {
+        wrapper: createWrapper,
+      });
 
       expect(result.current.currentExecutionId).toBe("456");
     });
@@ -300,7 +313,7 @@ describe("useCurrentLevelExecutionData", () => {
         },
       );
 
-      renderHook(() => useCurrentLevelExecutionData("root-exec-123"), {
+      renderHook(() => useCurrentLevelExecutionData(), {
         wrapper: createWrapper,
       });
 
@@ -323,10 +336,9 @@ describe("useCurrentLevelExecutionData", () => {
         error: null,
       });
 
-      const { result } = renderHook(
-        () => useCurrentLevelExecutionData("root-exec-123"),
-        { wrapper: createWrapper },
-      );
+      const { result } = renderHook(() => useCurrentLevelExecutionData(), {
+        wrapper: createWrapper,
+      });
 
       expect(result.current.isLoading).toBe(true);
     });
@@ -341,10 +353,9 @@ describe("useCurrentLevelExecutionData", () => {
         error: mockError,
       });
 
-      const { result } = renderHook(
-        () => useCurrentLevelExecutionData("root-exec-123"),
-        { wrapper: createWrapper },
-      );
+      const { result } = renderHook(() => useCurrentLevelExecutionData(), {
+        wrapper: createWrapper,
+      });
 
       expect(result.current.error).toBe(mockError);
     });
@@ -367,7 +378,7 @@ describe("useCurrentLevelExecutionData", () => {
         error: null,
       });
 
-      renderHook(() => useCurrentLevelExecutionData("root-exec-123"), {
+      renderHook(() => useCurrentLevelExecutionData(), {
         wrapper: createWrapper,
       });
 
@@ -408,10 +419,9 @@ describe("useCurrentLevelExecutionData", () => {
         error: null,
       });
 
-      const { result } = renderHook(
-        () => useCurrentLevelExecutionData("root-exec-123"),
-        { wrapper: createWrapper },
-      );
+      const { result } = renderHook(() => useCurrentLevelExecutionData(), {
+        wrapper: createWrapper,
+      });
 
       // Should return root ID since we can't traverse further
       expect(result.current.currentExecutionId).toBe("root-exec-123");
