@@ -75,8 +75,18 @@ export const TaskNodeProvider = ({
   const taskId = data.taskId as string;
   const nodeId = taskIdToNodeId(taskId);
 
-  const inputs = taskSpec.componentRef.spec?.inputs || [];
-  const outputs = taskSpec.componentRef.spec?.outputs || [];
+  const inputs = useMemo(
+    () =>
+      taskSpec.componentRef.spec?.inputs?.filter((input) => !!input?.name) ||
+      [],
+    [taskSpec],
+  );
+  const outputs = useMemo(
+    () =>
+      taskSpec.componentRef.spec?.outputs?.filter((output) => !!output?.name) ||
+      [],
+    [taskSpec],
+  );
 
   const name = getComponentName(taskSpec.componentRef);
 
