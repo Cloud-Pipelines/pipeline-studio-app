@@ -1,17 +1,17 @@
 import type { DragEvent } from "react";
 
-import type { TaskType } from "@/types/taskNode";
+import type { NodeType } from "@/types/nodes";
 import type { TaskSpec } from "@/utils/componentSpec";
 
 export const getTaskFromEvent = (event: DragEvent) => {
   const droppedData = event.dataTransfer.getData("application/reactflow");
   if (droppedData === "") {
-    return { taskSpec: null, taskType: null };
+    return { taskSpec: null, nodeType: null };
   }
   const droppedDataObject = JSON.parse(droppedData);
-  const taskType = Object.keys(droppedDataObject)[0] as TaskType;
+  const nodeType = Object.keys(droppedDataObject)[0] as NodeType;
 
-  const taskSpec = droppedDataObject[taskType] as TaskSpec | null;
+  const taskSpec = droppedDataObject[nodeType] as TaskSpec | null;
 
-  return { taskSpec, taskType };
+  return { taskSpec, nodeType };
 };
