@@ -76,6 +76,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
 
     const { data: templateCode } = useTemplateCodeByName(templateName);
     const [componentText, setComponentText] = useState(text ?? templateCode);
+    const [errors, setErrors] = useState<string[]>([]);
 
     const { data: pythonCodeDetection } = useSuspenseQuery({
       queryKey: ["isPython", `${templateName}-${JSON.stringify(text)}`],
@@ -167,7 +168,11 @@ export const ComponentEditorDialog = withSuspenseWrapper(
             </InlineStack>
 
             <InlineStack gap="2" blockAlign="center">
-              <Button variant="secondary" onClick={handleSave}>
+              <Button
+                variant="default"
+                onClick={handleSave}
+                disabled={errors.length > 0}
+              >
                 <Icon name="Save" /> Save
               </Button>
               <Button variant="ghost" size="icon" onClick={handleClose}>
@@ -180,11 +185,13 @@ export const ComponentEditorDialog = withSuspenseWrapper(
             <PythonComponentEditor
               text={pythonCodeDetection.pythonOriginalCode}
               onComponentTextChange={handleComponentTextChange}
+              onErrorsChange={setErrors}
             />
           ) : (
             <YamlComponentEditor
               text={componentText}
               onComponentTextChange={handleComponentTextChange}
+              onErrorsChange={setErrors}
             />
           )}
         </BlockStack>
