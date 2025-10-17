@@ -4,7 +4,6 @@ import type { NodeData, TaskNodeData } from "@/types/nodes";
 
 import type { TaskSpec } from "../componentSpec";
 import { extractPositionFromAnnotations } from "./extractPositionFromAnnotations";
-import { taskIdToNodeId } from "./nodeIdUtils";
 import { convertNodeCallbacksToTaskCallbacks } from "./taskCallbackUtils";
 
 export const createTaskNode = (
@@ -12,10 +11,11 @@ export const createTaskNode = (
   nodeData: NodeData,
 ) => {
   const [taskId, taskSpec] = task;
-  const { callbacks, connectable = true, ...data } = nodeData;
+  const { nodeManager, callbacks, connectable = true, ...data } = nodeData;
+
+  const nodeId = nodeManager.getNodeId(taskId, "task");
 
   const position = extractPositionFromAnnotations(taskSpec.annotations);
-  const nodeId = taskIdToNodeId(taskId);
 
   // Inject the taskId and nodeId into the callbacks
   const taskCallbacks = convertNodeCallbacksToTaskCallbacks(

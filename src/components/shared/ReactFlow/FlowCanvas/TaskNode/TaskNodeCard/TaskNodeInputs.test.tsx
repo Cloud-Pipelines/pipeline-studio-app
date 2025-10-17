@@ -17,11 +17,32 @@ vi.mock("@/providers/ComponentLibraryProvider", () => ({
   }),
 }));
 
+vi.mock("@/providers/ComponentLibraryProvider/ForcedSearchProvider", () => ({
+  useForcedSearchContext: () => ({
+    highlightSearchFilter: vi.fn(),
+    resetSearchFilter: vi.fn(),
+    currentSearchFilter: { searchTerm: "", filters: [] },
+    highlightSearchResults: false,
+  }),
+}));
+
 vi.mock("@/providers/ComponentSpecProvider", () => ({
   useComponentSpec: () => ({
     graphSpec: {
       tasks: {},
     },
+  }),
+}));
+
+vi.mock("@/hooks/useNodeManager", () => ({
+  useNodeManager: () => ({
+    getInputHandleNodeId: vi.fn(
+      (_refId: string, inputName: string) => `input-handle-${inputName}`,
+    ),
+    getOutputHandleNodeId: vi.fn(),
+    getNodeId: vi.fn(),
+    getHandleNodeId: vi.fn(),
+    nodeManager: {},
   }),
 }));
 
@@ -39,6 +60,7 @@ describe("<TaskNodeInputs />", () => {
       state: { readOnly: false },
       select: vi.fn(),
       nodeId: "test-node",
+      taskId: "test-task",
     } as any);
   };
 

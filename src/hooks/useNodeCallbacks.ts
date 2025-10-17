@@ -34,8 +34,13 @@ export const useNodeCallbacks = ({
   const notify = useToastNotification();
   const reactFlowInstance = useReactFlow();
 
-  const { graphSpec, updateGraphSpec, componentSpec, setComponentSpec } =
-    useComponentSpec();
+  const {
+    graphSpec,
+    updateGraphSpec,
+    componentSpec,
+    setComponentSpec,
+    nodeManager,
+  } = useComponentSpec();
 
   // Workaround for nodes state being stale in task node callbacks
   const getNodeById = useCallback(
@@ -139,6 +144,7 @@ export const useNodeCallbacks = ({
       const { updatedComponentSpec, newNodes, updatedNodes } = duplicateNodes(
         componentSpec,
         [node],
+        nodeManager,
         { selected },
       );
 
@@ -149,7 +155,13 @@ export const useNodeCallbacks = ({
         newNodes,
       });
     },
-    [componentSpec, getNodeById, setComponentSpec, updateOrAddNodes],
+    [
+      componentSpec,
+      nodeManager,
+      getNodeById,
+      setComponentSpec,
+      updateOrAddNodes,
+    ],
   );
 
   const onUpgrade = useCallback(

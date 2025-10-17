@@ -12,16 +12,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Paragraph } from "@/components/ui/typography";
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import type { IONodeData } from "@/types/nodes";
 import { isInputSpec, typeSpecToString } from "@/utils/componentSpec";
 import { ENABLE_DEBUG_MODE } from "@/utils/constants";
-import {
-  inputNameToNodeId,
-  outputNameToNodeId,
-} from "@/utils/nodes/nodeIdUtils";
 
 interface IONodeProps {
   type: "input" | "output";
@@ -31,6 +28,7 @@ interface IONodeProps {
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
+  const { getNodeId, getHandleNodeId } = useNodeManager();
   const { graphSpec, componentSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
@@ -58,11 +56,9 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     [componentSpec.outputs, spec.name],
   );
 
-  const nodeId = isInput
-    ? inputNameToNodeId(spec.name)
-    : outputNameToNodeId(spec.name);
-
-  const nodeHandleId = `${nodeId}_handle`;
+  const nodeId = getNodeId(spec.name, type);
+  const handleNodeType = isInput ? "outputHandle" : "inputHandle";
+  const nodeHandleId = getHandleNodeId(spec.name, spec.name, handleNodeType);
 
   useEffect(() => {
     if (selected) {
@@ -163,6 +159,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
         <Tooltip>
           <TooltipTrigger asChild>
             <Handle
+              id={nodeHandleId}
               type={handleType}
               position={handlePosition}
               className={cn(handleDefaultClassName, handleClassName)}
