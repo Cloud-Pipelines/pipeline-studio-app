@@ -13,9 +13,11 @@ export const YamlComponentEditor = withSuspenseWrapper(
   ({
     text,
     onComponentTextChange,
+    onErrorsChange,
   }: {
     text: string;
     onComponentTextChange: (yaml: string) => void;
+    onErrorsChange: (errors: string[]) => void;
   }) => {
     const [componentText, setComponentText] = useState(text);
     const validateComponentSpec = useComponentSpecValidator();
@@ -26,15 +28,16 @@ export const YamlComponentEditor = withSuspenseWrapper(
         const validationResult = validateComponentSpec(value ?? "");
 
         if (!validationResult.valid) {
-          setValidationErrors(
-            validationResult.errors ?? ["Invalid component spec"],
-          );
+          const errors = validationResult.errors ?? ["Invalid component spec"];
+          setValidationErrors(errors);
+          onErrorsChange(errors);
           return;
         }
 
         setComponentText(value ?? "");
         onComponentTextChange(value ?? "");
         setValidationErrors([]);
+        onErrorsChange([]);
       },
       [onComponentTextChange, validateComponentSpec],
     );

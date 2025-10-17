@@ -1,17 +1,15 @@
 import MonacoEditor from "@monaco-editor/react";
 import { useCallback, useEffect, useState } from "react";
 
-import { TaskNodeCard } from "@/components/shared/ReactFlow/FlowCanvas/TaskNode/TaskNodeCard";
 import { withSuspenseWrapper } from "@/components/shared/SuspenseWrapper";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/typography";
-import { TaskNodeProvider } from "@/providers/TaskNodeProvider";
 
+import { InfoBox } from "../../InfoBox";
 import { DEFAULT_MONACO_OPTIONS } from "../constants";
 import { usePythonYamlGenerator } from "../generators/python";
-import { usePreviewTaskNodeData } from "../usePreviewTaskNodeData";
-import { PointersEventBlock } from "./PointersEventBlock";
+import { PreviewTaskNodeCard } from "./PreviewTaskNodeCard";
 import { TogglePreview } from "./TogglePreview";
 
 const PythonComponentEditorSkeleton = () => {
@@ -46,21 +44,32 @@ export const PythonComponentEditor = withSuspenseWrapper(
   ({
     text,
     onComponentTextChange,
+    onErrorsChange,
   }: {
     text: string;
     onComponentTextChange: (yaml: string) => void;
+    onErrorsChange: (errors: string[]) => void;
   }) => {
     const [componentText, setComponentText] = useState("");
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [showPreview, setShowPreview] = useState(true);
     const yamlGenerator = usePythonYamlGenerator();
 
     const handleFunctionTextChange = useCallback(
       async (value: string | undefined) => {
-        const yaml = await yamlGenerator(value ?? "").catch((error) => {
-          return `❌ Error In Component Code ❌ \n\n ${error instanceof Error ? error.message : String(error)}`;
-        });
-        setComponentText(yaml);
-        onComponentTextChange(yaml);
+        try {
+          const yaml = await yamlGenerator(value ?? "");
+          setComponentText(yaml);
+          onComponentTextChange(yaml);
+          setValidationErrors([]);
+          onErrorsChange([]);
+        } catch (error) {
+          const errors = [
+            error instanceof Error ? error.message : String(error),
+          ];
+          onErrorsChange(errors);
+          setValidationErrors(errors);
+        }
       },
       [yamlGenerator, onComponentTextChange],
     );
@@ -69,8 +78,6 @@ export const PythonComponentEditor = withSuspenseWrapper(
       // first time loading
       handleFunctionTextChange(text);
     }, [text, handleFunctionTextChange]);
-
-    const previewNodeData = usePreviewTaskNodeData(componentText);
 
     return (
       <InlineStack className="w-full h-full" gap="4">
@@ -101,19 +108,33 @@ export const PythonComponentEditor = withSuspenseWrapper(
               inlineAlign="center"
               data-testid="python-editor-preview"
             >
-              {previewNodeData && showPreview && (
-                <PointersEventBlock>
-                  <TaskNodeProvider data={previewNodeData} selected={false}>
-                    <TaskNodeCard />
-                  </TaskNodeProvider>
-                </PointersEventBlock>
-              )}
-              {!showPreview && (
+              {validationErrors.length > 0 ? (
+                <BlockStack className="m-4" align="center" inlineAlign="center">
+                  <InfoBox
+                    variant="error"
+                    title="Invalid component spec"
+                    className="w-[280px]"
+                  >
+                    <ul className="list-disc list-inside space-y-1">
+                      {validationErrors.map((error, index) => (
+                        <li key={index} className="text-sm break-words">
+                          {error}
+                        </li>
+                      ))}
+                    </ul>
+                  </InfoBox>
+                </BlockStack>
+              ) : showPreview ? (
+                <PreviewTaskNodeCard componentText={componentText} />
+              ) : (
                 <MonacoEditor
                   defaultLanguage="yaml"
                   theme="vs-dark"
                   value={componentText}
-                  options={DEFAULT_MONACO_OPTIONS}
+                  options={{
+                    ...DEFAULT_MONACO_OPTIONS,
+                    readOnly: true,
+                  }}
                 />
               )}
             </BlockStack>
