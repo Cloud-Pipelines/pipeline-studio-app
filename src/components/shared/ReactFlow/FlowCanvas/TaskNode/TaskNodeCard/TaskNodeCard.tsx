@@ -2,6 +2,7 @@ import { useStore } from "@xyflow/react";
 import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { ComponentEditorDialog } from "@/components/shared/ComponentEditor/ComponentEditorDialog";
 import { PublishedComponentBadge } from "@/components/shared/ManageComponent/PublishedComponentBadge";
 import { trimDigest } from "@/components/shared/ManageComponent/utils/digest";
 import { useBetaFlagValue } from "@/components/shared/Settings/useBetaFlags";
@@ -32,6 +33,7 @@ const TaskNodeCard = () => {
     "remote-component-library-search",
   );
   const isSubgraphNavigationEnabled = useBetaFlagValue("subgraph-navigation");
+  const isInAppEditorEnabled = useBetaFlagValue("in-app-component-editor");
   const { registerNode } = useNodesOverlay();
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
@@ -45,6 +47,7 @@ const TaskNodeCard = () => {
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [updateOverlayDialogOpen, setUpdateOverlayDialogOpen] = useState<
     UpdateOverlayMessage["data"] | undefined
   >();
@@ -98,6 +101,14 @@ const TaskNodeCard = () => {
     }
   }, []);
 
+  const handleEditComponent = useCallback(() => {
+    setIsEditDialogOpen(true);
+  }, []);
+
+  const handleCloseEditDialog = useCallback(() => {
+    setIsEditDialogOpen(false);
+  }, []);
+
   const taskConfigMarkup = useMemo(() => {
     const actions: Array<ButtonPropsWithTooltip> = [];
 
@@ -140,6 +151,19 @@ const TaskNodeCard = () => {
       });
     }
 
+    if (isInAppEditorEnabled) {
+      actions.push({
+        children: (
+          <div className="flex items-center gap-2">
+            <Icon name="FilePenLine" size="sm" />
+          </div>
+        ),
+        variant: "secondary",
+        tooltip: "Edit Component Definition",
+        onClick: handleEditComponent,
+      });
+    }
+
     return (
       <TaskConfiguration taskNode={taskNode} key={nodeId} actions={actions} />
     );
@@ -148,11 +172,13 @@ const TaskNodeCard = () => {
     readOnly,
     callbacks.onDuplicate,
     callbacks.onUpgrade,
+    isInAppEditorEnabled,
     isCustomComponent,
     isSubgraphNode,
     taskId,
     subgraphDescription,
     navigateToSubgraph,
+    handleEditComponent,
   ]);
 
   const handleInputSectionClick = useCallback(() => {
@@ -202,81 +228,89 @@ const TaskNodeCard = () => {
   );
 
   return (
-    <Card
-      className={cn(
-        "rounded-2xl border-gray-200 border-2 break-words p-0 drop-shadow-none gap-2",
-        selected ? "border-gray-500" : "hover:border-slate-200",
-        (highlighted || highlightedState) && "border-orange-500!",
-        isSubgraphNode && "cursor-pointer",
-      )}
-      style={{
-        width: dimensions.w + "px",
-        height: condensed || !dimensions.h ? "auto" : dimensions.h + "px",
-        transition: "height 0.2s",
-      }}
-      ref={nodeRef}
-      onDoubleClick={handleDoubleClick}
-    >
-      <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
-        <BlockStack>
-          <InlineStack gap="2" blockAlign="center">
-            {isSubgraphNode && isSubgraphNavigationEnabled && (
-              <QuickTooltip content={`Subgraph: ${subgraphDescription}`}>
-                <Icon name="Workflow" size="sm" className="text-blue-600" />
-              </QuickTooltip>
-            )}
-            <CardTitle className="break-words text-left text-xs text-slate-900">
-              {name}
-            </CardTitle>
-          </InlineStack>
-          {taskId &&
-            taskId !== name &&
-            !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
-              <Text size="xs" tone="subdued" className="font-light">
-                {taskId}
-              </Text>
-            )}
-        </BlockStack>
-
-        {isRemoteComponentLibrarySearchEnabled ? (
-          <PublishedComponentBadge componentRef={taskSpec.componentRef}>
-            {digestMarkup}
-          </PublishedComponentBadge>
-        ) : (
-          digestMarkup
+    <>
+      <Card
+        className={cn(
+          "rounded-2xl border-gray-200 border-2 break-words p-0 drop-shadow-none gap-2",
+          selected ? "border-gray-500" : "hover:border-slate-200",
+          (highlighted || highlightedState) && "border-orange-500!",
+          isSubgraphNode && "cursor-pointer",
         )}
-      </CardHeader>
-      <CardContent className="p-2 flex flex-col gap-2">
-        <div
-          style={{
-            maxHeight:
-              dimensions.h && !(expandedInputs || expandedOutputs)
-                ? `${dimensions.h}px`
-                : "100%",
-          }}
-          ref={contentRef}
-        >
-          <TaskNodeInputs
-            condensed={condensed}
-            expanded={expandedInputs}
-            onBackgroundClick={handleInputSectionClick}
-          />
+        style={{
+          width: dimensions.w + "px",
+          height: condensed || !dimensions.h ? "auto" : dimensions.h + "px",
+          transition: "height 0.2s",
+        }}
+        ref={nodeRef}
+        onDoubleClick={handleDoubleClick}
+      >
+        <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
+          <BlockStack>
+            <InlineStack gap="2" blockAlign="center">
+              {isSubgraphNode && isSubgraphNavigationEnabled && (
+                <QuickTooltip content={`Subgraph: ${subgraphDescription}`}>
+                  <Icon name="Workflow" size="sm" className="text-blue-600" />
+                </QuickTooltip>
+              )}
+              <CardTitle className="break-words text-left text-xs text-slate-900">
+                {name}
+              </CardTitle>
+            </InlineStack>
+            {taskId &&
+              taskId !== name &&
+              !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
+                <Text size="xs" tone="subdued" className="font-light">
+                  {taskId}
+                </Text>
+              )}
+          </BlockStack>
 
-          <TaskNodeOutputs
-            condensed={condensed}
-            expanded={expandedOutputs}
-            onBackgroundClick={handleOutputSectionClick}
-          />
-        </div>
-        {isRemoteComponentLibrarySearchEnabled && updateOverlayDialogOpen ? (
-          <UpgradeNodePopover
-            currentNode={taskNode}
-            onOpenChange={closeOverlayPopover}
-            {...updateOverlayDialogOpen}
-          />
-        ) : null}
-      </CardContent>
-    </Card>
+          {isRemoteComponentLibrarySearchEnabled ? (
+            <PublishedComponentBadge componentRef={taskSpec.componentRef}>
+              {digestMarkup}
+            </PublishedComponentBadge>
+          ) : (
+            digestMarkup
+          )}
+        </CardHeader>
+        <CardContent className="p-2 flex flex-col gap-2">
+          <div
+            style={{
+              maxHeight:
+                dimensions.h && !(expandedInputs || expandedOutputs)
+                  ? `${dimensions.h}px`
+                  : "100%",
+            }}
+            ref={contentRef}
+          >
+            <TaskNodeInputs
+              condensed={condensed}
+              expanded={expandedInputs}
+              onBackgroundClick={handleInputSectionClick}
+            />
+
+            <TaskNodeOutputs
+              condensed={condensed}
+              expanded={expandedOutputs}
+              onBackgroundClick={handleOutputSectionClick}
+            />
+          </div>
+          {isRemoteComponentLibrarySearchEnabled && updateOverlayDialogOpen ? (
+            <UpgradeNodePopover
+              currentNode={taskNode}
+              onOpenChange={closeOverlayPopover}
+              {...updateOverlayDialogOpen}
+            />
+          ) : null}
+        </CardContent>
+      </Card>
+      {isEditDialogOpen && (
+        <ComponentEditorDialog
+          text={taskSpec.componentRef?.text}
+          onClose={handleCloseEditDialog}
+        />
+      )}
+    </>
   );
 };
 
