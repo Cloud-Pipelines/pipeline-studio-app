@@ -218,6 +218,20 @@ export const ArgumentInputField = ({
     [argument, disabled],
   );
 
+  useEffect(() => {
+    return () => {
+      const value = inputValue.trim();
+      if (value !== lastSubmittedValue) {
+        const updatedArgument = {
+          ...argument,
+          value,
+          isRemoved: false,
+        };
+        onSave(updatedArgument);
+      }
+    };
+  }, [inputValue, lastSubmittedValue, argument, onSave]);
+
   return (
     <>
       <BlockStack gap="2" className="relative w-full">
