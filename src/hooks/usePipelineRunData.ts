@@ -27,6 +27,7 @@ const useRootExecutionId = (id: string) => {
       // assuming id is root_execution_id
       return id;
     },
+    enabled: !!id && id.length > 0,
     staleTime: Infinity,
   });
 
