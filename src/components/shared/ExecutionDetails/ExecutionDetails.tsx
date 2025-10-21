@@ -8,10 +8,13 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePipelineRunData } from "@/hooks/usePipelineRunData";
 import { useBackend } from "@/providers/BackendProvider";
 import { useFetchContainerExecutionState } from "@/services/executionService";
+import type { TaskSpec } from "@/utils/componentSpec";
 import { EXIT_CODE_OOM } from "@/utils/constants";
 import { formatDate, formatDuration } from "@/utils/date";
+import { isSubgraph } from "@/utils/subgraphUtils";
 
 import { InfoBox } from "../InfoBox";
 
@@ -27,6 +30,12 @@ export const ExecutionDetails = ({ executionId }: ExecutionDetailsProps) => {
     isLoading: isLoadingContainerState,
     error: containerStateError,
   } = useFetchContainerExecutionState(executionId || "", backendUrl);
+
+  const { executionData } = usePipelineRunData(executionId || "");
+
+  const isSubgraphNode =
+    executionData?.details?.task_spec &&
+    isSubgraph(executionData?.details?.task_spec as TaskSpec);
 
   // Don't render if no execution data is available
   const hasExecutionData =
@@ -63,7 +72,7 @@ export const ExecutionDetails = ({ executionId }: ExecutionDetailsProps) => {
             </span>
           </div>
 
-          {isLoadingContainerState && (
+          {isLoadingContainerState && !isSubgraphNode && (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Skeleton className="h-3 w-12" />
@@ -138,7 +147,8 @@ export const ExecutionDetails = ({ executionId }: ExecutionDetailsProps) => {
 
           {!isLoadingContainerState &&
             !containerState &&
-            !containerStateError && (
+            !containerStateError &&
+            !isSubgraphNode && (
               <div className="text-xs text-muted-foreground">
                 Container state not available
               </div>
