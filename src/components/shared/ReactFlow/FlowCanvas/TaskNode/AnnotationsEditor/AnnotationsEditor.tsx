@@ -9,7 +9,6 @@ import { NewAnnotationRow } from "./NewAnnotationRow";
 
 interface AnnotationsEditorProps {
   annotations: Annotations;
-  onChange: (key: string, value: string | undefined) => void;
   onBlur: (key: string, value: string | undefined) => void;
   onRemove: (key: string) => void;
   newRows: Array<{ key: string; value: string }>;
@@ -33,7 +32,6 @@ const HIDDEN_ANNOTATIONS = new Set(["executionId"]);
 
 export const AnnotationsEditor = ({
   annotations,
-  onChange,
   onBlur,
   onRemove,
   newRows,
@@ -73,8 +71,7 @@ export const AnnotationsEditor = ({
           <AnnotationsInput
             key={config.annotation}
             value={annotations[config.annotation]}
-            onChange={(newValue) => onChange(config.annotation, newValue)}
-            onBlur={(newValue) => onBlur(config.annotation, newValue)}
+            onSave={(newValue) => onBlur(config.annotation, newValue)}
             annotations={annotations}
             config={config}
           />
@@ -90,8 +87,7 @@ export const AnnotationsEditor = ({
           <AnnotationsInput
             key={key}
             value={value}
-            onChange={(newValue) => onChange(key, newValue)}
-            onBlur={(newValue) => onBlur(key, newValue)}
+            onSave={(newValue) => onBlur(key, newValue)}
             onDelete={() => onRemove(key)}
             annotations={annotations}
             deletable

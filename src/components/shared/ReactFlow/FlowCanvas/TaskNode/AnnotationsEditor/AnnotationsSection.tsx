@@ -93,22 +93,6 @@ export const AnnotationsSection = ({
     [annotations, onApply],
   );
 
-  const handleValueChange = useCallback(
-    (key: string, value: string | undefined) => {
-      if (value === undefined || value === "") {
-        // If value is empty or undefined, remove the annotation
-        handleRemove(key);
-        return;
-      }
-
-      setAnnotations((prev) => ({
-        ...prev,
-        [key]: value,
-      }));
-    },
-    [handleRemove],
-  );
-
   useEffect(() => {
     setAnnotations(rawAnnotations);
   }, [rawAnnotations]);
@@ -117,7 +101,6 @@ export const AnnotationsSection = ({
     <div className="h-auto flex flex-col gap-2 overflow-y-auto pr-4 py-2 overflow-visible">
       <ComputeResourcesEditor
         annotations={annotations}
-        onChange={handleValueChange}
         onBlur={handleValueBlur}
       />
 
@@ -125,7 +108,6 @@ export const AnnotationsSection = ({
 
       <AnnotationsEditor
         annotations={annotations}
-        onChange={handleValueChange}
         onBlur={handleValueBlur}
         onRemove={handleRemove}
         newRows={newRows}

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 import type {
   AnnotationConfig,
@@ -63,13 +63,11 @@ export const COMPUTE_RESOURCES: AnnotationConfig[] = [
 
 interface ComputeResourcesEditorProps {
   annotations: Annotations;
-  onChange: (key: string, value: string | undefined) => void;
   onBlur: (key: string, value: string | undefined) => void;
 }
 
 export const ComputeResourcesEditor = ({
   annotations,
-  onChange,
   onBlur,
 }: ComputeResourcesEditorProps) => {
   return (
@@ -80,7 +78,6 @@ export const ComputeResourcesEditor = ({
           key={resource.annotation}
           resource={resource}
           annotations={annotations}
-          onChange={onChange}
           onBlur={onBlur}
         />
       ))}
@@ -91,26 +88,14 @@ export const ComputeResourcesEditor = ({
 interface ComputeResourceFieldProps {
   resource: AnnotationConfig;
   annotations: Annotations;
-  onChange: (key: string, value: string) => void;
   onBlur: (key: string, value: string) => void;
 }
 
 const ComputeResourceField = ({
   resource,
   annotations,
-  onChange,
   onBlur,
 }: ComputeResourceFieldProps) => {
-  const handleValueChange = useCallback(
-    (value: string) => {
-      const formattedValue = resource.append
-        ? `${value}${resource.append}`
-        : value;
-      onChange(resource.annotation, formattedValue);
-    },
-    [resource, onChange],
-  );
-
   const handleValueBlur = useCallback(
     (value: string) => {
       const formattedValue = resource.append
@@ -121,13 +106,15 @@ const ComputeResourceField = ({
     [resource, onBlur],
   );
 
-  const value =
-    resource.append && annotations[resource.annotation]
-      ? annotations[resource.annotation].replace(
-          new RegExp(`${resource.append}$`),
-          "",
-        )
-      : annotations[resource.annotation];
+  const value = useMemo(() => {
+    if (resource.append && annotations[resource.annotation]) {
+      return annotations[resource.annotation].replace(
+        new RegExp(`${resource.append}$`),
+        "",
+      );
+    }
+    return annotations[resource.annotation];
+  }, [resource, annotations]);
 
   return (
     <div key={resource.annotation} className="flex items-center gap-2">
@@ -138,8 +125,7 @@ const ComputeResourceField = ({
       <AnnotationsInput
         value={value}
         config={resource}
-        onChange={handleValueChange}
-        onBlur={handleValueBlur}
+        onSave={handleValueBlur}
         annotations={annotations}
       />
     </div>

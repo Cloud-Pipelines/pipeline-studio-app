@@ -1,5 +1,5 @@
 import { AlertTriangle } from "lucide-react";
-import { type ChangeEvent, useCallback, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import { MultilineTextInputDialog } from "@/components/shared/Dialogs/MultilineTextInputDialog";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,7 @@ interface AnnotationsInputProps {
   deletable?: boolean;
   autoFocus?: boolean;
   className?: string;
-  onChange: (value: string) => void;
-  onBlur?: (value: string) => void;
+  onSave: (value: string) => void;
   onDelete?: () => void;
 }
 
@@ -38,16 +37,62 @@ export const AnnotationsInput = ({
   deletable = false,
   autoFocus = false,
   className = "",
-  onChange,
-  onBlur,
+  onSave,
   onDelete,
 }: AnnotationsInputProps) => {
-  const [isInvalid, setIsInvalid] = useState(false);
+  const [inputValue, setInputValue] = useState(value);
   const [lastSavedValue, setLastSavedValue] = useState(value);
+  const [isInvalid, setIsInvalid] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const inputType = config?.type ?? "string";
   const placeholder = config?.label ?? "";
+
+  const handleSubmit = useCallback(
+    (newValue: string) => {
+      if (newValue === lastSavedValue) return;
+
+      onSave(newValue);
+      setLastSavedValue(newValue);
+    },
+    [onSave, lastSavedValue],
+  );
+
+  const handleInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      setInputValue(newValue);
+
+      if (config?.type === "string") {
+        try {
+          JSON.parse(newValue);
+          setIsInvalid(false);
+        } catch {
+          setIsInvalid(true);
+        }
+      }
+    },
+    [config?.type],
+  );
+
+  const handleBlur = useCallback(() => {
+    let valueToSave = inputValue.trim();
+
+    if (
+      config?.type === "number" &&
+      !isNaN(Number(valueToSave)) &&
+      valueToSave !== ""
+    ) {
+      valueToSave = clamp(
+        Number(valueToSave),
+        config.min,
+        config.max,
+      ).toString();
+      setInputValue(valueToSave);
+    }
+
+    handleSubmit(valueToSave);
+  }, [inputValue, config, handleSubmit]);
 
   const handleExpand = useCallback(() => {
     setIsDialogOpen(true);
@@ -55,134 +100,65 @@ export const AnnotationsInput = ({
 
   const handleDialogConfirm = useCallback(
     (newValue: string) => {
-      onChange(newValue);
+      setInputValue(newValue);
       setIsDialogOpen(false);
-      if (onBlur && newValue !== lastSavedValue) {
-        onBlur(newValue);
-        setLastSavedValue(newValue);
-      }
+      handleSubmit(newValue);
     },
-    [onChange, onBlur, lastSavedValue],
+    [handleSubmit],
   );
 
   const handleDialogCancel = useCallback(() => {
     setIsDialogOpen(false);
   }, []);
 
-  const validateChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const newValue = e.target.value;
-
-      onChange(newValue);
-
-      try {
-        JSON.parse(newValue);
-        setIsInvalid(false);
-      } catch {
-        setIsInvalid(true);
-      }
-    },
-    [onChange],
-  );
-
-  const handleBlur = useCallback(() => {
-    if (onBlur && lastSavedValue !== value) {
-      if (config?.type === "number" && !isNaN(Number(value)) && value !== "") {
-        value = clamp(Number(value), config.min, config.max).toString();
-      }
-
-      onBlur(value);
-      setLastSavedValue(value);
-    }
-  }, [onBlur, lastSavedValue, value]);
-
   const handleQuantityKeyInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       if (!config?.annotation) return;
 
       const selectedKey = getAnnotationKey(config.annotation, annotations);
-
       if (!selectedKey) return;
 
       const newObj = { [selectedKey]: e.target.value };
+      const newValue = JSON.stringify(newObj);
 
-      onChange(JSON.stringify(newObj));
+      setInputValue(newValue);
     },
-    [config, annotations, onChange],
+    [config, annotations],
   );
 
-  const shouldSaveQuantityField = useCallback(() => {
-    if (!config?.enableQuantity || !config?.annotation) return false;
-
-    const selectedKey = getAnnotationKey(config.annotation, annotations);
-    const quantity = getAnnotationValue(config.annotation, annotations);
-    return !!selectedKey && !!quantity && quantity.trim() !== "";
-  }, [config, annotations]);
-
-  const handleQuantitySelectChange = useCallback(
+  const handleSelectChange = useCallback(
     (selectedKey: string) => {
       if (!config?.annotation) return;
 
-      const quantity = getAnnotationValue(config.annotation, annotations);
-      const newObj = selectedKey ? { [selectedKey]: quantity } : {};
-      const newValue = JSON.stringify(newObj);
+      let newValue: string;
 
-      onChange(newValue);
-
-      if (onBlur && newValue !== lastSavedValue && shouldSaveQuantityField()) {
-        onBlur(newValue);
-        setLastSavedValue(newValue);
+      if (config.enableQuantity) {
+        const quantity = getAnnotationValue(config.annotation, annotations);
+        const newObj = selectedKey ? { [selectedKey]: quantity } : {};
+        newValue = JSON.stringify(newObj);
+      } else {
+        newValue = selectedKey;
       }
-    },
-    [
-      config,
-      annotations,
-      onChange,
-      onBlur,
-      lastSavedValue,
-      shouldSaveQuantityField,
-    ],
-  );
 
-  const handleNonQuantitySelectChange = useCallback(
-    (selectedKey: string) => {
-      onChange(selectedKey);
-
-      if (onBlur && selectedKey !== lastSavedValue) {
-        onBlur(selectedKey);
-        setLastSavedValue(selectedKey);
-      }
+      setInputValue(newValue);
+      handleSubmit(newValue);
     },
-    [onChange, onBlur, lastSavedValue],
+    [config, annotations, handleSubmit],
   );
 
   const handleClearSelection = useCallback(() => {
-    if (config?.enableQuantity) {
-      const newValue = "";
-      onChange(newValue);
-      if (onBlur && newValue !== lastSavedValue) {
-        onBlur(newValue);
-        setLastSavedValue(newValue);
-      }
-    } else {
-      onChange("");
-      if (onBlur && "" !== lastSavedValue) {
-        onBlur("");
-        setLastSavedValue("");
-      }
-    }
-  }, [config, onChange, onBlur, lastSavedValue]);
+    const newValue = "";
+    setInputValue(newValue);
+    handleSubmit(newValue);
+  }, [handleSubmit]);
 
   const handleSwitchChange = useCallback(
     (checked: boolean) => {
       const newValue = checked ? "true" : "false";
-      onChange(newValue);
-      if (onBlur && newValue !== lastSavedValue) {
-        onBlur(newValue);
-        setLastSavedValue(newValue);
-      }
+      setInputValue(newValue);
+      handleSubmit(newValue);
     },
-    [onChange, onBlur, lastSavedValue],
+    [handleSubmit],
   );
 
   let inputElement = null;
@@ -190,18 +166,11 @@ export const AnnotationsInput = ({
   if (config?.options && config.options.length > 0) {
     const currentValue = config?.enableQuantity
       ? getAnnotationKey(config.annotation, annotations)
-      : value;
+      : inputValue;
 
     inputElement = (
       <div className="flex items-center gap-1 grow">
-        <Select
-          value={currentValue}
-          onValueChange={
-            config?.enableQuantity
-              ? handleQuantitySelectChange
-              : handleNonQuantitySelectChange
-          }
-        >
+        <Select value={currentValue} onValueChange={handleSelectChange}>
           <div className="relative group grow min-w-24">
             <SelectTrigger className={cn("w-full", className)}>
               <SelectValue placeholder={"Select " + placeholder} />
@@ -230,7 +199,7 @@ export const AnnotationsInput = ({
   } else if (inputType === "boolean") {
     inputElement = (
       <Switch
-        checked={value === "true"}
+        checked={inputValue === "true"}
         onCheckedChange={handleSwitchChange}
         className={className}
       />
@@ -240,15 +209,14 @@ export const AnnotationsInput = ({
       <InlineStack gap="2" blockAlign="center" wrap="nowrap" className="grow">
         <Input
           type="number"
-          value={value}
+          value={inputValue}
           min={config?.min}
           max={config?.max}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleInputChange}
           onBlur={handleBlur}
           autoFocus={autoFocus}
           className={className}
         />
-
         {config?.max !== undefined && (
           <Paragraph size="xs" tone="subdued" className="whitespace-nowrap">
             (max: {config.max})
@@ -257,18 +225,18 @@ export const AnnotationsInput = ({
       </InlineStack>
     );
   } else {
+    const displayValue = config?.enableQuantity
+      ? getAnnotationKey(config.annotation, annotations)
+      : inputValue;
+
     inputElement = (
       <div className="flex-1 w-full relative group">
         <Input
-          value={
-            config?.enableQuantity
-              ? getAnnotationKey(config.annotation, annotations)
-              : value
-          }
+          value={displayValue}
           onChange={
             config?.enableQuantity
               ? handleQuantityKeyInputChange
-              : validateChange
+              : handleInputChange
           }
           onBlur={handleBlur}
           autoFocus={autoFocus}
@@ -304,9 +272,7 @@ export const AnnotationsInput = ({
             min={config.min}
             max={config.max}
             disabled={!getAnnotationKey(config.annotation, annotations)}
-            onChange={onChange}
-            onBlur={onBlur}
-            shouldSave={shouldSaveQuantityField}
+            onSave={onSave}
           />
         )}
         {deletable && onDelete && (
@@ -321,7 +287,7 @@ export const AnnotationsInput = ({
           title={dialogTitle}
           description="Enter a value for this annotation."
           placeholder={placeholder}
-          initialValue={value}
+          initialValue={inputValue}
           open={isDialogOpen}
           onCancel={handleDialogCancel}
           onConfirm={handleDialogConfirm}
@@ -337,63 +303,64 @@ const QuantityInput = ({
   min,
   max,
   disabled,
-  onChange,
-  onBlur,
-  shouldSave,
+  onSave,
 }: {
   annotation: string;
   annotations: Annotations;
   min?: number;
   max?: number;
   disabled: boolean;
-  onChange: (value: string) => void;
-  onBlur?: (value: string) => void;
-  shouldSave: () => boolean;
+  onSave: (value: string) => void;
 }) => {
   const currentQuantity = getAnnotationValue(annotation, annotations);
-  const [lastSavedQuantity, setLastSavedQuantity] = useState(currentQuantity);
+  const [inputValue, setInputValue] = useState(currentQuantity);
+  const [lastSavedValue, setLastSavedValue] = useState(currentQuantity);
 
-  const handleValueInputChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    if (currentQuantity !== inputValue && currentQuantity !== lastSavedValue) {
+      setInputValue(currentQuantity);
+      setLastSavedValue(currentQuantity);
+    }
+  }, [currentQuantity, inputValue, lastSavedValue]);
+
+  const handleSubmit = useCallback(
+    (value: string) => {
+      if (value === lastSavedValue) return;
+
       const selectedKey = getAnnotationKey(annotation, annotations);
-
       if (!selectedKey) return;
 
-      const newObj = { [selectedKey]: e.target.value };
-
-      onChange(JSON.stringify(newObj));
-    },
-    [annotation, annotations, onChange],
-  );
-
-  const handleValueBlur = useCallback(() => {
-    const selectedKey = getAnnotationKey(annotation, annotations);
-
-    if (!selectedKey) return;
-
-    const quantity = getAnnotationValue(annotation, annotations);
-
-    if (onBlur && quantity !== lastSavedQuantity && shouldSave()) {
-      let limitedQuantity = Number(quantity);
-      if (!isNaN(limitedQuantity) && quantity !== "") {
+      let limitedQuantity = Number(value);
+      if (!isNaN(limitedQuantity) && value !== "") {
         limitedQuantity = clamp(limitedQuantity, min, max);
       }
 
       const newObj = { [selectedKey]: limitedQuantity };
       const newValue = JSON.stringify(newObj);
 
-      onBlur(newValue);
-      setLastSavedQuantity(limitedQuantity);
-    }
-  }, [
-    annotation,
-    annotations,
-    min,
-    max,
-    onBlur,
-    lastSavedQuantity,
-    shouldSave,
-  ]);
+      onSave(newValue);
+      setLastSavedValue(limitedQuantity.toString());
+    },
+    [annotation, annotations, min, max, onSave, lastSavedValue],
+  );
+
+  const handleInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      setInputValue(newValue);
+
+      const selectedKey = getAnnotationKey(annotation, annotations);
+      if (selectedKey) {
+        const newObj = { [selectedKey]: newValue };
+        onSave(JSON.stringify(newObj));
+      }
+    },
+    [annotation, annotations, onSave],
+  );
+
+  const handleBlur = useCallback(() => {
+    handleSubmit(inputValue);
+  }, [inputValue, handleSubmit]);
 
   return (
     <InlineStack
@@ -405,14 +372,14 @@ const QuantityInput = ({
       <span>x</span>
       <Input
         type="number"
-        value={getAnnotationValue(annotation, annotations)}
+        value={inputValue}
         min={min}
         max={max}
-        onChange={handleValueInputChange}
-        onBlur={handleValueBlur}
+        onChange={handleInputChange}
+        onBlur={handleBlur}
         className={cn(
           "min-w-12 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-          !currentQuantity && !disabled && "border-destructive/50",
+          !inputValue && !disabled && "border-destructive/50",
         )}
         disabled={disabled}
       />
