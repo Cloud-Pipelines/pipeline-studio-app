@@ -12,11 +12,11 @@ import { useExecutionStatusQuery } from "@/hooks/useExecutionStatusQuery";
 import { usePipelineRunData } from "@/hooks/usePipelineRunData";
 import { useBackend } from "@/providers/BackendProvider";
 import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
+import { ExecutionDataProvider } from "@/providers/ExecutionDataProvider";
 import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
 import * as pipelineRunService from "@/services/pipelineRunService";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
-import { RootExecutionStatusProvider } from "./RootExecutionStatusProvider";
 import { RunDetails } from "./RunDetails";
 
 // Mock the hooks and services
@@ -156,11 +156,11 @@ describe("<RunDetails/>", () => {
         <ComponentSpecProvider spec={mockComponentSpec}>
           <QueryClientProvider client={queryClient}>
             <PipelineRunsProvider pipelineName={mockPipelineRun.pipeline_name}>
-              <RootExecutionStatusProvider
+              <ExecutionDataProvider
                 pipelineRunId={mockPipelineRun.id.toString()}
               >
                 {children}
-              </RootExecutionStatusProvider>
+              </ExecutionDataProvider>
             </PipelineRunsProvider>
           </QueryClientProvider>
         </ComponentSpecProvider>

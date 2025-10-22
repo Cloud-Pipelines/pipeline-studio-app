@@ -6,10 +6,13 @@ import PipelineRunPage from "@/components/PipelineRun";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { Spinner } from "@/components/ui/spinner";
 import { faviconManager } from "@/favicon";
-import { useCurrentLevelExecutionData } from "@/hooks/useCurrentLevelExecutionData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import {
+  ExecutionDataProvider,
+  useExecutionData,
+} from "@/providers/ExecutionDataProvider";
 import { type RunDetailParams, runDetailRoute } from "@/routes/router";
 import {
   countTaskStatuses,
@@ -19,11 +22,10 @@ import {
 import { getBackendStatusString } from "@/utils/backend";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
-const PipelineRun = () => {
+const PipelineRunContent = () => {
   const { setComponentSpec, clearComponentSpec, componentSpec } =
     useComponentSpec();
   const { configured, available, ready } = useBackend();
-  const { id } = runDetailRoute.useParams() as RunDetailParams;
 
   const {
     details,
@@ -31,7 +33,7 @@ const PipelineRun = () => {
     isLoading: isLoadingCurrentLevelData,
     error: currentLevelError,
     rootDetails,
-  } = useCurrentLevelExecutionData();
+  } = useExecutionData();
 
   const isLoading = isLoadingCurrentLevelData;
   const error = currentLevelError;
@@ -119,11 +121,19 @@ const PipelineRun = () => {
     );
   }
 
+  return <PipelineRunPage />;
+};
+
+const PipelineRun = () => {
+  const { id } = runDetailRoute.useParams() as RunDetailParams;
+
   return (
     <div className="dndflow">
       <DndContext>
         <ReactFlowProvider>
-          <PipelineRunPage pipelineRunId={id} />
+          <ExecutionDataProvider pipelineRunId={id}>
+            <PipelineRunContent />
+          </ExecutionDataProvider>
         </ReactFlowProvider>
       </DndContext>
     </div>
