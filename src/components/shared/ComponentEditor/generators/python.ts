@@ -2,8 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { loadPyodide, version as pyodideVersion } from "pyodide";
 
 import { HOURS } from "../constants";
-
-type YamlGenerator = (text: string) => Promise<string>;
+import type { YamlGenerator, YamlGeneratorOptions } from "../types";
 
 export function usePythonYamlGenerator() {
   const { data: yamlGenerator } = useSuspenseQuery({
@@ -31,9 +30,24 @@ async function initializePythonYamlGenerator(): Promise<YamlGenerator> {
 
     const transformTextToYaml = pyodide.globals.get(
       "create_component_from_python_function_text",
-    ) as (text: string) => string;
+    ) as (
+      text: string,
+      baseImage?: string,
+      packagesToInstall?: string[],
+      annotations?: Record<string, string>,
+    ) => string;
 
-    return async (text: string) => transformTextToYaml(text);
+    return async (text: string, options?: YamlGeneratorOptions) => {
+      const packagesToInstall = pyodide.toPy(options?.packagesToInstall ?? []);
+      const annotations = pyodide.toPy(options?.annotations ?? {});
+
+      return transformTextToYaml(
+        text,
+        options?.baseImage ?? "python:3.12",
+        packagesToInstall,
+        annotations,
+      );
+    };
   } catch (error) {
     // Error will be caught by the suspense wrapper
     console.error("Pyodide loading error:", error);
