@@ -5,6 +5,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useCheckComponentSpecFromPath } from "@/hooks/useCheckComponentSpecFromPath";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { useExecutionData } from "@/providers/ExecutionDataProvider";
 import {
   countTaskStatuses,
   getRunStatus,
@@ -21,12 +22,17 @@ import { CancelPipelineRunButton } from "./components/CancelPipelineRunButton";
 import { ClonePipelineButton } from "./components/ClonePipelineButton";
 import { InspectPipelineButton } from "./components/InspectPipelineButton";
 import { RerunPipelineButton } from "./components/RerunPipelineButton";
-import { useRootExecutionContext } from "./RootExecutionStatusProvider";
 
 export const RunDetails = () => {
   const { configured } = useBackend();
   const { componentSpec } = useComponentSpec();
-  const { details, state, runId, isLoading, error } = useRootExecutionContext();
+  const {
+    rootDetails: details,
+    rootState: state,
+    runId,
+    isLoading,
+    error,
+  } = useExecutionData();
 
   const editorRoute = componentSpec.name
     ? `/editor/${encodeURIComponent(componentSpec.name)}`

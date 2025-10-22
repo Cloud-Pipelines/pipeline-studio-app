@@ -19,7 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useCurrentLevelExecutionData } from "@/hooks/useCurrentLevelExecutionData";
+import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
 import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
 
 import { AnnotationsSection } from "../AnnotationsEditor/AnnotationsSection";
@@ -39,7 +39,8 @@ interface TaskConfigurationProps {
 const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
   const { name, taskSpec, taskId, state, callbacks } = taskNode;
 
-  const { details } = useCurrentLevelExecutionData();
+  const executionData = useExecutionDataOptional();
+  const details = executionData?.details;
 
   const { readOnly, runStatus } = state;
   const disabled = !!runStatus;
