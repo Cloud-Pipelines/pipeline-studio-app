@@ -1,3 +1,4 @@
+import { useMatch } from "@tanstack/react-router";
 import {
   AmphoraIcon,
   FilePenLineIcon,
@@ -19,7 +20,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useCurrentLevelExecutionData } from "@/hooks/useCurrentLevelExecutionData";
 import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
+import { runDetailRoute } from "@/routes/router";
 
 import { AnnotationsSection } from "../AnnotationsEditor/AnnotationsSection";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
@@ -38,6 +41,11 @@ interface TaskConfigurationProps {
 const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
   const { name, taskSpec, taskId, state, callbacks } = taskNode;
 
+  const runMatch = useMatch({ from: runDetailRoute.id, shouldThrow: false });
+  const runId = (runMatch?.params as { id?: string })?.id || "";
+
+  const { details } = useCurrentLevelExecutionData(runId);
+
   const { readOnly, runStatus } = state;
   const disabled = !!runStatus;
 
@@ -50,7 +58,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
     return null;
   }
 
-  const executionId = taskSpec.annotations?.executionId as string;
+  const executionId = details?.child_task_execution_ids?.[taskId];
 
   return (
     <div
