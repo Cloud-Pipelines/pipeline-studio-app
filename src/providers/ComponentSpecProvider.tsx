@@ -4,6 +4,10 @@ import { type UndoRedo, useUndoRedo } from "@/hooks/useUndoRedo";
 import { loadPipelineByName } from "@/services/pipelineService";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
+import {
+  getSubgraphComponentSpec,
+  updateSubgraphSpec,
+} from "@/utils/subgraphUtils";
 import { checkComponentSpecValidity } from "@/utils/validations";
 
 import {
@@ -35,6 +39,8 @@ interface ComponentSpecContextType {
   setComponentSpec: (spec: ComponentSpec) => void;
   clearComponentSpec: () => void;
   graphSpec: GraphSpec;
+  currentGraphSpec: GraphSpec;
+  currentSubgraphSpec: ComponentSpec;
   isLoading: boolean;
   isValid: boolean;
   errors: string[];
@@ -83,9 +89,13 @@ export const ComponentSpecProvider = ({
   const undoRedoRef = useRef(undoRedo);
   undoRedoRef.current = undoRedo;
 
+  const currentSubgraphSpec = useMemo(() => {
+    return getSubgraphComponentSpec(componentSpec, currentSubgraphPath);
+  }, [componentSpec, currentSubgraphPath]);
+
   const { isValid, errors } = useMemo(
-    () => checkComponentSpecValidity(componentSpec),
-    [componentSpec],
+    () => checkComponentSpecValidity(currentSubgraphSpec),
+    [currentSubgraphSpec],
   );
 
   const clearComponentSpec = useCallback(() => {
@@ -103,6 +113,14 @@ export const ComponentSpecProvider = ({
 
     return EMPTY_GRAPH_SPEC;
   }, [componentSpec]);
+
+  const currentGraphSpec = useMemo(() => {
+    if (isGraphImplementation(currentSubgraphSpec.implementation)) {
+      return currentSubgraphSpec.implementation.graph;
+    }
+
+    return EMPTY_GRAPH_SPEC;
+  }, [currentSubgraphSpec]);
 
   const loadPipeline = useCallback(
     async (newName?: string) => {
@@ -153,15 +171,34 @@ export const ComponentSpecProvider = ({
     [componentSpec, readOnly],
   );
 
-  const updateGraphSpec = useCallback((newGraphSpec: GraphSpec) => {
-    setComponentSpec((prevSpec) => ({
-      ...prevSpec,
-      implementation: {
-        ...prevSpec.implementation,
-        graph: newGraphSpec,
-      },
-    }));
-  }, []);
+  const updateGraphSpec = useCallback(
+    (newGraphSpec: GraphSpec) => {
+      setComponentSpec((prevSpec) => {
+        // Get current subgraph spec (at root, this is prevSpec itself)
+        const currentSubgraphSpec = getSubgraphComponentSpec(
+          prevSpec,
+          currentSubgraphPath,
+        );
+
+        // Update its graph
+        const updatedSubgraphSpec: ComponentSpec = {
+          ...currentSubgraphSpec,
+          implementation: {
+            ...currentSubgraphSpec.implementation,
+            graph: newGraphSpec,
+          },
+        };
+
+        // Propagate changes back to root (handles root as early return)
+        return updateSubgraphSpec(
+          prevSpec,
+          currentSubgraphPath,
+          updatedSubgraphSpec,
+        );
+      });
+    },
+    [currentSubgraphPath],
+  );
 
   const navigateToSubgraph = useCallback((taskId: string) => {
     setCurrentSubgraphPath((prev) => [...prev, taskId]);
@@ -181,6 +218,8 @@ export const ComponentSpecProvider = ({
     () => ({
       componentSpec,
       graphSpec,
+      currentGraphSpec,
+      currentSubgraphSpec,
       taskStatusMap,
       isLoading,
       isValid,
@@ -202,6 +241,8 @@ export const ComponentSpecProvider = ({
     [
       componentSpec,
       graphSpec,
+      currentGraphSpec,
+      currentSubgraphSpec,
       taskStatusMap,
       isLoading,
       isValid,

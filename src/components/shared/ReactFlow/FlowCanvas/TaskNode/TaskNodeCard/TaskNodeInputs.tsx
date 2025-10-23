@@ -40,8 +40,10 @@ export function TaskNodeInputs({
 
   const [isDragging, setIsDragging] = useState(false);
 
-  const values = taskSpec.arguments;
-  const invalidArguments = inputsWithInvalidArguments(inputs, taskSpec);
+  const values = taskSpec?.arguments;
+  const invalidArguments = taskSpec
+    ? inputsWithInvalidArguments(inputs, taskSpec)
+    : [];
 
   const inputsWithTaskOutput = inputs.filter(
     (input) =>
@@ -159,6 +161,10 @@ export function TaskNodeInputs({
     resetSearchFilter,
     toggleHighlightRelatedHandles,
   ]);
+
+  if (!taskSpec) {
+    return null;
+  }
 
   if (!inputs.length) return null;
 

@@ -40,7 +40,10 @@ import {
 } from "@/utils/componentSpec";
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
 import createNodesFromComponentSpec from "@/utils/nodes/createNodesFromComponentSpec";
-import { getSubgraphComponentSpec } from "@/utils/subgraphUtils";
+import {
+  getSubgraphComponentSpec,
+  updateSubgraphSpec,
+} from "@/utils/subgraphUtils";
 
 import ComponentDuplicateDialog from "../../Dialogs/ComponentDuplicateDialog";
 import { useNodesOverlay } from "../NodesOverlay/NodesOverlayProvider";
@@ -112,17 +115,13 @@ const FlowCanvas = ({
   const {
     componentSpec,
     setComponentSpec,
-    graphSpec,
+    currentGraphSpec,
+    currentSubgraphSpec,
     updateGraphSpec,
     currentSubgraphPath,
   } = useComponentSpec();
   const { preserveIOSelectionOnSpecChange, resetPrevSpec } =
     useIOSelectionPersistence();
-
-  const currentSubgraphSpec = useMemo(
-    () => getSubgraphComponentSpec(componentSpec, currentSubgraphPath),
-    [componentSpec, currentSubgraphPath],
-  );
 
   const { edges, onEdgesChange } = useComponentSpecToEdges(currentSubgraphSpec);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -283,18 +282,24 @@ const FlowCanvas = ({
 
   const onElementsRemove = useCallback(
     (params: NodesAndEdges) => {
-      let updatedComponentSpec = { ...componentSpec };
+      let updatedSubgraphSpec = { ...currentSubgraphSpec };
 
       for (const edge of params.edges) {
-        updatedComponentSpec = removeEdge(edge, updatedComponentSpec);
+        updatedSubgraphSpec = removeEdge(edge, updatedSubgraphSpec);
       }
       for (const node of params.nodes) {
-        updatedComponentSpec = removeNode(node, updatedComponentSpec);
+        updatedSubgraphSpec = removeNode(node, updatedSubgraphSpec);
       }
 
-      setComponentSpec(updatedComponentSpec);
+      const updatedRootSpec = updateSubgraphSpec(
+        componentSpec,
+        currentSubgraphPath,
+        updatedSubgraphSpec,
+      );
+
+      setComponentSpec(updatedRootSpec);
     },
-    [componentSpec, setComponentSpec],
+    [componentSpec, currentSubgraphSpec, currentSubgraphPath, setComponentSpec],
   );
 
   const nodeCallbacks = useNodeCallbacks({
@@ -316,10 +321,10 @@ const FlowCanvas = ({
     (connection: Connection) => {
       if (connection.source === connection.target) return;
 
-      const updatedGraphSpec = handleConnection(graphSpec, connection);
+      const updatedGraphSpec = handleConnection(currentGraphSpec, connection);
       updateGraphSpec(updatedGraphSpec);
     },
-    [graphSpec, handleConnection, updateGraphSpec],
+    [currentGraphSpec, handleConnection, updateGraphSpec],
   );
 
   const onConnectEnd = useCallback(
@@ -447,7 +452,6 @@ const FlowCanvas = ({
           );
 
           setComponentSpec(newComponentSpec);
-          updateReactFlow(newComponentSpec);
         }
       } catch (error) {
         console.error("Failed to add imported component to canvas:", error);
@@ -541,7 +545,7 @@ const FlowCanvas = ({
         const { updatedGraphSpec, lostInputs, newTaskId } = replaceTaskNode(
           replaceTarget.data.taskId as string,
           droppedTask.componentRef,
-          graphSpec,
+          currentGraphSpec,
         );
 
         const dialogData = getReplaceConfirmationDetails(
@@ -564,25 +568,33 @@ const FlowCanvas = ({
       if (reactFlowInstance) {
         const position = getPositionFromEvent(event, reactFlowInstance);
 
-        const newComponentSpec = addTask(
+        const newSubgraphSpec = addTask(
           taskType,
           droppedTask,
           position,
-          componentSpec,
+          currentSubgraphSpec,
         );
 
-        setComponentSpec(newComponentSpec);
-        updateReactFlow(newComponentSpec);
+        const newRootSpec = updateSubgraphSpec(
+          componentSpec,
+          currentSubgraphPath,
+          newSubgraphSpec,
+        );
+
+        setComponentSpec(newRootSpec);
       }
     },
     [
       componentSpec,
+      currentSubgraphSpec,
+      currentSubgraphPath,
       reactFlowInstance,
       replaceTarget,
       setComponentSpec,
       updateGraphSpec,
       triggerConfirmation,
       handleDrop,
+      notify,
     ],
   );
 
@@ -618,17 +630,31 @@ const FlowCanvas = ({
           .filter(Boolean) as Node[];
 
         if (updatedNodes.length > 0) {
-          const updatedComponentSpec = updateNodePositions(
+          const updatedSubgraphSpec = updateNodePositions(
             updatedNodes,
-            componentSpec,
+            currentSubgraphSpec,
           );
-          setComponentSpec(updatedComponentSpec);
+
+          const updatedRootSpec = updateSubgraphSpec(
+            componentSpec,
+            currentSubgraphPath,
+            updatedSubgraphSpec,
+          );
+
+          setComponentSpec(updatedRootSpec);
         }
       }
 
       onNodesChange(changes);
     },
-    [nodes, componentSpec, setComponentSpec, onNodesChange],
+    [
+      nodes,
+      componentSpec,
+      currentSubgraphSpec,
+      currentSubgraphPath,
+      setComponentSpec,
+      onNodesChange,
+    ],
   );
 
   const handleBeforeDelete = async (params: NodesAndEdges) => {
@@ -653,22 +679,35 @@ const FlowCanvas = ({
   };
 
   const onDuplicateNodes = useCallback(() => {
-    const { updatedComponentSpec, newNodes, updatedNodes } = duplicateNodes(
+    const {
+      updatedComponentSpec: updatedSubgraphSpec,
+      newNodes,
+      updatedNodes,
+    } = duplicateNodes(currentSubgraphSpec, selectedNodes, { selected: true });
+
+    const updatedRootSpec = updateSubgraphSpec(
       componentSpec,
-      selectedNodes,
-      { selected: true },
+      currentSubgraphPath,
+      updatedSubgraphSpec,
     );
 
-    setComponentSpec(updatedComponentSpec);
+    setComponentSpec(updatedRootSpec);
 
     updateOrAddNodes({
       updatedNodes,
       newNodes,
     });
-  }, [componentSpec, selectedNodes, setComponentSpec, setNodes]);
+  }, [
+    componentSpec,
+    currentSubgraphSpec,
+    currentSubgraphPath,
+    selectedNodes,
+    setComponentSpec,
+    setNodes,
+  ]);
 
   const onUpgradeNodes = useCallback(async () => {
-    let newGraphSpec = graphSpec;
+    let newGraphSpec = currentGraphSpec;
     const allLostInputs: InputSpec[] = [];
     const includedNodes: Node[] = [];
     const excludedNodes: Node[] = [];
@@ -716,7 +755,13 @@ const FlowCanvas = ({
       updateGraphSpec(newGraphSpec);
       notify(`${includedNodes.length} nodes updated`, "success");
     }
-  }, [graphSpec, selectedNodes, updateGraphSpec]);
+  }, [
+    currentGraphSpec,
+    selectedNodes,
+    updateGraphSpec,
+    notify,
+    triggerConfirmation,
+  ]);
 
   const handleSelectionChange = useCallback(() => {
     if (selectedNodes.length < 1) {

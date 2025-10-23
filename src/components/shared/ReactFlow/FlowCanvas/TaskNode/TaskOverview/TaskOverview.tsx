@@ -39,6 +39,10 @@ const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
   const { readOnly, runStatus } = state;
   const disabled = !!runStatus;
 
+  if (!taskSpec || !taskId) {
+    return null;
+  }
+
   const componentSpec = taskSpec.componentRef.spec;
 
   if (!componentSpec) {

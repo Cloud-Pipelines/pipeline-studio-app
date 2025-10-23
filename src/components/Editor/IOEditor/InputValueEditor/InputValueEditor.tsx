@@ -16,6 +16,7 @@ import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { type InputSpec } from "@/utils/componentSpec";
 import { checkInputConnectionToRequiredFields } from "@/utils/inputConnectionUtils";
 import { inputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
+import { updateSubgraphSpec } from "@/utils/subgraphUtils";
 
 import { NameField, TextField, TypeField } from "./FormFields/FormFields";
 import { checkNameCollision } from "./FormFields/utils";
@@ -32,7 +33,12 @@ export const InputValueEditor = ({
 }: InputValueEditorProps) => {
   const notify = useToastNotification();
   const { transferSelection } = useNodeSelectionTransfer(inputNameToNodeId);
-  const { componentSpec, setComponentSpec } = useComponentSpec();
+  const {
+    componentSpec,
+    setComponentSpec,
+    currentSubgraphSpec,
+    currentSubgraphPath,
+  } = useComponentSpec();
   const { clearContent } = useContextPanel();
   const {
     handlers: confirmationHandlers,
@@ -54,8 +60,11 @@ export const InputValueEditor = ({
 
   // Check if this input is connected to any required fields
   const { isConnectedToRequired } = useMemo(() => {
-    return checkInputConnectionToRequiredFields(input.name, componentSpec);
-  }, [input.name, componentSpec]);
+    return checkInputConnectionToRequiredFields(
+      input.name,
+      currentSubgraphSpec,
+    );
+  }, [input.name, currentSubgraphSpec]);
 
   const effectiveOptionalValue = isConnectedToRequired ? false : inputOptional;
 
@@ -67,14 +76,14 @@ export const InputValueEditor = ({
       optional: boolean,
       type: string,
     ) => {
-      if (!componentSpec.inputs) return;
+      if (!currentSubgraphSpec.inputs) return;
 
       if (newName === "") {
         setValidationError("Input name cannot be empty");
         return;
       }
 
-      const updatedInputs = componentSpec.inputs.map((componentInput) => {
+      const updatedInputs = currentSubgraphSpec.inputs.map((componentInput) => {
         if (componentInput.name === oldName) {
           return {
             ...componentInput,
@@ -89,7 +98,7 @@ export const InputValueEditor = ({
       });
 
       const updatedComponentSpecValues = {
-        ...componentSpec,
+        ...currentSubgraphSpec,
         inputs: updatedInputs,
       };
 
@@ -103,7 +112,7 @@ export const InputValueEditor = ({
 
       return updatedComponentSpec;
     },
-    [componentSpec, transferSelection],
+    [currentSubgraphSpec, transferSelection],
   );
 
   const handleValueChange = useCallback((value: string) => {
@@ -132,7 +141,7 @@ export const InputValueEditor = ({
 
       setValidationError(null);
     },
-    [input.name, componentSpec],
+    [input.name, currentSubgraphSpec],
   );
 
   const hasChanges = useCallback(() => {
@@ -155,7 +164,7 @@ export const InputValueEditor = ({
   const saveChanges = useCallback(() => {
     if (!hasChanges() || validationError) return;
 
-    const updatedComponentSpecWithValues = handleInputChange(
+    const updatedSubgraphSpec = handleInputChange(
       input.name,
       inputValue.trim(),
       inputName.trim(),
@@ -163,8 +172,13 @@ export const InputValueEditor = ({
       inputType as string,
     );
 
-    if (updatedComponentSpecWithValues) {
-      setComponentSpec(updatedComponentSpecWithValues);
+    if (updatedSubgraphSpec) {
+      const updatedRootSpec = updateSubgraphSpec(
+        componentSpec,
+        currentSubgraphPath,
+        updatedSubgraphSpec,
+      );
+      setComponentSpec(updatedRootSpec);
     }
   }, [
     handleInputChange,
@@ -176,6 +190,8 @@ export const InputValueEditor = ({
     inputName,
     effectiveOptionalValue,
     inputType,
+    componentSpec,
+    currentSubgraphPath,
   ]);
 
   const handleBlur = useCallback(() => {
@@ -190,7 +206,7 @@ export const InputValueEditor = ({
   }, [inputValue]);
 
   const deleteNode = useCallback(async () => {
-    if (!componentSpec.inputs) return;
+    if (!currentSubgraphSpec.inputs) return;
 
     const confirmed = await triggerConfirmation({
       title: "Delete Input Node",
@@ -200,17 +216,29 @@ export const InputValueEditor = ({
 
     if (!confirmed) return;
 
-    const updatedComponentSpec = removeGraphInput(inputName, componentSpec);
+    const updatedSubgraphSpec = removeGraphInput(
+      inputName,
+      currentSubgraphSpec,
+    );
 
-    setComponentSpec(updatedComponentSpec);
+    const updatedRootSpec = updateSubgraphSpec(
+      componentSpec,
+      currentSubgraphPath,
+      updatedSubgraphSpec,
+    );
+
+    setComponentSpec(updatedRootSpec);
 
     clearContent();
   }, [
-    componentSpec,
+    currentSubgraphSpec,
     input.name,
     setComponentSpec,
     clearContent,
     triggerConfirmation,
+    inputName,
+    componentSpec,
+    currentSubgraphPath,
   ]);
 
   const handleExpandValueEditor = useCallback(() => {

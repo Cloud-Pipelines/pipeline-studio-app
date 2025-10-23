@@ -13,6 +13,7 @@ import type { Annotations } from "@/types/annotations";
 import type { NodeAndTaskId } from "@/types/taskNode";
 import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
 import type { ArgumentType } from "@/utils/componentSpec";
+import { updateSubgraphSpec } from "@/utils/subgraphUtils";
 
 import type { TriggerDialogProps } from "./useConfirmationDialog";
 import useToastNotification from "./useToastNotification";
@@ -34,8 +35,14 @@ export const useNodeCallbacks = ({
   const notify = useToastNotification();
   const reactFlowInstance = useReactFlow();
 
-  const { graphSpec, updateGraphSpec, componentSpec, setComponentSpec } =
-    useComponentSpec();
+  const {
+    currentGraphSpec,
+    currentSubgraphSpec,
+    currentSubgraphPath,
+    updateGraphSpec,
+    componentSpec,
+    setComponentSpec,
+  } = useComponentSpec();
 
   // Workaround for nodes state being stale in task node callbacks
   const getNodeById = useCallback(
@@ -105,12 +112,12 @@ export const useNodeCallbacks = ({
       const taskId = ids.taskId;
       const newGraphSpec = replaceTaskArgumentsInGraphSpec(
         taskId,
-        graphSpec,
+        currentGraphSpec,
         args,
       );
       updateGraphSpec(newGraphSpec);
     },
-    [graphSpec, updateGraphSpec],
+    [currentGraphSpec, updateGraphSpec],
   );
 
   const setAnnotations = useCallback(
@@ -118,18 +125,18 @@ export const useNodeCallbacks = ({
       const taskId = ids.taskId;
       const newGraphSpec = replaceTaskAnnotationsInGraphSpec(
         taskId,
-        graphSpec,
+        currentGraphSpec,
         annotations,
       );
       updateGraphSpec(newGraphSpec);
     },
-    [graphSpec, updateGraphSpec],
+    [currentGraphSpec, updateGraphSpec],
   );
 
   const setCacheStaleness = useCallback(
     (ids: NodeAndTaskId, cacheStaleness: string | undefined) => {
       const taskId = ids.taskId;
-      const task = graphSpec.tasks[taskId];
+      const task = currentGraphSpec.tasks[taskId];
 
       if (!task) {
         console.warn(`Task with id ${taskId} not found in graph spec.`);
@@ -149,16 +156,16 @@ export const useNodeCallbacks = ({
       };
 
       const newGraphSpec = {
-        ...graphSpec,
+        ...currentGraphSpec,
         tasks: {
-          ...graphSpec.tasks,
+          ...currentGraphSpec.tasks,
           [taskId]: updatedTask,
         },
       };
 
       updateGraphSpec(newGraphSpec);
     },
-    [graphSpec, updateGraphSpec],
+    [currentGraphSpec, updateGraphSpec],
   );
 
   const onDuplicate = useCallback(
@@ -171,20 +178,33 @@ export const useNodeCallbacks = ({
         return;
       }
 
-      const { updatedComponentSpec, newNodes, updatedNodes } = duplicateNodes(
+      const {
+        updatedComponentSpec: updatedSubgraphSpec,
+        newNodes,
+        updatedNodes,
+      } = duplicateNodes(currentSubgraphSpec, [node], { selected });
+
+      const updatedRootSpec = updateSubgraphSpec(
         componentSpec,
-        [node],
-        { selected },
+        currentSubgraphPath,
+        updatedSubgraphSpec,
       );
 
-      setComponentSpec(updatedComponentSpec);
+      setComponentSpec(updatedRootSpec);
 
       updateOrAddNodes({
         updatedNodes,
         newNodes,
       });
     },
-    [componentSpec, getNodeById, setComponentSpec, updateOrAddNodes],
+    [
+      componentSpec,
+      currentSubgraphSpec,
+      currentSubgraphPath,
+      getNodeById,
+      setComponentSpec,
+      updateOrAddNodes,
+    ],
   );
 
   const onUpgrade = useCallback(
@@ -200,7 +220,7 @@ export const useNodeCallbacks = ({
       const { updatedGraphSpec, lostInputs } = replaceTaskNode(
         node.data.taskId as string,
         newComponentRef,
-        graphSpec,
+        currentGraphSpec,
       );
 
       if (!newComponentRef.digest) {
@@ -222,7 +242,13 @@ export const useNodeCallbacks = ({
         notify("Component updated", "success");
       }
     },
-    [graphSpec, getNodeById, updateGraphSpec, triggerConfirmation, notify],
+    [
+      currentGraphSpec,
+      getNodeById,
+      updateGraphSpec,
+      triggerConfirmation,
+      notify,
+    ],
   );
 
   return {

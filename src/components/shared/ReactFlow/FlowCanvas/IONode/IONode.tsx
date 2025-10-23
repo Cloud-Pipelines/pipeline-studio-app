@@ -25,7 +25,7 @@ interface IONodeProps {
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
-  const { graphSpec, componentSpec } = useComponentSpec();
+  const { currentGraphSpec, currentSubgraphSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
   const isInput = type === "input";
@@ -44,13 +44,15 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const borderColor = selected ? selectedColor : defaultColor;
 
   const input = useMemo(
-    () => componentSpec.inputs?.find((input) => input.name === data.label),
-    [componentSpec.inputs, data.label],
+    () =>
+      currentSubgraphSpec.inputs?.find((input) => input.name === data.label),
+    [currentSubgraphSpec.inputs, data.label],
   );
 
   const output = useMemo(
-    () => componentSpec.outputs?.find((output) => output.name === data.label),
-    [componentSpec.outputs, data.label],
+    () =>
+      currentSubgraphSpec.outputs?.find((output) => output.name === data.label),
+    [currentSubgraphSpec.outputs, data.label],
   );
 
   useEffect(() => {
@@ -67,7 +69,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
 
       if (output && isOutput) {
         const outputConnectedDetails = getOutputConnectedDetails(
-          graphSpec,
+          currentGraphSpec,
           output.name,
         );
         setContent(
@@ -88,7 +90,10 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     };
   }, [input, output, selected, readOnly]);
 
-  const connectedOutput = getOutputConnectedDetails(graphSpec, data.label);
+  const connectedOutput = getOutputConnectedDetails(
+    currentGraphSpec,
+    data.label,
+  );
   const outputConnectedValue = connectedOutput.outputName;
   const outputConnectedType = connectedOutput.outputType;
   const outputConnectedTaskId = connectedOutput.taskId;

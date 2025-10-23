@@ -63,11 +63,15 @@ const TaskNodeCard = () => {
   const { dimensions, selected, highlighted, isCustomComponent, readOnly } =
     state;
 
-  const isSubgraphNode = useMemo(() => isSubgraph(taskSpec), [taskSpec]);
-  const subgraphDescription = useMemo(
-    () => getSubgraphDescription(taskSpec),
-    [taskSpec],
-  );
+  const isSubgraphNode = useMemo(() => {
+    if (!taskSpec) return false;
+    return isSubgraph(taskSpec);
+  }, [taskSpec]);
+
+  const subgraphDescription = useMemo(() => {
+    if (!taskSpec) return "";
+    return getSubgraphDescription(taskSpec);
+  }, [taskSpec]);
 
   const disabledCache = isCacheDisabled(taskSpec);
 
@@ -89,6 +93,7 @@ const TaskNodeCard = () => {
   }, []);
 
   useEffect(() => {
+    if (!taskSpec) return;
     return registerNode({
       nodeId,
       taskSpec,
@@ -219,6 +224,10 @@ const TaskNodeCard = () => {
       }
     };
   }, [selected, taskConfigMarkup, setContent, clearContent]);
+
+  if (!taskSpec) {
+    return null;
+  }
 
   const digestMarkup = taskSpec.componentRef?.digest && (
     <QuickTooltip content={taskSpec.componentRef.digest}>
