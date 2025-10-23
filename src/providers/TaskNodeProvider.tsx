@@ -71,23 +71,32 @@ export const TaskNodeProvider = ({
   const notify = useToastNotification();
   const reactFlowInstance = useReactFlow();
 
-  const taskSpec = data.taskSpec ?? ({} as TaskSpec);
-  const taskId = data.taskId as string;
+  if (!data.taskSpec || !data.taskId) {
+    console.error("TaskNodeProvider: taskSpec and taskId are required", {
+      taskSpec: data.taskSpec,
+      taskId: data.taskId,
+    });
+    return null;
+  }
+
+  const taskSpec = data.taskSpec;
+  const taskId = data.taskId;
   const nodeId = taskIdToNodeId(taskId);
 
-  const inputs = taskSpec.componentRef.spec?.inputs || [];
-  const outputs = taskSpec.componentRef.spec?.outputs || [];
+  const componentRef = taskSpec.componentRef || {};
+  const inputs = componentRef.spec?.inputs || [];
+  const outputs = componentRef.spec?.outputs || [];
 
-  const name = getComponentName(taskSpec.componentRef);
+  const name = getComponentName(componentRef);
 
-  const isCustomComponent = !taskSpec.componentRef.url; // Custom components don't have a source url
+  const isCustomComponent = !componentRef.url; // Custom components don't have a source url
 
   const { componentRef: mostRecentComponentRef } = useComponentFromUrl(
-    taskSpec.componentRef.url,
+    componentRef.url,
   );
 
   const isOutdated =
-    taskSpec.componentRef.digest !== mostRecentComponentRef.digest;
+    componentRef.digest !== mostRecentComponentRef.digest;
 
   const dimensions = useTaskNodeDimensions(taskSpec);
 
