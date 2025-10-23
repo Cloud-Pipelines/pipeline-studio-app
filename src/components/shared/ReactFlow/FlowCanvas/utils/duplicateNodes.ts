@@ -48,6 +48,7 @@ export const duplicateNodes = (
     position?: XYPosition;
     connection?: ConnectionMode;
     status?: boolean;
+    originGraphOutputValues?: Record<string, TaskOutputArgument>;
   },
 ) => {
   if (!isGraphImplementation(componentSpec.implementation)) {
@@ -223,13 +224,11 @@ export const duplicateNodes = (
 
       const oldOutputName = originalOutputNode.data.spec.name;
 
-      const originalOutputValue = graphSpec.outputValues?.[oldOutputName];
+      const originalOutputValue =
+        graphSpec.outputValues?.[oldOutputName] ??
+        config?.originGraphOutputValues?.[oldOutputName];
 
       if (!originalOutputValue) {
-        // Todo: Handle cross-instance copy + paste for output nodes (we don't have the original graphSpec available so we can't look up the output value)
-        console.warn(
-          `No output value found for output ${oldOutputName} in graph spec.`,
-        );
         return;
       }
 
@@ -243,11 +242,20 @@ export const duplicateNodes = (
       const connectedTaskId = originalOutputValue.taskOutput.taskId;
       const connectedOutputName = originalOutputValue.taskOutput.outputName;
 
-      const originalNodeId = nodeManager.getNodeId(connectedTaskId, "task");
+      const connectedTaskNode = nodesToDuplicate.find(
+        (node) => isTaskNode(node) && node.data.taskId === connectedTaskId,
+      );
 
-      const newTaskNodeId = nodeIdMap[originalNodeId];
+      if (!connectedTaskNode) {
+        console.warn(
+          `Connected task ${connectedTaskId} not found in duplicated nodes`,
+        );
+        return;
+      }
+
+      const newTaskNodeId = nodeIdMap[connectedTaskNode.id];
       if (!newTaskNodeId) {
-        console.warn(`No mapping found for task node ${originalNodeId}`);
+        console.warn(`No mapping found for task node ${connectedTaskNode.id}`);
         return;
       }
 
