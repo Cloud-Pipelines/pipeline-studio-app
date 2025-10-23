@@ -11,6 +11,7 @@ import { BASE_URL, IS_GITHUB_PAGES } from "@/utils/constants";
 
 import RootLayout from "../components/layout/RootLayout";
 import Editor from "./Editor";
+import ErrorPage from "./ErrorPage";
 import Home from "./Home";
 import PipelineRun from "./PipelineRun";
 import { QuickStartPage } from "./QuickStart";
@@ -35,6 +36,7 @@ export const APP_ROUTES = {
 
 const rootRoute = createRootRoute({
   component: Outlet,
+  errorComponent: ErrorPage,
 });
 
 const mainLayout = createRoute({
