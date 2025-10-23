@@ -14,6 +14,7 @@ import {
   PIPELINE_RUNS_STORE_NAME,
   USER_PIPELINES_LIST_NAME,
 } from "@/utils/constants";
+import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
 export const createPipelineRun = async (
   payload: BodyCreateApiPipelineRunsPost,
@@ -187,16 +188,10 @@ export const fetchPipelineRunById = async (runId: string) => {
 };
 
 export const cancelPipelineRun = async (runId: string, backendUrl: string) => {
-  const response = await fetch(
+  await fetchWithErrorHandling(
     `${backendUrl}/api/pipeline_runs/${runId}/cancel`,
     {
       method: "POST",
     },
   );
-
-  if (!response.ok) {
-    throw new Error("Failed to cancel pipeline run");
-  }
-
-  // endpoint returns nothing
 };
