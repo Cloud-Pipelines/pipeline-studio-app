@@ -39,6 +39,18 @@ vi.mock("@/hooks/usePipelineRunData");
 vi.mock("@/services/pipelineRunService");
 vi.mock("@/providers/BackendProvider");
 
+vi.mock("@/hooks/useUserDetails", () => ({
+  useUserDetails: vi.fn(() => ({
+    data: {
+      name: "test-user",
+      permissions: {
+        read: true,
+        write: true,
+      },
+    },
+  })),
+}));
+
 describe("<RunDetails/>", () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -237,7 +249,7 @@ describe("<RunDetails/>", () => {
   });
 
   describe("Cancel Pipeline Run Button", () => {
-    test("should render cancel button when status is RUNNING", async () => {
+    test("should render cancel button when status is RUNNING and user is the creator of the run", async () => {
       // arrange
       vi.mocked(usePipelineRunData).mockReturnValue({
         executionData: {
@@ -263,6 +275,35 @@ describe("<RunDetails/>", () => {
         executionData: {
           details: mockExecutionDetails,
           state: mockCancelledExecutionState,
+        },
+        rootExecutionId: "test-execution-id",
+        isLoading: false,
+        error: null,
+      });
+
+      // act
+      await act(async () => renderWithQueryClient(<RunDetails />));
+
+      // assert
+      const cancelButton = screen.queryByTestId("cancel-pipeline-run-button");
+      expect(cancelButton).not.toBeInTheDocument();
+    });
+
+    test("should NOT render cancel button when the user is not the creator of the run", async () => {
+      // arrange
+      const pipelineRunWithDifferentCreator = {
+        ...mockPipelineRun,
+        created_by: "different-user",
+      };
+
+      vi.mocked(pipelineRunService.fetchPipelineRunById).mockResolvedValue(
+        pipelineRunWithDifferentCreator,
+      );
+
+      vi.mocked(usePipelineRunData).mockReturnValue({
+        executionData: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
         },
         rootExecutionId: "test-execution-id",
         isLoading: false,
