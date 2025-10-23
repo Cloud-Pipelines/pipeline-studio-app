@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
 import { useCheckComponentSpecFromPath } from "@/hooks/useCheckComponentSpecFromPath";
+import { useUserDetails } from "@/hooks/useUserDetails";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useExecutionData } from "@/providers/ExecutionDataProvider";
@@ -33,6 +34,7 @@ export const RunDetails = () => {
     isLoading,
     error,
   } = useExecutionData();
+  const { data: currentUserDetails } = useUserDetails();
 
   const editorRoute = componentSpec.name
     ? `/editor/${encodeURIComponent(componentSpec.name)}`
@@ -44,6 +46,9 @@ export const RunDetails = () => {
   );
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
+
+  const isRunCreator =
+    currentUserDetails.name && metadata?.created_by === currentUserDetails.name;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -149,7 +154,9 @@ export const RunDetails = () => {
             <InspectPipelineButton pipelineName={componentSpec.name} />
           )}
           <ClonePipelineButton componentSpec={componentSpec} />
-          {isInProgress && <CancelPipelineRunButton runId={runId} />}
+          {isInProgress && isRunCreator && (
+            <CancelPipelineRunButton runId={runId} />
+          )}
           {isComplete && <RerunPipelineButton componentSpec={componentSpec} />}
         </div>
       </div>
