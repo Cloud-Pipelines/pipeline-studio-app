@@ -8,7 +8,7 @@ import type { HydratedComponentReference } from "@/utils/componentSpec";
 import { PublishComponent } from "./PublishComponent";
 
 // Mock the hooks
-vi.mock("./hooks/useUserDetails", () => ({
+vi.mock("@/hooks/useUserDetails", () => ({
   useUserDetails: vi.fn(() => ({
     data: {
       name: "TestUser",
