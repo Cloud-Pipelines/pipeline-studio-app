@@ -95,7 +95,14 @@ export const OutputNameEditor = ({
     (value: string) => {
       setOutputName(value);
 
-      if (checkNameCollision(value, output.name, componentSpec, "outputs")) {
+      if (
+        checkNameCollision(
+          value.trim(),
+          output.name.trim(),
+          componentSpec,
+          "outputs",
+        )
+      ) {
         setValidationError("An output with this name already exists");
         return;
       }
