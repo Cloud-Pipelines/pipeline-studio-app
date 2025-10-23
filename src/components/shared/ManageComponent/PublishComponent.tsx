@@ -5,13 +5,13 @@ import { BlockStack } from "@/components/ui/layout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Heading, Paragraph } from "@/components/ui/typography";
+import { useUserDetails } from "@/hooks/useUserDetails";
 import type { HydratedComponentReference } from "@/utils/componentSpec";
 
 import { withSuspenseWrapper } from "../SuspenseWrapper";
 import { ComponentHistoryTimeline } from "./ComponentHistoryTimeline";
 import { ComponentSpecProperty } from "./ComponentSpecProperty";
 import { usePublishedComponentHistory } from "./hooks/usePublishedComponentHistory";
-import { useUserDetails } from "./hooks/useUserDetails";
 
 interface ComponentPublishProps {
   component: HydratedComponentReference;
