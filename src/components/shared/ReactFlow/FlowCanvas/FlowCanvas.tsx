@@ -36,6 +36,7 @@ import {
   type ComponentSpec,
   type InputSpec,
   isNotMaterializedComponentReference,
+  type TaskOutputArgument,
   type TaskSpec,
 } from "@/utils/componentSpec";
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
@@ -866,14 +867,47 @@ const FlowCanvas = ({
   const onCopy = useCallback(() => {
     // Copy selected nodes to clipboard
     if (selectedNodes.length > 0) {
-      const selectedNodesJson = JSON.stringify(selectedNodes);
-      navigator.clipboard.writeText(selectedNodesJson).catch((err) => {
+      const outputNodes = selectedNodes.filter(
+        (node) => node.type === "output",
+      );
+
+      const relevantOutputValues: Record<string, TaskOutputArgument> = {};
+
+      if (outputNodes.length > 0 && currentGraphSpec.outputValues) {
+        outputNodes.forEach((node) => {
+          const outputName = nodeManager.getRefId(node.id);
+
+          if (outputName && currentGraphSpec.outputValues?.[outputName]) {
+            const outputValue = currentGraphSpec.outputValues[outputName];
+
+            // Only copy the output value if its task is also being copied -- otherwise the connection is not needed
+            if (
+              selectedNodes.some(
+                (node) => node.data.taskId === outputValue.taskOutput.taskId,
+              )
+            ) {
+              relevantOutputValues[outputName] = outputValue;
+            }
+          }
+        });
+      }
+
+      const clipboardData = {
+        nodes: selectedNodes,
+        graphOutputValues: relevantOutputValues,
+        version: "1.0",
+      };
+
+      const clipboardJson = JSON.stringify(clipboardData);
+
+      navigator.clipboard.writeText(clipboardJson).catch((err) => {
         console.error("Failed to copy nodes to clipboard:", err);
       });
+
       const message = `Copied ${selectedNodes.length} nodes to clipboard`;
       notify(message, "success");
     }
-  }, [selectedNodes]);
+  }, [selectedNodes, nodeManager, currentGraphSpec, notify]);
 
   const onPaste = useCallback(() => {
     if (readOnly) return;
@@ -889,7 +923,9 @@ const FlowCanvas = ({
           return;
         }
 
-        const nodesToPaste: Node[] = parsedData;
+        const nodesToPaste: Node[] = parsedData.nodes;
+        const graphOutputValues: Record<string, TaskOutputArgument> =
+          parsedData.graphOutputValues || {};
 
         // Get the center of the canvas
         const { domNode } = store.getState();
@@ -910,7 +946,11 @@ const FlowCanvas = ({
             componentSpec,
             nodesToPaste,
             nodeManager,
-            { position: reactFlowCenter, connection: "internal" },
+            {
+              position: reactFlowCenter,
+              connection: "internal",
+              originGraphOutputValues: graphOutputValues,
+            },
           );
 
           // Deselect all existing nodes
