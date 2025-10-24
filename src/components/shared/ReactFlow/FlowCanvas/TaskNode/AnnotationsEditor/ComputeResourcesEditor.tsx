@@ -62,6 +62,12 @@ export const COMPUTE_RESOURCES: AnnotationConfig[] = [
     type: "boolean",
   },
   */
+  // Experimental. Not yet supported in OSS backend
+  {
+    annotation: "cloud-pipelines.net/launchers/google/service_account",
+    label: "Custom Google Cloud Service Account",
+    type: "string",
+  },
 ];
 
 interface ComputeResourcesEditorProps {
