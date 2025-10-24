@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
+import {
+  ComponentSpecBuilder,
+  componentSpecFactory,
+  fixtures,
+  taskSpecFactory,
+} from "@/test-utils";
+
 import type { ComponentSpec, TaskSpec } from "./componentSpec";
 import { isGraphImplementation } from "./componentSpec";
 import {
@@ -10,307 +17,231 @@ import {
 } from "./subgraphUtils";
 
 describe("subgraphUtils", () => {
-  const createContainerTaskSpec = (): TaskSpec => ({
-    componentRef: {
-      spec: {
-        implementation: {
-          container: {
-            image: "alpine",
-            command: ["echo", "hello"],
-          },
-        },
-      },
-    },
-  });
-
-  const createGraphTaskSpec = (taskCount = 2): TaskSpec => ({
-    componentRef: {
-      spec: {
-        name: "test-graph-component",
-        implementation: {
-          graph: {
-            tasks: Object.fromEntries(
-              Array.from({ length: taskCount }, (_, i) => [
-                `task${i + 1}`,
-                createContainerTaskSpec(),
-              ]),
-            ),
-          },
-        },
-      },
-    },
-  });
-
-  const createNestedGraphTaskSpec = (): TaskSpec => ({
-    componentRef: {
-      spec: {
-        implementation: {
-          graph: {
-            tasks: {
-              "container-task": createContainerTaskSpec(),
-              "subgraph-task": createGraphTaskSpec(3),
-            },
-          },
-        },
-      },
-    },
-  });
-
   describe("isSubgraph", () => {
     it("should return false for container tasks", () => {
-      const taskSpec = createContainerTaskSpec();
+      const taskSpec = taskSpecFactory.container();
       expect(isSubgraph(taskSpec)).toBe(false);
     });
 
     it("should return true for graph tasks", () => {
-      const taskSpec = createGraphTaskSpec();
+      const taskSpec = taskSpecFactory.graph();
       expect(isSubgraph(taskSpec)).toBe(true);
     });
 
     it("should return false for tasks without spec", () => {
-      const taskSpec: TaskSpec = {
-        componentRef: {},
-      };
+      const taskSpec: TaskSpec = { componentRef: {} };
       expect(isSubgraph(taskSpec)).toBe(false);
     });
   });
 
   describe("getSubgraphDescription", () => {
     it("should return empty string for container tasks", () => {
-      const taskSpec = createContainerTaskSpec();
+      const taskSpec = taskSpecFactory.container();
       expect(getSubgraphDescription(taskSpec)).toBe("");
     });
 
     it("should return correct description for empty subgraph", () => {
-      const taskSpec = createGraphTaskSpec(0);
+      const taskSpec = taskSpecFactory.graph(0);
       expect(getSubgraphDescription(taskSpec)).toBe("Empty subgraph");
     });
 
     it("should return correct description for single task", () => {
-      const taskSpec = createGraphTaskSpec(1);
+      const taskSpec = taskSpecFactory.graph(1);
       expect(getSubgraphDescription(taskSpec)).toBe("1 task");
     });
 
     it("should return correct description for multiple tasks", () => {
-      const taskSpec = createGraphTaskSpec(3);
+      const taskSpec = taskSpecFactory.graph(3);
       expect(getSubgraphDescription(taskSpec)).toBe("3 tasks");
     });
 
     it("should not include depth information for nested subgraphs", () => {
-      const taskSpec = createNestedGraphTaskSpec();
-      const description = getSubgraphDescription(taskSpec);
-      expect(description).toBe("2 tasks");
+      const nestedTaskSpec = taskSpecFactory.graph({
+        "container-task": taskSpecFactory.container(),
+        "subgraph-task": taskSpecFactory.graph(3),
+      });
+
+      expect(getSubgraphDescription(nestedTaskSpec)).toBe("2 tasks");
     });
   });
 
   describe("getSubgraphComponentSpec", () => {
-    const createRootComponentSpec = () => ({
-      name: "root-component",
-      inputs: [{ name: "rootInput", type: "string" }],
-      outputs: [{ name: "rootOutput", type: "string" }],
-      implementation: {
-        graph: {
-          tasks: {
-            task1: createContainerTaskSpec(),
-            subgraph1: createGraphTaskSpec(2),
-          },
-          outputValues: {},
-        },
-      },
-    });
+    it("should return root spec for root path", () => {
+      const rootSpec = componentSpecFactory.build();
 
-    it("should return original spec for root path", () => {
-      const rootSpec = createRootComponentSpec();
-      const result = getSubgraphComponentSpec(rootSpec, ["root"]);
+      const result = getSubgraphComponentSpec(rootSpec, fixtures.paths.root);
+
       expect(result).toBe(rootSpec);
     });
 
-    it("should return original spec for empty path", () => {
-      const rootSpec = createRootComponentSpec();
+    it("should return root spec for empty path", () => {
+      const rootSpec = componentSpecFactory.build();
+
       const result = getSubgraphComponentSpec(rootSpec, []);
+
       expect(result).toBe(rootSpec);
     });
 
-    it("should navigate to subgraph", () => {
-      const rootSpec = createRootComponentSpec();
-      const result = getSubgraphComponentSpec(rootSpec, ["root", "subgraph1"]);
+    it("should return subgraph spec at depth 1", () => {
+      const subgraphSpec = componentSpecFactory.withTasks(2);
+      const rootSpec = new ComponentSpecBuilder()
+        .withTask("container-task", taskSpecFactory.container())
+        .withTask("subgraph", taskSpecFactory.withSpec(subgraphSpec))
+        .build();
 
-      // Should return the subgraph's component spec
-      expect(result.name).toBe("test-graph-component");
-      expect(result.implementation).toHaveProperty("graph");
+      const result = getSubgraphComponentSpec(
+        rootSpec,
+        fixtures.paths.shallow("subgraph"),
+      );
+
+      expect(result).toEqual(subgraphSpec);
     });
 
-    it("should handle invalid task ID gracefully", () => {
-      const rootSpec = createRootComponentSpec();
-      const result = getSubgraphComponentSpec(rootSpec, [
-        "root",
-        "nonexistent",
-      ]);
+    it("should return deeply nested subgraph spec", () => {
+      const level2Spec = new ComponentSpecBuilder()
+        .withName("level2-component")
+        .withTask("task1", taskSpecFactory.container())
+        .build();
 
-      // Should return original spec when navigation fails
+      const level1Spec = new ComponentSpecBuilder()
+        .withName("level1-component")
+        .withTask("level2-subgraph", taskSpecFactory.withSpec(level2Spec))
+        .build();
+
+      const rootSpec = new ComponentSpecBuilder()
+        .withName("root-component")
+        .withTask("level1-subgraph", taskSpecFactory.withSpec(level1Spec))
+        .build();
+
+      const result = getSubgraphComponentSpec(
+        rootSpec,
+        fixtures.paths.deep("level1-subgraph", "level2-subgraph"),
+      );
+
+      expect(result).toEqual(level2Spec);
+    });
+
+    it("should handle nonexistent task gracefully", () => {
+      const rootSpec = componentSpecFactory.withTasks(2);
+
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
+
+      const result = getSubgraphComponentSpec(
+        rootSpec,
+        fixtures.paths.shallow("nonexistent"),
+      );
+
       expect(result).toBe(rootSpec);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('task "nonexistent" not found'),
+      );
+
+      consoleWarnSpy.mockRestore();
     });
 
     it("should handle non-subgraph task gracefully", () => {
-      const rootSpec = createRootComponentSpec();
-      const result = getSubgraphComponentSpec(rootSpec, ["root", "task1"]);
+      const rootSpec = new ComponentSpecBuilder()
+        .withTask("container", taskSpecFactory.container())
+        .build();
 
-      // Should return original spec when trying to navigate into non-subgraph
-      expect(result).toBe(rootSpec);
-    });
-
-    it("should call notify when task ID is invalid", () => {
-      const rootSpec = createRootComponentSpec();
-      const notify = vi.fn();
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
 
       const result = getSubgraphComponentSpec(
         rootSpec,
-        ["root", "nonexistent"],
-        notify,
+        fixtures.paths.shallow("container"),
       );
 
-      expect(notify).toHaveBeenCalledWith(
-        expect.stringContaining('task "nonexistent" not found'),
-        "warning",
-      );
       expect(result).toBe(rootSpec);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('task "container" is not a subgraph'),
+      );
+
+      consoleWarnSpy.mockRestore();
     });
 
-    it("should call notify when task is not a subgraph", () => {
-      const rootSpec = createRootComponentSpec();
-      const notify = vi.fn();
-
-      const result = getSubgraphComponentSpec(
-        rootSpec,
-        ["root", "task1"],
-        notify,
-      );
-
-      expect(notify).toHaveBeenCalledWith(
-        expect.stringContaining('task "task1" is not a subgraph'),
-        "warning",
-      );
-      expect(result).toBe(rootSpec);
-    });
-
-    it("should call notify when task has no spec", () => {
-      const rootSpec = {
-        ...createRootComponentSpec(),
+    it("should handle task without spec gracefully", () => {
+      const rootSpec: ComponentSpec = {
+        name: "root",
         implementation: {
           graph: {
             tasks: {
-              "task-without-spec": {
-                componentRef: {},
-              },
+              "task-without-spec": { componentRef: {} },
             },
-            outputValues: {},
           },
         },
       };
-      const notify = vi.fn();
+
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
 
       const result = getSubgraphComponentSpec(
         rootSpec,
-        ["root", "task-without-spec"],
-        notify,
+        fixtures.paths.shallow("task-without-spec"),
       );
 
-      // Task without spec fails the isSubgraph check first
-      expect(notify).toHaveBeenCalledWith(
-        expect.stringContaining('task "task-without-spec" is not a subgraph'),
-        "warning",
-      );
       expect(result).toBe(rootSpec);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('task "task-without-spec" is not a subgraph'),
+      );
+
+      consoleWarnSpy.mockRestore();
     });
 
-    it("should not call notify on successful navigation", () => {
-      const rootSpec = createRootComponentSpec();
-      const notify = vi.fn();
+    it("should handle spec at root level without graph", () => {
+      const rootSpec: ComponentSpec = {
+        name: "root",
+        implementation: {
+          container: { image: "alpine" },
+        },
+      };
+
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
 
       const result = getSubgraphComponentSpec(
         rootSpec,
-        ["root", "subgraph1"],
-        notify,
+        fixtures.paths.shallow("task1"),
       );
 
-      expect(notify).not.toHaveBeenCalled();
-      expect(result.name).toBe("test-graph-component");
+      expect(result).toBe(rootSpec);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "current spec does not have graph implementation",
+        ),
+      );
+
+      consoleWarnSpy.mockRestore();
     });
   });
 
   describe("updateSubgraphSpec", () => {
-    const createRootComponentSpec = () => ({
-      name: "root-component",
-      inputs: [{ name: "rootInput", type: "string" }],
-      outputs: [{ name: "rootOutput", type: "string" }],
-      implementation: {
-        graph: {
-          tasks: {
-            task1: createContainerTaskSpec(),
-            subgraph1: createGraphTaskSpec(2),
-          },
-          outputValues: {},
-        },
-      },
-    });
-
-    const createDeeplyNestedSpec = (): ComponentSpec => ({
-      name: "root-component",
-      implementation: {
-        graph: {
-          tasks: {
-            "level1-subgraph": {
-              componentRef: {
-                spec: {
-                  name: "level1-component",
-                  implementation: {
-                    graph: {
-                      tasks: {
-                        "level2-subgraph": {
-                          componentRef: {
-                            spec: {
-                              name: "level2-component",
-                              implementation: {
-                                graph: {
-                                  tasks: {
-                                    "leaf-task": createContainerTaskSpec(),
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          outputValues: {},
-        },
-      },
-    });
-
     it("should return updated spec directly for root path", () => {
-      const rootSpec = createRootComponentSpec();
-      const updatedSpec: ComponentSpec = {
-        ...rootSpec,
-        name: "updated-root",
-      };
+      const rootSpec = componentSpecFactory.build();
+      const updatedSpec = new ComponentSpecBuilder()
+        .withName("updated-root")
+        .build();
 
-      const result = updateSubgraphSpec(rootSpec, ["root"], updatedSpec);
+      const result = updateSubgraphSpec(
+        rootSpec,
+        fixtures.paths.root,
+        updatedSpec,
+      );
 
       expect(result).toBe(updatedSpec);
       expect(result.name).toBe("updated-root");
     });
 
     it("should return updated spec directly for empty path", () => {
-      const rootSpec = createRootComponentSpec();
-      const updatedSpec: ComponentSpec = {
-        ...rootSpec,
-        name: "updated-root",
-      };
+      const rootSpec = componentSpecFactory.build();
+      const updatedSpec = new ComponentSpecBuilder()
+        .withName("updated-root")
+        .build();
 
       const result = updateSubgraphSpec(rootSpec, [], updatedSpec);
 
@@ -319,21 +250,22 @@ describe("subgraphUtils", () => {
     });
 
     it("should update subgraph at depth 1", () => {
-      const rootSpec = createRootComponentSpec();
-      const updatedSubgraphSpec: ComponentSpec = {
-        name: "updated-subgraph",
-        implementation: {
-          graph: {
-            tasks: {
-              "new-task": createContainerTaskSpec(),
-            },
-          },
-        },
-      };
+      const rootSpec = new ComponentSpecBuilder()
+        .withName("root-component")
+        .withInputs([{ name: "rootInput", type: "String" }])
+        .withOutputs([{ name: "rootOutput", type: "String" }])
+        .withTask("task1", taskSpecFactory.container())
+        .withTask("subgraph1", taskSpecFactory.graph(2))
+        .build();
+
+      const updatedSubgraphSpec = new ComponentSpecBuilder()
+        .withName("updated-subgraph")
+        .withTask("new-task", taskSpecFactory.container())
+        .build();
 
       const result = updateSubgraphSpec(
         rootSpec,
-        ["root", "subgraph1"],
+        fixtures.paths.shallow("subgraph1"),
         updatedSubgraphSpec,
       );
 
@@ -369,21 +301,15 @@ describe("subgraphUtils", () => {
     });
 
     it("should update deeply nested subgraph", () => {
-      const rootSpec = createDeeplyNestedSpec();
-      const updatedDeepSpec: ComponentSpec = {
-        name: "updated-level2",
-        implementation: {
-          graph: {
-            tasks: {
-              "updated-leaf": createContainerTaskSpec(),
-            },
-          },
-        },
-      };
+      const rootSpec = componentSpecFactory.nested(3);
+      const updatedDeepSpec = new ComponentSpecBuilder()
+        .withName("updated-level2")
+        .withTask("updated-leaf", taskSpecFactory.container())
+        .build();
 
       const result = updateSubgraphSpec(
         rootSpec,
-        ["root", "level1-subgraph", "level2-subgraph"],
+        fixtures.paths.deep("level3-subgraph", "level2-subgraph"),
         updatedDeepSpec,
       );
 
@@ -392,8 +318,8 @@ describe("subgraphUtils", () => {
       if (!isGraphImplementation(result.implementation)) return;
 
       const level1 =
-        result.implementation.graph.tasks["level1-subgraph"]?.componentRef.spec;
-      expect(level1?.name).toBe("level1-component");
+        result.implementation.graph.tasks["level3-subgraph"]?.componentRef.spec;
+      expect(level1?.name).toBe("level-2-component");
 
       if (level1 && isGraphImplementation(level1.implementation)) {
         const level2 =
@@ -410,7 +336,11 @@ describe("subgraphUtils", () => {
     });
 
     it("should maintain immutability of original spec", () => {
-      const rootSpec = createRootComponentSpec();
+      const rootSpec = new ComponentSpecBuilder()
+        .withName("root-component")
+        .withTask("subgraph1", taskSpecFactory.graph(2))
+        .build();
+
       const originalRootName = rootSpec.name;
 
       expect(isGraphImplementation(rootSpec.implementation)).toBe(true);
@@ -420,14 +350,15 @@ describe("subgraphUtils", () => {
         rootSpec.implementation.graph.tasks["subgraph1"]?.componentRef.spec
           ?.name;
 
-      const updatedSubgraphSpec: ComponentSpec = {
-        name: "updated-subgraph",
-        implementation: {
-          graph: { tasks: {} },
-        },
-      };
+      const updatedSubgraphSpec = new ComponentSpecBuilder()
+        .withName("updated-subgraph")
+        .build();
 
-      updateSubgraphSpec(rootSpec, ["root", "subgraph1"], updatedSubgraphSpec);
+      updateSubgraphSpec(
+        rootSpec,
+        fixtures.paths.shallow("subgraph1"),
+        updatedSubgraphSpec,
+      );
 
       // Original spec should remain unchanged
       expect(rootSpec.name).toBe(originalRootName);
@@ -438,11 +369,10 @@ describe("subgraphUtils", () => {
     });
 
     it("should handle invalid task ID gracefully", () => {
-      const rootSpec = createRootComponentSpec();
-      const updatedSpec: ComponentSpec = {
-        name: "should-not-be-applied",
-        implementation: { graph: { tasks: {} } },
-      };
+      const rootSpec = componentSpecFactory.withTasks(2);
+      const updatedSpec = new ComponentSpecBuilder()
+        .withName("should-not-be-applied")
+        .build();
 
       const consoleWarnSpy = vi
         .spyOn(console, "warn")
@@ -450,7 +380,7 @@ describe("subgraphUtils", () => {
 
       const result = updateSubgraphSpec(
         rootSpec,
-        ["root", "nonexistent"],
+        fixtures.paths.shallow("nonexistent"),
         updatedSpec,
       );
 
@@ -464,11 +394,13 @@ describe("subgraphUtils", () => {
     });
 
     it("should handle non-subgraph task gracefully", () => {
-      const rootSpec = createRootComponentSpec();
-      const updatedSpec: ComponentSpec = {
-        name: "should-not-be-applied",
-        implementation: { graph: { tasks: {} } },
-      };
+      const rootSpec = new ComponentSpecBuilder()
+        .withTask("task1", taskSpecFactory.container())
+        .build();
+
+      const updatedSpec = new ComponentSpecBuilder()
+        .withName("should-not-be-applied")
+        .build();
 
       const consoleWarnSpy = vi
         .spyOn(console, "warn")
@@ -476,7 +408,7 @@ describe("subgraphUtils", () => {
 
       const result = updateSubgraphSpec(
         rootSpec,
-        ["root", "task1"],
+        fixtures.paths.shallow("task1"),
         updatedSpec,
       );
 
@@ -498,18 +430,15 @@ describe("subgraphUtils", () => {
         implementation: {
           graph: {
             tasks: {
-              "subgraph-without-spec": {
-                componentRef: {},
-              },
+              "subgraph-without-spec": { componentRef: {} },
             },
           },
         },
       };
 
-      const updatedSpec: ComponentSpec = {
-        name: "should-not-be-applied",
-        implementation: { graph: { tasks: {} } },
-      };
+      const updatedSpec = new ComponentSpecBuilder()
+        .withName("should-not-be-applied")
+        .build();
 
       const consoleWarnSpy = vi
         .spyOn(console, "warn")
@@ -517,7 +446,7 @@ describe("subgraphUtils", () => {
 
       const result = updateSubgraphSpec(
         rootSpec,
-        ["root", "subgraph-without-spec"],
+        fixtures.paths.shallow("subgraph-without-spec"),
         updatedSpec,
       );
 
@@ -529,15 +458,14 @@ describe("subgraphUtils", () => {
     });
 
     it("should create new objects at each level", () => {
-      const rootSpec = createDeeplyNestedSpec();
-      const updatedSpec: ComponentSpec = {
-        name: "updated",
-        implementation: { graph: { tasks: {} } },
-      };
+      const rootSpec = componentSpecFactory.nested(3);
+      const updatedSpec = new ComponentSpecBuilder()
+        .withName("updated")
+        .build();
 
       const result = updateSubgraphSpec(
         rootSpec,
-        ["root", "level1-subgraph", "level2-subgraph"],
+        fixtures.paths.deep("level3-subgraph", "level2-subgraph"),
         updatedSpec,
       );
 
@@ -557,9 +485,9 @@ describe("subgraphUtils", () => {
         rootSpec.implementation.graph.tasks,
       );
 
-      const level1Result = result.implementation.graph.tasks["level1-subgraph"];
+      const level1Result = result.implementation.graph.tasks["level3-subgraph"];
       const level1Original =
-        rootSpec.implementation.graph.tasks["level1-subgraph"];
+        rootSpec.implementation.graph.tasks["level3-subgraph"];
 
       expect(level1Result).not.toBe(level1Original);
       expect(level1Result?.componentRef).not.toBe(level1Original?.componentRef);
@@ -569,32 +497,25 @@ describe("subgraphUtils", () => {
     });
 
     it("should preserve sibling tasks and properties", () => {
-      const rootSpec: ComponentSpec = {
-        name: "root",
-        inputs: [{ name: "input1", type: "string" }],
-        outputs: [{ name: "output1", type: "string" }],
-        implementation: {
-          graph: {
-            tasks: {
-              subgraph1: createGraphTaskSpec(2),
-              subgraph2: createGraphTaskSpec(3),
-              task1: createContainerTaskSpec(),
-            },
-            outputValues: {
-              output1: { taskOutput: { taskId: "task1", outputName: "test" } },
-            },
-          },
-        },
-      };
+      const rootSpec = new ComponentSpecBuilder()
+        .withName("root")
+        .withInputs([{ name: "input1", type: "String" }])
+        .withOutputs([{ name: "output1", type: "String" }])
+        .withTask("subgraph1", taskSpecFactory.graph(2))
+        .withTask("subgraph2", taskSpecFactory.graph(3))
+        .withTask("task1", taskSpecFactory.container())
+        .withOutputValues({
+          output1: { taskOutput: { taskId: "task1", outputName: "test" } },
+        })
+        .build();
 
-      const updatedSpec: ComponentSpec = {
-        name: "updated-subgraph1",
-        implementation: { graph: { tasks: {} } },
-      };
+      const updatedSpec = new ComponentSpecBuilder()
+        .withName("updated-subgraph1")
+        .build();
 
       const result = updateSubgraphSpec(
         rootSpec,
-        ["root", "subgraph1"],
+        fixtures.paths.shallow("subgraph1"),
         updatedSpec,
       );
 
