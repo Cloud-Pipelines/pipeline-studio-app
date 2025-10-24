@@ -100,6 +100,12 @@ This is a React + TypeScript application for building and running Machine Learni
 - Write component tests for complex components
 - Use Playwright helpers from `tests/e2e/helpers.ts`
 - Follow existing test patterns and naming
+- **Use test utilities from `@/test-utils`** for creating test fixtures:
+  - `ComponentSpecBuilder` and `componentSpecFactory` for ComponentSpec fixtures
+  - `taskSpecFactory` for TaskSpec fixtures
+  - `nodeFactory` for React Flow node fixtures
+  - `fixtures` for common test constants (positions, IDs, paths)
+  - See `src/test-utils/README.md` for detailed usage examples
 
 ### Performance
 
@@ -188,6 +194,19 @@ export const useContext = () => {
 - Follow the existing component library structure
 - **Do not modify componentSpec structure** without express permission beforehand
 
+## Do's
+
+- **Do** use test utilities from `@/test-utils` for test fixtures
+- **Do** use TypeScript strict mode with proper typing
+- **Do** use functional components with hooks exclusively
+- **Do** follow ESLint and Prettier rules
+- **Do** write tests for utilities, hooks, and complex components
+- **Do** use proper error handling with try/catch
+- **Do** use descriptive variable and function names
+- **Do** add JSDoc comments for complex functions
+- **Do** prefer early returns to reduce nesting
+- **Do** prioritize readability over complexity
+
 ## Don't Do
 
 - Don't use CSS-in-JS or styled-components
@@ -202,6 +221,7 @@ export const useContext = () => {
 - Don't create side effects in render functions
 - Don't use barrel exports
 - Don't modify componentSpec structure without express permission
+- Don't create inline test fixtures - use test utilities from `@/test-utils`
 
 ## Other rules
 

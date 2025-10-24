@@ -4,6 +4,7 @@
     "src/api/**",
     "node_modules/**",
     "src/components/ui/**",
+    "src/test-utils/**",
     "openapi-ts.config.ts",
     "vite.config.ghpages.js"
   ],
