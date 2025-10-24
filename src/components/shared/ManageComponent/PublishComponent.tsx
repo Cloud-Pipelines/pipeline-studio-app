@@ -47,7 +47,7 @@ export const PublishComponent = withSuspenseWrapper(
     const { data: currentUserDetails } = useUserDetails();
 
     const { data: history, refetch: refetchHistory } =
-      usePublishedComponentHistory(component, currentUserDetails.name);
+      usePublishedComponentHistory(component, currentUserDetails?.id ?? "");
 
     const onChange = useCallback(() => {
       refetchHistory();
@@ -79,7 +79,7 @@ export const PublishComponent = withSuspenseWrapper(
               <Separator />
               <ComponentSpecProperty
                 label="Published by"
-                value={currentUserDetails.name}
+                value={currentUserDetails?.id}
                 tooltip="Your current user name"
               />
             </BlockStack>
@@ -87,7 +87,7 @@ export const PublishComponent = withSuspenseWrapper(
             <ComponentHistoryTimeline
               history={history}
               currentComponent={component}
-              currentUserName={currentUserDetails.name}
+              currentUserName={currentUserDetails?.id}
               onChange={onChange}
             />
           </BlockStack>
