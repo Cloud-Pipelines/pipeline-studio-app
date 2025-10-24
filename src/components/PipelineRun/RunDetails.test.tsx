@@ -42,11 +42,8 @@ vi.mock("@/providers/BackendProvider");
 vi.mock("@/hooks/useUserDetails", () => ({
   useUserDetails: vi.fn(() => ({
     data: {
-      name: "test-user",
-      permissions: {
-        read: true,
-        write: true,
-      },
+      id: "test-user",
+      permissions: ["read", "write"],
     },
   })),
 }));

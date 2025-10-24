@@ -48,7 +48,7 @@ export const RunDetails = () => {
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
 
   const isRunCreator =
-    currentUserDetails.name && metadata?.created_by === currentUserDetails.name;
+    currentUserDetails?.id && metadata?.created_by === currentUserDetails.id;
 
   useEffect(() => {
     const fetchData = async () => {
