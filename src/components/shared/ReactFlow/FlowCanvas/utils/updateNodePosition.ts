@@ -1,19 +1,16 @@
 import type { Node } from "@xyflow/react";
 
+import type { NodeManager } from "@/nodeManager";
 import {
   type ComponentSpec,
   isGraphImplementation,
 } from "@/utils/componentSpec";
-import {
-  nodeIdToInputName,
-  nodeIdToOutputName,
-  nodeIdToTaskId,
-} from "@/utils/nodes/nodeIdUtils";
 import { setPositionInAnnotations } from "@/utils/nodes/setPositionInAnnotations";
 
 export const updateNodePositions = (
   updatedNodes: Node[],
   componentSpec: ComponentSpec,
+  nodeManager: NodeManager,
 ) => {
   const newComponentSpec = { ...componentSpec };
 
@@ -31,10 +28,13 @@ export const updateNodePositions = (
       y: node.position.y,
     };
 
+    const refId = nodeManager.getRefId(node.id);
+
+    if (!refId) continue;
+
     if (node.type === "task") {
-      const taskId = nodeIdToTaskId(node.id);
-      if (updatedGraphSpec.tasks[taskId]) {
-        const taskSpec = { ...updatedGraphSpec.tasks[taskId] };
+      if (updatedGraphSpec.tasks[refId]) {
+        const taskSpec = { ...updatedGraphSpec.tasks[refId] };
 
         const annotations = taskSpec.annotations || {};
 
@@ -48,14 +48,13 @@ export const updateNodePositions = (
           annotations: updatedAnnotations,
         };
 
-        updatedGraphSpec.tasks[taskId] = newTaskSpec;
+        updatedGraphSpec.tasks[refId] = newTaskSpec;
 
         newComponentSpec.implementation.graph = updatedGraphSpec;
       }
     } else if (node.type === "input") {
-      const inputName = nodeIdToInputName(node.id);
       const inputs = [...(newComponentSpec.inputs || [])];
-      const inputIndex = inputs.findIndex((input) => input.name === inputName);
+      const inputIndex = inputs.findIndex((input) => input.name === refId);
 
       if (inputIndex >= 0) {
         const annotations = inputs[inputIndex].annotations || {};
@@ -73,11 +72,8 @@ export const updateNodePositions = (
         newComponentSpec.inputs = inputs;
       }
     } else if (node.type === "output") {
-      const outputName = nodeIdToOutputName(node.id);
       const outputs = [...(newComponentSpec.outputs || [])];
-      const outputIndex = outputs.findIndex(
-        (output) => output.name === outputName,
-      );
+      const outputIndex = outputs.findIndex((output) => output.name === refId);
 
       if (outputIndex >= 0) {
         const annotations = outputs[outputIndex].annotations || {};

@@ -1,32 +1,33 @@
 import { type Node } from "@xyflow/react";
 
+import type { NodeManager } from "@/nodeManager";
 import {
   type ComponentSpec,
   isGraphImplementation,
 } from "@/utils/componentSpec";
-import {
-  nodeIdToInputName,
-  nodeIdToOutputName,
-  nodeIdToTaskId,
-} from "@/utils/nodes/nodeIdUtils";
 
 import { setGraphOutputValue } from "./setGraphOutputValue";
 import { setTaskArgument } from "./setTaskArgument";
 
-export const removeNode = (node: Node, componentSpec: ComponentSpec) => {
+export const removeNode = (
+  node: Node,
+  componentSpec: ComponentSpec,
+  nodeManager: NodeManager,
+) => {
+  const id = nodeManager.getRefId(node.id);
+
+  if (!id) return componentSpec;
+
   if (node.type === "task") {
-    const taskId = nodeIdToTaskId(node.id);
-    return removeTask(taskId, componentSpec);
+    return removeTask(id, componentSpec);
   }
 
   if (node.type === "input") {
-    const inputName = nodeIdToInputName(node.id);
-    return removeGraphInput(inputName, componentSpec);
+    return removeGraphInput(id, componentSpec);
   }
 
   if (node.type === "output") {
-    const outputName = nodeIdToOutputName(node.id);
-    return removeGraphOutput(outputName, componentSpec);
+    return removeGraphOutput(id, componentSpec);
   }
 
   return componentSpec;
