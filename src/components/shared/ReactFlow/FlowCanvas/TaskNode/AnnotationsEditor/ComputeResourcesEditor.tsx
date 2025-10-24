@@ -73,14 +73,12 @@ export const COMPUTE_RESOURCES: AnnotationConfig[] = [
 
 interface ComputeResourcesEditorProps {
   annotations: Annotations;
-  onChange: (key: string, value: string | undefined) => void;
-  onBlur: (key: string, value: string | undefined) => void;
+  onSave: (key: string, value: string) => void;
 }
 
 export const ComputeResourcesEditor = ({
   annotations,
-  onChange,
-  onBlur,
+  onSave,
 }: ComputeResourcesEditorProps) => {
   return (
     <div className="flex flex-col gap-2">
@@ -90,45 +88,30 @@ export const ComputeResourcesEditor = ({
           key={resource.annotation}
           resource={resource}
           annotations={annotations}
-          onChange={onChange}
-          onBlur={onBlur}
+          onSave={onSave}
         />
       ))}
     </div>
   );
 };
 
-interface ComputeResourceFieldProps {
+interface ComputeResourceFieldProps extends ComputeResourcesEditorProps {
   resource: AnnotationConfig;
-  annotations: Annotations;
-  onChange: (key: string, value: string) => void;
-  onBlur: (key: string, value: string) => void;
 }
 
 const ComputeResourceField = ({
   resource,
   annotations,
-  onChange,
-  onBlur,
+  onSave,
 }: ComputeResourceFieldProps) => {
-  const handleValueChange = useCallback(
-    (value: string) => {
-      const formattedValue = resource.append
-        ? `${value}${resource.append}`
-        : value;
-      onChange(resource.annotation, formattedValue);
-    },
-    [resource, onChange],
-  );
-
   const handleValueBlur = useCallback(
     (value: string) => {
       const formattedValue = resource.append
         ? `${value}${resource.append}`
         : value;
-      onBlur(resource.annotation, formattedValue);
+      onSave(resource.annotation, formattedValue);
     },
-    [resource, onBlur],
+    [resource, onSave],
   );
 
   const value =
@@ -148,7 +131,6 @@ const ComputeResourceField = ({
       <AnnotationsInput
         value={value}
         config={resource}
-        onChange={handleValueChange}
         onBlur={handleValueBlur}
         annotations={annotations}
       />
