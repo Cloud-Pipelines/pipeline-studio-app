@@ -123,7 +123,7 @@ describe("addTask", () => {
         ? Object.keys(newComponentSpec.implementation.graph.tasks)
         : [];
     expect(taskIds.length).toBe(2);
-    expect(taskIds).toContain("TestTask 2");
+    expect(taskIds).toContain("TestTask (2)");
   });
 
   it("should create unique names for inputs when duplicates exist", () => {
@@ -139,7 +139,7 @@ describe("addTask", () => {
     };
 
     expect(newComponentSpec.inputs.length).toBe(2);
-    expect(newComponentSpec.inputs[1].name).toBe("Input 2");
+    expect(newComponentSpec.inputs[1].name).toBe("Input (2)");
   });
 
   it("should create unique names for outputs when duplicates exist", () => {
@@ -155,6 +155,6 @@ describe("addTask", () => {
     };
 
     expect(newComponentSpec.outputs.length).toBe(2);
-    expect(newComponentSpec.outputs[1].name).toBe("Output 2");
+    expect(newComponentSpec.outputs[1].name).toBe("Output (2)");
   });
 });

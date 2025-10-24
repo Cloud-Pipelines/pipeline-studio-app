@@ -65,18 +65,17 @@ export const duplicateNodes = (
   const selected = config?.selected ?? true;
   const connection = config?.connection ?? "all";
 
+  // Temporary specs used to ensure newly generated names & ids are truly unique
+  const tempGraphSpec = { ...graphSpec };
+  const tempComponentSpec = { ...componentSpec };
+
   /* Create new Nodes and map old Task IDs to new Task IDs */
   nodesToDuplicate.forEach((node) => {
     const oldNodeId = node.id;
 
     if (isTaskNode(node)) {
-      const oldTaskId = nodeManager.getRefId(oldNodeId);
-      if (!oldTaskId) {
-        console.warn("Could not find taskId for node:", node);
-        return;
-      }
-
-      const newTaskId = getUniqueTaskId(graphSpec, oldTaskId);
+      const oldTaskId = node.data.taskId;
+      const newTaskId = getUniqueTaskId(tempGraphSpec, oldTaskId);
       const newNodeId = nodeManager.getNodeId(newTaskId, "task");
 
       nodeIdMap[oldNodeId] = newNodeId;
@@ -93,18 +92,24 @@ export const duplicateNodes = (
         ...taskSpec,
         annotations: updatedAnnotations,
       };
-      newTasks[newTaskId] = newTaskSpec;
-    } else if (isInputNode(node)) {
-      const inputSpec = componentSpec.inputs?.find(
-        (input) => input.name === node.data.label,
-      );
 
-      const newInputName = getUniqueInputName(componentSpec, inputSpec?.name);
+      newTasks[newTaskId] = newTaskSpec;
+      tempGraphSpec.tasks = {
+        ...tempGraphSpec.tasks,
+        [newTaskId]: newTaskSpec,
+      };
+    } else if (isInputNode(node)) {
+      const inputSpec = node.data.spec;
+
+      const newInputName = getUniqueInputName(
+        tempComponentSpec,
+        inputSpec.name,
+      );
       const newNodeId = nodeManager.getNodeId(newInputName, "input");
 
       nodeIdMap[oldNodeId] = newNodeId;
 
-      const annotations = inputSpec?.annotations || {};
+      const annotations = inputSpec.annotations || {};
 
       const updatedAnnotations = setPositionInAnnotations(annotations, {
         x: node.position.x + OFFSET,
@@ -118,20 +123,22 @@ export const duplicateNodes = (
       };
 
       newInputs[newInputName] = newInputSpec;
+      tempComponentSpec.inputs = [
+        ...(tempComponentSpec.inputs || []),
+        newInputSpec,
+      ];
     } else if (isOutputNode(node)) {
-      const outputSpec = componentSpec.outputs?.find(
-        (output) => output.name === node.data.label,
-      );
+      const outputSpec = node.data.spec;
 
       const newOutputName = getUniqueOutputName(
-        componentSpec,
-        outputSpec?.name,
+        tempComponentSpec,
+        outputSpec.name,
       );
       const newNodeId = nodeManager.getNodeId(newOutputName, "output");
 
       nodeIdMap[oldNodeId] = newNodeId;
 
-      const annotations = outputSpec?.annotations || {};
+      const annotations = outputSpec.annotations || {};
 
       const updatedAnnotations = setPositionInAnnotations(annotations, {
         x: node.position.x + OFFSET,
@@ -145,6 +152,10 @@ export const duplicateNodes = (
       };
 
       newOutputs[newOutputName] = newOutputSpec;
+      tempComponentSpec.outputs = [
+        ...(tempComponentSpec.outputs || []),
+        newOutputSpec,
+      ];
     }
   });
 
@@ -186,10 +197,11 @@ export const duplicateNodes = (
     }
   });
 
-  // Outputs are defined in the graph spec
   const updatedGraphOutputs = { ...graphSpec.outputValues };
-  if (connection !== "none") {
-    /* Reconfigure Outputs */
+
+  // Output Nodes can only have one input, so the "external" connection mode does not apply to them.
+  if (connection !== "none" && connection !== "external") {
+    /* Reconfigure Output Nodes */
     Object.entries(newOutputs).forEach((output) => {
       const [outputName] = output;
       const newNodeId = nodeManager.getNodeId(outputName, "output");
@@ -201,57 +213,62 @@ export const duplicateNodes = (
         return;
       }
 
-      const oldOutputName = nodeManager.getRefId(oldNodeId);
+      const originalOutputNode = nodesToDuplicate.find(
+        (node) => node.id === oldNodeId && isOutputNode(node),
+      );
 
-      if (!graphSpec.outputValues || !oldOutputName) {
+      if (!originalOutputNode || !isOutputNode(originalOutputNode)) {
         return;
       }
 
-      const outputValue = graphSpec.outputValues[oldOutputName];
+      const oldOutputName = originalOutputNode.data.spec.name;
 
-      if (!outputValue) {
+      const originalOutputValue = graphSpec.outputValues?.[oldOutputName];
+
+      if (!originalOutputValue) {
+        // Todo: Handle cross-instance copy + paste for output nodes (we don't have the original graphSpec available so we can't look up the output value)
+        console.warn(
+          `No output value found for output ${oldOutputName} in graph spec.`,
+        );
         return;
       }
 
-      const updatedOutputValue = { ...outputValue };
-
-      // If the outputvalue references a task that was also duplicated (internal connection), we need to update it to refer to the duplicated task id
-      let isInternal = false;
-      if (
-        typeof updatedOutputValue === "object" &&
-        updatedOutputValue !== null &&
-        connection !== "external"
-      ) {
-        if ("taskOutput" in updatedOutputValue) {
-          const oldTaskId = updatedOutputValue.taskOutput.taskId;
-          const oldTaskNodeId = nodeManager.getNodeId(oldTaskId, "task");
-          if (oldTaskNodeId in nodeIdMap) {
-            const newTaskId = nodeManager.getRefId(nodeIdMap[oldTaskNodeId]);
-            if (!newTaskId) {
-              return;
-            }
-
-            updatedOutputValue.taskOutput = {
-              ...updatedOutputValue.taskOutput,
-              taskId: newTaskId,
-            };
-
-            isInternal = true;
-          }
-        }
+      if (!("taskOutput" in originalOutputValue)) {
+        console.warn(
+          `Output ${oldOutputName} is not connected to a task output`,
+        );
+        return;
       }
 
-      if (
-        (isInternal && connection === "internal") ||
-        (!isInternal && connection === "external") ||
-        connection === "all"
-      ) {
-        updatedGraphOutputs[outputName] = updatedOutputValue;
+      const connectedTaskId = originalOutputValue.taskOutput.taskId;
+      const connectedOutputName = originalOutputValue.taskOutput.outputName;
+
+      const originalNodeId = nodeManager.getNodeId(connectedTaskId, "task");
+
+      const newTaskNodeId = nodeIdMap[originalNodeId];
+      if (!newTaskNodeId) {
+        console.warn(`No mapping found for task node ${originalNodeId}`);
+        return;
       }
+
+      const newTaskId = nodeManager.getRefId(newTaskNodeId);
+      if (!newTaskId) {
+        console.warn(`Could not get new task ID for node ${newTaskNodeId}`);
+        return;
+      }
+
+      const outputValue: TaskOutputArgument = {
+        taskOutput: {
+          taskId: newTaskId,
+          outputName: connectedOutputName,
+        },
+      };
+
+      updatedGraphOutputs[outputName] = outputValue;
     });
   }
 
-  /* Update the Graph Spec & Inputs */
+  /* Update the Graph Spec */
   const updatedTasks = { ...graphSpec.tasks, ...newTasks };
   const updatedGraphSpec = {
     ...graphSpec,
@@ -507,43 +524,61 @@ function reconfigureConnections(
 
   if ("taskOutput" in argument) {
     const oldTaskId = argument.taskOutput.taskId;
-    oldNodeId = nodeManager.getNodeId(oldTaskId, "task");
 
-    if (!isGraphImplementation(componentSpec.implementation)) {
-      throw new Error("ComponentSpec does not contain a graph implementation.");
+    const taskNode = nodes.find(
+      (node) => isTaskNode(node) && node.data.taskId === oldTaskId,
+    );
+
+    if (taskNode) {
+      oldNodeId = taskNode.id;
+      isExternal = false;
+    } else {
+      if (!isGraphImplementation(componentSpec.implementation)) {
+        throw new Error(
+          "ComponentSpec does not contain a graph implementation.",
+        );
+      }
+
+      const graphSpec = componentSpec.implementation.graph;
+      isExternal = oldTaskId in graphSpec.tasks;
     }
 
-    const graphSpec = componentSpec.implementation.graph;
-    isExternal = oldTaskId in graphSpec.tasks;
+    if (!oldNodeId) {
+      return reconfigureExternalConnection(taskSpec, argKey, mode);
+    }
 
     const newNodeId = nodeIdMap[oldNodeId];
-
     if (!newNodeId) {
       return reconfigureExternalConnection(taskSpec, argKey, mode);
     }
 
     const newTaskId = nodeManager.getRefId(newNodeId);
-
     newArgId = newTaskId;
   } else if ("graphInput" in argument) {
     const oldInputName = argument.graphInput.inputName;
-    oldNodeId = nodeManager.getNodeId(oldInputName, "input");
 
-    if (!("inputs" in componentSpec)) {
-      throw new Error("ComponentSpec does not contain inputs.");
+    const inputNode = nodes.find(
+      (node) => isInputNode(node) && node.data.spec.name === oldInputName,
+    );
+
+    if (inputNode) {
+      oldNodeId = inputNode.id;
+      isExternal = false;
+    } else {
+      const inputs = componentSpec.inputs || [];
+      isExternal = inputs.some((input) => input.name === oldInputName);
     }
 
-    const inputs = componentSpec.inputs || [];
-    isExternal = inputs.some((input) => input.name === oldInputName);
+    if (!oldNodeId) {
+      return reconfigureExternalConnection(taskSpec, argKey, mode);
+    }
 
     const newNodeId = nodeIdMap[oldNodeId];
-
     if (!newNodeId) {
       return reconfigureExternalConnection(taskSpec, argKey, mode);
     }
 
     const newInputName = nodeManager.getRefId(newNodeId);
-
     newArgId = newInputName;
   }
 
