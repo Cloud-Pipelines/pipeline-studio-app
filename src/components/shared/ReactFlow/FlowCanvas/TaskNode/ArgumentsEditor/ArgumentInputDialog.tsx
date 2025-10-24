@@ -1,7 +1,8 @@
 import { MultilineTextInputDialog } from "@/components/shared/Dialogs/MultilineTextInputDialog";
 import type { ArgumentInput } from "@/types/arguments";
+import { typeSpecToString } from "@/utils/componentSpec";
 
-import { getInputValue, typeSpecToString } from "./utils";
+import { getInputValue } from "./utils";
 
 export const ArgumentInputDialog = ({
   argument,
