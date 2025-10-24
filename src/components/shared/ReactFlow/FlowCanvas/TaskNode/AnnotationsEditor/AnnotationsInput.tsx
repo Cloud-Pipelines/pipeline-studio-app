@@ -1,5 +1,5 @@
 import { AlertTriangle } from "lucide-react";
-import { type ChangeEvent, useCallback, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import { MultilineTextInputDialog } from "@/components/shared/Dialogs/MultilineTextInputDialog";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,6 @@ interface AnnotationsInputProps {
   deletable?: boolean;
   autoFocus?: boolean;
   className?: string;
-  onChange: (value: string) => void;
   onBlur?: (value: string) => void;
   onDelete?: () => void;
 }
@@ -38,10 +37,10 @@ export const AnnotationsInput = ({
   deletable = false,
   autoFocus = false,
   className = "",
-  onChange,
   onBlur,
   onDelete,
 }: AnnotationsInputProps) => {
+  const [inputValue, setInputValue] = useState(value);
   const [isInvalid, setIsInvalid] = useState(false);
   const [lastSavedValue, setLastSavedValue] = useState(value);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -55,46 +54,48 @@ export const AnnotationsInput = ({
 
   const handleDialogConfirm = useCallback(
     (newValue: string) => {
-      onChange(newValue);
+      setInputValue(newValue);
       setIsDialogOpen(false);
       if (onBlur && newValue !== lastSavedValue) {
         onBlur(newValue);
         setLastSavedValue(newValue);
       }
     },
-    [onChange, onBlur, lastSavedValue],
+    [onBlur, lastSavedValue],
   );
 
   const handleDialogCancel = useCallback(() => {
     setIsDialogOpen(false);
   }, []);
 
-  const validateChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const newValue = e.target.value;
+  const validateChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
 
-      onChange(newValue);
+    setInputValue(newValue);
 
-      try {
-        JSON.parse(newValue);
-        setIsInvalid(false);
-      } catch {
-        setIsInvalid(true);
-      }
-    },
-    [onChange],
-  );
+    try {
+      JSON.parse(newValue);
+      setIsInvalid(false);
+    } catch {
+      setIsInvalid(true);
+    }
+  }, []);
 
   const handleBlur = useCallback(() => {
-    if (onBlur && lastSavedValue !== value) {
-      if (config?.type === "number" && !isNaN(Number(value)) && value !== "") {
-        value = clamp(Number(value), config.min, config.max).toString();
+    if (onBlur && lastSavedValue !== inputValue) {
+      let value = inputValue;
+      if (
+        config?.type === "number" &&
+        !isNaN(Number(inputValue)) &&
+        inputValue !== ""
+      ) {
+        value = clamp(Number(inputValue), config.min, config.max).toString();
       }
 
       onBlur(value);
       setLastSavedValue(value);
     }
-  }, [onBlur, lastSavedValue, value]);
+  }, [onBlur, lastSavedValue, inputValue]);
 
   const handleQuantityKeyInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -106,9 +107,9 @@ export const AnnotationsInput = ({
 
       const newObj = { [selectedKey]: e.target.value };
 
-      onChange(JSON.stringify(newObj));
+      setInputValue(JSON.stringify(newObj));
     },
-    [config, annotations, onChange],
+    [config, annotations],
   );
 
   const shouldSaveQuantityField = useCallback(() => {
@@ -127,70 +128,68 @@ export const AnnotationsInput = ({
       const newObj = selectedKey ? { [selectedKey]: quantity } : {};
       const newValue = JSON.stringify(newObj);
 
-      onChange(newValue);
+      setInputValue(newValue);
 
       if (onBlur && newValue !== lastSavedValue && shouldSaveQuantityField()) {
         onBlur(newValue);
         setLastSavedValue(newValue);
       }
     },
-    [
-      config,
-      annotations,
-      onChange,
-      onBlur,
-      lastSavedValue,
-      shouldSaveQuantityField,
-    ],
+    [config, annotations, onBlur, lastSavedValue, shouldSaveQuantityField],
   );
 
   const handleNonQuantitySelectChange = useCallback(
     (selectedKey: string) => {
-      onChange(selectedKey);
+      setInputValue(selectedKey);
 
       if (onBlur && selectedKey !== lastSavedValue) {
         onBlur(selectedKey);
         setLastSavedValue(selectedKey);
       }
     },
-    [onChange, onBlur, lastSavedValue],
+    [onBlur, lastSavedValue],
   );
 
   const handleClearSelection = useCallback(() => {
     if (config?.enableQuantity) {
       const newValue = "";
-      onChange(newValue);
+      setInputValue(newValue);
       if (onBlur && newValue !== lastSavedValue) {
         onBlur(newValue);
         setLastSavedValue(newValue);
       }
     } else {
-      onChange("");
+      setInputValue("");
       if (onBlur && "" !== lastSavedValue) {
         onBlur("");
         setLastSavedValue("");
       }
     }
-  }, [config, onChange, onBlur, lastSavedValue]);
+  }, [config, onBlur, lastSavedValue]);
 
   const handleSwitchChange = useCallback(
     (checked: boolean) => {
       const newValue = checked ? "true" : "false";
-      onChange(newValue);
+      setInputValue(newValue);
       if (onBlur && newValue !== lastSavedValue) {
         onBlur(newValue);
         setLastSavedValue(newValue);
       }
     },
-    [onChange, onBlur, lastSavedValue],
+    [onBlur, lastSavedValue],
   );
+
+  useEffect(() => {
+    setInputValue(value);
+    setLastSavedValue(value);
+  }, [value]);
 
   let inputElement = null;
 
   if (config?.options && config.options.length > 0) {
     const currentValue = config?.enableQuantity
       ? getAnnotationKey(config.annotation, annotations)
-      : value;
+      : inputValue;
 
     inputElement = (
       <div className="flex items-center gap-1 grow">
@@ -230,7 +229,7 @@ export const AnnotationsInput = ({
   } else if (inputType === "boolean") {
     inputElement = (
       <Switch
-        checked={value === "true"}
+        checked={inputValue === "true"}
         onCheckedChange={handleSwitchChange}
         className={className}
       />
@@ -240,10 +239,10 @@ export const AnnotationsInput = ({
       <InlineStack gap="2" blockAlign="center" wrap="nowrap" className="grow">
         <Input
           type="number"
-          value={value}
+          value={inputValue}
           min={config?.min}
           max={config?.max}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => setInputValue(e.target.value)}
           onBlur={handleBlur}
           autoFocus={autoFocus}
           className={className}
@@ -263,7 +262,7 @@ export const AnnotationsInput = ({
           value={
             config?.enableQuantity
               ? getAnnotationKey(config.annotation, annotations)
-              : value
+              : inputValue
           }
           onChange={
             config?.enableQuantity
@@ -304,7 +303,7 @@ export const AnnotationsInput = ({
             min={config.min}
             max={config.max}
             disabled={!getAnnotationKey(config.annotation, annotations)}
-            onChange={onChange}
+            onChange={setInputValue} // tbc if quantity input will handle it internally -- TODO: GPU field does not work
             onBlur={onBlur}
             shouldSave={shouldSaveQuantityField}
           />
@@ -321,7 +320,7 @@ export const AnnotationsInput = ({
           title={dialogTitle}
           description="Enter a value for this annotation."
           placeholder={placeholder}
-          initialValue={value}
+          initialValue={inputValue}
           open={isDialogOpen}
           onCancel={handleDialogCancel}
           onConfirm={handleDialogConfirm}
