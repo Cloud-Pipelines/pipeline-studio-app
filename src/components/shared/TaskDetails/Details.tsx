@@ -165,7 +165,12 @@ const TaskDetails = ({
           </div>
         )}
 
-        {executionId && <ExecutionDetails executionId={executionId} componentSpec={componentSpec} />}
+        {executionId && (
+          <ExecutionDetails
+            executionId={executionId}
+            componentSpec={componentSpec}
+          />
+        )}
 
         {componentSpec?.metadata?.annotations?.author && (
           <div className="flex flex-col px-3 py-2">
