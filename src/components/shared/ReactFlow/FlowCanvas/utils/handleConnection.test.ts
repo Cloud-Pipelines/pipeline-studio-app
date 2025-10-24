@@ -180,7 +180,7 @@ describe("handleConnection", () => {
       handleId === "target-handle"
         ? {
             handleName: "taskInput",
-            handleType: "handle_in",
+            handleType: "handle-in",
             parentRefId: "task-1",
           }
         : undefined,
@@ -219,7 +219,7 @@ describe("handleConnection", () => {
     );
     vi.mocked(mockNodeManager.getHandleInfo).mockReturnValue({
       handleName: "",
-      handleType: "handle_in",
+      handleType: "handle-in",
       parentRefId: "task-1",
     });
 
@@ -245,14 +245,14 @@ describe("handleConnection", () => {
       if (handleId === "source-handle") {
         return {
           handleName: "output1",
-          handleType: "handle_out",
+          handleType: "handle-out",
           parentRefId: "task-1",
         };
       }
       if (handleId === "target-handle") {
         return {
           handleName: "input1",
-          handleType: "handle_in",
+          handleType: "handle-in",
           parentRefId: "task-2",
         };
       }
@@ -294,14 +294,14 @@ describe("handleConnection", () => {
       if (handleId === "source-handle") {
         return {
           handleName: "",
-          handleType: "handle_out",
+          handleType: "handle-out",
           parentRefId: "task-1",
         };
       }
       if (handleId === "target-handle") {
         return {
           handleName: "input1",
-          handleType: "handle_in",
+          handleType: "handle-in",
           parentRefId: "task-2",
         };
       }
@@ -330,14 +330,14 @@ describe("handleConnection", () => {
       if (handleId === "source-handle") {
         return {
           handleName: "output1",
-          handleType: "handle_out",
+          handleType: "handle-out",
           parentRefId: "task-1",
         };
       }
       if (handleId === "target-handle") {
         return {
           handleName: "",
-          handleType: "handle_in",
+          handleType: "handle-in",
           parentRefId: "task-2",
         };
       }
@@ -368,7 +368,7 @@ describe("handleConnection", () => {
       handleId === "source-handle"
         ? {
             handleName: "taskOutput",
-            handleType: "handle_out",
+            handleType: "handle-out",
             parentRefId: "task-1",
           }
         : undefined,
@@ -409,7 +409,7 @@ describe("handleConnection", () => {
     );
     vi.mocked(mockNodeManager.getHandleInfo).mockReturnValue({
       handleName: "", // Empty handle name
-      handleType: "handle_out",
+      handleType: "handle-out",
       parentRefId: "task-1",
     });
 
