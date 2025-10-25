@@ -54,11 +54,14 @@ export const COMPUTE_RESOURCES: AnnotationConfig[] = [
     label: "Cloud provider",
     options: CloudProviders,
   },
+  // Spot VMs stopped working in Shopify's GCP.
+  /*
   {
     annotation: "cloud-pipelines.net/launchers/kubernetes/google/use_spot_vms",
     label: "Use spot VM",
     type: "boolean",
   },
+  */
 ];
 
 interface ComputeResourcesEditorProps {
