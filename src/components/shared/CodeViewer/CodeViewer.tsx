@@ -1,5 +1,5 @@
 import { Maximize2, X as XIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +15,42 @@ interface CodeViewerProps {
 
 const DEFAULT_HEIGHT = 128;
 
+function useTrackingHash(
+  hash: string | undefined,
+  onHashChange: (oldHash: string | undefined, newHash: string) => void,
+) {
+  const hashRef = useRef(hash);
+
+  useEffect(() => {
+    const handleHashChange = (event: HashChangeEvent) => {
+      const newUrl = new URL(event.newURL);
+
+      if (hashRef.current !== newUrl.hash) {
+        onHashChange(hashRef.current, newUrl.hash);
+        hashRef.current = newUrl.hash;
+      }
+    };
+
+    if (hash === hashRef.current) {
+      return;
+    }
+
+    hashRef.current = hash;
+
+    const url = new URL(window.location.href);
+    url.hash = hash ?? "";
+
+    /**
+     * We dont want to block the main thread immediately (due to tanstack router),
+     * so scheduling for next event loop improves perceived performance
+     */
+    setTimeout(() => window.history.pushState({}, "", url.toString()));
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [hash, onHashChange]);
+}
+
 const CodeViewer = ({
   code,
   language = "yaml",
@@ -25,6 +61,22 @@ const CodeViewer = ({
   const handleEnterFullscreen = useCallback(() => {
     setIsFullscreen((prev) => !prev);
   }, []);
+
+  const handleExitFullscreen = useCallback(
+    (last: string | undefined, current: string | undefined) => {
+      if (last === "#fullscreen") {
+        setIsFullscreen(false);
+      } else if (current === "#fullscreen") {
+        setIsFullscreen(true);
+      }
+    },
+    [],
+  );
+
+  useTrackingHash(
+    isFullscreen ? "#fullscreen" : undefined,
+    handleExitFullscreen,
+  );
 
   useEffect(() => {
     const handleEscapeKey = (e: KeyboardEvent) => {
