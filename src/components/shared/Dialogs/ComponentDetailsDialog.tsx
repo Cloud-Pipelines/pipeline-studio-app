@@ -19,6 +19,7 @@ import type { ComponentReference } from "@/utils/componentSpec";
 import InfoIconButton from "../Buttons/InfoIconButton";
 import TooltipButton from "../Buttons/TooltipButton";
 import { ComponentEditorDialog } from "../ComponentEditor/ComponentEditorDialog";
+import { ComponentFavoriteToggle } from "../FavoriteComponentToggle";
 import { InfoBox } from "../InfoBox";
 import { PublishComponent } from "../ManageComponent/PublishComponent";
 import { PublishedComponentDetails } from "../ManageComponent/PublishedComponentDetails";
@@ -184,12 +185,7 @@ const ComponentDetails = ({
   const [open, setOpen] = useState(false);
   const dialogTriggerButton = trigger || <InfoIconButton />;
 
-  const onOpenChange = (open: boolean) => {
-    setOpen(open);
-    if (!open) {
-      onClose?.();
-    }
-  };
+  const componentText = component.text;
 
   const dialogContextValue = useMemo(
     () => ({
@@ -200,6 +196,17 @@ const ComponentDetails = ({
     }),
     [],
   );
+
+  const handleCloseEditDialog = useCallback(() => {
+    setIsEditDialogOpen(false);
+  }, []);
+
+  const onOpenChange = useCallback((open: boolean) => {
+    setOpen(open);
+    if (!open) {
+      onClose?.();
+    }
+  }, []);
 
   const handleEditComponent = useCallback(() => {
     setIsEditDialogOpen(true);
@@ -213,6 +220,7 @@ const ComponentDetails = ({
         variant="secondary"
         onClick={handleEditComponent}
         tooltip="Edit Component Definition"
+        key={`${displayName}-edit-button`}
       >
         <Icon name="FilePenLine" />
       </TooltipButton>
@@ -220,12 +228,6 @@ const ComponentDetails = ({
 
     return [...actions, EditButton];
   }, [actions, hasEnabledInAppEditor, handleEditComponent]);
-
-  const componentText = component.text;
-
-  const handleCloseEditDialog = useCallback(() => {
-    setIsEditDialogOpen(false);
-  }, []);
 
   return (
     <>
@@ -245,6 +247,7 @@ const ComponentDetails = ({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 mr-5">
               <span>{displayName}</span>
+              <ComponentFavoriteToggle component={component} />
             </DialogTitle>
           </DialogHeader>
 

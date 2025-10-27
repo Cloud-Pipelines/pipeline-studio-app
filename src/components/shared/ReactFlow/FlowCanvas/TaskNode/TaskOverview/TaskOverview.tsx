@@ -8,13 +8,16 @@ import {
 
 import type { TooltipButtonProps } from "@/components/shared/Buttons/TooltipButton";
 import TooltipButton from "@/components/shared/Buttons/TooltipButton";
+import { ComponentDetailsDialog } from "@/components/shared/Dialogs";
 import { ComponentFavoriteToggle } from "@/components/shared/FavoriteComponentToggle";
 import { StatusIcon } from "@/components/shared/Status";
 import {
   TaskDetails,
   TaskImplementation,
 } from "@/components/shared/TaskDetails";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Text } from "@/components/ui/typography";
 import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
 import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
 import { isGraphImplementation } from "@/utils/componentSpec";
@@ -56,13 +59,20 @@ const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
   const executionId = details?.child_task_execution_ids?.[taskId];
 
   return (
-    <div className="flex flex-col h-full" data-context-panel="task-overview">
-      <div className="flex items-center gap-2 px-2 pb-2 font-semibold text-lg">
-        {name} <ComponentFavoriteToggle component={taskSpec.componentRef} />
-        {runStatus && <StatusIcon status={runStatus} tooltip label="task" />}
-      </div>
+    <BlockStack className="h-full" data-context-panel="task-overview">
+      <InlineStack gap="2" blockAlign="center" className="px-2 pb-2">
+        <Text size="lg" weight="semibold">
+          {name}
+        </Text>
+        <ComponentFavoriteToggle component={taskSpec.componentRef} hideDelete />
+        <ComponentDetailsDialog
+          displayName={name}
+          component={taskSpec.componentRef}
+        />
+        {!!runStatus && <StatusIcon status={runStatus} tooltip label="task" />}
+      </InlineStack>
 
-      <div className="flex flex-col px-4 gap-4 overflow-y-auto pb-4 h-full">
+      <div className="px-4 overflow-y-auto pb-4 h-full w-full">
         <Tabs defaultValue="io" className="h-full">
           <TabsList className="mb-2">
             <TabsTrigger value="io" className="flex-1">
@@ -91,7 +101,7 @@ const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
               </TabsTrigger>
             )}
           </TabsList>
-          <TabsContent value="details" className="h-full">
+          <TabsContent value="details">
             <TaskDetails
               displayName={name}
               executionId={executionId}
@@ -123,7 +133,7 @@ const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
               ))}
             />
           </TabsContent>
-          <TabsContent value="io" className="h-full">
+          <TabsContent value="io">
             {!readOnly && (
               <>
                 <ArgumentsSection
@@ -144,7 +154,7 @@ const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
             )}
           </TabsContent>
           {readOnly && !isSubgraph && (
-            <TabsContent value="logs" className="h-full">
+            <TabsContent value="logs">
               {!!executionId && (
                 <div className="flex w-full justify-end pr-4">
                   <OpenLogsInNewWindowLink
@@ -163,7 +173,7 @@ const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
           )}
         </Tabs>
       </div>
-    </div>
+    </BlockStack>
   );
 };
 
