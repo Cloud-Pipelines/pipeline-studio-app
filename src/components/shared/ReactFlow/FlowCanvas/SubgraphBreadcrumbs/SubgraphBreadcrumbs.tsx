@@ -1,6 +1,7 @@
 import { Home } from "lucide-react";
 import { Fragment } from "react";
 
+import { ShareSubgraphButton } from "@/components/shared/ShareSubgraphButton";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -83,10 +84,13 @@ export const SubgraphBreadcrumbs = () => {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="text-xs text-gray-500">
-        {currentSubgraphPath.length - 1} level
-        {currentSubgraphPath.length - 1 !== 1 ? "s" : ""} deep
-      </div>
+      <InlineStack gap="2" blockAlign="center">
+        <div className="text-xs text-gray-500">
+          {currentSubgraphPath.length - 1} level
+          {currentSubgraphPath.length - 1 !== 1 ? "s" : ""} deep
+        </div>
+        <ShareSubgraphButton />
+      </InlineStack>
     </InlineStack>
   );
 };

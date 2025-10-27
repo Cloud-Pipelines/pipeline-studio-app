@@ -10,6 +10,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { InlineStack } from "@/components/ui/layout";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSubgraphNavigationFromUrl } from "@/hooks/useSubgraphNavigationFromUrl";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
@@ -35,6 +36,8 @@ const PipelineDetails = () => {
   const notify = useToastNotification();
 
   const [isYamlOpen, setIsYamlOpen] = useState(false);
+
+  useSubgraphNavigationFromUrl(false, undefined, true);
 
   // Utility function to convert TypeSpecType to string
   const typeSpecToString = (typeSpec?: TypeSpecType): string => {

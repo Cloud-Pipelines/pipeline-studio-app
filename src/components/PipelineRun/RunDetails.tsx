@@ -1,8 +1,10 @@
+import { useSearch } from "@tanstack/react-router";
 import { Frown, Videotape } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
 import { useCheckComponentSpecFromPath } from "@/hooks/useCheckComponentSpecFromPath";
+import { useSubgraphNavigationFromUrl } from "@/hooks/useSubgraphNavigationFromUrl";
 import { useUserDetails } from "@/hooks/useUserDetails";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
@@ -27,12 +29,14 @@ import { RerunPipelineButton } from "./components/RerunPipelineButton";
 export const RunDetails = () => {
   const { configured } = useBackend();
   const { componentSpec } = useComponentSpec();
+  const search = useSearch({ strict: false });
   const {
     rootDetails: details,
     rootState: state,
     runId,
     isLoading,
     error,
+    currentExecutionId,
   } = useExecutionData();
   const { data: currentUserDetails } = useUserDetails();
 
@@ -49,6 +53,19 @@ export const RunDetails = () => {
 
   const isRunCreator =
     currentUserDetails?.id && metadata?.created_by === currentUserDetails.id;
+  const hasUrlSubgraphPath =
+    search !== null &&
+    typeof search === "object" &&
+    "subgraphPath" in search &&
+    typeof (search as Record<string, unknown>).subgraphPath === "string";
+
+  const isLoadingForNavigation = isLoading || !details || !state;
+  const { isNavigatingToUrl } = useSubgraphNavigationFromUrl(
+    isLoadingForNavigation,
+    currentExecutionId,
+    false,
+  );
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,6 +87,21 @@ export const RunDetails = () => {
     fetchData();
   }, [runId]);
 
+  const showNavigatingMessage = isNavigatingToUrl || hasUrlSubgraphPath;
+
+  if (showNavigatingMessage) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="flex flex-col items-center gap-3">
+          <Spinner className="w-8 h-8" />
+          <p className="text-sm text-muted-foreground">
+            Navigating to subgraph...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (error || !details || !state || !componentSpec) {
     return (
       <div className="flex flex-col gap-8 items-center justify-center h-full">
@@ -82,8 +114,10 @@ export const RunDetails = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Spinner className="mr-2" />
-        <p className="text-gray-500">Loading run details...</p>
+        <div className="flex flex-col items-center gap-3">
+          <Spinner className="w-8 h-8" />
+          <p className="text-sm text-muted-foreground">Loading run details...</p>
+        </div>
       </div>
     );
   }
