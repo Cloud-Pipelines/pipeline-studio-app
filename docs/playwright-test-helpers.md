@@ -80,7 +80,7 @@ await expect(node).toHaveClass(/\bselected\b/);
 ```typescript
 // Wait for specific context panel to appear
 await waitForContextPanel(page, "pipeline-details");
-await waitForContextPanel(page, "task-configuration");
+await waitForContextPanel(page, "task-overview");
 
 // Locate context panel container
 const container = locateContextPanelContainer(page);
@@ -139,7 +139,7 @@ test("should place and select nodes", async ({ page }) => {
   // Test selection
   await node.click();
   await expect(node).toHaveClass(/\bselected\b/);
-  await waitForContextPanel(page, "task-configuration");
+  await waitForContextPanel(page, "task-overview");
 });
 ```
 

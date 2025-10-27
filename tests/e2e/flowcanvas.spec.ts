@@ -62,7 +62,7 @@ test.describe("FlowCanvas Basic Functionality", () => {
 
     // Verify the node is selected and the task configuration panel is visible
     await expect(node).toHaveClass(/\bselected\b/);
-    await waitForContextPanel(page, "task-configuration");
+    await waitForContextPanel(page, "task-overview");
   });
 
   test("should connect two nodes satisfying the required field requirements", async ({

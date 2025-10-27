@@ -2,6 +2,7 @@ import { useStore } from "@xyflow/react";
 import { CircleFadingArrowUp, CopyIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import type { TooltipButtonProps } from "@/components/shared/Buttons/TooltipButton";
 import { ComponentEditorDialog } from "@/components/shared/ComponentEditor/ComponentEditorDialog";
 import { PublishedComponentBadge } from "@/components/shared/ManageComponent/PublishedComponentBadge";
 import { trimDigest } from "@/components/shared/ManageComponent/utils/digest";
@@ -22,8 +23,7 @@ import {
   type UpdateOverlayMessage,
   useNodesOverlay,
 } from "../../../NodesOverlay/NodesOverlayProvider";
-import TaskConfiguration from "../TaskConfiguration";
-import type { ButtonPropsWithTooltip } from "../TaskConfiguration/TaskConfiguration";
+import TaskOverview from "../TaskOverview";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
 import { UpgradeNodePopover } from "./UpgradeNodePopover";
@@ -110,7 +110,7 @@ const TaskNodeCard = () => {
   }, []);
 
   const taskConfigMarkup = useMemo(() => {
-    const actions: Array<ButtonPropsWithTooltip> = [];
+    const actions: Array<TooltipButtonProps> = [];
 
     if (!readOnly) {
       actions.push(
@@ -164,9 +164,7 @@ const TaskNodeCard = () => {
       });
     }
 
-    return (
-      <TaskConfiguration taskNode={taskNode} key={nodeId} actions={actions} />
-    );
+    return <TaskOverview taskNode={taskNode} key={nodeId} actions={actions} />;
   }, [
     nodeId,
     readOnly,
