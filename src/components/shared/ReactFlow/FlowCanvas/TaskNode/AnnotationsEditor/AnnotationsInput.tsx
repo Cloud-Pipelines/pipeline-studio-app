@@ -1,5 +1,11 @@
 import { AlertTriangle } from "lucide-react";
-import { type ChangeEvent, useCallback, useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { MultilineTextInputDialog } from "@/components/shared/Dialogs/MultilineTextInputDialog";
 import { Button } from "@/components/ui/button";
@@ -197,10 +203,22 @@ export const AnnotationsInput = ({
     }
   }, [onBlur, shouldSaveQuantityField, lastSavedValue, inputValue, config]);
 
+  const handleBlurRef = useRef(handleBlur);
+
+  useEffect(() => {
+    handleBlurRef.current = handleBlur;
+  }, [handleBlur]);
+
   useEffect(() => {
     setInputValue(value);
     setLastSavedValue(value);
   }, [value]);
+
+  useEffect(() => {
+    return () => {
+      handleBlurRef.current();
+    };
+  }, []);
 
   let inputElement = null;
 
