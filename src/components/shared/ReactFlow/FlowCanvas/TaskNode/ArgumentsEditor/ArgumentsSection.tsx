@@ -1,3 +1,5 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Paragraph } from "@/components/ui/typography";
 import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 
 import { ArgumentsEditor } from "../ArgumentsEditor";
@@ -14,16 +16,16 @@ const ArgumentsSection = ({
   disabled = false,
 }: ArgumentsSectionProps) => {
   return (
-    <div className="flex-1 overflow-y-auto py-2">
-      <p className="text-sm text-muted-foreground mb-3">
+    <ScrollArea>
+      <Paragraph size="sm" tone="subdued" className="mb-4">
         Configure the arguments for this task node.
-      </p>
+      </Paragraph>
       <ArgumentsEditor
         taskSpec={taskSpec}
         setArguments={setArguments}
         disabled={disabled}
       />
-    </div>
+    </ScrollArea>
   );
 };
 
