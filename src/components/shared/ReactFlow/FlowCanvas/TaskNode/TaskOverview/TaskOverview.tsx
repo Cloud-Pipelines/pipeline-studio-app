@@ -6,19 +6,15 @@ import {
   Parentheses,
 } from "lucide-react";
 
+import type { TooltipButtonProps } from "@/components/shared/Buttons/TooltipButton";
+import TooltipButton from "@/components/shared/Buttons/TooltipButton";
 import { ComponentFavoriteToggle } from "@/components/shared/FavoriteComponentToggle";
 import { StatusIcon } from "@/components/shared/Status";
 import {
   TaskDetails,
   TaskImplementation,
 } from "@/components/shared/TaskDetails";
-import { Button, type ButtonProps } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
 import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
 import { isGraphImplementation } from "@/utils/componentSpec";
@@ -29,15 +25,12 @@ import IOSection from "./IOSection/IOSection";
 import Logs, { OpenLogsInNewWindowLink } from "./logs";
 import OutputsList from "./OutputsList";
 
-export interface ButtonPropsWithTooltip extends ButtonProps {
-  tooltip?: string;
-}
-interface TaskConfigurationProps {
+interface TaskOverviewProps {
   taskNode: TaskNodeContextType;
-  actions?: ButtonPropsWithTooltip[];
+  actions?: TooltipButtonProps[];
 }
 
-const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
+const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
   const { name, taskSpec, taskId, state, callbacks } = taskNode;
 
   const executionData = useExecutionDataOptional();
@@ -50,7 +43,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
 
   if (!componentSpec) {
     console.error(
-      "TaskConfiguration called with missing taskSpec.componentRef.spec",
+      "TaskOverview called with missing taskSpec.componentRef.spec",
     );
     return null;
   }
@@ -59,10 +52,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
   const executionId = details?.child_task_execution_ids?.[taskId];
 
   return (
-    <div
-      className="flex flex-col h-full"
-      data-context-panel="task-configuration"
-    >
+    <div className="flex flex-col h-full" data-context-panel="task-overview">
       <div className="flex items-center gap-2 px-2 pb-2 font-semibold text-lg">
         {name} <ComponentFavoriteToggle component={taskSpec.componentRef} />
         {runStatus && <StatusIcon status={runStatus} tooltip label="task" />}
@@ -125,12 +115,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
                 },
               ]}
               actions={actions?.map((action) => (
-                <Tooltip key={action.tooltip}>
-                  <TooltipTrigger asChild>
-                    <Button {...action} />
-                  </TooltipTrigger>
-                  <TooltipContent>{action.tooltip}</TooltipContent>
-                </Tooltip>
+                <TooltipButton {...action} key={action.tooltip?.toString()} />
               ))}
             />
           </TabsContent>
@@ -184,4 +169,4 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
   );
 };
 
-export default TaskConfiguration;
+export default TaskOverview;
