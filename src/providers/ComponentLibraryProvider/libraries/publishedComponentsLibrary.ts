@@ -68,14 +68,12 @@ export class PublishedComponentsLibrary implements Library {
   }
 
   async hasComponent(component: ComponentReference): Promise<boolean> {
-    if (!isDiscoverableComponentReference(component)) {
-      throw new InvalidComponentReferenceError(component);
+    const isDiscoverable = isDiscoverableComponentReference(component);
+    if (!isDiscoverable) {
+      return false;
     }
 
-    if (
-      isDiscoverableComponentReference(component) &&
-      this.#knownDigests.has(component.digest)
-    ) {
+    if (isDiscoverable && this.#knownDigests.has(component.digest)) {
       return true;
     }
 
