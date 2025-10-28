@@ -22,6 +22,7 @@ const COMMON_ANNOTATIONS: AnnotationConfig[] = [
   {
     annotation: "editor.position",
     label: "Node position",
+    type: "json",
   },
   {
     annotation: "shopify.io/showback_cost_owner_ref",
