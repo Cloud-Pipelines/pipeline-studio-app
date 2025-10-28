@@ -6,6 +6,8 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import { BlockStack } from "@/components/ui/layout";
+import { Heading } from "@/components/ui/typography";
 import type { ArgumentInput } from "@/types/arguments";
 import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 
@@ -44,15 +46,18 @@ export const ArgumentsEditor = ({
   };
 
   return (
-    <div className="h-auto flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
-      {argumentInputs.map((argument) => (
-        <ArgumentInputField
-          key={argument.key}
-          argument={argument}
-          onSave={handleArgumentSave}
-          disabled={disabled}
-        />
-      ))}
-    </div>
+    <BlockStack>
+      <Heading level={1}>Inputs</Heading>
+      <BlockStack gap="2" className="h-auto max-h-[60vh] overflow-y-auto">
+        {argumentInputs.map((argument) => (
+          <ArgumentInputField
+            key={argument.key}
+            argument={argument}
+            onSave={handleArgumentSave}
+            disabled={disabled}
+          />
+        ))}
+      </BlockStack>
+    </BlockStack>
   );
 };
