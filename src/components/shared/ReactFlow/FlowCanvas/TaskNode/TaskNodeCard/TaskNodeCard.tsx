@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
+import { isCacheDisabled } from "@/utils/cache";
 import { getSubgraphDescription, isSubgraph } from "@/utils/subgraphUtils";
 
 import {
@@ -67,6 +68,8 @@ const TaskNodeCard = () => {
     () => getSubgraphDescription(taskSpec),
     [taskSpec],
   );
+
+  const disabledCache = isCacheDisabled(taskSpec);
 
   const onNotify = useCallback((message: NotifyMessage) => {
     switch (message.type) {
@@ -244,10 +247,18 @@ const TaskNodeCard = () => {
       >
         <CardHeader className="border-b border-slate-200 px-2 py-2.5 flex flex-row justify-between items-start">
           <BlockStack>
-            <InlineStack gap="2" blockAlign="center">
+            <InlineStack gap="2" blockAlign="center" wrap="nowrap">
               {isSubgraphNode && isSubgraphNavigationEnabled && (
                 <QuickTooltip content={`Subgraph: ${subgraphDescription}`}>
                   <Icon name="Workflow" size="sm" className="text-blue-600" />
+                </QuickTooltip>
+              )}
+              {disabledCache && !readOnly && (
+                <QuickTooltip
+                  content="Cache Disabled"
+                  className="whitespace-nowrap"
+                >
+                  <Icon name="ZapOff" size="sm" className="text-orange-400" />
                 </QuickTooltip>
               )}
               <CardTitle className="break-words text-left text-xs text-slate-900">

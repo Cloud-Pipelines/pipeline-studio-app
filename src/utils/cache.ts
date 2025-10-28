@@ -8,6 +8,9 @@
 
 import yaml from "js-yaml";
 
+import type { TaskSpec } from "./componentSpec";
+import { ISO8601_DURATION_ZERO_DAYS } from "./constants";
+
 const httpGetDataWithCache = async <T>(
   url: string,
   transformer: (buffer: ArrayBuffer) => T,
@@ -73,4 +76,25 @@ export function loadObjectFromYamlData(buffer: ArrayBuffer): object {
     return obj;
   }
   throw Error(`Expected a YAML-encoded object, but got "${typeof obj}"`);
+}
+
+export function isCacheDisabled(taskSpec?: TaskSpec): boolean {
+  return (
+    taskSpec?.executionOptions?.cachingStrategy?.maxCacheStaleness ===
+    ISO8601_DURATION_ZERO_DAYS
+  );
+}
+
+export function removeCachingStrategyFromSpec(taskSpec: TaskSpec): TaskSpec {
+  if (taskSpec.executionOptions?.cachingStrategy) {
+    const updatedExecutionOptions = {
+      ...taskSpec.executionOptions,
+    };
+    delete updatedExecutionOptions.cachingStrategy;
+    return {
+      ...taskSpec,
+      executionOptions: updatedExecutionOptions,
+    };
+  }
+  return taskSpec;
 }
