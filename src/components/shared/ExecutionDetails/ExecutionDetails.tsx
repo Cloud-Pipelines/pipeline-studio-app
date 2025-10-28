@@ -10,6 +10,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBackend } from "@/providers/BackendProvider";
 import { useFetchContainerExecutionState } from "@/services/executionService";
+import {
+  type ComponentSpec,
+  isGraphImplementation,
+} from "@/utils/componentSpec";
 import { EXIT_CODE_OOM } from "@/utils/constants";
 import { formatDate, formatDuration } from "@/utils/date";
 
@@ -17,10 +21,17 @@ import { InfoBox } from "../InfoBox";
 
 interface ExecutionDetailsProps {
   executionId: string;
+  componentSpec?: ComponentSpec;
 }
 
-export const ExecutionDetails = ({ executionId }: ExecutionDetailsProps) => {
+export const ExecutionDetails = ({
+  executionId,
+  componentSpec,
+}: ExecutionDetailsProps) => {
   const { backendUrl } = useBackend();
+
+  const isSubgraph =
+    componentSpec && isGraphImplementation(componentSpec.implementation);
 
   const {
     data: containerState,
@@ -63,86 +74,92 @@ export const ExecutionDetails = ({ executionId }: ExecutionDetailsProps) => {
             </span>
           </div>
 
-          {isLoadingContainerState && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-3 w-12" />
-                <Skeleton className="h-3 w-32" />
-              </div>
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-3 w-40" />
-              </div>
-            </div>
-          )}
-
-          {containerStateError && (
-            <InfoBox title="Failed to load container state" variant="error">
-              {containerStateError.message}
-            </InfoBox>
-          )}
-
-          {!!containerState?.exit_code && (
-            <div className="flex flex-wrap items-center gap-1">
-              <span className="font-medium text-xs text-destructive">
-                Exit Code:
-              </span>
-              <span className="text-xs text-destructive">
-                {containerState.exit_code}
-              </span>
-              {containerState.exit_code === EXIT_CODE_OOM && (
-                <span className="text-xs text-destructive">
-                  (Out of Memory)
-                </span>
+          {!isSubgraph && (
+            <>
+              {isLoadingContainerState && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-40" />
+                  </div>
+                </div>
               )}
-            </div>
-          )}
 
-          {containerState?.started_at && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-xs text-foreground min-w-fit">
-                Started:
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {formatDate(containerState.started_at)}
-              </span>
-            </div>
-          )}
+              {containerStateError && (
+                <InfoBox title="Failed to load container state" variant="error">
+                  {containerStateError.message}
+                </InfoBox>
+              )}
 
-          {containerState?.ended_at && containerState?.started_at && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-xs text-foreground min-w-fit">
-                Completed in:
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {formatDuration(
-                  containerState.started_at,
-                  containerState.ended_at,
+              {!!containerState?.exit_code && (
+                <div className="flex flex-wrap items-center gap-1">
+                  <span className="font-medium text-xs text-destructive">
+                    Exit Code:
+                  </span>
+                  <span className="text-xs text-destructive">
+                    {containerState.exit_code}
+                  </span>
+                  {containerState.exit_code === EXIT_CODE_OOM && (
+                    <span className="text-xs text-destructive">
+                      (Out of Memory)
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {containerState?.started_at && (
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-xs text-foreground min-w-fit">
+                    Started:
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(containerState.started_at)}
+                  </span>
+                </div>
+              )}
+
+              {containerState?.ended_at && containerState?.started_at && (
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-xs text-foreground min-w-fit">
+                    Completed in:
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDuration(
+                      containerState.started_at,
+                      containerState.ended_at,
+                    )}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    ({formatDate(containerState.ended_at)})
+                  </span>
+                </div>
+              )}
+
+              {podName && (
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-xs text-foreground min-w-fit">
+                    Pod Name:
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {podName}
+                  </span>
+                </div>
+              )}
+
+              {!isLoadingContainerState &&
+                !containerState &&
+                !containerStateError && (
+                  <div className="text-xs text-muted-foreground">
+                    Container state not available
+                  </div>
                 )}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                ({formatDate(containerState.ended_at)})
-              </span>
-            </div>
+            </>
           )}
-
-          {podName && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-xs text-foreground min-w-fit">
-                Pod Name:
-              </span>
-              <span className="text-xs text-muted-foreground">{podName}</span>
-            </div>
-          )}
-
-          {!isLoadingContainerState &&
-            !containerState &&
-            !containerStateError && (
-              <div className="text-xs text-muted-foreground">
-                Container state not available
-              </div>
-            )}
         </CollapsibleContent>
       </Collapsible>
     </div>

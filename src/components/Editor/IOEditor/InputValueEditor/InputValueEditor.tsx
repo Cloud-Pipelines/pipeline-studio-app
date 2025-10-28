@@ -118,7 +118,14 @@ export const InputValueEditor = ({
     (newName: string) => {
       setInputName(newName);
 
-      if (checkNameCollision(newName, input.name, componentSpec, "inputs")) {
+      if (
+        checkNameCollision(
+          newName.trim(),
+          input.name.trim(),
+          componentSpec,
+          "inputs",
+        )
+      ) {
         setValidationError("An input with this name already exists");
         return;
       }
@@ -131,7 +138,7 @@ export const InputValueEditor = ({
   const hasChanges = useCallback(() => {
     return (
       inputValue !== initialInputValue ||
-      inputName !== input.name ||
+      inputName.trim() !== input.name ||
       inputType !== (input.type?.toString() ?? "any") ||
       inputOptional !== initialIsOptional
     );

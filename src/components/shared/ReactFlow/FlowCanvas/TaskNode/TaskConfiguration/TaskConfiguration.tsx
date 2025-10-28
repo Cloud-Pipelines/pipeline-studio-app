@@ -19,7 +19,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
 import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
+import { isGraphImplementation } from "@/utils/componentSpec";
 
 import { AnnotationsSection } from "../AnnotationsEditor/AnnotationsSection";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
@@ -38,6 +40,9 @@ interface TaskConfigurationProps {
 const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
   const { name, taskSpec, taskId, state, callbacks } = taskNode;
 
+  const executionData = useExecutionDataOptional();
+  const details = executionData?.details;
+
   const { readOnly, runStatus } = state;
   const disabled = !!runStatus;
 
@@ -50,7 +55,8 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
     return null;
   }
 
-  const executionId = taskSpec.annotations?.executionId as string;
+  const isSubgraph = isGraphImplementation(componentSpec.implementation);
+  const executionId = details?.child_task_execution_ids?.[taskId];
 
   return (
     <div
@@ -78,7 +84,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
               Details
             </TabsTrigger>
 
-            {readOnly && (
+            {readOnly && !isSubgraph && (
               <TabsTrigger value="logs" className="flex-1">
                 <LogsIcon className="h-4 w-4" />
                 Logs
@@ -148,7 +154,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
               />
             )}
           </TabsContent>
-          {readOnly && (
+          {readOnly && !isSubgraph && (
             <TabsContent value="logs" className="h-full">
               {!!executionId && (
                 <div className="flex w-full justify-end pr-4">

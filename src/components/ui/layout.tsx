@@ -32,6 +32,7 @@ const blockStackVariants = cva("flex flex-col w-full", {
       "2": "gap-2",
       "3": "gap-3",
       "4": "gap-4",
+      "8": "gap-8",
     },
   },
 });

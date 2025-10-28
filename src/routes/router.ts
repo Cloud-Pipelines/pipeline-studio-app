@@ -11,8 +11,11 @@ import { BASE_URL, IS_GITHUB_PAGES } from "@/utils/constants";
 
 import RootLayout from "../components/layout/RootLayout";
 import Editor from "./Editor";
+import ErrorPage from "./ErrorPage";
 import Home from "./Home";
+import NotFoundPage from "./NotFoundPage";
 import PipelineRun from "./PipelineRun";
+import { QuickStartPage } from "./QuickStart";
 
 declare module "@tanstack/react-router" {
   interface Register {
@@ -22,8 +25,10 @@ declare module "@tanstack/react-router" {
 
 export const EDITOR_PATH = "/editor";
 export const RUNS_BASE_PATH = "/runs";
+const QUICK_START_PATH = "/quick-start";
 export const APP_ROUTES = {
   HOME: "/",
+  QUICK_START: QUICK_START_PATH,
   PIPELINE_EDITOR: `${EDITOR_PATH}/$name`,
   RUN_DETAIL: `${RUNS_BASE_PATH}/$id`,
   RUNS: RUNS_BASE_PATH,
@@ -32,6 +37,8 @@ export const APP_ROUTES = {
 
 const rootRoute = createRootRoute({
   component: Outlet,
+  errorComponent: ErrorPage,
+  notFoundComponent: NotFoundPage,
 });
 
 const mainLayout = createRoute({
@@ -44,6 +51,12 @@ const indexRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: APP_ROUTES.HOME,
   component: Home,
+});
+
+const quickStartRoute = createRoute({
+  getParentRoute: () => mainLayout,
+  path: APP_ROUTES.QUICK_START,
+  component: QuickStartPage,
 });
 
 const editorRoute = createRoute({
@@ -74,6 +87,7 @@ export const runDetailRoute = createRoute({
 
 const appRouteTree = mainLayout.addChildren([
   indexRoute,
+  quickStartRoute,
   editorRoute,
   runDetailRoute,
 ]);

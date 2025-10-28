@@ -7,12 +7,11 @@ import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
 import { ContextPanelProvider } from "@/providers/ContextPanelProvider";
 
 import { CollapsibleContextPanel } from "../shared/ContextPanel/CollapsibleContextPanel";
-import { RootExecutionStatusProvider } from "./RootExecutionStatusProvider";
 import { RunDetails } from "./RunDetails";
 
 const GRID_SIZE = 10;
 
-const PipelineRunPage = ({ pipelineRunId }: { pipelineRunId: string }) => {
+const PipelineRunPage = () => {
   const [flowConfig, setFlowConfig] = useState<ReactFlowProps>({
     snapGrid: [GRID_SIZE, GRID_SIZE],
     snapToGrid: true,
@@ -32,29 +31,27 @@ const PipelineRunPage = ({ pipelineRunId }: { pipelineRunId: string }) => {
   );
 
   return (
-    <RootExecutionStatusProvider pipelineRunId={pipelineRunId}>
-      <ContextPanelProvider defaultContent={<RunDetails />}>
-        <ComponentLibraryProvider>
-          <InlineStack className="w-full h-full" align="start">
-            <BlockStack className="flex-1 h-full">
-              <div className="reactflow-wrapper relative">
-                <FlowCanvas {...flowConfig} readOnly>
-                  <MiniMap position="bottom-left" pannable />
-                  <FlowControls
-                    className="ml-[224px]! mb-[24px]!"
-                    config={flowConfig}
-                    updateConfig={updateFlowConfig}
-                    showInteractive={false}
-                  />
-                  <Background gap={GRID_SIZE} className="bg-slate-50!" />
-                </FlowCanvas>
-              </div>
-            </BlockStack>
-            <CollapsibleContextPanel />
-          </InlineStack>
-        </ComponentLibraryProvider>
-      </ContextPanelProvider>
-    </RootExecutionStatusProvider>
+    <ContextPanelProvider defaultContent={<RunDetails />}>
+      <ComponentLibraryProvider>
+        <InlineStack className="w-full h-full" align="start">
+          <BlockStack className="flex-1 h-full">
+            <div className="reactflow-wrapper relative">
+              <FlowCanvas {...flowConfig} readOnly>
+                <MiniMap position="bottom-left" pannable />
+                <FlowControls
+                  className="ml-[224px]! mb-[24px]!"
+                  config={flowConfig}
+                  updateConfig={updateFlowConfig}
+                  showInteractive={false}
+                />
+                <Background gap={GRID_SIZE} className="bg-slate-50!" />
+              </FlowCanvas>
+            </div>
+          </BlockStack>
+          <CollapsibleContextPanel />
+        </InlineStack>
+      </ComponentLibraryProvider>
+    </ContextPanelProvider>
   );
 };
 
