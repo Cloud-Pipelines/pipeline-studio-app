@@ -12,6 +12,19 @@ export const UndoRedo = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      const isInputFocused =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable ||
+          target.closest('[data-slot="input"]'));
+
+      // Skip canvas-level undo/redo if an input is focused
+      if (isInputFocused) {
+        return;
+      }
+
       if (event.ctrlKey || event.metaKey) {
         if (event.key === KEYBOARD_SHORTCUTS.UNDO && !event.shiftKey) {
           event.preventDefault();

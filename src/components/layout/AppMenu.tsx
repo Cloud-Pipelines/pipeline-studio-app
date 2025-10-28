@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import logoAsset from "@/assets/logo.png";
 import ImportPipeline from "@/components/shared/ImportPipeline";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
@@ -21,7 +22,7 @@ const AppMenu = () => {
         <div className="flex flex-row gap-2 items-center">
           <Link to="/">
             <img
-              src="/beach.png"
+              src={logoAsset}
               alt="logo"
               className="w-10 h-10 filter invert cursor-pointer"
             />

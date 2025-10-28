@@ -16,13 +16,16 @@ import type { ComponentType, DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
+import { BlockStack } from "@/components/ui/layout";
 import useComponentSpecToEdges from "@/hooks/useComponentSpecToEdges";
 import useComponentUploader from "@/hooks/useComponentUploader";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
 import { useCopyPaste } from "@/hooks/useCopyPaste";
 import { useGhostNode } from "@/hooks/useGhostNode";
 import { useHintNode } from "@/hooks/useHintNode";
+import { useIOSelectionPersistence } from "@/hooks/useIOSelectionPersistence";
 import { useNodeCallbacks } from "@/hooks/useNodeCallbacks";
+import { useSubgraphKeyboardNavigation } from "@/hooks/useSubgraphKeyboardNavigation";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
@@ -37,6 +40,7 @@ import {
 } from "@/utils/componentSpec";
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
 import createNodesFromComponentSpec from "@/utils/nodes/createNodesFromComponentSpec";
+import { getSubgraphComponentSpec } from "@/utils/subgraphUtils";
 
 import ComponentDuplicateDialog from "../../Dialogs/ComponentDuplicateDialog";
 import { useNodesOverlay } from "../NodesOverlay/NodesOverlayProvider";
@@ -48,6 +52,7 @@ import GhostNode from "./GhostNode/GhostNode";
 import HintNode from "./GhostNode/HintNode";
 import IONode from "./IONode/IONode";
 import SelectionToolbar from "./SelectionToolbar";
+import { SubgraphBreadcrumbs } from "./SubgraphBreadcrumbs/SubgraphBreadcrumbs";
 import TaskNode from "./TaskNode/TaskNode";
 import type { NodesAndEdges } from "./types";
 import { addAndConnectNode } from "./utils/addAndConnectNode";
@@ -100,11 +105,26 @@ const FlowCanvas = ({
   const initialCanvasLoaded = useRef(false);
 
   const { clearContent } = useContextPanel();
+
+  useSubgraphKeyboardNavigation();
   const { setReactFlowInstance: setReactFlowInstanceForOverlay } =
     useNodesOverlay();
-  const { componentSpec, setComponentSpec, graphSpec, updateGraphSpec } =
-    useComponentSpec();
-  const { edges, onEdgesChange } = useComponentSpecToEdges(componentSpec);
+  const {
+    componentSpec,
+    setComponentSpec,
+    graphSpec,
+    updateGraphSpec,
+    currentSubgraphPath,
+  } = useComponentSpec();
+  const { preserveIOSelectionOnSpecChange, resetPrevSpec } =
+    useIOSelectionPersistence();
+
+  const currentSubgraphSpec = useMemo(
+    () => getSubgraphComponentSpec(componentSpec, currentSubgraphPath),
+    [componentSpec, currentSubgraphPath],
+  );
+
+  const { edges, onEdgesChange } = useComponentSpecToEdges(currentSubgraphSpec);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 
   const isConnecting = useConnection((connection) => connection.inProgress);
@@ -141,6 +161,18 @@ const FlowCanvas = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      const isInputFocused =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable ||
+        target.closest('[data-slot="input"]');
+
+      // Skip canvas shortcuts if an input is focused
+      if (isInputFocused) {
+        return;
+      }
+
       if (event.key === "Shift") {
         setShiftKeyPressed(true);
       }
@@ -266,7 +298,6 @@ const FlowCanvas = ({
   );
 
   const nodeCallbacks = useNodeCallbacks({
-    reactFlowInstance,
     triggerConfirmation,
     onElementsRemove,
     updateOrAddNodes,
@@ -699,7 +730,12 @@ const FlowCanvas = ({
 
   const updateReactFlow = useCallback(
     (newComponentSpec: ComponentSpec) => {
-      const newNodes = createNodesFromComponentSpec(newComponentSpec, nodeData);
+      const subgraphSpec = getSubgraphComponentSpec(
+        newComponentSpec,
+        currentSubgraphPath,
+        notify,
+      );
+      const newNodes = createNodesFromComponentSpec(subgraphSpec, nodeData);
 
       const updatedNewNodes = newNodes.map((node) => ({
         ...node,
@@ -718,21 +754,31 @@ const FlowCanvas = ({
         return updatedNodes;
       });
     },
-    [setNodes, nodeData, replaceTarget],
+    [setNodes, nodeData, replaceTarget, currentSubgraphPath],
   );
 
   useEffect(() => {
-    // Update ReactFlow based on the component spec
+    preserveIOSelectionOnSpecChange(componentSpec);
     updateReactFlow(componentSpec);
     initialCanvasLoaded.current = true;
-  }, [componentSpec, replaceTarget]);
+  }, [componentSpec, currentSubgraphPath, preserveIOSelectionOnSpecChange]);
+
+  useEffect(() => {
+    reactFlowInstance?.fitView({
+      maxZoom: 1,
+      duration: 300,
+    });
+  }, [currentSubgraphPath, reactFlowInstance]);
+
+  // Reset when loading a new component file
+  useEffect(() => {
+    resetPrevSpec();
+  }, [componentSpec?.name, resetPrevSpec]);
 
   const fitView = useCallback(() => {
-    if (reactFlowInstance) {
-      reactFlowInstance.fitView({
-        maxZoom: 1,
-      });
-    }
+    reactFlowInstance?.fitView({
+      maxZoom: 1,
+    });
   }, [reactFlowInstance]);
 
   useScheduleExecutionOnceWhenConditionMet(
@@ -828,7 +874,8 @@ const FlowCanvas = ({
   };
 
   return (
-    <>
+    <BlockStack gap="0" className="h-full w-full">
+      <SubgraphBreadcrumbs />
       <ReactFlow
         {...rest}
         nodes={allNodes}
@@ -872,6 +919,7 @@ const FlowCanvas = ({
         </NodeToolbar>
         {children}
       </ReactFlow>
+
       <ConfirmationDialog
         {...confirmationProps}
         onConfirm={() => confirmationHandlers?.onConfirm()}
@@ -883,7 +931,7 @@ const FlowCanvas = ({
         setClose={handleCancelUpload}
         handleImportComponent={handleImportComponent}
       />
-    </>
+    </BlockStack>
   );
 };
 

@@ -8,6 +8,7 @@ import type {
   OutputSpec,
   TaskSpec,
 } from "@/utils/componentSpec";
+import { deepClone } from "@/utils/deepClone";
 import {
   getUniqueInputName,
   getUniqueOutputName,
@@ -20,7 +21,7 @@ const addTask = (
   position: XYPosition,
   componentSpec: ComponentSpec,
 ): ComponentSpec => {
-  const newComponentSpec = { ...componentSpec };
+  const newComponentSpec = deepClone(componentSpec);
 
   if (!("graph" in newComponentSpec.implementation)) {
     console.error("Implementation does not contain a graph.");
@@ -77,24 +78,24 @@ const addTask = (
   }
 
   if (taskType === "input") {
-    const inputId = getUniqueInputName(componentSpec);
+    const inputId = getUniqueInputName(newComponentSpec);
     const inputSpec: InputSpec = {
       name: inputId,
       annotations: positionAnnotations,
     };
-    const inputs = (componentSpec.inputs ?? []).concat([inputSpec]);
+    const inputs = (newComponentSpec.inputs ?? []).concat([inputSpec]);
 
     newComponentSpec.inputs = inputs;
   }
 
   if (taskType === "output") {
-    const outputId = getUniqueOutputName(componentSpec);
+    const outputId = getUniqueOutputName(newComponentSpec);
     const outputSpec: OutputSpec = {
       name: outputId,
       annotations: positionAnnotations,
     };
 
-    const outputs = (componentSpec.outputs ?? []).concat([outputSpec]);
+    const outputs = (newComponentSpec.outputs ?? []).concat([outputSpec]);
 
     newComponentSpec.outputs = outputs;
   }

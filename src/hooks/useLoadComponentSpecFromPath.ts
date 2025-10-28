@@ -1,6 +1,7 @@
 import { useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
+import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { RUNS_BASE_PATH } from "@/routes/router";
 import { fetchExecutionDetails } from "@/services/executionService";
@@ -9,9 +10,10 @@ import type { ComponentReferenceWithSpec } from "@/utils/componentStore";
 import { prepareComponentRefForEditor } from "@/utils/prepareComponentRefForEditor";
 import { getIdOrTitleFromPath } from "@/utils/URL";
 
-export const useLoadComponentSpecFromPath = (backendUrl: string) => {
+export const useLoadComponentSpecFromPath = () => {
   const location = useLocation();
 
+  const { backendUrl } = useBackend();
   const { setComponentSpec, clearComponentSpec, componentSpec } =
     useComponentSpec();
 
@@ -67,8 +69,8 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
           }
         }
 
-        clearComponentSpec();
         setError("No component spec found for the current path.");
+        clearComponentSpec();
       } catch (error) {
         console.error("Error loading pipeline from storage:", error);
         if (error instanceof Error) {
@@ -83,7 +85,7 @@ export const useLoadComponentSpecFromPath = (backendUrl: string) => {
     return () => {
       clearComponentSpec();
     };
-  }, [id, title, setComponentSpec, clearComponentSpec]);
+  }, [id, title, backendUrl, isRunPath, setComponentSpec, clearComponentSpec]);
 
   return {
     componentSpec,

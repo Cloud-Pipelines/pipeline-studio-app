@@ -1,13 +1,16 @@
-import { CircleX, Terminal } from "lucide-react";
-import { type ChangeEvent, useEffect, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import NewPipelineButton from "@/components/shared/NewPipelineButton";
+import QuickStartCards from "@/components/shared/QuickStart/QuickStartCards";
+import { withSuspenseWrapper } from "@/components/shared/SuspenseWrapper";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BlockStack } from "@/components/ui/layout";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
@@ -16,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { Paragraph, Text } from "@/components/ui/typography";
 import {
   type ComponentFileEntry,
   getAllComponentFilesFromList,
@@ -28,7 +31,33 @@ import PipelineRow from "./PipelineRow";
 
 type Pipelines = Map<string, ComponentFileEntry>;
 
-export const PipelineSection = () => {
+const PipelineSectionSkeleton = () => {
+  return (
+    <BlockStack className="h-full" gap="3">
+      <BlockStack>
+        <InlineStack gap="2" align="space-between" className="w-full">
+          <Skeleton size="lg" shape="button" />
+          <Skeleton size="lg" shape="button" />
+          <Skeleton size="lg" shape="button" />
+        </InlineStack>
+      </BlockStack>
+      <BlockStack className="h-[40vh] mt-4" gap="2" inlineAlign="space-between">
+        <BlockStack gap="2">
+          <Skeleton size="full" />
+          <Skeleton size="half" />
+          <Skeleton size="full" />
+          <Skeleton size="half" />
+          <Skeleton size="full" />
+        </BlockStack>
+        <BlockStack gap="2" align="end">
+          <Skeleton size="lg" shape="button" />
+        </BlockStack>
+      </BlockStack>
+    </BlockStack>
+  );
+};
+
+export const PipelineSection = withSuspenseWrapper(() => {
   const [pipelines, setPipelines] = useState<Pipelines>(new Map());
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,17 +65,16 @@ export const PipelineSection = () => {
     new Set(),
   );
 
-  useEffect(() => {
-    fetchUserPipelines();
-  }, []);
+  const filteredPipelines = Array.from(pipelines.entries()).filter(([name]) => {
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
-  const fetchUserPipelines = async () => {
+  const fetchUserPipelines = useCallback(async () => {
     setIsLoading(true);
     try {
       const pipelines = await getAllComponentFilesFromList(
         USER_PIPELINES_LIST_NAME,
       );
-      //  sort pipelines by pipeline.modificationTime
       const sortedPipelines = new Map(
         [...pipelines.entries()].sort((a, b) => {
           return (
@@ -61,69 +89,83 @@ export const PipelineSection = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const refreshAll = () => {
+  const handleSearch = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
+
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        const allPipelineNames = new Set(
+          filteredPipelines.map(([name]) => name),
+        );
+        setSelectedPipelines(allPipelineNames);
+      } else {
+        setSelectedPipelines(new Set());
+      }
+    },
+    [filteredPipelines],
+  );
+
+  const handleSelectPipeline = useCallback(
+    (pipelineName: string, checked: boolean) => {
+      const newSelected = new Set(selectedPipelines);
+      if (checked) {
+        newSelected.add(pipelineName);
+      } else {
+        newSelected.delete(pipelineName);
+      }
+      setSelectedPipelines(newSelected);
+    },
+    [selectedPipelines],
+  );
+
+  const handleBulkDelete = useCallback(() => {
+    setSelectedPipelines(new Set());
     fetchUserPipelines();
-  };
+  }, [fetchUserPipelines]);
+
+  useEffect(() => {
+    fetchUserPipelines();
+  }, [fetchUserPipelines]);
 
   if (isLoading) {
     return (
-      <div className="flex gap-2 items-center">
+      <InlineStack gap="2" blockAlign="center" className="mt-4">
         <Spinner /> Loading...
-      </div>
+      </InlineStack>
     );
   }
 
   if (pipelines.size === 0) {
     return (
-      <div>
-        <p>No pipelines found.</p>
-        <NewPipelineButton />
-      </div>
+      <BlockStack gap="4" align="center">
+        <BlockStack gap="2">
+          <Paragraph size="md" tone="subdued">
+            You don&apos;t have any pipelines yet. Get started with a template
+            below.
+          </Paragraph>
+
+          <QuickStartCards />
+        </BlockStack>
+        <BlockStack align="center" gap="2">
+          <Text tone="subdued">Or start from scratch with</Text>
+          <NewPipelineButton />
+        </BlockStack>
+      </BlockStack>
     );
   }
-
-  const filteredPipelines = Array.from(pipelines.entries()).filter(([name]) => {
-    return name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const allPipelineNames = new Set(filteredPipelines.map(([name]) => name));
-      setSelectedPipelines(allPipelineNames);
-    } else {
-      setSelectedPipelines(new Set());
-    }
-  };
-
-  const handleSelectPipeline = (pipelineName: string, checked: boolean) => {
-    const newSelected = new Set(selectedPipelines);
-    if (checked) {
-      newSelected.add(pipelineName);
-    } else {
-      newSelected.delete(pipelineName);
-    }
-    setSelectedPipelines(newSelected);
-  };
 
   const isAllSelected =
     filteredPipelines.length > 0 &&
     filteredPipelines.every(([name]) => selectedPipelines.has(name));
 
-  const handleBulkDelete = () => {
-    setSelectedPipelines(new Set());
-    fetchUserPipelines();
-  };
-
   return (
-    <BlockStack>
+    <BlockStack gap="4" className="w-full">
       <Alert variant="destructive">
-        <Terminal className="h-4 w-4" />
+        <Icon name="Terminal" />
         <AlertTitle>Heads up!</AlertTitle>
         <AlertDescription>
           Your pipelines are stored in your browser&apos;s local storage.
@@ -132,19 +174,17 @@ export const PipelineSection = () => {
         </AlertDescription>
       </Alert>
 
-      <div className="py-4 w-[256px]">
+      <BlockStack className="w-full">
         <Label className="mb-2">Search pipelines</Label>
-        <div className="flex gap-1">
+        <InlineStack gap="1" wrap="nowrap">
           <Input type="text" value={searchQuery} onChange={handleSearch} />
-          <Button
-            variant="ghost"
-            className={cn(searchQuery ? "" : "invisible")}
-            onClick={() => setSearchQuery("")}
-          >
-            <CircleX />
-          </Button>
-        </div>
-      </div>
+          {!!searchQuery && (
+            <Button variant="ghost" onClick={() => setSearchQuery("")}>
+              <Icon name="CircleX" />
+            </Button>
+          )}
+        </InlineStack>
+      </BlockStack>
 
       {pipelines.size > 0 && (
         <Table>
@@ -181,7 +221,7 @@ export const PipelineSection = () => {
         </Table>
       )}
 
-      <Button onClick={refreshAll} className="mt-6 max-w-96">
+      <Button onClick={fetchUserPipelines} className="mt-6 max-w-96">
         Refresh
       </Button>
 
@@ -194,4 +234,4 @@ export const PipelineSection = () => {
       )}
     </BlockStack>
   );
-};
+}, PipelineSectionSkeleton);

@@ -22,7 +22,7 @@ const textVariants = cva("", {
   variants: {
     font: {
       default: "",
-      mono: "font-mono",
+      mono: "!font-mono",
     },
     tone: {
       inherit: "text-foreground",
@@ -36,11 +36,14 @@ const textVariants = cva("", {
       sm: "text-sm",
       md: "text-md",
       lg: "text-lg",
+      xl: "text-xl",
+      "2xl": "text-2xl",
     },
     weight: {
       regular: "font-regular",
       semibold: "font-semibold",
       bold: "font-bold",
+      light: "font-light",
     },
   },
 });
@@ -120,7 +123,7 @@ export const Heading = ({
     <Text
       as={`h${level}`}
       size={level === 1 ? "md" : "sm"}
-      weight="semibold"
+      weight={level < 3 ? "semibold" : "regular"}
       role="heading"
       aria-level={level}
     >

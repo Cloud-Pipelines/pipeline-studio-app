@@ -15,7 +15,7 @@ const RecentExecutions = ({ pipelineName }: { pipelineName?: string }) => {
   const runOverviews = useMemo(
     () =>
       recentRuns.map((run) => (
-        <a key={run.id} href={`/runs/${run.root_execution_id}`} tabIndex={0}>
+        <a key={run.id} href={`/runs/${run.id}`} tabIndex={0}>
           <RunOverview
             run={run}
             config={{

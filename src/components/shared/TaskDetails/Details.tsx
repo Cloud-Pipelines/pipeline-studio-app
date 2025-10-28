@@ -83,14 +83,14 @@ const TaskDetails = ({
     const annotations = componentSpec?.metadata?.annotations || {};
     const {
       git_remote_url,
-      git_remote_sha,
+      git_remote_branch,
       git_relative_dir,
       component_yaml_path,
     } = annotations;
 
     if (
       git_remote_url &&
-      git_remote_sha &&
+      git_remote_branch &&
       git_relative_dir &&
       component_yaml_path
     ) {
@@ -99,7 +99,7 @@ const TaskDetails = ({
         .replace(
           /\.git$/,
           "",
-        )}/blob/${git_remote_sha}/${git_relative_dir}/${component_yaml_path}`;
+        )}/blob/${git_remote_branch}/${git_relative_dir}/${component_yaml_path}`;
     }
   }
 
@@ -165,7 +165,7 @@ const TaskDetails = ({
           </div>
         )}
 
-        {executionId && <ExecutionDetails executionId={executionId} />}
+        {executionId && <ExecutionDetails executionId={executionId} componentSpec={componentSpec} />}
 
         {componentSpec?.metadata?.annotations?.author && (
           <div className="flex flex-col px-3 py-2">
@@ -291,7 +291,7 @@ const TaskDetails = ({
             <TooltipContent>Copy YAML</TooltipContent>
           </Tooltip>
 
-          {!readOnly && actions}
+          {actions}
 
           {onDelete && !readOnly && (
             <Tooltip>

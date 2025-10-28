@@ -2,8 +2,11 @@ import { Frown, Videotape } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
+import { useCheckComponentSpecFromPath } from "@/hooks/useCheckComponentSpecFromPath";
+import { useUserDetails } from "@/hooks/useUserDetails";
 import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
+import { useExecutionData } from "@/providers/ExecutionDataProvider";
 import {
   countTaskStatuses,
   getRunStatus,
@@ -20,15 +23,32 @@ import { CancelPipelineRunButton } from "./components/CancelPipelineRunButton";
 import { ClonePipelineButton } from "./components/ClonePipelineButton";
 import { InspectPipelineButton } from "./components/InspectPipelineButton";
 import { RerunPipelineButton } from "./components/RerunPipelineButton";
-import { useRootExecutionContext } from "./RootExecutionStatusProvider";
 
 export const RunDetails = () => {
-  const { details, state, runId, isLoading, error } = useRootExecutionContext();
-
   const { configured } = useBackend();
+  const { componentSpec } = useComponentSpec();
+  const {
+    rootDetails: details,
+    rootState: state,
+    runId,
+    isLoading,
+    error,
+  } = useExecutionData();
+  const { data: currentUserDetails } = useUserDetails();
+
+  const editorRoute = componentSpec.name
+    ? `/editor/${encodeURIComponent(componentSpec.name)}`
+    : "";
+
+  const canAccessEditorSpec = useCheckComponentSpecFromPath(
+    editorRoute,
+    !componentSpec.name,
+  );
 
   const [metadata, setMetadata] = useState<PipelineRun | null>(null);
-  const { componentSpec } = useComponentSpec();
+
+  const isRunCreator =
+    currentUserDetails?.id && metadata?.created_by === currentUserDetails.id;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -130,9 +150,13 @@ export const RunDetails = () => {
 
       <div>
         <div className="flex gap-2">
-          <InspectPipelineButton pipelineName={componentSpec.name} />
+          {canAccessEditorSpec && componentSpec.name && (
+            <InspectPipelineButton pipelineName={componentSpec.name} />
+          )}
           <ClonePipelineButton componentSpec={componentSpec} />
-          {isInProgress && <CancelPipelineRunButton runId={runId} />}
+          {isInProgress && isRunCreator && (
+            <CancelPipelineRunButton runId={runId} />
+          )}
           {isComplete && <RerunPipelineButton componentSpec={componentSpec} />}
         </div>
       </div>

@@ -16,8 +16,7 @@ export const ExistingBetaFlags = {
 
   ["redirect-on-new-pipeline-run"]: {
     name: "Redirect on new pipeline run",
-    description:
-      "Automatically redirect from the editor to the pipeline run page after starting a new execution.",
+    description: "Automatically open a new tab after starting a new execution.",
     default: false,
   } as BetaFlag,
 
@@ -25,6 +24,20 @@ export const ExistingBetaFlags = {
     name: "Default created by me filter",
     description:
       "Automatically select the 'Created by me' filter when viewing the pipeline run list.",
+    default: false,
+  } as BetaFlag,
+
+  ["in-app-component-editor"]: {
+    name: "In-app component editor",
+    description:
+      "Enable the in-app component editor for creating and editing Oasis components.",
+    default: false,
+  } as BetaFlag,
+
+  ["subgraph-navigation"]: {
+    name: "Subgraph Navigation",
+    description:
+      "⚠️ Experimental ⚠️ feature for viewing subgraphs. Navigate into nested pipeline components by double-clicking.",
     default: false,
   } as BetaFlag,
 };

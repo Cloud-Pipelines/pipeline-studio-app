@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer } from "react";
 
-import type { BetaFlag } from "@/types/betaFlags";
+import type { BetaFlag, BetaFlags } from "@/types/betaFlags";
 
 import { useBetaFlags } from "./useBetaFlags";
 
@@ -15,7 +15,7 @@ interface SetFlagAction {
 type Action = SetFlagAction;
 type State = (BetaFlag & { key: string; enabled: boolean })[];
 
-export function useBetaFlagsReducer(betaFlags: Record<string, BetaFlag>) {
+export function useBetaFlagsReducer(betaFlags: BetaFlags) {
   const { getFlag, setFlag, getFlags, removeFlag } = useBetaFlags();
 
   useEffect(() => {

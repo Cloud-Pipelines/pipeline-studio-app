@@ -14,6 +14,7 @@ import {
   PIPELINE_RUNS_STORE_NAME,
   USER_PIPELINES_LIST_NAME,
 } from "@/utils/constants";
+import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
 export const createPipelineRun = async (
   payload: BodyCreateApiPipelineRunsPost,
@@ -83,18 +84,6 @@ export const copyRunToPipeline = async (
   try {
     const cleanComponentSpec = structuredClone(componentSpec);
 
-    if (
-      "graph" in cleanComponentSpec.implementation &&
-      cleanComponentSpec.implementation?.graph?.tasks
-    ) {
-      Object.values(cleanComponentSpec.implementation.graph.tasks).forEach(
-        (task: any) => {
-          if (task.annotations && "status" in task.annotations) {
-            delete task.annotations.status;
-          }
-        },
-      );
-    }
     // The editor now only supports left-to-right layouts direction, so we mark every cloned pipelines with this annotation.
     // Ideally, we should have tried to properly convert the pipelines (transpose the node positions).
     // But there are already many runs that are left-to-right but not marked as such.
@@ -199,16 +188,10 @@ export const fetchPipelineRunById = async (runId: string) => {
 };
 
 export const cancelPipelineRun = async (runId: string, backendUrl: string) => {
-  const response = await fetch(
+  await fetchWithErrorHandling(
     `${backendUrl}/api/pipeline_runs/${runId}/cancel`,
     {
       method: "POST",
     },
   );
-
-  if (!response.ok) {
-    throw new Error("Failed to cancel pipeline run");
-  }
-
-  // endpoint returns nothing
 };

@@ -19,15 +19,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
 import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
+import { isGraphImplementation } from "@/utils/componentSpec";
 
 import { AnnotationsSection } from "../AnnotationsEditor/AnnotationsSection";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
-import Io from "./io";
+import IOSection from "./IOSection/IOSection";
 import Logs, { OpenLogsInNewWindowLink } from "./logs";
 import OutputsList from "./OutputsList";
 
-interface ButtonPropsWithTooltip extends ButtonProps {
+export interface ButtonPropsWithTooltip extends ButtonProps {
   tooltip?: string;
 }
 interface TaskConfigurationProps {
@@ -37,6 +39,9 @@ interface TaskConfigurationProps {
 
 const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
   const { name, taskSpec, taskId, state, callbacks } = taskNode;
+
+  const executionData = useExecutionDataOptional();
+  const details = executionData?.details;
 
   const { readOnly, runStatus } = state;
   const disabled = !!runStatus;
@@ -49,6 +54,9 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
     );
     return null;
   }
+
+  const isSubgraph = isGraphImplementation(componentSpec.implementation);
+  const executionId = details?.child_task_execution_ids?.[taskId];
 
   return (
     <div
@@ -76,7 +84,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
               Details
             </TabsTrigger>
 
-            {readOnly && (
+            {readOnly && !isSubgraph && (
               <TabsTrigger value="logs" className="flex-1">
                 <LogsIcon className="h-4 w-4" />
                 Logs
@@ -92,7 +100,7 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
           <TabsContent value="details" className="h-full">
             <TaskDetails
               displayName={name}
-              executionId={taskSpec.annotations?.executionId as string}
+              executionId={executionId}
               componentSpec={componentSpec}
               taskId={taskId}
               componentDigest={taskSpec.componentRef.digest}
@@ -139,25 +147,24 @@ const TaskConfiguration = ({ taskNode, actions }: TaskConfigurationProps) => {
               </>
             )}
             {readOnly && (
-              <Io
+              <IOSection
                 taskSpec={taskSpec}
                 readOnly={readOnly}
-                executionId={taskSpec.annotations?.executionId as string}
+                executionId={executionId}
               />
             )}
           </TabsContent>
-          {readOnly && (
+          {readOnly && !isSubgraph && (
             <TabsContent value="logs" className="h-full">
-              <div className="flex w-full justify-end pr-4">
-                <OpenLogsInNewWindowLink
-                  executionId={taskSpec.annotations?.executionId as string}
-                  status={runStatus}
-                />
-              </div>
-              <Logs
-                executionId={taskSpec.annotations?.executionId as string}
-                status={runStatus}
-              />
+              {!!executionId && (
+                <div className="flex w-full justify-end pr-4">
+                  <OpenLogsInNewWindowLink
+                    executionId={executionId}
+                    status={runStatus}
+                  />
+                </div>
+              )}
+              <Logs executionId={executionId} status={runStatus} />
             </TabsContent>
           )}
           {!readOnly && (

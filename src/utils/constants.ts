@@ -11,6 +11,8 @@ export const PRIVACY_POLICY_URL =
   "https://cloud-pipelines.net/privacy_policy";
 
 export const API_URL = import.meta.env.VITE_BACKEND_API_URL || "";
+export const BASE_URL = import.meta.env.VITE_BASE_URL || "/";
+export const IS_GITHUB_PAGES = import.meta.env.VITE_GITHUB_PAGES === "true";
 
 export const GIT_REPO_URL =
   import.meta.env.VITE_GIT_REPO_URL ||
@@ -31,10 +33,6 @@ implementation:
     tasks: {}
     outputValues: {}
 `;
-
-export const VALID_NAME_REGEX = /^[a-zA-Z0-9\s]+$/;
-export const VALID_NAME_MESSAGE =
-  "Name must be unique and contain only alphanumeric characters and spaces";
 
 // IndexedDB constants
 export const DB_NAME = "components";
@@ -71,3 +69,7 @@ export const KEYBOARD_SHORTCUTS = {
 
 // Container exit codes
 export const EXIT_CODE_OOM = 137; // SIGKILL (128 + 9) - Out of Memory
+
+export const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
+
+export const ROOT_TASK_ID = "root";

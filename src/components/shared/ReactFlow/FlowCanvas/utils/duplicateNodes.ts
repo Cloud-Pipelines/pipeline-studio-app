@@ -31,7 +31,7 @@ import {
 
 const OFFSET = 10;
 
-/* 
+/*
   config.connection:
     none = all links between nodes will be removed
     internal = duplicated nodes will maintain links with each other, but not with nodes outside the group
@@ -65,7 +65,6 @@ export const duplicateNodes = (
   // Default Config
   const selected = config?.selected ?? true;
   const connection = config?.connection ?? "all";
-  const status = config?.status ?? false;
 
   /* Create new Nodes and map old Task IDs to new Task IDs */
   nodesToDuplicate.forEach((node) => {
@@ -85,11 +84,6 @@ export const duplicateNodes = (
         x: node.position.x + OFFSET,
         y: node.position.y + OFFSET,
       });
-
-      if (!status) {
-        delete updatedAnnotations["status"];
-        delete updatedAnnotations["executionId"];
-      }
 
       const newTaskSpec = {
         ...taskSpec,
@@ -277,10 +271,11 @@ export const duplicateNodes = (
         return null;
       }
 
+      const originalNodeData = originalNode.data as TaskNodeData;
+
       if (originalNode.type === "task") {
         const newTaskId = nodeIdToTaskId(newNodeId);
 
-        const originalNodeData = originalNode.data as TaskNodeData;
         const newTaskSpec = updatedGraphSpec.tasks[newTaskId];
 
         const newNode = createTaskNode(
@@ -312,7 +307,7 @@ export const duplicateNodes = (
           return null;
         }
 
-        const newNode = createInputNode(newInputSpec);
+        const newNode = createInputNode(newInputSpec, originalNodeData);
 
         newNode.id = newNodeId;
         newNode.selected = false;
@@ -338,7 +333,7 @@ export const duplicateNodes = (
           return null;
         }
 
-        const newNode = createOutputNode(newOutputSpec);
+        const newNode = createOutputNode(newOutputSpec, originalNodeData);
 
         newNode.id = newNodeId;
 

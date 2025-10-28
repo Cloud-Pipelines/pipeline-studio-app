@@ -16,30 +16,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import useToastNotification from "@/hooks/useToastNotification";
-import { useBackend } from "@/providers/BackendProvider";
 import { APP_ROUTES } from "@/routes/router";
 import {
-  countTaskStatuses,
+  convertExecutionStatsToStatusCounts,
   getRunStatus,
-  useFetchExecutionInfo,
 } from "@/services/executionService";
 import { convertUTCToLocalTime, formatDate } from "@/utils/date";
 
 const RunRow = ({ run }: { run: PipelineRunResponse }) => {
-  const { backendUrl } = useBackend();
-
   const navigate = useNavigate();
   const notify = useToastNotification();
 
-  const executionId = `${run.root_execution_id}`;
+  const runId = `${run.id}`;
 
-  const { data, isLoading, error } = useFetchExecutionInfo(
-    executionId,
-    backendUrl,
-  );
-  const { details, state } = data;
-
-  const name = details?.task_spec?.componentRef?.spec?.name;
+  const name = run.pipeline_name ?? "Unknown pipeline";
 
   const createdBy = run.created_by ?? "Unknown user";
   const truncatedCreatedBy = truncateMiddle(createdBy);
@@ -54,31 +44,11 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
     [createdBy],
   );
 
-  if (isLoading) {
-    return (
-      <TableRow>
-        <TableCell colSpan={4}>Loading...</TableCell>
-      </TableRow>
-    );
-  }
+  const statusCounts = convertExecutionStatsToStatusCounts(
+    run.execution_status_stats,
+  );
 
-  if (error || !details || !state) {
-    return (
-      <TableRow>
-        <TableCell
-          colSpan={4}
-          className="flex flex-col p-2 text-sm text-red-500"
-        >
-          <span>Error loading run details</span>
-          <span className="text-xs">{error?.message}</span>
-        </TableCell>
-      </TableRow>
-    );
-  }
-
-  const statusCounts = countTaskStatuses(details, state);
-
-  const clickThroughUrl = `${APP_ROUTES.RUNS}/${executionId}`;
+  const clickThroughUrl = `${APP_ROUTES.RUNS}/${runId}`;
 
   const LinkProps = {
     to: clickThroughUrl,
@@ -119,7 +89,7 @@ const RunRow = ({ run }: { run: PipelineRunResponse }) => {
       <TableCell className="text-sm flex items-center gap-2">
         <StatusIcon status={getRunStatus(statusCounts)} />
         <Link {...LinkProps}>{name}</Link>
-        <span>{`#${executionId}`}</span>
+        <span>{`#${runId}`}</span>
       </TableCell>
       <TableCell>
         <HoverCard openDelay={100}>

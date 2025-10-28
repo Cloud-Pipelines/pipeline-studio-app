@@ -20,6 +20,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useBackend } from "@/providers/BackendProvider";
+import { getBackendStatusString } from "@/utils/backend";
+import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
 import RunRow from "./RunRow";
 
@@ -27,11 +29,13 @@ const PIPELINE_RUNS_QUERY_URL = "/api/pipeline_runs/";
 const PAGE_TOKEN_QUERY_KEY = "page_token";
 const FILTER_QUERY_KEY = "filter";
 const CREATED_BY_ME_FILTER = "created_by:me";
+const INCLUDE_PIPELINE_NAME_QUERY_KEY = "include_pipeline_names";
+const INCLUDE_EXECUTION_STATS_QUERY_KEY = "include_execution_stats";
 
 type RunSectionSearch = { page_token?: string; filter?: string };
 
 export const RunSection = () => {
-  const { backendUrl, configured, available } = useBackend();
+  const { backendUrl, configured, available, ready } = useBackend();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const search = useSearch({ strict: false }) as RunSectionSearch;
@@ -68,36 +72,26 @@ export const RunSection = () => {
   const pageToken = search.page_token;
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
-  const { data, isLoading, isFetching, error, refetch } =
+  const { data, isLoading, isFetching, error } =
     useQuery<ListPipelineJobsResponse>({
       queryKey: ["runs", backendUrl, pageToken, search.filter],
       refetchOnWindowFocus: false,
+      enabled: configured && available,
       queryFn: async () => {
         const u = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
         if (pageToken) u.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
         if (search.filter) u.searchParams.set(FILTER_QUERY_KEY, search.filter);
 
-        try {
-          const response = await fetch(u.toString());
-          if (!response.ok) {
-            throw new Error(
-              `Failed to fetch pipeline runs: ${response.statusText}`,
-            );
-          }
-          return response.json();
-        } catch (error) {
-          if (error instanceof Error) {
-            throw new Error(error.message);
-          } else {
-            throw new Error("An unknown error occurred");
-          }
+        u.searchParams.set(INCLUDE_PIPELINE_NAME_QUERY_KEY, "true");
+        u.searchParams.set(INCLUDE_EXECUTION_STATS_QUERY_KEY, "true");
+
+        if (!available) {
+          throw new Error("Backend is not available");
         }
+
+        return fetchWithErrorHandling(u.toString());
       },
     });
-
-  useEffect(() => {
-    refetch();
-  }, [backendUrl, search.filter, pageToken, refetch]);
 
   useEffect(() => {
     if (!search.page_token && search.filter === undefined) {
@@ -190,6 +184,22 @@ export const RunSection = () => {
     navigate({ to: pathname, search: nextSearch });
   };
 
+  if (!available) {
+    return (
+      <InfoBox title="Backend not available" variant="warning">
+        The configured backend is currently unavailable.
+      </InfoBox>
+    );
+  }
+
+  if (isLoading || isFetching || !ready) {
+    return (
+      <div className="flex gap-2 items-center">
+        <Spinner /> Loading...
+      </div>
+    );
+  }
+
   if (!configured) {
     return (
       <InfoBox title="Backend not configured" variant="warning">
@@ -198,25 +208,8 @@ export const RunSection = () => {
     );
   }
 
-  if (isLoading || isFetching) {
-    return (
-      <div className="flex gap-2 items-center">
-        <Spinner /> Loading...
-      </div>
-    );
-  }
-
   if (error) {
-    const backendNotConfigured = "The backend is not configured.";
-    const backendUnavailable =
-      "The configured backend is currently unavailable.";
-    const backendAvailableString = "The configured backend is available.";
-    const backendStatusString = configured
-      ? available
-        ? backendAvailableString
-        : backendUnavailable
-      : backendNotConfigured;
-
+    const backendStatusString = getBackendStatusString(configured, available);
     return (
       <InfoBox title="Error loading runs" variant="error">
         <div className="mb-2">{error.message}</div>
@@ -226,7 +219,11 @@ export const RunSection = () => {
   }
 
   if (!data) {
-    return <div>Failed to load runs.</div>;
+    return (
+      <InfoBox title="Failed to load runs" variant="error">
+        No data was returned from the backend.
+      </InfoBox>
+    );
   }
 
   const searchMarkup = (
@@ -312,7 +309,7 @@ export const RunSection = () => {
           <Button
             variant="outline"
             onClick={handleNextPage}
-            disabled={!data?.next_page_token}
+            disabled={!data.next_page_token}
           >
             Next
             <ChevronRight className="h-4 w-4 ml-2" />

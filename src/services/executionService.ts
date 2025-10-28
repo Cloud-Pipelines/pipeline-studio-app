@@ -1,38 +1,38 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
 
 import type {
   GetArtifactsApiExecutionsIdArtifactsGetResponse,
   GetContainerExecutionStateResponse,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
+  PipelineRunResponse,
 } from "@/api/types.gen";
 import type { TaskStatusCounts } from "@/types/pipelineRun";
+import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
 export const fetchExecutionState = async (
   executionId: string,
   backendUrl: string,
 ) => {
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/state`,
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch execution state: ${response.statusText}`);
-  }
-  return response.json();
+  const url = `${backendUrl}/api/executions/${executionId}/state`;
+  return fetchWithErrorHandling(url);
 };
 
 export const fetchExecutionDetails = async (
   executionId: string,
   backendUrl: string,
 ): Promise<GetExecutionInfoResponse> => {
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/details`,
-  );
+  const url = `${backendUrl}/api/executions/${executionId}/details`;
+  return fetchWithErrorHandling(url);
+};
+
+export const fetchPipelineRun = async (
+  runId: string,
+  backendUrl: string,
+): Promise<PipelineRunResponse> => {
+  const response = await fetch(`${backendUrl}/api/pipeline_runs/${runId}`);
   if (!response.ok) {
-    throw new Error(
-      `Failed to fetch execution details: ${response.statusText}`,
-    );
+    throw new Error(`Failed to fetch pipeline run: ${response.statusText}`);
   }
   return response.json();
 };
@@ -41,15 +41,8 @@ const fetchContainerExecutionState = async (
   executionId: string,
   backendUrl: string,
 ): Promise<GetContainerExecutionStateResponse> => {
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/container_state`,
-  );
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch container execution state: ${response.statusText}`,
-    );
-  }
-  return response.json();
+  const url = `${backendUrl}/api/executions/${executionId}/container_state`;
+  return fetchWithErrorHandling(url);
 };
 
 export const useFetchContainerExecutionState = (
@@ -64,75 +57,19 @@ export const useFetchContainerExecutionState = (
   });
 };
 
-export const useFetchExecutionInfo = (
-  executionId: string,
-  backendUrl: string,
-  poll: boolean = false,
-) => {
-  const {
-    data: details,
-    isLoading: isDetailsLoading,
-    isFetching: isDetailsFetching,
-    error: detailsError,
-    refetch: refetchDetails,
-  } = useQuery<GetExecutionInfoResponse>({
-    queryKey: ["pipeline-run-details", executionId],
-    refetchOnWindowFocus: false,
-    queryFn: () => fetchExecutionDetails(executionId, backendUrl),
-    refetchInterval: poll ? 5000 : false,
-  });
-
-  const {
-    data: state,
-    isLoading: isStateLoading,
-    isFetching: isStateFetching,
-    error: stateError,
-    refetch: refetchState,
-  } = useQuery<GetGraphExecutionStateResponse>({
-    queryKey: ["pipeline-run-state", executionId],
-    refetchOnWindowFocus: false,
-    queryFn: () => fetchExecutionState(executionId, backendUrl),
-    refetchInterval: poll ? 5000 : false,
-  });
-
-  const isLoading = isDetailsLoading || isStateLoading;
-  const isFetching = isDetailsFetching || isStateFetching;
-  const error = detailsError || stateError;
-  const data = { state, details };
-
-  const refetch = useCallback(() => {
-    refetchDetails();
-    refetchState();
-  }, [refetchDetails, refetchState]);
-
-  return { data, isLoading, isFetching, error, refetch };
-};
-
 export const fetchExecutionStatus = async (
   executionId: string,
   backendUrl: string,
 ) => {
   try {
-    const response = await fetch(
-      `${backendUrl}/api/executions/${executionId}/details`,
+    const details: GetExecutionInfoResponse = await fetchExecutionDetails(
+      executionId,
+      backendUrl,
     );
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch execution details: ${response.statusText}`,
-      );
-    }
-    const details: GetExecutionInfoResponse = await response.json();
-
-    const stateResponse = await fetch(
-      `${backendUrl}/api/executions/${executionId}/state`,
+    const stateData: GetGraphExecutionStateResponse = await fetchExecutionState(
+      executionId,
+      backendUrl,
     );
-    if (!stateResponse.ok) {
-      throw new Error(
-        `Failed to fetch execution state: ${stateResponse.statusText}`,
-      );
-    }
-    const stateData: GetGraphExecutionStateResponse =
-      await stateResponse.json();
 
     const taskStatuses = countTaskStatuses(details, stateData);
     const runStatus = getRunStatus(taskStatuses);
@@ -143,6 +80,7 @@ export const fetchExecutionStatus = async (
       `Error fetching task statuses for run ${executionId}:`,
       error,
     );
+    throw error;
   }
 };
 
@@ -189,6 +127,29 @@ export const isStatusComplete = (status: string = "") => {
   );
 };
 
+const mapStatus = (status: string) => {
+  switch (status) {
+    case "SUCCEEDED":
+      return "succeeded";
+    case "FAILED":
+    case "SYSTEM_ERROR":
+    case "INVALID":
+    case "UPSTREAM_FAILED":
+      return "failed";
+    case "UPSTREAM_FAILED_OR_SKIPPED":
+    case "CANCELLING":
+    case "SKIPPED":
+      return "skipped";
+    case "RUNNING":
+    case "STARTING":
+      return "running";
+    case "CANCELLED":
+      return "cancelled";
+    default:
+      return "waiting";
+  }
+};
+
 /**
  * Count task statuses from API response
  */
@@ -196,12 +157,15 @@ export const countTaskStatuses = (
   details: GetExecutionInfoResponse,
   stateData: GetGraphExecutionStateResponse,
 ): TaskStatusCounts => {
-  let succeeded = 0,
-    failed = 0,
-    running = 0,
-    waiting = 0,
-    skipped = 0,
-    cancelled = 0;
+  const statusCounts = {
+    total: 0,
+    succeeded: 0,
+    failed: 0,
+    running: 0,
+    waiting: 0,
+    skipped: 0,
+    cancelled: 0,
+  };
 
   if (
     details.child_task_execution_ids &&
@@ -214,40 +178,23 @@ export const countTaskStatuses = (
 
       if (statusStats) {
         const status = Object.keys(statusStats)[0];
-
-        switch (status) {
-          case "SUCCEEDED":
-            succeeded++;
-            break;
-          case "FAILED":
-          case "SYSTEM_ERROR":
-          case "INVALID":
-          case "UPSTREAM_FAILED":
-            failed++;
-            break;
-          case "UPSTREAM_FAILED_OR_SKIPPED":
-          case "CANCELLING":
-            skipped++;
-            break;
-          case "RUNNING":
-          case "STARTING":
-            running++;
-            break;
-          case "CANCELLED":
-            cancelled++;
-            break;
-          default:
-            waiting++;
-            break;
-        }
+        const mappedStatus = mapStatus(status);
+        statusCounts[mappedStatus as keyof TaskStatusCounts]++;
       } else {
-        waiting++;
+        statusCounts.waiting++;
       }
     });
   }
 
-  const total = succeeded + failed + running + waiting + skipped + cancelled;
-  return { total, succeeded, failed, running, waiting, skipped, cancelled };
+  const total =
+    statusCounts.succeeded +
+    statusCounts.failed +
+    statusCounts.running +
+    statusCounts.waiting +
+    statusCounts.skipped +
+    statusCounts.cancelled;
+
+  return { ...statusCounts, total };
 };
 
 export const getExecutionArtifacts = async (
@@ -263,4 +210,37 @@ export const getExecutionArtifacts = async (
     throw new Error(`Failed to fetch artifacts: ${response.statusText}`);
   }
   return response.json() as Promise<GetArtifactsApiExecutionsIdArtifactsGetResponse>;
+};
+
+export const convertExecutionStatsToStatusCounts = (
+  stats: { [key: string]: number } | null | undefined,
+): TaskStatusCounts => {
+  const statusCounts = {
+    total: 0,
+    succeeded: 0,
+    failed: 0,
+    running: 0,
+    waiting: 0,
+    skipped: 0,
+    cancelled: 0,
+  };
+
+  if (!stats) {
+    return statusCounts;
+  }
+
+  Object.entries(stats).forEach(([status, count]) => {
+    const mappedStatus = mapStatus(status);
+    statusCounts[mappedStatus as keyof TaskStatusCounts] += count;
+  });
+
+  const total =
+    statusCounts.succeeded +
+    statusCounts.failed +
+    statusCounts.running +
+    statusCounts.waiting +
+    statusCounts.skipped +
+    statusCounts.cancelled;
+
+  return { ...statusCounts, total };
 };

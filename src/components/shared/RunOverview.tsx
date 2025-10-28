@@ -42,7 +42,7 @@ const RunOverview = ({ run, config, className = "" }: RunOverviewProps) => {
     <div
       onClick={(e) => {
         e.stopPropagation();
-        navigate({ to: `${APP_ROUTES.RUNS}/${run.root_execution_id}` });
+        navigate({ to: `${APP_ROUTES.RUNS}/${run.id}` });
       }}
       className={cn(
         "flex flex-col p-2 text-sm hover:bg-gray-50 cursor-pointer",
@@ -55,7 +55,7 @@ const RunOverview = ({ run, config, className = "" }: RunOverviewProps) => {
           <div className="flex items-center gap-3">
             {combinedConfig?.showStatus && <StatusIcon status={run.status} />}
             {combinedConfig?.showExecutionId && (
-              <div className="text-xs">{`#${run.root_execution_id}`}</div>
+              <div className="text-xs">{`#${run.id}`}</div>
             )}
           </div>
           {combinedConfig?.showCreatedAt && run.created_at && (

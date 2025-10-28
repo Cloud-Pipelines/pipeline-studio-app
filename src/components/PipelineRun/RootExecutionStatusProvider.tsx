@@ -2,22 +2,14 @@ import {
   createContext,
   type PropsWithChildren,
   useContext,
-  useEffect,
   useMemo,
-  useState,
 } from "react";
 
 import type {
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
 } from "@/api/types.gen";
-import { useBackend } from "@/providers/BackendProvider";
-import {
-  countTaskStatuses,
-  getRunStatus,
-  isStatusComplete,
-  useFetchExecutionInfo,
-} from "@/services/executionService";
+import { usePipelineRunData } from "@/hooks/usePipelineRunData";
 
 interface RootExecutionStatus {
   details: GetExecutionInfoResponse | undefined;
@@ -30,30 +22,13 @@ interface RootExecutionStatus {
 const RootExecutionContext = createContext<RootExecutionStatus | null>(null);
 
 export function RootExecutionStatusProvider({
-  rootExecutionId,
+  pipelineRunId,
   children,
-}: PropsWithChildren<{ rootExecutionId: string }>) {
-  const { backendUrl } = useBackend();
+}: PropsWithChildren<{ pipelineRunId: string }>) {
+  const { executionData, isLoading, error } = usePipelineRunData(pipelineRunId);
 
-  const [isPolling, setIsPolling] = useState(true);
-
-  const { data, isLoading, error } = useFetchExecutionInfo(
-    rootExecutionId,
-    backendUrl,
-    isPolling,
-  );
-  const { details, state } = data;
+  const { details, state } = executionData ?? {};
   const runId = details?.pipeline_run_id;
-
-  useEffect(() => {
-    if (details && state) {
-      const statusCounts = countTaskStatuses(details, state);
-      const runStatus = getRunStatus(statusCounts);
-      if (isStatusComplete(runStatus)) {
-        setIsPolling(false);
-      }
-    }
-  }, [details, state]);
 
   const value = useMemo(
     () => ({

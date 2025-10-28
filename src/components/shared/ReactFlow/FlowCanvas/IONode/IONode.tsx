@@ -1,16 +1,15 @@
-import { useLocation } from "@tanstack/react-router";
-import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { memo, useCallback, useEffect } from "react";
+import { Handle, Position } from "@xyflow/react";
+import { memo, useEffect, useMemo } from "react";
 
-import { InputValueEditor } from "@/components/Editor/InputValueEditor/InputValueEditor";
-import { OutputNameEditor } from "@/components/Editor/OutputNameEditor";
+import { InputValueEditor } from "@/components/Editor/IOEditor/InputValueEditor";
+import { OutputNameEditor } from "@/components/Editor/IOEditor/OutputNameEditor";
+import { getOutputConnectedDetails } from "@/components/Editor/utils/getOutputConnectedDetails";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { Paragraph } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
-import { deselectAllNodes } from "@/utils/flowUtils";
-
-import { getOutputConnectedDetails } from "../utils/getOutputConnectedDetails";
 
 interface IONodeProps {
   type: "input" | "output";
@@ -19,59 +18,54 @@ interface IONodeProps {
     value?: string;
     default?: string;
     type?: string;
+    readOnly?: boolean;
   };
   selected: boolean;
   deletable: boolean;
 }
 
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
-  const { setNodes } = useReactFlow();
-  const location = useLocation();
   const { graphSpec, componentSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
-  const isPipelineEditor = location.pathname.includes("/editor");
+  const isInput = type === "input";
+  const isOutput = type === "output";
 
-  const handleType = type === "input" ? "source" : "target";
-  const handlePosition = type === "input" ? Position.Right : Position.Left;
-  const selectedBorderColor =
-    type === "input"
-      ? "border-blue-500 bg-blue-100"
-      : "border-violet-500 bg-violet-100";
-  const defaultBorderColor =
-    type === "input"
-      ? "border-blue-300 bg-blue-100"
-      : "border-violet-300 bg-violet-100";
-  const borderColor = selected ? selectedBorderColor : defaultBorderColor;
+  const readOnly = !!data.readOnly;
 
-  const input = componentSpec.inputs?.find(
-    (input) => input.name === data.label,
+  const handleType = isInput ? "source" : "target";
+  const handlePosition = isInput ? Position.Right : Position.Left;
+  const selectedColor = isInput
+    ? "border-blue-500 bg-blue-100"
+    : "border-violet-500 bg-violet-100";
+  const defaultColor = isInput
+    ? "border-blue-300 bg-blue-100"
+    : "border-violet-300 bg-violet-100";
+  const borderColor = selected ? selectedColor : defaultColor;
+
+  const input = useMemo(
+    () => componentSpec.inputs?.find((input) => input.name === data.label),
+    [componentSpec.inputs, data.label],
   );
 
-  const output = componentSpec.outputs?.find(
-    (output) => output.name === data.label,
+  const output = useMemo(
+    () => componentSpec.outputs?.find((output) => output.name === data.label),
+    [componentSpec.outputs, data.label],
   );
-
-  const deselectNode = useCallback(() => {
-    setNodes(deselectAllNodes);
-    clearContent();
-  }, [setNodes]);
 
   useEffect(() => {
     if (selected) {
-      if (input && type === "input") {
+      if (input && isInput) {
         setContent(
           <InputValueEditor
             input={input}
             key={input.name}
-            onSave={deselectNode}
-            disabled={!isPipelineEditor}
-            onCancel={deselectNode}
+            disabled={readOnly}
           />,
         );
       }
 
-      if (output && type === "output") {
+      if (output && isOutput) {
         const outputConnectedDetails = getOutputConnectedDetails(
           graphSpec,
           output.name,
@@ -81,84 +75,86 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
             output={output}
             connectedDetails={outputConnectedDetails}
             key={output.name}
-            onSave={deselectNode}
-            disabled={!isPipelineEditor}
-            onCancel={deselectNode}
+            disabled={readOnly}
           />,
         );
       }
     }
-  }, [selected]);
 
-  const {
-    outputName: outputConnectedValue,
-    outputType: outputConnectedType,
-    taskId: outputConnectedTaskId,
-  } = getOutputConnectedDetails(graphSpec, data.label);
+    return () => {
+      if (selected) {
+        clearContent();
+      }
+    };
+  }, [input, output, selected, readOnly]);
+
+  const connectedOutput = getOutputConnectedDetails(graphSpec, data.label);
+  const outputConnectedValue = connectedOutput.outputName;
+  const outputConnectedType = connectedOutput.outputType;
+  const outputConnectedTaskId = connectedOutput.taskId;
 
   const handleDefaultClassName =
-    "!w-[12px] !h-[12px] !border-0! !w-[12px] !h-[12px] transform-none! cursor-pointer bg-gray-500! border-none!";
+    "!w-[12px] !h-[12px] !border-0 !transform-none !bg-gray-500";
 
-  const handleClassName =
-    type === "input" ? "translate-x-1.5" : "-translate-x-1.5";
+  const handleClassName = isInput ? "translate-x-1.5" : "-translate-x-1.5";
+
+  const hasDataValue = !!data.value;
+  const hasDataDefault = !!data.default;
+
+  const inputValue = hasDataValue
+    ? data.value
+    : hasDataDefault
+      ? data.default
+      : null;
+
+  const outputValue = outputConnectedValue ?? null;
+
+  const value = isInput ? inputValue : outputValue;
 
   return (
-    <Card
-      className={`rounded-2xl ${borderColor} border-2 max-w-[300px] break-words p-0 drop-shadow-none gap-2`}
-    >
-      <CardHeader className="border-b border-slate-200 px-2 py-2.5">
-        <CardTitle className="max-w-[300px] break-words text-left text-xs text-slate-900">
-          {data.label}
-        </CardTitle>
+    <Card className={cn("border-2 max-w-[300px] p-0", borderColor)}>
+      <CardHeader className="px-2 py-2.5">
+        <CardTitle className="break-words">{data.label}</CardTitle>
       </CardHeader>
-      <CardContent className="p-2 flex flex-col gap-2">
-        {/* type */}
-        <div className="text-xs text-slate-700 font-mono truncate max-w-[250px]">
-          <span className="font-bold text-slate-700">Type:</span>{" "}
-          {type === "input"
-            ? input?.type?.toString() || "Any"
-            : outputConnectedType || output?.type?.toString() || "Any"}
-        </div>
+      <CardContent className="p-2 max-w-[250px]">
+        <BlockStack gap="2">
+          {/* type */}
+          <Paragraph size="xs" font="mono" className="truncate text-slate-700">
+            <span className="font-bold">Type:</span>{" "}
+            {outputConnectedType ?? data.type ?? "Any"}
+          </Paragraph>
 
-        <span className="font-bold text-slate-700">
-          {outputConnectedTaskId}
-        </span>
+          {!!outputConnectedTaskId && (
+            <Paragraph weight="bold" className="text-slate-700">
+              {outputConnectedTaskId}
+            </Paragraph>
+          )}
 
-        {/* value */}
-        <div className={cn("flex flex-col gap-3 p-2 bg-white rounded-lg")}>
-          {type === "input" && (
-            <div
-              className={cn(
-                "text-xs text-slate-700 font-mono truncate max-w-[250px]",
-                {
-                  "text-red-500":
-                    type === "input" && !data.value && !data.default,
-                },
-              )}
+          {/* value */}
+          <InlineStack gap="1" className="p-2 bg-white rounded-lg w-full">
+            <Paragraph
+              size="xs"
+              font="mono"
+              weight="bold"
+              className="text-slate-700"
             >
-              <span className="font-bold text-slate-700">Value:</span>{" "}
-              {data.value || data.default || "No value"}
-            </div>
-          )}
-          {type === "output" && (
-            <div
-              className={cn(
-                "text-xs text-slate-700 font-mono truncate max-w-[250px]",
-                {
-                  "text-red-500": type === "output" && !outputConnectedValue,
-                },
-              )}
+              Value:
+            </Paragraph>
+            <Paragraph
+              size="xs"
+              font="mono"
+              tone={!value ? "critical" : "subdued"}
+              className="truncate"
             >
-              <span className="font-bold text-slate-700">From:</span>{" "}
-              {outputConnectedValue || "Not connected"}
-            </div>
-          )}
-          <Handle
-            type={handleType}
-            position={handlePosition}
-            className={cn(handleDefaultClassName, handleClassName)}
-          />
-        </div>
+              {value ?? "No value"}
+            </Paragraph>
+          </InlineStack>
+        </BlockStack>
+        <Handle
+          type={handleType}
+          position={handlePosition}
+          className={cn(handleDefaultClassName, handleClassName)}
+        />
       </CardContent>
     </Card>
   );

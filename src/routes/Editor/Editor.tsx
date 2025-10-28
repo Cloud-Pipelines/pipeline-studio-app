@@ -8,11 +8,9 @@ import { InfoBox } from "@/components/shared/InfoBox";
 import { BlockStack } from "@/components/ui/layout";
 import { Text } from "@/components/ui/typography";
 import { useLoadComponentSpecFromPath } from "@/hooks/useLoadComponentSpecFromPath";
-import { useBackend } from "@/providers/BackendProvider";
 
 const Editor = () => {
-  const { backendUrl } = useBackend();
-  const { componentSpec, error } = useLoadComponentSpecFromPath(backendUrl);
+  const { componentSpec, error } = useLoadComponentSpecFromPath();
 
   if (error) {
     return (

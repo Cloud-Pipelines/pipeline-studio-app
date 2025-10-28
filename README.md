@@ -1,33 +1,38 @@
-# Cloud Pipelines Editor
+# Cloud Pipelines Studio
 
-Cloud Pipelines Editor is a web app that allows the users to build and run Machine Learning pipelines using drag and drop without having to set up development environment.
+Cloud Pipelines Studio is a web app that allows the users to build and run Machine Learning pipelines using drag and drop without having to set up development environment.
+
+[![image](https://github.com/user-attachments/assets/0ce7ccc0-dad7-4f6a-8677-f2adcd83f558)](https://cloud-pipelines.net/pipeline-studio-app)
 
 ## Video
 
-Please take a look at the short video demonstrating the visual pipeline editor.
+Please take a look at the short video demonstrating the first version of the visual pipeline editor.
 
-[Cloud Pipelines - Build machine learning pipelines without writing code](https://www.youtube.com/watch?v=7g22nupCDes)
-[![image](https://user-images.githubusercontent.com/1829149/127566707-fceb9e41-1126-4588-b94a-c69e87fe0488.png)](https://www.youtube.com/watch?v=7g22nupCDes)
+[Cloud Pipelines Editor - Build machine learning pipelines without writing code](https://www.youtube.com/watch?v=7g22nupCDes)
 
 ## Demo
 
-[Demo](https://cloud-pipelines.net/pipeline-editor)
+[Demo](https://cloud-pipelines.net/pipeline-studio-app)
 
-The early alpha version of the Cloud Pipelines Editor app shown in this video is now available at <https://cloud-pipelines.net/pipeline-editor> . The app is open and standalone. No registration is required.
+The experimental new version of the Cloud Pipelines Studio app is now available at <https://cloud-pipelines.net/pipeline-studio-app> . No registration is required to experiment with building pipelines. To install your own app instance, follow the [backend installation instructions](https://github.com/Cloud-Pipelines/backend?tab=readme-ov-file#installation).
 
 Please check it out and report any bugs you find using [GitHub Issues](https://github.com/Cloud-Pipelines/pipeline-studio-app/issues).
 
 The app is under active development, so expect some breakages as I work on the app and do not rely on the app for production.
 
-App features:
+### App features:
 
 - Build pipeline using drag and drop
 - Edit component arguments
-- Submit the pipeline to [Google Cloud Vertex Pipelines](https://cloud.google.com/vertex-ai/docs/pipelines/) for execution.
-- Fully compatible with the Kubeflow Pipelines' components (`component.yaml` files) You can find some components here: [Ark-kun/pipeline_components](https://github.com/Ark-kun/pipeline_components/tree/master/components) or [kubeflow/pipelines/components](https://github.com/kubeflow/pipelines/tree/master/components#index-of-components)
+- Submit the pipeline for execution. (Follow the [backend installation instructions](https://github.com/Cloud-Pipelines/backend?tab=readme-ov-file#installation).)
+- The ComponentSpec/`component.yaml` format used by Cloud Pipelines is fully compatible with the Google Cloud Vertex AI Pipelines and Kubeflow Pipelines v1. You can find many components here: [Ark-kun/pipeline_components](https://github.com/Ark-kun/pipeline_components/)
 - Preloaded component library
 - User component library (add private components)
 - Component search
 - Import and export pipelines
 
 There are many features that I want to add, but I want to prioritize them based on your feedback.
+
+### Credits:
+
+This app is based on the [Pipeline Editor](https://cloud-pipelines.net/pipeline-editor) app created by [Alexey Volkov](https://github.com/Ark-kun) as part of the [Cloud Pipelines](https://github.com/Cloud-Pipelines) project.
