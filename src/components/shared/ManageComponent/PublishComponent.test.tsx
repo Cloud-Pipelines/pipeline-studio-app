@@ -11,11 +11,8 @@ import { PublishComponent } from "./PublishComponent";
 vi.mock("@/hooks/useUserDetails", () => ({
   useUserDetails: vi.fn(() => ({
     data: {
-      name: "TestUser",
-      permissions: {
-        read: true,
-        write: true,
-      },
+      id: "TestUser",
+      permissions: ["read", "write"],
     },
   })),
 }));

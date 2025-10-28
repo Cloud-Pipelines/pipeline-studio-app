@@ -7,16 +7,12 @@ import { Button } from "@/components/ui/button";
 import { BlockStack } from "@/components/ui/layout";
 import { Paragraph, Text } from "@/components/ui/typography";
 
-export default function ErrorPage({ error, reset }: ErrorComponentProps) {
+export default function ErrorPage({ error }: ErrorComponentProps) {
   const router = useRouter();
 
   const handleRefresh = useCallback(() => {
-    if (reset) {
-      reset();
-    } else {
-      window.location.reload();
-    }
-  }, [reset]);
+    window.location.reload();
+  }, []);
 
   const handleGoHome = useCallback(() => {
     router.navigate({ to: "/" });
