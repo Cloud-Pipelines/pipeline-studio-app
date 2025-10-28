@@ -1,6 +1,7 @@
 import { PlusCircleIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Heading } from "@/components/ui/typography";
 import type { AnnotationConfig, Annotations } from "@/types/annotations";
 
 import { AnnotationsInput } from "./AnnotationsInput";
@@ -48,7 +49,7 @@ export const AnnotationsEditor = ({
   return (
     <div className="h-auto flex flex-col gap-2">
       <div className="flex justify-between items-center">
-        <h3>Other Annotations</h3>
+        <Heading level={1}>Annotations</Heading>
 
         <Button
           onClick={onAddNewRow}

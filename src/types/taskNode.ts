@@ -28,6 +28,7 @@ export type TaskType = "task" | "input" | "output";
 interface TaskNodeCallbacks {
   setArguments: (args: Record<string, ArgumentType>) => void;
   setAnnotations: (annotations: Annotations) => void;
+  setCacheStaleness: (cacheStaleness: string | undefined) => void;
   onDelete: () => void;
   onDuplicate: (selected?: boolean) => void;
   onUpgrade: (newComponentRef: ComponentReference) => void;

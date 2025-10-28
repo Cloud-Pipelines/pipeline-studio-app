@@ -126,6 +126,41 @@ export const useNodeCallbacks = ({
     [graphSpec, updateGraphSpec],
   );
 
+  const setCacheStaleness = useCallback(
+    (ids: NodeAndTaskId, cacheStaleness: string | undefined) => {
+      const taskId = ids.taskId;
+      const task = graphSpec.tasks[taskId];
+
+      if (!task) {
+        console.warn(`Task with id ${taskId} not found in graph spec.`);
+        return;
+      }
+
+      const cachingStrategy = cacheStaleness
+        ? { maxCacheStaleness: cacheStaleness }
+        : undefined;
+
+      const updatedTask: TaskSpec = {
+        ...task,
+        executionOptions: {
+          ...task.executionOptions,
+          cachingStrategy,
+        },
+      };
+
+      const newGraphSpec = {
+        ...graphSpec,
+        tasks: {
+          ...graphSpec.tasks,
+          [taskId]: updatedTask,
+        },
+      };
+
+      updateGraphSpec(newGraphSpec);
+    },
+    [graphSpec, updateGraphSpec],
+  );
+
   const onDuplicate = useCallback(
     (ids: NodeAndTaskId, selected = true) => {
       const nodeId = ids.nodeId;
@@ -194,6 +229,7 @@ export const useNodeCallbacks = ({
     onDelete,
     setArguments,
     setAnnotations,
+    setCacheStaleness,
     onDuplicate,
     onUpgrade,
   };

@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 
+import { Heading } from "@/components/ui/typography";
 import type {
   AnnotationConfig,
   AnnotationOption,
@@ -83,7 +84,7 @@ export const ComputeResourcesEditor = ({
 }: ComputeResourcesEditorProps) => {
   return (
     <div className="flex flex-col gap-2">
-      <h3>Compute Resources</h3>
+      <Heading level={1}>Compute Resources</Heading>
       {COMPUTE_RESOURCES.map((resource) => (
         <ComputeResourceField
           key={resource.annotation}
