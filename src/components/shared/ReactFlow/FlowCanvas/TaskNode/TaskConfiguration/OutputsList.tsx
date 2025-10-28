@@ -1,3 +1,5 @@
+import { BlockStack } from "@/components/ui/layout";
+import { Heading } from "@/components/ui/typography";
 import type { TaskSpec } from "@/utils/componentSpec";
 
 interface OutputsListProps {
@@ -31,10 +33,10 @@ const OutputsList = ({ taskSpec }: OutputsListProps) => {
   ));
 
   return (
-    <div className="flex-1 overflow-y-auto p-2">
-      <h3>Outputs</h3>
+    <BlockStack className="overflow-y-auto p-2">
+      <Heading level={1}>Outputs</Heading>
       {outputsMarkup}
-    </div>
+    </BlockStack>
   );
 };
 
