@@ -585,6 +585,20 @@ export type GetGraphExecutionStateResponse = {
 };
 
 /**
+ * GetUserResponse
+ */
+export type GetUserResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Permissions
+     */
+    permissions: Array<string>;
+};
+
+/**
  * GraphImplementation
  */
 export type GraphImplementationInput = {
@@ -1437,6 +1451,125 @@ export type PipelineRunCancelApiPipelineRunsIdCancelPostResponses = {
     200: unknown;
 };
 
+export type ListAnnotationsApiPipelineRunsIdAnnotationsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/pipeline_runs/{id}/annotations/';
+};
+
+export type ListAnnotationsApiPipelineRunsIdAnnotationsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListAnnotationsApiPipelineRunsIdAnnotationsGetError = ListAnnotationsApiPipelineRunsIdAnnotationsGetErrors[keyof ListAnnotationsApiPipelineRunsIdAnnotationsGetErrors];
+
+export type ListAnnotationsApiPipelineRunsIdAnnotationsGetResponses = {
+    /**
+     * Response List Annotations Api Pipeline Runs  Id  Annotations  Get
+     * Successful Response
+     */
+    200: {
+        [key: string]: string | null;
+    };
+};
+
+export type ListAnnotationsApiPipelineRunsIdAnnotationsGetResponse = ListAnnotationsApiPipelineRunsIdAnnotationsGetResponses[keyof ListAnnotationsApiPipelineRunsIdAnnotationsGetResponses];
+
+export type DeleteAnnotationApiPipelineRunsIdAnnotationsKeyDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Id
+         */
+        id: string;
+        /**
+         * Key
+         */
+        key: string;
+    };
+    query?: never;
+    url: '/api/pipeline_runs/{id}/annotations/{key}';
+};
+
+export type DeleteAnnotationApiPipelineRunsIdAnnotationsKeyDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteAnnotationApiPipelineRunsIdAnnotationsKeyDeleteError = DeleteAnnotationApiPipelineRunsIdAnnotationsKeyDeleteErrors[keyof DeleteAnnotationApiPipelineRunsIdAnnotationsKeyDeleteErrors];
+
+export type DeleteAnnotationApiPipelineRunsIdAnnotationsKeyDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type SetAnnotationApiPipelineRunsIdAnnotationsKeyPutData = {
+    body?: never;
+    path: {
+        /**
+         * Id
+         */
+        id: string;
+        /**
+         * Key
+         */
+        key: string;
+    };
+    query?: {
+        /**
+         * Value
+         */
+        value?: string | null;
+    };
+    url: '/api/pipeline_runs/{id}/annotations/{key}';
+};
+
+export type SetAnnotationApiPipelineRunsIdAnnotationsKeyPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetAnnotationApiPipelineRunsIdAnnotationsKeyPutError = SetAnnotationApiPipelineRunsIdAnnotationsKeyPutErrors[keyof SetAnnotationApiPipelineRunsIdAnnotationsKeyPutErrors];
+
+export type SetAnnotationApiPipelineRunsIdAnnotationsKeyPutResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetCurrentUserApiUsersMeGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/users/me';
+};
+
+export type GetCurrentUserApiUsersMeGetResponses = {
+    /**
+     * Response Get Current User Api Users Me Get
+     * Successful Response
+     */
+    200: GetUserResponse | null;
+};
+
+export type GetCurrentUserApiUsersMeGetResponse = GetCurrentUserApiUsersMeGetResponses[keyof GetCurrentUserApiUsersMeGetResponses];
+
 export type GetApiComponentsDigestGetData = {
     body?: never;
     path: {
@@ -1483,6 +1616,10 @@ export type ListApiPublishedComponentsGetData = {
          * Published By Substring
          */
         published_by_substring?: string | null;
+        /**
+         * Digest
+         */
+        digest?: string | null;
     };
     url: '/api/published_components/';
 };

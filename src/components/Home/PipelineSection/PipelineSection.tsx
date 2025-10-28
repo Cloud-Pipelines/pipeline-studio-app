@@ -1,6 +1,7 @@
 import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import NewPipelineButton from "@/components/shared/NewPipelineButton";
+import QuickStartCards from "@/components/shared/QuickStart/QuickStartCards";
 import { withSuspenseWrapper } from "@/components/shared/SuspenseWrapper";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Paragraph } from "@/components/ui/typography";
+import { Paragraph, Text } from "@/components/ui/typography";
 import {
   type ComponentFileEntry,
   getAllComponentFilesFromList,
@@ -140,9 +141,19 @@ export const PipelineSection = withSuspenseWrapper(() => {
 
   if (pipelines.size === 0) {
     return (
-      <BlockStack gap="2" align="center" className="mt-4">
-        <Paragraph>No pipelines found.</Paragraph>
-        <NewPipelineButton />
+      <BlockStack gap="4" align="center">
+        <BlockStack gap="2">
+          <Paragraph size="md" tone="subdued">
+            You don&apos;t have any pipelines yet. Get started with a template
+            below.
+          </Paragraph>
+
+          <QuickStartCards />
+        </BlockStack>
+        <BlockStack align="center" gap="2">
+          <Text tone="subdued">Or start from scratch with</Text>
+          <NewPipelineButton />
+        </BlockStack>
       </BlockStack>
     );
   }

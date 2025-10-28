@@ -1,64 +1,57 @@
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
-import { useRef, useState } from "react";
-import type { ImperativePanelHandle } from "react-resizable-panels";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { ResizablePanel } from "@/components/ui/resizable";
-import { cn } from "@/lib/utils";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Icon } from "@/components/ui/icon";
+import { VerticalResizeHandle } from "@/components/ui/resize-handle";
 
 import { ContextPanel } from "./ContextPanel";
 
+const MIN_WIDTH = 200;
+const MAX_WIDTH = 600;
+const DEFAULT_WIDTH = 400;
+
+interface CollapsibleContextPanelProps {
+  defaultOpen?: boolean;
+}
+
 export function CollapsibleContextPanel({
-  defaultSize = 30,
-  minSize = 15,
-  maxSize = 50,
-  collapsedSize = 3,
-}: {
-  defaultSize?: number;
-  minSize?: number;
-  maxSize?: number;
-  collapsedSize?: number;
-}) {
-  const resizablePanelRef = useRef<ImperativePanelHandle>(null);
-  const [collapsed, setCollapsed] = useState(false);
+  defaultOpen = true,
+}: CollapsibleContextPanelProps = {}) {
+  const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <ResizablePanel
-      ref={resizablePanelRef}
-      collapsible
-      defaultSize={defaultSize}
-      minSize={minSize}
-      maxSize={maxSize}
-      collapsedSize={collapsedSize}
-      onCollapse={() => setCollapsed(true)}
-      onExpand={() => setCollapsed(false)}
-    >
-      {collapsed && (
-        <div className="relative">
-          <Button
-            className="absolute top-2 right-2"
-            variant="ghost"
-            onClick={() => {
-              resizablePanelRef.current?.expand();
-              resizablePanelRef.current?.resize(30);
-            }}
-          >
-            <PanelRightOpen className="h-6 w-6" />
-          </Button>
-        </div>
-      )}
-      <div className={cn("h-full relative", collapsed && "hidden")}>
+    <Collapsible open={open} onOpenChange={setOpen} className="h-full">
+      <CollapsibleTrigger asChild>
         <Button
-          className="absolute top-2 right-2"
           variant="ghost"
-          onClick={() => {
-            resizablePanelRef.current?.collapse();
-          }}
+          size="icon"
+          className="absolute top-[95px] z-0 transition-all duration-300 bg-white rounded-r-none shadow-md -translate-x-9"
+          aria-label={open ? "Collapse context panel" : "Expand context panel"}
         >
-          <PanelRightClose className="h-6 w-6" />
+          <Icon name={open ? "PanelRightClose" : "PanelRightOpen"} />
         </Button>
-        <ContextPanel />
+      </CollapsibleTrigger>
+      <div
+        className="relative h-full flex"
+        style={{ width: open ? `${DEFAULT_WIDTH}px` : "0px" }}
+      >
+        {open && (
+          <VerticalResizeHandle
+            side="left"
+            minWidth={MIN_WIDTH}
+            maxWidth={MAX_WIDTH}
+          />
+        )}
+
+        <CollapsibleContent className="flex-1 h-full overflow-hidden">
+          <ContextPanel />
+        </CollapsibleContent>
       </div>
-    </ResizablePanel>
+    </Collapsible>
   );
 }

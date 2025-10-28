@@ -12,11 +12,11 @@ import { useExecutionStatusQuery } from "@/hooks/useExecutionStatusQuery";
 import { usePipelineRunData } from "@/hooks/usePipelineRunData";
 import { useBackend } from "@/providers/BackendProvider";
 import { ComponentSpecProvider } from "@/providers/ComponentSpecProvider";
+import { ExecutionDataProvider } from "@/providers/ExecutionDataProvider";
 import { PipelineRunsProvider } from "@/providers/PipelineRunsProvider";
 import * as pipelineRunService from "@/services/pipelineRunService";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
-import { RootExecutionStatusProvider } from "./RootExecutionStatusProvider";
 import { RunDetails } from "./RunDetails";
 
 // Mock the hooks and services
@@ -38,6 +38,15 @@ vi.mock("@/hooks/useCheckComponentSpecFromPath");
 vi.mock("@/hooks/usePipelineRunData");
 vi.mock("@/services/pipelineRunService");
 vi.mock("@/providers/BackendProvider");
+
+vi.mock("@/hooks/useUserDetails", () => ({
+  useUserDetails: vi.fn(() => ({
+    data: {
+      id: "test-user",
+      permissions: ["read", "write"],
+    },
+  })),
+}));
 
 describe("<RunDetails/>", () => {
   const queryClient = new QueryClient({
@@ -156,11 +165,11 @@ describe("<RunDetails/>", () => {
         <ComponentSpecProvider spec={mockComponentSpec}>
           <QueryClientProvider client={queryClient}>
             <PipelineRunsProvider pipelineName={mockPipelineRun.pipeline_name}>
-              <RootExecutionStatusProvider
+              <ExecutionDataProvider
                 pipelineRunId={mockPipelineRun.id.toString()}
               >
                 {children}
-              </RootExecutionStatusProvider>
+              </ExecutionDataProvider>
             </PipelineRunsProvider>
           </QueryClientProvider>
         </ComponentSpecProvider>
@@ -237,7 +246,7 @@ describe("<RunDetails/>", () => {
   });
 
   describe("Cancel Pipeline Run Button", () => {
-    test("should render cancel button when status is RUNNING", async () => {
+    test("should render cancel button when status is RUNNING and user is the creator of the run", async () => {
       // arrange
       vi.mocked(usePipelineRunData).mockReturnValue({
         executionData: {
@@ -263,6 +272,35 @@ describe("<RunDetails/>", () => {
         executionData: {
           details: mockExecutionDetails,
           state: mockCancelledExecutionState,
+        },
+        rootExecutionId: "test-execution-id",
+        isLoading: false,
+        error: null,
+      });
+
+      // act
+      await act(async () => renderWithQueryClient(<RunDetails />));
+
+      // assert
+      const cancelButton = screen.queryByTestId("cancel-pipeline-run-button");
+      expect(cancelButton).not.toBeInTheDocument();
+    });
+
+    test("should NOT render cancel button when the user is not the creator of the run", async () => {
+      // arrange
+      const pipelineRunWithDifferentCreator = {
+        ...mockPipelineRun,
+        created_by: "different-user",
+      };
+
+      vi.mocked(pipelineRunService.fetchPipelineRunById).mockResolvedValue(
+        pipelineRunWithDifferentCreator,
+      );
+
+      vi.mocked(usePipelineRunData).mockReturnValue({
+        executionData: {
+          details: mockExecutionDetails,
+          state: mockRunningExecutionState,
         },
         rootExecutionId: "test-execution-id",
         isLoading: false,

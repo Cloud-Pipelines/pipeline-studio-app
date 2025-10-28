@@ -31,7 +31,7 @@ import {
 
 const OFFSET = 10;
 
-/* 
+/*
   config.connection:
     none = all links between nodes will be removed
     internal = duplicated nodes will maintain links with each other, but not with nodes outside the group
@@ -65,7 +65,6 @@ export const duplicateNodes = (
   // Default Config
   const selected = config?.selected ?? true;
   const connection = config?.connection ?? "all";
-  const status = config?.status ?? false;
 
   /* Create new Nodes and map old Task IDs to new Task IDs */
   nodesToDuplicate.forEach((node) => {
@@ -85,11 +84,6 @@ export const duplicateNodes = (
         x: node.position.x + OFFSET,
         y: node.position.y + OFFSET,
       });
-
-      if (!status) {
-        delete updatedAnnotations["status"];
-        delete updatedAnnotations["executionId"];
-      }
 
       const newTaskSpec = {
         ...taskSpec,

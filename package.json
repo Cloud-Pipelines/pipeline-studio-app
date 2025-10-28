@@ -47,6 +47,7 @@
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@hey-api/client-fetch": "^0.13.1",
+    "@hyperjump/json-schema": "^1.16.5",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -64,7 +65,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@tailwindcss/vite": "^4.1.14",
+    "@tailwindcss/vite": "^4.1.16",
     "@tanstack/history": "^1.131.2",
     "@tanstack/react-query": "^5.85.5",
     "@tanstack/react-query-devtools": "^5.85.5",
@@ -87,11 +88,10 @@
     "react-dom": "^19.2.0",
     "react-error-boundary": "^6.0.0",
     "react-icons": "^5.5.0",
-    "react-resizable-panels": "^3.0.6",
     "react-scan": "^0.4.3",
     "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.3.1",
-    "tailwindcss": "^4.1.13",
+    "tailwindcss": "^4.1.16",
     "tailwindcss-animate": "^1.0.7"
   },
   "peerDependencies": {
@@ -120,7 +120,7 @@
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.40.0",
-    "vite": "^7.1.10",
+    "vite": "^7.1.12",
     "vitest": "^3.0.5"
   }
 }

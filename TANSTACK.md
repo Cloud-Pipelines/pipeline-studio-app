@@ -345,7 +345,7 @@ const rootRoute = createRootRoute({
 });
 ```
 
-Now you can use `useQuery` to fetch your data.
+Now you can use `useQuery` to fetch your data
 
 ```tsx
 import { useQuery } from "@tanstack/react-query";

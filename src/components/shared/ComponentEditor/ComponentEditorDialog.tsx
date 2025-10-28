@@ -10,13 +10,14 @@ import { Heading, Paragraph } from "@/components/ui/typography";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import { hydrateComponentReference } from "@/services/componentService";
+import { isContainerImplementation } from "@/utils/componentSpec";
 import { saveComponent } from "@/utils/localforage";
 
 import { FullscreenElement } from "../FullscreenElement";
 import { withSuspenseWrapper } from "../SuspenseWrapper";
 import { PythonComponentEditor } from "./components/PythonComponentEditor";
 import { YamlComponentEditor } from "./components/YamlComponentEditor";
-import type { SupportedTemplate } from "./types";
+import type { SupportedTemplate, YamlGeneratorOptions } from "./types";
 import { useTemplateCodeByName } from "./useTemplateCodeByName";
 
 const ComponentEditorDialogSkeleton = () => {
@@ -58,7 +59,11 @@ const ComponentEditorDialogSkeleton = () => {
 };
 
 type PythonCodeDetection =
-  | { isPython: true; pythonOriginalCode: string }
+  | {
+      isPython: true;
+      pythonOriginalCode: string;
+      options: YamlGeneratorOptions;
+    }
   | { isPython: false };
 
 export const ComponentEditorDialog = withSuspenseWrapper(
@@ -76,6 +81,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
 
     const { data: templateCode } = useTemplateCodeByName(templateName);
     const [componentText, setComponentText] = useState(text ?? templateCode);
+    const [errors, setErrors] = useState<string[]>([]);
 
     const { data: pythonCodeDetection } = useSuspenseQuery({
       queryKey: ["isPython", `${templateName}-${JSON.stringify(text)}`],
@@ -85,7 +91,14 @@ export const ComponentEditorDialog = withSuspenseWrapper(
             text,
           });
 
-          const pythonOriginalCode = hydratedComponent?.spec?.metadata
+          if (
+            !hydratedComponent ||
+            !isContainerImplementation(hydratedComponent.spec.implementation)
+          ) {
+            return { isPython: false };
+          }
+
+          const pythonOriginalCode = hydratedComponent.spec.metadata
             ?.annotations?.python_original_code as string;
 
           if (!pythonOriginalCode) {
@@ -95,6 +108,25 @@ export const ComponentEditorDialog = withSuspenseWrapper(
           return {
             isPython: true,
             pythonOriginalCode,
+            options: {
+              baseImage:
+                hydratedComponent.spec.implementation.container.image ??
+                "python:3.12",
+              packagesToInstall: parsePythonDependencies(
+                hydratedComponent.spec.metadata?.annotations
+                  ?.python_dependencies,
+              ),
+              annotations: Object.fromEntries(
+                Object.entries(
+                  (hydratedComponent.spec.metadata?.annotations ??
+                    {}) as Record<string, string>,
+                ).filter(
+                  ([key]) =>
+                    key !== "python_original_code" &&
+                    key !== "python_dependencies",
+                ),
+              ),
+            },
           };
         }
 
@@ -109,6 +141,7 @@ export const ComponentEditorDialog = withSuspenseWrapper(
         return {
           isPython: true,
           pythonOriginalCode: defaultPythonFunctionText,
+          options: {},
         };
       },
     });
@@ -167,7 +200,11 @@ export const ComponentEditorDialog = withSuspenseWrapper(
             </InlineStack>
 
             <InlineStack gap="2" blockAlign="center">
-              <Button variant="secondary" onClick={handleSave}>
+              <Button
+                variant="default"
+                onClick={handleSave}
+                disabled={errors.length > 0}
+              >
                 <Icon name="Save" /> Save
               </Button>
               <Button variant="ghost" size="icon" onClick={handleClose}>
@@ -179,12 +216,15 @@ export const ComponentEditorDialog = withSuspenseWrapper(
           {pythonCodeDetection?.isPython ? (
             <PythonComponentEditor
               text={pythonCodeDetection.pythonOriginalCode}
+              options={pythonCodeDetection.options}
               onComponentTextChange={handleComponentTextChange}
+              onErrorsChange={setErrors}
             />
           ) : (
             <YamlComponentEditor
               text={componentText}
               onComponentTextChange={handleComponentTextChange}
+              onErrorsChange={setErrors}
             />
           )}
         </BlockStack>
@@ -193,3 +233,13 @@ export const ComponentEditorDialog = withSuspenseWrapper(
   },
   ComponentEditorDialogSkeleton,
 );
+
+function parsePythonDependencies(dependencies: unknown | undefined): string[] {
+  try {
+    return (
+      JSON.parse(typeof dependencies === "string" ? dependencies : "[]") ?? []
+    );
+  } catch {
+    return [];
+  }
+}

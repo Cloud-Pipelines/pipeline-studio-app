@@ -26,7 +26,7 @@ export const SubgraphBreadcrumbs = () => {
       align="space-between"
       blockAlign="center"
       gap="0"
-      className="px-4 py-2 bg-gray-50 border-b w-full"
+      className="px-4 py-2 bg-gray-50 border-b w-full z-1"
     >
       <Breadcrumb>
         <BreadcrumbList>

@@ -588,6 +588,8 @@ export const getAllComponentFilesFromList = async (listName: string) => {
   const componentFiles = new Map<string, ComponentFileEntry>();
   await componentListDb.iterate<ComponentFileEntry, void>(
     (fileEntry, fileName) => {
+      fileEntry.creationTime = new Date(fileEntry.creationTime);
+      fileEntry.modificationTime = new Date(fileEntry.modificationTime);
       componentFiles.set(fileName, fileEntry);
     },
   );
