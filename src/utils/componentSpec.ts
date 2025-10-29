@@ -490,3 +490,13 @@ export const isContainerImplementation = (
 export const isGraphImplementation = (
   implementation: ImplementationType,
 ): implementation is GraphImplementation => "graph" in implementation;
+
+export const isTaskOutputArgument = (
+  arg: ArgumentType,
+): arg is TaskOutputArgument =>
+  typeof arg === "object" && arg !== null && "taskOutput" in arg;
+
+export const isGraphInputArgument = (
+  arg: ArgumentType,
+): arg is GraphInputArgument =>
+  typeof arg === "object" && arg !== null && "graphInput" in arg;
