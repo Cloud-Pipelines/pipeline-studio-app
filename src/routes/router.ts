@@ -47,10 +47,19 @@ const mainLayout = createRoute({
   component: RootLayout,
 });
 
-const indexRoute = createRoute({
+export interface HomeSearch {
+  page_token?: string;
+  filter?: string;
+}
+
+export const indexRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: APP_ROUTES.HOME,
   component: Home,
+  validateSearch: (search: Record<string, unknown>): HomeSearch => ({
+    page_token: search.page_token as string | undefined,
+    filter: search.filter as string | undefined,
+  }),
 });
 
 const quickStartRoute = createRoute({
@@ -79,10 +88,17 @@ export interface RunDetailParams {
   id: string;
 }
 
+interface RunDetailSearch {
+  indexPath?: string;
+}
+
 export const runDetailRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: APP_ROUTES.RUN_DETAIL,
   component: PipelineRun,
+  validateSearch: (search: Record<string, unknown>): RunDetailSearch => ({
+    indexPath: search.indexPath as string | undefined,
+  }),
 });
 
 const appRouteTree = mainLayout.addChildren([

@@ -5,7 +5,9 @@ import { isGraphImplementation } from "./componentSpec";
 import {
   getSubgraphComponentSpec,
   getSubgraphDescription,
+  indexPathToSubgraphPath,
   isSubgraph,
+  subgraphPathToIndexPath,
   updateSubgraphSpec,
 } from "./subgraphUtils";
 
@@ -624,6 +626,488 @@ describe("subgraphUtils", () => {
       expect(
         result.implementation.graph.tasks["subgraph1"]?.componentRef.spec?.name,
       ).toBe("updated-subgraph1");
+    });
+  });
+
+  describe("subgraphPathToIndexPath", () => {
+    const createRootComponentSpec = (): ComponentSpec => ({
+      name: "root-component",
+      implementation: {
+        graph: {
+          tasks: {
+            "first-task": createContainerTaskSpec(),
+            "second-task": createContainerTaskSpec(),
+            "third-task": createGraphTaskSpec(3),
+            "fourth-task": createContainerTaskSpec(),
+          },
+          outputValues: {},
+        },
+      },
+    });
+
+    const createNestedComponentSpec = (): ComponentSpec => ({
+      name: "root-component",
+      implementation: {
+        graph: {
+          tasks: {
+            "task-a": createContainerTaskSpec(),
+            "task-b": {
+              componentRef: {
+                spec: {
+                  name: "level1-component",
+                  implementation: {
+                    graph: {
+                      tasks: {
+                        "level1-task-a": createContainerTaskSpec(),
+                        "level1-task-b": createContainerTaskSpec(),
+                        "level1-task-c": {
+                          componentRef: {
+                            spec: {
+                              name: "level2-component",
+                              implementation: {
+                                graph: {
+                                  tasks: {
+                                    "level2-task-a": createContainerTaskSpec(),
+                                    "level2-task-b": createContainerTaskSpec(),
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            "task-c": createContainerTaskSpec(),
+          },
+          outputValues: {},
+        },
+      },
+    });
+
+    it("should convert root path to empty index path", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = subgraphPathToIndexPath(["root"], rootSpec);
+      expect(result).toEqual([]);
+    });
+
+    it("should convert empty path to empty index path", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = subgraphPathToIndexPath([], rootSpec);
+      expect(result).toEqual([]);
+    });
+
+    it("should convert single level path to index", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = subgraphPathToIndexPath(["root", "third-task"], rootSpec);
+      expect(result).toEqual(["2"]);
+    });
+
+    it("should convert first task to index 0", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = subgraphPathToIndexPath(["root", "first-task"], rootSpec);
+      expect(result).toEqual(["0"]);
+    });
+
+    it("should convert last task to correct index", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = subgraphPathToIndexPath(["root", "fourth-task"], rootSpec);
+      expect(result).toEqual(["3"]);
+    });
+
+    it("should convert nested path to indices", () => {
+      const rootSpec = createNestedComponentSpec();
+      const result = subgraphPathToIndexPath(
+        ["root", "task-b", "level1-task-c"],
+        rootSpec,
+      );
+      expect(result).toEqual(["1", "2"]);
+    });
+
+    it("should convert deeply nested path to indices", () => {
+      const rootSpec = createNestedComponentSpec();
+      const result = subgraphPathToIndexPath(
+        ["root", "task-b", "level1-task-c", "level2-task-b"],
+        rootSpec,
+      );
+      expect(result).toEqual(["1", "2", "1"]);
+    });
+
+    it("should return empty array for invalid task ID", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = subgraphPathToIndexPath(
+        ["root", "nonexistent-task"],
+        rootSpec,
+      );
+      expect(result).toEqual([]);
+    });
+
+    it("should return empty array when task spec is missing", () => {
+      const rootSpec: ComponentSpec = {
+        name: "root",
+        implementation: {
+          graph: {
+            tasks: {
+              "task-without-spec": {
+                componentRef: {},
+              },
+            },
+          },
+        },
+      };
+      const result = subgraphPathToIndexPath(
+        ["root", "task-without-spec"],
+        rootSpec,
+      );
+      expect(result).toEqual([]);
+    });
+
+    it("should return empty array when current spec is not a graph", () => {
+      const rootSpec: ComponentSpec = {
+        name: "root",
+        implementation: {
+          container: {
+            image: "alpine",
+            command: ["echo", "hello"],
+          },
+        },
+      };
+      const result = subgraphPathToIndexPath(["root", "any-task"], rootSpec);
+      expect(result).toEqual([]);
+    });
+
+    it("should return empty array when navigation fails mid-way", () => {
+      const rootSpec = createNestedComponentSpec();
+      const result = subgraphPathToIndexPath(
+        ["root", "task-b", "nonexistent-task"],
+        rootSpec,
+      );
+      expect(result).toEqual([]);
+    });
+
+    it("should handle path through multiple subgraphs", () => {
+      const rootSpec = createNestedComponentSpec();
+      const result = subgraphPathToIndexPath(
+        ["root", "task-b", "level1-task-a"],
+        rootSpec,
+      );
+      expect(result).toEqual(["1", "0"]);
+    });
+  });
+
+  describe("indexPathToSubgraphPath", () => {
+    const createRootComponentSpec = (): ComponentSpec => ({
+      name: "root-component",
+      implementation: {
+        graph: {
+          tasks: {
+            "alpha-task": createContainerTaskSpec(),
+            "beta-task": createContainerTaskSpec(),
+            "gamma-task": createGraphTaskSpec(3),
+            "delta-task": createContainerTaskSpec(),
+          },
+          outputValues: {},
+        },
+      },
+    });
+
+    const createNestedComponentSpec = (): ComponentSpec => ({
+      name: "root-component",
+      implementation: {
+        graph: {
+          tasks: {
+            "root-task-1": createContainerTaskSpec(),
+            "root-task-2": {
+              componentRef: {
+                spec: {
+                  name: "nested-component",
+                  implementation: {
+                    graph: {
+                      tasks: {
+                        "nested-task-1": createContainerTaskSpec(),
+                        "nested-task-2": createContainerTaskSpec(),
+                        "nested-task-3": {
+                          componentRef: {
+                            spec: {
+                              name: "deep-component",
+                              implementation: {
+                                graph: {
+                                  tasks: {
+                                    "deep-task-1": createContainerTaskSpec(),
+                                    "deep-task-2": createContainerTaskSpec(),
+                                    "deep-task-3": createContainerTaskSpec(),
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            "root-task-3": createContainerTaskSpec(),
+          },
+          outputValues: {},
+        },
+      },
+    });
+
+    it("should convert empty index path to empty subgraph path", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = indexPathToSubgraphPath([], rootSpec);
+      expect(result).toEqual([]);
+    });
+
+    it("should convert single index to task name", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = indexPathToSubgraphPath(["0"], rootSpec);
+      expect(result).toEqual(["alpha-task"]);
+    });
+
+    it("should convert index 2 to third task name", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = indexPathToSubgraphPath(["2"], rootSpec);
+      expect(result).toEqual(["gamma-task"]);
+    });
+
+    it("should convert last index to last task name", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = indexPathToSubgraphPath(["3"], rootSpec);
+      expect(result).toEqual(["delta-task"]);
+    });
+
+    it("should convert nested indices to nested task names", () => {
+      const rootSpec = createNestedComponentSpec();
+      const result = indexPathToSubgraphPath(["1", "2"], rootSpec);
+      expect(result).toEqual(["root-task-2", "nested-task-3"]);
+    });
+
+    it("should convert deeply nested indices to task names", () => {
+      const rootSpec = createNestedComponentSpec();
+      const result = indexPathToSubgraphPath(["1", "2", "1"], rootSpec);
+      expect(result).toEqual(["root-task-2", "nested-task-3", "deep-task-2"]);
+    });
+
+    it("should return empty array for negative index", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = indexPathToSubgraphPath(["-1"], rootSpec);
+      expect(result).toEqual([]);
+    });
+
+    it("should return empty array for out of bounds index", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = indexPathToSubgraphPath(["10"], rootSpec);
+      expect(result).toEqual([]);
+    });
+
+    it("should return empty array when current spec is not a graph", () => {
+      const rootSpec: ComponentSpec = {
+        name: "root",
+        implementation: {
+          container: {
+            image: "alpine",
+            command: ["echo", "hello"],
+          },
+        },
+      };
+      const result = indexPathToSubgraphPath(["0"], rootSpec);
+      expect(result).toEqual([]);
+    });
+
+    it("should return task name even when task spec is missing at final level", () => {
+      const rootSpec: ComponentSpec = {
+        name: "root",
+        implementation: {
+          graph: {
+            tasks: {
+              "task-without-spec": {
+                componentRef: {},
+              },
+            },
+          },
+        },
+      };
+      const result = indexPathToSubgraphPath(["0"], rootSpec);
+      // Should return the task name since we're not trying to navigate deeper
+      expect(result).toEqual(["task-without-spec"]);
+    });
+
+    it("should return empty array when trying to navigate into task without spec", () => {
+      const rootSpec: ComponentSpec = {
+        name: "root",
+        implementation: {
+          graph: {
+            tasks: {
+              "task-without-spec": {
+                componentRef: {},
+              },
+              "another-task": createContainerTaskSpec(),
+            },
+          },
+        },
+      };
+      // Trying to navigate into task-without-spec should fail
+      const result = indexPathToSubgraphPath(["0", "0"], rootSpec);
+      expect(result).toEqual([]);
+    });
+
+    it("should return empty array when nested navigation fails", () => {
+      const rootSpec = createNestedComponentSpec();
+      // root-task-1 is a container task, not a subgraph
+      const result = indexPathToSubgraphPath(["0", "0"], rootSpec);
+      expect(result).toEqual([]);
+    });
+
+    it("should handle complex nested indices", () => {
+      const rootSpec = createNestedComponentSpec();
+      const result = indexPathToSubgraphPath(["1", "0"], rootSpec);
+      expect(result).toEqual(["root-task-2", "nested-task-1"]);
+    });
+
+    it("should handle string indices correctly", () => {
+      const rootSpec = createRootComponentSpec();
+      const result = indexPathToSubgraphPath(["0", "2", "1"], rootSpec);
+      // Should fail because alpha-task is not a subgraph
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("Path conversion round-trips", () => {
+    const createTestSpec = (): ComponentSpec => ({
+      name: "test-root",
+      implementation: {
+        graph: {
+          tasks: {
+            "task-1": createContainerTaskSpec(),
+            "task-2": {
+              componentRef: {
+                spec: {
+                  name: "subgraph-1",
+                  implementation: {
+                    graph: {
+                      tasks: {
+                        "sub-task-1": createContainerTaskSpec(),
+                        "sub-task-2": {
+                          componentRef: {
+                            spec: {
+                              name: "subgraph-2",
+                              implementation: {
+                                graph: {
+                                  tasks: {
+                                    "deep-task-1": createContainerTaskSpec(),
+                                    "deep-task-2": createContainerTaskSpec(),
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                        "sub-task-3": createContainerTaskSpec(),
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            "task-3": createContainerTaskSpec(),
+          },
+          outputValues: {},
+        },
+      },
+    });
+
+    it("should convert subgraph path to index path and back", () => {
+      const rootSpec = createTestSpec();
+      const originalPath = ["root", "task-2", "sub-task-2"];
+
+      const indexPath = subgraphPathToIndexPath(originalPath, rootSpec);
+      expect(indexPath).toEqual(["1", "1"]);
+
+      const reconstructedPath = indexPathToSubgraphPath(indexPath, rootSpec);
+      // Should get back the path without "root" prefix
+      expect(reconstructedPath).toEqual(["task-2", "sub-task-2"]);
+    });
+
+    it("should convert deeply nested path round-trip", () => {
+      const rootSpec = createTestSpec();
+      const originalPath = ["root", "task-2", "sub-task-2", "deep-task-2"];
+
+      const indexPath = subgraphPathToIndexPath(originalPath, rootSpec);
+      expect(indexPath).toEqual(["1", "1", "1"]);
+
+      const reconstructedPath = indexPathToSubgraphPath(indexPath, rootSpec);
+      expect(reconstructedPath).toEqual([
+        "task-2",
+        "sub-task-2",
+        "deep-task-2",
+      ]);
+    });
+
+    it("should convert index path to subgraph path and back", () => {
+      const rootSpec = createTestSpec();
+      const originalIndexPath = ["1", "0"];
+
+      const subgraphPath = indexPathToSubgraphPath(originalIndexPath, rootSpec);
+      expect(subgraphPath).toEqual(["task-2", "sub-task-1"]);
+
+      const reconstructedIndexPath = subgraphPathToIndexPath(
+        ["root", ...subgraphPath],
+        rootSpec,
+      );
+      expect(reconstructedIndexPath).toEqual(originalIndexPath);
+    });
+
+    it("should handle single level round-trip", () => {
+      const rootSpec = createTestSpec();
+      const originalPath = ["root", "task-1"];
+
+      const indexPath = subgraphPathToIndexPath(originalPath, rootSpec);
+      expect(indexPath).toEqual(["0"]);
+
+      const reconstructedPath = indexPathToSubgraphPath(indexPath, rootSpec);
+      expect(reconstructedPath).toEqual(["task-1"]);
+
+      const backToIndex = subgraphPathToIndexPath(
+        ["root", ...reconstructedPath],
+        rootSpec,
+      );
+      expect(backToIndex).toEqual(indexPath);
+    });
+
+    it("should maintain consistency for all valid paths", () => {
+      const rootSpec = createTestSpec();
+      const testPaths = [
+        ["root", "task-1"],
+        ["root", "task-2"],
+        ["root", "task-3"],
+        ["root", "task-2", "sub-task-1"],
+        ["root", "task-2", "sub-task-2"],
+        ["root", "task-2", "sub-task-3"],
+        ["root", "task-2", "sub-task-2", "deep-task-1"],
+        ["root", "task-2", "sub-task-2", "deep-task-2"],
+      ];
+
+      testPaths.forEach((path) => {
+        const indexPath = subgraphPathToIndexPath(path, rootSpec);
+        const reconstructedPath = indexPathToSubgraphPath(indexPath, rootSpec);
+
+        // Remove "root" from original path for comparison
+        const pathWithoutRoot = path.slice(1);
+        expect(reconstructedPath).toEqual(pathWithoutRoot);
+
+        // Convert back to verify consistency
+        const backToIndex = subgraphPathToIndexPath(
+          ["root", ...reconstructedPath],
+          rootSpec,
+        );
+        expect(backToIndex).toEqual(indexPath);
+      });
     });
   });
 });

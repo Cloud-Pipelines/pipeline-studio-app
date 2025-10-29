@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocation, useNavigate, useSearch } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { ChevronFirst, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useBackend } from "@/providers/BackendProvider";
+import { type HomeSearch, indexRoute } from "@/routes/router";
 import { getBackendStatusString } from "@/utils/backend";
 import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
@@ -32,13 +33,11 @@ const CREATED_BY_ME_FILTER = "created_by:me";
 const INCLUDE_PIPELINE_NAME_QUERY_KEY = "include_pipeline_names";
 const INCLUDE_EXECUTION_STATS_QUERY_KEY = "include_execution_stats";
 
-type RunSectionSearch = { page_token?: string; filter?: string };
-
 export const RunSection = () => {
   const { backendUrl, configured, available, ready } = useBackend();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const search = useSearch({ strict: false }) as RunSectionSearch;
+  const search = indexRoute.useSearch();
   const isCreatedByMeDefault = useBetaFlagValue("created-by-me-default");
 
   // Parse filter into a dictionary
@@ -58,7 +57,9 @@ export const RunSection = () => {
     return filterDict;
   };
 
-  const filterDict = parseFilter(search.filter);
+  const filterDict = parseFilter(
+    "filter" in search ? search.filter : undefined,
+  );
   const createdByValue = filterDict.created_by;
 
   const [searchUser, setSearchUser] = useState(createdByValue ?? "");
@@ -69,18 +70,25 @@ export const RunSection = () => {
     ? `Created by ${createdByValue}`
     : "Created by me";
 
-  const pageToken = search.page_token;
+  const pageToken = "page_token" in search ? search.page_token : undefined;
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
   const { data, isLoading, isFetching, error } =
     useQuery<ListPipelineJobsResponse>({
-      queryKey: ["runs", backendUrl, pageToken, search.filter],
+      queryKey: [
+        "runs",
+        backendUrl,
+        pageToken,
+        "filter" in search ? search.filter : undefined,
+      ],
       refetchOnWindowFocus: false,
       enabled: configured && available,
       queryFn: async () => {
         const u = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
         if (pageToken) u.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
-        if (search.filter) u.searchParams.set(FILTER_QUERY_KEY, search.filter);
+        if ("filter" in search && search.filter) {
+          u.searchParams.set(FILTER_QUERY_KEY, search.filter);
+        }
 
         u.searchParams.set(INCLUDE_PIPELINE_NAME_QUERY_KEY, "true");
         u.searchParams.set(INCLUDE_EXECUTION_STATS_QUERY_KEY, "true");
@@ -94,13 +102,18 @@ export const RunSection = () => {
     });
 
   useEffect(() => {
-    if (!search.page_token && search.filter === undefined) {
+    const hasPageToken = "page_token" in search && search.page_token;
+    const hasFilter = "filter" in search && search.filter !== undefined;
+    if (!hasPageToken && !hasFilter) {
       handleFilterChange(isCreatedByMeDefault);
     }
   }, [isCreatedByMeDefault]);
 
   const handleFilterChange = (value: boolean) => {
-    const nextSearch: RunSectionSearch = { ...search };
+    const nextSearch: HomeSearch = {
+      page_token: "page_token" in search ? search.page_token : undefined,
+      filter: "filter" in search ? search.filter : undefined,
+    };
     delete nextSearch.page_token;
 
     if (value) {
@@ -137,7 +150,10 @@ export const RunSection = () => {
   const handleUserSearch = () => {
     if (!searchUser.trim()) return;
 
-    const nextSearch: RunSectionSearch = { ...search };
+    const nextSearch: HomeSearch = {
+      page_token: "page_token" in search ? search.page_token : undefined,
+      filter: "filter" in search ? search.filter : undefined,
+    };
     delete nextSearch.page_token;
 
     // Create or update the created_by filter
@@ -168,7 +184,10 @@ export const RunSection = () => {
   const handlePreviousPage = () => {
     const previousToken = previousPageTokens[previousPageTokens.length - 1];
     setPreviousPageTokens(previousPageTokens.slice(0, -1));
-    const nextSearch: RunSectionSearch = { ...search };
+    const nextSearch: HomeSearch = {
+      page_token: "page_token" in search ? search.page_token : undefined,
+      filter: "filter" in search ? search.filter : undefined,
+    };
     if (previousToken) {
       nextSearch.page_token = previousToken;
     } else {
@@ -179,7 +198,10 @@ export const RunSection = () => {
 
   const handleFirstPage = () => {
     setPreviousPageTokens([]);
-    const nextSearch: RunSectionSearch = { ...search };
+    const nextSearch: HomeSearch = {
+      page_token: "page_token" in search ? search.page_token : undefined,
+      filter: "filter" in search ? search.filter : undefined,
+    };
     delete nextSearch.page_token;
     navigate({ to: pathname, search: nextSearch });
   };

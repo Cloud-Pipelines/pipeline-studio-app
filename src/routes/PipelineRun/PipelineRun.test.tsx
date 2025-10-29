@@ -13,9 +13,11 @@ import PipelineRun from "./PipelineRun";
 
 // Mock the router and other dependencies
 vi.mock("@tanstack/react-router", async (importOriginal) => {
+  const actual = (await importOriginal()) as object;
   return {
-    ...(await importOriginal()),
+    ...actual,
     useNavigate: () => vi.fn(),
+    useSearch: () => ({ indexPath: undefined }),
     useLocation: () => ({
       pathname: "/runs/test-run-id-123",
       search: {},
@@ -32,6 +34,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
 vi.mock("@/routes/router", () => ({
   runDetailRoute: {
     useParams: () => ({ id: "test-run-id-123" }),
+    useSearch: () => ({ indexPath: undefined }),
   },
   RUNS_BASE_PATH: "/runs",
 }));
@@ -201,6 +204,15 @@ describe("<PipelineRun/>", () => {
     // arrange
     mockUseComponentSpec.mockReturnValue({
       componentSpec: null,
+      currentSubgraphSpec: {
+        implementation: {
+          graph: {
+            tasks: {},
+            outputValues: {},
+          },
+        },
+      },
+      currentGraphSpec: { tasks: {}, outputValues: {} },
       setComponentSpec: vi.fn(),
       clearComponentSpec: vi.fn(),
       setTaskStatusMap: vi.fn(),
