@@ -46,16 +46,21 @@ export const UpgradeNodePopover = ({
   const { notifyNode, fitNodeIntoView } = useNodesOverlay();
 
   const replaceWithComponent = useMemo(() => {
-    return replaceWith.get(
-      taskSpec.componentRef.digest ?? "",
-    ) as HydratedComponentReference;
+    if (!taskSpec) return null;
+    return replaceWith.get(taskSpec.componentRef.digest ?? "") as
+      | HydratedComponentReference
+      | undefined;
   }, [replaceWith, taskSpec]);
 
   const updatePreview = useMemo(() => {
+    if (!taskId || !replaceWithComponent) return null;
     return replaceTaskNode(taskId, replaceWithComponent, graphSpec);
   }, [taskId, replaceWithComponent, graphSpec]);
 
   const markup = useMemo(() => {
+    if (!taskId || !taskSpec || !replaceWithComponent || !updatePreview) {
+      return null;
+    }
     const { content } = getUpgradeConfirmationDetails(
       taskId,
       taskSpec,
@@ -64,7 +69,7 @@ export const UpgradeNodePopover = ({
     );
 
     return content;
-  }, [taskId, taskSpec, updatePreview.lostInputs, replaceWithComponent.digest]);
+  }, [taskId, taskSpec, replaceWithComponent, updatePreview]);
 
   const handleOpenChange = useCallback(() => {
     setOpen(false);
@@ -96,10 +101,15 @@ export const UpgradeNodePopover = ({
   }, [fitNodeIntoView, ids, replaceWith, notifyNode, handleOpenChange]);
 
   const handleApplyAndNext = useCallback(async () => {
+    if (!updatePreview) return;
     updateGraphSpec(updatePreview.updatedGraphSpec);
 
     void handleNext();
-  }, [handleNext, updatePreview.updatedGraphSpec, updateGraphSpec]);
+  }, [handleNext, updatePreview, updateGraphSpec]);
+
+  if (!taskSpec || !taskId || !replaceWithComponent || !updatePreview) {
+    return null;
+  }
 
   return (
     <Popover {...props} open={open} onOpenChange={handleOpenChange}>

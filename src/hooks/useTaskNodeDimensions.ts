@@ -16,8 +16,12 @@ type EditorPosition = {
   h?: string;
 };
 
-export function useTaskNodeDimensions(taskSpec: TaskSpec): TaskNodeDimensions {
+export function useTaskNodeDimensions(taskSpec?: TaskSpec): TaskNodeDimensions {
   return useMemo(() => {
+    if (!taskSpec) {
+      return DEFAULT_NODE_DIMENSIONS;
+    }
+
     let annotatedDimensions;
     try {
       const parsed = JSON.parse(

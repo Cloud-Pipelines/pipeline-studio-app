@@ -14,8 +14,6 @@ interface TaskConfigurationProps {
 const TaskConfiguration = ({ taskNode }: TaskConfigurationProps) => {
   const { taskSpec, callbacks } = taskNode;
 
-  const disabledCache = isCacheDisabled(taskSpec);
-
   const handleDisableCacheChange = useCallback(
     (checked: boolean) => {
       callbacks.setCacheStaleness(
@@ -24,6 +22,12 @@ const TaskConfiguration = ({ taskNode }: TaskConfigurationProps) => {
     },
     [callbacks],
   );
+
+  if (!taskSpec) {
+    return null;
+  }
+
+  const disabledCache = isCacheDisabled(taskSpec);
 
   return (
     <BlockStack gap="2">

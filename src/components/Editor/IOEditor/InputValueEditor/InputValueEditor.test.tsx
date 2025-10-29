@@ -24,6 +24,18 @@ vi.mock("@/providers/ComponentSpecProvider", () => ({
         },
       },
     },
+    currentSubgraphSpec: {
+      inputs: [
+        { name: "TestInput", type: "String" },
+        { name: "ExistingInput", type: "String" },
+      ],
+      implementation: {
+        container: {
+          image: "test-image",
+        },
+      },
+    },
+    currentSubgraphPath: ["root"],
     setComponentSpec: mockSetComponentSpec,
   }),
 }));

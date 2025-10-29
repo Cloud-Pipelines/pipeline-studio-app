@@ -1,4 +1,9 @@
-import type { ComponentSpec, TaskSpec } from "./componentSpec";
+import type {
+  ArgumentType,
+  ComponentSpec,
+  GraphInputArgument,
+  TaskSpec,
+} from "./componentSpec";
 import { isGraphImplementation } from "./componentSpec";
 import { ROOT_TASK_ID } from "./constants";
 import { pluralize } from "./string";
@@ -108,6 +113,93 @@ export const getSubgraphComponentSpec = (
   return currentSpec;
 };
 
+const detectIONameChanges = (
+  oldSpec: ComponentSpec,
+  newSpec: ComponentSpec,
+): {
+  inputChanges: Map<string, string>;
+  outputChanges: Map<string, string>;
+} => {
+  const inputChanges = new Map<string, string>();
+  const outputChanges = new Map<string, string>();
+
+  const oldInputs = oldSpec.inputs || [];
+  const newInputs = newSpec.inputs || [];
+
+  oldInputs.forEach((oldInput, index) => {
+    const newInput = newInputs[index];
+    if (
+      newInput &&
+      oldInput.name !== newInput.name &&
+      oldInputs.length === newInputs.length
+    ) {
+      inputChanges.set(oldInput.name, newInput.name);
+    }
+  });
+
+  const oldOutputs = oldSpec.outputs || [];
+  const newOutputs = newSpec.outputs || [];
+
+  oldOutputs.forEach((oldOutput, index) => {
+    const newOutput = newOutputs[index];
+    if (
+      newOutput &&
+      oldOutput.name !== newOutput.name &&
+      oldOutputs.length === newOutputs.length
+    ) {
+      outputChanges.set(oldOutput.name, newOutput.name);
+    }
+  });
+
+  return { inputChanges, outputChanges };
+};
+
+const updateTaskArgumentsForRenamedInputs = (
+  taskSpec: TaskSpec,
+  inputChanges: Map<string, string>,
+): TaskSpec => {
+  if (!taskSpec.arguments || inputChanges.size === 0) {
+    return taskSpec;
+  }
+
+  const updatedArguments: Record<string, ArgumentType> = {};
+  let hasChanges = false;
+
+  Object.entries(taskSpec.arguments).forEach(([argName, argValue]) => {
+    const newInputName = inputChanges.get(argName);
+
+    if (newInputName) {
+      updatedArguments[newInputName] = argValue;
+      hasChanges = true;
+    } else {
+      updatedArguments[argName] = argValue;
+    }
+
+    if (
+      argValue &&
+      typeof argValue === "object" &&
+      "graphInput" in argValue &&
+      argValue.graphInput
+    ) {
+      const referencedInputName = argValue.graphInput.inputName;
+      const newReferencedInputName = inputChanges.get(referencedInputName);
+
+      if (newReferencedInputName) {
+        updatedArguments[newInputName || argName] = {
+          ...argValue,
+          graphInput: {
+            ...argValue.graphInput,
+            inputName: newReferencedInputName,
+          },
+        } as GraphInputArgument;
+        hasChanges = true;
+      }
+    }
+  });
+
+  return hasChanges ? { ...taskSpec, arguments: updatedArguments } : taskSpec;
+};
+
 /**
  * Updates a nested subgraph specification within the root component spec.
  * This function recursively navigates the subgraph path and replaces the
@@ -165,11 +257,33 @@ export const updateSubgraphSpec = (
     return currentSpec;
   }
 
+  const oldSubgraphSpec = targetTask.componentRef.spec;
   const updatedNestedSpec = updateSubgraphSpec(
-    targetTask.componentRef.spec,
+    oldSubgraphSpec,
     path.slice(1),
     updatedSubgraphSpec,
   );
+
+  const { inputChanges } = detectIONameChanges(
+    oldSubgraphSpec,
+    updatedNestedSpec,
+  );
+
+  let updatedTargetTask = targetTask;
+  if (inputChanges.size > 0) {
+    updatedTargetTask = updateTaskArgumentsForRenamedInputs(
+      targetTask,
+      inputChanges,
+    );
+  }
+
+  updatedTargetTask = {
+    ...updatedTargetTask,
+    componentRef: {
+      ...updatedTargetTask.componentRef,
+      spec: updatedNestedSpec,
+    },
+  };
 
   return {
     ...currentSpec,
@@ -179,13 +293,7 @@ export const updateSubgraphSpec = (
         ...currentSpec.implementation.graph,
         tasks: {
           ...currentSpec.implementation.graph.tasks,
-          [taskId]: {
-            ...targetTask,
-            componentRef: {
-              ...targetTask.componentRef,
-              spec: updatedNestedSpec,
-            },
-          },
+          [taskId]: updatedTargetTask,
         },
       },
     },

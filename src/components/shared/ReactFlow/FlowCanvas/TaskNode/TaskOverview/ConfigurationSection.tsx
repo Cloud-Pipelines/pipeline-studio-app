@@ -14,6 +14,10 @@ interface ConfigurationSectionProps {
 const ConfigurationSection = ({ taskNode }: ConfigurationSectionProps) => {
   const { taskSpec, callbacks } = taskNode;
 
+  if (!taskSpec) {
+    return null;
+  }
+
   const componentSpec = taskSpec.componentRef.spec;
 
   if (!componentSpec) {

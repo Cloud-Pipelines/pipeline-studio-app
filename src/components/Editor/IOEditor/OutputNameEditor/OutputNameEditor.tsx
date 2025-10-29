@@ -12,6 +12,7 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { type OutputSpec } from "@/utils/componentSpec";
 import { outputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
+import { updateSubgraphSpec } from "@/utils/subgraphUtils";
 
 import { type OutputConnectedDetails } from "../../utils/getOutputConnectedDetails";
 import { updateOutputNameOnComponentSpec } from "../../utils/updateOutputNameOnComponentSpec";
@@ -30,7 +31,12 @@ export const OutputNameEditor = ({
   connectedDetails,
 }: OutputNameEditorProps) => {
   const { transferSelection } = useNodeSelectionTransfer(outputNameToNodeId);
-  const { setComponentSpec, componentSpec } = useComponentSpec();
+  const {
+    setComponentSpec,
+    componentSpec,
+    currentSubgraphSpec,
+    currentSubgraphPath,
+  } = useComponentSpec();
   const { clearContent } = useContextPanel();
   const {
     handlers: confirmationHandlers,
@@ -47,10 +53,10 @@ export const OutputNameEditor = ({
 
   const handleOutputNameChange = useCallback(
     (oldName: string, newName: string) => {
-      if (!componentSpec.outputs) return null;
+      if (!currentSubgraphSpec.outputs) return null;
 
       const updatedComponentSpec = updateOutputNameOnComponentSpec(
-        componentSpec,
+        currentSubgraphSpec,
         oldName,
         newName,
       );
@@ -59,7 +65,7 @@ export const OutputNameEditor = ({
 
       return updatedComponentSpec;
     },
-    [componentSpec, setComponentSpec],
+    [currentSubgraphSpec, transferSelection],
   );
 
   const saveChanges = useCallback(() => {
@@ -70,13 +76,18 @@ export const OutputNameEditor = ({
       return;
     }
 
-    const updatedComponentSpecWithValues = handleOutputNameChange(
+    const updatedSubgraphSpec = handleOutputNameChange(
       output.name,
       outputName.trim(),
     );
 
-    if (updatedComponentSpecWithValues) {
-      setComponentSpec(updatedComponentSpecWithValues);
+    if (updatedSubgraphSpec) {
+      const updatedRootSpec = updateSubgraphSpec(
+        componentSpec,
+        currentSubgraphPath,
+        updatedSubgraphSpec,
+      );
+      setComponentSpec(updatedRootSpec);
     }
   }, [
     hasChanges,
@@ -85,6 +96,8 @@ export const OutputNameEditor = ({
     output.name,
     outputName,
     setComponentSpec,
+    componentSpec,
+    currentSubgraphPath,
   ]);
 
   const handleBlur = useCallback(() => {
@@ -109,11 +122,11 @@ export const OutputNameEditor = ({
 
       setValidationError(null);
     },
-    [componentSpec, output.name],
+    [currentSubgraphSpec, output.name],
   );
 
   const deleteNode = useCallback(async () => {
-    if (!componentSpec.outputs) return;
+    if (!currentSubgraphSpec.outputs) return;
 
     const confirmed = await triggerConfirmation({
       title: "Delete Output Node",
@@ -123,17 +136,28 @@ export const OutputNameEditor = ({
 
     if (!confirmed) return;
 
-    const updatedComponentSpec = removeGraphOutput(output.name, componentSpec);
+    const updatedSubgraphSpec = removeGraphOutput(
+      output.name,
+      currentSubgraphSpec,
+    );
 
-    setComponentSpec(updatedComponentSpec);
+    const updatedRootSpec = updateSubgraphSpec(
+      componentSpec,
+      currentSubgraphPath,
+      updatedSubgraphSpec,
+    );
+
+    setComponentSpec(updatedRootSpec);
 
     clearContent();
   }, [
-    componentSpec,
+    currentSubgraphSpec,
     output.name,
     setComponentSpec,
     clearContent,
     triggerConfirmation,
+    componentSpec,
+    currentSubgraphPath,
   ]);
 
   useEffect(() => {
