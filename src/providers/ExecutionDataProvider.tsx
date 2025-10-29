@@ -168,7 +168,13 @@ export function ExecutionDataProvider({
       executionDataCache.current,
       queryClient,
     );
-  }, [currentSubgraphPath, rootExecutionId, rootDetails, isAtRoot, queryClient]);
+  }, [
+    currentSubgraphPath,
+    rootExecutionId,
+    rootDetails,
+    isAtRoot,
+    queryClient,
+  ]);
 
   const {
     executionData: nestedExecutionData,
@@ -195,7 +201,13 @@ export function ExecutionDataProvider({
       details: nestedDetails,
       state: nestedState,
     });
-  }, [nestedDetails, nestedState, currentExecutionId, currentSubgraphPath, isAtRoot]);
+  }, [
+    nestedDetails,
+    nestedState,
+    currentExecutionId,
+    currentSubgraphPath,
+    isAtRoot,
+  ]);
 
   useEffect(() => {
     const taskStatusMap = buildTaskStatusMap(details, state);
