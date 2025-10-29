@@ -16,6 +16,7 @@ describe("createNodesFromComponentSpec", () => {
     onDelete: vi.fn(),
     setArguments: vi.fn(),
     setAnnotations: vi.fn(),
+    setCacheStaleness: vi.fn(),
     onDuplicate: vi.fn(),
     onUpgrade: vi.fn(),
   };

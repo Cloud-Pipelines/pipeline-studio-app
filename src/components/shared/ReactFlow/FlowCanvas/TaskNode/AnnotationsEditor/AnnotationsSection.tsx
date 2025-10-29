@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { Separator } from "@/components/ui/separator";
 import useToastNotification from "@/hooks/useToastNotification";
 import type { Annotations } from "@/types/annotations";
 import type { TaskSpec } from "@/utils/componentSpec";
@@ -121,7 +122,7 @@ export const AnnotationsSection = ({
         onBlur={handleValueBlur}
       />
 
-      <hr className="border-t border-dashed border-gray-200 my-4" />
+      <Separator className="mt-4 mb-2" />
 
       <AnnotationsEditor
         annotations={annotations}

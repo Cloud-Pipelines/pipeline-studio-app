@@ -35,6 +35,7 @@ type TaskNodeState = Readonly<{
 type TaskNodeCallbacks = {
   setArguments: (args: Record<string, ArgumentType>) => void;
   setAnnotations: (annotations: Annotations) => void;
+  setCacheStaleness: (cacheStaleness: string | undefined) => void;
   onDelete?: () => void;
   onDuplicate?: () => void;
   onUpgrade?: () => void;
@@ -105,6 +106,13 @@ export const TaskNodeProvider = ({
     [data.callbacks],
   );
 
+  const handleSetCacheStaleness = useCallback(
+    (cacheStaleness: string | undefined) => {
+      data.callbacks?.setCacheStaleness(cacheStaleness);
+    },
+    [data.callbacks],
+  );
+
   const handleDeleteTaskNode = useCallback(() => {
     data.callbacks?.onDelete();
   }, [data.callbacks]);
@@ -156,6 +164,7 @@ export const TaskNodeProvider = ({
     () => ({
       setArguments: handleSetArguments,
       setAnnotations: handleSetAnnotations,
+      setCacheStaleness: handleSetCacheStaleness,
       onDelete: handleDeleteTaskNode,
       onDuplicate: handleDuplicateTaskNode,
       onUpgrade: handleUpgradeTaskNode,

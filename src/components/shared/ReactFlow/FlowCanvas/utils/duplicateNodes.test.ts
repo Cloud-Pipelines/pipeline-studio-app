@@ -80,6 +80,7 @@ const createMockComponentSpecWithOutputs = (
 const createMockTaskNodeCallbacks = () => ({
   setArguments: vi.fn(),
   setAnnotations: vi.fn(),
+  setCacheStaleness: vi.fn(),
   onDelete: vi.fn(),
   onDuplicate: vi.fn(),
   onUpgrade: vi.fn(),
@@ -88,6 +89,7 @@ const createMockTaskNodeCallbacks = () => ({
 const createMockNodeCallbacks = (): NodeCallbacks => ({
   setArguments: vi.fn(),
   setAnnotations: vi.fn(),
+  setCacheStaleness: vi.fn(),
   onDelete: vi.fn(),
   onDuplicate: vi.fn(),
   onUpgrade: vi.fn(),

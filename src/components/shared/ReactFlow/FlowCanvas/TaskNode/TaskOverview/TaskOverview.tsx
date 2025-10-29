@@ -19,8 +19,8 @@ import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
 import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
 import { isGraphImplementation } from "@/utils/componentSpec";
 
-import { AnnotationsSection } from "../AnnotationsEditor/AnnotationsSection";
 import ArgumentsSection from "../ArgumentsEditor/ArgumentsSection";
+import ConfigurationSection from "./ConfigurationSection";
 import IOSection from "./IOSection/IOSection";
 import Logs, { OpenLogsInNewWindowLink } from "./logs";
 import OutputsList from "./OutputsList";
@@ -81,9 +81,9 @@ const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
               </TabsTrigger>
             )}
             {!readOnly && (
-              <TabsTrigger value="annotations" className="flex-1">
+              <TabsTrigger value="configuration" className="flex-1">
                 <FilePenLineIcon className="h-4 w-4" />
-                Annotations
+                Configuration
               </TabsTrigger>
             )}
           </TabsList>
@@ -153,14 +153,8 @@ const TaskOverview = ({ taskNode, actions }: TaskOverviewProps) => {
             </TabsContent>
           )}
           {!readOnly && (
-            <TabsContent value="annotations">
-              <p className="text-sm text-muted-foreground mb-2">
-                Configure task annotations, resources and custom data.
-              </p>
-              <AnnotationsSection
-                taskSpec={taskSpec}
-                onApply={callbacks.setAnnotations}
-              />
+            <TabsContent value="configuration">
+              <ConfigurationSection taskNode={taskNode} />
             </TabsContent>
           )}
         </Tabs>
