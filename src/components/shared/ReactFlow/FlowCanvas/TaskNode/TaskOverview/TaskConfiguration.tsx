@@ -4,6 +4,7 @@ import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Switch } from "@/components/ui/switch";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
+import { isCacheDisabled } from "@/utils/cache";
 import { ISO8601_DURATION_ZERO_DAYS } from "@/utils/constants";
 
 interface TaskConfigurationProps {
@@ -13,9 +14,7 @@ interface TaskConfigurationProps {
 const TaskConfiguration = ({ taskNode }: TaskConfigurationProps) => {
   const { taskSpec, callbacks } = taskNode;
 
-  const disableCache =
-    taskSpec.executionOptions?.cachingStrategy?.maxCacheStaleness ===
-    ISO8601_DURATION_ZERO_DAYS;
+  const disabledCache = isCacheDisabled(taskSpec);
 
   const handleDisableCacheChange = useCallback(
     (checked: boolean) => {
@@ -34,7 +33,7 @@ const TaskConfiguration = ({ taskNode }: TaskConfigurationProps) => {
           Disable cache
         </Paragraph>
         <Switch
-          checked={disableCache}
+          checked={disabledCache}
           onCheckedChange={handleDisableCacheChange}
         />
       </InlineStack>

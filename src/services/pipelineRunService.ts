@@ -3,7 +3,11 @@ import localForage from "localforage";
 import type { BodyCreateApiPipelineRunsPost } from "@/api/types.gen";
 import { APP_ROUTES } from "@/routes/router";
 import type { PipelineRun } from "@/types/pipelineRun";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import { removeCachingStrategyFromSpec } from "@/utils/cache";
+import {
+  type ComponentSpec,
+  isGraphImplementation,
+} from "@/utils/componentSpec";
 import {
   componentSpecToYaml,
   getComponentFileFromList,
@@ -91,6 +95,18 @@ export const copyRunToPipeline = async (
     cleanComponentSpec.metadata.annotations ??= {};
     cleanComponentSpec.metadata.annotations["editor.flow-direction"] ??=
       "left-to-right";
+
+    // Remove caching strategy from all tasks
+    if (isGraphImplementation(cleanComponentSpec.implementation)) {
+      const tasks = cleanComponentSpec.implementation.graph.tasks;
+
+      cleanComponentSpec.implementation.graph.tasks = Object.fromEntries(
+        Object.entries(tasks).map(([taskId, task]) => [
+          taskId,
+          removeCachingStrategyFromSpec(task),
+        ]),
+      );
+    }
 
     // Generate a name for the copied pipeline
     const originalName = cleanComponentSpec.name || "Unnamed Pipeline";
