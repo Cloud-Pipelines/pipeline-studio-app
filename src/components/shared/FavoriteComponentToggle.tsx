@@ -1,9 +1,10 @@
-import { PackagePlus, Star, Trash2 } from "lucide-react";
+import { PackagePlus, Star } from "lucide-react";
 import type { MouseEvent, PropsWithChildren } from "react";
 import { useCallback, useMemo, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
 import type { ComponentReference } from "@/utils/componentSpec";
@@ -11,15 +12,18 @@ import { getComponentName } from "@/utils/getComponentName";
 
 interface ComponentFavoriteToggleProps {
   component: ComponentReference;
+  hideDelete?: boolean;
 }
 
 interface StateButtonProps {
   active?: boolean;
+  isDanger?: boolean;
   onClick?: () => void;
 }
 
 const IconStateButton = ({
   active,
+  isDanger = false,
   onClick,
   children,
 }: PropsWithChildren<StateButtonProps>) => {
@@ -37,8 +41,12 @@ const IconStateButton = ({
       onClick={handleFavorite}
       data-testid="favorite-star"
       className={cn(
-        "w-fit h-fit p-1 hover:text-yellow-500",
-        active ? "text-yellow-500" : "text-gray-500/50",
+        "w-fit h-fit p-1 hover:text-warning",
+        active ? "text-warning" : "text-gray-500/50",
+        {
+          "hover:text-destructive": isDanger,
+          "text-destructive": isDanger && active,
+        },
       )}
       variant="ghost"
       size="icon"
@@ -69,14 +77,15 @@ const AddToLibraryButton = ({ active, onClick }: StateButtonProps) => {
 
 const DeleteFromLibraryButton = ({ active, onClick }: StateButtonProps) => {
   return (
-    <IconStateButton active={active} onClick={onClick}>
-      <Trash2 className="h-4 w-4" />
+    <IconStateButton active={active} onClick={onClick} isDanger>
+      <Icon name="PackageX" />
     </IconStateButton>
   );
 };
 
 export const ComponentFavoriteToggle = ({
   component,
+  hideDelete = false,
 }: ComponentFavoriteToggleProps) => {
   const {
     addToComponentLibrary,
@@ -140,6 +149,8 @@ export const ComponentFavoriteToggle = ({
     handleDelete();
   }, [component, isInLibrary, addToComponentLibrary, handleDelete]);
 
+  const showDeleteButton = isInLibrary && isUserComponent && !hideDelete;
+
   return (
     <>
       {!isInLibrary && <AddToLibraryButton onClick={openConfirmationDialog} />}
@@ -148,7 +159,7 @@ export const ComponentFavoriteToggle = ({
         <FavoriteStarButton active={isFavorited} onClick={onFavorite} />
       )}
 
-      {isInLibrary && isUserComponent && (
+      {showDeleteButton && (
         <DeleteFromLibraryButton onClick={openConfirmationDialog} />
       )}
 
