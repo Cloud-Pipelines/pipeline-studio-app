@@ -8,6 +8,7 @@ import type { TaskSpec } from "@/utils/componentSpec";
 
 import { AnnotationsEditor } from "./AnnotationsEditor";
 import { ComputeResourcesEditor } from "./ComputeResourcesEditor";
+import type { NewAnnotationRowData } from "./NewAnnotationRow";
 
 interface AnnotationsSectionProps {
   taskSpec: TaskSpec;
@@ -27,43 +28,41 @@ export const AnnotationsSection = ({
   });
 
   // Track new rows separately until they have a key
-  const [newRows, setNewRows] = useState<Array<{ key: string; value: string }>>(
-    [],
-  );
+  const [newRows, setNewRows] = useState<Array<NewAnnotationRowData>>([]);
 
   const handleAddNewRow = useCallback(() => {
-    setNewRows((rows) => [...rows, { key: "", value: "" }]);
+    const newRow = { id: Date.now().toString(), key: "", value: "" };
+    setNewRows((rows) => [...rows, newRow]);
   }, []);
 
-  const handleRemoveNewRow = useCallback((idx: number) => {
-    setNewRows((rows) => rows.filter((_, i) => i !== idx));
+  const handleRemoveNewRow = useCallback((newRow: NewAnnotationRowData) => {
+    setNewRows((rows) => rows.filter((row) => row.id !== newRow.id));
   }, []);
 
   const handleNewRowBlur = useCallback(
-    (idx: number, newRow: { key: string; value: string }) => {
-      const updatedRows = [...newRows];
-      updatedRows[idx] = { ...updatedRows[idx], ...newRow };
-
-      const row = updatedRows[idx];
-
-      if (row.key.trim() && !(row.key in annotations)) {
+    (newRow: NewAnnotationRowData) => {
+      if (newRow.key.trim() && !(newRow.key in annotations)) {
         const newAnnotations = {
           ...annotations,
-          [row.key]: row.value,
+          [newRow.key]: newRow.value,
         };
         setAnnotations(newAnnotations);
         onApply(newAnnotations);
 
-        setNewRows((rows) => rows.filter((_, i) => i !== idx));
+        setNewRows((rows) => rows.filter((row) => row.id !== newRow.id));
       } else {
-        if (row.key.trim() && row.key in annotations) {
+        if (newRow.key.trim() && newRow.key in annotations) {
           notify("Annotation key already exists", "warning");
         }
 
-        setNewRows(updatedRows);
+        setNewRows((rows) =>
+          rows.map((row) =>
+            row.id === newRow.id ? { ...row, ...newRow } : row,
+          ),
+        );
       }
     },
-    [newRows, annotations, onApply],
+    [annotations, onApply, notify],
   );
 
   const handleRemove = useCallback(

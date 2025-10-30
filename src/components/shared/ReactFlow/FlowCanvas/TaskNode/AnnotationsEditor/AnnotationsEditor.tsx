@@ -6,15 +6,18 @@ import type { AnnotationConfig, Annotations } from "@/types/annotations";
 
 import { AnnotationsInput } from "./AnnotationsInput";
 import { COMPUTE_RESOURCES } from "./ComputeResourcesEditor";
-import { NewAnnotationRow } from "./NewAnnotationRow";
+import {
+  NewAnnotationRow,
+  type NewAnnotationRowData,
+} from "./NewAnnotationRow";
 
 interface AnnotationsEditorProps {
   annotations: Annotations;
   onSave: (key: string, value: string) => void;
   onRemove: (key: string) => void;
-  newRows: Array<{ key: string; value: string }>;
-  onNewRowBlur: (idx: number, newRow: { key: string; value: string }) => void;
-  onRemoveNewRow: (idx: number) => void;
+  newRows: Array<NewAnnotationRowData>;
+  onNewRowBlur: (newRow: NewAnnotationRowData) => void;
+  onRemoveNewRow: (newRow: NewAnnotationRowData) => void;
   onAddNewRow: () => void;
 }
 
@@ -96,11 +99,11 @@ export const AnnotationsEditor = ({
 
       {newRows.map((row, idx) => (
         <NewAnnotationRow
-          key={row.key + idx}
+          key={row.id}
           row={row}
           autofocus={idx === newRows.length - 1}
-          onBlur={(newRow) => onNewRowBlur(idx, newRow)}
-          onRemove={() => onRemoveNewRow(idx)}
+          onBlur={onNewRowBlur}
+          onRemove={onRemoveNewRow}
         />
       ))}
     </div>
