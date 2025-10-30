@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { BlockStack } from "@/components/ui/layout";
 import { Separator } from "@/components/ui/separator";
 import useToastNotification from "@/hooks/useToastNotification";
 import type { Annotations } from "@/types/annotations";
@@ -65,25 +66,6 @@ export const AnnotationsSection = ({
     [newRows, annotations, onApply],
   );
 
-  const handleValueBlur = useCallback(
-    (key: string, value: string | undefined) => {
-      const newAnnotations =
-        value === undefined || value === ""
-          ? (() => {
-              const { [key]: _, ...rest } = annotations;
-              return rest;
-            })()
-          : {
-              ...annotations,
-              [key]: value,
-            };
-
-      setAnnotations(newAnnotations);
-      onApply(newAnnotations);
-    },
-    [annotations, onApply],
-  );
-
   const handleRemove = useCallback(
     (key: string) => {
       const { [key]: _, ...rest } = annotations;
@@ -94,7 +76,7 @@ export const AnnotationsSection = ({
     [annotations, onApply],
   );
 
-  const handleValueChange = useCallback(
+  const handleSave = useCallback(
     (key: string, value: string | undefined) => {
       if (value === undefined || value === "") {
         // If value is empty or undefined, remove the annotation
@@ -102,12 +84,15 @@ export const AnnotationsSection = ({
         return;
       }
 
-      setAnnotations((prev) => ({
-        ...prev,
+      const newAnnotations = {
+        ...annotations,
         [key]: value,
-      }));
+      };
+
+      setAnnotations(newAnnotations);
+      onApply(newAnnotations);
     },
-    [handleRemove],
+    [annotations, onApply, handleRemove],
   );
 
   useEffect(() => {
@@ -115,25 +100,20 @@ export const AnnotationsSection = ({
   }, [rawAnnotations]);
 
   return (
-    <div className="h-auto flex flex-col gap-2 overflow-y-auto pr-4 py-2 overflow-visible">
-      <ComputeResourcesEditor
-        annotations={annotations}
-        onChange={handleValueChange}
-        onBlur={handleValueBlur}
-      />
+    <BlockStack gap="2" className="overflow-y-auto pr-4 py-2 overflow-visible">
+      <ComputeResourcesEditor annotations={annotations} onSave={handleSave} />
 
       <Separator className="mt-4 mb-2" />
 
       <AnnotationsEditor
         annotations={annotations}
-        onChange={handleValueChange}
-        onBlur={handleValueBlur}
+        onSave={handleSave}
         onRemove={handleRemove}
         newRows={newRows}
         onNewRowBlur={handleNewRowBlur}
         onRemoveNewRow={handleRemoveNewRow}
         onAddNewRow={handleAddNewRow}
       />
-    </div>
+    </BlockStack>
   );
 };
