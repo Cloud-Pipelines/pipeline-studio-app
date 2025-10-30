@@ -79,11 +79,13 @@ export const AnnotationsInput = ({
       return;
     }
 
-    try {
-      JSON.parse(newValue);
-      setIsInvalid(false);
-    } catch {
-      setIsInvalid(true);
+    if (config?.type === "json") {
+      try {
+        JSON.parse(newValue);
+        setIsInvalid(false);
+      } catch {
+        setIsInvalid(true);
+      }
     }
   }, []);
 
@@ -183,7 +185,7 @@ export const AnnotationsInput = ({
   const handleBlur = useCallback(() => {
     if (config?.enableQuantity && !shouldSaveQuantityField()) return;
 
-    if (onBlur && lastSavedValue !== inputValue) {
+    if (onBlur && lastSavedValue !== inputValue && !isInvalid) {
       let value = inputValue;
       if (
         config?.type === "number" &&
@@ -196,7 +198,14 @@ export const AnnotationsInput = ({
       onBlur(value);
       setLastSavedValue(value);
     }
-  }, [onBlur, shouldSaveQuantityField, lastSavedValue, inputValue, config]);
+  }, [
+    onBlur,
+    shouldSaveQuantityField,
+    isInvalid,
+    lastSavedValue,
+    inputValue,
+    config,
+  ]);
 
   useCallbackOnUnmount(handleBlur);
 
@@ -317,7 +326,7 @@ export const AnnotationsInput = ({
 
   return (
     <>
-      <InlineStack gap="2" blockAlign="center" className="grow flex-wrap">
+      <InlineStack gap="2" blockAlign="center" wrap="nowrap" className="grow">
         {inputElement}
         {config?.enableQuantity && (
           <QuantityInput
