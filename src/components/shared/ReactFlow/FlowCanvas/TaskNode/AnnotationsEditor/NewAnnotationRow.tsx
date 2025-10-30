@@ -5,11 +5,17 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { InlineStack } from "@/components/ui/layout";
 
+export type NewAnnotationRowData = {
+  id: string;
+  key: string;
+  value: string;
+};
+
 interface NewAnnotationRowProps {
-  row: { key: string; value: string };
+  row: NewAnnotationRowData;
   autofocus: boolean;
-  onBlur: (row: { key: string; value: string }) => void;
-  onRemove: () => void;
+  onBlur: (row: NewAnnotationRowData) => void;
+  onRemove: (row: NewAnnotationRowData) => void;
 }
 
 export const NewAnnotationRow = ({
@@ -21,7 +27,7 @@ export const NewAnnotationRow = ({
   const [key, setKey] = useState(row.key);
   const [value, setValue] = useState(row.value);
 
-  const newRow = useMemo(() => ({ key, value }), [key, value]);
+  const newRow = useMemo(() => ({ ...row, key, value }), [row, key, value]);
 
   const handleRowBlur = useCallback(
     (e: FocusEvent<HTMLDivElement>) => {
@@ -31,6 +37,10 @@ export const NewAnnotationRow = ({
     },
     [newRow, onBlur],
   );
+
+  const handleRowRemove = useCallback(() => {
+    onRemove(newRow);
+  }, [newRow, onRemove]);
 
   return (
     <div onBlur={handleRowBlur}>
@@ -48,7 +58,7 @@ export const NewAnnotationRow = ({
           onChange={(e) => setValue(e.target.value)}
           className="flex-1"
         />
-        <Button variant="ghost" size="icon" onClick={onRemove}>
+        <Button variant="ghost" size="icon" onClick={handleRowRemove}>
           <Icon name="Trash" className="text-destructive" />
         </Button>
       </InlineStack>
