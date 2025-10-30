@@ -625,5 +625,316 @@ describe("subgraphUtils", () => {
         result.implementation.graph.tasks["subgraph1"]?.componentRef.spec?.name,
       ).toBe("updated-subgraph1");
     });
+
+    it("should update parent task references when subgraph output is renamed", () => {
+      // Create a subgraph with an output
+      const subgraphSpec: ComponentSpec = {
+        name: "my-subgraph",
+        outputs: [{ name: "oldOutputName" }],
+        implementation: {
+          graph: {
+            tasks: {
+              "inner-task": createContainerTaskSpec(),
+            },
+            outputValues: {
+              oldOutputName: {
+                taskOutput: {
+                  taskId: "inner-task",
+                  outputName: "result",
+                },
+              },
+            },
+          },
+        },
+      };
+
+      // Create root spec with subgraph and a task that consumes its output
+      const rootSpec: ComponentSpec = {
+        name: "root-pipeline",
+        implementation: {
+          graph: {
+            tasks: {
+              "subgraph-task": {
+                componentRef: {
+                  spec: subgraphSpec,
+                },
+              },
+              "consumer-task": {
+                componentRef: {
+                  spec: {
+                    name: "consumer",
+                    inputs: [{ name: "data" }],
+                    implementation: {
+                      container: {
+                        image: "alpine",
+                        command: ["process"],
+                      },
+                    },
+                  },
+                },
+                arguments: {
+                  data: {
+                    taskOutput: {
+                      taskId: "subgraph-task",
+                      outputName: "oldOutputName",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      // Update the subgraph to rename the output
+      const updatedSubgraphSpec: ComponentSpec = {
+        ...subgraphSpec,
+        outputs: [{ name: "newOutputName" }],
+        implementation: {
+          graph: {
+            tasks: {
+              "inner-task": createContainerTaskSpec(),
+            },
+            outputValues: {
+              newOutputName: {
+                taskOutput: {
+                  taskId: "inner-task",
+                  outputName: "result",
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const result = updateSubgraphSpec(
+        rootSpec,
+        ["root", "subgraph-task"],
+        updatedSubgraphSpec,
+      );
+
+      expect(isGraphImplementation(result.implementation)).toBe(true);
+      if (!isGraphImplementation(result.implementation)) return;
+
+      // Verify the subgraph output was renamed in the subgraph spec
+      const updatedSubgraph =
+        result.implementation.graph.tasks["subgraph-task"]?.componentRef.spec;
+      expect(updatedSubgraph?.outputs?.[0].name).toBe("newOutputName");
+
+      // Verify the consumer task's argument was updated to reference the new output name
+      const consumerTask = result.implementation.graph.tasks["consumer-task"];
+      expect(consumerTask?.arguments?.data).toEqual({
+        taskOutput: {
+          taskId: "subgraph-task",
+          outputName: "newOutputName",
+        },
+      });
+    });
+
+    it("should handle multiple tasks referencing renamed subgraph outputs", () => {
+      const subgraphSpec: ComponentSpec = {
+        name: "data-source",
+        outputs: [{ name: "output1" }, { name: "output2" }],
+        implementation: {
+          graph: {
+            tasks: {
+              "source-task": createContainerTaskSpec(),
+            },
+            outputValues: {
+              output1: {
+                taskOutput: {
+                  taskId: "source-task",
+                  outputName: "data1",
+                },
+              },
+              output2: {
+                taskOutput: {
+                  taskId: "source-task",
+                  outputName: "data2",
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const rootSpec: ComponentSpec = {
+        name: "root",
+        implementation: {
+          graph: {
+            tasks: {
+              "data-subgraph": {
+                componentRef: {
+                  spec: subgraphSpec,
+                },
+              },
+              consumer1: {
+                componentRef: {
+                  spec: {
+                    name: "consumer1",
+                    inputs: [{ name: "input" }],
+                    implementation: {
+                      container: { image: "alpine", command: ["echo"] },
+                    },
+                  },
+                },
+                arguments: {
+                  input: {
+                    taskOutput: {
+                      taskId: "data-subgraph",
+                      outputName: "output1",
+                    },
+                  },
+                },
+              },
+              consumer2: {
+                componentRef: {
+                  spec: {
+                    name: "consumer2",
+                    inputs: [{ name: "input" }],
+                    implementation: {
+                      container: { image: "alpine", command: ["cat"] },
+                    },
+                  },
+                },
+                arguments: {
+                  input: {
+                    taskOutput: {
+                      taskId: "data-subgraph",
+                      outputName: "output1",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      // Rename output1 to renamedOutput1
+      const updatedSubgraphSpec: ComponentSpec = {
+        ...subgraphSpec,
+        outputs: [{ name: "renamedOutput1" }, { name: "output2" }],
+        implementation: {
+          graph: {
+            tasks: {
+              "source-task": createContainerTaskSpec(),
+            },
+            outputValues: {
+              renamedOutput1: {
+                taskOutput: {
+                  taskId: "source-task",
+                  outputName: "data1",
+                },
+              },
+              output2: {
+                taskOutput: {
+                  taskId: "source-task",
+                  outputName: "data2",
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const result = updateSubgraphSpec(
+        rootSpec,
+        ["root", "data-subgraph"],
+        updatedSubgraphSpec,
+      );
+
+      expect(isGraphImplementation(result.implementation)).toBe(true);
+      if (!isGraphImplementation(result.implementation)) return;
+
+      // Both consumers should have updated references
+      const consumer1 = result.implementation.graph.tasks["consumer1"];
+      expect(consumer1?.arguments?.input).toEqual({
+        taskOutput: {
+          taskId: "data-subgraph",
+          outputName: "renamedOutput1",
+        },
+      });
+
+      const consumer2 = result.implementation.graph.tasks["consumer2"];
+      expect(consumer2?.arguments?.input).toEqual({
+        taskOutput: {
+          taskId: "data-subgraph",
+          outputName: "renamedOutput1",
+        },
+      });
+    });
+
+    it("should not affect tasks that don't reference the renamed output", () => {
+      const subgraphSpec: ComponentSpec = {
+        name: "subgraph",
+        outputs: [{ name: "oldOutput" }],
+        implementation: {
+          graph: {
+            tasks: { task: createContainerTaskSpec() },
+            outputValues: {
+              oldOutput: {
+                taskOutput: { taskId: "task", outputName: "result" },
+              },
+            },
+          },
+        },
+      };
+
+      const rootSpec: ComponentSpec = {
+        name: "root",
+        implementation: {
+          graph: {
+            tasks: {
+              mySubgraph: {
+                componentRef: { spec: subgraphSpec },
+              },
+              unrelatedTask: {
+                componentRef: {
+                  spec: {
+                    name: "unrelated",
+                    inputs: [{ name: "value" }],
+                    implementation: {
+                      container: { image: "alpine", command: ["echo"] },
+                    },
+                  },
+                },
+                arguments: {
+                  value: "some-literal-value",
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const updatedSubgraphSpec: ComponentSpec = {
+        ...subgraphSpec,
+        outputs: [{ name: "newOutput" }],
+        implementation: {
+          graph: {
+            tasks: { task: createContainerTaskSpec() },
+            outputValues: {
+              newOutput: {
+                taskOutput: { taskId: "task", outputName: "result" },
+              },
+            },
+          },
+        },
+      };
+
+      const result = updateSubgraphSpec(
+        rootSpec,
+        ["root", "mySubgraph"],
+        updatedSubgraphSpec,
+      );
+
+      expect(isGraphImplementation(result.implementation)).toBe(true);
+      if (!isGraphImplementation(result.implementation)) return;
+
+      // Unrelated task should remain unchanged
+      const unrelatedTask = result.implementation.graph.tasks["unrelatedTask"];
+      expect(unrelatedTask?.arguments?.value).toBe("some-literal-value");
+    });
   });
 });

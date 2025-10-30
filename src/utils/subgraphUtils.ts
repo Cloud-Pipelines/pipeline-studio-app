@@ -2,6 +2,8 @@ import type {
   ArgumentType,
   ComponentSpec,
   GraphInputArgument,
+  GraphSpec,
+  TaskOutputArgument,
   TaskSpec,
 } from "./componentSpec";
 import { isGraphImplementation } from "./componentSpec";
@@ -154,6 +156,42 @@ const detectIONameChanges = (
   return { inputChanges, outputChanges };
 };
 
+/**
+ * Type guard to check if an argument value is a GraphInputArgument
+ */
+const isGraphInputArgument = (
+  argValue: ArgumentType,
+): argValue is GraphInputArgument => {
+  return (
+    argValue !== null &&
+    typeof argValue === "object" &&
+    "graphInput" in argValue &&
+    argValue.graphInput !== null &&
+    typeof argValue.graphInput === "object" &&
+    "inputName" in argValue.graphInput &&
+    typeof argValue.graphInput.inputName === "string"
+  );
+};
+
+/**
+ * Type guard to check if an argument value is a TaskOutputArgument
+ */
+const isTaskOutputArgument = (
+  argValue: ArgumentType,
+): argValue is TaskOutputArgument => {
+  return (
+    argValue !== null &&
+    typeof argValue === "object" &&
+    "taskOutput" in argValue &&
+    argValue.taskOutput !== null &&
+    typeof argValue.taskOutput === "object" &&
+    "taskId" in argValue.taskOutput &&
+    "outputName" in argValue.taskOutput &&
+    typeof argValue.taskOutput.taskId === "string" &&
+    typeof argValue.taskOutput.outputName === "string"
+  );
+};
+
 const updateTaskArgumentsForRenamedInputs = (
   taskSpec: TaskSpec,
   inputChanges: Map<string, string>,
@@ -175,12 +213,7 @@ const updateTaskArgumentsForRenamedInputs = (
       updatedArguments[argName] = argValue;
     }
 
-    if (
-      argValue &&
-      typeof argValue === "object" &&
-      "graphInput" in argValue &&
-      argValue.graphInput
-    ) {
+    if (isGraphInputArgument(argValue)) {
       const referencedInputName = argValue.graphInput.inputName;
       const newReferencedInputName = inputChanges.get(referencedInputName);
 
@@ -191,13 +224,75 @@ const updateTaskArgumentsForRenamedInputs = (
             ...argValue.graphInput,
             inputName: newReferencedInputName,
           },
-        } as GraphInputArgument;
+        };
         hasChanges = true;
       }
     }
   });
 
   return hasChanges ? { ...taskSpec, arguments: updatedArguments } : taskSpec;
+};
+
+/**
+ * Updates all tasks in a graph that reference renamed outputs from a specific subgraph task.
+ * When a subgraph's output is renamed, any tasks in the parent graph that reference
+ * that output need to be updated to use the new output name.
+ */
+const updateGraphTasksForRenamedOutputs = (
+  graphSpec: GraphSpec,
+  subgraphTaskId: string,
+  outputChanges: Map<string, string>,
+): GraphSpec => {
+  if (outputChanges.size === 0) {
+    return graphSpec;
+  }
+
+  const updatedTasks: Record<string, TaskSpec> = {};
+
+  Object.entries(graphSpec.tasks).forEach(
+    ([taskId, task]: [string, TaskSpec]) => {
+      if (!task.arguments) {
+        updatedTasks[taskId] = task;
+        return;
+      }
+
+      const updatedArguments: Record<string, ArgumentType> = {};
+      let hasTaskChanges = false;
+
+      Object.entries(task.arguments).forEach(([argName, argValue]) => {
+        const needsUpdate =
+          isTaskOutputArgument(argValue) &&
+          argValue.taskOutput.taskId === subgraphTaskId &&
+          outputChanges.has(argValue.taskOutput.outputName);
+
+        if (needsUpdate) {
+          const newOutputName = outputChanges.get(
+            argValue.taskOutput.outputName,
+          )!;
+          updatedArguments[argName] = {
+            ...argValue,
+            taskOutput: {
+              ...argValue.taskOutput,
+              outputName: newOutputName,
+            },
+          };
+          hasTaskChanges = true;
+        } else {
+          updatedArguments[argName] = argValue;
+        }
+      });
+
+      updatedTasks[taskId] = hasTaskChanges
+        ? { ...task, arguments: updatedArguments }
+        : task;
+    },
+  );
+
+  const hasAnyChanges = Object.keys(updatedTasks).some(
+    (taskId) => updatedTasks[taskId] !== graphSpec.tasks[taskId],
+  );
+
+  return hasAnyChanges ? { ...graphSpec, tasks: updatedTasks } : graphSpec;
 };
 
 /**
@@ -264,7 +359,7 @@ export const updateSubgraphSpec = (
     updatedSubgraphSpec,
   );
 
-  const { inputChanges } = detectIONameChanges(
+  const { inputChanges, outputChanges } = detectIONameChanges(
     oldSubgraphSpec,
     updatedNestedSpec,
   );
@@ -285,14 +380,23 @@ export const updateSubgraphSpec = (
     },
   };
 
+  let updatedGraph = currentSpec.implementation.graph;
+  if (outputChanges.size > 0) {
+    updatedGraph = updateGraphTasksForRenamedOutputs(
+      updatedGraph,
+      taskId,
+      outputChanges,
+    );
+  }
+
   return {
     ...currentSpec,
     implementation: {
       ...currentSpec.implementation,
       graph: {
-        ...currentSpec.implementation.graph,
+        ...updatedGraph,
         tasks: {
-          ...currentSpec.implementation.graph.tasks,
+          ...updatedGraph.tasks,
           [taskId]: updatedTargetTask,
         },
       },
