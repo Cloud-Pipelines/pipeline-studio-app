@@ -14,7 +14,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 
@@ -29,6 +28,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useCallbackOnUnmount } from "@/hooks/useCallbackOnUnmount";
 import useToastNotification from "@/hooks/useToastNotification";
 import { cn } from "@/lib/utils";
 import type { ArgumentInput } from "@/types/arguments";
@@ -59,8 +59,6 @@ export const ArgumentInputField = ({
   );
 
   const [isTextareaDialogOpen, setIsTextareaDialogOpen] = useState(false);
-
-  const inputValueRef = useRef(inputValue);
 
   const undoValue = useMemo(() => argument, []);
   const hint = argument.inputSpec.annotations?.hint as string | undefined;
@@ -221,23 +219,7 @@ export const ArgumentInputField = ({
     [argument, disabled],
   );
 
-  useEffect(() => {
-    inputValueRef.current = inputValue;
-  }, [inputValue]);
-
-  useEffect(() => {
-    return () => {
-      const value = inputValueRef.current.trim();
-      if (value !== lastSubmittedValue) {
-        const updatedArgument = {
-          ...argument,
-          value,
-          isRemoved: false,
-        };
-        onSave(updatedArgument);
-      }
-    };
-  }, []);
+  useCallbackOnUnmount(handleBlur);
 
   return (
     <>
