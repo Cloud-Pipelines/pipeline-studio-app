@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type {
+  ContainerExecutionStatus,
   GetArtifactsApiExecutionsIdArtifactsGetResponse,
   GetContainerExecutionStateResponse,
   GetExecutionInfoResponse,
   GetGraphExecutionStateResponse,
   PipelineRunResponse,
 } from "@/api/types.gen";
-import type { TaskStatusCounts } from "@/types/pipelineRun";
+import type { ExecutionStatus, TaskStatusCounts } from "@/types/pipelineRun";
 import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 
 export const fetchExecutionState = async (
@@ -71,10 +72,7 @@ export const fetchExecutionStatus = async (
       backendUrl,
     );
 
-    const taskStatuses = countTaskStatuses(details, stateData);
-    const runStatus = getRunStatus(taskStatuses);
-
-    return runStatus;
+    return processExecutionStatuses(details, stateData);
   } catch (error) {
     console.error(
       `Error fetching task statuses for run ${executionId}:`,
@@ -151,13 +149,14 @@ const mapStatus = (status: string) => {
 };
 
 /**
- * Count task statuses from API response
+ * Count execution statuses from API response
  */
-export const countTaskStatuses = (
-  details: GetExecutionInfoResponse,
-  stateData: GetGraphExecutionStateResponse,
-): TaskStatusCounts => {
-  const statusCounts = {
+export const processExecutionStatuses = (
+  details?: GetExecutionInfoResponse,
+  state?: GetGraphExecutionStateResponse,
+): ExecutionStatus => {
+  const map = new Map<string, ContainerExecutionStatus>();
+  const counts = {
     total: 0,
     succeeded: 0,
     failed: 0,
@@ -167,34 +166,92 @@ export const countTaskStatuses = (
     cancelled: 0,
   };
 
-  if (
-    details.child_task_execution_ids &&
-    stateData.child_execution_status_stats
-  ) {
-    Object.values(details.child_task_execution_ids).forEach((executionId) => {
-      const executionIdStr = String(executionId);
-      const statusStats =
-        stateData.child_execution_status_stats[executionIdStr];
-
-      if (statusStats) {
-        const status = Object.keys(statusStats)[0];
-        const mappedStatus = mapStatus(status);
-        statusCounts[mappedStatus as keyof TaskStatusCounts]++;
-      } else {
-        statusCounts.waiting++;
-      }
-    });
+  if (!details) {
+    return {
+      run: STATUS.UNKNOWN,
+      map,
+      counts,
+    };
   }
 
-  const total =
-    statusCounts.succeeded +
-    statusCounts.failed +
-    statusCounts.running +
-    statusCounts.waiting +
-    statusCounts.skipped +
-    statusCounts.cancelled;
+  // If no state data is available, set all tasks to WAITING_FOR_UPSTREAM
+  if (!state && details?.child_task_execution_ids) {
+    Object.keys(details.child_task_execution_ids).forEach((taskId) => {
+      map.set(taskId, "WAITING_FOR_UPSTREAM");
+      counts.waiting++;
+    });
 
-  return { ...statusCounts, total };
+    counts.total = counts.waiting;
+
+    return {
+      run: STATUS.WAITING,
+      map,
+      counts,
+    };
+  }
+
+  if (
+    details?.child_task_execution_ids &&
+    state?.child_execution_status_stats
+  ) {
+    Object.entries(details.child_task_execution_ids).forEach(
+      ([taskId, executionId]) => {
+        const executionIdStr = String(executionId);
+        const statusStats = state.child_execution_status_stats[executionIdStr];
+
+        let status: ContainerExecutionStatus;
+
+        if (statusStats) {
+          status = Object.keys(statusStats)[0] as ContainerExecutionStatus;
+          map.set(taskId, status);
+        } else {
+          status = "WAITING_FOR_UPSTREAM";
+          map.set(taskId, status);
+        }
+
+        // Count the status
+        switch (status) {
+          case "SUCCEEDED":
+            counts.succeeded++;
+            break;
+          case "FAILED":
+          case "SYSTEM_ERROR":
+          case "INVALID":
+            counts.failed++;
+            break;
+          case "CANCELLING":
+          case "SKIPPED":
+            counts.skipped++;
+            break;
+          case "RUNNING":
+            counts.running++;
+            break;
+          case "CANCELLED":
+            counts.cancelled++;
+            break;
+          default:
+            counts.waiting++;
+            break;
+        }
+      },
+    );
+  }
+
+  counts.total =
+    counts.succeeded +
+    counts.failed +
+    counts.running +
+    counts.waiting +
+    counts.skipped +
+    counts.cancelled;
+
+  const runStatus = getRunStatus(counts);
+
+  return {
+    run: runStatus,
+    map,
+    counts,
+  };
 };
 
 export const getExecutionArtifacts = async (

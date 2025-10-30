@@ -61,8 +61,6 @@ vi.mock("@/services/executionService", () => ({
     refetch: () => {},
     enabled: false,
   }),
-  countTaskStatuses: vi.fn(),
-  getRunStatus: vi.fn(),
   STATUS: {
     SUCCEEDED: "SUCCEEDED",
     FAILED: "FAILED",
