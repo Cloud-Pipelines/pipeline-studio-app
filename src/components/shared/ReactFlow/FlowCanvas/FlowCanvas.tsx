@@ -12,7 +12,12 @@ import {
   useNodesState,
   useStoreApi,
 } from "@xyflow/react";
-import type { ComponentType, DragEvent } from "react";
+import { nanoid } from "nanoid";
+import type {
+  ComponentType,
+  DragEvent,
+  MouseEvent as ReactMouseEvent,
+} from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/Dialogs";
@@ -39,6 +44,7 @@ import {
   type TaskSpec,
 } from "@/utils/componentSpec";
 import { loadComponentAsRefFromText } from "@/utils/componentStore";
+import { createCommentsFromComponentSpec } from "@/utils/nodes/createCommentsFromComponentSpec";
 import createNodesFromComponentSpec from "@/utils/nodes/createNodesFromComponentSpec";
 import {
   getSubgraphComponentSpec,
@@ -47,6 +53,7 @@ import {
 
 import ComponentDuplicateDialog from "../../Dialogs/ComponentDuplicateDialog";
 import { useNodesOverlay } from "../NodesOverlay/NodesOverlayProvider";
+import CommentNode from "./CommentNode/CommentNode";
 import { getBulkUpdateConfirmationDetails } from "./ConfirmationDialogs/BulkUpdateConfirmationDialog";
 import { getDeleteConfirmationDetails } from "./ConfirmationDialogs/DeleteConfirmation";
 import { getReplaceConfirmationDetails } from "./ConfirmationDialogs/ReplaceConfirmation";
@@ -76,9 +83,10 @@ const nodeTypes: Record<string, ComponentType<any>> = {
   ghost: GhostNode,
   input: IONode,
   output: IONode,
+  comment: CommentNode,
 };
 
-const SELECTABLE_NODES = new Set(["task", "input", "output"]);
+const SELECTABLE_NODES = new Set(["task", "input", "output", "comment"]);
 const UPGRADEABLE_NODES = new Set(["task"]);
 const REPLACEABLE_NODES = new Set(["task"]);
 
@@ -782,15 +790,15 @@ const FlowCanvas = ({
         notify,
       );
       const newNodes = createNodesFromComponentSpec(subgraphSpec, nodeData);
+      const commentNodes = createCommentsFromComponentSpec(subgraphSpec);
 
-      const updatedNewNodes = newNodes.map((node) => ({
+      const updatedNewNodes = newNodes.concat(commentNodes).map((node) => ({
         ...node,
         data: {
           ...node.data,
           highlighted: node.id === replaceTarget?.id,
         },
       }));
-
       setNodes((prevNodes) => {
         const updatedNodes = updatedNewNodes.map((newNode) => {
           const existingNode = prevNodes.find((node) => node.id === newNode.id);
@@ -915,9 +923,48 @@ const FlowCanvas = ({
     onPaste,
   });
 
-  const onPaneClick = () => {
-    clearContent();
-  };
+  const onPaneClick = useCallback(
+    (event: ReactMouseEvent) => {
+      if (isCommenting) {
+        const comment = "<comment>";
+
+        const position = reactFlowInstance?.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
+
+        if (!position) return;
+
+        const uuid = nanoid();
+        const id = `comment-${uuid}`;
+
+        const newComponentSpec: ComponentSpec = {
+          ...componentSpec,
+          metadata: {
+            ...componentSpec.metadata,
+            annotations: {
+              ...componentSpec.metadata?.annotations,
+              comments: [
+                ...(componentSpec.metadata?.annotations?.comments || []),
+                { id, message: comment, position },
+              ],
+            },
+          },
+        };
+        setComponentSpec(newComponentSpec);
+        return;
+      }
+
+      clearContent();
+    },
+    [
+      clearContent,
+      isCommenting,
+      reactFlowInstance,
+      componentSpec,
+      setComponentSpec,
+    ],
+  );
 
   return (
     <BlockStack gap="0" className="h-full w-full">
