@@ -3,12 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import { NodeManager } from "@/nodeManager";
 import type { TaskNodeData } from "@/types/nodes";
-import type {
-  ComponentSpec,
-  InputSpec,
-  OutputSpec,
-  TaskOutputArgument,
-  TaskSpec,
+import {
+  type ComponentSpec,
+  type InputSpec,
+  isGraphImplementation,
+  type OutputSpec,
+  type TaskOutputArgument,
+  type TaskSpec,
 } from "@/utils/componentSpec";
 
 import { duplicateNodes } from "./duplicateNodes";
@@ -63,7 +64,7 @@ const createMockComponentSpecWithOutputs = (
           acc[output.name] = {
             taskOutput: {
               taskId: "task1",
-              outputName: "result",
+              outputName: output.name,
             },
           };
           return acc;
@@ -124,7 +125,7 @@ const createMockInputNode = (
     position,
     data: {
       label: inputName,
-      inputSpec: { ...mockInputSpec, name: inputName },
+      spec: { ...mockInputSpec, name: inputName },
     },
     selected: false,
     dragging: false,
@@ -145,7 +146,7 @@ const createMockOutputNode = (
     position,
     data: {
       label: outputName,
-      outputSpec: { ...mockOutputSpec, name: outputName },
+      spec: { ...mockOutputSpec, name: outputName },
     },
     selected: false,
     dragging: false,
@@ -211,7 +212,7 @@ describe("duplicateNodes", () => {
       if ("graph" in result.updatedComponentSpec.implementation!) {
         expect(
           result.updatedComponentSpec.implementation.graph.tasks,
-        ).toHaveProperty("original-task 2");
+        ).toHaveProperty("original-task (2)");
       }
     });
 
@@ -237,14 +238,14 @@ describe("duplicateNodes", () => {
       expect(result.newNodes).toHaveLength(1);
       expect(result.newNodes[0].type).toBe("input");
       expect(result.newNodes[0].id).toBe(
-        nodeManager.getNodeId("original-input 2", "input"),
+        nodeManager.getNodeId("original-input (2)", "input"),
       );
       expect(result.newNodes[0].position).toEqual({ x: 60, y: 60 });
 
       expect(result.updatedComponentSpec.inputs).toHaveLength(2);
       expect(
         result.updatedComponentSpec.inputs?.some(
-          (input) => input.name === "original-input 2",
+          (input) => input.name === "original-input (2)",
         ),
       ).toBe(true);
     });
@@ -275,14 +276,14 @@ describe("duplicateNodes", () => {
       expect(result.newNodes).toHaveLength(1);
       expect(result.newNodes[0].type).toBe("output");
       expect(result.newNodes[0].id).toBe(
-        nodeManager.getNodeId("original-output 2", "output"),
+        nodeManager.getNodeId("original-output (2)", "output"),
       );
       expect(result.newNodes[0].position).toEqual({ x: 310, y: 310 });
 
       expect(result.updatedComponentSpec.outputs).toHaveLength(2);
       expect(
         result.updatedComponentSpec.outputs?.some(
-          (output) => output.name === "original-output 2",
+          (output) => output.name === "original-output (2)",
         ),
       ).toBe(true);
     });
@@ -305,13 +306,13 @@ describe("duplicateNodes", () => {
       const result = duplicateNodes(componentSpec, nodes, nodeManager);
 
       expect(result.newNodes).toHaveLength(2);
-      if ("graph" in result.updatedComponentSpec.implementation!) {
+      if (isGraphImplementation(result.updatedComponentSpec.implementation)) {
         expect(
           result.updatedComponentSpec.implementation.graph.tasks,
-        ).toHaveProperty("task1 2");
+        ).toHaveProperty("task1 (2)");
         expect(
           result.updatedComponentSpec.implementation.graph.tasks,
-        ).toHaveProperty("task2 2");
+        ).toHaveProperty("task2 (2)");
       }
     });
   });
@@ -419,7 +420,7 @@ describe("duplicateNodes", () => {
 
       if ("graph" in result.updatedComponentSpec.implementation!) {
         const duplicatedTask2 =
-          result.updatedComponentSpec.implementation.graph.tasks["task2 2"];
+          result.updatedComponentSpec.implementation.graph.tasks["task2 (2)"];
         expect(duplicatedTask2.arguments).toEqual({});
       }
     });
@@ -443,10 +444,10 @@ describe("duplicateNodes", () => {
 
       if ("graph" in result.updatedComponentSpec.implementation!) {
         const duplicatedTask2 =
-          result.updatedComponentSpec.implementation.graph.tasks["task2 2"];
+          result.updatedComponentSpec.implementation.graph.tasks["task2 (2)"];
         expect(duplicatedTask2.arguments?.input1).toEqual({
           taskOutput: {
-            taskId: "task1 2",
+            taskId: "task1 (2)",
             outputName: "output1",
           },
         });
@@ -496,7 +497,7 @@ describe("duplicateNodes", () => {
 
       if ("graph" in result.updatedComponentSpec.implementation!) {
         const duplicatedTask2 =
-          result.updatedComponentSpec.implementation.graph.tasks["task2 2"];
+          result.updatedComponentSpec.implementation.graph.tasks["task2 (2)"];
 
         // Should remove internal connection to task1 (since task1 is being duplicated)
         expect(duplicatedTask2.arguments?.input1).toBeUndefined();
@@ -530,10 +531,10 @@ describe("duplicateNodes", () => {
 
       if ("graph" in result.updatedComponentSpec.implementation!) {
         const duplicatedTask2 =
-          result.updatedComponentSpec.implementation.graph.tasks["task2 2"];
+          result.updatedComponentSpec.implementation.graph.tasks["task2 (2)"];
         expect(duplicatedTask2.arguments?.input1).toEqual({
           taskOutput: {
-            taskId: "task1 2",
+            taskId: "task1 (2)",
             outputName: "output1",
           },
         });
@@ -571,26 +572,45 @@ describe("duplicateNodes", () => {
         connection: "all",
       });
 
-      if ("graph" in result.updatedComponentSpec.implementation!) {
+      if (isGraphImplementation(result.updatedComponentSpec.implementation)) {
         const duplicatedTask =
-          result.updatedComponentSpec.implementation.graph.tasks["task1 2"];
+          result.updatedComponentSpec.implementation.graph.tasks["task1 (2)"];
         expect(duplicatedTask.arguments?.input1).toEqual({
           graphInput: {
-            inputName: "graph-input 2",
+            inputName: "graph-input (2)",
           },
         });
       }
     });
 
     it("should handle graph output connections", () => {
+      const outputSpec: OutputSpec = {
+        ...mockOutputSpec,
+        name: "graph-output-node",
+      };
+
+      const taskComponentSpec: ComponentSpec = {
+        name: "task-component",
+        inputs: [],
+        outputs: [
+          {
+            name: "graph-output",
+            type: "String",
+            annotations: {},
+          },
+        ],
+        implementation: {
+          container: { image: "task-image" },
+        },
+      };
+
       const taskSpec: TaskSpec = {
         ...mockTaskSpec,
         arguments: {},
-      };
-
-      const outputSpec: OutputSpec = {
-        ...mockOutputSpec,
-        name: "graph-output",
+        componentRef: {
+          name: "task-component",
+          spec: taskComponentSpec,
+        },
       };
 
       const componentSpec = createMockComponentSpecWithOutputs(
@@ -602,7 +622,7 @@ describe("duplicateNodes", () => {
       const nodeManager = createMockNodeManager();
       const nodes = [
         createMockTaskNode("task1", taskSpec, nodeManager),
-        createMockOutputNode("graph-output", nodeManager),
+        createMockOutputNode("graph-output-node", nodeManager),
       ];
 
       const result = duplicateNodes(componentSpec, nodes, nodeManager, {
@@ -610,15 +630,15 @@ describe("duplicateNodes", () => {
       });
 
       // Check that outputValues are updated for duplicated outputs
-      if ("graph" in result.updatedComponentSpec.implementation!) {
+      if (isGraphImplementation(result.updatedComponentSpec.implementation)) {
         const outputValues =
           result.updatedComponentSpec.implementation.graph.outputValues;
 
         // Duplicated output should reference duplicated task
-        expect(outputValues?.["graph-output 2"]).toEqual({
+        expect(outputValues?.["graph-output-node (2)"]).toEqual({
           taskOutput: {
-            taskId: "task1 2",
-            outputName: "result",
+            taskId: "task1 (2)",
+            outputName: "graph-output-node",
           },
         });
       }
@@ -656,7 +676,7 @@ describe("duplicateNodes", () => {
     it("should handle nodes without position annotations", () => {
       const taskSpecWithoutPosition = {
         ...mockTaskSpec,
-        annotations: {}, // No position annotation
+        annotations: {},
       };
 
       const componentSpec = createMockComponentSpec({
