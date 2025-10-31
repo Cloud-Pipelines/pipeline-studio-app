@@ -6,6 +6,11 @@ import { OutputNameEditor } from "@/components/Editor/IOEditor/OutputNameEditor"
 import { getOutputConnectedDetails } from "@/components/Editor/utils/getOutputConnectedDetails";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Paragraph } from "@/components/ui/typography";
 import { useNodeManager } from "@/hooks/useNodeManager";
 import { cn } from "@/lib/utils";
@@ -13,6 +18,7 @@ import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import type { IONodeData } from "@/types/nodes";
 import { isInputSpec, typeSpecToString } from "@/utils/componentSpec";
+import { ENABLE_DEBUG_MODE } from "@/utils/constants";
 
 interface IONodeProps {
   type: "input" | "output";
@@ -24,7 +30,7 @@ interface IONodeProps {
 const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const { currentGraphSpec, currentSubgraphSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
-  const { getHandleNodeId } = useNodeManager();
+  const { getNodeId, getHandleNodeId } = useNodeManager();
 
   const { spec, readOnly } = data;
 
@@ -51,6 +57,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     [currentSubgraphSpec.outputs, spec.name],
   );
 
+  const nodeId = getNodeId(spec.name, type);
   const handleNodeType = isInput ? "handle-out" : "handle-in";
   const nodeHandleId = getHandleNodeId(spec.name, spec.name, handleNodeType);
 
@@ -107,6 +114,11 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
     <Card className={cn("border-2 max-w-[300px] p-0", borderColor)}>
       <CardHeader className="px-2 py-2.5">
         <CardTitle className="break-words">{spec.name}</CardTitle>
+        {ENABLE_DEBUG_MODE && (
+          <Paragraph size="xs" tone="subdued">
+            Node Id: {nodeId}
+          </Paragraph>
+        )}
       </CardHeader>
       <CardContent className="p-2 max-w-[250px]">
         <BlockStack gap="2">
@@ -141,12 +153,24 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
             </Paragraph>
           </InlineStack>
         </BlockStack>
-        <Handle
-          id={nodeHandleId}
-          type={handleType}
-          position={handlePosition}
-          className={cn(handleDefaultClassName, handleClassName)}
-        />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Handle
+              id={nodeHandleId}
+              type={handleType}
+              position={handlePosition}
+              className={cn(handleDefaultClassName, handleClassName)}
+            />
+          </TooltipTrigger>
+          <TooltipContent disabled={!ENABLE_DEBUG_MODE}>
+            <div className="capitalize">
+              {type} Name: {spec.name}
+            </div>
+            <div>Handle Name: {spec.name}</div>
+            <div>parentNodeId: {nodeId}</div>
+            <div>handleNodeId: {nodeHandleId}</div>
+          </TooltipContent>
+        </Tooltip>
       </CardContent>
     </Card>
   );
