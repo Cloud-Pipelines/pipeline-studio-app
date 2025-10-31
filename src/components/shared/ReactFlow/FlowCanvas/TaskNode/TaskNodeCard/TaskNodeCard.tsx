@@ -15,6 +15,7 @@ import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
+import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
 import { useTaskNode } from "@/providers/TaskNodeProvider";
 import { isCacheDisabled } from "@/utils/cache";
 import { getSubgraphDescription, isSubgraph } from "@/utils/subgraphUtils";
@@ -24,6 +25,7 @@ import {
   type UpdateOverlayMessage,
   useNodesOverlay,
 } from "../../../NodesOverlay/NodesOverlayProvider";
+import { SubgraphProgressIndicator } from "../SubgraphProgressIndicator";
 import TaskOverview from "../TaskOverview";
 import { TaskNodeInputs } from "./TaskNodeInputs";
 import { TaskNodeOutputs } from "./TaskNodeOutputs";
@@ -39,6 +41,8 @@ const TaskNodeCard = () => {
   const taskNode = useTaskNode();
   const { setContent, clearContent } = useContextPanel();
   const { navigateToSubgraph } = useComponentSpec();
+  const executionData = useExecutionDataOptional();
+  const taskStatusCountsMap = executionData?.taskStatusCountsMap ?? new Map();
 
   const isDragging = useStore((state) => {
     const thisNode = state.nodes.find((node) => node.id === taskNode.nodeId);
@@ -74,6 +78,9 @@ const TaskNodeCard = () => {
   }, [taskSpec]);
 
   const disabledCache = isCacheDisabled(taskSpec);
+
+  const subgraphStatusCounts =
+    isSubgraphNode && taskId ? taskStatusCountsMap.get(taskId) : undefined;
 
   const onNotify = useCallback((message: NotifyMessage) => {
     switch (message.type) {
@@ -292,6 +299,11 @@ const TaskNodeCard = () => {
           )}
         </CardHeader>
         <CardContent className="p-2 flex flex-col gap-2">
+          {subgraphStatusCounts && (
+            <div className="pb-2 border-b border-slate-200">
+              <SubgraphProgressIndicator statusCounts={subgraphStatusCounts} />
+            </div>
+          )}
           <div
             style={{
               maxHeight:

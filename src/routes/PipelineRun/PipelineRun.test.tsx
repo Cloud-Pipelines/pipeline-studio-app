@@ -58,11 +58,19 @@ vi.mock("@/services/executionService", () => ({
     isLoading: false,
     error: null,
     isFetching: false,
-    refetch: () => {},
+    refetch: () => { },
     enabled: false,
   }),
   countTaskStatuses: vi.fn(),
-  getRunStatus: vi.fn(),
+  getRunStatus: vi.fn(() => "RUNNING"),
+  convertExecutionStatsToStatusCounts: vi.fn((stats) => ({
+    succeeded: stats?.SUCCEEDED || 0,
+    failed: stats?.FAILED || 0,
+    running: stats?.RUNNING || 0,
+    waiting: stats?.WAITING_FOR_UPSTREAM || stats?.WAITING || 0,
+    cancelled: stats?.CANCELLED || 0,
+    total: Object.values(stats || {}).reduce((a: number, b) => a + (b as number), 0),
+  })),
   STATUS: {
     SUCCEEDED: "SUCCEEDED",
     FAILED: "FAILED",
@@ -88,11 +96,11 @@ vi.mock("@/providers/ComponentSpecProvider", async (importOriginal) => {
 });
 
 vi.mock("@/hooks/useDocumentTitle", () => ({
-  useDocumentTitle: () => {},
+  useDocumentTitle: () => { },
 }));
 
 vi.mock("@/hooks/useFavicon", () => ({
-  useFavicon: () => {},
+  useFavicon: () => { },
 }));
 
 describe("<PipelineRun/>", () => {
