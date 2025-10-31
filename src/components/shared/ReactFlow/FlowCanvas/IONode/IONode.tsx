@@ -10,16 +10,12 @@ import { Paragraph } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
+import type { IONodeData } from "@/types/nodes";
+import { isInputSpec, typeSpecToString } from "@/utils/componentSpec";
 
 interface IONodeProps {
   type: "input" | "output";
-  data: {
-    label: string;
-    value?: string;
-    default?: string;
-    type?: string;
-    readOnly?: boolean;
-  };
+  data: IONodeData;
   selected: boolean;
   deletable: boolean;
 }
@@ -28,10 +24,9 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const { currentGraphSpec, currentSubgraphSpec } = useComponentSpec();
   const { setContent, clearContent } = useContextPanel();
 
-  const isInput = type === "input";
-  const isOutput = type === "output";
+  const { spec, readOnly } = data;
 
-  const readOnly = !!data.readOnly;
+  const isInput = isInputSpec(spec, type);
 
   const handleType = isInput ? "source" : "target";
   const handlePosition = isInput ? Position.Right : Position.Left;
@@ -44,15 +39,14 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
   const borderColor = selected ? selectedColor : defaultColor;
 
   const input = useMemo(
-    () =>
-      currentSubgraphSpec.inputs?.find((input) => input.name === data.label),
-    [currentSubgraphSpec.inputs, data.label],
+    () => currentSubgraphSpec.inputs?.find((input) => input.name === spec.name),
+    [currentSubgraphSpec.inputs, spec.name],
   );
 
   const output = useMemo(
     () =>
-      currentSubgraphSpec.outputs?.find((output) => output.name === data.label),
-    [currentSubgraphSpec.outputs, data.label],
+      currentSubgraphSpec.outputs?.find((output) => output.name === spec.name),
+    [currentSubgraphSpec.outputs, spec.name],
   );
 
   useEffect(() => {
@@ -67,7 +61,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
         );
       }
 
-      if (output && isOutput) {
+      if (output && !isInput) {
         const outputConnectedDetails = getOutputConnectedDetails(
           currentGraphSpec,
           output.name,
@@ -92,7 +86,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
 
   const connectedOutput = getOutputConnectedDetails(
     currentGraphSpec,
-    data.label,
+    spec.name,
   );
   const outputConnectedValue = connectedOutput.outputName;
   const outputConnectedType = connectedOutput.outputType;
@@ -103,30 +97,24 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
 
   const handleClassName = isInput ? "translate-x-1.5" : "-translate-x-1.5";
 
-  const hasDataValue = !!data.value;
-  const hasDataDefault = !!data.default;
-
-  const inputValue = hasDataValue
-    ? data.value
-    : hasDataDefault
-      ? data.default
-      : null;
-
+  const inputValue = isInput ? spec.value || spec.default || null : null;
   const outputValue = outputConnectedValue ?? null;
-
   const value = isInput ? inputValue : outputValue;
+
+  const typeValue = isInput
+    ? typeSpecToString(spec.type)
+    : typeSpecToString(outputConnectedType);
 
   return (
     <Card className={cn("border-2 max-w-[300px] p-0", borderColor)}>
       <CardHeader className="px-2 py-2.5">
-        <CardTitle className="break-words">{data.label}</CardTitle>
+        <CardTitle className="break-words">{spec.name}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 max-w-[250px]">
         <BlockStack gap="2">
           {/* type */}
           <Paragraph size="xs" font="mono" className="truncate text-slate-700">
-            <span className="font-bold">Type:</span>{" "}
-            {outputConnectedType ?? data.type ?? "Any"}
+            <span className="font-bold">Type:</span> {typeValue}
           </Paragraph>
 
           {!!outputConnectedTaskId && (

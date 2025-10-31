@@ -6,7 +6,8 @@ import useComponentFromUrl from "@/hooks/useComponentFromUrl";
 import { useTaskNodeDimensions } from "@/hooks/useTaskNodeDimensions";
 import useToastNotification from "@/hooks/useToastNotification";
 import type { Annotations } from "@/types/annotations";
-import type { TaskNodeData, TaskNodeDimensions } from "@/types/taskNode";
+import type { TaskNodeData } from "@/types/nodes";
+import type { TaskNodeDimensions } from "@/types/nodes";
 import type {
   ArgumentType,
   InputSpec,
@@ -94,14 +95,14 @@ export const TaskNodeProvider = ({
 
   const handleSetArguments = useCallback(
     (args: Record<string, ArgumentType>) => {
-      data.callbacks?.setArguments(args);
+      data.callbacks.setArguments(args);
     },
     [data.callbacks],
   );
 
   const handleSetAnnotations = useCallback(
     (annotations: Annotations) => {
-      data.callbacks?.setAnnotations(annotations);
+      data.callbacks.setAnnotations(annotations);
     },
     [data.callbacks],
   );
@@ -114,11 +115,11 @@ export const TaskNodeProvider = ({
   );
 
   const handleDeleteTaskNode = useCallback(() => {
-    data.callbacks?.onDelete();
+    data.callbacks.onDelete();
   }, [data.callbacks]);
 
   const handleDuplicateTaskNode = useCallback(() => {
-    data.callbacks?.onDuplicate();
+    data.callbacks.onDuplicate();
   }, [data.callbacks]);
 
   const handleUpgradeTaskNode = useCallback(() => {
@@ -127,7 +128,7 @@ export const TaskNodeProvider = ({
       return;
     }
 
-    data.callbacks?.onUpgrade(mostRecentComponentRef);
+    data.callbacks.onUpgrade(mostRecentComponentRef);
   }, [data.callbacks, isOutdated, mostRecentComponentRef, notify]);
 
   const select = useCallback(() => {

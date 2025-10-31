@@ -10,7 +10,7 @@ import replaceTaskArgumentsInGraphSpec from "@/components/shared/ReactFlow/FlowC
 import { replaceTaskNode } from "@/components/shared/ReactFlow/FlowCanvas/utils/replaceTaskNode";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import type { Annotations } from "@/types/annotations";
-import type { NodeAndTaskId } from "@/types/taskNode";
+import type { NodeAndTaskId } from "@/types/nodes";
 import type { ComponentReference, TaskSpec } from "@/utils/componentSpec";
 import type { ArgumentType } from "@/utils/componentSpec";
 import { updateSubgraphSpec } from "@/utils/subgraphUtils";

@@ -16,7 +16,7 @@ import { useContextPanel } from "@/providers/ContextPanelProvider";
 import {
   type InputSpec,
   type OutputSpec,
-  type TypeSpecType,
+  typeSpecToString,
 } from "@/utils/componentSpec";
 import { getComponentFileFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
@@ -35,17 +35,6 @@ const PipelineDetails = () => {
   const notify = useToastNotification();
 
   const [isYamlOpen, setIsYamlOpen] = useState(false);
-
-  // Utility function to convert TypeSpecType to string
-  const typeSpecToString = (typeSpec?: TypeSpecType): string => {
-    if (typeSpec === undefined) {
-      return "Any";
-    }
-    if (typeof typeSpec === "string") {
-      return typeSpec;
-    }
-    return JSON.stringify(typeSpec);
-  };
 
   // State for file metadata
   const [fileMeta, setFileMeta] = useState<{

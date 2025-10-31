@@ -93,7 +93,10 @@ describe("createNodesFromComponentSpec", () => {
 
     expect(result).toContainEqual({
       id: "input_input1",
-      data: expect.objectContaining({ label: "input1" }),
+      data: expect.objectContaining({
+        spec: expect.objectContaining({ name: "input1" }),
+        readOnly: false,
+      }),
       position: { x: 50, y: 100 },
       type: "input",
     });
@@ -118,7 +121,10 @@ describe("createNodesFromComponentSpec", () => {
 
     expect(result).toContainEqual({
       id: "output_output1",
-      data: expect.objectContaining({ label: "output1" }),
+      data: expect.objectContaining({
+        spec: expect.objectContaining({ name: "output1" }),
+        readOnly: false,
+      }),
       position: { x: 300, y: 150 },
       type: "output",
     });
@@ -162,38 +168,5 @@ describe("createNodesFromComponentSpec", () => {
         position: defaultPosition,
       }),
     );
-  });
-
-  it("tests the setArguments function in task nodes", () => {
-    const taskId = "task1";
-    const nodeId = `task_${taskId}`;
-
-    const mockSetArguments = mockNodeCallbacks.setArguments;
-
-    const componentSpec = createBasicComponentSpec({
-      graph: {
-        tasks: {
-          [taskId]: {
-            componentRef: {},
-            arguments: { existingArg: "value" },
-          },
-        },
-        outputValues: {},
-      },
-    });
-
-    const result = createNodesFromComponentSpec(componentSpec, mockNodeData);
-    const taskNode = result.find((node) => node.id === nodeId) as
-      | {
-          id: string;
-          data: { callbacks: { setArguments: (args: any) => void } };
-        }
-      | undefined;
-
-    const newArgs = { newArg: "newValue" };
-    taskNode?.data.callbacks.setArguments(newArgs);
-
-    expect(mockSetArguments).toHaveBeenCalledTimes(1);
-    expect(mockSetArguments).toHaveBeenCalledWith({ taskId, nodeId }, newArgs);
   });
 });

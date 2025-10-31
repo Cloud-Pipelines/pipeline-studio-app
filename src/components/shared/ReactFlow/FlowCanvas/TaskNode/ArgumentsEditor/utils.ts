@@ -1,9 +1,5 @@
 import type { ArgumentInput } from "@/types/arguments";
-import type {
-  ArgumentType,
-  TaskSpec,
-  TypeSpecType,
-} from "@/utils/componentSpec";
+import type { ArgumentType, TaskSpec } from "@/utils/componentSpec";
 
 export const getArgumentInputs = (taskSpec: TaskSpec) => {
   const componentSpec = taskSpec.componentRef.spec;
@@ -38,16 +34,6 @@ export const getArgumentInputs = (taskSpec: TaskSpec) => {
     }) ?? [];
 
   return argumentInputs;
-};
-
-export const typeSpecToString = (typeSpec?: TypeSpecType): string => {
-  if (typeSpec === undefined) {
-    return "Any";
-  }
-  if (typeof typeSpec === "string") {
-    return typeSpec;
-  }
-  return JSON.stringify(typeSpec);
 };
 
 export const getPlaceholder = (argument: ArgumentType) => {

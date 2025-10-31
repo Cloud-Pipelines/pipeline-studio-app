@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { hydrateComponentReference } from "@/services/componentService";
-import type { TaskNodeData } from "@/types/taskNode";
+import type { TaskNodeData } from "@/types/nodes";
 import type { HydratedComponentReference } from "@/utils/componentSpec";
 import { generateTaskSpec } from "@/utils/nodes/generateTaskSpec";
+import { createEmptyTaskCallbacks } from "@/utils/nodes/taskCallbackUtils";
 
 export const usePreviewTaskNodeData = (componentText: string) => {
   const { data: componentRef, isLoading } = useQuery({
@@ -30,5 +31,8 @@ const generatePreviewTaskNodeData = (
     taskId: previewTaskId,
     isGhost: false,
     readOnly: true,
+    connectable: false,
+    highlighted: false,
+    callbacks: createEmptyTaskCallbacks(),
   };
 };

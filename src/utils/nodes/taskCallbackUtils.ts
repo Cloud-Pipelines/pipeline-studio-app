@@ -2,7 +2,7 @@ import type {
   NodeAndTaskId,
   NodeCallbacks,
   TaskCallbacks,
-} from "@/types/taskNode";
+} from "@/types/nodes";
 
 // Sync TaskCallbacks with NodeCallbacks by injecting nodeId and taskId
 export const convertNodeCallbacksToTaskCallbacks = (
@@ -25,7 +25,24 @@ export const convertNodeCallbacksToTaskCallbacks = (
   };
 };
 
-const createEmptyTaskCallbacks = (): TaskCallbacks => ({
+// Sync NodeCallbacks with TaskCallbacks by removing nodeId and taskId
+export const convertTaskCallbacksToNodeCallbacks = (
+  taskCallbacks: TaskCallbacks,
+): NodeCallbacks => {
+  return {
+    setArguments: (_, args) => taskCallbacks.setArguments?.(args),
+    setAnnotations: (_, annotations) =>
+      taskCallbacks.setAnnotations?.(annotations),
+    setCacheStaleness: (_, cacheStaleness) =>
+      taskCallbacks.setCacheStaleness?.(cacheStaleness),
+    onDelete: (_) => taskCallbacks.onDelete?.(),
+    onDuplicate: (_, selected) => taskCallbacks.onDuplicate?.(selected),
+    onUpgrade: (_, newComponentRef) =>
+      taskCallbacks.onUpgrade?.(newComponentRef),
+  };
+};
+
+export const createEmptyTaskCallbacks = (): TaskCallbacks => ({
   setArguments: () => {},
   setAnnotations: () => {},
   setCacheStaleness: () => {},
