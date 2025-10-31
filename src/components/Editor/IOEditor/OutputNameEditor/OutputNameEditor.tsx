@@ -7,11 +7,11 @@ import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import useConfirmationDialog from "@/hooks/useConfirmationDialog";
+import { useNodeManager } from "@/hooks/useNodeManager";
 import { useNodeSelectionTransfer } from "@/hooks/useNodeSelectionTransfer";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { type OutputSpec } from "@/utils/componentSpec";
-import { outputNameToNodeId } from "@/utils/nodes/nodeIdUtils";
 import { updateSubgraphSpec } from "@/utils/subgraphUtils";
 
 import { type OutputConnectedDetails } from "../../utils/getOutputConnectedDetails";
@@ -30,7 +30,8 @@ export const OutputNameEditor = ({
   disabled,
   connectedDetails,
 }: OutputNameEditorProps) => {
-  const { transferSelection } = useNodeSelectionTransfer(outputNameToNodeId);
+  const { getOutputNodeId } = useNodeManager();
+  const { transferSelection } = useNodeSelectionTransfer(getOutputNodeId);
   const {
     setComponentSpec,
     componentSpec,

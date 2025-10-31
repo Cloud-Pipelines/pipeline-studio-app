@@ -1,15 +1,11 @@
 import type { Connection } from "@xyflow/react";
 
+import type { NodeManager } from "@/nodeManager";
 import type {
   GraphInputArgument,
   GraphSpec,
   TaskOutputArgument,
 } from "@/utils/componentSpec";
-import {
-  nodeIdToInputName,
-  nodeIdToOutputName,
-  nodeIdToTaskId,
-} from "@/utils/nodes/nodeIdUtils";
 
 import { setGraphOutputValue } from "./setGraphOutputValue";
 import { setTaskArgument } from "./setTaskArgument";
@@ -17,44 +13,55 @@ import { setTaskArgument } from "./setTaskArgument";
 export const handleConnection = (
   graphSpec: GraphSpec,
   connection: Connection,
+  nodeManager: NodeManager,
 ) => {
-  const targetTaskInputName = connection.targetHandle?.replace(/^input_/, "");
-  const sourceTaskOutputName = connection.sourceHandle?.replace(/^output_/, "");
+  const sourceId = nodeManager.getRefId(connection.source);
+  const targetId = nodeManager.getRefId(connection.target);
 
-  if (sourceTaskOutputName !== undefined) {
+  const sourceHandleName = connection.sourceHandle
+    ? nodeManager.getHandleInfo(connection.sourceHandle)?.handleName
+    : undefined;
+  const targetHandleName = connection.targetHandle
+    ? nodeManager.getHandleInfo(connection.targetHandle)?.handleName
+    : undefined;
+
+  // Previously sourceHandle & targetHandle were `undefined` for IO Nodes, but in the new NodeManager system the handles now have an id & name.
+  // Thus, if the handle name is the same as the input/output name, treat it as undefined.
+  const sourceTaskOutputName =
+    sourceId && sourceHandleName === sourceId ? undefined : sourceHandleName;
+  const targetTaskInputName =
+    targetId && targetHandleName === targetId ? undefined : targetHandleName;
+
+  if (sourceTaskOutputName !== undefined && sourceId) {
     const taskOutputArgument: TaskOutputArgument = {
       taskOutput: {
-        taskId: nodeIdToTaskId(connection.source),
+        taskId: sourceId,
         outputName: sourceTaskOutputName,
       },
     };
 
-    if (targetTaskInputName !== undefined) {
+    if (targetTaskInputName !== undefined && targetId) {
       return setTaskArgument(
         graphSpec,
-        nodeIdToTaskId(connection.target),
+        targetId,
         targetTaskInputName,
         taskOutputArgument,
       );
-    } else {
-      return setGraphOutputValue(
-        graphSpec,
-        nodeIdToOutputName(connection.target),
-        taskOutputArgument,
-      );
+    } else if (targetId) {
+      return setGraphOutputValue(graphSpec, targetId, taskOutputArgument);
       // TODO: Perhaps propagate type information
     }
-  } else {
-    const graphInputName = nodeIdToInputName(connection.source);
+  } else if (sourceId) {
+    const graphInputName = sourceId;
     const graphInputArgument: GraphInputArgument = {
       graphInput: {
         inputName: graphInputName,
       },
     };
-    if (targetTaskInputName !== undefined) {
+    if (targetTaskInputName !== undefined && targetId) {
       return setTaskArgument(
         graphSpec,
-        nodeIdToTaskId(connection.target),
+        targetId,
         targetTaskInputName,
         graphInputArgument,
       );
