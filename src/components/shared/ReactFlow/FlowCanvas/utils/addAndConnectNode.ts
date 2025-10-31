@@ -1,6 +1,6 @@
 import type { Connection, Handle } from "@xyflow/react";
 
-import type { NodeManager, NodeType } from "@/nodeManager";
+import type { HandleInfo, NodeManager, NodeType } from "@/nodeManager";
 import {
   type ComponentReference,
   type ComponentSpec,
@@ -21,6 +21,15 @@ type AddAndConnectNodeParams = {
   nodeManager: NodeManager;
 };
 
+/* 
+  Add a new task node to the graph and connect it to an existing handle 
+  - ComponentRef: The component reference for the new task
+  - fromHandle: The handle from which the connection originates (input or output handle)
+  - position: The position to place the new task node
+  - componentSpec: The current component specification containing the graph
+  - nodeManager: The NodeManager instance for managing node IDs
+*/
+
 export function addAndConnectNode({
   componentRef,
   fromHandle,
@@ -28,57 +37,26 @@ export function addAndConnectNode({
   componentSpec,
   nodeManager,
 }: AddAndConnectNodeParams): ComponentSpec {
-  // 1. Add the new node
-  const taskSpec: TaskSpec = {
-    annotations: {},
-    componentRef: { ...componentRef },
-  };
-
-  if (!isGraphImplementation(componentSpec.implementation)) {
+  if (!isGraphImplementation(componentSpec.implementation) || !fromHandle?.id) {
     return componentSpec;
   }
 
-  const oldGraphSpec = componentSpec.implementation.graph;
-
-  if (!fromHandle?.id) {
-    return componentSpec;
-  }
-
-  const fromNodeId = fromHandle.nodeId;
-  const fromNodeType = nodeManager.getNodeType(fromNodeId);
-  const fromTaskId = nodeManager.getRefId(fromNodeId);
-
-  if (!fromTaskId) {
-    return componentSpec;
-  }
-
-  let fromHandleType: NodeType | undefined;
-  let fromHandleName: string | undefined;
-
-  if (fromNodeType === "task") {
-    const fromHandleInfo = nodeManager.getHandleInfo(fromHandle.id);
-    fromHandleName = fromHandleInfo?.handleName;
-    fromHandleType = nodeManager.getNodeType(fromHandle.id);
-  } else if (fromNodeType === "input") {
-    fromHandleType = "handle-out";
-    fromHandleName = fromTaskId;
-  } else if (fromNodeType === "output") {
-    fromHandleType = "handle-in";
-    fromHandleName = fromTaskId;
-  } else {
-    return componentSpec;
-  }
-
-  if (!fromHandleName) {
-    return componentSpec;
-  }
+  const handleInfo = nodeManager.getHandleInfo(fromHandle.id);
+  const fromHandleType = handleInfo?.handleType;
 
   if (
+    !handleInfo ||
     !fromHandleType ||
-    (fromHandleType !== "handle-in" && fromHandleType !== "handle-out")
+    !["handle-in", "handle-out"].includes(fromHandleType)
   ) {
     return componentSpec;
   }
+
+  // 1. Create new task
+  const newTaskSpec: TaskSpec = {
+    annotations: {},
+    componentRef: { ...componentRef },
+  };
 
   const adjustedPosition =
     fromHandleType === "handle-in"
@@ -87,114 +65,117 @@ export function addAndConnectNode({
 
   const newComponentSpec = addTask(
     "task",
-    taskSpec,
+    newTaskSpec,
     adjustedPosition,
     componentSpec,
   );
 
-  // 2. Find the new node
   if (!isGraphImplementation(newComponentSpec.implementation)) {
-    return newComponentSpec;
+    return componentSpec;
   }
 
-  const graphSpec = newComponentSpec.implementation.graph;
+  const oldTasks = componentSpec.implementation.graph.tasks;
+  const newTasks = newComponentSpec.implementation.graph.tasks;
+  const newTaskId = Object.keys(newTasks).find((key) => !(key in oldTasks));
 
-  const newTaskId = Object.keys(graphSpec.tasks).find(
-    (key) => !(key in oldGraphSpec.tasks),
+  if (!newTaskId) return newComponentSpec;
+
+  // 2. Find the first matching handle on the new task
+  const connectionType = getConnectionType(
+    handleInfo,
+    fromHandleType,
+    componentSpec,
+    newTasks,
   );
+  if (!connectionType) return newComponentSpec;
 
-  if (!newTaskId) {
-    return newComponentSpec;
-  }
-
-  const newNodeId = nodeManager.getNodeId(newTaskId, "task");
-
-  // 3. Determine the connection data type and find the first matching handle on the new node
-  let fromComponentSpec: ComponentSpec | undefined;
-
-  if (fromNodeType === "task") {
-    // Get spec from task
-    const fromTaskSpec = graphSpec.tasks[fromTaskId];
-    fromComponentSpec = fromTaskSpec?.componentRef.spec;
-  } else {
-    // For IO nodes, get spec from component spec
-    fromComponentSpec = componentSpec;
-  }
-
-  let connectionType: TypeSpecType | undefined;
-  if (fromHandleType === "handle-in") {
-    connectionType = fromComponentSpec?.inputs?.find(
-      (io) => io.name === fromHandleName,
-    )?.type;
-  } else if (fromHandleType === "handle-out") {
-    connectionType = fromComponentSpec?.outputs?.find(
-      (io) => io.name === fromHandleName,
-    )?.type;
-  }
-
-  // Find the first matching handle on the new node
   const toHandleType =
     fromHandleType === "handle-in" ? "handle-out" : "handle-in";
+  const toHandleName = findCompatibleHandle(
+    componentRef,
+    toHandleType,
+    connectionType,
+  );
 
-  const inputHandleName = componentRef.spec?.inputs?.find(
-    (io) => io.type === connectionType,
-  )?.name;
+  if (!toHandleName) return newComponentSpec;
 
-  const outputHandleName = componentRef.spec?.outputs?.find(
-    (io) => io.type === connectionType,
-  )?.name;
-
-  const toHandleName =
-    toHandleType === "handle-in" ? inputHandleName : outputHandleName;
-
-  if (!toHandleName) {
-    return newComponentSpec;
-  }
-
+  // 3. Create connection
+  const newNodeId = nodeManager.getNodeId(newTaskId, "task");
   const targetHandleId = nodeManager.getHandleNodeId(
     newTaskId,
     toHandleName,
     toHandleType,
   );
+  const isReversed =
+    fromHandleType === "handle-in" && toHandleType === "handle-out";
 
-  // 4. Build a Connection object and use handleConnection to add the edge
-  if (targetHandleId) {
-    const fromNodeId = fromHandle.nodeId;
-    const fromHandleId = fromHandle.id;
+  const connection: Connection = isReversed
+    ? {
+        source: newNodeId,
+        sourceHandle: targetHandleId,
+        target: fromHandle.nodeId,
+        targetHandle: fromHandle.id,
+      }
+    : {
+        source: fromHandle.nodeId,
+        sourceHandle: fromHandle.id,
+        target: newNodeId,
+        targetHandle: targetHandleId,
+      };
 
-    const isReversedConnection =
-      fromHandleType === "handle-in" && toHandleType === "handle-out";
+  const updatedGraphSpec = handleConnection(
+    newComponentSpec.implementation.graph,
+    connection,
+    nodeManager,
+  );
 
-    const connection: Connection = isReversedConnection
-      ? // Drawing from an input handle to a new output handle
-        {
-          source: newNodeId,
-          sourceHandle: targetHandleId,
-          target: fromNodeId,
-          targetHandle: fromHandleId,
-        }
-      : // Drawing from an output handle to a new input handle
-        {
-          source: fromNodeId,
-          sourceHandle: fromHandleId,
-          target: newNodeId,
-          targetHandle: targetHandleId,
-        };
+  return {
+    ...newComponentSpec,
+    implementation: {
+      ...newComponentSpec.implementation,
+      graph: updatedGraphSpec,
+    },
+  };
+}
 
-    const updatedGraphSpec = handleConnection(
-      graphSpec,
-      connection,
-      nodeManager,
-    );
+function getConnectionType(
+  handleInfo: HandleInfo,
+  handleType: NodeType,
+  componentSpec: ComponentSpec,
+  tasks: Record<string, TaskSpec>,
+): TypeSpecType | undefined {
+  let targetSpec: ComponentSpec | undefined;
 
-    return {
-      ...newComponentSpec,
-      implementation: {
-        ...newComponentSpec.implementation,
-        graph: updatedGraphSpec,
-      },
-    };
+  const taskSpec = tasks[handleInfo.parentRefId];
+
+  if (taskSpec) {
+    targetSpec = taskSpec.componentRef.spec;
+  } else {
+    targetSpec = componentSpec;
   }
 
-  return newComponentSpec;
+  if (!targetSpec) return undefined;
+
+  if (handleType === "handle-in") {
+    return targetSpec.inputs?.find((io) => io.name === handleInfo.handleName)
+      ?.type;
+  } else {
+    return targetSpec.outputs?.find((io) => io.name === handleInfo.handleName)
+      ?.type;
+  }
+}
+
+function findCompatibleHandle(
+  componentRef: ComponentReference,
+  handleType: "handle-in" | "handle-out",
+  connectionType: TypeSpecType,
+): string | undefined {
+  const spec = componentRef.spec;
+  if (!spec) return undefined;
+
+  if (handleType === "handle-in") {
+    return spec.inputs?.find((io) => io.type === connectionType)?.name;
+  } else {
+    return spec.outputs?.find((io) => io.type === connectionType)?.name;
+  }
 }
