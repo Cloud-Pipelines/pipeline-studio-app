@@ -102,9 +102,10 @@ const useScheduleExecutionOnceWhenConditionMet = (
 const FlowCanvas = ({
   readOnly,
   nodesConnectable,
+  isCommenting,
   children,
   ...rest
-}: ReactFlowProps & { readOnly?: boolean }) => {
+}: ReactFlowProps & { readOnly?: boolean; isCommenting?: boolean }) => {
   const initialCanvasLoaded = useRef(false);
 
   const { clearContent } = useContextPanel();
@@ -944,10 +945,10 @@ const FlowCanvas = ({
         onSelectionEnd={handleSelectionEnd}
         nodesConnectable={readOnly ? false : nodesConnectable}
         connectOnClick={!readOnly}
-        className={cn(
-          (rest.selectionOnDrag || (shiftKeyPressed && !isConnecting)) &&
-            "cursor-crosshair",
-        )}
+        className={cn({
+          "cursor-crosshair":
+            rest.selectionOnDrag || (shiftKeyPressed && !isConnecting),
+        })}
       >
         <NodeToolbar
           nodeId={selectedNodes.map((node) => node.id)}
