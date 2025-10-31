@@ -11,6 +11,11 @@ import {
   createRequiredContext,
   useRequiredContext,
 } from "@/hooks/useRequiredContext";
+import {
+  convertExecutionStatsToStatusCounts,
+  getRunStatus,
+} from "@/services/executionService";
+import type { TaskStatusCounts } from "@/types/pipelineRun";
 
 import { useComponentSpec } from "./ComponentSpecProvider";
 
@@ -30,6 +35,7 @@ interface ExecutionDataContextType {
   runId: string | undefined | null;
   isLoading: boolean;
   error: Error | null;
+  taskStatusCountsMap: Map<string, TaskStatusCounts>;
 }
 
 const ExecutionDataContext = createRequiredContext<ExecutionDataContextType>(
@@ -44,43 +50,64 @@ const isAtRootLevel = (path: string[]) => path.length <= 1;
 
 const buildPathKey = (path: string[]) => path.join(PATH_DELIMITER);
 
-const extractStatusFromStats = (
-  statusStats: Record<string, number>,
-): string | undefined => {
-  const statuses = Object.keys(statusStats);
-  return statuses.length > 0 ? statuses[0] : undefined;
-};
-
-const buildTaskStatusMap = (
+const buildTaskStatusMaps = (
   details?: GetExecutionInfoResponse,
   state?: GetGraphExecutionStateResponse,
-): Map<string, string> => {
+): {
+  taskStatusMap: Map<string, string>;
+  taskStatusCountsMap: Map<string, TaskStatusCounts>;
+} => {
   const taskStatusMap = new Map<string, string>();
+  const taskStatusCountsMap = new Map<string, TaskStatusCounts>();
 
   if (!details?.child_task_execution_ids) {
-    return taskStatusMap;
+    return { taskStatusMap, taskStatusCountsMap };
   }
 
   Object.entries(details.child_task_execution_ids).forEach(
     ([taskId, executionId]) => {
-      const executionIdStr = executionId;
-      const statusStats = state?.child_execution_status_stats?.[executionIdStr];
+      const statusStats = state?.child_execution_status_stats?.[executionId];
 
-      const status = statusStats
-        ? extractStatusFromStats(statusStats)
-        : undefined;
+      if (!statusStats) {
+        taskStatusMap.set(taskId, DEFAULT_TASK_STATUS);
+        return;
+      }
 
-      taskStatusMap.set(taskId, status ?? DEFAULT_TASK_STATUS);
+      const statusCounts = convertExecutionStatsToStatusCounts(statusStats);
+      const aggregatedStatus = getRunStatus(statusCounts);
+
+      let status: string;
+      switch (aggregatedStatus) {
+        case "FAILED":
+          status = "FAILED";
+          break;
+        case "CANCELLED":
+          status = "CANCELLED";
+          break;
+        case "RUNNING":
+          status = "RUNNING";
+          break;
+        case "WAITING":
+          status = "WAITING_FOR_UPSTREAM";
+          break;
+        case "SUCCEEDED":
+          status =
+            statusCounts.succeeded === statusCounts.total
+              ? "SUCCEEDED"
+              : "RUNNING";
+          break;
+        default:
+          status = DEFAULT_TASK_STATUS;
+      }
+
+      taskStatusMap.set(taskId, status);
+      taskStatusCountsMap.set(taskId, statusCounts);
     },
   );
 
-  return taskStatusMap;
+  return { taskStatusMap, taskStatusCountsMap };
 };
 
-/**
- * Traverses subgraph path to find execution ID at target level.
- * Example: ["root", "task-1", "task-2"] returns execution ID for task-2.
- */
 const findExecutionIdAtPath = (
   path: string[],
   rootExecutionId: string | undefined,
@@ -209,10 +236,14 @@ export function ExecutionDataProvider({
     isAtRoot,
   ]);
 
+  const { taskStatusMap, taskStatusCountsMap } = useMemo(
+    () => buildTaskStatusMaps(details, state),
+    [details, state],
+  );
+
   useEffect(() => {
-    const taskStatusMap = buildTaskStatusMap(details, state);
     setTaskStatusMap(taskStatusMap);
-  }, [details, state, setTaskStatusMap]);
+  }, [taskStatusMap, setTaskStatusMap]);
 
   const value = useMemo(
     () => ({
@@ -225,6 +256,7 @@ export function ExecutionDataProvider({
       runId,
       isLoading,
       error,
+      taskStatusCountsMap,
     }),
     [
       currentExecutionId,
@@ -236,6 +268,7 @@ export function ExecutionDataProvider({
       runId,
       isLoading,
       error,
+      taskStatusCountsMap,
     ],
   );
 
