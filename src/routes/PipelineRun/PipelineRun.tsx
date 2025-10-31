@@ -1,4 +1,5 @@
 import { DndContext } from "@dnd-kit/core";
+import { useNavigate } from "@tanstack/react-router";
 import { ReactFlowProvider } from "@xyflow/react";
 import { useEffect } from "react";
 
@@ -20,11 +21,27 @@ import {
   STATUS,
 } from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
-import type { ComponentSpec } from "@/utils/componentSpec";
+import {
+  type ComponentSpec,
+  isGraphImplementation,
+} from "@/utils/componentSpec";
+import {
+  indexPathToSubgraphPath,
+  subgraphPathToIndexPath,
+} from "@/utils/subgraphUtils";
 
 const PipelineRunContent = () => {
-  const { setComponentSpec, clearComponentSpec, componentSpec } =
-    useComponentSpec();
+  const {
+    setComponentSpec,
+    clearComponentSpec,
+    componentSpec,
+    navigateToPath,
+    currentSubgraphPath,
+  } = useComponentSpec();
+
+  const navigate = useNavigate();
+  const search = runDetailRoute.useSearch();
+
   const { configured, available, ready } = useBackend();
 
   const {
@@ -65,6 +82,40 @@ const PipelineRunContent = () => {
       clearComponentSpec();
     };
   }, [rootDetails, setComponentSpec, clearComponentSpec]);
+
+  useEffect(() => {
+    const indexPath = subgraphPathToIndexPath(
+      currentSubgraphPath,
+      componentSpec,
+    );
+    if (indexPath.length > 0) {
+      navigate({
+        to: ".",
+        search: {
+          ...search,
+          indexPath: indexPath.join("."),
+        },
+        replace: true,
+      });
+    }
+  }, [currentSubgraphPath, navigate, search]);
+
+  useEffect(() => {
+    const tasks = Object.keys(
+      componentSpec?.implementation &&
+        isGraphImplementation(componentSpec.implementation)
+        ? componentSpec.implementation.graph.tasks
+        : {},
+    );
+
+    if ("indexPath" in search && search.indexPath && tasks.length > 0) {
+      const indexPath = search.indexPath.split(".");
+
+      const subgraphPath = indexPathToSubgraphPath(indexPath, componentSpec);
+
+      navigateToPath(["root", ...subgraphPath]);
+    }
+  }, [componentSpec]);
 
   useDocumentTitle({
     "/runs/$id": (params) =>

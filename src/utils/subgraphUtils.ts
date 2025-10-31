@@ -299,3 +299,66 @@ export const updateSubgraphSpec = (
     },
   };
 };
+
+export const subgraphPathToIndexPath = (
+  subgraphPath: string[],
+  rootComponentSpec: ComponentSpec,
+): string[] => {
+  const indexPath: string[] = [];
+  let currentSpec = rootComponentSpec;
+
+  for (let i = 1; i < subgraphPath.length; i++) {
+    const taskId = subgraphPath[i];
+    if (!isGraphImplementation(currentSpec.implementation)) {
+      return [];
+    }
+    const taskIndex = Object.keys(
+      currentSpec.implementation.graph.tasks,
+    ).indexOf(taskId);
+    if (taskIndex === -1) {
+      return [];
+    }
+
+    indexPath.push(taskIndex.toString());
+    if (!currentSpec.implementation.graph.tasks[taskId].componentRef.spec) {
+      return [];
+    }
+    currentSpec =
+      currentSpec.implementation.graph.tasks[taskId].componentRef.spec;
+  }
+  return indexPath;
+};
+
+export const indexPathToSubgraphPath = (
+  indexPath: string[],
+  rootComponentSpec: ComponentSpec,
+): string[] => {
+  const subgraphPath: string[] = [];
+  let currentSpec = rootComponentSpec;
+
+  for (let i = 0; i < indexPath.length; i++) {
+    const taskIndex = parseInt(indexPath[i]);
+
+    if (!isGraphImplementation(currentSpec.implementation)) {
+      return [];
+    }
+
+    const taskNames = Object.keys(currentSpec.implementation.graph.tasks);
+
+    if (taskIndex < 0 || taskIndex >= taskNames.length) {
+      return [];
+    }
+
+    const taskName = taskNames[taskIndex];
+    subgraphPath.push(taskName);
+
+    if (i < indexPath.length - 1) {
+      const task = currentSpec.implementation.graph.tasks[taskName];
+      if (!task.componentRef.spec) {
+        return [];
+      }
+      currentSpec = task.componentRef.spec;
+    }
+  }
+  return subgraphPath;
+};
