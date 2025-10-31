@@ -7,9 +7,9 @@ import { InputValueEditor } from "./InputValueEditor";
 
 // Mock all the dependencies
 const mockSetComponentSpec = vi.fn();
-const mockTransferSelection = vi.fn();
 const mockNotify = vi.fn();
 const mockClearContent = vi.fn();
+const mockUpdateRefId = vi.fn();
 
 vi.mock("@/providers/ComponentSpecProvider", () => ({
   useComponentSpec: () => ({
@@ -48,9 +48,12 @@ vi.mock("@/providers/ContextPanelProvider", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useNodeSelectionTransfer", () => ({
-  useNodeSelectionTransfer: () => ({
-    transferSelection: mockTransferSelection,
+vi.mock("@/hooks/useNodeManager", () => ({
+  useNodeManager: () => ({
+    updateRefId: mockUpdateRefId,
+    getNodeId: vi.fn(),
+    getHandleNodeId: vi.fn(),
+    nodeManager: {},
   }),
 }));
 
@@ -122,7 +125,7 @@ describe("InputValueEditor", () => {
 
     // Verify that the component spec was updated and selection was transferred
     expect(mockSetComponentSpec).toHaveBeenCalled();
-    expect(mockTransferSelection).toHaveBeenCalledWith("TestInput", "NewName");
+    expect(mockUpdateRefId).toHaveBeenCalledWith("TestInput", "NewName");
   });
 
   it("shows validation error when renaming to existing input name", () => {

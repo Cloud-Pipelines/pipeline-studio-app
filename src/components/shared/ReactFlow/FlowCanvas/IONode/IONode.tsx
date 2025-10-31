@@ -57,13 +57,7 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
   useEffect(() => {
     if (selected) {
       if (input && isInput) {
-        setContent(
-          <InputValueEditor
-            input={input}
-            key={input.name}
-            disabled={readOnly}
-          />,
-        );
+        setContent(<InputValueEditor input={input} disabled={readOnly} />);
       }
 
       if (output && !isInput) {
@@ -75,19 +69,18 @@ const IONode = ({ type, data, selected = false }: IONodeProps) => {
           <OutputNameEditor
             output={output}
             connectedDetails={outputConnectedDetails}
-            key={output.name}
             disabled={readOnly}
           />,
         );
       }
     }
+  }, [selected, readOnly, input, output, isInput, currentGraphSpec]);
 
+  useEffect(() => {
     return () => {
-      if (selected) {
-        clearContent();
-      }
+      clearContent();
     };
-  }, [input, output, selected, readOnly]);
+  }, []);
 
   const connectedOutput = getOutputConnectedDetails(
     currentGraphSpec,
