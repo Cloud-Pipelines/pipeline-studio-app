@@ -6,7 +6,7 @@ import type {
   TaskSpec,
 } from "@/utils/componentSpec";
 import { deepClone } from "@/utils/deepClone";
-import { getUniqueTaskName } from "@/utils/unique";
+import { getUniqueTaskId } from "@/utils/unique";
 
 export const replaceTaskNode = (
   taskId: string,
@@ -15,14 +15,13 @@ export const replaceTaskNode = (
 ) => {
   const updatedGraphSpec = deepClone(graphSpec);
 
-  const taskName = newComponentRef.spec?.name;
-  const newTaskInputs = newComponentRef.spec?.inputs;
-  const newTaskOutputs = newComponentRef.spec?.outputs;
-  const newTaskId = getUniqueTaskName(graphSpec, taskName);
-
   const oldTaskId = taskId;
   const oldTask = deepClone(updatedGraphSpec.tasks[oldTaskId]) as TaskSpec;
   const oldTaskInputs = oldTask.componentRef.spec?.inputs;
+
+  const newTaskInputs = newComponentRef.spec?.inputs;
+  const newTaskOutputs = newComponentRef.spec?.outputs;
+  const newTaskId = getUniqueTaskId(graphSpec, oldTaskId);
 
   // Migrate the task to the new componentRef
   const updatedTask = {

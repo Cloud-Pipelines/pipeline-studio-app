@@ -13,7 +13,7 @@ import { deepClone } from "@/utils/deepClone";
 import {
   getUniqueInputName,
   getUniqueOutputName,
-  getUniqueTaskName,
+  getUniqueTaskId,
 } from "@/utils/unique";
 
 const addTask = (
@@ -62,7 +62,7 @@ const addTask = (
       arguments: taskArguments ?? {},
     };
 
-    const taskId = getUniqueTaskName(
+    const uniqueTaskId = getUniqueTaskId(
       graphSpec,
       taskSpec.componentRef.spec?.name ?? "Task",
     );
@@ -71,7 +71,7 @@ const addTask = (
       ...graphSpec,
       tasks: {
         ...graphSpec.tasks,
-        [taskId]: updatedTaskSpec,
+        [uniqueTaskId]: updatedTaskSpec,
       },
     };
 
@@ -79,9 +79,9 @@ const addTask = (
   }
 
   if (nodeType === "input") {
-    const inputId = getUniqueInputName(newComponentSpec);
+    const inputName = getUniqueInputName(newComponentSpec);
     const inputSpec: InputSpec = {
-      name: inputId,
+      name: inputName,
       annotations: positionAnnotations,
     };
     const inputs = (newComponentSpec.inputs ?? []).concat([inputSpec]);
@@ -90,9 +90,9 @@ const addTask = (
   }
 
   if (nodeType === "output") {
-    const outputId = getUniqueOutputName(newComponentSpec);
+    const outputName = getUniqueOutputName(newComponentSpec);
     const outputSpec: OutputSpec = {
-      name: outputId,
+      name: outputName,
       annotations: positionAnnotations,
     };
 
