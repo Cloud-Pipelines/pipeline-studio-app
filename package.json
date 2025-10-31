@@ -99,7 +99,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
-    "@hey-api/openapi-ts": "^0.86.9",
+    "@hey-api/openapi-ts": "^0.86.11",
     "@playwright/test": "^1.56.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
