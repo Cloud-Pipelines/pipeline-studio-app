@@ -168,12 +168,12 @@ const ClassicInputHandle = observer(function ClassicInputHandle({
                   ? "text-gray-100 bg-white/10 hover:bg-white/15 dark:hover:bg-white/15 hover:text-gray-100"
                   : "text-gray-800 bg-black/5 hover:bg-black/10 dark:hover:bg-black/10 hover:text-gray-800",
             )}
-            title={`${input.name}${input.type ? `: ${input.type}` : ""}`}
+            title={`${input.label ?? input.name}${input.type ? `: ${input.type}` : ""}`}
             onClick={onLabelClick}
             data-input-control
             data-testid={`input-label-${input.name}`}
           >
-            {input.name.replace(/_/g, " ")}
+            {input.label ?? input.name.replace(/_/g, " ")}
           </Button>
         </div>
         {showValueDisplay && (
