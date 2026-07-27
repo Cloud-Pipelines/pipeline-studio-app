@@ -146,3 +146,6 @@ export const DOCKED_HEADER_HEIGHT = 36;
 
 /** Distance from dock area edge to trigger dock insert preview (px) */
 export const DOCK_AREA_SNAP_THRESHOLD = 40;
+
+/** Height of a window chrome (px) */
+export const WINDOW_CHROME_HEIGHT = 30;

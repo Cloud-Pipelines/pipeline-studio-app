@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 
 import { useSharedStores } from "@/routes/v2/shared/store/SharedStoreContext";
+import { WINDOW_CHROME_HEIGHT } from "@/routes/v2/shared/windows/types";
 
 import { CanvasControlsContent } from "./CanvasControlsContent";
 
 const CANVAS_CONTROLS_WINDOW_ID = "canvas-controls";
 const CANVAS_CONTROLS_WINDOW_HEIGHT = 150;
-const WINDOW_CHROME_HEIGHT = 30;
 
 export function useCanvasControlsWindow(trackingSpace: string) {
   const { windows } = useSharedStores();

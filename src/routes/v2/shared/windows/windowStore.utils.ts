@@ -7,6 +7,7 @@ import {
   type WindowOptions,
   type WindowState,
 } from "./types";
+import { bringIntoViewport, type ViewportBounds } from "./viewportUtils";
 import { DEFAULT_VIEW_PRESET } from "./viewPresets";
 import type { WindowModelInit } from "./windowModel";
 import {
@@ -20,10 +21,17 @@ export function buildWindowModelInit(
   id: string,
   options: WindowOptions,
   defaultPosition: Position,
+  viewportBounds?: ViewportBounds,
 ): WindowModelInit {
   const persisted = options.persisted ? getPersistedWindowState(id) : null;
-  const geo = resolveGeometry(persisted, options, defaultPosition);
   const docked = resolveDockedOverrides(persisted, options.defaultDockState);
+  const geo = resolveGeometry(
+    persisted,
+    options,
+    defaultPosition,
+    docked.dockState,
+    viewportBounds,
+  );
   const initial = resolveInitialState(persisted, options, docked.dockState, id);
 
   return {
@@ -86,12 +94,24 @@ function resolveGeometry(
   persisted: PersistedState,
   options: WindowOptions,
   defaultPosition: Position,
+  dockState: DockState,
+  viewportBounds?: ViewportBounds,
 ): { position: Position; size: Size; minSize: Size } {
-  return {
-    position: persisted?.position ?? options.position ?? defaultPosition,
-    size: persisted?.size ?? options.size ?? { ...DEFAULT_WINDOW_SIZE },
-    minSize: options.minSize ?? { ...DEFAULT_MIN_SIZE },
-  };
+  const position = persisted?.position ?? options.position ?? defaultPosition;
+  const size = persisted?.size ?? options.size ?? { ...DEFAULT_WINDOW_SIZE };
+  const minSize = options.minSize ?? { ...DEFAULT_MIN_SIZE };
+
+  // A floating window restored from persisted state may have been saved on a
+  // larger screen and now sit off the current viewport. Snap it back in so it
+  // stays reachable. Only persisted floating windows are adjusted — docked
+  // windows lay out via their dock area, and fresh/default positions are honored.
+  const restoredFloating = persisted !== null && dockState === "none";
+  const resolvedPosition =
+    restoredFloating && viewportBounds
+      ? bringIntoViewport(position, size, viewportBounds)
+      : position;
+
+  return { position: resolvedPosition, size, minSize };
 }
 function resolveDockedOverrides(
   persisted: PersistedState,
