@@ -5,6 +5,10 @@ import { useEffect, useRef } from "react";
 import { useSharedStores } from "@/routes/v2/shared/store/SharedStoreContext";
 import type { Position } from "@/routes/v2/shared/windows/types";
 import { COLLAPSED_DOCK_AREA_WIDTH } from "@/routes/v2/shared/windows/types";
+import {
+  bringIntoViewport,
+  type ViewportBounds,
+} from "@/routes/v2/shared/windows/viewportUtils";
 
 const CONTEXT_PANEL_WINDOW_ID = "context-panel";
 const GAP = 12;
@@ -16,19 +20,12 @@ interface Rect {
   bottom: number;
 }
 
-interface Bounds {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}
-
 function getAvailableBounds(store: {
   getDockAreaConfig: (side: "left" | "right") => {
     collapsed: boolean;
     width: number;
   };
-}): Bounds {
+}): ViewportBounds {
   const effectiveWidth = (side: "left" | "right") => {
     const area = store.getDockAreaConfig(side);
     return area.collapsed ? COLLAPSED_DOCK_AREA_WIDTH : area.width;
@@ -41,18 +38,6 @@ function getAvailableBounds(store: {
   };
 }
 
-function clampPosition(
-  pos: Position,
-  windowWidth: number,
-  windowHeight: number,
-  bounds: Bounds,
-): Position {
-  return {
-    x: Math.max(bounds.left, Math.min(pos.x, bounds.right - windowWidth)),
-    y: Math.max(bounds.top, Math.min(pos.y, bounds.bottom - windowHeight)),
-  };
-}
-
 /**
  * Try placements in priority order: right, left, below, above.
  * Returns the first position that fits entirely within the available bounds,
@@ -62,7 +47,7 @@ function calculateWindowPosition(
   nodeRect: Rect,
   windowWidth: number,
   windowHeight: number,
-  bounds: Bounds,
+  bounds: ViewportBounds,
 ): Position {
   const candidates: Position[] = [
     { x: nodeRect.right + GAP, y: nodeRect.top },
@@ -82,7 +67,11 @@ function calculateWindowPosition(
     }
   }
 
-  return clampPosition(candidates[0], windowWidth, windowHeight, bounds);
+  return bringIntoViewport(
+    candidates[0],
+    { width: windowWidth, height: windowHeight },
+    bounds,
+  );
 }
 
 /**

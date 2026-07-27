@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { Position, Size, WindowOptions } from "./types";
+import {
+  type Position,
+  type Size,
+  WINDOW_CHROME_HEIGHT,
+  type WindowOptions,
+} from "./types";
+import type { ViewportBounds } from "./viewportUtils";
 import { DEFAULT_VIEW_PRESET } from "./viewPresets";
 import { buildWindowModelInit } from "./windowStore.utils";
 
@@ -19,14 +25,16 @@ interface SeedWindowState {
   isHidden?: boolean;
   isMinimized?: boolean;
   dockState?: "left" | "right" | "none";
+  position?: Position;
+  size?: Size;
 }
 
 function seedPersistedWindow(id: string, state: SeedWindowState): void {
   const layout = {
     windows: {
       [id]: {
-        position: DEFAULT_POSITION,
-        size: DEFAULT_SIZE,
+        position: state.position ?? DEFAULT_POSITION,
+        size: state.size ?? DEFAULT_SIZE,
         dockState: state.dockState ?? "none",
         isHidden: state.isHidden ?? false,
         isMinimized: state.isMinimized ?? false,
@@ -92,5 +100,87 @@ describe("resolveInitialState (via buildWindowModelInit)", () => {
     const init = buildWindowModelInit(id, baseOptions(), DEFAULT_POSITION);
 
     expect(init.state).toBe("minimized");
+  });
+});
+
+describe("resolveGeometry viewport clamping (via buildWindowModelInit)", () => {
+  const VIEWPORT_BOUNDS: ViewportBounds = {
+    left: 0,
+    top: 56,
+    right: 1000,
+    bottom: 800,
+  };
+
+  it("brings an off-viewport persisted floating window back into view", () => {
+    const id = "off-screen-floating";
+    seedPersistedWindow(id, {
+      dockState: "none",
+      position: { x: 5000, y: 5000 },
+      size: { width: 320, height: 420 },
+    });
+
+    const init = buildWindowModelInit(
+      id,
+      baseOptions(),
+      DEFAULT_POSITION,
+      VIEWPORT_BOUNDS,
+    );
+
+    expect(init.position).toEqual({
+      x: VIEWPORT_BOUNDS.right - 320,
+      y: VIEWPORT_BOUNDS.bottom - 420 - WINDOW_CHROME_HEIGHT,
+    });
+  });
+
+  it("leaves an in-viewport persisted floating window untouched", () => {
+    const id = "in-view-floating";
+    const position: Position = { x: 120, y: 140 };
+    seedPersistedWindow(id, {
+      dockState: "none",
+      position,
+      size: { width: 320, height: 420 },
+    });
+
+    const init = buildWindowModelInit(
+      id,
+      baseOptions(),
+      DEFAULT_POSITION,
+      VIEWPORT_BOUNDS,
+    );
+
+    expect(init.position).toEqual(position);
+  });
+
+  it("does not clamp the position of a persisted docked window", () => {
+    const id = "off-screen-docked";
+    const position: Position = { x: 5000, y: 5000 };
+    seedPersistedWindow(id, {
+      dockState: "left",
+      position,
+      size: { width: 320, height: 420 },
+    });
+
+    const init = buildWindowModelInit(
+      id,
+      baseOptions(),
+      DEFAULT_POSITION,
+      VIEWPORT_BOUNDS,
+    );
+
+    expect(init.position).toEqual(position);
+  });
+
+  it("does not clamp a first-visit default position (no persisted state)", () => {
+    const id = "first-visit-default";
+    const optionPosition: Position = { x: 5000, y: 5000 };
+
+    const init = buildWindowModelInit(
+      id,
+      baseOptions({ position: optionPosition, startVisible: true }),
+      DEFAULT_POSITION,
+      VIEWPORT_BOUNDS,
+    );
+
+    expect(init.position).toEqual(optionPosition);
   });
 });

@@ -12,6 +12,7 @@ import {
   type WindowOptions,
   type WindowRef,
 } from "./types";
+import { getFloatingViewportBounds } from "./viewportUtils";
 import { dockSideByWindowId, type ViewPreset } from "./viewPresets";
 import { WindowModel, type WindowStoreRef } from "./windowModel";
 import { buildWindowModelInit } from "./windowStore.utils";
@@ -93,7 +94,12 @@ export class WindowStoreImpl implements WindowStoreRef {
     if (options.miniContent !== undefined) {
       this.miniContentMap.set(id, options.miniContent);
     }
-    const init = buildWindowModelInit(id, options, this.calculateNewPosition());
+    const init = buildWindowModelInit(
+      id,
+      options,
+      this.calculateNewPosition(),
+      getFloatingViewportBounds(this),
+    );
     const model = new WindowModel(init, this);
 
     this.windows[id] = model;
