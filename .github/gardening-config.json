@@ -2,7 +2,7 @@
   "canonicalRepo": "TangleML/tangle-ui",
   "reviewers": ["TangleML/Tangle-dev"],
   "prLabel": "automated-gardening",
-  "backlogLabel": "automated-gardening-backlog",
+  "queueLabel": "automated-gardening-queue",
   "churnLookback": "18 months",
   "categories": [
     {
@@ -36,6 +36,18 @@
       "confidenceThreshold": 0.8,
       "conventionSkill": "typescript-standards",
       "description": "Simplify verbose code, remove unsafe casts and dead defensive branches, and integrate better with the wider codebase."
+    },
+    {
+      "id": "consistency",
+      "pillar": "consistency",
+      "enabled": true,
+      "confidenceThreshold": 0.85,
+      "conventionSkill": "project-conventions",
+      "registry": ".claude/skills/gardening/canon-registry.md",
+      "supermajorityRatio": 0.75,
+      "minConceptSites": 4,
+      "requiresBehaviorReview": true,
+      "description": "Migrate divergent implementations of one concept onto the canonical form the codebase already uses (per canon-registry.md, or a measured supermajority). Registry-backed + behavior-preserving migrations apply; undocumented majorities go to the decision queue for a human to bless, never auto-applied."
     },
     {
       "id": "primitives",

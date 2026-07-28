@@ -27,8 +27,8 @@ nesting with early returns, and integrates better with existing abstractions.
 
 - **Highest-subjectivity pillar — lean on the confidence gate.** Only propose simplifications you are
   confident are behavior-preserving and that a reviewer will read as obviously better. Genuine
-  restructures that change control flow or public signatures are out of scope for auto-apply → report
-  them to the backlog for a human, don't edit them.
+  restructures that change control flow or public signatures are out of scope for auto-apply → record
+  them in the decision queue as a yes/no for a human (not behavior-preserving), don't edit them.
 - **Integrate, don't just shrink.** When a verbose block reimplements something an existing hook,
   provider, or util already offers (e.g. `useRequiredContext`, an existing service), rewrite it to use
   the existing abstraction rather than merely compressing the local code. Grep before proposing.

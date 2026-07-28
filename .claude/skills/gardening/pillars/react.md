@@ -46,8 +46,8 @@ Grep `.tsx` under `src` (drop `excludeGlobs`, claimed files, suppressed fingerpr
   complex or perf-critical layouts). KEEP those and log the decision.
 - **New UI primitives / components are flag-only — never authored without express permission.** Using
   and composing _existing_ primitives is always allowed (that is this pillar's core job). But when a
-  valid case exists for a _new_ primitive or shared component, only **flag** it: write it to the backlog
-  (E9) as a proposal with its rationale (the recurring pattern, file count, why no existing primitive
-  fits, a sketched API). Do **not** `Write` a new primitive/component file, and do not migrate call sites
-  onto a not-yet-existing one. A human decides whether it gets built. (This is an explicit exception to
+  valid case exists for a _new_ primitive or shared component, only **flag** it: write it to the
+  decision queue (E9) as a yes/no proposal with its rationale (the recurring pattern, file count, why no
+  existing primitive fits, a sketched API). Do **not** `Write` a new primitive/component file, and do not
+  migrate call sites onto a not-yet-existing one. A human decides whether it gets built. (This is an explicit exception to
   the engine's "new files may be created" rule, which the `react` pillar overrides for primitives.)

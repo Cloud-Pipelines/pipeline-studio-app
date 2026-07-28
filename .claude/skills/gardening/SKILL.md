@@ -1,9 +1,9 @@
 ---
 name: gardening
-description: Weekly codebase groundskeeping. Sweeps the codebase for one or more hygiene pillars — hygiene (Prettier/import-sort/knip dead code), comments (low-value/commented-out), dry (dedup/reuse), refactor (leaner code), react (UI primitives + React Compiler), tests (coverage + e2e + stale-test repair) — applies only gate-verified fixes, and opens a DRAFT PR per pillar plus a backlog issue. Use for the weekly gardening run or when invoked as /gardening [pillars].
+description: Weekly codebase groundskeeping. Sweeps the codebase for one or more hygiene pillars — hygiene (Prettier/import-sort/knip dead code), comments (low-value/commented-out), dry (dedup/reuse), refactor (leaner code), consistency (converge divergent implementations onto the canonical one), react (UI primitives + React Compiler), tests (coverage + e2e + stale-test repair) — applies only gate-verified fixes, and opens a DRAFT PR per pillar plus a queue issue (bot-owned carry-over + human decisions). Use for the weekly gardening run or when invoked as /gardening [pillars].
 disable-model-invocation: true
 allowed-tools: Bash(gh *), Bash(git *), Bash(pnpm run *), Bash(pnpm exec *), Bash(node *), Bash(date *), Bash(ls *), Bash(find *), Bash(mkdir *), Bash(rm *), Read, Edit, MultiEdit, Write, Grep, Glob, Agent
-argument-hint: "[hygiene|comments|dry|refactor|react|tests|all ...] [--dry-run] [--max-files N] [--promote-compiler]"
+argument-hint: "[hygiene|comments|dry|refactor|consistency|react|tests|all ...] [--dry-run] [--max-files N] [--promote-compiler]"
 ---
 
 # Codebase Gardening
@@ -15,22 +15,23 @@ human review. The goal is a codebase that stays free of AI slop without dependin
 Work is organized into **pillars**, each a bounded scan run one at a time so a single run is unlikely
 to exhaust the token budget or time out:
 
-| Pillar     | What it does                                                            | Convention skill(s)                           |
-| ---------- | ----------------------------------------------------------------------- | --------------------------------------------- |
-| `hygiene`  | Fix Prettier/import-sort violations; remove knip dead code (runs first) | `project-conventions`, `typescript-standards` |
-| `comments` | Remove/refine low-value & commented-out comments; keep the _why_        | `project-conventions`                         |
-| `dry`      | Consolidate duplicated logic; adopt an existing helper before extract   | `project-conventions`, `typescript-standards` |
-| `refactor` | Simplify verbose code; integrate with existing abstractions             | `typescript-standards`, `project-conventions` |
-| `react`    | Raw HTML → UI primitives + `tone`; flag React Compiler adoption gaps    | `ui-primitives`, `react-patterns`             |
-| `tests`    | Add missing tests, author e2e specs, repair stale tests (runs last)     | `vitest-testing`, `e2e-testing`               |
+| Pillar        | What it does                                                                                                                    | Convention skill(s)                                             |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `hygiene`     | Fix Prettier/import-sort violations; remove knip dead code (runs first)                                                         | `project-conventions`, `typescript-standards`                   |
+| `comments`    | Remove/refine low-value & commented-out comments; keep the _why_                                                                | `project-conventions`                                           |
+| `dry`         | Consolidate duplicated logic; adopt an existing helper before extract                                                           | `project-conventions`, `typescript-standards`                   |
+| `refactor`    | Simplify verbose code; integrate with existing abstractions                                                                     | `typescript-standards`, `project-conventions`                   |
+| `consistency` | Converge divergent implementations of one concept onto the canonical form (per `canon-registry.md` or a measured supermajority) | `react-patterns`, `project-conventions`, `typescript-standards` |
+| `react`       | Raw HTML → UI primitives + `tone`; flag React Compiler adoption gaps                                                            | `ui-primitives`, `react-patterns`                               |
+| `tests`       | Add missing tests, author e2e specs, repair stale tests (runs last)                                                             | `vitest-testing`, `e2e-testing`                                 |
 
 ## Arguments
 
 Positional pillar names select what runs; flags modify the run.
 
-- **Pillars** — any subset of `hygiene`, `comments`, `dry`, `refactor`, `react`, `tests`,
-  space-separated (e.g. `/gardening comments dry`). `all` (or **no pillar given**) runs all six in
-  priority order. Unknown names → list the valid pillars and stop.
+- **Pillars** — any subset of `hygiene`, `comments`, `dry`, `refactor`, `consistency`, `react`,
+  `tests`, space-separated (e.g. `/gardening comments dry`). `all` (or **no pillar given**) runs all
+  seven in priority order. Unknown names → list the valid pillars and stop.
 - `--dry-run` — analyze and print each selected pillar's worklist + findings table; create no branches,
   edits, commits, or PRs.
 - `--max-files N` — override `caps.maxFilesPerPR` for this run.
@@ -39,9 +40,9 @@ Positional pillar names select what runs; flags modify the run.
 
 ## How to run
 
-1. **Parse arguments** into `SELECTED_PILLARS` (default: all six, in config priority order —
-   `hygiene`, `comments`, `dry`, `refactor`, `react`, `tests` per `.github/gardening-config.json`) and
-   the flag set.
+1. **Parse arguments** into `SELECTED_PILLARS` (default: all seven, in config priority order —
+   `hygiene`, `comments`, `dry`, `refactor`, `consistency`, `react`, `tests` per
+   `.github/gardening-config.json`) and the flag set.
 2. **Read the shared engine once:** `.claude/skills/gardening/engine.md`. It defines steps E0–E10, the
    state model, fingerprints, and schemas.
 3. **Run the engine's shared preamble once** (E0 config, E1 fork protection, E2 ISO-week +
@@ -51,7 +52,7 @@ Positional pillar names select what runs; flags modify the run.
      `CATEGORY_IDS`, `CONVENTION_SKILLS`, `SIGNALS`, `SPECIAL_HANDLING`). If the doc is missing, print
      `SKIPPED <pillar>: missing pillar doc` and move to the next pillar — never improvise the spec.
    - Run engine steps **E3–E9** for that pillar (worklist → MAP → REDUCE → gate → apply/validate/revert
-     → draft PR → self-review → backlog). Each pillar produces its own branch
+     → draft PR → self-review → queue update). Each pillar produces its own branch
      `automated-gardening/<pillar>/<week>` and its own draft PR.
    - **Carry the claimed-files set forward:** after a pillar opens a PR, add the files it touched to the
      claimed-files set so a later pillar in the same run cannot edit them (prevents mid-run collisions,

@@ -50,4 +50,4 @@ behavior, not merely that the test passes`. The gate proves tests are green; onl
 - **Separate commits** for new-test additions vs. repairs to existing tests, so a reviewer can accept
   one and drop the other.
 - Never weaken or delete a meaningful assertion to make a red test pass — flag genuinely broken
-  behavior to the backlog for a human instead of editing the test to match it.
+  behavior to the decision queue for a human instead of editing the test to match it.
