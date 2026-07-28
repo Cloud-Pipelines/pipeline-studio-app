@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { CopyValueButton } from "@/routes/v2/shared/components/CopyValueButton";
 
 function heightFormula(maxGrowHeight: string): string {
   return `min(var(--max-h, ${maxGrowHeight}), max(var(--content-h, 2.5rem), 2.5rem))`;
@@ -53,6 +54,7 @@ export function AutoGrowTextarea({
   expandDialogTitle,
   onChangeComplete,
   highlightSyntax,
+  readOnly,
   ...props
 }: AutoGrowTextareaProps) {
   const formula = heightFormula(maxGrowHeight);
@@ -149,13 +151,13 @@ export function AutoGrowTextarea({
     setIsDialogOpen(false);
   };
 
-  const showExpandButton = expandDialogTitle && onChangeComplete;
+  const showExpandButton =
+    Boolean(expandDialogTitle) && (Boolean(onChangeComplete) || readOnly);
+  const showActions = showExpandButton || readOnly;
 
   return (
     <>
-      <div
-        className={cn(showExpandButton && "group/expand relative", "w-full")}
-      >
+      <div className={cn(showActions && "group/expand relative", "w-full")}>
         <Textarea
           ref={setDefaultRef}
           className={cn(
@@ -167,6 +169,7 @@ export function AutoGrowTextarea({
             ...style,
           }}
           defaultValue={defaultValue}
+          readOnly={readOnly}
           onChange={handleChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -175,17 +178,22 @@ export function AutoGrowTextarea({
           onPointerUp={handlePointerUp}
           {...props}
         />
-        {showExpandButton && (
-          <Button
-            variant="ghost"
-            size="min"
-            className="absolute top-1 right-1 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover/expand:opacity-100"
-            onPointerDown={(e) => e.preventDefault()}
-            onClick={handleExpandClick}
-            tabIndex={-1}
-          >
-            <Icon name="Maximize2" size="xs" />
-          </Button>
+        {showActions && (
+          <div className="absolute top-1 right-1 flex items-center gap-1 opacity-0 transition-opacity group-hover/expand:opacity-100">
+            {readOnly && <CopyValueButton valueFn={() => localValue} />}
+            {showExpandButton && (
+              <Button
+                variant="ghost"
+                size="min"
+                className="text-muted-foreground hover:text-foreground"
+                onPointerDown={(e) => e.preventDefault()}
+                onClick={handleExpandClick}
+                tabIndex={-1}
+              >
+                <Icon name="Maximize2" size="xs" />
+              </Button>
+            )}
+          </div>
         )}
       </div>
       {showExpandButton && (
@@ -196,6 +204,7 @@ export function AutoGrowTextarea({
           onConfirm={handleDialogConfirm}
           onCancel={handleDialogCancel}
           highlightSyntax={highlightSyntax}
+          readOnly={readOnly}
         />
       )}
     </>

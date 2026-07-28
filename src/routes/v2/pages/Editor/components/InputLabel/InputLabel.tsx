@@ -2,8 +2,7 @@ import type { ComponentProps } from "react";
 
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-
-import { CopyValueButton } from "./components/CopyValueButton";
+import { CopyValueButton } from "@/routes/v2/shared/components/CopyValueButton";
 
 export function InputLabel({
   children,

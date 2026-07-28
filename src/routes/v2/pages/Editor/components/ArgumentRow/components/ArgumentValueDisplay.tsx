@@ -4,7 +4,7 @@ import { InlineStack } from "@/components/ui/layout";
 import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import type { InputSpec, Task } from "@/models/componentSpec";
-import { AutoGrowTextarea } from "@/routes/v2/pages/Editor/components/AutoGrowTextArea";
+import { AutoGrowTextarea } from "@/routes/v2/shared/components/AutoGrowTextArea";
 
 type DynamicDataDisplayInfo = NonNullable<
   ReturnType<typeof getDynamicDataDisplayInfo>

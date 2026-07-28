@@ -4,9 +4,9 @@ import { BlockStack } from "@/components/ui/layout";
 import { Text } from "@/components/ui/typography";
 import type { ComponentSpec, ValidationIssue } from "@/models/componentSpec";
 import { useAnalytics } from "@/providers/AnalyticsProvider";
-import { AutoGrowTextarea } from "@/routes/v2/pages/Editor/components/AutoGrowTextArea";
 import { InputLabel } from "@/routes/v2/pages/Editor/components/InputLabel/InputLabel";
 import { useIOActions } from "@/routes/v2/pages/Editor/store/actions/useIOActions";
+import { AutoGrowTextarea } from "@/routes/v2/shared/components/AutoGrowTextArea";
 
 import { InfoOnlyResolution } from "./InfoOnlyResolution";
 

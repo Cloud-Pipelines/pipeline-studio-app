@@ -37,6 +37,7 @@ interface MultilineTextInputDialogProps {
   required?: boolean;
   maxLength?: number;
   highlightSyntax?: boolean;
+  readOnly?: boolean;
   onCancel: () => void;
   onConfirm: (value: string) => void;
 }
@@ -50,6 +51,7 @@ export const MultilineTextInputDialog = ({
   required = false,
   maxLength,
   highlightSyntax,
+  readOnly = false,
   onCancel,
   onConfirm,
 }: MultilineTextInputDialogProps) => {
@@ -174,6 +176,7 @@ export const MultilineTextInputDialog = ({
               value={value}
               language={selectedLanguage}
               onChange={setValue}
+              readOnly={readOnly}
             />
           </div>
         ) : (
@@ -185,6 +188,7 @@ export const MultilineTextInputDialog = ({
             className="min-h-32 max-h-[80vh]"
             required={required}
             maxLength={maxLength}
+            readOnly={readOnly}
           />
         )}
         <DialogFooter>
@@ -199,10 +203,12 @@ export const MultilineTextInputDialog = ({
               align="end"
               className={cn(!maxLength && "w-full")}
             >
-              <Button variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button onClick={handleConfirm}>Confirm</Button>
+              <>
+                <Button variant="outline" onClick={handleCancel}>
+                  {readOnly ? "Close" : "Cancel"}
+                </Button>
+                {!readOnly && <Button onClick={handleConfirm}>Confirm</Button>}
+              </>
             </InlineStack>
           </InlineStack>
         </DialogFooter>
