@@ -15,7 +15,7 @@ const RUN_TOOL_CLASS_NAME =
 const RUN_TOOL_WRAPPER_CLASS_NAME = "w-full";
 
 const ROW_TOOL_CLASS_NAME =
-  "h-10 justify-start gap-3 px-3 shadow-none hover:border-border hover:bg-muted";
+  "h-10 justify-start gap-3 px-3 shadow-none hover:border-border hover:bg-muted border";
 const ROW_TOOL_WRAPPER_CLASS_NAME = "shrink-0";
 
 export const RunToolsContent = observer(function RunToolsContent() {
@@ -81,7 +81,7 @@ export const RunToolsContent = observer(function RunToolsContent() {
           runId={runId}
           displayLabel="Cancel run"
           showTooltip={false}
-          className={`${toolClassName} text-destructive hover:text-destructive`}
+          className={`${toolClassName} bg-transparent border-destructive/50 hover:bg-destructive/10 text-destructive hover:text-destructive`}
           wrapperClassName={wrapperClassName}
           {...tracking("v2.run_view.tools.cancel_run")}
         />
