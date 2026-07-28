@@ -6,9 +6,9 @@ import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Textarea } from "@/components/ui/textarea";
 import { Text } from "@/components/ui/typography";
 import { useAnalytics } from "@/providers/AnalyticsProvider";
-import { AutoGrowTextarea } from "@/routes/v2/pages/Editor/components/AutoGrowTextArea";
 import { InputLabel } from "@/routes/v2/pages/Editor/components/InputLabel/InputLabel";
 import { useIOActions } from "@/routes/v2/pages/Editor/store/actions/useIOActions";
+import { AutoGrowTextarea } from "@/routes/v2/shared/components/AutoGrowTextArea";
 import { useSpec } from "@/routes/v2/shared/providers/SpecContext";
 
 interface InputDetailsProps {

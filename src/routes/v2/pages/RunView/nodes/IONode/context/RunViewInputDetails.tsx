@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Text } from "@/components/ui/typography";
 import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
+import { AutoGrowTextarea } from "@/routes/v2/shared/components/AutoGrowTextArea";
 import { useSpec } from "@/routes/v2/shared/providers/SpecContext";
 import { getArgumentValue } from "@/utils/nodes/taskArguments";
 import { tracking } from "@/utils/tracking";
@@ -87,9 +88,15 @@ export const RunViewInputDetails = observer(function RunViewInputDetails({
             <Text size="xs" tone="subdued" weight="semibold">
               Value
             </Text>
-            <CopyText size="sm" className="font-mono whitespace-pre-wrap">
-              {argumentValue}
-            </CopyText>
+            <AutoGrowTextarea
+              readOnly
+              key={`${entityId}-value-${argumentValue}`}
+              defaultValue={argumentValue}
+              expandDialogTitle="Value"
+              highlightSyntax={true}
+              className="h-4 min-h-4 text-xs font-mono"
+              data-testid="input-value"
+            />
           </BlockStack>
         )}
 
@@ -98,9 +105,15 @@ export const RunViewInputDetails = observer(function RunViewInputDetails({
             <Text size="xs" tone="subdued" weight="semibold">
               Default Value
             </Text>
-            <CopyText size="sm" className="font-mono whitespace-pre-wrap">
-              {input.defaultValue}
-            </CopyText>
+            <AutoGrowTextarea
+              readOnly
+              key={`${entityId}-default-value-${input.defaultValue}`}
+              defaultValue={input.defaultValue}
+              expandDialogTitle="Default Value"
+              highlightSyntax={true}
+              className="h-4 min-h-4 text-xs font-mono"
+              data-testid="input-default-value"
+            />
           </BlockStack>
         )}
 
