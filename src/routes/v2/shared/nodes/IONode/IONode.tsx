@@ -2,11 +2,13 @@ import { type Node, type NodeProps } from "@xyflow/react";
 import { observer } from "mobx-react-lite";
 import { type MouseEvent } from "react";
 
+import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
 import { useIsDetailedView } from "@/routes/v2/shared/hooks/useIsDetailedView";
 import type { IONodeData } from "@/routes/v2/shared/nodes/types";
 import { useSpec } from "@/routes/v2/shared/providers/SpecContext";
 import { isEditorVisualNodeSelected } from "@/routes/v2/shared/store/isEditorVisualNodeSelected";
 import { useSharedStores } from "@/routes/v2/shared/store/SharedStoreContext";
+import { getArgumentValue } from "@/utils/nodes/taskArguments";
 
 import { IONodeCard } from "./IONodeCard";
 import { IONodeSimplified } from "./IONodeSimplified";
@@ -20,6 +22,7 @@ export interface IONodeViewProps {
   type?: string;
   description?: string;
   defaultValue?: string;
+  argumentValue?: string;
   connectedValue: string | null;
   isInput: boolean;
   selected: boolean;
@@ -41,6 +44,7 @@ export const IONode = observer(function IONode({
   const { entityId, ioType } = data;
   const { editor } = useSharedStores();
   const showContent = useIsDetailedView();
+  const executionData = useExecutionDataOptional();
 
   const spec = useSpec();
   const isInput = ioType === "input";
@@ -81,6 +85,11 @@ export const IONode = observer(function IONode({
       ? (entity.defaultValue ?? undefined)
       : undefined;
 
+  const taskArguments = executionData?.details?.task_spec.arguments;
+  const argumentValue = isInput
+    ? getArgumentValue(taskArguments, name)
+    : undefined;
+
   const isSelected = isEditorVisualNodeSelected(editor, id, !!selected);
 
   const viewProps: IONodeViewProps = {
@@ -89,6 +98,7 @@ export const IONode = observer(function IONode({
     type,
     description,
     defaultValue,
+    argumentValue,
     connectedValue,
     isInput,
     selected: isSelected,
