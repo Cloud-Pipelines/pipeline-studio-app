@@ -1,6 +1,7 @@
 import { observer } from "mobx-react-lite";
 
-import { BlockStack } from "@/components/ui/layout";
+import { Icon } from "@/components/ui/icon";
+import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Text } from "@/components/ui/typography";
 import type { ComponentSpec, ValidationIssue } from "@/models/componentSpec";
 import { useAnalytics } from "@/providers/AnalyticsProvider";
@@ -36,10 +37,12 @@ export const MissingPipelineInputValueResolution = observer(
 
     const entityId = issue.entityId;
 
-    const handleDefaultValueChange = (value: string) => {
-      const newDefault = value || undefined;
-      if (newDefault !== input.defaultValue) {
-        ioActions.setInputDefaultValue(spec, entityId, newDefault);
+    const effectiveValue = input.value ?? input.defaultValue;
+
+    const handleValueChange = (value: string) => {
+      const newValue = value || undefined;
+      if (newValue !== effectiveValue) {
+        ioActions.setInputValue(spec, entityId, newValue);
         track("v2.pipeline_editor.input_details.default_value.updated");
       }
     };
@@ -51,23 +54,41 @@ export const MissingPipelineInputValueResolution = observer(
           weight="semibold"
           className="text-gray-700 dark:text-foreground"
         >
-          Set a default value for pipeline input &ldquo;{input.name}&rdquo;
+          Set a value for pipeline input &ldquo;{input.name}&rdquo;
         </Text>
         <BlockStack gap="2">
-          <InputLabel
-            htmlFor="resolution-input-default-value"
-            onCopy={() => input.defaultValue}
+          <InlineStack
+            gap="2"
+            blockAlign="center"
+            align="space-between"
+            className="w-full"
           >
-            Default value
-          </InputLabel>
+            <InputLabel
+              htmlFor="resolution-input-value"
+              onCopy={() => effectiveValue}
+            >
+              Value
+            </InputLabel>
+
+            <InlineStack gap="1" blockAlign="center">
+              <Icon
+                name="SquareCheckBig"
+                size="sm"
+                className="text-muted-foreground"
+              />
+              <Text size="xs" className="text-muted-foreground">
+                Use as default
+              </Text>
+            </InlineStack>
+          </InlineStack>
           <AutoGrowTextarea
-            id="resolution-input-default-value"
-            key={`${entityId}-default-value`}
-            expandDialogTitle="Default Value"
+            id="resolution-input-value"
+            key={`${entityId}-value`}
+            expandDialogTitle="Value"
             highlightSyntax={true}
-            defaultValue={input.defaultValue}
-            onChangeComplete={handleDefaultValueChange}
-            placeholder="Default value"
+            defaultValue={effectiveValue}
+            onChangeComplete={handleValueChange}
+            placeholder="Value"
             className="h-4 min-h-4 text-xs font-mono"
             data-testid="resolution-pipeline-input-default-value"
           />
