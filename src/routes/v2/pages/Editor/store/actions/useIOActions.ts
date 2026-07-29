@@ -14,6 +14,7 @@ import {
   setInputDefaultValue,
   setInputDescription,
   setInputType,
+  setInputValue,
   setOutputDescription,
 } from "./io.actions";
 
@@ -35,6 +36,7 @@ export function useIOActions() {
     setInputDescription: setInputDescription.bind(null, undo),
     setInputType: setInputType.bind(null, undo),
     setInputDefaultValue: setInputDefaultValue.bind(null, undo),
+    setInputValue: setInputValue.bind(null, undo),
     setOutputDescription: setOutputDescription.bind(null, undo),
     createConnectedIONode: createConnectedIONode.bind(null, undo),
     createInputAndConnect: createInputAndConnect.bind(null, undo),

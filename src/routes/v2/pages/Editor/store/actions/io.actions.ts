@@ -136,6 +136,19 @@ export function setInputDefaultValue(
   });
 }
 
+export function setInputValue(
+  undo: UndoGroupable,
+  spec: ComponentSpec,
+  entityId: string,
+  value: string | undefined,
+): void {
+  undo.withGroup("Set input value", () => {
+    const input = spec.inputs.find((i) => i.$id === entityId);
+    input?.setValue(value);
+    input?.setDefaultValue(value);
+  });
+}
+
 export function setOutputDescription(
   undo: UndoGroupable,
   spec: ComponentSpec,

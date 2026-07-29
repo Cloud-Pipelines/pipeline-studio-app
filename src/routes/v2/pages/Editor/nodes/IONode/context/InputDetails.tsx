@@ -1,6 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { type ChangeEvent, type FocusEvent } from "react";
 
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,10 +52,12 @@ export const InputDetails = observer(function InputDetails({
     }
   };
 
-  const handleDefaultValueChange = (value: string) => {
-    const newDefault = value || undefined;
-    if (newDefault !== input.defaultValue) {
-      ioActions.setInputDefaultValue(spec, entityId, newDefault);
+  const effectiveValue = input.value ?? input.defaultValue;
+
+  const handleValueChange = (value: string) => {
+    const newValue = value || undefined;
+    if (newValue !== effectiveValue) {
+      ioActions.setInputValue(spec, entityId, newValue);
       track("v2.pipeline_editor.input_details.default_value.updated");
     }
   };
@@ -111,23 +114,37 @@ export const InputDetails = observer(function InputDetails({
         </BlockStack>
 
         <BlockStack gap="2">
-          <InputLabel
-            htmlFor="input-default-value"
-            onCopy={() => input.defaultValue}
+          <InlineStack
+            gap="2"
+            blockAlign="center"
+            align="space-between"
+            className="w-full"
           >
-            Default Value
-          </InputLabel>
+            <InputLabel htmlFor="input-value" onCopy={() => effectiveValue}>
+              Value
+            </InputLabel>
+            <InlineStack gap="1" blockAlign="center">
+              <Icon
+                name="SquareCheckBig"
+                size="sm"
+                className="text-muted-foreground"
+              />
+              <Text size="xs" className="text-muted-foreground">
+                Use as default
+              </Text>
+            </InlineStack>
+          </InlineStack>
 
           <AutoGrowTextarea
-            id="input-default-value"
-            key={`${entityId}-default-value`}
-            expandDialogTitle="Default Value"
+            id="input-value"
+            key={`${entityId}-value`}
+            expandDialogTitle="Value"
             highlightSyntax={true}
-            defaultValue={input.defaultValue}
-            onChangeComplete={handleDefaultValueChange}
-            placeholder="Default value"
+            defaultValue={effectiveValue}
+            onChangeComplete={handleValueChange}
+            placeholder="Value"
             className="h-4 min-h-4 text-xs font-mono"
-            data-testid="input-default-value"
+            data-testid="input-value"
           />
         </BlockStack>
 
