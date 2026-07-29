@@ -30,7 +30,8 @@ This pillar depends on the **global indexes** built in E3 — build them before 
   a `formatDuration` when `src/utils` already has one.
 - **Blast radius is real here.** A DRY change touches multiple files at once, so it rarely stays
   `local`. Keep each cluster to a modest call-site count, set `riskBlastRadius` honestly, and let the
-  `caps.maxFilesPerPR` cap push large clusters to the backlog rather than shipping a sprawling PR.
+  `caps.maxFilesPerPR` cap spill large clusters into follow-up PRs (or carry-over once the run's PR
+  budget is spent) rather than shipping one sprawling PR — never a forgotten ticket.
 - Only consolidate genuine duplication of _behavior_. Superficially similar code with diverging intent
   (coincidental shape) is a KEEP — forcing it behind one helper couples unrelated concerns.
 - New helpers follow project structure: `@/` imports, no barrel exports, placed in the right
