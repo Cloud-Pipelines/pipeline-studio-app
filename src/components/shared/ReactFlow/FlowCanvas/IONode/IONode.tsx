@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { Handle, Position, useEdges, useReactFlow } from "@xyflow/react";
 import type { MouseEvent } from "react";
 import { memo, useCallback, useEffect, useMemo } from "react";
@@ -12,13 +11,12 @@ import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { QuickTooltip } from "@/components/ui/tooltip";
 import { Paragraph } from "@/components/ui/typography";
 import { useEdgeSelectionHighlight } from "@/hooks/useEdgeSelectionHighlight";
+import { useExecutionArtifacts } from "@/hooks/useExecutionArtifacts";
 import { useIsMultiSelect } from "@/hooks/useIsMultiSelect";
 import { cn } from "@/lib/utils";
-import { useBackend } from "@/providers/BackendProvider";
 import { useComponentSpec } from "@/providers/ComponentSpecProvider";
 import { useContextPanel } from "@/providers/ContextPanelProvider";
 import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
-import { getExecutionArtifacts } from "@/services/executionService";
 import type { OutputSpec } from "@/utils/componentSpec";
 import { getArgumentValue } from "@/utils/nodes/taskArguments";
 import { isViewingSubgraph } from "@/utils/subgraphUtils";
@@ -46,7 +44,6 @@ const IONode = ({ id, type, data, selected = false }: IONodeProps) => {
   const { currentGraphSpec, currentSubgraphSpec, currentSubgraphPath } =
     useComponentSpec();
 
-  const { backendUrl } = useBackend();
   const executionData = useExecutionDataOptional();
   const taskArguments = executionData?.rootDetails?.task_spec.arguments;
   const rootExecutionId = executionData?.rootExecutionId;
@@ -156,7 +153,6 @@ const IONode = ({ id, type, data, selected = false }: IONodeProps) => {
             key={output.name}
             disabled={readOnly}
             rootExecutionId={rootExecutionId}
-            backendUrl={backendUrl}
           />,
         );
       }
@@ -284,7 +280,6 @@ interface OutputNodeContentProps {
   connectedDetails: OutputConnectedDetails;
   disabled: boolean;
   rootExecutionId: string | undefined;
-  backendUrl: string;
 }
 
 const OutputNodeContent = ({
@@ -292,13 +287,8 @@ const OutputNodeContent = ({
   connectedDetails,
   disabled,
   rootExecutionId,
-  backendUrl,
 }: OutputNodeContentProps) => {
-  const { data: artifacts } = useQuery({
-    queryKey: ["artifacts", rootExecutionId],
-    queryFn: () => getExecutionArtifacts(String(rootExecutionId), backendUrl),
-    enabled: !!rootExecutionId,
-  });
+  const { data: artifacts } = useExecutionArtifacts(rootExecutionId);
 
   const artifact = artifacts?.output_artifacts?.[output.name];
 

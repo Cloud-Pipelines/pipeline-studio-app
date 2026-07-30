@@ -1,12 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { InfoBox } from "@/components/shared/InfoBox";
 import { BlockStack } from "@/components/ui/layout";
 import { Spinner } from "@/components/ui/spinner";
 import { Paragraph } from "@/components/ui/typography";
+import { useExecutionArtifacts } from "@/hooks/useExecutionArtifacts";
 import { useBackend } from "@/providers/BackendProvider";
 import { useExecutionData } from "@/providers/ExecutionDataProvider";
-import { getExecutionArtifacts } from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
 import type { TaskSpec } from "@/utils/componentSpec";
 import { addDays, formatDate, isOlderThanDays } from "@/utils/date";
@@ -24,7 +22,7 @@ interface IOSectionProps {
 }
 
 const IOSection = ({ taskSpec, executionId, readOnly }: IOSectionProps) => {
-  const { backendUrl, configured, available } = useBackend();
+  const { configured, available } = useBackend();
   const { metadata } = useExecutionData();
 
   const {
@@ -32,11 +30,7 @@ const IOSection = ({ taskSpec, executionId, readOnly }: IOSectionProps) => {
     isLoading,
     isFetching,
     error,
-  } = useQuery({
-    queryKey: ["artifacts", executionId],
-    queryFn: () => getExecutionArtifacts(String(executionId), backendUrl),
-    enabled: !!executionId,
-  });
+  } = useExecutionArtifacts(executionId);
 
   if (!configured) {
     return (
