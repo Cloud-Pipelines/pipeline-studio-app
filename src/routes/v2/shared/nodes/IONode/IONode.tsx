@@ -21,6 +21,7 @@ export interface IONodeViewProps {
   name: string;
   type?: string;
   description?: string;
+  value?: string;
   defaultValue?: string;
   argumentValue?: string;
   connectedValue: string | null;
@@ -90,6 +91,11 @@ export const IONode = observer(function IONode({
     ? getArgumentValue(taskArguments, name)
     : undefined;
 
+  const value =
+    isInput && entity && "value" in entity
+      ? (entity.value ?? undefined)
+      : undefined;
+
   const isSelected = isEditorVisualNodeSelected(editor, id, !!selected);
 
   const viewProps: IONodeViewProps = {
@@ -97,6 +103,7 @@ export const IONode = observer(function IONode({
     name,
     type,
     description,
+    value,
     defaultValue,
     argumentValue,
     connectedValue,
