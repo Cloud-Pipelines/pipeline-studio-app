@@ -37,7 +37,13 @@ export const InlineContent = ({
       );
     case "jsonobject":
     case "jsonarray":
-      return <JsonVisualizerValue value={value} name={name} />;
+      return (
+        <JsonVisualizerValue
+          value={value}
+          name={name}
+          isFullscreen={isFullscreen}
+        />
+      );
     case "text":
     default:
       return <TextVisualizerValue value={value} isFullscreen={isFullscreen} />;
@@ -94,7 +100,13 @@ export const PreviewContent = ({
       );
     case "jsonobject":
     case "jsonarray":
-      return <JsonVisualizerRemote signedUrl={signedUrl} name={name} />;
+      return (
+        <JsonVisualizerRemote
+          signedUrl={signedUrl}
+          name={name}
+          isFullscreen={isFullscreen}
+        />
+      );
     default:
       return null;
   }
