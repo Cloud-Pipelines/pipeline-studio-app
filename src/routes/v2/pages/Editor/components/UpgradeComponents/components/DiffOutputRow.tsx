@@ -5,15 +5,15 @@ import { InlineStack } from "@/components/ui/layout";
 import { cn } from "@/lib/utils";
 import type { DiffEntry } from "@/routes/v2/pages/Editor/store/actions/task.utils";
 import type { TaskNodeOutput } from "@/routes/v2/shared/nodes/TaskNode/TaskNode";
+import { DIFF_STATUS_ICON } from "@/utils/diffStatus";
 
 import {
   DIFF_STATUS_CLASSES,
   HANDLE_STATUS_CLASSES,
-  STATUS_ICON,
 } from "./upgradePreviewConstants";
 
 export function DiffOutputRow({ entry, status }: DiffEntry<TaskNodeOutput>) {
-  const icon = STATUS_ICON[status];
+  const icon = DIFF_STATUS_ICON[status];
   return (
     <InlineStack blockAlign="center" className="w-full justify-end">
       <InlineStack
