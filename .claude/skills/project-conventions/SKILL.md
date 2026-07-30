@@ -33,11 +33,27 @@ React + TypeScript application for building and running ML pipelines using drag 
 
 ## Comments & Documentation
 
-- Use JSDoc for public APIs
-- Add comments for complex business logic
-- **Explain "why" not "what" in comments**
-- Keep comments up to date with code changes
-- Avoid writing redundant comments for functions and variables that are self-explanatory
+Code must be self-explanatory. Assess every comment on its merit: it is justified **only** when it
+explains something the code and its names cannot — a non-obvious _why_ such as a workaround, a race
+condition, an external-system quirk, or a subtle ordering constraint. Default to no comment; most added
+comments restate the code and should be removed. This is a judgment call per comment, not a mechanical
+ban — a comment with a genuine purpose stays.
+
+- **Explain "why", never "what".** Comments that narrate what the code plainly does — step-by-step
+  narration (`// fetch the data`, `// loop over items`), or section-divider banners (`// ─── … ───`) —
+  are not allowed; delete them. A comment earns its place only by stating something the code cannot.
+- **Keep prop and field definitions clean.** A comment on an `interface` field, `type` member, component
+  `Props`, or config-object field — trailing (`count: number; // …`) or leading (`// …`, `/* … */`, or
+  `/** … */` above the field) — is usually restatement, and a field that needs a comment to explain
+  _what_ it is signals a **naming failure**: rename the field to be self-evident rather than annotate it.
+  Keep such a comment only when it conveys something genuinely non-obvious the name and type cannot (a
+  unit, an external constraint). _Exception:_ the public API of a shared design-system primitive (e.g.
+  `src/components/ui/typography.tsx`, `src/components/ui/layout.tsx`), whose props are an external
+  contract, may carry JSDoc.
+- **JSDoc is for genuinely complex functions and shared/public APIs only** — not for self-explanatory
+  functions, and never as a substitute for a good name.
+- Keep comments up to date with the code; a stale comment is worse than none.
+- Never write redundant comments for functions or variables that are self-explanatory.
 
 ## Error Handling
 
