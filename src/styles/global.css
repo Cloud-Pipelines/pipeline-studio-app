@@ -86,6 +86,13 @@ code {
   --status-cancelled: oklch(0.44 0.01 286);
   --status-cancelling: oklch(0.7 0.19 42);
   --status-uninitialized: oklch(0.85 0.16 90);
+
+  /* Run comparison diff colours — one value per diff status, used for node
+   * borders, legend swatches, and graph edge strokes. */
+  --diff-unchanged: oklch(0.87 0.01 286);
+  --diff-lost: oklch(0.7 0.19 22);
+  --diff-new: oklch(0.72 0.19 149);
+  --diff-changed: oklch(0.83 0.16 84);
 }
 
 .dark {
@@ -150,6 +157,11 @@ code {
   --status-cancelled: oklch(0.52 0.01 286);
   --status-cancelling: oklch(0.6 0.13 42);
   --status-uninitialized: oklch(0.68 0.11 90);
+
+  --diff-unchanged: oklch(0.55 0.012 286);
+  --diff-lost: oklch(0.58 0.14 22);
+  --diff-new: oklch(0.58 0.12 149);
+  --diff-changed: oklch(0.68 0.11 84);
 }
 
 /*
@@ -253,6 +265,10 @@ code {
   --color-status-cancelled: var(--status-cancelled);
   --color-status-cancelling: var(--status-cancelling);
   --color-status-uninitialized: var(--status-uninitialized);
+  --color-diff-unchanged: var(--diff-unchanged);
+  --color-diff-lost: var(--diff-lost);
+  --color-diff-new: var(--diff-new);
+  --color-diff-changed: var(--diff-changed);
 
   /* Custom animations */
   --animate-revert-copied: revert-copied 0.5s ease-in-out forwards;
