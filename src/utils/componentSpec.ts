@@ -456,9 +456,11 @@ export const isContainerImplementation = (
 ): implementation is ContainerImplementation => "container" in implementation;
 
 export const isGraphImplementation = (
-  implementation: ImplementationType | undefined,
+  implementation: ImplementationType | null | undefined,
 ): implementation is GraphImplementation =>
-  implementation !== undefined && "graph" in implementation;
+  implementation !== null &&
+  implementation !== undefined &&
+  "graph" in implementation;
 
 export const isGraphImplementationOutput = (
   implementation:

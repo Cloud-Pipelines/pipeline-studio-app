@@ -6,14 +6,13 @@ import type {
 import type { OutputSpec } from "@/models/componentSpec/entities/types";
 import { isInputRequired } from "@/models/componentSpec/validation/validateSpec";
 import type { LostBinding } from "@/routes/v2/pages/Editor/components/UpgradeComponents/types";
+import type { DiffStatus } from "@/utils/diffStatus";
 
 export interface EntityDiff<T> {
   lostEntities: T[];
   newEntities: T[];
   changedEntities: T[];
 }
-
-export type DiffStatus = "unchanged" | "lost" | "new" | "changed";
 
 export interface DiffEntry<T> {
   entry: T;

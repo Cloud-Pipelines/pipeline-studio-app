@@ -1,7 +1,11 @@
 import { describe, expect, test } from "vitest";
 
-import type { GetGraphExecutionStateResponse } from "@/api/types.gen";
+import type {
+  GetExecutionInfoResponse,
+  GetGraphExecutionStateResponse,
+} from "@/api/types.gen";
 import {
+  buildTaskExecutionStatusMap,
   countInProgressFromStats,
   flattenExecutionStatusStats,
   getExecutionStatusLabel,
@@ -208,5 +212,61 @@ describe("isExecutionComplete()", () => {
         SKIPPED: 2,
       }),
     ).toBe(true);
+  });
+});
+
+describe("buildTaskExecutionStatusMap()", () => {
+  const details = (
+    childTaskExecutionIds: Record<string, string>,
+  ): GetExecutionInfoResponse => ({
+    id: "root",
+    task_spec: { componentRef: {} },
+    child_task_execution_ids: childTaskExecutionIds,
+  });
+
+  const state = (
+    stats: NonNullable<
+      GetGraphExecutionStateResponse["child_execution_status_stats"]
+    >,
+  ): GetGraphExecutionStateResponse => ({
+    child_execution_status_stats: stats,
+  });
+
+  test("maps each task id to its aggregated execution status", () => {
+    const result = buildTaskExecutionStatusMap(
+      details({ train: "e1", evaluate: "e2" }),
+      state({ e1: { SUCCEEDED: 1 }, e2: { FAILED: 1, RUNNING: 2 } }),
+    );
+
+    expect(Object.fromEntries(result)).toEqual({
+      train: "SUCCEEDED",
+      evaluate: "FAILED",
+    });
+  });
+
+  test("returns an empty map when details are missing", () => {
+    expect(buildTaskExecutionStatusMap(undefined, state({})).size).toBe(0);
+  });
+
+  test("omits tasks whose execution has no stats", () => {
+    const result = buildTaskExecutionStatusMap(
+      details({ train: "e1", evaluate: "missing" }),
+      state({ e1: { SUCCEEDED: 1 } }),
+    );
+
+    expect(Object.fromEntries(result)).toEqual({ train: "SUCCEEDED" });
+  });
+
+  test("omits tasks whose stats are all zero", () => {
+    const result = buildTaskExecutionStatusMap(
+      details({ train: "e1" }),
+      state({ e1: { RUNNING: 0 } }),
+    );
+
+    expect(result.size).toBe(0);
+  });
+
+  test("omits every task when the run has no state yet", () => {
+    expect(buildTaskExecutionStatusMap(details({ train: "e1" })).size).toBe(0);
   });
 });
