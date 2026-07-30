@@ -10,6 +10,7 @@ import { RunSourceIcon } from "@/components/shared/RunSource";
 import { StatusBar, StatusIcon } from "@/components/shared/Status";
 import { TagList } from "@/components/shared/Tags/TagList";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@/components/ui/icon";
 import { InlineStack } from "@/components/ui/layout";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -37,9 +38,18 @@ import { tracking } from "@/utils/tracking";
 interface RunRowProps {
   run: PipelineRunResponse;
   onFilterByUser?: (createdBy: string) => void;
+  selectable?: boolean;
+  isSelected?: boolean;
+  onToggleSelected?: (runId: string) => void;
 }
 
-const RunRow = ({ run, onFilterByUser }: RunRowProps) => {
+const RunRow = ({
+  run,
+  onFilterByUser,
+  selectable = false,
+  isSelected = false,
+  onToggleSelected,
+}: RunRowProps) => {
   const navigate = useNavigate();
   const { backendUrl } = useBackend();
   const notify = useToastNotification();
@@ -122,6 +132,20 @@ const RunRow = ({ run, onFilterByUser }: RunRowProps) => {
       onClick={handleRowClick}
       className="cursor-pointer text-muted-foreground text-xs h-10"
     >
+      {selectable && (
+        <TableCell className="w-8">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center"
+          >
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelected?.(runId)}
+              aria-label={`Select run ${runId}`}
+            />
+          </div>
+        </TableCell>
+      )}
       <TableCell>
         <InlineStack gap="2" blockAlign="center" wrap="nowrap">
           <StatusIcon status={overallStatus} />
