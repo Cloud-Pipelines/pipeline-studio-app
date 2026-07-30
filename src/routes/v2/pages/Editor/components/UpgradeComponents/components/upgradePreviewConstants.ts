@@ -1,5 +1,5 @@
 import type { IconName } from "@/components/ui/icon";
-import type { DiffStatus } from "@/routes/v2/pages/Editor/store/actions/task.utils";
+import type { DiffStatus } from "@/utils/diffStatus";
 
 export const DIFF_STATUS_CLASSES: Record<DiffStatus, string> = {
   unchanged: "bg-gray-200 text-gray-800",

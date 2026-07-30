@@ -1,0 +1,332 @@
+import { describe, expect, test } from "vitest";
+
+import type { ComponentSpec, TaskSpec } from "@/utils/componentSpec";
+
+import {
+  buildPipelineComparison,
+  type ComparisonSide,
+} from "./comparePipelines";
+
+const task = (digest: string, overrides: Partial<TaskSpec> = {}): TaskSpec => ({
+  componentRef: { name: "comp", digest },
+  ...overrides,
+});
+
+const graphSpec = (tasks: Record<string, TaskSpec>): ComponentSpec => ({
+  implementation: { graph: { tasks } },
+});
+
+const containerSpec = (): ComponentSpec => ({
+  implementation: { container: { image: "python:3.11" } },
+});
+
+const noStatus = new Map<string, string>();
+
+const side = (
+  spec: ComponentSpec | undefined,
+  taskStatusMap: Map<string, string> = noStatus,
+  taskExecutionIdMap?: Map<string, string>,
+): ComparisonSide => ({ spec, taskStatusMap, taskExecutionIdMap });
+
+describe("buildPipelineComparison()", () => {
+  test("flags added, removed, and unchanged tasks by id", () => {
+    const specA = graphSpec({ train: task("d1"), evaluate: task("d2") });
+    const specB = graphSpec({ train: task("d1"), deploy: task("d3") });
+
+    const { taskDiffs, counts } = buildPipelineComparison(
+      side(specA),
+      side(specB),
+    );
+
+    const byId = Object.fromEntries(taskDiffs.map((d) => [d.taskId, d.status]));
+    expect(byId).toEqual({
+      train: "unchanged",
+      evaluate: "lost",
+      deploy: "new",
+    });
+    expect(counts).toEqual({
+      added: 1,
+      removed: 1,
+      changed: 0,
+      unchanged: 1,
+      outcomeChanged: 0,
+    });
+  });
+
+  test("marks a task changed when the component digest differs", () => {
+    const specA = graphSpec({ train: task("d1") });
+    const specB = graphSpec({ train: task("d2") });
+
+    const [diff] = buildPipelineComparison(side(specA), side(specB)).taskDiffs;
+
+    expect(diff.status).toBe("changed");
+    expect(diff.componentChanged).toBe(true);
+  });
+
+  test("marks a task changed when arguments differ but the component is identical", () => {
+    const specA = graphSpec({
+      train: task("d1", { arguments: { epochs: "10" } }),
+    });
+    const specB = graphSpec({
+      train: task("d1", { arguments: { epochs: "20" } }),
+    });
+
+    const [diff] = buildPipelineComparison(side(specA), side(specB)).taskDiffs;
+
+    expect(diff.status).toBe("changed");
+    expect(diff.componentChanged).toBe(false);
+    const epochs = diff.argumentDiffs.find((a) => a.key === "epochs");
+    expect(epochs?.status).toBe("changed");
+  });
+
+  test("does not claim a component change when digests are absent and the refs match", () => {
+    const digestless = (args: Record<string, string>): TaskSpec => ({
+      componentRef: { name: "comp" },
+      arguments: args,
+    });
+    const specA = graphSpec({ train: digestless({ epochs: "10" }) });
+    const specB = graphSpec({ train: digestless({ epochs: "20" }) });
+
+    const [diff] = buildPipelineComparison(side(specA), side(specB)).taskDiffs;
+
+    expect(diff.status).toBe("changed");
+    expect(diff.componentChanged).toBe(false);
+  });
+
+  test("ignores frontend-only annotation changes", () => {
+    const specA = graphSpec({
+      train: task("d1", {
+        annotations: { "editor.position": "{x:0}", zIndex: "1" },
+      }),
+    });
+    const specB = graphSpec({
+      train: task("d1", {
+        annotations: { "editor.position": "{x:999}", zIndex: "5" },
+      }),
+    });
+
+    const [diff] = buildPipelineComparison(side(specA), side(specB)).taskDiffs;
+
+    expect(diff.status).toBe("unchanged");
+    expect(
+      diff.annotationDiffs.some((entry) => entry.status !== "unchanged"),
+    ).toBe(false);
+  });
+
+  test("flags a cache-only change as changed and carries per-run cache state", () => {
+    const specA = graphSpec({
+      train: task("d1", {
+        executionOptions: { cachingStrategy: { maxCacheStaleness: "P0D" } },
+      }),
+    });
+    const specB = graphSpec({ train: task("d1") });
+
+    const [diff] = buildPipelineComparison(side(specA), side(specB)).taskDiffs;
+
+    expect(diff.status).toBe("changed");
+    expect(diff.cacheChanged).toBe(true);
+    expect(diff.cacheDisabledA).toBe(true);
+    expect(diff.cacheDisabledB).toBe(false);
+  });
+
+  test("treats structurally equal object arguments as unchanged", () => {
+    const arg = { taskOutput: { taskId: "prep", outputName: "data" } };
+    const specA = graphSpec({ train: task("d1", { arguments: { in: arg } }) });
+    const specB = graphSpec({
+      train: task("d1", { arguments: { in: { ...arg } } }),
+    });
+
+    const [diff] = buildPipelineComparison(side(specA), side(specB)).taskDiffs;
+
+    expect(diff.status).toBe("unchanged");
+  });
+
+  test("carries per-run execution status onto each task diff", () => {
+    const specA = graphSpec({ train: task("d1") });
+    const specB = graphSpec({ train: task("d1") });
+
+    const [diff] = buildPipelineComparison(
+      side(specA, new Map([["train", "SUCCEEDED"]])),
+      side(specB, new Map([["train", "FAILED"]])),
+    ).taskDiffs;
+
+    expect(diff.statusA).toBe("SUCCEEDED");
+    expect(diff.statusB).toBe("FAILED");
+  });
+
+  test("carries per-run execution ids onto each task diff", () => {
+    const specA = graphSpec({ train: task("d1") });
+    const specB = graphSpec({ train: task("d1") });
+
+    const [diff] = buildPipelineComparison(
+      side(specA, noStatus, new Map([["train", "exec-a"]])),
+      side(specB, noStatus, new Map([["train", "exec-b"]])),
+    ).taskDiffs;
+
+    expect(diff.executionIdA).toBe("exec-a");
+    expect(diff.executionIdB).toBe("exec-b");
+  });
+
+  test("flags an outcome difference even when the task spec is unchanged", () => {
+    const specA = graphSpec({ train: task("d1") });
+    const specB = graphSpec({ train: task("d1") });
+
+    const { taskDiffs, counts } = buildPipelineComparison(
+      side(specA, new Map([["train", "SUCCEEDED"]])),
+      side(specB, new Map([["train", "FAILED"]])),
+    );
+
+    expect(taskDiffs[0].status).toBe("unchanged");
+    expect(taskDiffs[0].outcomeChanged).toBe(true);
+    expect(counts.outcomeChanged).toBe(1);
+  });
+
+  test("does not flag an outcome difference when both runs share a status", () => {
+    const specA = graphSpec({ train: task("d1") });
+    const specB = graphSpec({ train: task("d1") });
+
+    const { taskDiffs, counts } = buildPipelineComparison(
+      side(specA, new Map([["train", "SUCCEEDED"]])),
+      side(specB, new Map([["train", "SUCCEEDED"]])),
+    );
+
+    expect(taskDiffs[0].outcomeChanged).toBe(false);
+    expect(counts.outcomeChanged).toBe(0);
+  });
+
+  test("does not flag an outcome difference for added or removed tasks", () => {
+    const specA = graphSpec({ evaluate: task("d1") });
+    const specB = graphSpec({ deploy: task("d2") });
+
+    const { taskDiffs, counts } = buildPipelineComparison(
+      side(specA, new Map([["evaluate", "SUCCEEDED"]])),
+      side(specB, new Map([["deploy", "FAILED"]])),
+    );
+
+    const byId = Object.fromEntries(
+      taskDiffs.map((diff) => [diff.taskId, diff]),
+    );
+    expect(byId.evaluate.status).toBe("lost");
+    expect(byId.evaluate.outcomeChanged).toBe(false);
+    expect(byId.deploy.status).toBe("new");
+    expect(byId.deploy.outcomeChanged).toBe(false);
+    expect(counts.outcomeChanged).toBe(0);
+  });
+
+  test("reports no comparable graph for container-implementation specs", () => {
+    const { taskDiffs, hasComparableGraph } = buildPipelineComparison(
+      side(containerSpec()),
+      side(containerSpec()),
+    );
+
+    expect(taskDiffs).toHaveLength(0);
+    expect(hasComparableGraph).toBe(false);
+  });
+
+  test("treats unrelated pipelines as fully added/removed", () => {
+    const specA = graphSpec({ a1: task("d1"), a2: task("d2") });
+    const specB = graphSpec({ b1: task("d3") });
+
+    const { counts } = buildPipelineComparison(side(specA), side(specB));
+
+    expect(counts).toEqual({
+      added: 1,
+      removed: 2,
+      changed: 0,
+      unchanged: 0,
+      outcomeChanged: 0,
+    });
+  });
+
+  test("aligns pipeline inputs by name and flags value changes", () => {
+    const specA: ComponentSpec = {
+      inputs: [{ name: "epochs", value: "10" }, { name: "dropped" }],
+      implementation: { graph: { tasks: {} } },
+    };
+    const specB: ComponentSpec = {
+      inputs: [{ name: "epochs", value: "20" }, { name: "added" }],
+      implementation: { graph: { tasks: {} } },
+    };
+
+    const { inputDiffs } = buildPipelineComparison(side(specA), side(specB));
+    const byName = Object.fromEntries(
+      inputDiffs.map((d) => [d.name, d.status]),
+    );
+
+    expect(byName).toEqual({
+      epochs: "changed",
+      dropped: "lost",
+      added: "new",
+    });
+    const epochs = inputDiffs.find((d) => d.name === "epochs");
+    expect(epochs?.fieldDiffs.find((f) => f.key === "value")?.status).toBe(
+      "changed",
+    );
+  });
+
+  test("reports every task unchanged when both sides are the same spec", () => {
+    const spec = graphSpec({ train: task("d1"), evaluate: task("d2") });
+    const statuses = new Map([
+      ["train", "SUCCEEDED"],
+      ["evaluate", "FAILED"],
+    ]);
+
+    const { taskDiffs, counts, hasComparableGraph } = buildPipelineComparison(
+      side(spec, statuses),
+      side(spec, statuses),
+    );
+
+    expect(hasComparableGraph).toBe(true);
+    expect(taskDiffs.every((diff) => diff.status === "unchanged")).toBe(true);
+    expect(taskDiffs.every((diff) => !diff.outcomeChanged)).toBe(true);
+    expect(counts.changed).toBe(0);
+    expect(counts.added).toBe(0);
+    expect(counts.removed).toBe(0);
+    expect(counts.outcomeChanged).toBe(0);
+  });
+
+  test("reports no comparable graph when both specs are undefined", () => {
+    const { hasComparableGraph, taskDiffs } = buildPipelineComparison(
+      side(undefined),
+      side(undefined),
+    );
+
+    expect(hasComparableGraph).toBe(false);
+    expect(taskDiffs).toHaveLength(0);
+  });
+
+  test("flags an output whose producing task was rewired", () => {
+    const specA: ComponentSpec = {
+      outputs: [{ name: "model" }],
+      implementation: {
+        graph: {
+          tasks: { train: task("d1"), tune: task("d2") },
+          outputValues: {
+            model: { taskOutput: { taskId: "train", outputName: "out" } },
+          },
+        },
+      },
+    };
+    const specB: ComponentSpec = {
+      outputs: [{ name: "model" }],
+      implementation: {
+        graph: {
+          tasks: { train: task("d1"), tune: task("d2") },
+          outputValues: {
+            model: { taskOutput: { taskId: "tune", outputName: "out" } },
+          },
+        },
+      },
+    };
+
+    const { outputDiffs } = buildPipelineComparison(side(specA), side(specB));
+
+    const model = outputDiffs.find((d) => d.name === "model");
+    expect(model?.status).toBe("changed");
+    expect(model?.sourceTaskIdA).toBe("train");
+    expect(model?.sourceTaskIdB).toBe("tune");
+    expect(model?.fieldDiffs.find((f) => f.key === "source")?.status).toBe(
+      "changed",
+    );
+  });
+});
