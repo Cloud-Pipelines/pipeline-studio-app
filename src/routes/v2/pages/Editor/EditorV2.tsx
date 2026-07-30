@@ -6,11 +6,10 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { observer } from "mobx-react-lite";
 import { type ReactNode, useEffect } from "react";
 
+import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { useFlagValue } from "@/components/shared/Settings/useFlags";
 import { withSuspenseWrapper } from "@/components/shared/SuspenseWrapper";
-import { BlockStack, InlineStack } from "@/components/ui/layout";
-import { Spinner } from "@/components/ui/spinner";
-import { Text } from "@/components/ui/typography";
+import { InlineStack } from "@/components/ui/layout";
 import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
 import { ForcedSearchProvider } from "@/providers/ComponentLibraryProvider/ForcedSearchProvider";
 import { DialogProvider } from "@/providers/DialogProvider/DialogProvider";
@@ -67,16 +66,9 @@ interface PipelineEditorProps {
   pipelineRef: PipelineRef;
 }
 
-const PipelineEditorSkeleton = () => {
-  return (
-    <BlockStack fill className="items-center justify-center bg-background">
-      <InlineStack gap="2">
-        <Spinner />
-        <Text>Loading pipeline... </Text>
-      </InlineStack>
-    </BlockStack>
-  );
-};
+const PipelineEditorSkeleton = () => (
+  <LoadingScreen message="Loading pipeline..." />
+);
 
 const PipelineEditor = withSuspenseWrapper(
   observer(({ pipelineRef }: PipelineEditorProps) => {
