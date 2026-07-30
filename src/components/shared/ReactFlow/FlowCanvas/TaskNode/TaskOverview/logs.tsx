@@ -1,14 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
 import { type ComponentPropsWithoutRef, useEffect, useState } from "react";
 
 import { CodeViewer } from "@/components/shared/CodeViewer";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
+import { useContainerLog } from "@/hooks/useContainerLog";
 import { useBackend } from "@/providers/BackendProvider";
-import { fetchContainerLog } from "@/services/executionService";
 import { getBackendStatusString } from "@/utils/backend";
-import { CONTAINER_STATUSES_PRE_LAUNCH } from "@/utils/executionStatus";
+import { shouldStatusHaveLogs } from "@/utils/executionStatus";
 
 const LogDisplay = ({
   logs,
@@ -54,31 +53,6 @@ const LogDisplay = ({
   );
 };
 
-/**
- * Statuses where the container is running and actively producing logs.
- * Used to decide whether to poll for new log content.
- */
-const isStatusActivelyLogging = (status?: string): boolean => {
-  switch (status) {
-    case "RUNNING":
-    case "PENDING":
-    case "CANCELLING":
-      return true;
-    default:
-      return false;
-  }
-};
-
-/**
- * Returns true if the container may have logs worth fetching.
- */
-export const shouldStatusHaveLogs = (status?: string): boolean => {
-  if (!status) {
-    return false;
-  }
-  return !CONTAINER_STATUSES_PRE_LAUNCH.has(status);
-};
-
 const Logs = ({
   executionId,
   status,
@@ -89,19 +63,15 @@ const Logs = ({
   const { backendUrl, configured, available } = useBackend();
 
   const shouldFetch = !!executionId && shouldStatusHaveLogs(status);
-  const shouldPoll = shouldFetch && isStatusActivelyLogging(status);
 
   const [logs, setLogs] = useState<{
     log_text?: string;
     system_error_exception_full?: string;
   }>();
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["logs", executionId],
-    queryFn: () => fetchContainerLog(String(executionId), backendUrl),
-    enabled: shouldFetch,
-    refetchInterval: shouldPoll ? 5000 : false,
-    refetchIntervalInBackground: false,
-  });
+  const { data, isLoading, error, refetch } = useContainerLog(
+    executionId,
+    status,
+  );
 
   useEffect(() => {
     if (data && !error) {
