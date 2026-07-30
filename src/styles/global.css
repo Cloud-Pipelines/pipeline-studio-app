@@ -86,6 +86,18 @@ code {
   --status-cancelled: oklch(0.44 0.01 286);
   --status-cancelling: oklch(0.7 0.19 42);
   --status-uninitialized: oklch(0.85 0.16 90);
+
+  /* Run comparison diff colours — one fill per diff status (node borders,
+   * legend swatches, graph edge strokes, status badges) plus the foreground
+   * that stays legible on top of it. */
+  --diff-unchanged: oklch(0.87 0.01 286);
+  --diff-lost: oklch(0.7 0.19 22);
+  --diff-new: oklch(0.72 0.19 149);
+  --diff-changed: oklch(0.83 0.16 84);
+  --diff-unchanged-foreground: oklch(0.28 0.006 286);
+  --diff-lost-foreground: oklch(0.99 0 0);
+  --diff-new-foreground: oklch(0.99 0 0);
+  --diff-changed-foreground: oklch(0.28 0.02 84);
 }
 
 .dark {
@@ -150,6 +162,15 @@ code {
   --status-cancelled: oklch(0.52 0.01 286);
   --status-cancelling: oklch(0.6 0.13 42);
   --status-uninitialized: oklch(0.68 0.11 90);
+
+  --diff-unchanged: oklch(0.55 0.012 286);
+  --diff-lost: oklch(0.58 0.14 22);
+  --diff-new: oklch(0.58 0.12 149);
+  --diff-changed: oklch(0.68 0.11 84);
+  --diff-unchanged-foreground: oklch(0.98 0 0);
+  --diff-lost-foreground: oklch(0.99 0 0);
+  --diff-new-foreground: oklch(0.99 0 0);
+  --diff-changed-foreground: oklch(0.24 0.02 84);
 }
 
 /*
@@ -253,6 +274,14 @@ code {
   --color-status-cancelled: var(--status-cancelled);
   --color-status-cancelling: var(--status-cancelling);
   --color-status-uninitialized: var(--status-uninitialized);
+  --color-diff-unchanged: var(--diff-unchanged);
+  --color-diff-lost: var(--diff-lost);
+  --color-diff-new: var(--diff-new);
+  --color-diff-changed: var(--diff-changed);
+  --color-diff-unchanged-foreground: var(--diff-unchanged-foreground);
+  --color-diff-lost-foreground: var(--diff-lost-foreground);
+  --color-diff-new-foreground: var(--diff-new-foreground);
+  --color-diff-changed-foreground: var(--diff-changed-foreground);
 
   /* Custom animations */
   --animate-revert-copied: revert-copied 0.5s ease-in-out forwards;
