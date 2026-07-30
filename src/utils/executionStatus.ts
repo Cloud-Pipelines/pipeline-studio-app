@@ -61,6 +61,16 @@ export const CONTAINER_STATUSES_PRE_LAUNCH = new Set([
 ]);
 
 /**
+ * Statuses where the container is running and actively producing logs, so a log
+ * reader should keep polling.
+ */
+const CONTAINER_STATUSES_ACTIVELY_LOGGING = new Set([
+  "RUNNING",
+  "PENDING",
+  "CANCELLING",
+]);
+
+/**
  * Statuses considered "in progress" (not terminal).
  */
 const IN_PROGRESS_STATUSES = new Set([
@@ -106,6 +116,19 @@ export function isValidExecutionStatus(
   value: string,
 ): value is ContainerExecutionStatus {
   return value in EXECUTION_STATUS_LABELS;
+}
+
+/**
+ * Whether the container may have logs worth fetching at all.
+ */
+export function shouldStatusHaveLogs(status?: string): boolean {
+  if (!status) return false;
+  return !CONTAINER_STATUSES_PRE_LAUNCH.has(status);
+}
+
+export function isStatusActivelyLogging(status?: string): boolean {
+  if (!status) return false;
+  return CONTAINER_STATUSES_ACTIVELY_LOGGING.has(status);
 }
 
 /**

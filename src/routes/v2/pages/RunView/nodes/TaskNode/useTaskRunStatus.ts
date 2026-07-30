@@ -1,9 +1,11 @@
-import { shouldStatusHaveLogs } from "@/components/shared/ReactFlow/FlowCanvas/TaskNode/TaskOverview/logs";
 import type { Task } from "@/models/componentSpec";
 import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
 import { useSpec } from "@/routes/v2/shared/providers/SpecContext";
 import { ISO8601_DURATION_ZERO_DAYS } from "@/utils/constants";
-import type { ExecutionStatusStats } from "@/utils/executionStatus";
+import {
+  type ExecutionStatusStats,
+  shouldStatusHaveLogs,
+} from "@/utils/executionStatus";
 
 interface TaskRunStatus {
   task: Task | undefined;
