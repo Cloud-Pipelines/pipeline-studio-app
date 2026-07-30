@@ -412,7 +412,7 @@ manifest.
 ```html
 <!-- gardening-manifest
 {"week":"2026-W30","pillar":"comments","category":"comments",
- "findings":[{"strongKey":"<sha1>","weakKey":"<sha1>","file":"src/…","rule":"project-conventions#comments"}]}
+ "findings":[{"strongKey":"<sha1>","weakKey":"<sha1>","file":"src/…","rule":"project-conventions#comments--documentation"}]}
 -->
 ```
 
