@@ -54,7 +54,8 @@ export function useTaskRunStatus(entityId: string): TaskRunStatus {
     ISO8601_DURATION_ZERO_DAYS;
 
   const executionId = resolveExecutionId(task, executionData);
-  const showLogsButton = !!executionId && shouldStatusHaveLogs(status);
+  const showLogsButton =
+    !!executionId && !task?.subgraphSpec && shouldStatusHaveLogs(status);
   const subgraphExecutionStats = resolveSubgraphExecutionStats(
     task,
     executionId,

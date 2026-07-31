@@ -11,11 +11,13 @@ import { shouldStatusHaveLogs } from "@/utils/executionStatus";
 
 const LogDisplay = ({
   logs,
+  allowFullscreen,
 }: {
   logs: {
     log_text?: string;
     system_error_exception_full?: string;
   };
+  allowFullscreen?: boolean;
 }) => {
   if (!logs.log_text && !logs.system_error_exception_full) {
     return <div>No logs available</div>;
@@ -36,6 +38,7 @@ const LogDisplay = ({
             language="text"
             filename="Execution Logs"
             scrollToBottom
+            allowFullscreen={allowFullscreen}
           />
         </div>
       )}
@@ -46,6 +49,7 @@ const LogDisplay = ({
             language="text"
             filename="System Error Logs"
             scrollToBottom
+            allowFullscreen={allowFullscreen}
           />
         </div>
       )}
@@ -56,9 +60,11 @@ const LogDisplay = ({
 const Logs = ({
   executionId,
   status,
+  allowFullscreen = true,
 }: {
   executionId?: string | number;
   status?: string;
+  allowFullscreen?: boolean;
 }) => {
   const { backendUrl, configured, available } = useBackend();
 
@@ -132,7 +138,7 @@ const Logs = ({
   return (
     <div className="space-y-4 h-full">
       <div className="font-mono text-sm whitespace-pre-wrap bg-gray-50 dark:bg-muted p-4 rounded-lg h-full min-h-0 flex-1">
-        {logs && <LogDisplay logs={logs} />}
+        {logs && <LogDisplay logs={logs} allowFullscreen={allowFullscreen} />}
       </div>
     </div>
   );

@@ -73,7 +73,7 @@ const CONTAINER_STATUSES_ACTIVELY_LOGGING = new Set([
 /**
  * Statuses considered "in progress" (not terminal).
  */
-const IN_PROGRESS_STATUSES = new Set([
+export const IN_PROGRESS_STATUSES = new Set([
   "RUNNING",
   "PENDING",
   "QUEUED",

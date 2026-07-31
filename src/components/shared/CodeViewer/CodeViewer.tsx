@@ -13,6 +13,7 @@ interface CodeViewerProps {
   filename?: string;
   fullscreen?: boolean;
   scrollToBottom?: boolean;
+  allowFullscreen?: boolean;
   onClose?: () => void;
 }
 
@@ -24,6 +25,7 @@ const CodeViewer = ({
   filename = "",
   fullscreen = false,
   scrollToBottom = false,
+  allowFullscreen = true,
   onClose,
 }: CodeViewerProps) => {
   const [isFullscreen, setIsFullscreen] = useState(fullscreen);
@@ -65,17 +67,19 @@ const CodeViewer = ({
               (Read Only)
             </Text>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={handleToggleFullscreen}
-            className="text-muted-foreground hover:text-foreground"
-            title={isFullscreen ? "Exit fullscreen" : "View fullscreen"}
-            aria-label={isFullscreen ? "Exit fullscreen" : "View fullscreen"}
-          >
-            {isFullscreen ? <Icon name="X" /> : <Icon name="Maximize2" />}
-          </Button>
+          {allowFullscreen && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleToggleFullscreen}
+              className="text-muted-foreground hover:text-foreground"
+              title={isFullscreen ? "Exit fullscreen" : "View fullscreen"}
+              aria-label={isFullscreen ? "Exit fullscreen" : "View fullscreen"}
+            >
+              {isFullscreen ? <Icon name="X" /> : <Icon name="Maximize2" />}
+            </Button>
+          )}
         </div>
         <div className="flex-1 relative">
           <div

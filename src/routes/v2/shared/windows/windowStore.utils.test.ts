@@ -184,3 +184,25 @@ describe("resolveGeometry viewport clamping (via buildWindowModelInit)", () => {
     expect(init.position).toEqual(optionPosition);
   });
 });
+
+describe("minDockedHeight (via buildWindowModelInit)", () => {
+  it("passes the option through to the model init", () => {
+    const init = buildWindowModelInit(
+      "logs-window",
+      baseOptions({ minDockedHeight: 280 }),
+      DEFAULT_POSITION,
+    );
+
+    expect(init.minDockedHeight).toBe(280);
+  });
+
+  it("leaves the value unset when the option is omitted", () => {
+    const init = buildWindowModelInit(
+      "plain-window",
+      baseOptions(),
+      DEFAULT_POSITION,
+    );
+
+    expect(init.minDockedHeight).toBeUndefined();
+  });
+});

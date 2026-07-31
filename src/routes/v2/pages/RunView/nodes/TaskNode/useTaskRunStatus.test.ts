@@ -73,4 +73,36 @@ describe("useTaskRunStatus", () => {
 
     expect(result.current.subgraphExecutionStats).toBeNull();
   });
+
+  it("shows the logs button for a container task with logs", () => {
+    useSpecMock.mockReturnValue({
+      tasks: [
+        {
+          $id: "task-1",
+          name: "subgraph-task",
+          subgraphSpec: undefined,
+        },
+      ],
+    });
+
+    const { result } = renderHook(() => useTaskRunStatus("task-1"));
+
+    expect(result.current.showLogsButton).toBe(true);
+  });
+
+  it("hides the logs button for a subgraph task", () => {
+    useSpecMock.mockReturnValue({
+      tasks: [
+        {
+          $id: "task-1",
+          name: "subgraph-task",
+          subgraphSpec: {},
+        },
+      ],
+    });
+
+    const { result } = renderHook(() => useTaskRunStatus("task-1"));
+
+    expect(result.current.showLogsButton).toBe(false);
+  });
 });

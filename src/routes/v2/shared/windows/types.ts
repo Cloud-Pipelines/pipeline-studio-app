@@ -62,10 +62,12 @@ export interface WindowOptions {
   defaultDockState?: "left" | "right";
   variant?: "window" | "panel";
   fillDockHeight?: boolean;
+  minDockedHeight?: number;
   onClose?: () => void;
   // Without miniContent a window is filtered out of the collapsed dock strip, so
   // it is unreachable until the user expands the dock area again.
   miniContent?: ReactNode;
+  renderMiniInline?: boolean;
 }
 
 // All dimensions below are CSS pixels. See src/routes/v2/WINDOWS.md for what each one drives.

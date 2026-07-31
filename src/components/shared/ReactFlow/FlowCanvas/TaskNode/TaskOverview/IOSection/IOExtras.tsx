@@ -1,9 +1,8 @@
 import type { GetExecutionArtifactsResponse } from "@/api/types.gen";
-import { BlockStack } from "@/components/ui/layout";
-import { Heading } from "@/components/ui/typography";
 import type { InputSpec, OutputSpec } from "@/utils/componentSpec";
 
 import IOCell from "./IOCell/IOCell";
+import IOCollapsibleSection from "./IOCollapsibleSection";
 
 interface IOExtrasProps {
   inputs?: InputSpec[];
@@ -27,21 +26,25 @@ const IOExtras = ({ inputs, outputs, artifacts }: IOExtrasProps) => {
   return (
     <>
       {additionalInputs.length > 0 && (
-        <BlockStack gap="1" className="w-full">
-          <Heading level={1}>Additional Input Artifacts</Heading>
+        <IOCollapsibleSection
+          title="Additional Input Artifacts"
+          count={additionalInputs.length}
+        >
           {additionalInputs.map(([key, artifact]) => (
             <IOCell key={key} name={key} artifact={artifact} />
           ))}
-        </BlockStack>
+        </IOCollapsibleSection>
       )}
 
       {additionalOutputs.length > 0 && (
-        <BlockStack gap="1" className="w-full">
-          <Heading level={1}>Additional Output Artifacts</Heading>
+        <IOCollapsibleSection
+          title="Additional Output Artifacts"
+          count={additionalOutputs.length}
+        >
           {additionalOutputs.map(([key, artifact]) => (
             <IOCell key={key} name={key} artifact={artifact} />
           ))}
-        </BlockStack>
+        </IOCollapsibleSection>
       )}
     </>
   );

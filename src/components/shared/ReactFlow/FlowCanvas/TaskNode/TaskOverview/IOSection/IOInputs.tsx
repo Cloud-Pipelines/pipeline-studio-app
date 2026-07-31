@@ -1,9 +1,9 @@
 import type { GetExecutionArtifactsResponse } from "@/api/types.gen";
-import { BlockStack } from "@/components/ui/layout";
-import { Heading, Paragraph } from "@/components/ui/typography";
+import { Paragraph } from "@/components/ui/typography";
 import type { InputSpec } from "@/utils/componentSpec";
 
 import IOCell from "./IOCell/IOCell";
+import IOCollapsibleSection from "./IOCollapsibleSection";
 
 interface IOInputsProps {
   inputs?: InputSpec[];
@@ -12,9 +12,7 @@ interface IOInputsProps {
 
 const IOInputs = ({ inputs, artifacts }: IOInputsProps) => {
   return (
-    <BlockStack gap="1" className="w-full">
-      <Heading level={1}>Inputs</Heading>
-
+    <IOCollapsibleSection title="Inputs" count={inputs?.length ?? 0}>
       {(!inputs || inputs.length === 0) && (
         <Paragraph tone="subdued" size="xs">
           No inputs defined
@@ -33,7 +31,7 @@ const IOInputs = ({ inputs, artifacts }: IOInputsProps) => {
           />
         );
       })}
-    </BlockStack>
+    </IOCollapsibleSection>
   );
 };
 
