@@ -22,6 +22,7 @@ import type { TaskSpec } from "@/utils/componentSpec";
 import { tracking } from "@/utils/tracking";
 
 import { RunViewTaskActions } from "./RunViewTaskActions";
+import { getTaskAnnotationSections } from "./RunViewTaskAnnotations";
 
 interface RunViewTaskDetailsProps {
   entityId: string;
@@ -125,6 +126,7 @@ export const RunViewTaskDetails = observer(function RunViewTaskDetails({
               status={status}
               readOnly
               options={{ descriptionExpanded: true }}
+              additionalSection={getTaskAnnotationSections(task.annotations)}
             />
           </TabsContent>
 

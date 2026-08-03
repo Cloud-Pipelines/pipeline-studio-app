@@ -1,4 +1,9 @@
-import { type MouseEvent, useEffect, useState } from "react";
+import {
+  type ComponentProps,
+  type MouseEvent,
+  useEffect,
+  useState,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -15,6 +20,8 @@ interface CopyTextProps {
   alwaysShowButton?: boolean;
   compact?: boolean;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
+  tone?: ComponentProps<typeof Text>["tone"];
+  font?: ComponentProps<typeof Text>["font"];
   copyTrackingAction?: string;
 }
 
@@ -25,6 +32,8 @@ export const CopyText = ({
   alwaysShowButton = false,
   compact = false,
   size = "md",
+  tone,
+  font,
   copyTrackingAction,
 }: CopyTextProps) => {
   const { track } = useAnalytics();
@@ -64,6 +73,8 @@ export const CopyText = ({
       <InlineStack gap="1" blockAlign="center" wrap="nowrap">
         <Text
           size={size}
+          tone={tone}
+          font={font}
           className={cn(
             "min-w-0 transition-all duration-150",
             className,
