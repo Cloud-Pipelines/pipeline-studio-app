@@ -380,7 +380,7 @@ interface TwoLogicalOperands {
   op1: PredicateType;
   op2: PredicateType;
 }
-export type PredicateType =
+type PredicateType =
   | {
       "==": TwoArgumentOperands;
     }
