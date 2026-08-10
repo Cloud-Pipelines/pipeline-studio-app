@@ -230,6 +230,11 @@ export function ComponentSearchV2Content() {
         />
       </BlockStack>
       <ComponentSearchResults
+        key={JSON.stringify([
+          deferredQuery,
+          [...disabledSourceKeys].sort(),
+          isRerankActive ? "ai" : "lexical",
+        ])}
         query={deferredQuery}
         results={results}
         browseFolders={browseFolders}

@@ -29,7 +29,6 @@ import {
   buildResults,
   collectAllSourcedReferences,
   type ComponentSearchV2State,
-  LEXICAL_RESULT_LIMIT,
   mergeSearchIndexes,
   registeredLibrariesFingerprint,
   registeredSource,
@@ -51,6 +50,8 @@ import { componentReferenceToCandidate } from "@/services/naturalLanguageCompone
 import type { ComponentFolder } from "@/types/componentLibrary";
 import type { ComponentReference } from "@/utils/componentSpec";
 import { HOURS } from "@/utils/constants";
+
+const AI_EMBEDDING_FALLBACK_LIMIT = 20;
 
 function mergeUniqueMatches(
   primary: LexicalMatch[],
@@ -262,11 +263,14 @@ export function useComponentSearchV2State(
     !isEmbeddingSearchPending &&
     (rerankData?.matches.length ?? 0) > 0;
 
-  const displayedMatches = (
-    isRerankActive
-      ? rerankedMatches(rerankData, rerankBaseMatches)
-      : lexicalMatches
-  ).slice(0, LEXICAL_RESULT_LIMIT);
+  const displayedMatches = isRerankActive
+    ? mergeUniqueMatches(
+        rerankedMatches(rerankData, rerankBaseMatches),
+        [],
+        lexicalMatches,
+        rerankBaseMatches.length + lexicalMatches.length,
+      )
+    : lexicalMatches;
 
   const buildEmbeddingMatches = async ({
     sourceIndex,
@@ -318,7 +322,7 @@ export function useComponentSearchV2State(
     const canUseEmbeddings = useEmbeddings && canUseEmbeddingSearch;
     if (matches.length === 0 && !canUseEmbeddings) return;
 
-    const effectiveLimit = limit || LEXICAL_RESULT_LIMIT;
+    const effectiveLimit = limit || AI_EMBEDDING_FALLBACK_LIMIT;
     const embeddingMatches = canUseEmbeddings
       ? await buildEmbeddingMatches({
           sourceIndex: filteredIndex,
@@ -359,7 +363,7 @@ export function useComponentSearchV2State(
     void startRerank(aiCandidateMatches, {
       scoreAllCandidates: true,
       useEmbeddings: true,
-      limit: aiCandidateMatches.length || LEXICAL_RESULT_LIMIT,
+      limit: aiCandidateMatches.length || AI_EMBEDDING_FALLBACK_LIMIT,
     });
   };
 
