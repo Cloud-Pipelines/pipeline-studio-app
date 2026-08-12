@@ -29,8 +29,6 @@ import type {
   HydratedComponentReference,
 } from "@/utils/componentSpec";
 
-/** How many hits to show by default before the user asks for AI judgment. */
-export const LEXICAL_RESULT_LIMIT = 10;
 const AI_CANDIDATE_LIMIT = 80;
 const AI_LEXICAL_CANDIDATE_LIMIT = 60;
 const AI_SOURCE_DIVERSITY_CANDIDATES_PER_SOURCE = 8;
@@ -326,7 +324,7 @@ export function buildResultFolders({
 
 /**
  * Matches to display: an alphabetical browse list for an empty query, otherwise
- * the top lexical hits.
+ * every lexical hit in relevance order. The results panel owns scrolling.
  */
 export function buildLexicalMatches(
   index: IndexEntry[],
@@ -338,7 +336,7 @@ export function buildLexicalMatches(
       .map(indexEntryToLexicalMatch);
   }
   return lexicalSearch(index, trimmedQuery, {
-    limit: LEXICAL_RESULT_LIMIT,
+    limit: index.length,
     minLength: 1,
   });
 }

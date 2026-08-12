@@ -22,7 +22,6 @@ import {
   buildResults,
   buildSourcedHydratedReferences,
   collectAllSourcedReferences,
-  LEXICAL_RESULT_LIMIT,
   mergeSearchIndexes,
   PUBLISHED_SOURCE,
   registeredLibrariesFingerprint,
@@ -330,20 +329,18 @@ describe("buildLexicalMatches / buildAiCandidateMatches", () => {
     expect(buildAiCandidateMatches(index, "")).toEqual([]);
   });
 
-  it("caps displayed lexical results below the AI candidate pool", () => {
+  it("returns every lexical match while keeping the AI candidate pool bounded", () => {
     const broadIndex = buildSearchIndex(
-      Array.from({ length: 20 }, (_, i) => ({
+      Array.from({ length: 100 }, (_, i) => ({
         reference: ref(`train-${i}`, `train_${i}`),
         source: source("standard"),
       })),
     );
 
-    expect(buildLexicalMatches(broadIndex, "train")).toHaveLength(
-      LEXICAL_RESULT_LIMIT,
-    );
-    expect(buildAiCandidateMatches(broadIndex, "train").length).toBeGreaterThan(
-      LEXICAL_RESULT_LIMIT,
-    );
+    expect(buildLexicalMatches(broadIndex, "train")).toHaveLength(100);
+    expect(
+      buildAiCandidateMatches(broadIndex, "train").length,
+    ).toBeLessThanOrEqual(80);
   });
 
   it("returns no AI candidates when literal search finds nothing", () => {

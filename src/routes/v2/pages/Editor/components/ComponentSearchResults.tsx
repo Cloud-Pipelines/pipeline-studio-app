@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { ComponentSearchEmptyStateSuggestions } from "@/components/shared/ComponentSearchEmptyStateSuggestions";
 import {
   ComponentMarkup,
@@ -13,8 +15,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Paragraph, Text } from "@/components/ui/typography";
 import type { ComponentSearchSuggestion } from "@/services/componentSearchSuggestions";
 import type { UIComponentFolder } from "@/types/componentLibrary";
+import { tracking } from "@/utils/tracking";
 
 import type { ComponentSearchV2Result } from "./componentSearchV2Logic";
+
+const INITIAL_VISIBLE_RESULT_COUNT = 10;
+const RESULT_PAGE_SIZE = 10;
 
 interface ComponentSearchResultsProps {
   query: string;
@@ -83,6 +89,12 @@ export function ComponentSearchResults({
   onSuggestedSearch,
 }: ComponentSearchResultsProps) {
   const isEmptyQuery = query.trim().length === 0;
+  const [visibleResultCount, setVisibleResultCount] = useState(
+    INITIAL_VISIBLE_RESULT_COUNT,
+  );
+  const visibleResults = results.slice(0, visibleResultCount);
+  const remainingResultCount = results.length - visibleResults.length;
+  const nextPageSize = Math.min(RESULT_PAGE_SIZE, remainingResultCount);
 
   if (!isEmptyQuery && (isLoading || isSearching)) {
     return <ComponentSearchResultsSkeleton />;
@@ -125,9 +137,18 @@ export function ComponentSearchResults({
       data-testid="search-results-container"
     >
       <InlineStack align="space-between" blockAlign="center" gap="2">
-        <Text tone="subdued" size="sm" data-testid="search-results-header">
+        <Text
+          tone="subdued"
+          size="sm"
+          role="status"
+          aria-live="polite"
+          data-testid="search-results-header"
+        >
           {isRerankActive ? "AI-ranked results" : "Search Results"} (
-          {results.length})
+          {remainingResultCount > 0
+            ? `${visibleResults.length} of ${results.length}`
+            : results.length}
+          )
         </Text>
         {isRerankActive && (
           <Button
@@ -141,23 +162,51 @@ export function ComponentSearchResults({
         )}
       </InlineStack>
       <Separator />
-      <BlockStack className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin">
+      <BlockStack
+        className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin"
+        data-testid="search-results-list"
+      >
         {results.length > 0 ? (
-          <BlockStack
-            as="ul"
-            className="[&_li]:marker:hidden [&_li]:before:content-none [&_li]:list-none"
-          >
-            {results.map((result) => (
-              <ComponentMarkup
-                key={`${result.reference.digest}-${result.reference.name ?? result.reference.url ?? "component"}`}
-                component={result.reference}
-                matchedFields={result.matchedFields}
-                rerankScore={result.rerankScore}
-                rerankReason={result.rerankReason}
-                showOutdatedBadge={false}
-                source={result.source}
-              />
-            ))}
+          <BlockStack>
+            <BlockStack
+              as="ul"
+              className="[&_li]:marker:hidden [&_li]:before:content-none [&_li]:list-none"
+            >
+              {visibleResults.map((result) => (
+                <ComponentMarkup
+                  key={`${result.reference.digest}-${result.reference.name ?? result.reference.url ?? "component"}`}
+                  component={result.reference}
+                  matchedFields={result.matchedFields}
+                  rerankScore={result.rerankScore}
+                  rerankReason={result.rerankReason}
+                  showOutdatedBadge={false}
+                  source={result.source}
+                />
+              ))}
+            </BlockStack>
+            {remainingResultCount > 0 && (
+              <div className="px-2 pb-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() =>
+                    setVisibleResultCount(
+                      (current) => current + RESULT_PAGE_SIZE,
+                    )
+                  }
+                  {...tracking("component_library.search.show_more", {
+                    surface: "editor_component_search_v2",
+                    shown_count: visibleResults.length,
+                    result_count: results.length,
+                    ai_ranked: isRerankActive,
+                  })}
+                >
+                  Show {nextPageSize} more
+                </Button>
+              </div>
+            )}
           </BlockStack>
         ) : (
           <BlockStack gap="2">

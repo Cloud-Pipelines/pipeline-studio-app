@@ -150,6 +150,80 @@ describe("ComponentSearchResults", () => {
     expect(screen.getByText("source Published")).toBeInTheDocument();
   });
 
+  it("renders matches in a vertically scrollable list", () => {
+    const results: ComponentSearchV2Result[] = [
+      {
+        reference: { digest: "digest", name: "Load CSV" },
+        source: { kind: "standard", id: "standard", label: "Standard" },
+      },
+    ];
+
+    render(
+      <ComponentSearchResults {...baseProps} query="csv" results={results} />,
+    );
+
+    expect(screen.getByTestId("search-results-list")).toHaveClass(
+      "overflow-y-auto",
+    );
+  });
+
+  it("shows large result sets progressively", () => {
+    const results: ComponentSearchV2Result[] = Array.from(
+      { length: 25 },
+      (_, index) => ({
+        reference: { digest: `digest-${index}`, name: `Component ${index}` },
+        source: { kind: "standard", id: "standard", label: "Standard" },
+      }),
+    );
+
+    render(
+      <ComponentSearchResults
+        {...baseProps}
+        query="component"
+        results={results}
+      />,
+    );
+
+    expect(screen.getByTestId("search-results-header")).toHaveTextContent(
+      "Search Results (10 of 25)",
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(10);
+
+    const showMoreButton = screen.getByRole("button", {
+      name: "Show 10 more",
+    });
+    expect(showMoreButton).toHaveAttribute(
+      "data-tracking-id",
+      "component_library.search.show_more",
+    );
+    expect(showMoreButton).toHaveAttribute(
+      "data-tracking-metadata",
+      JSON.stringify({
+        surface: "editor_component_search_v2",
+        shown_count: 10,
+        result_count: 25,
+        ai_ranked: false,
+      }),
+    );
+
+    fireEvent.click(showMoreButton);
+
+    expect(screen.getByTestId("search-results-header")).toHaveTextContent(
+      "Search Results (20 of 25)",
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(20);
+
+    fireEvent.click(screen.getByRole("button", { name: "Show 5 more" }));
+
+    expect(screen.getByTestId("search-results-header")).toHaveTextContent(
+      "Search Results (25)",
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(25);
+    expect(
+      screen.queryByRole("button", { name: /Show .* more/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("passes matched fields through for result explanations", () => {
     const results: ComponentSearchV2Result[] = [
       {
