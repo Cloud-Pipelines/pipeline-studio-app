@@ -1,9 +1,6 @@
 import type { ComponentSpec, InputSpec, OutputSpec } from "./componentSpec";
 import { ComponentSearchFilter } from "./constants";
 
-/**
- * Normalizes text for case-insensitive searching
- */
 export const normalizeForSearch = (text: string): string => {
   return text
     .toLowerCase()
@@ -11,10 +8,6 @@ export const normalizeForSearch = (text: string): string => {
     .replace(/^["]|["]$/g, "");
 };
 
-/**
- * Checks if a search term is contained in text
- * Simple substring match check
- */
 export const containsSearchTerm = (
   text: string | undefined,
   searchTerm: string,
@@ -32,10 +25,6 @@ export const containsSearchTerm = (
   return normalizedText.includes(normalizedSearchTerm);
 };
 
-/**
- * Checks if a component matches the search term
- * based on the specified filters.
- */
 export function componentMatchesSearch(
   component: ComponentSpec,
   searchTerm: string,
@@ -53,10 +42,6 @@ export function componentMatchesSearch(
   );
 }
 
-/**
- * Checks if a component matches the search term
- * based on the specific filter.
- */
 function checkSearchFilterComponent(
   searchTerm: string,
   filter: string,
@@ -92,10 +77,6 @@ function checkSearchFilterComponent(
   }
 }
 
-/**
- * Checks if an input or output matches the search term
- * based on the specified filters.
- */
 export function checkArtifactMatchesSearchFilters(
   searchTerm: string,
   filters: string[],
