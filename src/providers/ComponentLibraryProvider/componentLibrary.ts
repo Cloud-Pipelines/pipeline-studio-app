@@ -36,7 +36,7 @@ export const fetchUserComponents = async (): Promise<ComponentFolder> => {
       name: "User Components",
       components,
       folders: [],
-      isUserFolder: true, // Add a flag to identify this as user components folder
+      isUserFolder: true,
     };
 
     return userComponentsFolder;
@@ -106,7 +106,6 @@ export async function populateComponentRefs<
       };
     }
 
-    // if there is no text, try to fetch by URL
     if (ref.url) {
       const stored = await getComponentByUrl(ref.url);
       if (stored && stored.data) {
@@ -122,7 +121,6 @@ export async function populateComponentRefs<
       }
     }
 
-    // if there is no url, fallback to spec
     if (ref.spec) {
       const text = componentSpecToYaml(ref.spec);
       const digest = await generateDigest(text);
@@ -132,13 +130,11 @@ export async function populateComponentRefs<
     return ref;
   }
 
-  // Process components at this level
   const updatedComponents =
     "components" in libraryOrFolder && Array.isArray(libraryOrFolder.components)
       ? await Promise.all(libraryOrFolder.components.map(populateRef))
       : [];
 
-  // Recurse into folders
   const updatedFolders =
     "folders" in libraryOrFolder && Array.isArray(libraryOrFolder.folders)
       ? await Promise.all(
