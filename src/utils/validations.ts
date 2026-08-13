@@ -356,7 +356,7 @@ const validateTaskOutputReference = (
     if (referencedTask.componentRef && referencedTask.componentRef.spec) {
       const referencedTaskSpec = referencedTask.componentRef.spec;
       const outputExists = referencedTaskSpec.outputs?.some(
-        (output: any) => output.name === referencedOutput,
+        (output) => output.name === referencedOutput,
       );
 
       if (!outputExists) {
