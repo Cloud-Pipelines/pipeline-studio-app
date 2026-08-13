@@ -7,8 +7,6 @@ import { getAllComponentFilesFromList } from "@/utils/componentStore";
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 import { getStorage } from "@/utils/typedStorage";
 
-// ─── Node counting ────────────────────────────────────────────────────────────
-
 /**
  * Counts nodes in a pipeline spec, flattening any inline subgraphs recursively.
  * Each subgraph's components (including its own IO nodes) replace the subgraph
@@ -37,8 +35,6 @@ function countTaskNodes(task: TaskSpec): number {
   return 1;
 }
 
-// ─── Bucketing ────────────────────────────────────────────────────────────────
-
 // Bucket boundaries follow Fibonacci numbers (5, 13, 34, 89, 233) to give
 // fine-grained visibility at low node counts and coverage into 200+ node graphs.
 type PipelineNodeBucket =
@@ -59,8 +55,6 @@ function bucketNodeCount(nodeCount: number): PipelineNodeBucket {
   if (nodeCount <= 233) return "90_to_233";
   return "234_plus";
 }
-
-// ─── Daily throttle ───────────────────────────────────────────────────────────
 
 type PipelineStatsStorageKeys = "tangle_pipeline_stats_last_fired_date";
 type PipelineStatsStorageMapping = {
@@ -89,8 +83,6 @@ function markFiredToday(): void {
     todayIsoDate(),
   );
 }
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
  * Fires a `session.pipeline_stats.start` event at most once per day per client
