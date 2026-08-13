@@ -68,7 +68,7 @@ const CollapsibleSection = ({
       >
         {label}
       </Text>
-      <Text size="xs" className="text-muted-foreground tabular-nums">
+      <Text size="xs" tone="subdued" className="tabular-nums">
         {count}
       </Text>
     </CollapsibleTrigger>
@@ -150,7 +150,7 @@ const FolderNode = ({
         className="text-muted-foreground transition-transform shrink-0 group-data-[state=open]:rotate-90"
         size="sm"
       />
-      <Text size="xs" className="text-muted-foreground font-medium truncate">
+      <Text size="xs" tone="subdued" className="font-medium truncate">
         {folder.name}
       </Text>
     </CollapsibleTrigger>
