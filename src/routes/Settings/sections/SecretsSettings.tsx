@@ -1,6 +1,6 @@
 import { Outlet } from "@tanstack/react-router";
-import { Suspense } from "react";
 
+import { SuspenseWrapper } from "@/components/shared/SuspenseWrapper";
 import { BlockStack } from "@/components/ui/layout";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -14,8 +14,8 @@ function SecretsSettingsSkeleton() {
 
 export function SecretsSettings() {
   return (
-    <Suspense fallback={<SecretsSettingsSkeleton />}>
+    <SuspenseWrapper fallback={<SecretsSettingsSkeleton />}>
       <Outlet />
-    </Suspense>
+    </SuspenseWrapper>
   );
 }
