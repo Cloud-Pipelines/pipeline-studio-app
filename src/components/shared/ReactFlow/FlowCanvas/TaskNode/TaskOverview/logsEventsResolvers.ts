@@ -30,8 +30,6 @@ type RunningHintHydrationReplacements = {
   isRunning: boolean;
 };
 
-// --- Helpers ---
-
 // TODO: Test if backend returns timestamps without timezone suffix (e.g. "2024-01-01T00:00:00"
 // instead of "2024-01-01T00:00:00Z"). If so, uncomment utcTimezoneWorkaround and its usages
 // in adjustTimestamp below. Remove this workaround once backend saves timezone-aware timestamps.
@@ -103,8 +101,6 @@ export function extractJobName(
   }
   return null;
 }
-
-// --- Resolver functions ---
 
 const DEFAULT_FALLBACK_MINUTES = 60;
 const RELATIVE_NOW = "now";
