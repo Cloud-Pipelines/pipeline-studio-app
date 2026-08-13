@@ -39,6 +39,7 @@ import {
   buildSearchIndex,
   type IndexEntry,
   type LexicalMatch,
+  mergeUniqueMatches,
   type SourcedReference,
 } from "@/services/componentSearchIndex";
 import { buildComponentSearchSuggestions } from "@/services/componentSearchSuggestions";
@@ -52,23 +53,6 @@ import type { ComponentReference } from "@/utils/componentSpec";
 import { HOURS } from "@/utils/constants";
 
 const AI_EMBEDDING_FALLBACK_LIMIT = 20;
-
-function mergeUniqueMatches(
-  primary: LexicalMatch[],
-  secondary: LexicalMatch[],
-  fallback: LexicalMatch[],
-  limit: number,
-): LexicalMatch[] {
-  const merged: LexicalMatch[] = [];
-  const seen = new Set<string>();
-  for (const match of [...primary, ...secondary, ...fallback]) {
-    if (seen.has(match.digest)) continue;
-    seen.add(match.digest);
-    merged.push(match);
-    if (merged.length >= limit) return merged;
-  }
-  return merged;
-}
 
 export function useComponentSearchV2State(
   query: string,

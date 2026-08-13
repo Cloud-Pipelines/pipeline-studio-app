@@ -79,6 +79,27 @@ export function indexEntryToLexicalMatch(entry: IndexEntry): LexicalMatch {
   };
 }
 
+/**
+ * Concatenates match lists and drops repeats by digest, stopping at `limit`.
+ * The first occurrence of a digest wins, so pass the lists in priority order.
+ */
+export function mergeUniqueMatches(
+  primary: LexicalMatch[],
+  secondary: LexicalMatch[],
+  fallback: LexicalMatch[],
+  limit: number,
+): LexicalMatch[] {
+  const merged: LexicalMatch[] = [];
+  const seen = new Set<string>();
+  for (const match of [...primary, ...secondary, ...fallback]) {
+    if (seen.has(match.digest)) continue;
+    seen.add(match.digest);
+    merged.push(match);
+    if (merged.length >= limit) return merged;
+  }
+  return merged;
+}
+
 const ANNOTATION_KEYS_EXCLUDED_FROM_SEARCH = new Set([
   "editor.position",
   "editor.collapsed",
