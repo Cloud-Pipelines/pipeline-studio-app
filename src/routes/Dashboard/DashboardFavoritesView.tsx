@@ -148,7 +148,7 @@ export function DashboardFavoritesView() {
               >
                 <Icon name="ChevronLeft" />
               </Button>
-              <Text size="sm" className="text-muted-foreground">
+              <Text size="sm" tone="subdued">
                 {safePage + 1} / {totalPages}
               </Text>
               <Button
