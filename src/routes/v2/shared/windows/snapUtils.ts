@@ -22,10 +22,6 @@ function detectEdgeSnap(
   return null;
 }
 
-// ============================================================================
-// Dock Area Insertion Detection
-// ============================================================================
-
 /** DOM element refs for dock areas, set by DockArea components */
 const dockAreaElements: Record<"left" | "right", HTMLElement | null> = {
   left: null,
@@ -123,7 +119,6 @@ function calculateInsertPosition(
     return { insertIndex: 0, indicatorY: rect.top + 4 };
   }
 
-  // Find insertion point between existing windows
   for (let i = 0; i < windowEls.length; i++) {
     const winEl = windowEls[i];
     const winId = winEl.getAttribute("data-dock-window");
@@ -144,7 +139,6 @@ function calculateInsertPosition(
     }
   }
 
-  // After all windows - insert at end
   const lastEl = windowEls[windowEls.length - 1];
   const lastRect = lastEl.getBoundingClientRect();
   return {
