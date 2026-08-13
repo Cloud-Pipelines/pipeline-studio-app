@@ -28,7 +28,13 @@ export const InlineContent = ({
   switch (type) {
     case "csv":
     case "tsv":
-      return <CsvVisualizerValue value={value} isFullscreen={isFullscreen} />;
+      return (
+        <CsvVisualizerValue
+          value={value}
+          type={type}
+          isFullscreen={isFullscreen}
+        />
+      );
     case "jsonobject":
     case "jsonarray":
       return <JsonVisualizerValue value={value} name={name} />;
@@ -78,6 +84,7 @@ export const PreviewContent = ({
       return (
         <CsvVisualizerRemote
           signedUrl={signedUrl}
+          type={type}
           isFullscreen={isFullscreen}
         />
       );

@@ -5,10 +5,17 @@ import { type ReactElement, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import useToastNotification from "@/hooks/useToastNotification";
 import { ArtifactFetchError } from "@/services/executionService";
 
+import { PARQUET_PREVIEW_ROWS } from "./parquetUtils";
 import ParquetVisualizer from "./ParquetVisualizer";
-import type { ArtifactColumn } from "./utils";
+import { type ArtifactColumn, getPreviewRowLimit } from "./utils";
+
+type DownloadFull = { filename: string; getBlob: () => Promise<Blob> };
+
+// Captures the `downloadFull` prop so tests can exercise its `getBlob` contract.
+let lastDownloadFull: DownloadFull | undefined;
 
 vi.mock("hyparquet", () => ({
   parquetReadObjects: vi.fn(),
@@ -24,35 +31,62 @@ vi.mock("@/utils/URL", () => ({
   downloadStringAsFile: vi.fn(),
 }));
 
+vi.mock("@/hooks/useToastNotification");
+
+const mockNotify = vi.fn();
+
 vi.mock("./TableVisualizer", () => ({
   default: ({
     data,
     isFullscreen,
+    isLoading,
     totalRows,
     columnCount,
     onDownloadSchema,
+    onLoadMore,
+    onLoadAll,
+    downloadFull,
   }: {
     data: { columns: ArtifactColumn[]; rows: string[][]; hasMore: boolean };
     isFullscreen: boolean;
+    isLoading?: boolean;
     totalRows?: number;
     columnCount?: number;
     onDownloadSchema?: () => void;
-  }) => (
-    <div
-      data-testid="table-visualizer"
-      data-fullscreen={isFullscreen}
-      data-has-more={data.hasMore}
-      data-headers={data.columns.map((c) => c.name).join(",")}
-      data-row-count={data.rows.length}
-      data-columns={JSON.stringify(data.columns)}
-      data-total-rows={totalRows}
-      data-column-count={columnCount}
-    >
-      <button type="button" onClick={onDownloadSchema}>
-        Download schema
-      </button>
-    </div>
-  ),
+    onLoadMore?: () => void;
+    onLoadAll?: () => void;
+    downloadFull?: DownloadFull;
+  }) => {
+    lastDownloadFull = downloadFull;
+    return (
+      <div
+        data-testid="table-visualizer"
+        data-fullscreen={isFullscreen}
+        data-loading={isLoading}
+        data-has-more={data.hasMore}
+        data-headers={data.columns.map((c) => c.name).join(",")}
+        data-row-count={data.rows.length}
+        data-columns={JSON.stringify(data.columns)}
+        data-total-rows={totalRows}
+        data-column-count={columnCount}
+        data-download-filename={downloadFull?.filename}
+      >
+        <button type="button" onClick={onDownloadSchema}>
+          Download schema
+        </button>
+        {onLoadMore && (
+          <button type="button" onClick={onLoadMore}>
+            Load more
+          </button>
+        )}
+        {onLoadAll && (
+          <button type="button" onClick={onLoadAll}>
+            Load max
+          </button>
+        )}
+      </div>
+    );
+  },
 }));
 
 const {
@@ -108,9 +142,36 @@ const mockDataset = (schema: unknown[], numRows: number) => {
   );
 };
 
+/** Same as `mockDataset`, but with `columnCount` generated columns per row. */
+const mockWideDataset = (columnCount: number, numRows: number) => {
+  const names = Array.from({ length: columnCount }, (_, i) => `col_${i}`);
+  vi.mocked(parquetMetadataAsync).mockResolvedValue({
+    schema: [
+      { name: "root", num_children: columnCount },
+      ...names.map((name) => ({
+        name,
+        type: "INT64",
+        repetition_type: "REQUIRED",
+      })),
+    ],
+    num_rows: numRows,
+  } as unknown as Awaited<ReturnType<typeof parquetMetadataAsync>>);
+  vi.mocked(parquetReadObjects).mockImplementation(
+    async ({ rowStart = 0, rowEnd }) => {
+      const end = Math.min(rowEnd ?? numRows, numRows);
+      return Array.from({ length: Math.max(0, end - rowStart) }, (_, i) =>
+        Object.fromEntries(names.map((name) => [name, rowStart + i])),
+      );
+    },
+  );
+};
+
 beforeEach(() => {
   queryClient.clear();
+  lastDownloadFull = undefined;
   vi.restoreAllMocks();
+  mockNotify.mockReset();
+  vi.mocked(useToastNotification).mockReturnValue(mockNotify);
   vi.mocked(parquetMetadata).mockReset();
   vi.mocked(parquetMetadataAsync).mockReset();
   vi.mocked(parquetReadObjects).mockReset();
@@ -148,8 +209,8 @@ describe("ParquetVisualizer", () => {
     );
   });
 
-  it("previews the top rows and reports more remain for a large file", async () => {
-    mockDataset(SCHEMA, 2500);
+  it("loads more rows on demand without re-reading the whole file", async () => {
+    mockDataset(SCHEMA, 250);
 
     renderWithSuspense(
       <ParquetVisualizer
@@ -158,12 +219,166 @@ describe("ParquetVisualizer", () => {
       />,
     );
 
-    await waitFor(() => {
-      const table = screen.getByTestId("table-visualizer");
-      expect(table).toHaveAttribute("data-row-count", "100");
-      expect(table).toHaveAttribute("data-total-rows", "2500");
-      expect(table).toHaveAttribute("data-has-more", "true");
-    });
+    await waitFor(() =>
+      expect(screen.getByTestId("table-visualizer")).toHaveAttribute(
+        "data-row-count",
+        "100",
+      ),
+    );
+    expect(screen.getByTestId("table-visualizer")).toHaveAttribute(
+      "data-has-more",
+      "true",
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Load more" }));
+    await waitFor(() =>
+      expect(screen.getByTestId("table-visualizer")).toHaveAttribute(
+        "data-row-count",
+        "200",
+      ),
+    );
+
+    // The second read only pulls the new range, not rows already loaded.
+    expect(vi.mocked(parquetReadObjects)).toHaveBeenCalledWith(
+      expect.objectContaining({ rowStart: 100, rowEnd: 200 }),
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Load max" }));
+    await waitFor(() =>
+      expect(screen.getByTestId("table-visualizer")).toHaveAttribute(
+        "data-row-count",
+        "250",
+      ),
+    );
+    expect(screen.getByTestId("table-visualizer")).toHaveAttribute(
+      "data-has-more",
+      "false",
+    );
+  });
+
+  it("caps rendered rows at the preview limit and offers a full-dataset download", async () => {
+    // SCHEMA has two columns, so the cell budget resolves to the row backstop.
+    const cap = getPreviewRowLimit(2);
+    const total = cap + 2000;
+    mockDataset(SCHEMA, total);
+    const signedUrl = "https://storage.example.com/huge-rows.parquet";
+
+    renderWithSuspense(
+      <ParquetVisualizer signedUrl={signedUrl} isFullscreen={false} />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("table-visualizer")).toHaveAttribute(
+        "data-row-count",
+        "100",
+      ),
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Load max" }));
+    await waitFor(() =>
+      expect(screen.getByTestId("table-visualizer")).toHaveAttribute(
+        "data-row-count",
+        String(cap),
+      ),
+    );
+
+    const table = screen.getByTestId("table-visualizer");
+    expect(table).toHaveAttribute("data-has-more", "true");
+    expect(table).toHaveAttribute("data-total-rows", String(total));
+    expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Load max" })).toBeNull();
+
+    expect(lastDownloadFull?.filename).toBe("data.parquet");
+    const fullBlob = new Blob(["parquet-bytes"]);
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      blob: () => Promise.resolve(fullBlob),
+    } as unknown as Response);
+    const blob = await lastDownloadFull?.getBlob();
+    expect(fetchSpy).toHaveBeenCalledWith(signedUrl, undefined);
+    expect(blob).toBe(fullBlob);
+  });
+
+  it("notifies and keeps the loaded rows when a later read fails", async () => {
+    const consoleSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    mockDataset(SCHEMA, 250);
+    vi.mocked(parquetReadObjects).mockImplementation(
+      async ({ rowStart = 0, rowEnd }) => {
+        if (rowStart > 0) throw new Error("Signed URL expired");
+        return Array.from({ length: rowEnd ?? 0 }, (_, i) => ({
+          name: `row-${i}`,
+          score: i * 10,
+        }));
+      },
+    );
+
+    renderWithSuspense(
+      <ParquetVisualizer
+        signedUrl="https://storage.example.com/expiring.parquet"
+        isFullscreen={false}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("table-visualizer")).toHaveAttribute(
+        "data-row-count",
+        "100",
+      ),
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Load more" }));
+
+    await waitFor(() =>
+      expect(mockNotify).toHaveBeenCalledWith(
+        "Failed to load more rows. Please try again.",
+        "error",
+      ),
+    );
+
+    // The already-loaded rows survive and the user can retry.
+    const table = screen.getByTestId("table-visualizer");
+    expect(table).toHaveAttribute("data-row-count", "100");
+    expect(table).toHaveAttribute("data-loading", "false");
+    expect(
+      screen.getByRole("button", { name: "Load more" }),
+    ).toBeInTheDocument();
+
+    expect(consoleSpy).toHaveBeenCalled();
+  });
+
+  it("caps the initial read at the cell budget for very wide schemas", async () => {
+    // 1,000 columns exhausts MAX_PREVIEW_CELLS well before the 100-row preview.
+    const columnCount = 1000;
+    const cap = getPreviewRowLimit(columnCount);
+    expect(cap).toBeLessThan(PARQUET_PREVIEW_ROWS);
+    mockWideDataset(columnCount, 500);
+
+    renderWithSuspense(
+      <ParquetVisualizer
+        signedUrl="https://storage.example.com/wide.parquet"
+        isFullscreen={false}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("table-visualizer")).toHaveAttribute(
+        "data-row-count",
+        String(cap),
+      ),
+    );
+
+    // The cap is applied to the read itself, not just to what gets rendered.
+    expect(vi.mocked(parquetReadObjects)).toHaveBeenCalledWith(
+      expect.objectContaining({ rowEnd: cap }),
+    );
+
+    const table = screen.getByTestId("table-visualizer");
+    expect(table).toHaveAttribute("data-column-count", String(columnCount));
+    expect(table).toHaveAttribute("data-has-more", "true");
+    expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Load max" })).toBeNull();
   });
 
   const mockFullDownload = (contentLength: string | null) =>
@@ -206,7 +421,6 @@ describe("ParquetVisualizer", () => {
     vi.mocked(byteLengthFromUrl).mockRejectedValue(
       new TypeError("Failed to fetch"),
     );
-    // 200 MB — well past the full-download cap.
     mockFullDownload(String(200 * 1024 * 1024));
 
     renderWithSuspense(
@@ -226,7 +440,7 @@ describe("ParquetVisualizer", () => {
     vi.mocked(byteLengthFromUrl).mockRejectedValue(
       new TypeError("Failed to fetch"),
     );
-    // No Content-Length header — size is unknown, so we must not download.
+
     mockFullDownload(null);
 
     renderWithSuspense(

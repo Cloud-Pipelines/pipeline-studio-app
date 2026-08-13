@@ -61,11 +61,21 @@ vi.mock("./ImageVisualizer", () => ({
 }));
 
 vi.mock("./CsvVisualizer", () => ({
-  CsvVisualizerValue: ({ value }: { value: string }) => (
-    <div data-testid="csv-visualizer" data-value={value} />
+  CsvVisualizerValue: ({ value, type }: { value: string; type: string }) => (
+    <div data-testid="csv-visualizer" data-value={value} data-type={type} />
   ),
-  CsvVisualizerRemote: ({ signedUrl }: { signedUrl: string }) => (
-    <div data-testid="csv-visualizer" data-signed-url={signedUrl} />
+  CsvVisualizerRemote: ({
+    signedUrl,
+    type,
+  }: {
+    signedUrl: string;
+    type: string;
+  }) => (
+    <div
+      data-testid="csv-visualizer"
+      data-signed-url={signedUrl}
+      data-type={type}
+    />
   ),
 }));
 
@@ -190,6 +200,7 @@ describe("ArtifactVisualizer", () => {
       await waitFor(() => {
         const viz = screen.getByTestId("csv-visualizer");
         expect(viz).toHaveAttribute("data-value", "a,b\n1,2");
+        expect(viz).toHaveAttribute("data-type", "csv");
       });
     });
 
@@ -208,6 +219,8 @@ describe("ArtifactVisualizer", () => {
       await waitFor(() => {
         const viz = screen.getByTestId("csv-visualizer");
         expect(viz).toHaveAttribute("data-value", "a\tb\n1\t2");
+        // The type drives the download filename/MIME, so it must survive routing.
+        expect(viz).toHaveAttribute("data-type", "tsv");
       });
     });
 
@@ -260,6 +273,23 @@ describe("ArtifactVisualizer", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("image-visualizer")).toBeInTheDocument();
+      });
+    });
+
+    it("renders CsvVisualizerRemote with the tsv type for tsv artifacts", async () => {
+      renderWithQuery(
+        <ArtifactVisualizer artifact={makeArtifact()} name="data" type="TSV" />,
+      );
+
+      await userEvent.click(screen.getByText("Preview"));
+
+      await waitFor(() => {
+        const viz = screen.getByTestId("csv-visualizer");
+        expect(viz).toHaveAttribute(
+          "data-signed-url",
+          "https://storage.example.com/signed",
+        );
+        expect(viz).toHaveAttribute("data-type", "tsv");
       });
     });
 

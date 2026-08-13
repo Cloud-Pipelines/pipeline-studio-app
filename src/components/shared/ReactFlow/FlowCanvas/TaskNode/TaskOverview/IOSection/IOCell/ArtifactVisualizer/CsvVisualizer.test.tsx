@@ -6,21 +6,39 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CsvVisualizerRemote, CsvVisualizerValue } from "./CsvVisualizer";
 
+type DownloadFull = { filename: string; getBlob: () => Promise<Blob> };
+
+// The real TableVisualizer owns the download click; here we just capture the
+// `downloadFull` prop so tests can exercise its `getBlob` contract directly.
+let lastDownloadFull: DownloadFull | undefined;
+
 vi.mock("./TableVisualizer", () => ({
   default: ({
     data,
     isFullscreen,
+    totalRows,
+    columnCount,
+    downloadFull,
   }: {
     data: { columns: { name: string }[]; rows: string[][] };
     isFullscreen: boolean;
-  }) => (
-    <div
-      data-testid="table-visualizer"
-      data-fullscreen={isFullscreen}
-      data-headers={data.columns.map((c) => c.name).join(",")}
-      data-row-count={data.rows.length}
-    />
-  ),
+    totalRows?: number;
+    columnCount?: number;
+    downloadFull?: DownloadFull;
+  }) => {
+    lastDownloadFull = downloadFull;
+    return (
+      <div
+        data-testid="table-visualizer"
+        data-fullscreen={isFullscreen}
+        data-headers={data.columns.map((c) => c.name).join(",")}
+        data-row-count={data.rows.length}
+        data-total-rows={totalRows}
+        data-column-count={columnCount}
+        data-download-filename={downloadFull?.filename}
+      />
+    );
+  },
 }));
 
 const queryClient = new QueryClient({
@@ -49,13 +67,15 @@ const renderWithSuspense = (ui: ReactElement) =>
 
 beforeEach(() => {
   queryClient.clear();
+  lastDownloadFull = undefined;
 });
 
 describe("CsvVisualizerValue", () => {
-  it("parses CSV and renders TableVisualizer", () => {
+  it("parses CSV and renders TableVisualizer with row/column stats", () => {
     renderWithQuery(
       <CsvVisualizerValue
         value={"Name,Age\nAlice,30\nBob,25"}
+        type="csv"
         isFullscreen={false}
       />,
     );
@@ -63,12 +83,28 @@ describe("CsvVisualizerValue", () => {
     const table = screen.getByTestId("table-visualizer");
     expect(table).toHaveAttribute("data-headers", "Name,Age");
     expect(table).toHaveAttribute("data-row-count", "2");
+    expect(table).toHaveAttribute("data-total-rows", "2");
+    expect(table).toHaveAttribute("data-column-count", "2");
+  });
+
+  it("offers the inline value itself as the full-dataset download", async () => {
+    const value = "Name,Age\nAlice,30\nBob,25";
+    renderWithQuery(
+      <CsvVisualizerValue value={value} type="csv" isFullscreen={false} />,
+    );
+
+    // The inline value is served as-is on demand — no fetch, no mount-time URL.
+    expect(lastDownloadFull?.filename).toBe("data.csv");
+    const blob = await lastDownloadFull?.getBlob();
+    expect(await blob?.text()).toBe(value);
+    expect(blob?.type).toBe("text/csv;charset=utf-8");
   });
 
   it("parses TSV with tab delimiter", () => {
     renderWithQuery(
       <CsvVisualizerValue
         value={"Name\tAge\nAlice\t30"}
+        type="tsv"
         isFullscreen={false}
       />,
     );
@@ -77,15 +113,29 @@ describe("CsvVisualizerValue", () => {
     expect(table).toHaveAttribute("data-headers", "Name,Age");
   });
 
+  it("downloads TSV artifacts as .tsv with a tab-separated MIME type", async () => {
+    const value = "Name\tAge\nAlice\t30";
+    renderWithQuery(
+      <CsvVisualizerValue value={value} type="tsv" isFullscreen={false} />,
+    );
+
+    expect(lastDownloadFull?.filename).toBe("data.tsv");
+    const blob = await lastDownloadFull?.getBlob();
+    expect(await blob?.text()).toBe(value);
+    expect(blob?.type).toBe("text/tab-separated-values;charset=utf-8");
+  });
+
   it("shows 'No data' for empty CSV", () => {
-    renderWithQuery(<CsvVisualizerValue value="" isFullscreen={false} />);
+    renderWithQuery(
+      <CsvVisualizerValue value="" type="csv" isFullscreen={false} />,
+    );
     expect(screen.getByText("No data")).toBeInTheDocument();
   });
 
   it("does not fetch", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     renderWithQuery(
-      <CsvVisualizerValue value="a,b\n1,2" isFullscreen={false} />,
+      <CsvVisualizerValue value="a,b\n1,2" type="csv" isFullscreen={false} />,
     );
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
@@ -102,6 +152,7 @@ describe("CsvVisualizerRemote", () => {
     renderWithSuspense(
       <CsvVisualizerRemote
         signedUrl="https://storage.example.com/data.csv"
+        type="csv"
         isFullscreen={false}
       />,
     );
@@ -124,6 +175,7 @@ describe("CsvVisualizerRemote", () => {
     renderWithSuspense(
       <CsvVisualizerRemote
         signedUrl="https://storage.example.com/forbidden.csv"
+        type="csv"
         isFullscreen={false}
       />,
     );
@@ -145,6 +197,7 @@ describe("CsvVisualizerRemote", () => {
     renderWithSuspense(
       <CsvVisualizerRemote
         signedUrl="https://storage.example.com/data.csv"
+        type="csv"
         isFullscreen={true}
       />,
     );
@@ -155,6 +208,59 @@ describe("CsvVisualizerRemote", () => {
         "true",
       );
     });
+
+    vi.restoreAllMocks();
+  });
+
+  it("fetches the signed URL for the full-dataset download", async () => {
+    const fullBlob = new Blob(["X,Y\n1,2\n3,4"], { type: "text/csv" });
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve("X,Y\n1,2\n3,4"),
+      blob: () => Promise.resolve(fullBlob),
+    } as unknown as Response);
+    const signedUrl = "https://storage.example.com/data.csv";
+
+    renderWithSuspense(
+      <CsvVisualizerRemote
+        signedUrl={signedUrl}
+        type="csv"
+        isFullscreen={false}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("table-visualizer")).toBeInTheDocument(),
+    );
+
+    expect(lastDownloadFull?.filename).toBe("data.csv");
+    fetchSpy.mockClear();
+    const blob = await lastDownloadFull?.getBlob();
+    expect(fetchSpy).toHaveBeenCalledWith(signedUrl, undefined);
+    expect(blob).toBe(fullBlob);
+
+    vi.restoreAllMocks();
+  });
+
+  it("names the TSV download data.tsv", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve("X\tY\n1\t2"),
+    } as Response);
+
+    renderWithSuspense(
+      <CsvVisualizerRemote
+        signedUrl="https://storage.example.com/data.tsv"
+        type="tsv"
+        isFullscreen={false}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("table-visualizer")).toBeInTheDocument(),
+    );
+
+    expect(lastDownloadFull?.filename).toBe("data.tsv");
 
     vi.restoreAllMocks();
   });
