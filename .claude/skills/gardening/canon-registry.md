@@ -55,6 +55,41 @@ Each entry provides:
 
 ---
 
+## icon-usage — rendering an icon glyph
+
+- **conceptId:** `icon-usage`
+- **canonical:** `Icon` from `@/components/ui/icon` — `<Icon name="ChevronRight" size="lg" />`. It maps a
+  Lucide name to the component and applies the shared size scale, so call sites never hand-size an icon.
+- **detector (`.tsx`/`.ts` under `src`):** any of an import from `lucide-react`, an import of `Icon` from
+  `@/components/ui/icon`, an import from `react-icons/*`, or a literal `<svg`.
+- **deviations (migrate onto canonical):**
+  - a direct `lucide-react` import whose JSX carries a size class **on the `Icon` scale**
+    (`size-3`/`3.5`/`4`/`5`/`6`, or the `w-*`/`h-*` pair) — move the size to the `size` prop
+    (`xs`/`sm`/`md`/`lg`/`xl`) and keep the remaining classes — **apply: yes**, identical computed size;
+  - a direct `lucide-react` import with **no** size class — Lucide's own default is 24px, so this needs
+    `size="xl"` to stay put; `size="md"` (the default) would silently shrink it to 16px — **apply: yes**
+    with `size="xl"`, never a bare swap;
+  - a size class **off** the scale (`w-2`, `h-8`, `w-12`) — **apply: flag.** No variant matches, and
+    `iconVariants` emits `!w-*`/`!h-*` (`!important`, which `twMerge` does not dedupe against a later
+    `size-*`), so the class cannot win. Migrating needs either a new scale step or an accepted size
+    change — a human's call;
+  - a **computed** `className` (`className={cn(…)}`) around a Lucide icon — **apply: flag**; the size
+    cannot be read statically, so preservation cannot be proven.
+- **conventionRef:** `ui-primitives#icons`
+- **exceptions:**
+  - **Non-Lucide glyphs.** `Icon`'s `name` is `keyof typeof icons` from `lucide-react`, so it structurally
+    cannot render anything else. Brand and language logos come from `react-icons` (`FaPython`,
+    `SiGnubash`, `SiRuby`, `TbBrandJavascript`, `FaGoogleDrive`) and Lucide has no equivalent. KEEP, and
+    do not re-flag them as unmigrated icons.
+  - **`src/components/ui/**`.** shadcn/ui primitives (`dialog`, `select`, `sheet`, `command`, `calendar`,
+    `checkbox`, `breadcrumb`, `date-picker`) import their own Lucide glyphs and are CLI-regenerable — a
+    hand edit is overwritten by the next `shadcn add`. `icon.tsx` **is** the primitive. KEEP.
+  - **Raw `<svg>` that is not an icon.** `<defs>`/`<marker>` arrowhead definitions
+    (`FlowCanvas/Edges/*.tsx`), the `Spinner` primitive's own markup, and bespoke glyphs with no library
+    equivalent (the resize grip in `windows/components/FloatingWindow.tsx`). KEEP.
+
+---
+
 <!--
 Candidates a run may PROPOSE (flag-only) until a human blesses them here. Do NOT pre-declare these
 canonical — only add an entry once one implementation is actually dominant AND a convention-skill
@@ -63,5 +98,4 @@ rule authorizes it:
   - confirm / destructive-action dialogs
   - toast / notification calls
   - date & number formatting entrypoints
-  - icon usage (raw lucide import vs the `Icon` primitive)
 -->
