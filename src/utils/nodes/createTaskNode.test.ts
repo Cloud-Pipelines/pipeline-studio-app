@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { TaskNodeData } from "@/types/taskNode";
+import {
+  DEFAULT_TASK_NODE_CALLBACKS,
+  type TaskNodeData,
+} from "@/types/taskNode";
 
 import type { TaskSpec } from "../componentSpec";
 import { createTaskNode } from "./createTaskNode";
@@ -117,6 +120,22 @@ describe("createTaskNode", () => {
       onDuplicate: expect.any(Function),
       onUpgrade: expect.any(Function),
       onSelect: expect.any(Function),
+    });
+  });
+
+  it("injects the task and node id as the first argument of each wrapped callback", () => {
+    const data = nodeData();
+
+    const node = createTaskNode(["train", taskSpec()], data);
+    const callbacks = node.data.callbacks as typeof DEFAULT_TASK_NODE_CALLBACKS;
+
+    callbacks.onDelete();
+    callbacks.setArguments({ epochs: "5" });
+
+    const ids = { taskId: "train", nodeId: "task_train" };
+    expect(data.nodeCallbacks!.onDelete).toHaveBeenCalledWith(ids);
+    expect(data.nodeCallbacks!.setArguments).toHaveBeenCalledWith(ids, {
+      epochs: "5",
     });
   });
 

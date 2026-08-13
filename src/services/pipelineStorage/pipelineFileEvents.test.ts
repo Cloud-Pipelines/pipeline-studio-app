@@ -3,20 +3,32 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   emitPipelineFileChanged,
   getLastForeignWriteTime,
+  type PipelineFileChange,
   subscribePipelineFileChanged,
 } from "./pipelineFileEvents";
 
 // The module keeps its write times in module scope, so every test uses its own
 // storage key rather than resetting shared state.
 
+const unsubscribes: (() => void)[] = [];
+
+// Registers the teardown up front so a failing assertion cannot leak a
+// listener into the module-scoped EventTarget for the rest of the file.
+const subscribe = (listener: (detail: PipelineFileChange) => void) => {
+  const unsubscribe = subscribePipelineFileChanged(listener);
+  unsubscribes.push(unsubscribe);
+  return unsubscribe;
+};
+
 afterEach(() => {
+  unsubscribes.splice(0).forEach((unsubscribe) => unsubscribe());
   vi.useRealTimers();
 });
 
 describe("subscribePipelineFileChanged", () => {
   it("delivers the emitted change to the listener", () => {
     const listener = vi.fn();
-    const unsubscribe = subscribePipelineFileChanged(listener);
+    subscribe(listener);
 
     emitPipelineFileChanged({ storageKey: "deliver", source: "v1" });
 
@@ -25,13 +37,11 @@ describe("subscribePipelineFileChanged", () => {
       storageKey: "deliver",
       source: "v1",
     });
-
-    unsubscribe();
   });
 
   it("stops delivering once unsubscribed", () => {
     const listener = vi.fn();
-    const unsubscribe = subscribePipelineFileChanged(listener);
+    const unsubscribe = subscribe(listener);
 
     unsubscribe();
     emitPipelineFileChanged({ storageKey: "unsubscribed", source: "v2" });
@@ -42,16 +52,13 @@ describe("subscribePipelineFileChanged", () => {
   it("notifies every active listener", () => {
     const first = vi.fn();
     const second = vi.fn();
-    const unsubscribeFirst = subscribePipelineFileChanged(first);
-    const unsubscribeSecond = subscribePipelineFileChanged(second);
+    subscribe(first);
+    subscribe(second);
 
     emitPipelineFileChanged({ storageKey: "fanout", source: "v1" });
 
     expect(first).toHaveBeenCalledTimes(1);
     expect(second).toHaveBeenCalledTimes(1);
-
-    unsubscribeFirst();
-    unsubscribeSecond();
   });
 });
 
