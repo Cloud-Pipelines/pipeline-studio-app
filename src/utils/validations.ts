@@ -582,7 +582,7 @@ const validateCircularDependencies = (
           argValue !== null &&
           "taskOutput" in argValue
         ) {
-          const dependentTaskId = (argValue as any).taskOutput.taskId;
+          const dependentTaskId = argValue.taskOutput.taskId;
           if (hasCycle(dependentTaskId)) {
             return true;
           }
