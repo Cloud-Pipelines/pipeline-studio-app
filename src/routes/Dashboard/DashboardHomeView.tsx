@@ -62,7 +62,7 @@ const RecentlyViewedPreviewRow = ({ item }: { item: RecentItem }) => (
         </TooltipTrigger>
         <TooltipContent>{item.name}</TooltipContent>
       </Tooltip>
-      <Text size="xs" className="text-muted-foreground shrink-0">
+      <Text size="xs" tone="subdued" className="shrink-0">
         {formatRelativeTime(new Date(item.timestamp))}
       </Text>
     </Link>
@@ -144,7 +144,7 @@ const RecentComponentPreviewRow = ({
           </TooltipTrigger>
           <TooltipContent>{item.name}</TooltipContent>
         </Tooltip>
-        <Text size="xs" className="text-muted-foreground shrink-0">
+        <Text size="xs" tone="subdued" className="shrink-0">
           {formatRelativeTime(new Date(item.timestamp))}
         </Text>
       </Link>
