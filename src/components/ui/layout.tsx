@@ -8,7 +8,7 @@ import {
 
 import { cn } from "@/lib/utils";
 
-type StackElement = "div" | "span" | "li" | "ol" | "ul";
+type StackElement = "div" | "span" | "li" | "ol" | "ul" | "dl";
 
 const blockStackVariants = cva("flex flex-col w-full", {
   variants: {
@@ -28,7 +28,9 @@ const blockStackVariants = cva("flex flex-col w-full", {
     },
     gap: {
       "0": "gap-0",
+      "0.5": "gap-0.5",
       "1": "gap-1",
+      "1.5": "gap-1.5",
       "2": "gap-2",
       "3": "gap-3",
       "4": "gap-4",
@@ -41,13 +43,11 @@ const blockStackVariants = cva("flex flex-col w-full", {
 
 interface BlockStackProps
   extends AriaAttributes, VariantProps<typeof blockStackVariants> {
-  /** HTML Element type
-   * @default 'div'
-   */
   as?: StackElement;
   /** Fill the container and center content */
   fill?: boolean;
-  /** Additional CSS classes */
+  /** Grow to fill the main axis of a flex parent and host a scroll region. */
+  grow?: boolean;
   className?: string;
 }
 
@@ -58,6 +58,7 @@ export const BlockStack = forwardRef<
   const {
     as: Element = "div",
     fill = false,
+    grow = false,
     className = "",
     align = fill ? "center" : "start",
     inlineAlign = fill ? "center" : "start",
@@ -70,6 +71,7 @@ export const BlockStack = forwardRef<
     <Element
       className={cn(
         { "h-full w-full": fill },
+        { "min-h-0 min-w-0 flex-1": grow },
         blockStackVariants({ align, inlineAlign, gap }),
         className.split(" "),
       )}
@@ -102,7 +104,9 @@ const inlineStackVariants = cva("flex flex-row", {
     },
     gap: {
       "0": "gap-0",
+      "0.5": "gap-0.5",
       "1": "gap-1",
+      "1.5": "gap-1.5",
       "2": "gap-2",
       "3": "gap-3",
       "4": "gap-4",
@@ -119,13 +123,11 @@ const inlineStackVariants = cva("flex flex-row", {
 
 interface InlineStackProps
   extends AriaAttributes, VariantProps<typeof inlineStackVariants> {
-  /** HTML Element type
-   * @default 'div'
-   */
   as?: StackElement;
   /** Fill the container and center content */
   fill?: boolean;
-  /** Additional CSS classes */
+  /** Grow to fill the main axis of a flex parent and host a scroll region. */
+  grow?: boolean;
   className?: string;
 }
 
@@ -136,6 +138,7 @@ export const InlineStack = forwardRef<
   const {
     as: Element = "div",
     fill = false,
+    grow = false,
     align = fill ? "center" : "start",
     blockAlign = "center",
     gap = "0",
@@ -149,6 +152,7 @@ export const InlineStack = forwardRef<
     <Element
       className={cn(
         { "h-full w-full": fill },
+        { "min-h-0 min-w-0 flex-1": grow },
         inlineStackVariants({ align, blockAlign, gap, wrap }),
         className,
       )}

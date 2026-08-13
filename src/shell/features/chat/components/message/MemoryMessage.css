@@ -1,0 +1,28 @@
+/* Memory-message scope: re-point the markdown tokens (code chips, quote and
+   table borders) to the violet accent family at low strength so a remembered
+   note's content blends into its lavender card instead of mimicking a normal
+   agent message. Cascades to nested markdown via custom-property inheritance.
+   Applied by the `memory` variant in ShellMessageBubble. */
+.message-memory {
+  --message-code: color-mix(
+    in oklch,
+    var(--accent-foreground) 10%,
+    transparent
+  );
+  --message-code-foreground: var(--accent-foreground);
+  --message-quote-border: color-mix(
+    in oklch,
+    var(--accent-foreground) 35%,
+    transparent
+  );
+  --message-table-border: color-mix(
+    in oklch,
+    var(--accent-foreground) 20%,
+    transparent
+  );
+  --message-table-header: color-mix(
+    in oklch,
+    var(--accent-foreground) 12%,
+    transparent
+  );
+}

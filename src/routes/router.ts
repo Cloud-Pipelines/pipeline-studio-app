@@ -16,6 +16,9 @@ import { AddSecretView } from "@/components/shared/SecretsManagement/components/
 import { ReplaceSecretView } from "@/components/shared/SecretsManagement/components/ReplaceSecretView";
 import { SecretsListView } from "@/components/shared/SecretsManagement/components/SecretsListView";
 import { isFlagEnabled } from "@/components/shared/Settings/useFlags";
+import { SessionChatPage } from "@/shell/routes/SessionChatPage";
+import { SessionsPage } from "@/shell/routes/SessionsPage";
+import { ShellLayout } from "@/shell/routes/ShellLayout";
 import { BASE_URL, IS_GITHUB_PAGES } from "@/utils/constants";
 
 import RootLayout from "../components/layout/RootLayout";
@@ -369,6 +372,37 @@ const pipelineFoldersRoute = createRoute({
   component: PipelineFoldersPage,
 });
 
+// The tangent-shell UI. Its own layout route rather than a dashboard child: it
+// is a full-page, panel-filling view, and it owns the lobby socket that keeps
+// live session status alive across navigations within /shell.
+const shellLayoutRoute = createRoute({
+  getParentRoute: () => mainLayout,
+  path: APP_ROUTES.SHELL,
+  component: ShellLayout,
+  beforeLoad: () => {
+    if (!isFlagEnabled("agent-shell")) {
+      throw redirect({ to: APP_ROUTES.DASHBOARD });
+    }
+  },
+});
+
+const shellSessionsRoute = createRoute({
+  getParentRoute: () => shellLayoutRoute,
+  path: "/",
+  component: SessionsPage,
+});
+
+const shellSessionChatRoute = createRoute({
+  getParentRoute: () => shellLayoutRoute,
+  path: "/$sessionId",
+  component: SessionChatPage,
+});
+
+const shellRouteTree = shellLayoutRoute.addChildren([
+  shellSessionsRoute,
+  shellSessionChatRoute,
+]);
+
 const artifactPreviewRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: APP_ROUTES.ARTIFACT_PREVIEW,
@@ -406,6 +440,7 @@ const appRouteTree = mainLayout.addChildren([
   pipelineFoldersRoute,
   artifactPreviewRoute,
   tourRoute,
+  shellRouteTree,
 ]);
 
 const rootRouteTree = rootRoute.addChildren([

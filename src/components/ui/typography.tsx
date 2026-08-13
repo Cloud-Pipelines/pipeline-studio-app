@@ -1,5 +1,10 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import type { AriaAttributes, AriaRole, PropsWithChildren } from "react";
+import type {
+  AriaAttributes,
+  AriaRole,
+  HTMLAttributes,
+  PropsWithChildren,
+} from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -27,10 +32,16 @@ const textVariants = cva("", {
     tone: {
       inherit: "text-foreground",
       subdued: "text-muted-foreground",
+      strong: "text-foreground",
+      weak: "text-muted-foreground/70",
       critical: "text-destructive",
-      inverted: "text-inverted",
+      inverted: "text-background",
       info: "text-foreground underline decoration-dotted",
       warning: "text-warning",
+      success: "text-success",
+      accent: "text-accent-foreground",
+      magic: "text-accent-foreground",
+      heading: "text-message-heading",
     },
     size: {
       xs: "text-xs",
@@ -45,54 +56,107 @@ const textVariants = cva("", {
       semibold: "font-semibold",
       bold: "font-bold",
       light: "font-light",
+      medium: "font-medium",
+    },
+    align: {
+      start: "text-start",
+      center: "text-center",
+      end: "text-end",
+      justify: "text-justify",
+    },
+    wrap: {
+      normal: "whitespace-normal",
+      "break-anywhere": "wrap-anywhere",
+      "break-word": "wrap-break-word",
+      pre: "whitespace-pre",
+      "pre-wrap": "whitespace-pre-wrap",
+      nowrap: "whitespace-nowrap",
+    },
+    italic: {
+      true: "italic",
+      false: "",
+    },
+    leading: {
+      tight: "leading-tight",
+      normal: "leading-normal",
+      relaxed: "leading-relaxed",
+    },
+    transform: {
+      none: "",
+      uppercase: "uppercase",
+      lowercase: "lowercase",
+      capitalize: "capitalize",
+    },
+    decoration: {
+      none: "no-underline",
+      underline: "underline",
     },
   },
 });
 
+type TextVariantProps = VariantProps<typeof textVariants>;
+
 interface TextProps
-  extends PropsWithChildren<AriaAttributes>, VariantProps<typeof textVariants> {
-  /**
-   * The role of the text element.
-   * @default 'text'
-   */
+  extends PropsWithChildren<AriaAttributes>, TextVariantProps {
   role?: AriaRole;
 
-  /** HTML Element type
-   * @default 'span'
-   */
   as?: TextElement;
 
-  /** Custom class name
-   * @default ''
-   */
-  className?: string;
+  /** Truncate to one line (true) or clamp to N lines. */
+  truncate?: boolean | number;
 
-  /** HTML id used to associate text with form controls and ARIA descriptions. */
+  title?: string;
+
   id?: string;
 
-  /** Native browser tooltip text */
-  title?: string;
+  className?: string;
 }
 
-/**
- * Text component. Wraps any text element and provides a set of default styles.
- * @param param0
- * @returns
- */
+function truncateClass(truncate: boolean | number | undefined): string {
+  if (truncate === true) return "truncate";
+  if (typeof truncate === "number" && truncate > 0) {
+    if (truncate === 1) return "truncate";
+    return `line-clamp-${truncate} break-words`;
+  }
+  return "";
+}
+
 export function Text({
   as: Element = "span",
   tone = "inherit",
   size = "md",
   weight = "regular",
   font = "default",
+  align,
+  wrap,
+  italic,
+  leading,
+  transform,
+  decoration,
+  truncate,
   children,
   className,
   ...rest
 }: TextProps) {
   return (
     <Element
-      className={cn(textVariants({ tone, size, weight, font }), className)}
-      {...rest}
+      className={cn(
+        textVariants({
+          tone,
+          size,
+          weight,
+          font,
+          align,
+          wrap,
+          italic,
+          leading,
+          transform,
+          decoration,
+        }),
+        truncateClass(truncate),
+        className,
+      )}
+      {...(rest as HTMLAttributes<HTMLElement>)}
     >
       {children}
     </Element>
@@ -101,11 +165,6 @@ export function Text({
 
 Text.displayName = "Text";
 
-/**
- * Paragraph component. Wraps the Text component and sets the element to 'p'.
- * @param param0
- * @returns
- */
 export function Paragraph({ children, ...rest }: TextProps) {
   return (
     <Text as="p" {...rest}>
@@ -116,20 +175,67 @@ export function Paragraph({ children, ...rest }: TextProps) {
 
 Paragraph.displayName = "Paragraph";
 
-/**
- * Heading component. Wraps the Text component and sets the element to 'h1', 'h2', 'h3', 'h4', 'h5', or 'h6'.
- * @param param0
- * @returns
- */
+type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+interface HeadingProps extends PropsWithChildren {
+  level: HeadingLevel;
+  size?: TextVariantProps["size"];
+  weight?: TextVariantProps["weight"];
+  tone?: TextVariantProps["tone"];
+  font?: TextVariantProps["font"];
+  truncate?: boolean | number;
+  align?: TextVariantProps["align"];
+  wrap?: TextVariantProps["wrap"];
+  className?: string;
+}
+
+const HEADING_SIZE: Record<
+  HeadingLevel,
+  NonNullable<TextVariantProps["size"]>
+> = {
+  1: "md",
+  2: "sm",
+  3: "sm",
+  4: "sm",
+  5: "sm",
+  6: "sm",
+};
+
+const HEADING_WEIGHT: Record<
+  HeadingLevel,
+  NonNullable<TextVariantProps["weight"]>
+> = {
+  1: "semibold",
+  2: "semibold",
+  3: "regular",
+  4: "regular",
+  5: "regular",
+  6: "regular",
+};
+
 export const Heading = ({
   children,
   level = 1,
-}: PropsWithChildren<{ level: 1 | 2 | 3 | 4 | 5 | 6 }>) => {
+  size,
+  weight,
+  tone,
+  font,
+  truncate,
+  align,
+  wrap,
+  className,
+}: HeadingProps) => {
   return (
     <Text
       as={`h${level}`}
-      size={level === 1 ? "md" : "sm"}
-      weight={level < 3 ? "semibold" : "regular"}
+      size={size ?? HEADING_SIZE[level]}
+      weight={weight ?? HEADING_WEIGHT[level]}
+      tone={tone}
+      font={font}
+      truncate={truncate}
+      align={align}
+      wrap={wrap}
+      className={className}
       role="heading"
       aria-level={level}
     >

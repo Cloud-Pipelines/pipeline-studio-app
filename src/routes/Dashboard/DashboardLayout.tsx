@@ -49,6 +49,12 @@ const COMPONENT_SEARCH_ITEM: SidebarItem = {
   icon: "PackageSearch",
 };
 
+const AGENT_SHELL_ITEM: SidebarItem = {
+  to: APP_ROUTES.SHELL,
+  label: "Agent Shell",
+  icon: "Bot",
+};
+
 const navItemClass = (isActive: boolean) =>
   cn(
     "w-full px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-accent",
@@ -58,16 +64,21 @@ const navItemClass = (isActive: boolean) =>
 export function DashboardLayout() {
   const requiresAuthorization = isAuthorizationRequired();
   const isComponentSearchEnabled = useFlagValue("component-search-v2");
+  const isAgentShellEnabled = useFlagValue("agent-shell");
 
   const { shouldShowOnboarding } = useOnboarding();
 
-  const baseItems = isComponentSearchEnabled
+  const searchItems = isComponentSearchEnabled
     ? BASE_SIDEBAR_ITEMS.map((item) =>
         item.to === APP_ROUTES.DASHBOARD_COMPONENTS
           ? COMPONENT_SEARCH_ITEM
           : item,
       )
     : BASE_SIDEBAR_ITEMS;
+
+  const baseItems = isAgentShellEnabled
+    ? [...searchItems, AGENT_SHELL_ITEM]
+    : searchItems;
 
   const sidebarItems: SidebarItem[] = shouldShowOnboarding
     ? [

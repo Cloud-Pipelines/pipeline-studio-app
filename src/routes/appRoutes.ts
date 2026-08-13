@@ -6,6 +6,7 @@ const RUNS_V2_BASE_PATH = "/runs-v2";
 const SETTINGS_PATH = "/settings";
 const IMPORT_PATH = "/app/editor/import-pipeline";
 const TOUR_BASE_PATH = "/tour";
+const SHELL_BASE_PATH = "/shell";
 
 export const APP_ROUTES = {
   HOME: "/",
@@ -46,4 +47,6 @@ export const APP_ROUTES = {
   PIPELINE_FOLDERS: "/pipeline-folders",
   PLAYGROUND: "/playground",
   ARTIFACT_PREVIEW: "/artifact/$artifactId",
+  SHELL: SHELL_BASE_PATH,
+  SHELL_SESSION: `${SHELL_BASE_PATH}/$sessionId`,
 } as const;
