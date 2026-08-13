@@ -1,9 +1,7 @@
 interface TaskColorPalette {
   background: string;
-  /** Darker accent for borders — same hue, higher saturation, lower lightness */
   border: string;
   sectionBg: string;
-  /** WCAG-appropriate text color (black or white) */
   text: string;
 }
 
@@ -48,9 +46,11 @@ export function deriveColorPalette(
     };
   }
 
+  // Border darkened to 35% of the card's lightness, saturation nudged up.
   const borderL = Math.max(l * 0.35, 0.12);
   const borderS = Math.min(s * 1.2, 1);
 
+  // Section overlay desaturated and lightened 70% of the way toward white.
   const sectionL = Math.min(l + (1 - l) * 0.7, 0.92);
   const sectionS = s * 0.35;
 
