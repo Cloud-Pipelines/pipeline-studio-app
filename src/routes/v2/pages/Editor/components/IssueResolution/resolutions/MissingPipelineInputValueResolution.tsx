@@ -76,7 +76,7 @@ export const MissingPipelineInputValueResolution = observer(
                 size="sm"
                 className="text-muted-foreground"
               />
-              <Text size="xs" className="text-muted-foreground">
+              <Text size="xs" tone="subdued">
                 Use as default
               </Text>
             </InlineStack>
