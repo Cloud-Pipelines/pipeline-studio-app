@@ -64,8 +64,14 @@ Each entry provides:
   `@/components/ui/icon`, an import from `react-icons/*`, or a literal `<svg`.
 - **deviations (migrate onto canonical):**
   - a direct `lucide-react` import whose JSX carries a size class **on the `Icon` scale**
-    (`size-3`/`3.5`/`4`/`5`/`6`, or the `w-*`/`h-*` pair) — move the size to the `size` prop
-    (`xs`/`sm`/`md`/`lg`/`xl`) and keep the remaining classes — **apply: yes**, identical computed size;
+    (`size-3`/`3.5`/`4`/`5`/`6`, or a matched `w-*`/`h-*` pair at the same step) — move the size to the
+    `size` prop (`xs`/`sm`/`md`/`lg`/`xl`) and keep the remaining classes — **apply: yes**, identical
+    computed size;
+  - a **lone** `w-*` or `h-*` without its partner, or a mismatched pair (`w-4 h-5`) — **apply: flag.**
+    Only the constrained axis comes from the class; the other falls back to Lucide's own 24px attribute,
+    so `<ChevronRight className="w-4" />` renders 16×24 and any `size` prop would change it (`size="md"`
+    → 16×16). No such usage exists today, so this bucket should be empty — but it must not be swept in
+    with the matched pair above;
   - a direct `lucide-react` import with **no** size class — Lucide's own default is 24px, so this needs
     `size="xl"` to stay put; `size="md"` (the default) would silently shrink it to 16px — **apply: yes**
     with `size="xl"`, never a bare swap;
