@@ -95,17 +95,11 @@ export class KeyboardStore {
     return [...this.shortcuts.values()].find((shortcut) => shortcut.id === id);
   }
 
-  /**
-   * Returns true when the pressed set matches the given shortcut keys exactly.
-   */
   matchesPressed(keys: ShortcutKeys): boolean {
     if (this.pressed.size !== keys.length) return false;
     return keys.every((k) => this.pressed.has(k));
   }
 
-  /**
-   * Programmatically invoke a registered shortcut by id with optional params.
-   */
   invokeShortcut(id: string, params?: ShortcutParams): void {
     const shortcut = this.getShortcut(id);
     shortcut?.action(new KeyboardEvent("keydown"), params);
