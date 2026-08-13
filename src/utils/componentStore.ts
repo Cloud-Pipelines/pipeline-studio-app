@@ -381,7 +381,6 @@ const addComponentToListByUrl = async (
   const componentRef = await storeComponentFromUrl(url);
 
   if (additionalData) {
-    // Merge additional data into the component reference
     Object.assign(componentRef, additionalData);
   }
 
@@ -412,13 +411,11 @@ const findDuplicateComponent = async (
       return null; // Can't check for duplicates without a name
     }
 
-    // Look for components with the same name
     for (const [, fileEntry] of componentFiles) {
       const existingComponentName = fileEntry.componentRef.spec.name;
 
       if (existingComponentName === targetComponentName) {
         // TODO: This check causing some behavior divergence with ComponentService.
-        // Found a component with the same name, now check if content is identical
         if (fileEntry.componentRef.text === componentRef.text) {
           return fileEntry; // Exact duplicate found
         }
@@ -454,7 +451,6 @@ const addComponentToListByTextWithDuplicateCheck = async (
   const componentRef = await storeComponentText(componentText);
 
   if (additionalData) {
-    // Merge additional data into the component reference
     Object.assign(componentRef, additionalData);
   }
 
@@ -472,7 +468,6 @@ const addComponentToListByTextWithDuplicateCheck = async (
     }
   }
 
-  // No duplicate found or duplicates are allowed, proceed with normal addition
   const fileEntry = await addComponentRefToList(
     listName,
     componentRef,
@@ -492,7 +487,6 @@ export const updateComponentInListByText = async (
 ) => {
   const componentRef = await storeComponentText(componentText);
   if (additionalData) {
-    // Merge additional data into the component reference
     Object.assign(componentRef, additionalData);
   }
   return updateComponentRefInList(listName, componentRef, fileName);
@@ -526,7 +520,6 @@ export const renameComponentFileInList = async (
     storeName: tableName,
   });
 
-  // Check if the old file exists
   let fileEntry =
     await componentListDb.getItem<ComponentFileEntry>(oldFileName);
   if (!fileEntry) {
@@ -548,7 +541,6 @@ export const renameComponentFileInList = async (
     }
   }
 
-  // Check if the new file name is already taken
   const existingNewFile =
     await componentListDb.getItem<ComponentFileEntry>(newFileName);
   if (existingNewFile) {
@@ -559,10 +551,8 @@ export const renameComponentFileInList = async (
 
   fileEntry.componentRef.spec.name = newFileName;
 
-  // Update the file entry's name
   const updatedFileEntry = { ...fileEntry, name: newFileName };
 
-  // Remove the old entry and add the new one
   await componentListDb.removeItem(oldFileName);
   await componentListDb.setItem(newFileName, updatedFileEntry);
 
