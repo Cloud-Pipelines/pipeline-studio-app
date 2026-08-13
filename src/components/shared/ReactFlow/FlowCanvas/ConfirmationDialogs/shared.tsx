@@ -1,7 +1,8 @@
+import { Paragraph } from "@/components/ui/typography";
 import type { ArgumentType } from "@/utils/componentSpec";
 
 export const thisCannotBeUndone = (
-  <p className="text-muted-foreground">This cannot be undone.</p>
+  <Paragraph tone="subdued">This cannot be undone.</Paragraph>
 );
 
 export function getArgumentDetails(
