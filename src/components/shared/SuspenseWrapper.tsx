@@ -10,6 +10,7 @@ import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
+import { reportError } from "@/services/errorManagement/bugsnag";
 
 import TooltipButton from "./Buttons/TooltipButton";
 
@@ -50,7 +51,16 @@ export const SuspenseWrapper = ({
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
-        <ErrorBoundary onReset={reset} fallbackRender={errorFallback}>
+        <ErrorBoundary
+          onReset={reset}
+          onError={(error, info) =>
+            reportError(error, {
+              boundary: "SuspenseWrapper",
+              componentStack: info.componentStack,
+            })
+          }
+          fallbackRender={errorFallback}
+        >
           <Suspense fallback={fallbackMarkup}>{children}</Suspense>
         </ErrorBoundary>
       )}
