@@ -154,9 +154,6 @@ export function hasPersistedLayout(): boolean {
   return loadWindowLayout() !== null;
 }
 
-/**
- * Get persisted state for a specific window ID.
- */
 export function getPersistedWindowState(
   id: string,
 ): PersistedWindowState | null {
