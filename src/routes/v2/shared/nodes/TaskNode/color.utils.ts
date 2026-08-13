@@ -1,9 +1,7 @@
 interface TaskColorPalette {
-  /** The original selected color */
   background: string;
   /** Darker accent for borders — same hue, higher saturation, lower lightness */
   border: string;
-  /** Subtle tinted background for input/output sections */
   sectionBg: string;
   /** WCAG-appropriate text color (black or white) */
   text: string;
@@ -50,11 +48,9 @@ export function deriveColorPalette(
     };
   }
 
-  // Border: darken by 35% of current lightness, boost saturation slightly
   const borderL = Math.max(l * 0.35, 0.12);
   const borderS = Math.min(s * 1.2, 1);
 
-  // Section background: desaturate and lighten toward white
   const sectionL = Math.min(l + (1 - l) * 0.7, 0.92);
   const sectionS = s * 0.35;
 
