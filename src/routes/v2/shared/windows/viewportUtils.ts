@@ -57,7 +57,6 @@ export function getFloatingViewportBounds(
   };
 }
 
-/** True when the window rect fits entirely inside the usable bounds. */
 export function isFullyWithinViewport(
   position: Position,
   size: Size,
