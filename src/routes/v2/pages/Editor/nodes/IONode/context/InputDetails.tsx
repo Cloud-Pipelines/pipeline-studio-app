@@ -129,7 +129,7 @@ export const InputDetails = observer(function InputDetails({
                 size="sm"
                 className="text-muted-foreground"
               />
-              <Text size="xs" className="text-muted-foreground">
+              <Text size="xs" tone="subdued">
                 Use as default
               </Text>
             </InlineStack>
@@ -152,7 +152,7 @@ export const InputDetails = observer(function InputDetails({
           <Text size="xs" className="text-gray-400">
             Optional:
           </Text>
-          <Text size="xs" weight="semibold" className="text-muted-foreground">
+          <Text size="xs" weight="semibold" tone="subdued">
             {input.optional ? "Yes" : "No"}
           </Text>
         </InlineStack>
