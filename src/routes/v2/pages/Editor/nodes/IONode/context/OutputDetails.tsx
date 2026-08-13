@@ -65,7 +65,7 @@ export const OutputDetails = observer(function OutputDetails({
             >
               Type
             </InputLabel>
-            <Text size="xs" className="font-mono text-gray-500">
+            <Text size="xs" font="mono" className="text-gray-500">
               {String(output.type)}
             </Text>
           </BlockStack>
