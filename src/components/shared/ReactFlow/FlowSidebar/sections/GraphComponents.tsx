@@ -200,7 +200,7 @@ const GraphComponents = ({
                 <LibraryFolderItem
                   key={library.id}
                   library={getComponentLibrary(library.id)}
-                  icon={library.icon as any /** todo: fix this */}
+                  icon={library.icon}
                 />
               ))}
             </>

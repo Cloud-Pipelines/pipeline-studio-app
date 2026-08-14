@@ -30,7 +30,7 @@ export function SelectedNodesList({ nodes, spec }: SelectedNodesListProps) {
             className="text-xs py-1.5 px-2 bg-slate-50 rounded border border-slate-100 dark:bg-muted dark:border-border"
           >
             <Icon
-              name={getNodeIcon(registry, node.type) as any}
+              name={getNodeIcon(registry, node.type)}
               size="xs"
               className={`shrink-0 ${getNodeIconColor(registry, node.type)}`}
             />

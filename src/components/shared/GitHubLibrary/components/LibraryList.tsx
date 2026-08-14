@@ -35,7 +35,7 @@ export const LibraryList = withSuspenseWrapper(
             >
               <InlineStack gap="1">
                 <Icon
-                  name={library.icon as any /** todo: fix this */}
+                  name={library.icon ?? "Folder"}
                   className="text-gray-400"
                 />
                 <Text>{library.name}</Text>

@@ -7,6 +7,7 @@ import type {
 } from "@xyflow/react";
 import type { ComponentType, MouseEvent } from "react";
 
+import type { IconName } from "@/components/ui/icon";
 import type { ComponentSpec } from "@/models/componentSpec";
 import type { GuidelineOrientation } from "@/models/componentSpec/annotations";
 import type { IdGenerator } from "@/models/componentSpec/factories/idGenerator";
@@ -186,7 +187,7 @@ export interface NodeTypeManifest {
   // -- Display metadata (multi-selection, etc.) -------------------------
 
   displayName?(spec: ComponentSpec, entityId: string): string;
-  readonly icon?: string;
+  readonly icon?: IconName;
   readonly iconColor?: string;
 
   // -- Interactions -----------------------------------------------------
