@@ -13,7 +13,7 @@ import { taskIdToNodeId } from "./nodeIdUtils";
 export const createTaskNode = (
   task: [`${string}`, TaskSpec],
   nodeData: TaskNodeData,
-  readOnly: boolean = false,
+  readOnly?: boolean,
 ) => {
   const nodeType = "task";
 
@@ -36,7 +36,7 @@ export const createTaskNode = (
       taskId,
       highlighted: false,
       callbacks: dynamicCallbacks, // Use these callbacks internally within the node
-      readOnly,
+      readOnly: readOnly ?? nodeData.readOnly ?? false,
     },
     position: position,
     type: nodeType,

@@ -12,7 +12,7 @@ import { inputNameToNodeId } from "./nodeIdUtils";
 export const createInputNode = (
   input: InputSpec,
   nodeData: TaskNodeData,
-  readOnly: boolean = false,
+  readOnly?: boolean,
 ) => {
   const nodeType = "input";
 
@@ -29,7 +29,7 @@ export const createInputNode = (
       ...rest,
       ...nodeData,
       label: name,
-      readOnly,
+      readOnly: readOnly ?? nodeData.readOnly ?? false,
     },
     position: position,
     type: nodeType,

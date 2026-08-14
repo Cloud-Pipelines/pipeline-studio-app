@@ -12,7 +12,7 @@ import { outputNameToNodeId } from "./nodeIdUtils";
 export const createOutputNode = (
   output: OutputSpec,
   nodeData: TaskNodeData,
-  readOnly: boolean = false,
+  readOnly?: boolean,
 ) => {
   const nodeType = "output";
 
@@ -29,7 +29,7 @@ export const createOutputNode = (
       ...rest,
       ...nodeData,
       label: name,
-      readOnly,
+      readOnly: readOnly ?? nodeData.readOnly ?? false,
     },
     position: position,
     type: nodeType,

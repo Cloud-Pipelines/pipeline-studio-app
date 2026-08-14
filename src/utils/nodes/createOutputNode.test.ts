@@ -62,12 +62,14 @@ describe("createOutputNode", () => {
     expect(node.data.annotations).toBeUndefined();
   });
 
-  it("defaults readOnly to false and lets the argument override nodeData", () => {
+  it("resolves readOnly from the argument, then nodeData, then false", () => {
     expect(createOutputNode(output(), {}).data.readOnly).toBe(false);
     expect(createOutputNode(output(), {}, true).data.readOnly).toBe(true);
-    // The readOnly argument is spread last, so it wins over nodeData.readOnly.
     expect(createOutputNode(output(), { readOnly: true }).data.readOnly).toBe(
-      false,
+      true,
     );
+    expect(
+      createOutputNode(output(), { readOnly: true }, false).data.readOnly,
+    ).toBe(false);
   });
 });

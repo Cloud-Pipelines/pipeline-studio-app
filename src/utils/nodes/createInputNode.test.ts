@@ -77,12 +77,14 @@ describe("createInputNode", () => {
     expect(node.data.description).toBe("from nodeData");
   });
 
-  it("defaults readOnly to false and lets the argument override nodeData", () => {
+  it("resolves readOnly from the argument, then nodeData, then false", () => {
     expect(createInputNode(input(), {}).data.readOnly).toBe(false);
     expect(createInputNode(input(), {}, true).data.readOnly).toBe(true);
-    // The readOnly argument is spread last, so it wins over nodeData.readOnly.
     expect(createInputNode(input(), { readOnly: true }).data.readOnly).toBe(
-      false,
+      true,
     );
+    expect(
+      createInputNode(input(), { readOnly: true }, false).data.readOnly,
+    ).toBe(false);
   });
 });

@@ -139,23 +139,28 @@ describe("createTaskNode", () => {
     });
   });
 
-  it("produces empty callbacks when no node callbacks are supplied", () => {
+  it("falls back to no-op callbacks when no node callbacks are supplied", () => {
     const node = createTaskNode(["train", taskSpec()], {});
 
-    expect(node.data.callbacks).toEqual({});
+    expect(node.data.callbacks).toEqual(DEFAULT_TASK_NODE_CALLBACKS);
   });
 
-  it("defaults readOnly to false and lets the argument override nodeData", () => {
+  it("resolves readOnly from the argument, then nodeData, then false", () => {
     const implicit = createTaskNode(["train", taskSpec()], nodeData());
     const explicit = createTaskNode(["train", taskSpec()], nodeData(), true);
-    const overridden = createTaskNode(
+    const inherited = createTaskNode(
       ["train", taskSpec()],
       nodeData({ readOnly: true }),
+    );
+    const argumentWins = createTaskNode(
+      ["train", taskSpec()],
+      nodeData({ readOnly: true }),
+      false,
     );
 
     expect(implicit.data.readOnly).toBe(false);
     expect(explicit.data.readOnly).toBe(true);
-    // The readOnly argument is spread last, so it wins over nodeData.readOnly.
-    expect(overridden.data.readOnly).toBe(false);
+    expect(inherited.data.readOnly).toBe(true);
+    expect(argumentWins.data.readOnly).toBe(false);
   });
 });
