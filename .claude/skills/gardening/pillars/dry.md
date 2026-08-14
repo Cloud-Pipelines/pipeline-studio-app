@@ -34,5 +34,14 @@ This pillar depends on the **global indexes** built in E3 — build them before 
   budget is spent) rather than shipping one sprawling PR — never a forgotten ticket.
 - Only consolidate genuine duplication of _behavior_. Superficially similar code with diverging intent
   (coincidental shape) is a KEEP — forcing it behind one helper couples unrelated concerns.
+- **Standing KEEP: v1 ↔ v2 parallel implementations.** A cluster whose participating files span the v1
+  canvas (`src/components/shared/ReactFlow/**`, and the v1 `src/routes/**` views it serves) and the v2
+  tree (`src/routes/v2/**`) is a **migration in progress**, not accidental duplication — v1 is slated for
+  removal, and coupling the two behind one helper mid-migration is the "diverging intent" case above.
+  Examples seen: `PipelineTags`/`TagsBlock`, `PipelineRun`/`RunViewV2`, `RunDetails`/`RunDetailsContent`,
+  `FlexNodeEditor`/`FlexNodeDetails`, `IONode`/`IONodeCard`.
+  Drop these clusters in E5 — do **not** file them as findings, and do **not** re-raise them as a
+  decision-queue item (#2626 B12 closed this; re-filing it every run is the noise this rule removes).
+  Duplication _within_ v1 or _within_ v2 is still in scope, as is a v1-only or v2-only cluster.
 - New helpers follow project structure: `@/` imports, no barrel exports, placed in the right
   `src/utils|hooks|lib` home with a proper TypeScript signature.
