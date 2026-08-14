@@ -1,5 +1,13 @@
 import { renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type Mock,
+  vi,
+} from "vitest";
 
 import { DOCUMENTATION_URL, PRIVACY_POLICY_URL } from "@/utils/constants";
 
@@ -17,7 +25,7 @@ function clickLink(href: string) {
 }
 
 describe("useDocsVisitTracking", () => {
-  let onVisit: ReturnType<typeof vi.fn>;
+  let onVisit: Mock<() => void>;
 
   beforeEach(() => {
     onVisit = vi.fn();

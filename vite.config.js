@@ -141,14 +141,11 @@ export default defineConfig(({ mode }) => {
       coverage: {
         provider: "v8",
         reporter: ["text", "json", "html"],
+        include: ["src/**/*.{ts,tsx}"],
         exclude: [
-          "node_modules/",
-          "test/",
-          "tests/",
-          "tests/e2e/",
-          "*.test.tsx",
-          "*.test.ts",
-          "*.d.ts",
+          "src/**/*.{test,spec}.{ts,tsx}",
+          "src/**/*.d.ts",
+          "src/api/*.gen.ts",
         ],
       },
     },
