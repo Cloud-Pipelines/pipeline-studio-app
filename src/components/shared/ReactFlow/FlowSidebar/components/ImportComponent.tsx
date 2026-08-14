@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Paragraph } from "@/components/ui/typography";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useAnalytics } from "@/providers/AnalyticsProvider";
 import { useComponentLibrary } from "@/providers/ComponentLibraryProvider";
@@ -225,12 +226,16 @@ const ImportComponent = ({
                         {!selectedFileName && (
                           <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
                             <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                            <p className="text-sm text-gray-600 dark:text-muted-foreground">
+                            <Paragraph tone="subdued" size="sm">
                               Drop your YAML file here or click to browse
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            </Paragraph>
+                            <Paragraph
+                              tone="subdued"
+                              size="xs"
+                              className="mt-1"
+                            >
                               Supports .yaml files
-                            </p>
+                            </Paragraph>
                           </div>
                         )}
                         {selectedFileName && (
@@ -262,9 +267,9 @@ const ImportComponent = ({
                         </Button>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">
+                    <Paragraph tone="subdued" size="sm">
                       Select a YAML file containing a pipeline component
-                    </p>
+                    </Paragraph>
                   </div>
                 </div>
               </TabsContent>
@@ -280,9 +285,9 @@ const ImportComponent = ({
                       onChange={handleUrlChange}
                       disabled={isPending}
                     />
-                    <p className="text-sm text-gray-500">
+                    <Paragraph tone="subdued" size="sm">
                       Enter the URL of a component YAML file
-                    </p>
+                    </Paragraph>
                   </div>
                 </div>
               </TabsContent>

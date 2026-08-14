@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 
+import { Paragraph } from "@/components/ui/typography";
 import { deselectAllNodes } from "@/utils/flowUtils";
 
 import {
@@ -29,7 +30,7 @@ const ContextPanelContext = createRequiredContext<ContextPanelContextType>(
 
 const EMPTY_STATE = (
   <div className="flex items-center justify-center h-full">
-    <p className="text-gray-500">Select an element to see details</p>
+    <Paragraph tone="subdued">Select an element to see details</Paragraph>
   </div>
 );
 
