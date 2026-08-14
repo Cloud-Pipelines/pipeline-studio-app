@@ -43,13 +43,11 @@ export function BetaFeatureWrapper({
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
           <BlockStack gap="1">
-            <Paragraph weight="semibold" className="text-white">
-              {flag.name}
-            </Paragraph>
-            <Paragraph size="xs" className="text-white opacity-90">
+            <Paragraph weight="semibold">{flag.name}</Paragraph>
+            <Paragraph size="xs" className="opacity-90">
               {flag.description}
             </Paragraph>
-            <Paragraph size="xs" className="italic text-white opacity-70">
+            <Paragraph size="xs" className="italic opacity-70">
               Beta feature
             </Paragraph>
           </BlockStack>

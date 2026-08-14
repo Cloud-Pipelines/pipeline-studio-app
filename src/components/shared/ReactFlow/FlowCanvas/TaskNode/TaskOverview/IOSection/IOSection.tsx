@@ -60,7 +60,7 @@ const IOSection = ({ taskSpec, executionId, readOnly }: IOSectionProps) => {
     return (
       <InfoBox title="Error loading artifacts" variant="error">
         <Paragraph className="mb-2">{error.message}</Paragraph>
-        <Paragraph className="text-black italic">
+        <Paragraph className="text-muted-foreground italic">
           {backendStatusString}
         </Paragraph>
       </InfoBox>

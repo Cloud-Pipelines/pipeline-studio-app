@@ -224,7 +224,9 @@ export const RunSection = ({
     return (
       <InfoBox title="Error loading runs" variant="error">
         <div className="mb-2">{error.message}</div>
-        <div className="text-black italic">{backendStatusString}</div>
+        <div className="text-muted-foreground italic">
+          {backendStatusString}
+        </div>
       </InfoBox>
     );
   }

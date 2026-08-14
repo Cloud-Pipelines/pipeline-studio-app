@@ -152,7 +152,7 @@ const Logs = ({
     return (
       <InfoBox title="Error loading logs" variant="error">
         <div className="mb-2">{error.message}</div>
-        <div className="text-black dark:text-muted-foreground italic">
+        <div className="text-muted-foreground italic">
           {backendStatusString}
         </div>
       </InfoBox>
