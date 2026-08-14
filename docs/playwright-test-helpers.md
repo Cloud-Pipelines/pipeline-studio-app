@@ -13,7 +13,6 @@ The Pipeline Studio app provides a comprehensive set of helper functions in `tes
 Creates a new pipeline by navigating to home and clicking the new pipeline button.
 
 ```typescript
-// Usage
 await createNewPipeline(page);
 ```
 
@@ -27,14 +26,13 @@ await createNewPipeline(page);
 
 #### Canvas Actions
 
+- `clickOnCanvas(page, x, y)` - click at coordinates (defaults `x=400`, `y=300`)
+- `panCanvas(page, deltaX, deltaY)` - pan the canvas (defaults `deltaX=50`, `deltaY=50`)
+- `zoomIn(page)`, `zoomOut(page)`, `fitToView(page)` - zoom controls
+
 ```typescript
-// Click on canvas at specific coordinates (defaults: x=400, y=300)
 await clickOnCanvas(page, 400, 300);
-
-// Pan the canvas (defaults: deltaX=50, deltaY=50)
 await panCanvas(page, deltaX, deltaY);
-
-// Zoom controls
 await zoomIn(page);
 await zoomOut(page);
 await fitToView(page);
@@ -44,19 +42,18 @@ await fitToView(page);
 
 #### Working with Component Folders
 
-```typescript
-// Open a component library folder
-const folder = await openComponentLibFolder(page, "Quick start");
+`dropComponentFromLibraryOnCanvas` does the whole open-locate-drag workflow in one call; its fourth
+argument is optional.
 
-// Locate component within folder
+```typescript
+const folder = await openComponentLibFolder(page, "Quick start");
 const component = locateComponentInFolder(folder, "Chicago Taxi Trips dataset");
 
-// Complete workflow: drag component to canvas
 const node = await dropComponentFromLibraryOnCanvas(
   page,
-  "Quick start", // folder name
-  "Chicago Taxi Trips dataset", // component name
-  { targetPosition: { x: 400, y: 300 } }, // optional drag options
+  "Quick start",
+  "Chicago Taxi Trips dataset",
+  { targetPosition: { x: 400, y: 300 } },
 );
 ```
 
@@ -65,10 +62,8 @@ const node = await dropComponentFromLibraryOnCanvas(
 #### Node Selection and Manipulation
 
 ```typescript
-// Locate node by name
 const node = locateNodeByName(page, "Chicago Taxi Trips dataset");
 
-// Click and verify selection
 await node.click();
 await expect(node).toHaveClass(/\bselected\b/);
 ```
@@ -78,14 +73,10 @@ await expect(node).toHaveClass(/\bselected\b/);
 #### Working with Side Panels
 
 ```typescript
-// Wait for specific context panel to appear
 await waitForContextPanel(page, "pipeline-details");
 await waitForContextPanel(page, "task-overview");
 
-// Locate context panel container
 const container = locateContextPanelContainer(page);
-
-// Locate specific context panel
 const panel = locateContextPanel(page, "pipeline-details");
 ```
 
@@ -97,19 +88,14 @@ const panel = locateContextPanel(page, "pipeline-details");
 test("should load pipeline editor and allow basic interaction", async ({
   page,
 }) => {
-  // Setup
   await createNewPipeline(page);
 
-  // Verify canvas components
   await expect(locateFlowCanvas(page)).toBeVisible();
   await expect(locateFlowViewport(page)).toBeVisible();
-
-  // Check React Flow UI components
   await expect(page.locator(".react-flow__minimap")).toBeVisible();
   await expect(page.locator(".react-flow__background")).toBeVisible();
   await expect(page.locator(".react-flow__controls")).toBeVisible();
 
-  // Test interactions
   await clickOnCanvas(page, 400, 300);
   await panCanvas(page, 50, 50);
   await zoomIn(page);
@@ -123,20 +109,15 @@ test("should load pipeline editor and allow basic interaction", async ({
 test("should place and select nodes", async ({ page }) => {
   await createNewPipeline(page);
 
-  // Add component from library
   const node = await dropComponentFromLibraryOnCanvas(
     page,
     "Quick start",
     "Chicago Taxi Trips dataset",
   );
 
-  // Verify placement
   await expect(node).toBeVisible();
-
-  // Verify the pipeline details panel is visible initially
   await waitForContextPanel(page, "pipeline-details");
 
-  // Test selection
   await node.click();
   await expect(node).toHaveClass(/\bselected\b/);
   await waitForContextPanel(page, "task-overview");
@@ -149,18 +130,15 @@ test("should place and select nodes", async ({ page }) => {
 test("should connect two nodes", async ({ page }) => {
   await createNewPipeline(page);
 
-  // Place first node
   const nodeA = await dropComponentFromLibraryOnCanvas(
     page,
     "Quick start",
     "Chicago Taxi Trips dataset",
   );
 
-  // Position for second node
   const nodeABox = await nodeA.boundingBox();
   await panCanvas(page, -nodeABox!.width, 0);
 
-  // Place second node
   const nodeB = await dropComponentFromLibraryOnCanvas(
     page,
     "Quick start",
@@ -168,40 +146,34 @@ test("should connect two nodes", async ({ page }) => {
     { targetPosition: { x: nodeABox!.width * 1.5, y: nodeABox!.y } },
   );
 
-  // Verify both nodes are visible
   await expect(nodeA).toBeVisible();
   await expect(nodeB).toBeVisible();
 
-  // Locate connection points
   const outputPin = nodeA.locator('[data-handleid="output_Table"]');
   const inputPin = nodeB.locator('[data-handleid="input_training_data"]');
 
-  // Ensure both connectors are within viewport
+  // A drag only registers when both pins are inside the viewport.
   await fitToView(page);
 
-  // Verify pins are visible and input shows required state (red)
   await expect(outputPin).toBeInViewport();
   await expect(inputPin).toBeInViewport();
+  // bg-red-700 marks a required input that is not yet connected.
   await expect(inputPin).toHaveClass(/\bbg-red-700\b/);
 
-  // Connect nodes via drag and drop
   await outputPin.hover();
   await page.mouse.down();
   await inputPin.hover();
   await page.mouse.up();
 
-  // Verify connection state changes
   await expect(inputPin).not.toHaveClass(/\bbg-red-700\b/);
   await expect(inputPin).toHaveClass(/\bbg-gray-500\b/);
 
-  // Verify edge is created
   const edgesContainer = page.locator(".react-flow__edges");
   const edge = edgesContainer.locator(
     '[data-testid="rf__edge-Chicago Taxi Trips dataset_Table-Train XGBoost model on CSV_training_data"]',
   );
   await expect(edge).toBeVisible();
 
-  // Verify input handle shows connection data
   const inputHandle = nodeB.locator(
     '[data-testid="input-handle-training_data"]',
   );
@@ -247,17 +219,13 @@ test("should connect two nodes", async ({ page }) => {
 
 ### Handle and Connection Selectors
 
+Edge test ids follow the format `source_output-target_input`.
+
 ```typescript
-// Output handles
 const outputPin = node.locator('[data-handleid="output_Table"]');
-
-// Input handles
 const inputPin = node.locator('[data-handleid="input_training_data"]');
-
-// Input handle containers
 const inputHandle = node.locator('[data-testid="input-handle-training_data"]');
 
-// Edge connections (format: source_output-target_input)
 const edge = page.locator(
   '[data-testid="rf__edge-Chicago Taxi Trips dataset_Table-Train XGBoost model on CSV_training_data"]',
 );
@@ -278,14 +246,12 @@ const edge = page.locator(
 
 ### 3. Node Positioning
 
-```typescript
-// Get node dimensions for relative positioning
-const nodeBox = await node.boundingBox();
+Read the existing node's box, pan to make room, then position the new node relative to it.
 
-// Pan canvas to make room for additional nodes
+```typescript
+const nodeBox = await node.boundingBox();
 await panCanvas(page, -nodeBox!.width, 0);
 
-// Position new nodes relative to existing ones
 const newNode = await dropComponentFromLibraryOnCanvas(
   page,
   "Quick start",
@@ -296,11 +262,13 @@ const newNode = await dropComponentFromLibraryOnCanvas(
 
 ### 4. Connection Testing
 
+Always assert the connection state both before and after connecting. The state lives in the pin's
+class: `bg-red-700` means required-but-unconnected, `bg-gray-500` means connected.
+
 ```typescript
-// Always verify connection state before and after
-await expect(inputPin).toHaveClass(/\bbg-red-700\b/); // Required state
+await expect(inputPin).toHaveClass(/\bbg-red-700\b/);
 // ... perform connection ...
-await expect(inputPin).toHaveClass(/\bbg-gray-500\b/); // Connected state
+await expect(inputPin).toHaveClass(/\bbg-gray-500\b/);
 ```
 
 ### 5. Async Operations
@@ -317,11 +285,12 @@ await expect(inputPin).toHaveClass(/\bbg-gray-500\b/); // Connected state
 
 ### 7. Debugging
 
+`page.pause()` opens the inspector for interactive debugging, and logging a bounding box helps with
+positioning problems.
+
 ```typescript
-// Use page.pause() for interactive debugging
 await page.pause();
 
-// Log bounding boxes for positioning issues
 const nodeBox = await node.boundingBox();
 console.log("Node position:", nodeBox);
 ```
@@ -370,16 +339,23 @@ pnpm run test:e2e:headed
 
 ### Complete Function Signatures
 
-```typescript
-// Setup
-export async function createNewPipeline(page: Page): Promise<void>;
+#### Setup
 
-// Canvas locators
+```typescript
+export async function createNewPipeline(page: Page): Promise<void>;
+```
+
+#### Canvas locators
+
+```typescript
 export function locateFlowCanvas(page: Page): Locator;
 export function locateFlowViewport(page: Page): Locator;
 export function locateFlowPane(page: Page): Locator;
+```
 
-// Canvas interactions
+#### Canvas interactions
+
+```typescript
 export async function clickOnCanvas(
   page: Page,
   x: number = 400,
@@ -393,8 +369,11 @@ export async function panCanvas(
 export async function zoomIn(page: Page): Promise<void>;
 export async function zoomOut(page: Page): Promise<void>;
 export async function fitToView(page: Page): Promise<void>;
+```
 
-// Component library
+#### Component library
+
+```typescript
 export async function openComponentLibFolder(
   page: Page,
   folderName: string,
@@ -408,19 +387,28 @@ export async function dragComponentToCanvas(
   component: Locator,
   dragOptions: DragOptions = {},
 ): Promise<void>;
+```
 
-// Nodes
+#### Nodes
+
+```typescript
 export function locateNodeByName(page: Page, nodeName: string): Locator;
+```
 
-// Context panels
+#### Context panels
+
+```typescript
 export function locateContextPanelContainer(page: Page): Locator;
 export function locateContextPanel(page: Page, panelName: string): Locator;
 export async function waitForContextPanel(
   page: Page,
   panelName: string,
 ): Promise<Locator>;
+```
 
-// Complete workflows
+#### Complete workflows
+
+```typescript
 export async function dropComponentFromLibraryOnCanvas(
   page: Page,
   folderName: string,

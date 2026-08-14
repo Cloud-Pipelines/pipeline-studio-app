@@ -166,26 +166,20 @@ const CompactIO = ({
 // ─── Detail panel (suspends on hydration) ───────────────────────────────────
 
 interface ComponentDetailProps {
-  /**
-   * The reference to render. Callers pass whatever they have — a hydrated ref
-   * (no network needed) or a stub with `digest`+`url` (one hydration round-trip).
-   * Hydration is keyed by digest/url, so cache is shared with other usages.
-   */
+  // The reference to render. Callers pass whatever they have — a hydrated ref
+  // (no network needed) or a stub with `digest`+`url` (one hydration round-trip).
+  // Hydration is keyed by digest/url, so cache is shared with other usages.
   reference: ComponentReference;
-  /**
-   * - `split` (V1 default): metadata+I/O on the left, sticky source code panel
-   *   on the right. Best for full-bleed detail pages.
-   * - `stacked`: single column — metadata, I/O, then source code in a card with
-   *   a capped height. Best for narrower detail panes alongside other content.
-   */
+  // - `split` (V1 default): metadata+I/O on the left, sticky source code panel
+  //   on the right. Best for full-bleed detail pages.
+  // - `stacked`: single column — metadata, I/O, then source code in a card with
+  //   a capped height. Best for narrower detail panes alongside other content.
   layout?: "split" | "stacked";
-  /**
-   * CSS height for the source code panel. In `split` layout this is the sticky
-   * right column's height (defaults to the remaining viewport height under the
-   * top nav). In `stacked` layout this caps the inline source card's height.
-   */
+  // CSS height for the source code panel. In `split` layout this is the sticky
+  // right column's height (defaults to the remaining viewport height under the
+  // top nav). In `stacked` layout this caps the inline source card's height.
   sourcePanelHeight?: string;
-  /** Hide the source-authored description when the caller renders its own description panel. */
+  // Hide the source-authored description when the caller renders its own description panel.
   hideDescription?: boolean;
 }
 

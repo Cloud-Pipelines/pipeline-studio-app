@@ -39,8 +39,10 @@ Pass a second argument for event-specific properties. The metadata is serialized
 
 When a child component renders the interactive element but the parent owns the tracking context, prefer prop drilling or forwarding rest props so `data-tracking-id` reaches the DOM element. This is intentional — it keeps tracking declarative and avoids manual `track()` calls scattered across the codebase.
 
+The parent passes the tracking attributes, and `ActionButton` forwards its rest props down the
+`<TooltipButton>` → `<Button>` → DOM chain:
+
 ```tsx
-// Parent passes tracking attributes
 <ActionButton
   tooltip="Export Pipeline"
   icon="FileDown"
@@ -48,7 +50,6 @@ When a child component renders the interactive element but the parent owns the t
   {...tracking("pipeline_editor.pipeline_actions.export_pipeline")}
 />;
 
-// ActionButton forwards rest props to the underlying <TooltipButton> → <Button> → DOM
 export const ActionButton = ({
   tooltip,
   onClick,
@@ -102,19 +103,20 @@ import { useAnalytics } from "@/providers/AnalyticsProvider";
 
 const { track } = useAnalytics();
 
-// Outcome — fires after success, not on click
 const handleSave = async (name: string) => {
   await savePipeline(name);
   track("pipeline_editor.pipeline_actions.save_pipeline_as_completed");
 };
 
-// Impression — fires when dialog opens
 useEffect(() => {
   if (open) {
     track("component_editor.save.already_exists_impression");
   }
 }, [open]);
 ```
+
+The first is an outcome event — it fires after the save succeeds, not on click. The second is an
+impression event, firing when the dialog opens.
 
 ## Event detail shape
 

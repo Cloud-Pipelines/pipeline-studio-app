@@ -115,14 +115,12 @@ vi.mock("@/utils/localforage", () => ({
   saveComponent: vi.fn(),
 }));
 
-// React component mock
 vi.mock("@monaco-editor/react", () => ({
   default: ({ defaultValue }: { defaultValue: string }) => (
     <pre data-testid="monaco-mock">{defaultValue}</pre>
   ),
 }));
 
-// Provider/context mock
 vi.mock("@/providers/ComponentSpecProvider", () => ({
   useComponentSpec: () => ({
     componentSpec: mockSpec,
@@ -135,7 +133,7 @@ vi.mock("@/providers/ComponentSpecProvider", () => ({
 
 ```typescript
 const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-// ... test code
+// ...
 expect(consoleSpy).toHaveBeenCalledWith("Error:", expect.any(Error));
 ```
 
@@ -184,25 +182,34 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  cleanup(); // Testing Library cleanup
-  queryClient.clear(); // Clear query cache if using QueryClient
+  cleanup();
+  queryClient.clear();
   vi.restoreAllMocks();
 });
 ```
 
+Only call `queryClient.clear()` when the suite uses a `QueryClient`.
+
 ## Assertion Patterns
 
+DOM:
+
 ```typescript
-// DOM assertions
 expect(screen.getByTestId("submit")).toBeInTheDocument();
 expect(screen.queryByTestId("hidden")).not.toBeInTheDocument();
+```
 
-// Mock assertions
+Mocks:
+
+```typescript
 expect(mockFn).toHaveBeenCalledWith(url);
 expect(mockFn).toHaveBeenCalledTimes(1);
 expect(mockFn).not.toHaveBeenCalled();
+```
 
-// Partial matching
+Partial matching:
+
+```typescript
 expect(mockSave).toHaveBeenCalledWith({
   id: expect.stringMatching(/^component-\w+$/),
   createdAt: expect.any(Number),
@@ -223,12 +230,10 @@ expect(mockCallback).toHaveBeenCalled();
 ## Async Testing
 
 ```typescript
-// Wait for state updates
 await waitFor(() => {
   expect(screen.getByTestId("content")).toBeInTheDocument();
 });
 
-// Assert on promises
 await expect(promise).resolves.toBe(expectedValue);
 ```
 

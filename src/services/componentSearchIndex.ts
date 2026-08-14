@@ -17,24 +17,18 @@ import { getComponentName } from "@/utils/getComponentName";
 
 import { expandSynonymTokens } from "./componentSearchSynonyms";
 
-/** Which field of a component matched the query. Surfaced in the UI. */
 export type MatchField =
   "name" | "description" | "io" | "implementation" | "metadata";
 
 /**
- * Where a component came from. Attached to every index entry and threaded
- * through to UI cards as a source badge so users know whether a result is
- * from the curated standard library, the backend's published catalog, a
- * registered external library (e.g. GitHub), or their own user components.
+ * Where a component came from. Threaded through to UI cards as a source badge so users can tell a
+ * curated standard-library result from the backend's published catalog, a registered external
+ * library (e.g. GitHub), or their own components.
  */
 export interface ComponentSearchSource {
   kind: "standard" | "user" | "published" | "registered";
-  /** Short label shown in the UI badge (e.g. "Standard", "Published", or a library name). */
   label: string;
-  /**
-   * Stable identifier for future filter chips / URL state. For built-in kinds
-   * this matches the kind; for `registered` libraries it's the stored library id.
-   */
+  // Matches `kind` for the built-in kinds; for `registered` it is the stored library id.
   id: string;
 }
 
@@ -44,19 +38,14 @@ export interface SourcedReference {
 }
 
 export interface IndexEntry {
-  /** Full reference, kept so callers can render whatever they need. */
   reference: ComponentReference;
-  /** Component digest. Stable id for round-tripping (LLM rerank, dedupe). */
   digest: string;
-  /** Display name. */
   name: string;
-  /** Where this component came from. */
   source: ComponentSearchSource;
-  /** Normalized searchable text, one per logical field. */
   searchable: Record<MatchField, string>;
-  /** Pre-split searchable text, built once with the index to avoid per-keystroke tokenization. */
+  // Derived from `searchable` once at index build time so that tokenizing and
+  // regex-normalizing do not run again on every keystroke.
   searchableTokens?: Record<MatchField, string[]>;
-  /** Phrase-normalized searchable text, built once with the index to avoid per-keystroke regex work. */
   searchablePhrases?: Record<MatchField, string>;
 }
 
@@ -65,7 +54,6 @@ export interface LexicalMatch {
   digest: string;
   name: string;
   source: ComponentSearchSource;
-  /** Which fields matched the query (for UX labels like "matched: command"). */
   matchedFields: MatchField[];
 }
 
@@ -271,25 +259,22 @@ function extractImplementationText(reference: ComponentReference): string {
   return parts.join(" ").toLowerCase();
 }
 
-/**
- * Common projection of a `ComponentReference` into the fields used downstream
- * by both the lexical index and the LLM reranker. Returns `null` when the
- * reference has no digest or no useful metadata — both consumers want to
- * skip such references for the same reason (un-roundtrippable / noise).
- */
 export interface ComponentMetadata {
   digest: string;
   name: string;
-  /** Trimmed; empty string when missing. */
   description: string;
   inputNames: string[];
   outputNames: string[];
-  /** Names, descriptions, types, and annotations for inputs/outputs. */
+  // Names, descriptions, types and annotations of every input and output, flattened.
   ioText: string;
-  /** Searchable component-level metadata annotations. */
   metadataText: string;
 }
 
+/**
+ * Common projection of a `ComponentReference` into the fields used downstream by both the lexical
+ * index and the LLM reranker. Returns `null` when the reference has no digest or no useful
+ * metadata — both consumers skip such references for the same reason (un-roundtrippable / noise).
+ */
 export function extractComponentMetadata(
   reference: ComponentReference,
 ): ComponentMetadata | null {
@@ -336,12 +321,9 @@ const EMPTY_SEARCHABLE: Record<MatchField, string> = {
 };
 
 export interface BuildSearchIndexOptions {
-  /**
-   * Emit a name-only entry for references that have a digest but no hydrated
-   * spec yet, so the panel can offer instant name search before full text is
-   * fetched. Off by default: callers passing hydrated refs keep the stricter
-   * "skip specs with no useful metadata" behavior.
-   */
+  // Emits a name-only entry for references that have a digest but no hydrated spec yet, so the
+  // panel can search names before full text is fetched. Off by default, so callers passing
+  // hydrated refs keep the stricter "skip specs with no useful metadata" behaviour.
   includeNameOnly?: boolean;
 }
 
@@ -571,12 +553,8 @@ const FUZZY_SEARCH_FIELDS: MatchField[] = ["name", "io"];
 const NEGATIVE_SEARCH_FIELDS: MatchField[] = ["name", "description", "io"];
 
 interface SearchOptions {
-  /** Max results to return. Default 20. */
   limit?: number;
-  /**
-   * Minimum query length before any results are returned. Default 1. Set to 2
-   * or 3 to suppress noisy results on the first keystroke.
-   */
+  // Raise to 2 or 3 to suppress noisy results on the first keystroke.
   minLength?: number;
 }
 

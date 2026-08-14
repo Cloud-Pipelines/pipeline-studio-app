@@ -7,6 +7,7 @@ import simpleImportSort from "eslint-plugin-simple-import-sort";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import localRules from "./eslint-rules/no-type-member-comments.js";
 import { REACT_COMPILER_ENABLED_GLOBS } from "./react-compiler.config.js";
 
 const baseRestrictedImportPaths = [
@@ -61,6 +62,15 @@ export default [
     plugins: {
       "simple-import-sort": simpleImportSort,
       "react-compiler": reactCompiler,
+    },
+  },
+  // Comments policy (CLAUDE.md): no JSDoc/block comments on type members.
+  {
+    files: ["**/*.{ts,tsx}"],
+    ignores: ["src/components/ui/**"],
+    plugins: { local: localRules },
+    rules: {
+      "local/no-type-member-comments": "warn",
     },
   },
   // React Compiler enabled directories: warn about unnecessary useCallback/useMemo

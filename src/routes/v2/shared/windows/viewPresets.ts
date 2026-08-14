@@ -8,7 +8,7 @@ export interface ViewPreset {
   label: string;
   description: string;
   visible: Set<string>;
-  /** Default dock columns: ids per side, order matters for first-visit layout seeding. */
+  // Window ids per side. Order matters: it seeds the first-visit layout.
   dockAreas?: PresetDockAreas;
 }
 

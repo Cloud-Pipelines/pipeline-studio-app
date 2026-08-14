@@ -14,13 +14,15 @@ This project uses TanStack Query v5 for all server state management.
 Use **hierarchical array-based keys**. For domains with multiple related queries, use a query key factory:
 
 ```typescript
-// Query key factory pattern (preferred for grouped queries)
 export const SecretsQueryKeys = {
   All: () => ["secrets"] as const,
   Id: (id: string) => ["secrets", id] as const,
 } as const;
+```
 
-// Simple keys for standalone queries
+Standalone queries just use a simple key:
+
+```typescript
 queryKey: ["pipeline-run", rootExecutionId];
 queryKey: ["execution-details", rootExecutionId];
 queryKey: ["component", "hydrate", componentQueryKey];

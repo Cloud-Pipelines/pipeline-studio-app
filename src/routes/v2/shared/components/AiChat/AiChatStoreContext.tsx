@@ -12,9 +12,9 @@ import { AiChatStore } from "./aiChatStore";
 const AiChatStoreCtx = createRequiredContext<AiChatStore>("AiChatStoreContext");
 
 interface AiChatStoreProviderProps {
-  /** Page-owned factory that spawns the worker for this AI chat. */
+  // Page-owned factory that spawns the worker for this AI chat.
   createWorker: () => Worker;
-  /** Current page context, baked into each new thread's worker at init. */
+  // Current page context, baked into each new thread's worker at init.
   context: AgentContext;
   children: ReactNode;
 }

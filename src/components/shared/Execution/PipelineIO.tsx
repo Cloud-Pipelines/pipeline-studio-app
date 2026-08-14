@@ -23,11 +23,9 @@ const PipelineIO = ({
   section,
 }: {
   taskArguments?: TaskSpecOutput["arguments"] | null;
-  /**
-   * When set, renders only one side (without the wrapping ContentBlock) so the
-   * caller can supply its own section header (e.g. a collapsible section).
-   * When omitted, renders both Inputs/Arguments and Outputs blocks.
-   */
+  // When set, renders only one side (without the wrapping ContentBlock) so the
+  // caller can supply its own section header (e.g. a collapsible section).
+  // When omitted, renders both Inputs/Arguments and Outputs blocks.
   section?: "inputs" | "outputs";
 }) => {
   const { setContent } = useContextPanel();

@@ -5,13 +5,9 @@ import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
 interface SidebarSectionProps {
-  /** Section header title */
   title: string;
-  /** Optional action element displayed on the right side of the header */
   headerAction?: ReactNode;
-  /** Section content */
   children: ReactNode;
-  /** Additional class names for the section container */
   className?: string;
 }
 

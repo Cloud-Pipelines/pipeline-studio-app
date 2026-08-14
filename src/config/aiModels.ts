@@ -7,9 +7,9 @@ export interface AiModelOption {
 }
 
 interface AiModelOptionsConfig {
-  /** Replaces the built-in model suggestions when provided by the host page. */
+  // Replaces the built-in suggestions when the host page provides it.
   models?: AiModelOption[];
-  /** Suggested model shown first in blank model inputs. */
+  // Shown first in blank model inputs.
   defaultModel?: string;
 }
 

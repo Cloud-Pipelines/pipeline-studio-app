@@ -18,9 +18,6 @@ interface InputOutputSpec {
     [k: string]: unknown;
   };
 }
-/**
- * Describes the component input specification
- */
 export interface InputSpec extends InputOutputSpec {
   name: string;
   type?: TypeSpecType;
@@ -32,9 +29,6 @@ export interface InputSpec extends InputOutputSpec {
     [k: string]: unknown;
   };
 }
-/**
- * Describes the component output specification
- */
 export interface OutputSpec extends InputOutputSpec {
   name: string;
   type?: TypeSpecType;
@@ -47,27 +41,18 @@ export interface OutputSpec extends InputOutputSpec {
  * Represents the command-line argument placeholder that will be replaced at run-time by the input argument value.
  */
 interface InputValuePlaceholder {
-  /**
-   * Name of the input.
-   */
   inputValue: string;
 }
 /**
  * Represents the command-line argument placeholder that will be replaced at run-time by a local file path pointing to a file containing the input argument value.
  */
 interface InputPathPlaceholder {
-  /**
-   * Name of the input.
-   */
   inputPath: string;
 }
 /**
  * Represents the command-line argument placeholder that will be replaced at run-time by a local file path pointing to a file where the program should write its output data.
  */
 interface OutputPathPlaceholder {
-  /**
-   * Name of the output.
-   */
   outputPath: string;
 }
 export type StringOrPlaceholder =
@@ -81,25 +66,20 @@ export type StringOrPlaceholder =
  * Represents the command-line argument placeholder that will be replaced at run-time by the concatenated values of its items.
  */
 interface ConcatPlaceholder {
-  /**
-   * Items to concatenate
-   */
   concat: StringOrPlaceholder[];
 }
 /**
  * Represents the command-line argument placeholder that will be replaced at run-time by a boolean value specifying whether the caller has passed an argument for the specified optional input.
  */
 interface IsPresentPlaceholder {
-  /**
-   * Name of the input.
-   */
   isPresent: string;
 }
 type IfConditionArgumentType =
   IsPresentPlaceholder | boolean | string | InputValuePlaceholder;
 type ListOfStringsOrPlaceholders = StringOrPlaceholder[];
 /**
- * Represents the command-line argument placeholder that will be replaced at run-time by a boolean value specifying whether the caller has passed an argument for the specified optional input.
+ * Represents the command-line argument placeholder that will be replaced at run-time by either the
+ * `then` or the `else` branch, depending on how `cond` evaluates.
  */
 interface IfPlaceholder {
   if: {
@@ -109,28 +89,15 @@ interface IfPlaceholder {
   };
 }
 interface ContainerSpec {
-  /**
-   * Docker image name.
-   */
   image: string;
-  /**
-   * Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided.
-   */
+  // Not run through a shell. Omitting these falls back to the image's own
+  // ENTRYPOINT and CMD respectively.
   command?: StringOrPlaceholder[];
-  /**
-   * Arguments to the entrypoint. The docker image's CMD is used if this is not provided.
-   */
   args?: StringOrPlaceholder[];
-  /**
-   * List of environment variables to set in the container.
-   */
   env?: {
     [k: string]: StringOrPlaceholder;
   };
 }
-/**
- * Represents the container component implementation.
- */
 export interface ContainerImplementation {
   container: ContainerSpec;
 }
@@ -144,9 +111,6 @@ export interface MetadataSpec {
     [FLEX_NODES_ANNOTATION]?: string;
   };
 }
-/**
- * Component specification. Describes the metadata (name, description, source), the interface (inputs and outputs) and the implementation of the component.
- */
 export interface ComponentSpec {
   name?: string;
   description?: string;
@@ -155,22 +119,15 @@ export interface ComponentSpec {
   implementation: ImplementationType;
   metadata?: MetadataSpec;
 }
-/**
- * Component reference. Contains information that can be used to locate and load a component by name, digest or URL
- */
 interface ComponentReferenceBase {
   name?: string;
   digest?: string;
   tag?: string;
   url?: string;
   spec?: ComponentSpec;
-  // Holds unparsed component text. An alternative to spec.
-  // url -> data -> text -> spec
-  // This simplifies code due to ability to preserve the original component data corresponding to the hash digest.
-  // I debated whether to use data (binary) or text here and decided on text.
-  // ComponentSpec is usually serialized to YAML or JSON formats that are text based
-  // and have better support for text compared to binary data.
-  // Not yet in the standard.
+  // Unparsed component source, an alternative to `spec` (url -> data -> text -> spec).
+  // Kept as text so the exact bytes behind the hash digest survive a round trip.
+  // Not yet part of the standard.
   text?: string;
 }
 
@@ -376,9 +333,6 @@ export function isDisplayableComponentReference(
  * Represents the component argument value that comes from the graph component input.
  */
 export interface GraphInputArgument {
-  /**
-   * References the input of the graph/pipeline.
-   */
   graphInput: {
     inputName: string;
     type?: TypeSpecType;
@@ -388,28 +342,16 @@ export interface GraphInputArgument {
  * Represents the component argument value that comes from the output of a sibling task.
  */
 export interface TaskOutputArgument {
-  /**
-   * References the output of a sibling task.
-   */
   taskOutput: {
     taskId: string;
     outputName: string;
     type?: TypeSpecType;
   };
 }
-/**
- * Reference to a secret by name.
- */
 interface SecretReference {
   name: string;
 }
-/**
- * Represents the component argument value that comes from a secret.
- */
 export interface SecretArgument {
-  /**
-   * References a secret by name.
-   */
   secret: SecretReference;
 }
 
@@ -421,9 +363,6 @@ type SystemDataArgument = {
   [key: string]: Record<string, unknown>;
 };
 
-/**
- * Union type for all dynamic data sources.
- */
 export type DynamicDataValue = SecretArgument | SystemDataArgument;
 
 export interface DynamicDataArgument {
@@ -433,23 +372,14 @@ export interface DynamicDataArgument {
 export type ArgumentType =
   string | GraphInputArgument | TaskOutputArgument | DynamicDataArgument;
 
-/**
- * Pair of operands for a binary operation.
- */
 interface TwoArgumentOperands {
   op1: ArgumentType;
   op2: ArgumentType;
 }
-/**
- * Pair of operands for a binary logical operation.
- */
 interface TwoLogicalOperands {
   op1: PredicateType;
   op2: PredicateType;
 }
-/**
- * Optional configuration that specifies how the task should be executed. Can be used to set some platform-specific options.
- */
 export type PredicateType =
   | {
       "==": TwoArgumentOperands;
@@ -479,16 +409,11 @@ export type PredicateType =
       not: PredicateType;
     };
 
-/**
- * Optional configuration that specifies how the task should be retried if it fails.
- */
 interface RetryStrategySpec {
   maxRetries?: number;
 }
-/**
- * Optional configuration that specifies how the task execution may be skipped if the output data exist in cache.
- */
 interface CachingStrategySpec {
+  // When a cached output is younger than this ISO 8601 duration, the task is skipped entirely.
   maxCacheStaleness?: string;
 }
 
@@ -497,7 +422,8 @@ export interface ExecutionOptionsSpec {
   cachingStrategy?: CachingStrategySpec;
 }
 /**
- * 'Task specification. Task is a configured component - a component supplied with arguments and other applied configuration changes.
+ * A task is a configured component: a component supplied with arguments and other applied
+ * configuration changes.
  */
 export interface TaskSpec {
   componentRef: ComponentReference;
@@ -510,9 +436,6 @@ export interface TaskSpec {
     [k: string]: unknown;
   };
 }
-/**
- * Describes the graph component implementation. It represents a graph of component tasks connected to the upstream sources of data using the argument specifications. It also describes the sources of graph output values.
- */
 export interface GraphSpec {
   tasks: {
     [k: string]: TaskSpec;
@@ -521,14 +444,10 @@ export interface GraphSpec {
     [k: string]: TaskOutputArgument;
   };
 }
-/**
- * Represents the graph component implementation.
- */
 export interface GraphImplementation {
   graph: GraphSpec;
 }
 
-// Type guards
 export const isValidComponentSpec = (obj: any): obj is ComponentSpec =>
   typeof obj === "object" && "implementation" in obj;
 
@@ -564,17 +483,11 @@ export const isGraphInputArgument = (
 ): arg is GraphInputArgument =>
   typeof arg === "object" && arg !== null && "graphInput" in arg;
 
-/**
- * Checks if an argument is any type of dynamic data argument.
- */
 export const isDynamicDataArgument = (
   arg?: ArgumentType,
 ): arg is DynamicDataArgument =>
   typeof arg === "object" && arg !== null && "dynamicData" in arg;
 
-/**
- * Checks if an argument is a secret-based dynamic data argument.
- */
 export const isSecretArgument = (
   arg?: ArgumentType,
 ): arg is DynamicDataArgument =>

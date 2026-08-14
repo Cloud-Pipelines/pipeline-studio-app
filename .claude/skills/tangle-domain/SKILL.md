@@ -142,7 +142,6 @@ Arbitrary key-value metadata (`Record<string, unknown>`) on components, tasks, i
 Sensitive values (API keys, credentials) stored securely in the backend and referenced by name in task arguments via `SecretArgument`. Resolved at runtime — never embedded in pipeline definitions or exports.
 
 ```typescript
-// SecretArgument structure
 {
   secret: {
     name: "my-api-key";

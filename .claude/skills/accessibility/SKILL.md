@@ -12,12 +12,10 @@ This project builds on **shadcn/ui** primitives which provide strong built-in a1
 All interactive elements without visible text must have an `aria-label`:
 
 ```typescript
-// Icon buttons
 <Button variant="ghost" aria-label="Home">
   <Icon name="Home" />
 </Button>
 
-// Folder toggles
 <div role="button" aria-expanded={isOpen} aria-label={`Folder: ${folder.name}`}>
 ```
 
@@ -45,11 +43,15 @@ Use the shadcn/ui `Label` component for proper form associations.
 - **Escape**: Close dialogs, cancel editing, deselect
 - **Tab**: Move focus between interactive elements
 
-```typescript
-// The Input component has built-in onEnter and onEscape props
-<Input onEnter={save} onEscape={cancel} />
+The `Input` component has built-in `onEnter` and `onEscape` props:
 
-// For non-Input elements, handle manually
+```typescript
+<Input onEnter={save} onEscape={cancel} />
+```
+
+Everything else handles the keys itself:
+
+```typescript
 onKeyDown={(e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -78,13 +80,11 @@ The dialog component already handles this — use `preventKeyboardPropagation` p
 Use `sr-only` class for visually hidden but screen-reader-accessible text:
 
 ```typescript
-// Close buttons with only an icon
 <DialogClose>
   <Cross2Icon />
   <span className="sr-only">Close</span>
 </DialogClose>
 
-// Command palette title
 <DialogHeader className="sr-only">
   <DialogTitle>{title}</DialogTitle>
   <DialogDescription>{description}</DialogDescription>
@@ -95,19 +95,10 @@ Use `sr-only` class for visually hidden but screen-reader-accessible text:
 
 Use proper semantic elements and ARIA roles:
 
-```typescript
-// Navigation
-<nav aria-label="breadcrumb">
-
-// Current page in breadcrumb
-<span role="link" aria-disabled="true" aria-current="page">{children}</span>
-
-// Decorative separators
-<li role="presentation" aria-hidden="true">
-
-// Alerts
-<div role="alert">
-```
+- Navigation — `<nav aria-label="breadcrumb">`
+- The current page in a breadcrumb — `<span role="link" aria-disabled="true" aria-current="page">`
+- Decorative separators — `<li role="presentation" aria-hidden="true">`
+- Alerts — `<div role="alert">`
 
 ## Focus Styling
 

@@ -118,15 +118,13 @@ type DropHandler = (
 // ---------------------------------------------------------------------------
 
 export interface NodeTypeManifest {
-  /** React Flow node type key (e.g. "task", "input", "output", "conduit", "ghost"). */
+  // React Flow node type key (e.g. "task", "input", "output", "conduit", "ghost").
   readonly type: string;
 
-  /** Node ID prefix used to identify this type from an id string. */
+  // Node ID prefix used to identify this type from an id string.
   readonly idPrefix: string;
 
-  /**
-   * Domain entity type (e.g. "task", "input", "output", "conduit").
-   */
+  // Domain entity type (e.g. "task", "input", "output", "conduit").
   readonly entityType: string;
   hasEntityId?(spec: ComponentSpec, id: string): boolean;
 
@@ -140,26 +138,20 @@ export interface NodeTypeManifest {
   buildNodes(spec: ComponentSpec): Node[];
   buildEdges?(spec: ComponentSpec): Edge[];
 
-  /**
-   * Transform the base binding edges (e.g. replace "default" edges with
-   * a specialised edge type). Called after `buildBindingEdges`.
-   */
+  // Transform the base binding edges (e.g. replace "default" edges with
+  // a specialised edge type). Called after `buildBindingEdges`.
   transformEdges?(spec: ComponentSpec, edges: Edge[]): Edge[];
 
   // -- Canvas operations ------------------------------------------------
 
   readonly drop?: {
-    /** Key in the `application/reactflow` JSON payload. */
+    // Key in the `application/reactflow` JSON payload.
     readonly dataKey: string;
     handler: DropHandler;
   };
 
-  /**
-   * Used to get the position of a node from the spec.
-   * CopyPaste features rely on this to fetch position of the node regardless of the node type.
-   * @param spec
-   * @param nodeId
-   */
+  // Used to get the position of a node from the spec.
+  // CopyPaste features rely on this to fetch position of the node regardless of the node type.
   getPosition(spec: ComponentSpec, nodeId: string): XYPosition | undefined;
 
   updatePosition(
@@ -218,14 +210,12 @@ export interface NodeTypeManifest {
 
   // -- Canvas enhancement (runtime hooks) ---------------------------------
 
-  /**
-   * Optional React hook called by the composing `useCanvasEnhancements` hook.
-   * Manifests use this to inject extra nodes/edges or transform edges at
-   * render time (e.g. ghost-node overlay, conduit edge styling).
-   *
-   * Safe to use React hooks inside — the manifest array is static so call
-   * order is stable across renders.
-   */
+  // Optional React hook called by the composing `useCanvasEnhancements` hook.
+  // Manifests use this to inject extra nodes/edges or transform edges at
+  // render time (e.g. ghost-node overlay, conduit edge styling).
+  //
+  // Safe to use React hooks inside — the manifest array is static so call
+  // order is stable across renders.
   readonly useCanvasEnhancement?: (
     params: CanvasEnhancementParams,
   ) => CanvasEnhancementResult;
@@ -246,7 +236,7 @@ export interface CanvasEnhancementParams {
 export interface CanvasEnhancementResult {
   extraNodes?: Node[];
   extraEdges?: Edge[];
-  /** Replaces the incoming edges (used for styling / type transforms). */
+  // Replaces the incoming edges (used for styling / type transforms).
   transformedEdges?: Edge[];
   onEdgeClick?: (event: MouseEvent, edge: { id: string }) => void;
 }

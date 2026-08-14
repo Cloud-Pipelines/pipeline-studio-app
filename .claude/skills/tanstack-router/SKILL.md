@@ -24,7 +24,6 @@ const indexRoute = createRoute({
   component: Editor,
 });
 
-// Assemble tree
 const appRouteTree = mainLayout.addChildren([
   indexRoute,
   quickStartRoute,

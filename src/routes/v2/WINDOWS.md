@@ -210,6 +210,26 @@ When undocking:
 1. The window ID is removed from the dock area order.
 2. `applyUndockState()` restores the pre-dock position/size and clears dock fields.
 
+## `WindowOptions` Reference
+
+| Option             | Default                       | Meaning                                                                                                                                                                                               |
+| ------------------ | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | generated                     | Explicit window ID                                                                                                                                                                                    |
+| `title`            | required                      | Title shown in the header                                                                                                                                                                             |
+| `position`         | cascaded from the last window | Initial position                                                                                                                                                                                      |
+| `size`             | `DEFAULT_WINDOW_SIZE`         | Initial size                                                                                                                                                                                          |
+| `minSize`          | `DEFAULT_MIN_SIZE`            | Minimum size while resizing                                                                                                                                                                           |
+| `linkedEntityId`   | none                          | Entity this window belongs to; the window auto-closes when that entity is deleted                                                                                                                     |
+| `disabledActions`  | none                          | Header actions to hide, e.g. `["close"]` for a non-closable window                                                                                                                                    |
+| `startVisible`     | `false`                       | Open visible even if the persisted state was `hidden` — used by selection-driven windows                                                                                                              |
+| `defaultVisible`   | `false`                       | Visibility when there is no persisted state at all                                                                                                                                                    |
+| `persisted`        | `false`                       | Persist layout (position, size, dock state) to localStorage across reloads                                                                                                                            |
+| `defaultDockState` | none (floating)               | Dock side for first-time users, before any state is persisted                                                                                                                                         |
+| `variant`          | `"window"`                    | `"panel"` renders chrome-less (border and header appear on hover) and auto-fits its content while floating                                                                                            |
+| `fillDockHeight`   | `false`                       | When docked, grow to fill the remaining dock-area height instead of fitting content — for log-style expanding panels                                                                                  |
+| `onClose`          | none                          | Invoked when the window closes                                                                                                                                                                        |
+| `miniContent`      | none                          | Compact control (usually an icon button) shown while the dock area is collapsed; clicking it opens the full content in a popover. A window without it is unreachable while its dock area is collapsed |
+
 ## Opening a Window (Sequence)
 
 ```mermaid
@@ -502,8 +522,13 @@ interface WindowContextValue {
 | `MAX_DOCK_AREA_WIDTH`       | `600px`     | Maximum dock column width (resize handle)                     |
 | `COLLAPSED_DOCK_AREA_WIDTH` | `36px`      | Width of a collapsed dock column                              |
 | `DEFAULT_DOCKED_HEIGHT`     | `300px`     | Default height for a docked window                            |
-| `MIN_DOCKED_HEIGHT`         | `100px`     | Minimum height for a docked window (resize handle)            |
+| `MIN_DOCKED_HEIGHT`         | `50px`      | Minimum height for a docked window (resize handle)            |
+| `DOCKED_HEADER_HEIGHT`      | `36px`      | Docked window header height, used to stack sticky headers     |
+| `WINDOW_CHROME_HEIGHT`      | `30px`      | Window chrome height                                          |
 | `TASK_PANEL_HEIGHT`         | `43px`      | Height of the TaskPanel bar (used for floating window offset) |
+
+`DOCK_AREA_RESIZE_SNAP_THRESHOLD` is derived (`MIN_DOCK_AREA_WIDTH - 20`): it is the resize width at
+which a dock area previews and snaps between expanded and collapsed.
 
 ## Rules and Restrictions
 

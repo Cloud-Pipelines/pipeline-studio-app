@@ -16,17 +16,15 @@ interface ShortcutDefinition {
   id: string;
   keys: ShortcutKeys;
   label: string;
-  /** When true, the shortcut fires even when an input/textarea is focused. */
+  // When true, the shortcut fires even when an input/textarea is focused.
   allowInEditable?: boolean;
   // todo: add DOM element as a scope for the shortcut
   // todo: add enabled: boolean;
-  /**
-   * Return `false` to allow the native event to propagate:
-   * the listener skips preventDefault so the
-   * browser / Radix portal handlers (e.g. dialog ESC) can run.
-   * The shortcut registry holds at most one handler per combo,
-   * so this is NOT a fallthrough to another shortcut.
-   */
+  // Return `false` to allow the native event to propagate:
+  // the listener skips preventDefault so the
+  // browser / Radix portal handlers (e.g. dialog ESC) can run.
+  // The shortcut registry holds at most one handler per combo,
+  // so this is NOT a fallthrough to another shortcut.
   action: (event: KeyboardEvent, params?: ShortcutParams) => void | false;
 }
 

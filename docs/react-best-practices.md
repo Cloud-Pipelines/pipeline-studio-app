@@ -13,11 +13,10 @@ Initializing non-primitives during render and passing these values as props or d
 This could impact performance and/or introduce bugs, or even make it harder to implement some features.
 
 ```tsx
-// ❌ The new callback is considered unstable.
+// ❌ The new callback is unstable, so the effect triggers every render.
 const eventHandler = () => sendEvent({ shopId });
 
 useEffect(() => {
-  // Triggers every render
   eventHandler();
 }, [eventHandler, shopId]);
 ```
@@ -129,7 +128,6 @@ export const SubmitButton = ({ onClick, disabled }) => (
 
 // src/components/Editor/PipelineEditor.tsx
 import { SubmitButton } from "../shared/SubmitButton";
-// Only used here...
 ```
 
 ```tsx
@@ -142,7 +140,6 @@ const SubmitButton = ({ onClick, disabled }) => (
 );
 
 export const PipelineEditor = () => {
-  // Use SubmitButton directly in the same file
   return <SubmitButton onClick={handleSubmit} />;
 };
 ```
@@ -151,7 +148,7 @@ export const PipelineEditor = () => {
 // ✅ GOOD: Move to sibling file when used by multiple components in the same feature
 // src/components/Editor/components/SubmitButton.tsx
 export const SubmitButton = ({ onClick, disabled }) => {
-  // Component implementation
+  // ...
 };
 
 // src/components/Editor/PipelineEditor.tsx
@@ -167,19 +164,18 @@ import { SubmitButton } from "./components/SubmitButton";
 // ❌ BAD: Creating a generic hook in /hooks when it's feature-specific
 // src/hooks/usePipelineValidation.ts
 export const usePipelineValidation = () => {
-  // Pipeline-specific validation logic
+  // ...
 };
 
 // src/components/Editor/PipelineEditor.tsx
 import { usePipelineValidation } from "../../hooks/usePipelineValidation";
-// Only the Editor feature uses this...
 ```
 
 ```tsx
 // ✅ GOOD: Keep feature-specific hooks with the feature
 // src/components/Editor/hooks/usePipelineValidation.ts
 export const usePipelineValidation = () => {
-  // Pipeline-specific validation logic
+  // ...
 };
 
 // src/components/Editor/PipelineEditor.tsx
@@ -192,7 +188,6 @@ import { usePipelineValidation } from "./hooks/usePipelineValidation";
 // ❌ BAD: Putting very specific logic in a general utils folder
 // src/utils/formatters.ts
 export const formatPipelineNodeLabel = (node) => {
-  // Very specific to pipeline nodes...
   return `${node.type}: ${node.name}`;
 };
 
@@ -229,7 +224,7 @@ export const formatDate = (date: Date): string => {
 // ✅ GOOD: This button is used across many unrelated features
 // src/components/ui/button.tsx
 export const Button = ({ variant, size, children, ...props }) => {
-  // Generic button implementation
+  // ...
 };
 ```
 
@@ -269,7 +264,7 @@ export function useHydrateComponentReference(component: ComponentReference) {
   const { data: componentRef } = useSuspenseQuery({
     queryKey: ["component", "hydrate", component.digest ?? component.url],
     queryFn: () => hydrateComponentReference(component),
-    staleTime: 1000 * 60 * 60 * 1, // 1 hour
+    staleTime: ONE_HOUR_MS,
     retryOnMount: true,
   });
 
@@ -295,7 +290,7 @@ export function useHydrateComponentReference(component: ComponentReference) {
 const { data } = useSuspenseQuery({
   queryKey: ["user", userId, "posts", { status: "published" }],
   queryFn: () => fetchUserPosts(userId, { status: "published" }),
-  staleTime: 1000 * 60 * 5, // 5 minutes for user-specific data
+  staleTime: FIVE_MINUTES_MS,
 });
 ```
 
@@ -306,7 +301,6 @@ The `withSuspenseWrapper()` Higher-Order Component provides a consistent way to 
 ```tsx
 // ✅ GOOD: Component that fetches data using useSuspenseQuery
 const ComponentDetailsDialogContent = ({ componentRef }: Props) => {
-  // This will suspend the component
   const hydratedComponent = useHydrateComponentReference(componentRef);
 
   return (
@@ -316,7 +310,6 @@ const ComponentDetailsDialogContent = ({ componentRef }: Props) => {
   );
 };
 
-// Create a skeleton that matches the component's layout
 const ComponentDetailsSkeleton = () => {
   return (
     <BlockStack gap="3">
@@ -332,7 +325,6 @@ const ComponentDetailsSkeleton = () => {
   );
 };
 
-// Export the wrapped component
 export const ComponentDetailsDialog = withSuspenseWrapper(
   ComponentDetailsDialogContent,
   ComponentDetailsSkeleton,
@@ -394,7 +386,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const ComplexSkeleton = () => {
   const [animationState, setAnimationState] = useState(0);
   useEffect(() => {
-    // Unnecessary complexity
+    // ...
   }, []);
 
   return <div>...</div>;
@@ -414,15 +406,14 @@ const SimpleSkeleton = () => (
 The `withSuspenseWrapper()` HOC includes error boundary handling with retry capabilities:
 
 ```tsx
-// The wrapper automatically provides error UI with retry
 export const MyComponent = withSuspenseWrapper(
   MyComponentContent,
   MyComponentSkeleton,
 );
-
-// Users will see a friendly error message with a "Try Again" button
-// that will reset the error boundary and retry the failed queries
 ```
+
+On failure users see a friendly error message with a "Try Again" button, which resets the error
+boundary and retries the failed queries.
 
 ### Composition Patterns
 
@@ -485,7 +476,6 @@ const EditableComponent = () => {
   const mutation = useMutation({
     mutationFn: updateComponent,
     onSuccess: () => {
-      // Invalidate to trigger suspense refetch
       queryClient.invalidateQueries({ queryKey: ["component", id] });
     },
   });
@@ -503,7 +493,7 @@ const EditableComponent = () => {
 try {
   const data = useSuspenseQuery(...);
 } catch (promise) {
-  // Don't do this!
+  // ...
 }
 
 // ✅ GOOD: Let Suspense boundaries handle it
@@ -516,9 +506,10 @@ const data = useSuspenseQuery(...);
 // ❌ BAD: Mixing suspense with manual loading states
 const Component = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const { data } = useSuspenseQuery(...); // This suspends!
+  const { data } = useSuspenseQuery(...);
 
-  if (isLoading) return <Spinner />; // Never reached
+  // Never reached: the query suspends before this branch can render.
+  if (isLoading) return <Spinner />;
   return <div>{data}</div>;
 };
 
@@ -579,11 +570,9 @@ const renderWithProviders = (component: React.ReactElement) => {
   );
 };
 
-// In your test
 test("loads and displays data", async () => {
   renderWithProviders(<MyComponent />);
 
-  // Wait for suspense to resolve
   await waitFor(() => {
     expect(screen.getByText("Expected Content")).toBeInTheDocument();
   });
@@ -937,10 +926,7 @@ When testing components that use UI primitives:
 test("displays error message", () => {
   render(<Alert message="Error occurred" variant="destructive" />);
 
-  // Don't test for specific classes
   // ❌ expect(screen.getByRole("alert")).toHaveClass("bg-red-50");
-
-  // Test for content and semantics
   // ✅
   expect(screen.getByRole("alert")).toHaveTextContent("Error occurred");
 });
