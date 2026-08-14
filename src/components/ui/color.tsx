@@ -154,7 +154,7 @@ export const ColorPicker = ({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="absolute right-2 top-0 hover:bg-transparent hover:text-black!"
+                    className="absolute right-2 top-0 hover:bg-transparent hover:text-foreground!"
                     style={{
                       color:
                         localColor === "transparent" ? "lightgray" : localColor,
