@@ -9,7 +9,7 @@ argument-hint: "[hygiene|comments|dry|refactor|consistency|react|tests|all ...] 
 # Codebase Gardening
 
 Weekly groundskeeping for the Tangle-UI codebase. Sweep the tree for hygiene issues, apply only fixes
-a validation gate can prove safe, self-review each PR with the `review` skill, and open **draft** PRs for
+a validation gate can prove safe, self-review each PR against the `review` skill's criteria, and open **draft** PRs for
 human review. The goal is a codebase that stays free of AI slop without depending on per-PR hand polish.
 
 Work is organized into **pillars**, each a bounded scan run one at a time so a single run is unlikely

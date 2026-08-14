@@ -10,6 +10,11 @@ argument-hint: [PR number]
 
 Review code changes against project coding standards. This team uses **Graphite** for stacked PRs — each commit is a PR in a stack.
 
+`disable-model-invocation` is deliberate: a review only happens when a human asks for one. The single
+exception is the `gardening` skill, whose E8 self-review **reads this file** and applies Step 1 and the
+"What to Check" criteria to its own PR, skipping the interactive Steps 2–3. Keep those steps separable —
+gardening cannot answer an `AskUserQuestion` prompt.
+
 ## Step 0: Determine Review Target
 
 Check if the user provided a PR number as an argument.
