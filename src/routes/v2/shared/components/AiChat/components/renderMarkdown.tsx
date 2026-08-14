@@ -64,7 +64,7 @@ function MarkdownLink({
   }
 
   return (
-    <Link href={href} variant="primary" external>
+    <Link href={href} size="sm" variant="primary" external>
       {children}
     </Link>
   );

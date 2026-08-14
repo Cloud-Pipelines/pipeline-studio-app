@@ -84,7 +84,7 @@ const ComponentQuickDetailsDialog = withSuspenseWrapper(
             of version {trimDigest(hydratedComponent.digest)}.
           </DialogDescription>
           <DialogTitle className="flex items-center gap-2 mr-5">
-            <Text>
+            <Text size="lg" weight="semibold">
               {displayName}: {trimDigest(hydratedComponent.digest)}
             </Text>
           </DialogTitle>

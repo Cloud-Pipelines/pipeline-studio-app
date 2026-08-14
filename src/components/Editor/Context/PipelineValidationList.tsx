@@ -156,7 +156,7 @@ export const PipelineValidationList = ({
                           isOpen && "rotate-90",
                         )}
                       />
-                      <Text className="flex-1 truncate">
+                      <Text size="sm" className="flex-1 truncate">
                         {group.depth === 0
                           ? "Root Pipeline"
                           : `Subgraph: ${group.pathLabel}`}
@@ -208,6 +208,7 @@ export const PipelineValidationList = ({
                             {typeLabel}
                           </Text>
                           <Text
+                            size="sm"
                             tone={levelToTone(level)}
                             className="shrink-0 opacity-40"
                           >

@@ -147,13 +147,13 @@ const DebugPanelContent = observer(function DebugPanelContent() {
                   <InlineStack gap="4">
                     <Text size="xs" tone="subdued">
                       Nodes:{" "}
-                      <Text as="span" font="mono" weight="semibold">
+                      <Text as="span" size="xs" font="mono" weight="semibold">
                         {systemClipboard.envelope.snapshots.length}
                       </Text>
                     </Text>
                     <Text size="xs" tone="subdued">
                       Connections:{" "}
-                      <Text as="span" font="mono" weight="semibold">
+                      <Text as="span" size="xs" font="mono" weight="semibold">
                         {systemClipboard.envelope.bindings.length}
                       </Text>
                     </Text>

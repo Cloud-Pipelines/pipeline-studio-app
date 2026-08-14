@@ -263,7 +263,7 @@ const PipelineRow = withSuspenseWrapper(
         </TableCell>
         <TableCell>
           <InlineStack gap="2" blockAlign="center">
-            <Paragraph>{props.name}</Paragraph>
+            <Paragraph size="sm">{props.name}</Paragraph>
           </InlineStack>
         </TableCell>
         <TableCell>

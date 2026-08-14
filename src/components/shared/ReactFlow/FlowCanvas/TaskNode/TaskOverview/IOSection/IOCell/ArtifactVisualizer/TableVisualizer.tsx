@@ -158,9 +158,11 @@ const ArtifactTable = ({ columns, rows }: ArtifactTableProps) => (
             className="bg-background sticky top-0 z-10 h-auto py-2 align-bottom"
           >
             <BlockStack>
-              <Text size="xs">{col.name}</Text>
+              <Text size="xs" weight="medium">
+                {col.name}
+              </Text>
               {col.type && (
-                <Text tone="subdued" size="xs">
+                <Text tone="subdued" size="xs" weight="medium">
                   {col.type}
                   {col.nullable ? "?" : ""}
                 </Text>

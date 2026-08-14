@@ -23,7 +23,8 @@ export const SidebarSection = ({
         <Text
           as="h3"
           size="sm"
-          className="font-medium text-sidebar-foreground/70"
+          weight="medium"
+          className="text-sidebar-foreground/70"
         >
           {title}
         </Text>

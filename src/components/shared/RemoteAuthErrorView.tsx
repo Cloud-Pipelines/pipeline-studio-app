@@ -29,7 +29,7 @@ export const RemoteAuthErrorView = ({
     <BlockStack fill>
       <InfoBox title={title} variant="error">
         <BlockStack gap="3">
-          <Paragraph>{body}</Paragraph>
+          <Paragraph size="sm">{body}</Paragraph>
           {helpLink && (
             <Paragraph tone="subdued" size="xs">
               <a

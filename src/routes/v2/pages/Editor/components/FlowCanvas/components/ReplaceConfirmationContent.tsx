@@ -26,8 +26,14 @@ export function ReplaceConfirmationContent({
     <BlockStack gap="3" className="py-2">
       <InlineStack gap="1" blockAlign="center">
         <Text size="sm">
-          Replace <Text weight="semibold">{taskName}</Text> with{" "}
-          <Text weight="semibold">{newComponentName}</Text>
+          Replace{" "}
+          <Text size="sm" weight="semibold">
+            {taskName}
+          </Text>{" "}
+          with{" "}
+          <Text size="sm" weight="semibold">
+            {newComponentName}
+          </Text>
         </Text>
       </InlineStack>
 

@@ -35,13 +35,14 @@ const textVariants = cva("", {
     size: {
       xs: "text-xs",
       sm: "text-sm",
-      md: "text-md",
+      md: "text-base",
       lg: "text-lg",
       xl: "text-xl",
       "2xl": "text-2xl",
     },
     weight: {
-      regular: "font-regular",
+      regular: "font-normal",
+      medium: "font-medium",
       semibold: "font-semibold",
       bold: "font-bold",
       light: "font-light",

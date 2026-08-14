@@ -48,7 +48,11 @@ export const ActionButton = ({
       {...rest}
     >
       {children === undefined && icon ? <Icon name={icon} /> : children}
-      {label && <Paragraph>{label}</Paragraph>}
+      {label && (
+        <Paragraph size="sm" weight="medium">
+          {label}
+        </Paragraph>
+      )}
     </TooltipButton>
   );
 };
