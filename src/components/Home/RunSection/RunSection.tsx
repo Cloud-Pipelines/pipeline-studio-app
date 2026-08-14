@@ -1,8 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
-import type { ListPipelineJobsResponse } from "@/api/types.gen";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { useFlagValue } from "@/components/shared/Settings/useFlags";
 import { Button } from "@/components/ui/button";
@@ -20,10 +18,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Text } from "@/components/ui/typography";
+import { usePipelineRunList } from "@/hooks/usePipelineRunList";
 import { useRunSearchParams } from "@/hooks/useRunSearchParams";
 import { useBackend } from "@/providers/BackendProvider";
 import { getBackendStatusString } from "@/utils/backend";
-import { fetchWithErrorHandling } from "@/utils/fetchWithErrorHandling";
 import {
   filtersToFilterQuery,
   parseFilterParam,
@@ -31,12 +29,7 @@ import {
 
 import RunRow from "./RunRow";
 
-const PIPELINE_RUNS_QUERY_URL = "/api/pipeline_runs/";
-const PAGE_TOKEN_QUERY_KEY = "page_token";
-const FILTER_QUERY_PARAM_KEY = "filter_query";
 const CREATED_BY_ME_FILTER = "created_by:me";
-const INCLUDE_PIPELINE_NAME_QUERY_KEY = "include_pipeline_names";
-const INCLUDE_EXECUTION_STATS_QUERY_KEY = "include_execution_stats";
 
 type RunSectionSearch = { page_token?: string; filter?: string };
 
@@ -53,7 +46,7 @@ export const RunSection = ({
   forcedFilter,
   maxItems,
 }: RunSectionProps) => {
-  const { backendUrl, configured, available, ready } = useBackend();
+  const { configured, available, ready } = useBackend();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const search = useSearch({ strict: false }) as RunSectionSearch;
@@ -81,29 +74,13 @@ export const RunSection = ({
   const pageToken = search.page_token;
   const [previousPageTokens, setPreviousPageTokens] = useState<string[]>([]);
 
-  const { data, isLoading, isFetching, error, isFetched } =
-    useQuery<ListPipelineJobsResponse>({
-      queryKey: ["runs", backendUrl, pageToken, apiFilterQuery],
-      refetchOnWindowFocus: false,
-      enabled: configured && available,
-      queryFn: async () => {
-        const url = new URL(PIPELINE_RUNS_QUERY_URL, backendUrl);
-        if (pageToken) url.searchParams.set(PAGE_TOKEN_QUERY_KEY, pageToken);
-        if (apiFilterQuery)
-          url.searchParams.set(FILTER_QUERY_PARAM_KEY, apiFilterQuery);
-
-        url.searchParams.set(INCLUDE_PIPELINE_NAME_QUERY_KEY, "true");
-        url.searchParams.set(INCLUDE_EXECUTION_STATS_QUERY_KEY, "true");
-
-        if (!available) {
-          throw new Error("Backend is not available");
-        }
-
-        dataVersion.current++;
-
-        return fetchWithErrorHandling(url.toString());
-      },
-    });
+  const { data, isLoading, isFetching, error, isFetched } = usePipelineRunList({
+    pageToken,
+    filterQuery: apiFilterQuery,
+    onFetch: () => {
+      dataVersion.current++;
+    },
+  });
 
   const handleFilterChange = (value: boolean) => {
     const nextSearch: RunSectionSearch = { ...search };
