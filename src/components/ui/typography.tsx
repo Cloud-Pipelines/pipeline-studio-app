@@ -31,6 +31,7 @@ const textVariants = cva("", {
       inverted: "text-inverted",
       info: "text-foreground underline decoration-dotted",
       warning: "text-warning",
+      success: "text-success",
     },
     size: {
       xs: "text-xs",
@@ -125,12 +126,17 @@ Paragraph.displayName = "Paragraph";
 export const Heading = ({
   children,
   level = 1,
-}: PropsWithChildren<{ level: 1 | 2 | 3 | 4 | 5 | 6 }>) => {
+  size,
+  weight,
+  ...rest
+}: PropsWithChildren<{ level: 1 | 2 | 3 | 4 | 5 | 6 }> &
+  Omit<TextProps, "as" | "children">) => {
   return (
     <Text
+      {...rest}
       as={`h${level}`}
-      size={level === 1 ? "md" : "sm"}
-      weight={level < 3 ? "semibold" : "regular"}
+      size={size ?? (level === 1 ? "md" : "sm")}
+      weight={weight ?? (level < 3 ? "semibold" : "regular")}
       role="heading"
       aria-level={level}
     >
