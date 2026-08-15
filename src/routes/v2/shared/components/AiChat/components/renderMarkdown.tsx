@@ -10,7 +10,7 @@ import remarkGfm from "remark-gfm";
 
 import { Link } from "@/components/ui/link";
 import { Separator } from "@/components/ui/separator";
-import { Paragraph, Text } from "@/components/ui/typography";
+import { Heading, Paragraph } from "@/components/ui/typography";
 import { getComponentQueryKey } from "@/hooks/useHydrateComponentReference";
 import type { ComponentRefData } from "@/routes/v2/shared/components/AiChat/types";
 import { CodeBlock } from "@/routes/v2/shared/components/CodeBlock";
@@ -137,24 +137,29 @@ function MarkdownCode({
 
 const markdownComponents = {
   h1: ({ children }: { children?: ReactNode }) => (
-    <Text as="h1" size="md" weight="bold" className="mt-3 mb-1 block">
+    <Heading level={1} size="md" weight="bold" className="mt-3 mb-1 block">
       {children}
-    </Text>
+    </Heading>
   ),
   h2: ({ children }: { children?: ReactNode }) => (
-    <Text as="h2" size="sm" weight="bold" className="mt-2 mb-1 block">
+    <Heading level={2} size="sm" weight="bold" className="mt-2 mb-1 block">
       {children}
-    </Text>
+    </Heading>
   ),
   h3: ({ children }: { children?: ReactNode }) => (
-    <Text as="h3" size="sm" weight="semibold" className="mt-2 mb-0.5 block">
+    <Heading
+      level={3}
+      size="sm"
+      weight="semibold"
+      className="mt-2 mb-0.5 block"
+    >
       {children}
-    </Text>
+    </Heading>
   ),
   h4: ({ children }: { children?: ReactNode }) => (
-    <Text as="h4" size="sm" weight="semibold" className="mt-1 block">
+    <Heading level={4} size="sm" weight="semibold" className="mt-1 block">
       {children}
-    </Text>
+    </Heading>
   ),
   p: ({ children }: { children?: ReactNode }) => (
     <Paragraph size="sm" className="my-1 leading-relaxed">

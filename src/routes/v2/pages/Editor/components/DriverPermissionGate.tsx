@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack } from "@/components/ui/layout";
 import { Spinner } from "@/components/ui/spinner";
-import { Text } from "@/components/ui/typography";
+import { Heading, Text } from "@/components/ui/typography";
 import type { PipelineFolder } from "@/services/pipelineStorage/PipelineFolder";
 import { usePipelineStorage } from "@/services/pipelineStorage/PipelineStorageProvider";
 import type { PipelineStorageService } from "@/services/pipelineStorage/PipelineStorageService";
@@ -92,9 +92,9 @@ export function DriverPermissionGate({
   return (
     <BlockStack fill align="center" inlineAlign="center" gap="4">
       <Icon name="ShieldAlert" className="size-12 text-muted-foreground" />
-      <Text as="h2" size="lg" weight="semibold">
+      <Heading level={2} size="lg" weight="semibold">
         Permission Required
-      </Text>
+      </Heading>
       <Text tone="subdued" className="text-center max-w-md">
         This pipeline is stored in &ldquo;{data.folder?.name}&rdquo; which
         requires access permission.

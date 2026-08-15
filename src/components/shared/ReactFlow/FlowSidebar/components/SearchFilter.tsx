@@ -8,6 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Heading } from "@/components/ui/typography";
 import { type SearchFilterProps } from "@/types/componentLibrary";
 import { ComponentSearchFilter } from "@/utils/constants";
 
@@ -44,7 +45,9 @@ const SearchFilter = ({
       </PopoverTrigger>
       <PopoverContent className="w-40">
         <div className="grid gap-2">
-          <h4>Filter Search</h4>
+          <Heading level={4} size="md">
+            Filter Search
+          </Heading>
           <div className="space-y-2">
             {availableFilters.map((filter) => {
               if (filter === ComponentSearchFilter.EXACTMATCH) return;

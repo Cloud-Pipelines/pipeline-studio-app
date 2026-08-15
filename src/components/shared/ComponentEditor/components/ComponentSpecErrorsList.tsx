@@ -1,6 +1,6 @@
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
-import { Text } from "@/components/ui/typography";
+import { Heading } from "@/components/ui/typography";
 
 export const ComponentSpecErrorsList = ({
   validationErrors,
@@ -15,9 +15,9 @@ export const ComponentSpecErrorsList = ({
     <BlockStack className="p-4 px-8 bg-destructive/10 border border-t-4 border-destructive/30 text-destructive">
       <InlineStack gap="2">
         <Icon name="OctagonAlert" size="lg" className="text-destructive" />
-        <Text tone="critical" as="h2" size="lg">
+        <Heading level={2} tone="critical" size="lg">
           Invalid component spec
-        </Text>
+        </Heading>
       </InlineStack>
       <ul className="list-disc list-inside space-y-1 p-4">
         {validationErrors.map((error, idx) => (
