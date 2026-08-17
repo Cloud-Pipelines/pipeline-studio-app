@@ -17,7 +17,7 @@
       "id": "comments",
       "pillar": "comments",
       "enabled": true,
-      "confidenceThreshold": 0.85,
+      "confidenceThreshold": 0.75,
       "conventionSkill": "project-conventions",
       "description": "Remove or refine low-value narrating comments and commented-out code; keep comments that explain a non-obvious why."
     },
