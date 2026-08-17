@@ -1,3 +1,4 @@
+import type { IconName } from "@/components/ui/icon";
 import type { ComponentSpec, Task, TypeSpecType } from "@/models/componentSpec";
 import type { NodeTypeRegistry } from "@/routes/v2/shared/nodes/registry";
 import type { SelectedNode } from "@/routes/v2/shared/store/editorStore";
@@ -107,7 +108,7 @@ export function getNodeDisplayName(
 export function getNodeIcon(
   registry: NodeTypeRegistry,
   type: SelectedNode["type"],
-): string {
+): IconName {
   return registry.get(type)?.icon ?? "Circle";
 }
 
