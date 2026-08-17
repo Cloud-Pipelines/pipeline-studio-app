@@ -356,7 +356,7 @@ const validateTaskOutputReference = (
     if (referencedTask.componentRef && referencedTask.componentRef.spec) {
       const referencedTaskSpec = referencedTask.componentRef.spec;
       const outputExists = referencedTaskSpec.outputs?.some(
-        (output: any) => output.name === referencedOutput,
+        (output) => output.name === referencedOutput,
       );
 
       if (!outputExists) {
@@ -582,7 +582,7 @@ const validateCircularDependencies = (
           argValue !== null &&
           "taskOutput" in argValue
         ) {
-          const dependentTaskId = (argValue as any).taskOutput.taskId;
+          const dependentTaskId = argValue.taskOutput.taskId;
           if (hasCycle(dependentTaskId)) {
             return true;
           }
