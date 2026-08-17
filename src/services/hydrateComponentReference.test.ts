@@ -15,7 +15,7 @@ vi.mock("@/utils/localforage", () => ({
 
 describe("hydrateComponentReference()", () => {
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.restoreAllMocks();
   });
 

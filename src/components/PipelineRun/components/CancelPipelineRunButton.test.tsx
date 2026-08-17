@@ -8,7 +8,15 @@ import {
   waitFor,
 } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  type Mock,
+  test,
+  vi,
+} from "vitest";
 
 import useToastNotification from "@/hooks/useToastNotification";
 import { useBackend } from "@/providers/BackendProvider";
@@ -28,7 +36,7 @@ describe("<CancelPipelineRunButton/>", () => {
       mutations: { retry: false },
     },
   });
-  const mockNotify: ReturnType<typeof vi.fn> = vi.fn();
+  const mockNotify: Mock<ReturnType<typeof useToastNotification>> = vi.fn();
 
   beforeEach(() => {
     // Reset all mocks

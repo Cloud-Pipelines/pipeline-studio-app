@@ -32,7 +32,7 @@
     "serve": "vite preview",
     "serve:ghpages": "vite preview --config vite.config.ghpages.js",
     "test": "vitest run",
-    "test:coverage": "pnpm vitest --coverage",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
@@ -167,6 +167,6 @@
     "typescript-eslint": "^8.65.0",
     "vite": "^8.1.5",
     "vite-plugin-bugsnag": "^2.0.2",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.10"
   }
 }

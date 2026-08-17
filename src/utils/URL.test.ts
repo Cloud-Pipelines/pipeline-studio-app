@@ -10,6 +10,10 @@ import {
   normalizeUrl,
 } from "./URL";
 
+vi.mock("@/routes/router", () => ({
+  RUNS_BASE_PATH: "/runs",
+}));
+
 // normalizeUrl tests
 describe("normalizeUrl", () => {
   it("returns empty string for empty input", () => {
@@ -138,9 +142,6 @@ describe("convertGithubUrlToDirectoryUrl", () => {
 describe("getIdOrTitleFromPath", () => {
   it("returns last path segment as id if RUNS_BASE_PATH is present", () => {
     const path = "/foo/bar/runs/123";
-    vi.mock("@/routes/router", () => ({
-      RUNS_BASE_PATH: "/runs",
-    }));
     const { id, title } = getIdOrTitleFromPath(path);
     expect(id).toBe("123");
     expect(title).toBe(undefined);

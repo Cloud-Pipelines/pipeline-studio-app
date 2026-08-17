@@ -1,5 +1,13 @@
 import yaml from "js-yaml";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type Mock,
+  vi,
+} from "vitest";
 
 import * as pipelineRunService from "@/services/pipelineRunService";
 import type { PipelineRun } from "@/types/pipelineRun";
@@ -17,7 +25,7 @@ describe("submitPipelineRun", () => {
   const mockBackendUrl = "https://api.example.com";
   const mockAuthToken = "test-auth-token";
 
-  let mockFetch: ReturnType<typeof vi.fn>;
+  let mockFetch: Mock;
 
   const mockPipelineRun: PipelineRun = {
     id: 123,

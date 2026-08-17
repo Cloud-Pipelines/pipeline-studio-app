@@ -1,5 +1,5 @@
 import type { Node } from "@xyflow/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
 import {
   type ComponentSpec,
@@ -68,8 +68,8 @@ const createGraphSpec = (
 });
 
 describe("handleGroupNodes", () => {
-  let onSuccess: ReturnType<typeof vi.fn>;
-  let onError: ReturnType<typeof vi.fn>;
+  let onSuccess: Mock<(updatedComponentSpec: ComponentSpec) => void>;
+  let onError: Mock<(error: Error) => void>;
 
   beforeEach(() => {
     vi.clearAllMocks();
