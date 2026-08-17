@@ -100,8 +100,6 @@ export class WindowModel {
     makeObservable(this);
   }
 
-  // -- Computed getters --
-
   @computed get isMinimized(): boolean {
     return this.state === "minimized";
   }
@@ -129,8 +127,6 @@ export class WindowModel {
   isActionDisabled(actionType: WindowAction): boolean {
     return this.disabledActions?.includes(actionType) ?? false;
   }
-
-  // -- State mutation actions --
 
   @action minimize({ quiet = false } = {}): void {
     if (this.isMinimized) return;

@@ -10,8 +10,6 @@ import {
 } from "@/hooks/useRequiredContext";
 import { userQueryOptions } from "@/hooks/useUserDetails";
 
-// ─── Private session & dispatch helpers ──────────────────────────────────────
-
 const SESSION_KEY = "tangle_tab_session_id";
 
 async function getUserHash(userId: string): Promise<string> {
@@ -52,8 +50,6 @@ function dispatchTrack(
     }),
   );
 }
-
-// ─── Context & Provider ───────────────────────────────────────────────────────
 
 type TrackFn = (actionType: string, metadata?: Record<string, unknown>) => void;
 

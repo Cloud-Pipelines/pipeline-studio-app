@@ -153,7 +153,6 @@ const processComponentSpec = async (
       continue;
     }
 
-    // If there's a URL but no spec, fetch the component
     if (task.componentRef.url && !task.componentRef.spec) {
       try {
         if (componentCache.has(task.componentRef.url)) {
@@ -216,7 +215,6 @@ const processComponentSpec = async (
   return spec;
 };
 
-// Load component from text and parse YAML
 const parseComponentYaml = (text: string): ComponentSpec => {
   if (!text || text.trim() === "") {
     throw new Error("Received empty component specification");

@@ -1,5 +1,3 @@
-// ───────────────────── Types ─────────────────────
-
 import type { XYPosition } from "@xyflow/react";
 
 /** 0 = Horizontal, 1 = Vertical */
@@ -19,8 +17,6 @@ interface DpChoice {
   prevExitDir: Dir;
 }
 
-// ───────────────────── Core ─────────────────────
-
 /**
  * Builds an orthogonal (rectilinear) polyline passing through all
  * given points in order, using the fewest possible turns.
@@ -33,8 +29,6 @@ export function buildOrthogonalPolyline(points: XYPosition[]): XYPosition[] {
 
   return assemblePolyline(points, options, selected);
 }
-
-// ───────────────── Segment analysis ─────────────────
 
 /** Returns the valid routing options for a single segment. */
 function getRoutingOptions(from: XYPosition, to: XYPosition): RoutingOption[] {
@@ -67,8 +61,6 @@ function buildSegmentOptions(points: XYPosition[]): RoutingOption[][] {
   }
   return options;
 }
-
-// ──────────────── DP optimization ────────────────
 
 /**
  * Finds the combination of routing choices that minimizes total
@@ -168,8 +160,6 @@ function backtrack(dp: [number, number], history: DpChoice[][]): number[] {
   return result;
 }
 
-// ──────────────── Polyline assembly ────────────────
-
 /** Computes the corner point for a non-aligned segment. */
 function getCornerPoint(
   from: XYPosition,
@@ -204,8 +194,6 @@ function assemblePolyline(
 
   return result;
 }
-
-// ──────────────── Optional cleanup ────────────────
 
 /** Removes intermediate points that are collinear with their neighbors. */
 export function removeCollinearPoints(polyline: XYPosition[]): XYPosition[] {

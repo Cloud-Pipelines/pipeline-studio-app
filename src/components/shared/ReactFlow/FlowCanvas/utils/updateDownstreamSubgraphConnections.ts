@@ -49,7 +49,6 @@ export const updateDownstreamSubgraphConnections = (
     }
 
     if (mapping.targetTaskId === GRAPH_OUTPUT) {
-      // Update graph output
       const graphOutput =
         updatedGraphSpec?.outputValues?.[mapping.targetInputName];
       if (graphOutput && isTaskOutputArgument(graphOutput)) {
@@ -60,7 +59,6 @@ export const updateDownstreamSubgraphConnections = (
         };
       }
     } else {
-      // Update task argument
       const targetTask = updatedGraphSpec.tasks[mapping.targetTaskId];
       const targetTaskArg = targetTask?.arguments?.[mapping.targetInputName];
       if (isTaskOutputArgument(targetTaskArg)) {

@@ -65,9 +65,6 @@ interface DynamicDataDisplayInfo {
 const dynamicDataSchema = schema as DynamicDataSchema;
 const DEFAULT_TEXT_COLOR = "text-gray-600";
 
-/**
- * Parses the dynamic data schema into usable group configurations.
- */
 function parseDynamicDataSchema(): DynamicDataGroup[] {
   const groups: DynamicDataGroup[] = [];
 
@@ -102,9 +99,6 @@ function parseDynamicDataSchema(): DynamicDataGroup[] {
   return groups;
 }
 
-/**
- * Checks if a task has the required annotation with the expected value.
- */
 function hasRequiredTaskAnnotation(
   taskAnnotations: TaskAnnotations | undefined,
   requirement: TaskAnnotationRequirement,
@@ -169,10 +163,6 @@ function isSecretData(data: DynamicDataValue): data is SecretArgument {
   return "secret" in data;
 }
 
-/**
- * Gets display information for a dynamic data value.
- * @param dynamicData - The dynamic data value to get display info for
- */
 export function getDynamicDataDisplayInfo(
   dynamicData: DynamicDataValue,
 ): DynamicDataDisplayInfo {

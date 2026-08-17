@@ -354,7 +354,6 @@ const FlowCanvasContent = ({
     // Collect all edges that need to be removed, including those connected to deleted nodes
     const edgesToRemove = [...params.edges];
 
-    // Add edges connected to deleted nodes
     for (const node of params.nodes) {
       const connectedEdges = edges.filter(
         (edge) => edge.source === node.id || edge.target === node.id,
@@ -372,12 +371,10 @@ const FlowCanvasContent = ({
       edgesToRemove,
     );
 
-    // Remove edges
     for (const edge of edgesToRemove) {
       updatedSubgraphSpec = removeEdge(edge, updatedSubgraphSpec);
     }
 
-    // Remove nodes
     for (const node of params.nodes) {
       updatedSubgraphSpec = removeNode(node, updatedSubgraphSpec);
     }
@@ -439,7 +436,6 @@ const FlowCanvasContent = ({
           };
         }
 
-        // For other nodes, deep merge
         return {
           ...existingNode,
           ...newNode,
@@ -495,7 +491,6 @@ const FlowCanvasContent = ({
       requestAnimationFrame(() => {
         updateNodeInternals(targetNodeId);
 
-        // Now create the actual connection with the redirected handle
         const finalGraphSpec = handleConnection(
           latestGraphSpecRef.current,
           redirectedConn,
@@ -602,7 +597,6 @@ const FlowCanvasContent = ({
   const onDragOver = async (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
 
-    // Check if we're dragging files
     const hasFiles = event.dataTransfer.types.includes("Files");
     if (hasFiles) {
       return;
@@ -640,7 +634,6 @@ const FlowCanvasContent = ({
     event.preventDefault();
     if (readOnly) return;
 
-    // Handle file drops
     if (event.dataTransfer.files.length > 0) {
       try {
         // Parse the imported YAML to get the component spec
@@ -663,7 +656,6 @@ const FlowCanvasContent = ({
         );
 
         if (result && reactFlowInstance) {
-          // Use the drop position if available
           const position = getPositionFromEvent(event, reactFlowInstance);
           const taskSpec: TaskSpec = {
             annotations: {},
@@ -738,7 +730,6 @@ const FlowCanvasContent = ({
     }
 
     if (isNotMaterializedComponentReference(droppedTask?.componentRef)) {
-      // load spec
       const hydratedComponentRef = await hydrateComponentReference(
         droppedTask.componentRef,
       );
@@ -754,7 +745,6 @@ const FlowCanvasContent = ({
       }
     }
 
-    // Replacing an existing node
     if (replaceTarget) {
       if (!droppedTask) {
         console.error(
@@ -900,7 +890,6 @@ const FlowCanvasContent = ({
       return false;
     }
 
-    // Skip confirmation if Shift key is pressed
     if (shiftKeyPressed) {
       return true;
     }
@@ -1072,7 +1061,6 @@ const FlowCanvasContent = ({
   );
 
   const onCopy = () => {
-    // Copy selected nodes to clipboard
     const nodes = getSelectedNodes();
     if (nodes.length > 0) {
       const selectedNodesJson = JSON.stringify(nodes);
@@ -1100,7 +1088,6 @@ const FlowCanvasContent = ({
 
         const nodesToPaste: Node[] = parsedData;
 
-        // Get the center of the canvas
         const { domNode } = store.getState();
         const boundingRect = domNode?.getBoundingClientRect();
 
@@ -1122,7 +1109,6 @@ const FlowCanvasContent = ({
               author: currentUserDetails?.id,
             });
 
-          // Deselect all existing nodes
           const updatedNodes = nodes.map((node) => ({
             ...node,
             selected: false,

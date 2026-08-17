@@ -49,10 +49,6 @@ export function rateLimit<TArgs extends unknown[], TResult>(
   let isDisposed = false;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  /**
-   * Refill tokens based on elapsed time since last refill.
-   * Tokens accumulate continuously up to bucketSize.
-   */
   const refillTokens = (): void => {
     const now = performance.now();
     const elapsed = Math.max(0, now - lastRefill); // Guard against edge cases
@@ -62,9 +58,6 @@ export function rateLimit<TArgs extends unknown[], TResult>(
     lastRefill = now;
   };
 
-  /**
-   * Calculate wait time until at least 1 token is available.
-   */
   const getWaitTime = (): number => {
     if (tokens >= 1) return 0;
 
@@ -73,9 +66,6 @@ export function rateLimit<TArgs extends unknown[], TResult>(
     return Math.ceil(tokensNeeded * msPerToken);
   };
 
-  /**
-   * Process queued requests while tokens are available.
-   */
   const processQueue = (): void => {
     if (isDisposed) return;
     if (timeoutId !== null) {
@@ -85,7 +75,6 @@ export function rateLimit<TArgs extends unknown[], TResult>(
 
     refillTokens();
 
-    // Process requests while we have tokens
     while (queue.length > 0 && tokens >= 1) {
       tokens -= 1;
       const req = queue.shift();
@@ -112,10 +101,6 @@ export function rateLimit<TArgs extends unknown[], TResult>(
     }
   };
 
-  /**
-   * Schedule queue processing after a delay.
-   * Clears any existing scheduled processing first.
-   */
   const scheduleProcessing = (delay?: number): void => {
     if (isDisposed) return;
 
@@ -128,9 +113,6 @@ export function rateLimit<TArgs extends unknown[], TResult>(
     timeoutId = setTimeout(processQueue, Math.max(0, waitTime));
   };
 
-  /**
-   * Queue a rate-limited function call.
-   */
   const call = (...args: TArgs): Promise<TResult> => {
     if (isDisposed) {
       return Promise.reject(new Error("Rate limiter has been disposed"));
@@ -148,9 +130,6 @@ export function rateLimit<TArgs extends unknown[], TResult>(
     });
   };
 
-  /**
-   * Dispose the rate limiter, rejecting all pending requests.
-   */
   const dispose = (): void => {
     isDisposed = true;
 
@@ -159,7 +138,6 @@ export function rateLimit<TArgs extends unknown[], TResult>(
       timeoutId = null;
     }
 
-    // Reject all pending requests
     while (queue.length > 0) {
       const req = queue.shift();
       req?.reject(new Error("Rate limiter disposed"));

@@ -14,10 +14,6 @@ import type {
   SnapPreviewType,
 } from "@/routes/v2/shared/windows/types";
 
-// ---------------------------------------------------------------------------
-// Drag phase state machine
-// ---------------------------------------------------------------------------
-
 /** Distance (px) from origin mouse position before undocking a docked window. */
 const UNDOCK_THRESHOLD = 20;
 
@@ -25,10 +21,6 @@ type DragPhase =
   | { type: "idle" }
   | { type: "docked-pending"; originMouse: Position }
   | { type: "free" };
-
-// ---------------------------------------------------------------------------
-// Hook interface
-// ---------------------------------------------------------------------------
 
 interface UseWindowDragOptions {
   docked: boolean;
@@ -42,10 +34,6 @@ interface UseWindowDragReturn {
   handleContainerMouseDown: () => void;
   handleContainerClick: () => void;
 }
-
-// ---------------------------------------------------------------------------
-// Hook implementation
-// ---------------------------------------------------------------------------
 
 export function useWindowDrag({
   docked,
@@ -67,7 +55,6 @@ export function useWindowDrag({
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
   const snapPreviewRef = useRef<SnapPreviewType | null>(null);
   const dragUndockTrackedRef = useRef(false);
-  /** Standard DOM ref for the panel element. */
   const panelRef = useRef<HTMLDivElement>(null);
 
   const raiseZIndex = () => {

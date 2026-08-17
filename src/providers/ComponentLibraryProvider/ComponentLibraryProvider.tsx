@@ -187,7 +187,6 @@ export const ComponentLibraryProvider = ({
   const [newComponent, setNewComponent] =
     useState<HydratedComponentReference | null>(null);
 
-  // Fetch main component library
   const {
     data: rawComponentLibrary,
     isLoading: isLibraryLoading,
@@ -198,7 +197,6 @@ export const ComponentLibraryProvider = ({
     queryFn: fetchAndStoreComponentLibrary,
   });
 
-  // Fetch user components
   const {
     data: rawUserComponentsFolder,
     isLoading: isUserComponentsLoading,
@@ -211,13 +209,11 @@ export const ComponentLibraryProvider = ({
     refetchOnMount: "always",
   });
 
-  // Fetch "Used in Pipeline" components
   const usedComponentsFolder: ComponentFolder = useMemo(
     () => fetchUsedComponents(graphSpec),
     [graphSpec],
   );
 
-  // Fetch "Starred" components
   const { data: favoritesFolderData, refetch: refetchFavorites } = useQuery({
     queryKey: ["favorites"],
     queryFn: async () => {
@@ -259,7 +255,6 @@ export const ComponentLibraryProvider = ({
     [favoritesFolderData],
   );
 
-  // Methods
   const refreshComponentLibrary = useCallback(async () => {
     const { data: updatedLibrary } = await refetchLibrary();
 
@@ -361,7 +356,6 @@ export const ComponentLibraryProvider = ({
       const exactMatch = filtersSet.has(ComponentSearchFilter.EXACTMATCH);
       const hasNameFilter = filtersSet.has(ComponentSearchFilter.NAME);
 
-      // Helper to check if a component matches the search criteria
       const componentMatches = (c: ComponentReference): boolean => {
         // If spec is available, use the full search
         if (c.spec && componentMatchesSearch(c.spec, search, filters)) {
