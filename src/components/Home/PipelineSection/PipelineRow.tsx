@@ -27,7 +27,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Paragraph } from "@/components/ui/typography";
+import { Paragraph, Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useAnalytics } from "@/providers/AnalyticsProvider";
 import { getDefaultEditorPath } from "@/routes/editorRoutes";
@@ -215,7 +215,9 @@ const PipelineRow = withSuspenseWrapper(
           </div>
         </TableCell>
         <TableCell>
-          <span className="text-xs text-muted-foreground">{formattedDate}</span>
+          <Text size="xs" tone="subdued">
+            {formattedDate}
+          </Text>
         </TableCell>
         <TableCell className="max-w-64">
           {tags && tags.length > 0 && <TagList tags={tags} />}

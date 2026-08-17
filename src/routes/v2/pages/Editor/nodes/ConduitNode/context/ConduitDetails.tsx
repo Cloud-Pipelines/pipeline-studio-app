@@ -106,7 +106,7 @@ export const ConduitDetails = observer(function ConduitDetails({
                   >
                     <Icon name="X" size="xs" />
                   </Button>
-                  <Text size="xs" className="truncate flex-1 font-mono">
+                  <Text size="xs" font="mono" className="truncate flex-1">
                     {edgeLabel(
                       binding.sourceEntityId,
                       binding.sourcePortName,

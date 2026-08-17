@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { Text } from "@/components/ui/typography";
 
 import { FullscreenElement } from "../FullscreenElement";
 import CodeSyntaxHighlighter from "./CodeSyntaxHighlighter";
@@ -60,7 +61,9 @@ const CodeViewer = ({
             <span className="font-semibold text-base text-foreground">
               {filename}
             </span>
-            <span className="text-sm text-muted-foreground">(Read Only)</span>
+            <Text size="sm" tone="subdued">
+              (Read Only)
+            </Text>
           </div>
           <Button
             type="button"

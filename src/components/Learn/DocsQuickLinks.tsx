@@ -78,7 +78,7 @@ function QuickLinkPill({ link }: { link: QuickLink }) {
 export function DocsQuickLinks() {
   return (
     <BlockStack gap="1">
-      <Text size="sm" weight="semibold" className="text-muted-foreground">
+      <Text size="sm" weight="semibold" tone="subdued">
         Quick links
       </Text>
       <InlineStack gap="2">
