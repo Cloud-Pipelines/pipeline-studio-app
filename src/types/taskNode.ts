@@ -25,7 +25,7 @@ export type NodeAndTaskId = {
 export type TaskType = "task" | "input" | "output";
 
 /* Note: Optional callbacks will cause TypeScript to break when applying the callbacks to the Nodes. */
-interface TaskNodeCallbacks {
+export interface TaskNodeCallbacks {
   setArguments: (args: Record<string, ArgumentType>) => void;
   setAnnotations: (annotations: Annotations) => void;
   setCacheStaleness: (cacheStaleness: string | undefined) => void;
@@ -48,7 +48,7 @@ export const DEFAULT_TASK_NODE_CALLBACKS: TaskNodeCallbacks = {
 };
 
 // Dynamic Node Callback types - every callback has a version with the node & task id added to it as an input parameter
-export type CallbackWithIds<K extends keyof TaskNodeCallbacks> =
+type CallbackWithIds<K extends keyof TaskNodeCallbacks> =
   TaskNodeCallbacks[K] extends (...args: infer A) => infer R
     ? (ids: NodeAndTaskId, ...args: A) => R
     : never;

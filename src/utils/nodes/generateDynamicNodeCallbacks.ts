@@ -1,42 +1,29 @@
-import type {
-  CallbackWithIds,
-  NodeAndTaskId,
-  NodeCallbacks,
-} from "@/types/taskNode";
+import type { NodeCallbacks, TaskNodeCallbacks } from "@/types/taskNode";
+import { DEFAULT_TASK_NODE_CALLBACKS } from "@/types/taskNode";
 
 import { nodeIdToTaskId } from "./nodeIdUtils";
-
-type ExcludeNodeAndTaskId<T> = T extends [NodeAndTaskId, ...infer Rest]
-  ? Rest
-  : never;
 
 // Utility function that adds the taskId and nodeId to the callbacks as the first argument
 export const generateDynamicNodeCallbacks = (
   nodeId: string,
   nodeCallbacks?: NodeCallbacks,
-): NodeCallbacks => {
+): TaskNodeCallbacks => {
   if (!nodeCallbacks) {
-    return {} as NodeCallbacks;
+    return DEFAULT_TASK_NODE_CALLBACKS;
   }
 
-  const taskId = nodeIdToTaskId(nodeId);
-  return Object.fromEntries(
-    (Object.keys(nodeCallbacks) as (keyof NodeCallbacks)[]).map(
-      (callbackName) => {
-        const callbackFn = nodeCallbacks[callbackName] as CallbackWithIds<
-          typeof callbackName
-        >;
-        return [
-          callbackName,
-          ((...args: any[]) =>
-            callbackFn(
-              { taskId, nodeId },
-              ...((args ?? []) as ExcludeNodeAndTaskId<
-                Parameters<typeof callbackFn>
-              >),
-            )) as NodeCallbacks[typeof callbackName],
-        ];
-      },
-    ),
-  ) as NodeCallbacks;
+  const ids = { taskId: nodeIdToTaskId(nodeId), nodeId };
+
+  return {
+    setArguments: (args) => nodeCallbacks.setArguments(ids, args),
+    setAnnotations: (annotations) =>
+      nodeCallbacks.setAnnotations(ids, annotations),
+    setCacheStaleness: (cacheStaleness) =>
+      nodeCallbacks.setCacheStaleness(ids, cacheStaleness),
+    onDelete: () => nodeCallbacks.onDelete(ids),
+    onDuplicate: (selected) => nodeCallbacks.onDuplicate(ids, selected),
+    onUpgrade: (newComponentRef) =>
+      nodeCallbacks.onUpgrade(ids, newComponentRef),
+    onSelect: () => nodeCallbacks.onSelect(ids),
+  };
 };
