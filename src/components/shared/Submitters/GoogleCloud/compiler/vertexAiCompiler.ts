@@ -7,6 +7,7 @@ import {
   type StringOrPlaceholder,
   type TypeSpecType,
 } from "@/utils/componentSpec";
+import { makeNameUniqueByAddingIndex } from "@/utils/unique";
 
 import * as vertex from "./vertexPipelineSpec";
 
@@ -832,19 +833,6 @@ const buildVertexTaskSpecFromTaskSpec = (
   };
 
   return vertexTaskSpec;
-};
-
-const makeNameUniqueByAddingIndex = (
-  name: string,
-  existingNames: Set<string>,
-): string => {
-  let finalName = name;
-  let index = 1;
-  while (existingNames.has(finalName)) {
-    index++;
-    finalName = name + " " + index.toString();
-  }
-  return finalName;
 };
 
 const buildVertexPipelineSpecFromGraphComponentSpec = (

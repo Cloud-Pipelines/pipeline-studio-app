@@ -64,6 +64,7 @@ import {
   type LexicalMatch,
   lexicalSearch,
   type MatchField,
+  mergeUniqueMatches,
   type SourcedReference,
 } from "@/services/componentSearchIndex";
 import { buildComponentSearchSuggestions } from "@/services/componentSearchSuggestions";
@@ -643,31 +644,6 @@ const ComponentDescriptionPanel = ({
     </BlockStack>
   );
 };
-
-/**
- * Merge every component source the rest of the app knows about into a single
- * deduped, source-attributed list.
- *
- * Order matters: the first occurrence of a digest wins. Priority is
- * `standard > published > registered > user` so the most canonical label
- * sticks when the same component appears in multiple places.
- */
-function mergeUniqueMatches(
-  primary: LexicalMatch[],
-  secondary: LexicalMatch[],
-  fallback: LexicalMatch[],
-  limit: number,
-): LexicalMatch[] {
-  const merged: LexicalMatch[] = [];
-  const seen = new Set<string>();
-  for (const match of [...primary, ...secondary, ...fallback]) {
-    if (seen.has(match.digest)) continue;
-    seen.add(match.digest);
-    merged.push(match);
-    if (merged.length >= limit) return merged;
-  }
-  return merged;
-}
 
 const AI_SEARCH_PROGRESS_VERBS = [
   "Scanning",

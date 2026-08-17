@@ -1,6 +1,6 @@
 import type { ComponentSpec, GraphSpec } from "./componentSpec";
 
-const makeNameUniqueByAddingIndex = (
+export const makeNameUniqueByAddingIndex = (
   name: string,
   existingNames: Set<string>,
 ): string => {
