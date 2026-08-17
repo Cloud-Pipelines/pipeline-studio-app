@@ -41,7 +41,24 @@ Use `Button` from `@/components/ui/button`
 
 ## Icons
 
-Use `Icon` from `@/components/ui/icon`
+Use `Icon` from `@/components/ui/icon` instead of importing from `lucide-react` directly:
+
+- `<Icon name="ChevronRight" size="lg" />` instead of `<ChevronRight className="size-5" />`
+- `name` is any Lucide icon name; `size` is `xs` `sm` `md` `lg` `xl` `fill` (12/14/16/20/24/100%,
+  default `md`)
+- Size comes from the `size` prop, **not** a `className`. The variant emits `!w-* !h-*`, so a width or
+  height class on `className` loses to it — `<Icon name="X" className="size-5" />` renders at 16px, not
+  20px. Reserve `className` for colour, margin, and transforms.
+
+**Icons Lucide does not have** — brand and language logos (Python, Ruby, Bash, JavaScript, Google
+Drive, …) — come from `react-icons` and are used directly, because `Icon` only accepts Lucide names:
+
+- `<FaPython />` from `react-icons/fa` — correct, not a deviation to migrate
+- Match the surrounding icons' rendered size by hand (`size={n}` or a Tailwind size class); these do not
+  get the `Icon` size scale
+
+Draw a raw `<svg>` only for something that is not an icon from a set — SVG `<defs>`/`<marker>`
+definitions, or a bespoke glyph with no library equivalent.
 
 ## Styling
 
