@@ -4,48 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Text } from "@/components/ui/typography";
-import { cn } from "@/lib/utils";
 import type { TaskDiff } from "@/routes/v2/pages/CompareView/utils/comparePipelines";
-import {
-  EXECUTION_STATUS_BG_COLORS,
-  getExecutionStatusLabel,
-} from "@/utils/executionStatus";
 import { tracking } from "@/utils/tracking";
 
 import { ArtifactDiffSection } from "./ArtifactDiffSection";
 import { DiffStatusBadge } from "./DiffStatusBadge";
+import { ExecutionStatusPill } from "./ExecutionStatusPill";
 import { FieldDiffRow } from "./FieldDiffRow";
 import { RunTags } from "./RunTag";
 import {
   taskHasComparableLogs,
   TaskLogComparisonDialog,
 } from "./TaskLogComparisonDialog";
-
-interface ExecutionStatusPillProps {
-  label: string;
-  status: string | undefined;
-}
-
-function ExecutionStatusPill({ label, status }: ExecutionStatusPillProps) {
-  if (!status) return null;
-
-  return (
-    <InlineStack gap="1" blockAlign="center" wrap="nowrap">
-      <Text as="span" size="xs" tone="subdued">
-        {label}
-      </Text>
-      <span
-        className={cn(
-          "h-2 w-2 rounded-full",
-          EXECUTION_STATUS_BG_COLORS[status] ?? "bg-muted",
-        )}
-      />
-      <Text as="span" size="xs">
-        {getExecutionStatusLabel(status)}
-      </Text>
-    </InlineStack>
-  );
-}
 
 interface TaskDiffDetailProps {
   diff: TaskDiff;
@@ -167,7 +137,7 @@ export function TaskDiffDetail({
             <Text as="span" size="sm" tone="subdued">
               {diff.outcomeChanged
                 ? "No configuration changes - the execution outcome differs between runs."
-                : "No differences in this task."}
+                : "Configuration and outcome match. Expand Artifacts to compare what each run produced."}
             </Text>
           )}
         </>

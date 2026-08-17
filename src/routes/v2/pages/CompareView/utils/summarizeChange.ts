@@ -1,3 +1,4 @@
+import type { DiffStatus } from "@/utils/diffStatus";
 import { pluralize } from "@/utils/string";
 
 import { countChanged, type IoDiff, type TaskDiff } from "./comparePipelines";
@@ -32,23 +33,33 @@ export function summarizeTaskChange(diff: TaskDiff): string {
   return parts.join(" · ");
 }
 
+const ARTIFACT_CHANGE_LABEL: Partial<Record<DiffStatus, string>> = {
+  changed: "artifact differs",
+  lost: "artifact only in A",
+  new: "artifact only in B",
+};
+
 /**
  * Short human summary of how a changed pipeline input/output differs. A rewired
  * producing task is called out explicitly, alongside the count of any other
- * fields that also changed.
+ * fields that also changed, and a difference in the artifact the run actually
+ * produced — which is invisible in the spec — is named on its own.
  */
 export function summarizeIoChange(diff: IoDiff): string {
   const changedFields = diff.fieldDiffs.filter(
     (entry) => entry.status !== "unchanged",
   );
-  if (changedFields.length === 0) return "";
-
   const rewired = changedFields.some((entry) => entry.key === "source");
   const otherFields = rewired ? changedFields.length - 1 : changedFields.length;
 
   const parts: string[] = [];
   if (rewired) parts.push("source rewired");
   if (otherFields > 0) parts.push(`${counted(otherFields, "field")} changed`);
+
+  const artifactLabel = diff.artifactStatus
+    ? ARTIFACT_CHANGE_LABEL[diff.artifactStatus]
+    : undefined;
+  if (artifactLabel) parts.push(artifactLabel);
 
   return parts.join(" · ");
 }

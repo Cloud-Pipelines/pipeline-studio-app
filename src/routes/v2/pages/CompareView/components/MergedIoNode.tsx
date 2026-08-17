@@ -6,6 +6,7 @@ import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import type { MergedIoNodeData } from "@/routes/v2/pages/CompareView/utils/buildMergedGraph";
 import type { KeyedDiffEntry } from "@/routes/v2/pages/CompareView/utils/comparePipelines";
+import { ioDisplayStatus } from "@/routes/v2/pages/CompareView/utils/comparePipelines";
 import { formatDiffValue } from "@/routes/v2/pages/CompareView/utils/formatDiffValue";
 import { summarizeIoChange } from "@/routes/v2/pages/CompareView/utils/summarizeChange";
 
@@ -83,9 +84,10 @@ export function MergedIoNode({ data }: NodeProps<MergedIoNodeType>) {
     (entry) => entry.status !== "unchanged",
   );
   const side = spotlight === "b" ? "b" : "a";
+  const displayStatus = ioDisplayStatus(diff);
   const showSideValues = spotlight !== "both" && changedFields.length > 0;
   const changeSummary =
-    diff.status === "changed" ? summarizeIoChange(diff) : "";
+    displayStatus === "changed" ? summarizeIoChange(diff) : "";
   const showFieldChanges =
     !showSideValues &&
     diff.status === "changed" &&
@@ -98,7 +100,7 @@ export function MergedIoNode({ data }: NodeProps<MergedIoNodeType>) {
       className={cn(
         "relative w-44 rounded-2xl border-2 px-4 py-2",
         KIND_TINT[isInput ? "input" : "output"],
-        MEMBERSHIP_BORDER[diff.status],
+        MEMBERSHIP_BORDER[displayStatus],
       )}
     >
       <InlineStack
@@ -124,7 +126,7 @@ export function MergedIoNode({ data }: NodeProps<MergedIoNodeType>) {
           </Text>
         </InlineStack>
         {!singleRun && (
-          <DiffStatusBadge status={diff.status} spotlight={spotlight} />
+          <DiffStatusBadge status={displayStatus} spotlight={spotlight} />
         )}
       </InlineStack>
 

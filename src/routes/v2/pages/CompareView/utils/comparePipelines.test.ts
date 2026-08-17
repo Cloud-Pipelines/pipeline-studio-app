@@ -1,10 +1,15 @@
 import { describe, expect, test } from "vitest";
 
+import type {
+  ArtifactDataResponse,
+  ArtifactNodeResponse,
+} from "@/api/types.gen";
 import type { ComponentSpec, TaskSpec } from "@/utils/componentSpec";
 
 import {
   buildPipelineComparison,
   type ComparisonSide,
+  ioDisplayStatus,
 } from "./comparePipelines";
 
 const task = (digest: string, overrides: Partial<TaskSpec> = {}): TaskSpec => ({
@@ -28,6 +33,31 @@ const side = (
   taskExecutionIdMap?: Map<string, string>,
 ): ComparisonSide => ({ spec, taskStatusMap, taskExecutionIdMap });
 
+const outputSpec = (): ComponentSpec => ({
+  outputs: [{ name: "model" }],
+  implementation: {
+    graph: {
+      tasks: { train: task("d1") },
+      outputValues: {
+        model: { taskOutput: { taskId: "train", outputName: "out" } },
+      },
+    },
+  },
+});
+
+const artifact = (
+  id: string,
+  data: Partial<ArtifactDataResponse>,
+): ArtifactNodeResponse => ({
+  id,
+  artifact_data: { total_size: 0, is_dir: false, ...data },
+});
+
+const sideWithArtifacts = (
+  spec: ComponentSpec,
+  outputArtifacts: Record<string, ArtifactNodeResponse>,
+): ComparisonSide => ({ spec, taskStatusMap: noStatus, outputArtifacts });
+
 describe("buildPipelineComparison()", () => {
   test("flags added, removed, and unchanged tasks by id", () => {
     const specA = graphSpec({ train: task("d1"), evaluate: task("d2") });
@@ -50,6 +80,7 @@ describe("buildPipelineComparison()", () => {
       changed: 0,
       unchanged: 1,
       outcomeChanged: 0,
+      outputArtifactChanged: 0,
     });
   });
 
@@ -235,6 +266,7 @@ describe("buildPipelineComparison()", () => {
       changed: 0,
       unchanged: 0,
       outcomeChanged: 0,
+      outputArtifactChanged: 0,
     });
   });
 
@@ -328,5 +360,74 @@ describe("buildPipelineComparison()", () => {
     expect(model?.fieldDiffs.find((f) => f.key === "source")?.status).toBe(
       "changed",
     );
+  });
+
+  test("flags an output whose artifact differs even though the spec matched", () => {
+    const spec = outputSpec();
+
+    const { outputDiffs, counts } = buildPipelineComparison(
+      sideWithArtifacts(spec, { model: artifact("a1", { total_size: 1_000 }) }),
+      sideWithArtifacts(spec, { model: artifact("b1", { total_size: 9_000 }) }),
+    );
+
+    const model = outputDiffs[0];
+    expect(model.status).toBe("unchanged");
+    expect(model.artifactStatus).toBe("changed");
+    expect(ioDisplayStatus(model)).toBe("changed");
+    expect(counts.outputArtifactChanged).toBe(1);
+  });
+
+  test("leaves an output unchanged when the artifacts match", () => {
+    const spec = outputSpec();
+    const data = { total_size: 1_000, value: "gs://bucket/model" };
+
+    const { outputDiffs, counts } = buildPipelineComparison(
+      sideWithArtifacts(spec, { model: artifact("a1", data) }),
+      sideWithArtifacts(spec, { model: artifact("b1", data) }),
+    );
+
+    expect(outputDiffs[0].artifactStatus).toBe("unchanged");
+    expect(ioDisplayStatus(outputDiffs[0])).toBe("unchanged");
+    expect(counts.outputArtifactChanged).toBe(0);
+  });
+
+  test("reports an artifact missing on one side as a value difference, not a removal", () => {
+    const spec = outputSpec();
+
+    const { outputDiffs, counts } = buildPipelineComparison(
+      sideWithArtifacts(spec, { model: artifact("a1", { total_size: 10 }) }),
+      sideWithArtifacts(spec, {}),
+    );
+
+    expect(outputDiffs[0].status).toBe("unchanged");
+    expect(outputDiffs[0].artifactStatus).toBe("lost");
+    expect(ioDisplayStatus(outputDiffs[0])).toBe("changed");
+    expect(counts.outputArtifactChanged).toBe(1);
+  });
+
+  test("does not count the artifact of an output only one run declares", () => {
+    const { outputDiffs, counts } = buildPipelineComparison(
+      sideWithArtifacts(outputSpec(), {
+        model: artifact("a1", { total_size: 10 }),
+      }),
+      side(graphSpec({})),
+    );
+
+    expect(outputDiffs[0].status).toBe("lost");
+    expect(ioDisplayStatus(outputDiffs[0])).toBe("lost");
+    expect(counts.outputArtifactChanged).toBe(0);
+  });
+
+  test("leaves the artifact axis undefined before artifact data arrives", () => {
+    const spec = outputSpec();
+
+    const { outputDiffs, counts } = buildPipelineComparison(
+      side(spec),
+      side(spec),
+    );
+
+    expect(outputDiffs[0].artifactStatus).toBeUndefined();
+    expect(ioDisplayStatus(outputDiffs[0])).toBe("unchanged");
+    expect(counts.outputArtifactChanged).toBe(0);
   });
 });

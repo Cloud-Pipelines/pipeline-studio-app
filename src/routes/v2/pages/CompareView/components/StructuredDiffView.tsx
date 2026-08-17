@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Heading, Text } from "@/components/ui/typography";
 import type { CompareMode } from "@/routes/v2/pages/CompareView/utils/compareMode";
 import type { PipelineComparison } from "@/routes/v2/pages/CompareView/utils/comparePipelines";
+import { ioDisplayStatus } from "@/routes/v2/pages/CompareView/utils/comparePipelines";
+import { pluralize } from "@/utils/string";
 import { tracking } from "@/utils/tracking";
 
 import { IoDiffRow } from "./IoDiffRow";
@@ -20,6 +22,20 @@ interface SummaryCountProps {
 function SummaryCount({ label, value }: SummaryCountProps) {
   return (
     <InlineStack gap="1" blockAlign="baseline">
+      <Text as="span" size="sm" weight="semibold">
+        {value}
+      </Text>
+      <Text as="span" size="sm" tone="subdued">
+        {label}
+      </Text>
+    </InlineStack>
+  );
+}
+
+function ChangeCount({ label, value }: SummaryCountProps) {
+  return (
+    <InlineStack gap="1" blockAlign="center">
+      <span className="h-2 w-2 rounded-full bg-diff-changed" />
       <Text as="span" size="sm" weight="semibold">
         {value}
       </Text>
@@ -74,7 +90,9 @@ export function StructuredDiffView({
     : comparison.inputDiffs.filter((diff) => diff.status !== "unchanged");
   const visibleOutputs = showUnchangedRows
     ? comparison.outputDiffs
-    : comparison.outputDiffs.filter((diff) => diff.status !== "unchanged");
+    : comparison.outputDiffs.filter(
+        (diff) => ioDisplayStatus(diff) !== "unchanged",
+      );
   const visibleTasks = showUnchangedRows
     ? comparison.taskDiffs
     : comparison.taskDiffs.filter(
@@ -101,15 +119,16 @@ export function StructuredDiffView({
             <SummaryCount label="changed" value={counts.changed} />
             <SummaryCount label="unchanged" value={counts.unchanged} />
             {counts.outcomeChanged > 0 && (
-              <InlineStack gap="1" blockAlign="center">
-                <span className="h-2 w-2 rounded-full bg-diff-changed" />
-                <Text as="span" size="sm" weight="semibold">
-                  {counts.outcomeChanged}
-                </Text>
-                <Text as="span" size="sm" tone="subdued">
-                  outcome differs
-                </Text>
-              </InlineStack>
+              <ChangeCount
+                value={counts.outcomeChanged}
+                label="outcome differs"
+              />
+            )}
+            {counts.outputArtifactChanged > 0 && (
+              <ChangeCount
+                value={counts.outputArtifactChanged}
+                label={`output ${pluralize(counts.outputArtifactChanged, "artifact")} ${counts.outputArtifactChanged === 1 ? "differs" : "differ"}`}
+              />
             )}
           </InlineStack>
           <InlineStack gap="2" blockAlign="center" wrap="nowrap">
@@ -133,7 +152,9 @@ export function StructuredDiffView({
           </InfoBox>
         ) : (
           <InfoBox title="No differences" variant="success" width="full">
-            These two runs have identical inputs, tasks, and outputs.
+            These two runs match on inputs, tasks, outcomes, and pipeline output
+            artifacts. Artifacts produced inside a task are compared when you
+            open that task — switch on Show unchanged to list them.
           </InfoBox>
         )
       ) : (

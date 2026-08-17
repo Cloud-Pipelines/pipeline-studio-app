@@ -115,4 +115,21 @@ describe("summarizeIoChange()", () => {
   test("returns an empty string with no changed fields", () => {
     expect(summarizeIoChange(ioDiff({ fieldDiffs: [] }))).toBe("");
   });
+
+  test("names an artifact difference the spec cannot show", () => {
+    expect(
+      summarizeIoChange(ioDiff({ fieldDiffs: [], artifactStatus: "changed" })),
+    ).toBe("artifact differs");
+    expect(
+      summarizeIoChange(ioDiff({ fieldDiffs: [], artifactStatus: "lost" })),
+    ).toBe("artifact only in A");
+    expect(
+      summarizeIoChange(ioDiff({ fieldDiffs: [], artifactStatus: "new" })),
+    ).toBe("artifact only in B");
+    expect(
+      summarizeIoChange(
+        ioDiff({ fieldDiffs: [], artifactStatus: "unchanged" }),
+      ),
+    ).toBe("");
+  });
 });

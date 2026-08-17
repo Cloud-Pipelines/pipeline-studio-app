@@ -169,12 +169,16 @@ export function CompareView() {
         a={{
           createdBy: sideA.createdBy,
           createdAt: sideA.createdAt,
+          status: sideA.status,
+          durationMs: sideA.durationMs,
           annotations: sideA.runAnnotations,
           arguments: sideA.runArguments,
         }}
         b={{
           createdBy: sideB.createdBy,
           createdAt: sideB.createdAt,
+          status: sideB.status,
+          durationMs: sideB.durationMs,
           annotations: sideB.runAnnotations,
           arguments: sideB.runArguments,
         }}

@@ -60,6 +60,54 @@ describe("buildRunMetadataComparison()", () => {
     expect(result.hasChanges).toBe(false);
   });
 
+  test("counts a differing run status", () => {
+    const result = buildRunMetadataComparison(
+      { status: "SUCCEEDED" },
+      { status: "FAILED" },
+    );
+
+    expect(result.status.changed).toBe(true);
+    expect(result.changeCount).toBe(1);
+  });
+
+  test("does not report a status difference while one side is still loading", () => {
+    const result = buildRunMetadataComparison({ status: "SUCCEEDED" }, {});
+
+    expect(result.status.changed).toBe(false);
+    expect(result.hasChanges).toBe(false);
+  });
+
+  test("counts a duration gap that is both large and proportionally big", () => {
+    const result = buildRunMetadataComparison(
+      { durationMs: 30_000 },
+      { durationMs: 120_000 },
+    );
+
+    expect(result.duration.changed).toBe(true);
+    expect(result.changeCount).toBe(1);
+  });
+
+  test("ignores a duration gap within scheduling noise", () => {
+    const proportionallyBigButTiny = buildRunMetadataComparison(
+      { durationMs: 1_000 },
+      { durationMs: 3_000 },
+    );
+    const absolutelyBigButProportionallySmall = buildRunMetadataComparison(
+      { durationMs: 600_000 },
+      { durationMs: 610_000 },
+    );
+
+    expect(proportionallyBigButTiny.duration.changed).toBe(false);
+    expect(absolutelyBigButProportionallySmall.duration.changed).toBe(false);
+  });
+
+  test("does not report a duration difference while one side is unknown", () => {
+    const result = buildRunMetadataComparison({ durationMs: 30_000 }, {});
+
+    expect(result.duration.changed).toBe(false);
+    expect(result.hasChanges).toBe(false);
+  });
+
   test("diffs run arguments generically", () => {
     const result = buildRunMetadataComparison(
       { arguments: { epochs: "10", region: "us" } },

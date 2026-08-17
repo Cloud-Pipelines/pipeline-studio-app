@@ -16,10 +16,12 @@ import {
   buildRunMetadataComparison,
   type RunMetadataInput,
 } from "@/routes/v2/pages/CompareView/utils/compareRunMetadata";
-import { formatDate } from "@/utils/date";
+import { formatDate, formatDurationMs } from "@/utils/date";
+import { getExecutionStatusLabel } from "@/utils/executionStatus";
 import { tracking } from "@/utils/tracking";
 
 import { DiffStatusBadge } from "./DiffStatusBadge";
+import { ExecutionStatusPill } from "./ExecutionStatusPill";
 import { FieldDiffRow } from "./FieldDiffRow";
 import { RunTag } from "./RunTag";
 
@@ -56,14 +58,29 @@ function scalarEntry(
   return { key, a, b, status: changed ? "changed" : "unchanged" };
 }
 
+const statusText = (status: string | undefined) =>
+  status ? getExecutionStatusLabel(status) : undefined;
+
+const durationText = (durationMs: number | undefined) =>
+  durationMs === undefined ? undefined : formatDurationMs(durationMs);
+
 interface RunSummaryProps {
   run: "a" | "b";
   label: string;
   author: string | undefined;
   createdAt: string | undefined;
+  status: string | undefined;
+  durationMs: number | undefined;
 }
 
-function RunSummary({ run, label, author, createdAt }: RunSummaryProps) {
+function RunSummary({
+  run,
+  label,
+  author,
+  createdAt,
+  status,
+  durationMs,
+}: RunSummaryProps) {
   return (
     <InlineStack gap="2" blockAlign="center" wrap="nowrap" className="min-w-0">
       <RunTag run={run} label={label} />
@@ -73,6 +90,12 @@ function RunSummary({ run, label, author, createdAt }: RunSummaryProps) {
       <Text as="span" size="xs" tone="subdued" className="whitespace-nowrap">
         {createdAt ? formatDate(createdAt) : "Unknown"}
       </Text>
+      <ExecutionStatusPill status={status} />
+      {durationMs !== undefined && (
+        <Text as="span" size="xs" tone="subdued" className="whitespace-nowrap">
+          {formatDurationMs(durationMs)}
+        </Text>
+      )}
     </InlineStack>
   );
 }
@@ -103,6 +126,8 @@ export function RunMetadataSection({
           label={mode.side === "a" ? labelA : labelB}
           author={present.createdBy}
           createdAt={present.createdAt}
+          status={present.status}
+          durationMs={present.durationMs}
         />
       </MetadataBar>
     );
@@ -134,12 +159,16 @@ function RunMetadataComparison({
         label={labelA}
         author={comparison.author.a}
         createdAt={comparison.createdAt.a}
+        status={comparison.status.a}
+        durationMs={comparison.duration.a}
       />
       <RunSummary
         run="b"
         label={labelB}
         author={comparison.author.b}
         createdAt={comparison.createdAt.b}
+        status={comparison.status.b}
+        durationMs={comparison.duration.b}
       />
     </InlineStack>
   );
@@ -201,6 +230,26 @@ function RunMetadataComparison({
               comparison.createdAt.a,
               comparison.createdAt.b,
               comparison.createdAt.changed,
+            )}
+            labelA={labelA}
+            labelB={labelB}
+          />
+          <FieldDiffRow
+            entry={scalarEntry(
+              "status",
+              statusText(comparison.status.a),
+              statusText(comparison.status.b),
+              comparison.status.changed,
+            )}
+            labelA={labelA}
+            labelB={labelB}
+          />
+          <FieldDiffRow
+            entry={scalarEntry(
+              "duration",
+              durationText(comparison.duration.a),
+              durationText(comparison.duration.b),
+              comparison.duration.changed,
             )}
             labelA={labelA}
             labelB={labelB}

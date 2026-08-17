@@ -1,5 +1,6 @@
 import equal from "fast-deep-equal";
 
+import type { ArtifactNodeResponse } from "@/api/types.gen";
 import {
   EDGE_CONDUITS_ANNOTATION,
   EDITOR_COLLAPSED_ANNOTATION,
@@ -21,6 +22,8 @@ import type {
 } from "@/utils/componentSpec";
 import { isGraphImplementation } from "@/utils/componentSpec";
 import type { DiffStatus } from "@/utils/diffStatus";
+
+import { artifactDiffStatus } from "./compareArtifacts";
 
 export type { DiffStatus };
 
@@ -66,6 +69,23 @@ export interface IoDiff {
   fieldDiffs: KeyedDiffEntry<unknown>[];
   sourceTaskIdA?: string;
   sourceTaskIdB?: string;
+  artifactStatus?: DiffStatus;
+  artifactA?: ArtifactNodeResponse;
+  artifactB?: ArtifactNodeResponse;
+}
+
+/**
+ * The status an output should be shown as. What a pipeline declares and what it
+ * produced are separate axes: an output whose declaration matched but whose
+ * artifact differs is not "unchanged", and one whose artifact is missing on one
+ * side is not "removed" — the declaration is still on both sides — so a
+ * value-only difference reads as changed either way.
+ */
+export function ioDisplayStatus(diff: IoDiff): DiffStatus {
+  if (diff.status !== "unchanged") return diff.status;
+  return diff.artifactStatus && diff.artifactStatus !== "unchanged"
+    ? "changed"
+    : "unchanged";
 }
 
 export interface TaskDiff {
@@ -94,6 +114,7 @@ interface ComparisonCounts {
   changed: number;
   unchanged: number;
   outcomeChanged: number;
+  outputArtifactChanged: number;
 }
 
 export interface PipelineComparison {
@@ -105,13 +126,15 @@ export interface PipelineComparison {
 }
 
 /**
- * One run's contribution to a comparison. Grouping the three per-run inputs
- * keeps the A and B sides impossible to transpose at the call site.
+ * One run's contribution to a comparison. Grouping the per-run inputs keeps the
+ * A and B sides impossible to transpose at the call site. `outputArtifacts` is
+ * the run's pipeline-level output artifacts, keyed by output name.
  */
 export interface ComparisonSide {
   spec: ComponentSpec | undefined;
   taskStatusMap: Map<string, string>;
   taskExecutionIdMap?: Map<string, string>;
+  outputArtifacts?: Record<string, ArtifactNodeResponse>;
 }
 
 export function countChanged(entries: { status: DiffStatus }[]): number {
@@ -313,10 +336,9 @@ function diffInputs(
   });
 }
 
-function diffOutputs(
-  specA: ComponentSpec | undefined,
-  specB: ComponentSpec | undefined,
-): IoDiff[] {
+function diffOutputs(sideA: ComparisonSide, sideB: ComparisonSide): IoDiff[] {
+  const { spec: specA, outputArtifacts: artifactsA = {} } = sideA;
+  const { spec: specB, outputArtifacts: artifactsB = {} } = sideB;
   const aMap = byName(specA?.outputs);
   const bMap = byName(specB?.outputs);
   const aOut = getOutputValues(specA);
@@ -330,6 +352,8 @@ function diffOutputs(
         outputFields(aMap[name], aOut[name]),
         outputFields(bMap[name], bOut[name]),
       );
+      const artifactA = artifactsA[name];
+      const artifactB = artifactsB[name];
       return {
         name,
         kind: "output" as const,
@@ -337,6 +361,12 @@ function diffOutputs(
         fieldDiffs,
         sourceTaskIdA: aOut[name]?.taskOutput.taskId,
         sourceTaskIdB: bOut[name]?.taskOutput.taskId,
+        artifactStatus:
+          artifactA || artifactB
+            ? artifactDiffStatus(artifactA, artifactB)
+            : undefined,
+        artifactA,
+        artifactB,
       };
     },
   );
@@ -373,7 +403,7 @@ export function buildPipelineComparison(
   );
 
   const inputDiffs = diffInputs(specA, specB);
-  const outputDiffs = diffOutputs(specA, specB);
+  const outputDiffs = diffOutputs(sideA, sideB);
 
   const counts: ComparisonCounts = {
     added: 0,
@@ -381,6 +411,7 @@ export function buildPipelineComparison(
     changed: 0,
     unchanged: 0,
     outcomeChanged: 0,
+    outputArtifactChanged: 0,
   };
   for (const diff of taskDiffs) {
     if (diff.status === "new") counts.added += 1;
@@ -389,6 +420,22 @@ export function buildPipelineComparison(
     else counts.unchanged += 1;
 
     if (diff.outcomeChanged) counts.outcomeChanged += 1;
+  }
+
+  /**
+   * An output only present on one side is already reported as added or removed,
+   * so its artifact adds nothing; the count is about outputs both runs declare
+   * but whose produced value differs.
+   */
+  for (const diff of outputDiffs) {
+    const bothSides = diff.status === "unchanged" || diff.status === "changed";
+    if (
+      bothSides &&
+      diff.artifactStatus &&
+      diff.artifactStatus !== "unchanged"
+    ) {
+      counts.outputArtifactChanged += 1;
+    }
   }
 
   return {

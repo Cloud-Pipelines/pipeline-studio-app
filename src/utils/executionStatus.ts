@@ -131,6 +131,11 @@ export function isStatusActivelyLogging(status?: string): boolean {
   return CONTAINER_STATUSES_ACTIVELY_LOGGING.has(status);
 }
 
+export function isInProgressStatus(status?: string): boolean {
+  if (!status) return false;
+  return IN_PROGRESS_STATUSES.has(status);
+}
+
 /**
  * Flatten nested child_execution_status_stats into a single aggregated stats object.
  */
