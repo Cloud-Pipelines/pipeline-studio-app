@@ -158,6 +158,31 @@ describe("useSavePrototypeBanner", () => {
     expect(saved[1]).toEqual({ "2026-02-01T00:00:00.000Z": "saved elsewhere" });
   });
 
+  it("keeps history that the endpoint returned as a JSON string", async () => {
+    fetchWithErrorHandling.mockImplementation((_url, options) =>
+      options?.method === "PATCH"
+        ? Promise.resolve({})
+        : Promise.resolve({
+            [SETTING_NAME]: JSON.stringify([
+              { "2026-01-01T00:00:00.000Z": "old" },
+            ]),
+          }),
+    );
+
+    const { result } = renderHook(() => useSavePrototypeBanner(), {
+      wrapper: makeWrapper(),
+    });
+
+    act(() => result.current.mutate("fresh banner"));
+    await waitFor(() => expect(patchCalls()).toHaveLength(1));
+
+    const saved = JSON.parse(patchCalls()[0][1]?.body as string).settings[
+      SETTING_NAME
+    ];
+    expect(saved).toHaveLength(2);
+    expect(saved[1]).toEqual({ "2026-01-01T00:00:00.000Z": "old" });
+  });
+
   it("stores an ISO timestamp as the banner key", async () => {
     const { result } = renderHook(() => useSavePrototypeBanner(), {
       wrapper: makeWrapper(),

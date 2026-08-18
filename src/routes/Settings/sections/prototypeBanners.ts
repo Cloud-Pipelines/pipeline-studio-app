@@ -33,12 +33,27 @@ function sortNewestFirst(banners: PrototypeBanner[]): PrototypeBanner[] {
   );
 }
 
-/** Keeps only single-entry string maps, sorted newest first. */
+/**
+ * Keeps only single-entry string maps, sorted newest first.
+ *
+ * The settings endpoint can hand a value back as a JSON string, so a string
+ * is parsed before validation — same as the tour and onboarding readers.
+ * Treating a stringified list as "no banners" would make the save path
+ * overwrite the whole history with one entry.
+ */
 export function parseBanners(value: unknown): PrototypeBanner[] {
-  if (!Array.isArray(value)) return [];
+  let raw = value;
+  if (typeof raw === "string") {
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(raw)) return [];
 
   const banners: PrototypeBanner[] = [];
-  for (const entry of value) {
+  for (const entry of raw) {
     if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
       continue;
     }

@@ -26,6 +26,14 @@ describe("parseBanners", () => {
     expect(parseBanners(undefined)).toEqual([]);
     expect(parseBanners({ "2026-01-01T00:00:00.000Z": "x" })).toEqual([]);
   });
+
+  it("parses a value the settings endpoint stored as a JSON string", () => {
+    expect(parseBanners(JSON.stringify([OLD, NEW]))).toEqual([NEW, OLD]);
+  });
+
+  it("returns an empty list for a string that is not JSON", () => {
+    expect(parseBanners("not json")).toEqual([]);
+  });
 });
 
 describe("withNewBanner", () => {
