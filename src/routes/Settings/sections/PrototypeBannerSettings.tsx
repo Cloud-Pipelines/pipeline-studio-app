@@ -155,8 +155,13 @@ export function PrototypeBannerSettings() {
                 </Text>
               ) : (
                 <BlockStack gap="3">
-                  {banners.map((banner) => (
-                    <BannerRow key={bannerTimestamp(banner)} banner={banner} />
+                  {banners.map((banner, index) => (
+                    // Two banners can share a timestamp, so the index keeps
+                    // the key unique.
+                    <BannerRow
+                      key={`${bannerTimestamp(banner)}-${index}`}
+                      banner={banner}
+                    />
                   ))}
                 </BlockStack>
               )}
