@@ -3,12 +3,14 @@ import { useNavigate } from "@tanstack/react-router";
 import { type MouseEvent } from "react";
 
 import type { PipelineRunResponse } from "@/api/types.gen";
+import TooltipButton from "@/components/shared/Buttons/TooltipButton";
 import { CopyText } from "@/components/shared/CopyText/CopyText";
 import { FavoriteToggle } from "@/components/shared/FavoriteToggle";
 import { RunSourceIcon } from "@/components/shared/RunSource";
 import { StatusBar, StatusIcon } from "@/components/shared/Status";
 import { TagList } from "@/components/shared/Tags/TagList";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 import { InlineStack } from "@/components/ui/layout";
 import { TableCell, TableRow } from "@/components/ui/table";
 import {
@@ -17,6 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Text } from "@/components/ui/typography";
+import useToastNotification from "@/hooks/useToastNotification";
 import { useBackend } from "@/providers/BackendProvider";
 import { getDefaultRunPath } from "@/routes/runRoutes";
 import { fetchRunAnnotations } from "@/services/pipelineRunService";
@@ -28,6 +31,8 @@ import {
 import { TWENTY_FOUR_HOURS_IN_MS } from "@/utils/constants";
 import { formatDate } from "@/utils/date";
 import { getOverallExecutionStatusFromStats } from "@/utils/executionStatus";
+import { copyToClipboard } from "@/utils/string";
+import { tracking } from "@/utils/tracking";
 
 interface RunRowProps {
   run: PipelineRunResponse;
@@ -37,6 +42,7 @@ interface RunRowProps {
 const RunRow = ({ run, onFilterByUser }: RunRowProps) => {
   const navigate = useNavigate();
   const { backendUrl } = useBackend();
+  const notify = useToastNotification();
 
   const runId = `${run.id}`;
 
@@ -78,6 +84,11 @@ const RunRow = ({ run, onFilterByUser }: RunRowProps) => {
     }
 
     navigate({ to: clickThroughUrl });
+  };
+
+  const handleShare = () => {
+    copyToClipboard(new URL(clickThroughUrl, window.location.origin).href);
+    notify("Link copied to clipboard", "success");
   };
 
   const createdByContent = onFilterByUser ? (
@@ -148,6 +159,16 @@ const RunRow = ({ run, onFilterByUser }: RunRowProps) => {
       <TableCell className="w-0">
         <InlineStack gap="2" blockAlign="center" wrap="nowrap">
           <RunSourceIcon source={source} className="opacity-50" />
+          <TooltipButton
+            tooltip="Share Run"
+            onClick={handleShare}
+            variant="ghost"
+            size="icon"
+            className="w-fit h-fit p-1 text-gray-500/50 dark:text-muted-foreground hover:text-foreground"
+            {...tracking("run_home.table.share_run")}
+          >
+            <Icon name="Share2" />
+          </TooltipButton>
           <FavoriteToggle type="run" id={runId} name={name} />
         </InlineStack>
       </TableCell>
