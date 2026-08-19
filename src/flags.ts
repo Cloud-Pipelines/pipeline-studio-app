@@ -78,4 +78,12 @@ export const ExistingFlags: ConfigFlags = {
     default: false,
     category: "beta",
   },
+
+  ["agent-shell"]: {
+    name: "Agent Shell",
+    description:
+      "Enable the Agent Shell at /shell: agent sessions with chat, sub-agents, assets and triggers. Requires the tangent-shell backend to be running.",
+    default: false,
+    category: "beta",
+  },
 };

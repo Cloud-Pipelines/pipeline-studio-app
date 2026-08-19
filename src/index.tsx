@@ -1,21 +1,20 @@
 import "./styles/global.css";
 import "@xyflow/react/dist/style.css";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { scan } from "react-scan";
 
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { queryClient } from "@/lib/queryClient";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
 import { router } from "./routes/router";
 import { initializeBugsnag } from "./services/errorManagement/bugsnag";
 
 initializeBugsnag();
-
-const queryClient = new QueryClient();
 
 scan({
   enabled: import.meta.env.VITE_ENABLE_SCAN === "true",

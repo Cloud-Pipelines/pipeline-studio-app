@@ -86,6 +86,18 @@ code {
   --status-cancelled: oklch(0.44 0.01 286);
   --status-cancelling: oklch(0.7 0.19 42);
   --status-uninitialized: oklch(0.85 0.16 90);
+
+  /* Chat message chrome (shell) — surfaces, code chips, quotes and tables
+   * inside rendered agent markdown. */
+  --message-surface: var(--card);
+  --message-surface-foreground: var(--foreground);
+  --message-surface-border: oklch(0.91 0.008 85);
+  --message-heading: var(--foreground);
+  --message-code: oklch(0.955 0.01 290);
+  --message-code-foreground: var(--foreground);
+  --message-quote-border: var(--border);
+  --message-table-border: var(--border);
+  --message-table-header: color-mix(in oklch, var(--muted) 50%, transparent);
 }
 
 .dark {
@@ -150,6 +162,16 @@ code {
   --status-cancelled: oklch(0.52 0.01 286);
   --status-cancelling: oklch(0.6 0.13 42);
   --status-uninitialized: oklch(0.68 0.11 90);
+
+  --message-surface: var(--muted);
+  --message-surface-foreground: var(--foreground);
+  --message-surface-border: transparent;
+  --message-heading: var(--foreground);
+  --message-code: var(--muted);
+  --message-code-foreground: var(--foreground);
+  --message-quote-border: var(--border);
+  --message-table-border: var(--border);
+  --message-table-header: color-mix(in oklch, var(--muted) 50%, transparent);
 }
 
 /*
@@ -255,6 +277,15 @@ code {
   --color-status-cancelled: var(--status-cancelled);
   --color-status-cancelling: var(--status-cancelling);
   --color-status-uninitialized: var(--status-uninitialized);
+  --color-message-surface: var(--message-surface);
+  --color-message-surface-foreground: var(--message-surface-foreground);
+  --color-message-surface-border: var(--message-surface-border);
+  --color-message-heading: var(--message-heading);
+  --color-message-code: var(--message-code);
+  --color-message-code-foreground: var(--message-code-foreground);
+  --color-message-quote-border: var(--message-quote-border);
+  --color-message-table-border: var(--message-table-border);
+  --color-message-table-header: var(--message-table-header);
 
   /* Custom animations */
   --animate-revert-copied: revert-copied 0.5s ease-in-out forwards;

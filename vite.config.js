@@ -34,6 +34,15 @@ export default defineConfig(({ mode }) => {
 
   const uploadSourcemaps = Boolean(apiKey && appUrl && sourceMapEndpoint);
 
+  // The tangent-shell backend is a separate service from the Tangle backend.
+  // Both mount their REST API at `/api` and the shell also mounts Socket.IO at
+  // `/socket.io`, so the shell traffic is proxied under distinct `/shell-*`
+  // prefixes and rewritten on the way out. That keeps `/api` free for Tangle,
+  // which is served from this same origin whenever `VITE_BACKEND_API_URL` is
+  // unset. Setting `VITE_SHELL_API_URL` bypasses the proxy entirely (the client
+  // then addresses the shell backend directly — see `src/shell/lib/basePath.ts`).
+  const shellTarget = env.SHELL_API_TARGET ?? "http://localhost:8787";
+
   const bugsnagConfig = {
     apiKey,
     appVersion,
@@ -71,6 +80,21 @@ export default defineConfig(({ mode }) => {
         : []),
     ],
     base: "/",
+    server: {
+      proxy: {
+        "/shell-api": {
+          target: shellTarget,
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/shell-api/, "/api"),
+        },
+        "/shell-socket.io": {
+          target: shellTarget,
+          changeOrigin: true,
+          ws: true,
+          rewrite: (p) => p.replace(/^\/shell-socket\.io/, "/socket.io"),
+        },
+      },
+    },
     experimental: {
       // Deploy base is unknown at build time: production serves assets from
       // the origin root, tophat from a CDN subpath. Emit in-bundle asset
