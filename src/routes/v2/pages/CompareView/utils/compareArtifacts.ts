@@ -1,5 +1,14 @@
-import type { ArtifactNodeResponse } from "@/api/types.gen";
+import type {
+  ArtifactNodeResponse,
+  GetExecutionArtifactsResponse,
+} from "@/api/types.gen";
 import type { DiffStatus } from "@/utils/diffStatus";
+
+export function outputArtifactsOf(
+  data: GetExecutionArtifactsResponse | null | undefined,
+): Record<string, ArtifactNodeResponse> {
+  return data?.output_artifacts ?? {};
+}
 
 /**
  * Compares two artifacts by what the backend reports about their contents, not
