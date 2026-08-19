@@ -24,6 +24,7 @@ export interface MergedTaskNodeData extends Record<string, unknown> {
 export interface MergedIoNodeData extends Record<string, unknown> {
   diff: IoDiff;
   spotlight: SpotlightMode;
+  singleRun?: boolean;
 }
 
 type MergedTaskNode = Node<MergedTaskNodeData, "mergedTask">;
