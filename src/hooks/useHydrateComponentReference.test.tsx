@@ -387,3 +387,75 @@ describe("useGuaranteedHydrateComponentReference", () => {
     });
   });
 });
+
+describe("digest key collisions between stripped and content-bearing references", () => {
+  const DIGEST = "8f0380c9807ac38866a922c847b75dff";
+
+  const spec: ComponentReference["spec"] = {
+    name: "Transform Batch",
+    implementation: { graph: { tasks: {} } },
+  };
+
+  const hydrated: HydratedComponentReference = {
+    digest: DIGEST,
+    name: "Transform Batch",
+    spec: spec!,
+    text: "name: Transform Batch",
+  };
+
+  const sharedWrapper = () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const Wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    Wrapper.displayName = "SharedQueryClientWrapper";
+    return Wrapper;
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(hydrateComponentReference).mockReset();
+  });
+
+  it("does not let an unresolvable digest-only reference poison the same digest carrying a spec", async () => {
+    vi.mocked(hydrateComponentReference).mockImplementation(async (ref) =>
+      ref.spec ? hydrated : null,
+    );
+
+    const wrapper = sharedWrapper();
+
+    const stripped = renderHook(
+      () => useHydrateComponentReference({ digest: DIGEST }),
+      { wrapper },
+    );
+    await waitFor(() => expect(stripped.result.current).toBeNull());
+
+    const resolved = renderHook(
+      () => useHydrateComponentReference({ digest: DIGEST, spec }),
+      { wrapper },
+    );
+    await waitFor(() => expect(resolved.result.current).toEqual(hydrated));
+  });
+
+  it("still shares one cache entry between content-bearing references with the same digest", async () => {
+    vi.mocked(hydrateComponentReference).mockResolvedValue(hydrated);
+
+    const wrapper = sharedWrapper();
+
+    const first = renderHook(
+      () => useHydrateComponentReference({ digest: DIGEST, spec }),
+      { wrapper },
+    );
+    await waitFor(() => expect(first.result.current).toEqual(hydrated));
+
+    const second = renderHook(
+      () => useHydrateComponentReference({ digest: DIGEST, spec }),
+      { wrapper },
+    );
+    await waitFor(() => expect(second.result.current).toEqual(hydrated));
+
+    expect(hydrateComponentReference).toHaveBeenCalledTimes(1);
+  });
+});

@@ -11,7 +11,9 @@ import { componentSpecToText } from "@/utils/yaml";
  */
 export function getComponentQueryKey(component: ComponentReference): string {
   if (component.digest) {
-    return `digest:${component.digest}`;
+    return component.spec || component.text
+      ? `digest:${component.digest}:content`
+      : `digest:${component.digest}`;
   }
 
   if (component.url) {

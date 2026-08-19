@@ -1,3 +1,4 @@
+import yaml from "js-yaml";
 import { describe, expect, it } from "vitest";
 
 import { Task } from "../../entities/task";
@@ -156,6 +157,74 @@ describe("Task", () => {
 
     expect(task.executionOptions).toEqual({
       retryStrategy: { maxRetries: 3 },
+    });
+  });
+
+  describe("resolvedComponentRef", () => {
+    const subgraphRef = {
+      name: "Subgraph",
+      digest: "digest123",
+      spec: {
+        name: "Subgraph",
+        inputs: [{ name: "page", type: "String" }],
+        implementation: {
+          graph: {
+            tasks: {
+              Inner: {
+                componentRef: {
+                  name: "Inner",
+                  spec: {
+                    name: "Inner",
+                    implementation: { container: { image: "inner:latest" } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    it("returns the reference unchanged for a container task", () => {
+      const componentRef = {
+        name: "Container",
+        digest: "digest456",
+        spec: {
+          name: "Container",
+          implementation: { container: { image: "container:latest" } },
+        },
+      };
+      const task = new Task({ $id: "task_1", name: "T", componentRef });
+
+      expect(task.resolvedComponentRef).toBe(task.componentRef);
+      expect(task.resolvedComponentRef.spec).toEqual(componentRef.spec);
+    });
+
+    it("re-attaches the spec that setComponentRef stripped from a subgraph task", () => {
+      const task = new Task({ $id: "task_1", name: "T", componentRef: {} });
+      task.setComponentRef(subgraphRef);
+
+      expect(task.componentRef.spec).toBeUndefined();
+      expect(task.resolvedComponentRef.name).toBe("Subgraph");
+      expect(task.resolvedComponentRef.digest).toBe("digest123");
+      expect(task.resolvedComponentRef.spec?.implementation).toHaveProperty(
+        "graph",
+      );
+      expect(task.resolvedComponentRef.spec?.inputs).toEqual([
+        expect.objectContaining({ name: "page", type: "String" }),
+      ]);
+    });
+
+    it("yields a spec that survives yaml.dump, unlike resolvedComponentSpec", () => {
+      const task = new Task({ $id: "task_1", name: "T", componentRef: {} });
+      task.setComponentRef(subgraphRef);
+
+      const dumped = yaml.load(
+        yaml.dump(task.resolvedComponentRef.spec),
+      ) as Record<string, unknown>;
+
+      expect(dumped).toHaveProperty("implementation");
+      expect(yaml.dump(task.resolvedComponentSpec)).toBe("{}\n");
     });
   });
 });
