@@ -59,10 +59,12 @@ export const taskManifest: NodeTypeManifest = {
       const clonedArguments = deepClone(snapshot.data.arguments);
       const reset = resetAggregatorOnClone(clonedComponentRef, clonedArguments);
 
+      const pastedComponentRef = reset?.componentRef ?? clonedComponentRef;
+
       const task = new Task({
         $id: idGen.next("task"),
         name: uniqueName,
-        componentRef: reset?.componentRef ?? clonedComponentRef,
+        componentRef: pastedComponentRef,
         isEnabled: snapshot.data.isEnabled
           ? deepClone(snapshot.data.isEnabled)
           : undefined,
@@ -72,6 +74,8 @@ export const taskManifest: NodeTypeManifest = {
           ? deepClone(snapshot.data.executionOptions)
           : undefined,
       });
+
+      task.setComponentRef(pastedComponentRef);
 
       spec.addTask(task);
       return task.$id;
