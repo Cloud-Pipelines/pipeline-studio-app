@@ -321,7 +321,7 @@ export const TaskNode = observer(function TaskNode({
       task.executionOptions?.cachingStrategy?.maxCacheStaleness ===
       ISO8601_DURATION_ZERO_DAYS,
     componentRef: publishedComponentBadgeEnabled
-      ? task.componentRef
+      ? task.resolvedComponentRef
       : undefined,
     publishedComponentBadgeReadOnly,
     isAggregator,

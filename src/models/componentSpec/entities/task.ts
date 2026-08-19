@@ -2,6 +2,7 @@ import { computed } from "mobx";
 import { idProp, Model, model, modelAction, prop } from "mobx-keystone";
 
 import { Annotations } from "../annotations";
+import { serializeComponentSpec } from "../serialization/serialize";
 import type { ComponentSpec } from "./componentSpec";
 import { createComponentSpecProxy } from "./componentSpecProxy";
 import { deserializeSubgraphSpec } from "./taskSubgraphHelper";
@@ -62,6 +63,18 @@ export class Task extends Model({
       return createComponentSpecProxy(this.subgraphSpec);
     }
     return this.componentRef.spec;
+  }
+
+  @computed
+  get resolvedComponentRef(): ComponentReference {
+    if (!this.subgraphSpec) {
+      return this.componentRef;
+    }
+
+    return {
+      ...this.componentRef,
+      spec: serializeComponentSpec(this.subgraphSpec),
+    };
   }
 
   @modelAction

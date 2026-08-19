@@ -2,6 +2,10 @@ import { waitFor } from "@testing-library/dom";
 import yaml from "js-yaml";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  IncrementingIdGenerator,
+  YamlDeserializer,
+} from "@/models/componentSpec";
 import type { ComponentSpec } from "@/utils/componentSpec";
 import * as localforage from "@/utils/localforage";
 
@@ -1167,6 +1171,53 @@ describe("hydrateComponentReference()", () => {
         expect(result?.spec?.description).toBe(largeDescription);
       });
     });
+  });
+});
+
+describe("subgraph task references", () => {
+  it("hydrates a deserialized subgraph task via resolvedComponentRef", async () => {
+    mockGetComponentById(null);
+
+    const subgraphRef = {
+      name: "Lock Scrape Complete",
+      digest: "d8eee904e935",
+      spec: {
+        name: "Lock Scrape Complete",
+        inputs: [{ name: "page", type: "String" }],
+        implementation: {
+          graph: {
+            tasks: {
+              Scrape: {
+                componentRef: {
+                  name: "Scrape",
+                  spec: createComponentSpec("Scrape", "scrape:latest"),
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const spec = new YamlDeserializer(
+      new IncrementingIdGenerator(),
+    ).deserialize({
+      name: "parent",
+      implementation: {
+        graph: { tasks: { "Lock Scrape 108": { componentRef: subgraphRef } } },
+      },
+    });
+    const task = spec.tasks[0];
+
+    expect(task.componentRef.spec).toBeUndefined();
+    expect(await hydrateComponentReference(task.componentRef)).toBeNull();
+
+    const hydrated = await hydrateComponentReference(task.resolvedComponentRef);
+
+    expect(hydrated).not.toBeNull();
+    expect(hydrated?.name).toBe("Lock Scrape Complete");
+    expect(hydrated?.spec.implementation).toHaveProperty("graph");
+    expect(hydrated?.text).toContain("Scrape");
   });
 });
 

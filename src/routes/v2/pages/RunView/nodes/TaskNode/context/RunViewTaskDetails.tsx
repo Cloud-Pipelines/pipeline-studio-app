@@ -54,7 +54,7 @@ export const RunViewTaskDetails = observer(function RunViewTaskDetails({
   const executionId =
     executionData?.details?.child_task_execution_ids?.[task.name];
 
-  const componentRef = task.componentRef;
+  const componentRef = task.resolvedComponentRef;
   const isSubgraphTask = task.subgraphSpec !== undefined;
 
   const taskSpecForIO = { componentRef } as TaskSpec;
