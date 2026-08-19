@@ -91,7 +91,7 @@ const IORow = ({
     {defaultValue !== undefined && (
       <Text size="xs" tone="subdued" className="block mt-0.5">
         Default:{" "}
-        <Text as="span" font="mono">
+        <Text as="span" size="xs" font="mono">
           {String(defaultValue)}
         </Text>
       </Text>

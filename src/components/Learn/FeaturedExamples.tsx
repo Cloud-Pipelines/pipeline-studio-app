@@ -47,7 +47,7 @@ export function FeaturedExamples() {
 
       {!!error && (
         <InfoBox title="Error importing pipeline" variant="error">
-          <Paragraph>{error.message}</Paragraph>
+          <Paragraph size="sm">{error.message}</Paragraph>
         </InfoBox>
       )}
 

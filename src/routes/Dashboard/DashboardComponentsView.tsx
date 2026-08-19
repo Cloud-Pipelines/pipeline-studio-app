@@ -64,7 +64,8 @@ const CollapsibleSection = ({
       />
       <Text
         size="xs"
-        className="text-muted-foreground font-medium uppercase tracking-wide flex-1 text-left"
+        weight="medium"
+        className="text-muted-foreground uppercase tracking-wide flex-1 text-left"
       >
         {label}
       </Text>
@@ -150,7 +151,7 @@ const FolderNode = ({
         className="text-muted-foreground transition-transform shrink-0 group-data-[state=open]:rotate-90"
         size="sm"
       />
-      <Text size="xs" tone="subdued" className="font-medium truncate">
+      <Text size="xs" tone="subdued" weight="medium" className="truncate">
         {folder.name}
       </Text>
     </CollapsibleTrigger>

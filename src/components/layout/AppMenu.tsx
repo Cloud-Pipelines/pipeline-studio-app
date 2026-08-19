@@ -81,7 +81,7 @@ const DefaultAppMenu = () => {
           </Link>
 
           {title && (
-            <CopyText className="text-white text-md font-bold truncate max-w-32 sm:max-w-48 md:max-w-64 lg:max-w-md">
+            <CopyText className="text-white text-base font-bold truncate max-w-32 sm:max-w-48 md:max-w-64 lg:max-w-md">
               {title}
             </CopyText>
           )}

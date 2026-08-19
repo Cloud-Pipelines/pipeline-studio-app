@@ -28,7 +28,9 @@ export const ComponentSpecProperty = ({
         {tooltip ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Text tone="info">{value}</Text>
+              <Text size="xs" tone="info">
+                {value}
+              </Text>
             </TooltipTrigger>
             <TooltipContent>{tooltip}</TooltipContent>
           </Tooltip>

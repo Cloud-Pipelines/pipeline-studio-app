@@ -20,15 +20,25 @@ export const ManualSubmissionInstructions = ({
       className="text-xs text-gray-700 dark:text-muted-foreground"
     >
       Download{" "}
-      <Link href={downloadUrl} download="vertex_pipeline_job.json">
+      <Link size="xs" href={downloadUrl} download="vertex_pipeline_job.json">
         pipeline_job.json
       </Link>
       , then go to{" "}
-      <Link href={VERTEX_PIPELINES_URL} target="_blank" rel="noreferrer">
+      <Link
+        size="xs"
+        href={VERTEX_PIPELINES_URL}
+        target="_blank"
+        rel="noreferrer"
+      >
         Vertex Pipelines
       </Link>{" "}
       and{" "}
-      <Link href={CREATE_RUN_DOCS_URL} target="_blank" rel="noreferrer">
+      <Link
+        size="xs"
+        href={CREATE_RUN_DOCS_URL}
+        target="_blank"
+        rel="noreferrer"
+      >
         create a new run
       </Link>
       .

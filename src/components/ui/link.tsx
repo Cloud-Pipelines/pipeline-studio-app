@@ -17,7 +17,7 @@ const linkVariants = cva("items-center inline-flex cursor-pointer", {
     size: {
       xs: "text-xs",
       sm: "text-sm",
-      md: "text-md",
+      md: "text-base",
       lg: "text-lg",
     },
   },

@@ -97,7 +97,7 @@ const StepIndicator = ({
               >
                 {step.label}
                 {step.key === Step.Done && pipelineName && (
-                  <Text as="span" font="mono" className="ml-1">
+                  <Text as="span" size="sm" font="mono" className="ml-1">
                     &ldquo;{pipelineName}&rdquo;
                   </Text>
                 )}

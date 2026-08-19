@@ -43,7 +43,7 @@ export function ExamplePipelines({ limit }: ExamplePipelinesProps) {
     <BlockStack gap="4">
       {!!error && (
         <InfoBox title="Error importing pipeline" variant="error">
-          <Paragraph>{error.message}</Paragraph>
+          <Paragraph size="sm">{error.message}</Paragraph>
         </InfoBox>
       )}
 
@@ -61,7 +61,7 @@ export function ExamplePipelines({ limit }: ExamplePipelinesProps) {
 
       {pipelines.length === 0 && (
         <InfoBox title="No example pipelines available." variant="error">
-          <Paragraph>Error loading example pipelines.</Paragraph>
+          <Paragraph size="sm">Error loading example pipelines.</Paragraph>
         </InfoBox>
       )}
     </BlockStack>

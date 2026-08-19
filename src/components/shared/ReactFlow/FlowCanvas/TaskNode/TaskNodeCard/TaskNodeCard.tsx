@@ -237,7 +237,8 @@ const TaskNodeCard = () => {
               >
                 <Text
                   as="span"
-                  className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 whitespace-nowrap cursor-help"
+                  weight="medium"
+                  className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-700 ring-1 ring-inset ring-amber-600/20 whitespace-nowrap cursor-help"
                 >
                   Beta
                 </Text>
@@ -245,7 +246,7 @@ const TaskNodeCard = () => {
             )}
           </InlineStack>
           {displayName !== name && (
-            <Text size="xs" tone="subdued" className="font-light">
+            <Text size="xs" tone="subdued" weight="light">
               {name}
             </Text>
           )}
@@ -253,7 +254,7 @@ const TaskNodeCard = () => {
             taskId &&
             taskId !== name &&
             !taskId.match(new RegExp(`^${name}\\s*\\d+$`)) && (
-              <Text size="xs" tone="subdued" className="font-light">
+              <Text size="xs" tone="subdued" weight="light">
                 {taskId}
               </Text>
             )}

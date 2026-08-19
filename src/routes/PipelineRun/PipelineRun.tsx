@@ -116,8 +116,12 @@ const PipelineRunContent = () => {
     return (
       <BlockStack fill>
         <InfoBox title="Error loading pipeline run" variant="error">
-          <Paragraph className="mb-2">{error.message}</Paragraph>
-          <Paragraph className="italic">{backendStatusString}</Paragraph>
+          <Paragraph size="sm" className="mb-2">
+            {error.message}
+          </Paragraph>
+          <Paragraph size="sm" className="italic">
+            {backendStatusString}
+          </Paragraph>
         </InfoBox>
       </BlockStack>
     );

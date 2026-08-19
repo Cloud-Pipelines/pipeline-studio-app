@@ -150,7 +150,9 @@ export function FolderRow({
                 className="text-muted-foreground shrink-0"
               />
             )}
-            <Paragraph weight="semibold">{folder.name}</Paragraph>
+            <Paragraph size="sm" weight="semibold">
+              {folder.name}
+            </Paragraph>
           </InlineStack>
         </div>
       </TableCell>

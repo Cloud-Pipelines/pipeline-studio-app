@@ -88,7 +88,9 @@ export function RemoteTroubleshootDialog({
                 <Heading level={3}>{successTitle}</Heading>
               </DialogTitle>
               <DialogDescription asChild>
-                <Paragraph tone="subdued">{successMessage}</Paragraph>
+                <Paragraph size="sm" tone="subdued">
+                  {successMessage}
+                </Paragraph>
               </DialogDescription>
             </BlockStack>
             <Button onClick={onClose}>Done</Button>
