@@ -40,6 +40,7 @@ export const REACT_COMPILER_ENABLED_DIRS = [
   "src/hooks/useDocsVisitTracking.ts",
   "src/hooks/useExecutionArtifacts.ts",
   "src/hooks/useContainerLog.ts",
+  "src/hooks/usePipelineRunList.ts",
   "src/components/shared/FavoriteToggle.tsx",
   "src/components/shared/ComponentLifecycleBadges.tsx",
   "src/components/shared/ComponentSearchEmptyStateSuggestions.tsx",
