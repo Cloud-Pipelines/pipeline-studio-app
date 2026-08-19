@@ -15,6 +15,7 @@ const TANGLE_ENV = import.meta.env.VITE_TANGLE_ENV;
 const GIT_COMMIT = import.meta.env.VITE_GIT_COMMIT;
 
 const GENERIC_ERROR_CLASS = "Error";
+const ERROR_HANDLER_METADATA_KEY = "error_handler";
 
 // Errors that are intentionally suppressed from Bugsnag reporting.
 //
@@ -73,6 +74,24 @@ export const handleBugsnagError = (event: Event): boolean | void => {
   }
 
   event.addMetadata("context", { pathname: window.location.pathname });
+};
+
+/**
+ * Reports a caught error to Bugsnag. No-op when Bugsnag is disabled or the
+ * value thrown was not an Error, so error boundaries can call it unguarded.
+ */
+export const reportError = (
+  error: unknown,
+  metadata: Record<string, unknown> = {},
+): void => {
+  if (!IS_BUGSNAG_ENABLED || !(error instanceof Error)) return;
+
+  Bugsnag.notify(error, (event: Event) => {
+    event.addMetadata(ERROR_HANDLER_METADATA_KEY, {
+      pathname: window.location.pathname,
+      ...metadata,
+    });
+  });
 };
 
 export const initializeBugsnag = (): void => {
