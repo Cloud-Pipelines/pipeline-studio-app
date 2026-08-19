@@ -192,6 +192,8 @@ code {
 }
 
 @theme inline {
+  --text-2xs: 0.625rem;
+  --text-3xs: 0.5rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
