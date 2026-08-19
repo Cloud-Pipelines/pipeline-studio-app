@@ -50,7 +50,7 @@ export const InspectPipelineButton = ({
       data-testid="inspect-pipeline-button"
       {...rest}
     >
-      <Icon name="Network" className="rotate-270" />
+      <Icon name="Binoculars" />
       {displayLabel ?? (showLabel ? "Inspect" : null)}
     </TooltipButton>
   );

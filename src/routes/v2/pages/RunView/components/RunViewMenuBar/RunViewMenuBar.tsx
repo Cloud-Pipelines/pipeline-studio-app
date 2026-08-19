@@ -55,7 +55,7 @@ export const RunViewMenuBar = observer(function RunViewMenuBar() {
               as="span"
               size="sm"
               weight="semibold"
-              className="text-white truncate max-w-64 lg:max-w-md leading-tight ml-1"
+              className="text-white truncate max-w-64 lg:max-w-md leading-tight ml-1 select-text cursor-text"
             >
               {pipelineName}
             </Text>

@@ -17,7 +17,6 @@ import { SnapPreview } from "@/routes/v2/shared/windows/SnapPreview";
 import {
   DEFAULT_DOCKED_HEIGHT,
   DOCKED_HEADER_HEIGHT as HEADER_HEIGHT,
-  MIN_DOCKED_HEIGHT,
 } from "@/routes/v2/shared/windows/types";
 
 import { WindowActions } from "./WindowActions";
@@ -71,7 +70,7 @@ export const DockedWindow = observer(function DockedWindow() {
 
     const onMouseMove = (moveE: MouseEvent) => {
       const newHeight = Math.max(
-        MIN_DOCKED_HEIGHT,
+        model.minDockedHeight,
         startHeight + (moveE.clientY - startY),
       );
       model.updateDockedHeight(newHeight);
@@ -196,7 +195,7 @@ export const DockedWindow = observer(function DockedWindow() {
             isDragging && "opacity-50",
           )}
           style={{
-            minHeight: MIN_DOCKED_HEIGHT,
+            minHeight: model.minDockedHeight,
             // fillDockHeight => grow to fill the dock column; otherwise an
             // undefined height fits content and a concrete value fixes the
             // height with the inner content area scrolling.
