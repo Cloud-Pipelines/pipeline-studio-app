@@ -5,15 +5,15 @@ import { InlineStack } from "@/components/ui/layout";
 import { cn } from "@/lib/utils";
 import type { DiffEntry } from "@/routes/v2/pages/Editor/store/actions/task.utils";
 import type { TaskNodeInput } from "@/routes/v2/shared/nodes/TaskNode/TaskNode";
+import { DIFF_STATUS_ICON } from "@/utils/diffStatus";
 
 import {
   DIFF_STATUS_CLASSES,
   HANDLE_STATUS_CLASSES,
-  STATUS_ICON,
 } from "./upgradePreviewConstants";
 
 export function DiffInputRow({ entry, status }: DiffEntry<TaskNodeInput>) {
-  const icon = STATUS_ICON[status];
+  const icon = DIFF_STATUS_ICON[status];
   return (
     <div className="relative w-full h-fit">
       <div className="absolute -translate-x-6 flex items-center h-3 w-3">
