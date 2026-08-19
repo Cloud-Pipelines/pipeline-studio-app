@@ -51,8 +51,18 @@ export const formatDate = (date: string | Date, format = defaultFormat) => {
 export const formatDuration = (startTime: string, endTime: string): string => {
   const startMs = new Date(startTime).getTime();
   const endMs = new Date(endTime).getTime();
-  const durationMs = endMs - startMs;
 
+  return formatDurationMs(endMs - startMs);
+};
+
+/**
+ * Format an already-measured duration
+ * @param durationMs - Elapsed milliseconds
+ * @returns Formatted duration string (e.g., "1h 23m 45s", "2m 30s", "45s")
+ * @public consumed by the run metadata section, which the compare page wires up
+ * later in this stack.
+ */
+export const formatDurationMs = (durationMs: number): string => {
   if (durationMs < 0) return "Invalid duration";
 
   const seconds = Math.floor(durationMs / 1000);
