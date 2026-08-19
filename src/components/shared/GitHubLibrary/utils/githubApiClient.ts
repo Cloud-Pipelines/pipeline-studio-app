@@ -43,9 +43,6 @@ interface GitHubBlob {
   node_id: string;
   size: number;
   url: string;
-  /**
-   * Decoded content of the blob
-   */
   content: string;
 }
 

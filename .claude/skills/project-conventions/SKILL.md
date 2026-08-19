@@ -1,6 +1,6 @@
 ---
 name: project-conventions
-description: Project conventions for Tangle-UI including file structure, imports, code quality, and general rules. Use when writing new code, creating files, or organizing imports.
+description: Project conventions for Tangle-UI including file structure, imports, comments, code quality, and general rules. Use when writing new code, editing existing code, adding or reviewing comments and JSDoc, creating files, or organizing imports.
 ---
 
 # Project Conventions
@@ -28,7 +28,6 @@ React + TypeScript application for building and running ML pipelines using drag 
 - Use Prettier for formatting
 - Write tests using Vitest for unit tests, Playwright for E2E
 - Use descriptive variable and function names
-- Add JSDoc comments for complex functions
 - Prefer early returns to reduce nesting
 
 ## Comments & Documentation

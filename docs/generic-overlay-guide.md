@@ -237,7 +237,6 @@ type ProfileLinkReplacements = {
   userId: string;
 };
 
-// userProfile comes from an API hook (e.g., useFetchUserProfile)
 export function resolveGreetingReplacements(
   metadata: Record<string, unknown>,
   userProfile: { name: string; retriesUsed: number },
@@ -300,7 +299,6 @@ export const StatusOverlaySection = ({
     profileLink: resolveProfileLinkReplacements(userId),
   };
 
-  // Pass null for displayFor when no conditional rendering is needed
   const hydrated = filterAndHydrateSchema(schema, allReplacements);
   return <Composer schema={hydrated} />;
 };

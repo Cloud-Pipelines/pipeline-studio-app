@@ -6,13 +6,11 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 
 interface CreatedByFilterProps {
-  /** Current filter value from URL. undefined means no filter. */
   value: string | undefined;
-  /** Called when input value changes (parent handles debouncing). */
+  // The parent owns debouncing.
   onChange: (value: string | undefined) => void;
-  /** Called when user clicks the clear button (for immediate clearing). */
   onClear: () => void;
-  /** Pre-fills the input on mount and triggers onChange if no URL value is set. */
+  // Pre-fills the input on mount, and fires onChange when the URL carries no value.
   defaultValue?: string;
 }
 

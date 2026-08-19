@@ -19,12 +19,10 @@ interface StoredLibraryFolder {
 export interface StoredLibrary extends StoredLibraryFolder {
   id: string;
   icon?: keyof typeof icons;
-  /**
-   * yaml - a yaml file that contains the components
-   * indexdb - a local database that contains the components. filled only by the Tangle App
-   * pinned - a pinned libraries from the Backend API
-   * github - a github repository that contains the components
-   */
+  // yaml - a yaml file that contains the components
+  // indexdb - a local database that contains the components. filled only by the Tangle App
+  // pinned - a pinned libraries from the Backend API
+  // github - a github repository that contains the components
   type: "yaml" | "indexdb" | "pinned" | "github";
 
   configuration?: Record<string, unknown>;

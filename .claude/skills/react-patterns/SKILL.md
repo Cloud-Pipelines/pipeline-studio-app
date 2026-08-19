@@ -18,13 +18,13 @@ description: React and React Compiler patterns for this project. Use when writin
 ```typescript
 // ComponentName/ComponentName.tsx — import directly, no index.ts barrel
 interface ComponentNameProps {
-  // props
+  ...
 }
 
 export const ComponentName = ({ }: ComponentNameProps) => {
-  // component logic
+  ...
   return (
-    // JSX
+    ...
   );
 };
 ```
@@ -42,7 +42,7 @@ export const ComponentName = ({ }: ComponentNameProps) => {
 const Context = createContext<ContextType | null>(null);
 
 export const Provider = ({ children }: { children: ReactNode }) => {
-  // provider logic
+  ...
   return <Context.Provider value={value}>{children}</Context.Provider>;
 };
 

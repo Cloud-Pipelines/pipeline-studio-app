@@ -253,11 +253,11 @@ interface ComponentCardProps {
   rerankScore?: number;
   isAiRanked?: boolean;
   isSelected?: boolean;
-  /** Position within the current result list — passed to analytics. */
+  // Position within the current result list — passed to analytics.
   position?: number;
-  /** Whether the user had typed a query when this card was rendered. */
+  // Whether the user had typed a query when this card was rendered.
   hadQuery?: boolean;
-  /** Whether the detail pane is open, forcing the results list into compact rows. */
+  // Whether the detail pane is open, forcing the results list into compact rows.
   isDetailOpen?: boolean;
   onSelect: (reference: ComponentReference) => void;
 }

@@ -95,7 +95,6 @@ This is a React + TypeScript application for building and running Machine Learni
 - Use Prettier for formatting
 - Write tests using Vitest for unit tests, Playwright for E2E
 - Use descriptive variable and function names
-- Add JSDoc comments for complex functions
 - Prefer early returns to reduce nesting
 
 ### API & Data
@@ -416,11 +415,9 @@ export const useContext = () => {
 
 ## Comments & Documentation
 
-- Use JSDoc for public APIs
-- Add comments for complex business logic
-- **Explain "why" not "what" in comments**
-- **Keep comments up to date with code changes**
-- Avoid writing redundant comments for functions and variables that are self-explanatory
+The comments policy lives in `CLAUDE.md` (root) — that is the single source of truth. In short:
+code must be self-explanatory, default to no comment, comment only a non-obvious _why_, never
+comment interface fields or props (rename them instead).
 
 ## Specific Project Patterns
 

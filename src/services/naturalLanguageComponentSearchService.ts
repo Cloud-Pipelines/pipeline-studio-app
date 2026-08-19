@@ -37,7 +37,7 @@ interface RerankCandidateIO {
 }
 
 export interface RerankCandidate {
-  /** Component digest. Used to round-trip the model's response to references. */
+  // Round-trips the model's response back to a component reference.
   id: string;
   name: string;
   description: string;
@@ -51,20 +51,20 @@ export interface RerankCandidate {
 
 export interface RerankedMatch {
   id: string;
-  /** Model-provided relevance, clamped to [0, 1]. */
+  // Model-provided, clamped to [0, 1].
   score: number;
   reason: string;
 }
 
 export interface RerankResult {
   matches: RerankedMatch[];
-  /** Raw model response, kept for debugging. */
+  // Kept for debugging.
   rawContent?: string;
 }
 
 export interface ComponentDescriptionResult {
   description: string;
-  /** Raw model response, kept for debugging. */
+  // Raw model response, kept for debugging.
   rawContent?: string;
 }
 
@@ -77,11 +77,11 @@ export class NaturalLanguageSearchConfigError extends Error {
 
 interface LlmOptions {
   signal?: AbortSignal;
-  /** Optional model id (OpenAI-compatible). Leave blank when the proxy owns selection. */
+  // OpenAI-compatible model id. Leave blank when the proxy owns model selection.
   model: string;
-  /** Base URL of an OpenAI-compatible API. Required. */
+  // Base URL of an OpenAI-compatible API.
   apiBase: string;
-  /** Optional bearer token. Leave blank when the proxy owns authentication. */
+  // Bearer token. Leave blank when the proxy owns authentication.
   apiKey: string;
 }
 

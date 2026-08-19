@@ -13,7 +13,6 @@ import { tracking } from "@/utils/tracking";
 import { componentSpecToText } from "@/utils/yaml";
 
 interface PinnedTaskContentProps {
-  /** The entity ID of the task to display */
   entityId: string;
 }
 

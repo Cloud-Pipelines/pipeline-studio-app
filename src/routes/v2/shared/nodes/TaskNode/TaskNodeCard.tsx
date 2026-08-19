@@ -93,9 +93,9 @@ interface ClassicInputHandleProps {
   displayValue: string | undefined;
   hideValue?: boolean;
   isSecret: boolean;
-  /** When true the node has no custom colour, so section chrome follows the theme. */
+  // When true the node has no custom colour, so section chrome follows the theme.
   themed: boolean;
-  /** Whether the app is in dark mode — used to darken coloured-node chrome. */
+  // Whether the app is in dark mode — used to darken coloured-node chrome.
   isDark: boolean;
   onInputClick: (name: string, event: ReactMouseEvent) => void;
   onHandleClick: (handleId: string, event: ReactMouseEvent) => void;

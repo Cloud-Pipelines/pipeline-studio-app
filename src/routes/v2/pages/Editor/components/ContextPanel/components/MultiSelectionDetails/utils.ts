@@ -9,10 +9,10 @@ export interface AggregatedArgument {
   typeLabel: string;
   optional: boolean;
   defaultValue?: string;
-  /** The shared value across all tasks, or empty string when mixed. */
+  // The shared value across all tasks, or empty string when mixed.
   value: string;
   isMixed: boolean;
-  /** Task IDs that have this input in their component spec. */
+  // Task IDs that have this input in their component spec.
   taskIds: string[];
 }
 

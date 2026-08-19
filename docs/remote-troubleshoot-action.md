@@ -38,31 +38,25 @@ Leaving the global unset (the default) disables the feature entirely — the but
 
 ```typescript
 interface RemoteTroubleshootActionConfig {
-  /** URL the payload will be POSTed to. */
   endpointUrl: string;
-
-  /** Label shown on the button and used as the default modal title. */
   buttonText: string;
-
-  /** Optional modal title (defaults to buttonText). */
   modalTitle?: string;
-
-  /** Optional modal description shown above the comments textarea. */
   modalDescription?: string;
-
-  /** Optional heading shown in the success state (defaults to "Request submitted"). */
   successTitle?: string;
-
-  /** Optional body shown in the success state, and persisted in the task panel after submission. */
   successMessage?: string;
-
-  /**
-   * Optional source tag included in the payload (defaults to "tangle-ui").
-   * Use this to distinguish requests from different deployments.
-   */
   source?: string;
 }
 ```
+
+| Field              | Required | Meaning                                                                                                        |
+| ------------------ | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `endpointUrl`      | yes      | URL the payload is POSTed to                                                                                   |
+| `buttonText`       | yes      | Label on the button, and the default modal title                                                               |
+| `modalTitle`       | no       | Modal title; defaults to `buttonText`                                                                          |
+| `modalDescription` | no       | Shown above the comments textarea                                                                              |
+| `successTitle`     | no       | Heading in the success state; defaults to "Request submitted"                                                  |
+| `successMessage`   | no       | Body in the success state, also persisted in the task panel after submit                                       |
+| `source`           | no       | Source tag in the payload; defaults to `"tangle-ui"`. Use it to tell requests from different deployments apart |
 
 ### Minimal example
 
