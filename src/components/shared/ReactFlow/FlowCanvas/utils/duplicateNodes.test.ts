@@ -292,6 +292,33 @@ describe("duplicateNodes", () => {
         taskIdToNodeId("task2 2"),
       ]);
     });
+
+    it("carries readOnly from the original node onto the duplicate", () => {
+      const inputSpec = { ...mockInputSpec, name: "original-input" };
+      const outputSpec = { ...mockOutputSpec, name: "original-output" };
+
+      const componentSpec = createMockComponentSpecWithOutputs(
+        { "original-task": mockTaskSpec },
+        [inputSpec],
+        [outputSpec],
+      );
+
+      const nodes = [
+        createMockTaskNode("original-task", mockTaskSpec),
+        createMockInputNode("original-input"),
+        createMockOutputNode("original-output"),
+      ];
+      for (const node of nodes) {
+        node.data.readOnly = true;
+      }
+
+      const result = duplicateNodes(componentSpec, nodes);
+
+      expect(result.newNodes).toHaveLength(3);
+      for (const newNode of result.newNodes) {
+        expect(newNode.data.readOnly).toBe(true);
+      }
+    });
   });
 
   describe("configuration options", () => {
