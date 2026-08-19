@@ -197,17 +197,17 @@ export const BatchArgumentRow = observer(function BatchArgumentRow({
             {aggArg.name}
           </Text>
           {aggArg.typeLabel && (
-            <Text size="xs" className="text-gray-400 shrink-0">
+            <Text size="xs" tone="subdued" className="shrink-0">
               {aggArg.typeLabel}
             </Text>
           )}
           {!aggArg.optional && (
-            <Text size="xs" className="text-red-400 shrink-0">
+            <Text size="xs" tone="critical" className="shrink-0">
               *
             </Text>
           )}
         </InlineStack>
-        <Text size="xs" className="text-gray-400 shrink-0 mr-1">
+        <Text size="xs" tone="subdued" className="shrink-0 mr-1">
           {aggArg.taskIds.length} tasks
         </Text>
         <ThunderMenu

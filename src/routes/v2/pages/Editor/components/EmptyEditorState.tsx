@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
-import { Text } from "@/components/ui/typography";
+import { Heading } from "@/components/ui/typography";
 import { useAnalytics } from "@/providers/AnalyticsProvider";
 import { APP_ROUTES } from "@/routes/router";
 // TODO: extract PipelineFolders picker to shared or restructure via routing composition
@@ -38,9 +38,9 @@ export function EmptyEditorState() {
       >
         <InlineStack gap="2" blockAlign="center">
           <Icon name="FolderOpen" size="md" className="text-stone-500" />
-          <Text as="h2" size="lg" weight="semibold">
+          <Heading level={2} size="lg" weight="semibold">
             Open Pipeline
-          </Text>
+          </Heading>
         </InlineStack>
         <PipelineFolders onPipelineClick={handlePipelineClick} />
       </BlockStack>

@@ -31,7 +31,7 @@ export const BatchTaskColor = observer(function BatchTaskColor({
       <Separator />
       <InlineStack align="space-between" gap="2" className="w-full">
         <InlineStack gap="2" blockAlign="center">
-          <Text size="xs" className="text-gray-600 dark:text-muted-foreground">
+          <Text size="xs" tone="subdued">
             Task color
           </Text>
           {!allSame && (

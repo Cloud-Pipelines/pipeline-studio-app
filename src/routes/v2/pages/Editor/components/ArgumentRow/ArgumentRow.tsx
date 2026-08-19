@@ -183,7 +183,7 @@ export const ArgumentRow = observer(function ArgumentRow({
           {inputSpec.name.replace(/_/g, " ")}
         </Text>
         {typeLabel && (
-          <Text size="xs" className="text-gray-400 shrink-0">
+          <Text size="xs" tone="subdued" className="shrink-0">
             ({typeLabel}
             {!inputSpec.optional ? "*" : ""})
           </Text>

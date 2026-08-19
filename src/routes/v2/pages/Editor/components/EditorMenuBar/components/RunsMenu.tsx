@@ -56,7 +56,7 @@ export const RunsMenu = observer(function RunsMenu() {
           <>
             <DropdownMenuSeparator />
             <div className="px-2 py-1.5">
-              <Text size="xs" className="text-red-500">
+              <Text size="xs" tone="critical">
                 {errorCount} validation {errorCount === 1 ? "issue" : "issues"}
               </Text>
             </div>

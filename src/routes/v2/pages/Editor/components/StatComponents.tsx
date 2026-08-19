@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { BlockStack, InlineStack } from "@/components/ui/layout";
-import { Text } from "@/components/ui/typography";
+import { Heading, Text } from "@/components/ui/typography";
 
 interface StatItemProps {
   label: string;
@@ -11,7 +11,7 @@ interface StatItemProps {
 export function StatItem({ label, value }: StatItemProps) {
   return (
     <InlineStack blockAlign="center" className="justify-between py-1" gap="2">
-      <Text size="xs" className="text-gray-500 dark:text-muted-foreground">
+      <Text size="xs" tone="subdued">
         {label}
       </Text>
       <Text
@@ -33,16 +33,9 @@ interface StatGroupProps {
 export function StatGroup({ title, children }: StatGroupProps) {
   return (
     <BlockStack gap="1">
-      <Text
-        as="h3"
-        size="xs"
-        weight="semibold"
-        tone="subdued"
-        role="heading"
-        aria-level={3}
-      >
+      <Heading level={3} size="xs" weight="semibold" tone="subdued">
         {title}
-      </Text>
+      </Heading>
       <BlockStack className="pl-2 border-l-2 border-gray-200 dark:border-border">
         {children}
       </BlockStack>

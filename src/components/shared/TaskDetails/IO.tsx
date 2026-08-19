@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Heading } from "@/components/ui/typography";
 import type { ComponentSpec } from "@/utils/componentSpec";
 
 interface TaskIOProps {
@@ -10,7 +11,9 @@ const TaskIO = ({ componentSpec }: TaskIOProps) => {
     <div className="h-full overflow-auto hide-scrollbar">
       {componentSpec?.inputs && componentSpec.inputs.length > 0 && (
         <div className="mb-4">
-          <h4 className="text-sm font-medium mb-2">Inputs</h4>
+          <Heading level={4} size="sm" className="font-medium mb-2">
+            Inputs
+          </Heading>
           <div className="border rounded-md divide-y">
             {componentSpec.inputs.map((input, index) => (
               <div key={index} className="flex flex-col px-3 py-2 gap-2">
@@ -48,7 +51,9 @@ const TaskIO = ({ componentSpec }: TaskIOProps) => {
 
       {componentSpec?.outputs && componentSpec.outputs.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium mb-2">Outputs</h4>
+          <Heading level={4} size="sm" className="font-medium mb-2">
+            Outputs
+          </Heading>
           <div className="border rounded-md divide-y">
             {componentSpec.outputs.map((output) => (
               <div key={output.name} className="flex flex-col px-3 py-2 gap-2">

@@ -42,7 +42,7 @@ export function InitialStateMarker({
       >
         Initial state
         {isCurrent && (
-          <Text as="span" size="xs" className="text-green-500 ml-1">
+          <Text as="span" size="xs" tone="success" className="ml-1">
             ●
           </Text>
         )}

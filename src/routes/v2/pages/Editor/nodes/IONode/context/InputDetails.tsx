@@ -149,7 +149,7 @@ export const InputDetails = observer(function InputDetails({
         </BlockStack>
 
         <InlineStack gap="2">
-          <Text size="xs" className="text-gray-400">
+          <Text size="xs" tone="subdued">
             Optional:
           </Text>
           <Text size="xs" weight="semibold" tone="subdued">

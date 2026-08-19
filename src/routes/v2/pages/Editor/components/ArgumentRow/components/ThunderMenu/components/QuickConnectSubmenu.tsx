@@ -62,7 +62,7 @@ export function QuickConnectSubmenu({
                     {port.portName}
                   </Text>
                   {typeLabel && (
-                    <Text size="xs" className="text-gray-400 shrink-0 ml-auto">
+                    <Text size="xs" tone="subdued" className="shrink-0 ml-auto">
                       {typeLabel}
                     </Text>
                   )}
