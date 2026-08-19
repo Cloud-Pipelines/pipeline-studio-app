@@ -6,13 +6,6 @@ const { useExecutionDataOptionalMock, useSpecMock } = vi.hoisted(() => ({
   useSpecMock: vi.fn(),
 }));
 
-vi.mock(
-  "@/components/shared/ReactFlow/FlowCanvas/TaskNode/TaskOverview/logs",
-  () => ({
-    shouldStatusHaveLogs: (status: string | undefined) => status === "RUNNING",
-  }),
-);
-
 vi.mock("@/providers/ExecutionDataProvider", () => ({
   useExecutionDataOptional: useExecutionDataOptionalMock,
 }));
