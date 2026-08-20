@@ -106,9 +106,11 @@ const serializeTask = (task: Task): AiTaskSpec =>
   pickDefined({
     $id: task.$id,
     name: task.name,
-    componentRef: serializeComponentRef(task.componentRef),
+    componentRef: serializeComponentRef(task.resolvedComponentRef),
     arguments: task.arguments.map(serializeArgument),
-    isSubgraph: isGraphImplementation(task.componentRef.spec?.implementation)
+    isSubgraph: isGraphImplementation(
+      task.resolvedComponentRef.spec?.implementation,
+    )
       ? true
       : undefined,
   });

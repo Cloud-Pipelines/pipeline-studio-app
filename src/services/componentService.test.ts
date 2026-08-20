@@ -164,8 +164,31 @@ describe("componentService", () => {
       vi.mocked(localforage.componentExistsByUrl).mockResolvedValue(false);
       mockFetch.mockResolvedValue({
         ok: false,
+        status: 404,
         headers: new Headers(),
         statusText: "Not Found",
+      } as Response);
+
+      const result = await fetchAndStoreComponentByUrl(url);
+
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        `Component at URL ${url} is unavailable: Not Found`,
+      );
+    });
+
+    it("should keep swallowing retryable fetch errors", async () => {
+      const url = "https://example.com/component.yaml";
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      vi.mocked(localforage.componentExistsByUrl).mockResolvedValue(false);
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 503,
+        headers: new Headers(),
+        statusText: "Service Unavailable",
       } as Response);
 
       const result = await fetchAndStoreComponentByUrl(url);

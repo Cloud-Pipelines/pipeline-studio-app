@@ -449,7 +449,7 @@ export interface GraphImplementation {
 }
 
 export const isValidComponentSpec = (obj: any): obj is ComponentSpec =>
-  typeof obj === "object" && "implementation" in obj;
+  obj !== null && typeof obj === "object" && "implementation" in obj;
 
 export const isContainerImplementation = (
   implementation: ImplementationType,

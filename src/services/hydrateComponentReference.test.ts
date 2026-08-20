@@ -272,21 +272,20 @@ describe("hydrateComponentReference()", () => {
         expect(localforage.saveComponent).toHaveBeenCalled();
       });
 
-      it("should handle getComponentById throwing an error gracefully", async () => {
+      it("should propagate getComponentById errors so callers can retry", async () => {
         // Arrange
         const testDigest = "error123case";
         const discoverableRef = { digest: testDigest };
 
         mockGetComponentMockError(new Error("Storage error"));
 
-        // Act
-        const result = await hydrateComponentReference(discoverableRef);
-
-        // Assert
+        // Act & Assert
+        await expect(
+          hydrateComponentReference(discoverableRef),
+        ).rejects.toThrow("Storage error");
         expect(localforage.getComponentById).toHaveBeenCalledWith(
           `component-${testDigest}`,
         );
-        expect(result).toBeNull();
       });
     });
   });
@@ -377,12 +376,34 @@ describe("hydrateComponentReference()", () => {
         expect(localforage.saveComponent).toHaveBeenCalled();
       });
 
-      it("should handle fetch network errors gracefully", async () => {
+      it("should propagate fetch network errors so callers can retry", async () => {
         // Arrange
         const testUrl = "https://example.com/error-component.yaml";
 
         mockGetComponentByUrl(null); // Not cached
         mockFetchError(new Error("Network error"));
+
+        const loadableRef = { url: testUrl };
+
+        // Act & Assert
+        await expect(hydrateComponentReference(loadableRef)).rejects.toThrow(
+          "Network error",
+        );
+        expect(localforage.getComponentByUrl).toHaveBeenCalledWith(testUrl);
+        expect(global.fetch).toHaveBeenCalledWith(testUrl);
+        expect(localforage.saveComponent).not.toHaveBeenCalled();
+      });
+
+      it("should treat a missing component as unresolvable rather than retryable", async () => {
+        // Arrange
+        const testUrl = "https://example.com/404-component.yaml";
+
+        mockGetComponentByUrl(null); // Not cached
+        mockFetchResponse("", {
+          ok: false,
+          status: 404,
+          statusText: "Not Found",
+        });
 
         const loadableRef = { url: testUrl };
 
@@ -396,22 +417,24 @@ describe("hydrateComponentReference()", () => {
         expect(localforage.saveComponent).not.toHaveBeenCalled();
       });
 
-      it("should handle non-ok fetch responses", async () => {
+      it("should propagate retryable server errors so callers can retry", async () => {
         // Arrange
-        const testUrl = "https://example.com/404-component.yaml";
+        const testUrl = "https://example.com/flaky-component.yaml";
 
         mockGetComponentByUrl(null); // Not cached
-        mockFetchResponse("", { ok: false, statusText: "Not Found" });
+        mockFetchResponse("", {
+          ok: false,
+          status: 503,
+          statusText: "Service Unavailable",
+        });
 
         const loadableRef = { url: testUrl };
 
-        // Act
-        const result = await hydrateComponentReference(loadableRef);
-
-        // Assert
-        expect(localforage.getComponentByUrl).toHaveBeenCalledWith(testUrl);
+        // Act & Assert
+        await expect(hydrateComponentReference(loadableRef)).rejects.toThrow(
+          "Failed to fetch component: Service Unavailable",
+        );
         expect(global.fetch).toHaveBeenCalledWith(testUrl);
-        expect(result).toBeNull();
         expect(localforage.saveComponent).not.toHaveBeenCalled();
       });
 
@@ -479,6 +502,33 @@ describe("hydrateComponentReference()", () => {
         // Assert
         expect(result).toBeNull();
         expect(localforage.saveComponent).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("when the reference carries an unusable spec alongside the URL", () => {
+      it("should still fall back to the URL", async () => {
+        // Arrange
+        const testUrl = "https://example.com/malformed-spec.yaml";
+        const { text: componentText, spec: componentSpec } =
+          prepareComponentContent("RecoveredComponent", "recovered:v1");
+
+        mockGetComponentByUrl(null);
+        mockFetchResponse(componentText);
+
+        const loadableRef = {
+          url: testUrl,
+          spec: { name: "Truncated" } as unknown as ComponentSpec,
+        };
+
+        // Act
+        const result = await hydrateComponentReference(loadableRef);
+
+        // Assert
+        expect(global.fetch).toHaveBeenCalledWith(testUrl);
+        expect(result).not.toBeNull();
+        expect(result?.name).toBe("RecoveredComponent");
+        expect(result?.spec).toEqual(componentSpec);
+        expect(result?.text).toBe(componentText);
       });
     });
 
@@ -824,7 +874,7 @@ describe("hydrateComponentReference()", () => {
     });
 
     describe("error handling", () => {
-      it("should handle crypto.subtle.digest errors gracefully", async () => {
+      it("should propagate crypto.subtle.digest errors so callers can retry", async () => {
         // Arrange
         const { text: componentText } = prepareComponentContent(
           "ErrorComponent",
@@ -837,11 +887,10 @@ describe("hydrateComponentReference()", () => {
 
         const partialRef = { text: componentText, spec: undefined };
 
-        // Act
-        const result = await hydrateComponentReference(partialRef);
-
-        // Assert
-        expect(result).toBeNull();
+        // Act & Assert
+        await expect(hydrateComponentReference(partialRef)).rejects.toThrow(
+          "Crypto error",
+        );
         expect(localforage.saveComponent).not.toHaveBeenCalled();
       });
 
@@ -1034,7 +1083,7 @@ describe("hydrateComponentReference()", () => {
         });
       });
 
-      it("should handle crypto.subtle.digest errors gracefully", async () => {
+      it("should propagate crypto.subtle.digest errors so callers can retry", async () => {
         // Arrange
         const { text: componentText, spec: componentSpec } =
           prepareComponentContent("ErrorComponent", "error:v1");
@@ -1045,11 +1094,10 @@ describe("hydrateComponentReference()", () => {
 
         const contentfulRef = { text: componentText, spec: componentSpec };
 
-        // Act
-        const result = await hydrateComponentReference(contentfulRef);
-
-        // Assert
-        expect(result).toBeNull();
+        // Act & Assert
+        await expect(hydrateComponentReference(contentfulRef)).rejects.toThrow(
+          "Crypto error",
+        );
         expect(localforage.saveComponent).not.toHaveBeenCalled();
       });
 
@@ -1323,10 +1371,11 @@ function mockGetComponentByUrl(
 
 function mockFetchResponse(
   text: string,
-  options: { ok?: boolean; statusText?: string } = {},
+  options: { ok?: boolean; status?: number; statusText?: string } = {},
 ) {
   const response = {
     ok: options.ok ?? true,
+    status: options.status ?? (options.ok === false ? 400 : 200),
     headers: new Headers(),
     statusText: options.statusText ?? "OK",
     text: vi.fn().mockResolvedValue(text),

@@ -6,11 +6,10 @@ import { Icon } from "@/components/ui/icon";
 import { BlockStack } from "@/components/ui/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Text } from "@/components/ui/typography";
-import { serializeComponentSpec } from "@/models/componentSpec";
+import { getTaskYamlText } from "@/routes/v2/pages/Editor/nodes/TaskNode/context/TaskDetails/components/actions/getTaskYamlText";
 import { CodeBlock } from "@/routes/v2/shared/components/CodeBlock";
 import { useSpec } from "@/routes/v2/shared/providers/SpecContext";
 import { tracking } from "@/utils/tracking";
-import { componentSpecToText } from "@/utils/yaml";
 
 interface PinnedTaskContentProps {
   entityId: string;
@@ -35,19 +34,9 @@ export const PinnedTaskContent = observer(function PinnedTaskContent({
     return <NotFoundState entityId={entityId} />;
   }
 
-  const componentRef = task.componentRef;
+  const componentRef = task.resolvedComponentRef;
   const componentSpec = task.resolvedComponentSpec;
-  const code = (() => {
-    if (componentRef.text) return componentRef.text;
-    if (task.subgraphSpec) {
-      return componentSpecToText(serializeComponentSpec(task.subgraphSpec));
-    }
-    return componentRef.spec
-      ? componentSpecToText(
-          componentRef.spec as Parameters<typeof componentSpecToText>[0],
-        )
-      : "";
-  })();
+  const code = getTaskYamlText(task);
 
   return (
     <BlockStack className="h-full w-full bg-card overflow-hidden">

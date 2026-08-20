@@ -16,7 +16,6 @@ import {
   isHydratedComponentReference,
   isInvalidComponentReference,
   isLoadableComponentReference,
-  isNotMaterializedComponentReference,
   isPartialContentfulComponentReference,
   isSpecOnlyComponentReference,
   isTextOnlyComponentReference,
@@ -249,6 +248,38 @@ const parseTextToSpec = async (
   return null;
 };
 
+const RETRYABLE_HTTP_STATUSES = new Set([408, 425, 429]);
+
+const isRetryableHttpStatus = (status: number) =>
+  status >= 500 || RETRYABLE_HTTP_STATUSES.has(status);
+
+const fetchComponentTextFromNetwork = async (
+  url: string,
+): Promise<string | undefined> => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    if (isRetryableHttpStatus(response.status)) {
+      throw new Error(`Failed to fetch component: ${response.statusText}`);
+    }
+
+    console.error(
+      `Component at URL ${url} is unavailable: ${response.statusText}`,
+    );
+    return undefined;
+  }
+
+  // if response code is json, return the json
+  if (response.headers.get("content-type")?.includes("application/json")) {
+    const json = await response.json();
+    // if coming from the Backend Component Library API
+    if (json.text) {
+      return json.text;
+    }
+  }
+
+  return await response.text();
+};
+
 /**
  * Helper function to fetch text content from URL (with caching)
  */
@@ -261,27 +292,30 @@ export const fetchComponentTextFromUrl = async (
     return storedComponent.data;
   }
 
-  // Fetch from network
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch component: ${response.statusText}`);
-    }
-
-    // if response code is json, return the json
-    if (response.headers.get("content-type")?.includes("application/json")) {
-      const json = await response.json();
-      // if coming from the Backend Component Library API
-      if (json.text) {
-        return json.text;
-      }
-    }
-
-    return await response.text();
+    return await fetchComponentTextFromNetwork(url);
   } catch (error) {
     console.error(`Error fetching component from URL ${url}:`, error);
     return undefined;
   }
+};
+
+/**
+ * Same as {@link fetchComponentTextFromUrl}, but surfaces retryable failures —
+ * a dropped connection or a 5xx — instead of reporting them as a component with
+ * no content. Callers that cache their result need to tell a transient failure
+ * apart from a component that is genuinely gone, so a 404 still resolves to
+ * `undefined` rather than throwing.
+ */
+const fetchComponentTextFromUrlOrThrow = async (
+  url: string,
+): Promise<string | undefined> => {
+  const storedComponent = await getComponentByUrl(url);
+  if (storedComponent) {
+    return storedComponent.data;
+  }
+
+  return await fetchComponentTextFromNetwork(url);
 };
 
 /**
@@ -396,17 +430,24 @@ async function hydrateFromPartialContentfulComponentReference(
   if (!isPartialContentfulComponentReference(component)) {
     return null;
   }
-  // it is ok to fail here, as we will try to fetch the text from the URL or local storage
-  const text = isSpecOnlyComponentReference(component)
-    ? componentSpecToYaml(component.spec)
-    : component.text;
+  let text: string | undefined;
+  let spec: ComponentSpec | undefined;
 
-  const spec = isTextOnlyComponentReference(component)
-    ? componentSpecFromYaml(component.text)
-    : component.spec;
+  try {
+    text = isSpecOnlyComponentReference(component)
+      ? componentSpecToYaml(component.spec)
+      : component.text;
+
+    spec = isTextOnlyComponentReference(component)
+      ? componentSpecFromYaml(component.text)
+      : component.spec;
+  } catch {
+    // Unparseable content is a permanent condition — reporting it as a failure
+    // would have callers retry a translation that can never succeed.
+    return null;
+  }
 
   if (!text || !spec) {
-    // likely we should see an exception above, but for narrowing types
     return null;
   }
 
@@ -462,6 +503,16 @@ async function saveHydratedComponentReferenceToStorage(
   });
 }
 
+function isUnresolvedLoadableComponentReference(
+  component: UnknownComponentReference,
+): component is LoadableComponentReference {
+  return (
+    isLoadableComponentReference(component) &&
+    !isContentfulComponentReference(component) &&
+    !isPartialContentfulComponentReference(component)
+  );
+}
+
 function hydrationStrategy<
   T extends UnknownComponentReference = ComponentReference,
 >(
@@ -482,7 +533,6 @@ function hydrationStrategy<
 
 /**
  * Hydrate a component reference by fetching the text and spec from the URL or local storage
- * This is experimental function, that potentially can replace all other methods of getting ComponentRef.
  *
  * @param component - The component reference to hydrate
  * @returns The hydrated component reference or null if the component reference is invalid
@@ -490,103 +540,93 @@ function hydrationStrategy<
 export const hydrateComponentReference = async (
   component: ComponentReference,
 ): Promise<HydratedComponentReference | null> => {
-  try {
-    let currentComponent: UnknownComponentReference = component;
+  let currentComponent: UnknownComponentReference = component;
 
-    const strategies = [
-      hydrationStrategy(
-        isInvalidComponentReference,
-        async (_: UnknownComponentReference) => null,
-      ),
-      hydrationStrategy(
-        isHydratedComponentReference,
-        async (component: HydratedComponentReference) => component,
-      ),
-      hydrationStrategy(
-        isContentfulComponentReference,
-        hydrateFromContentfulComponentReference,
-      ),
+  const strategies = [
+    hydrationStrategy(
+      isInvalidComponentReference,
+      async (_: UnknownComponentReference) => null,
+    ),
+    hydrationStrategy(
+      isHydratedComponentReference,
+      async (component: HydratedComponentReference) => component,
+    ),
+    hydrationStrategy(
+      isContentfulComponentReference,
+      hydrateFromContentfulComponentReference,
+    ),
 
-      hydrationStrategy(
-        isDiscoverableComponentReference,
-        async (component: DiscoverableComponentReference) => {
-          const storedComponent = await getComponentById(
-            componentId(component),
-          );
+    hydrationStrategy(
+      isDiscoverableComponentReference,
+      async (component: DiscoverableComponentReference) => {
+        const storedComponent = await getComponentById(componentId(component));
 
-          if (storedComponent) {
-            return await hydrateFromPartialContentfulComponentReference({
+        if (storedComponent) {
+          return await hydrateFromPartialContentfulComponentReference({
+            ...component,
+            ...normalizeStoredComponentReference(storedComponent),
+          });
+        }
+
+        return component;
+      },
+    ),
+
+    hydrationStrategy(
+      isTextOnlyComponentReference,
+      hydrateFromPartialContentfulComponentReference,
+    ),
+
+    hydrationStrategy(
+      isUnresolvedLoadableComponentReference,
+      async (component: LoadableComponentReference) => {
+        const text = await fetchComponentTextFromUrlOrThrow(component.url);
+
+        if (text) {
+          return (
+            (await hydrateFromPartialContentfulComponentReference({
               ...component,
-              ...normalizeStoredComponentReference(storedComponent),
-            });
-          }
+              // errasing spec, will be restored from text to keep both in sync
+              spec: undefined,
+              text,
+            })) ??
+            // fallback to component as is,
+            component
+          );
+        }
 
-          return component;
-        },
-      ),
+        return component;
+      },
+    ),
 
-      hydrationStrategy(
-        isTextOnlyComponentReference,
-        hydrateFromPartialContentfulComponentReference,
-      ),
+    hydrationStrategy(
+      isSpecOnlyComponentReference,
+      hydrateFromPartialContentfulComponentReference,
+    ),
+  ];
 
-      hydrationStrategy(
-        (component: UnknownComponentReference) =>
-          isNotMaterializedComponentReference(component) &&
-          isLoadableComponentReference(component),
-        async (component: LoadableComponentReference) => {
-          const text = await fetchComponentTextFromUrl(component.url);
+  /**
+   * Try hydration strategies in order.
+   * If the component is resolved, save it to the storage and return it.
+   */
+  for (const resolveComponentRef of strategies) {
+    await resolveComponentRef(currentComponent, (component) => {
+      currentComponent = component;
+    });
 
-          if (text) {
-            return (
-              (await hydrateFromPartialContentfulComponentReference({
-                ...component,
-                // errasing spec, will be restored from text to keep both in sync
-                spec: undefined,
-                text,
-              })) ??
-              // fallback to component as is,
-              component
-            );
-          }
-
-          return component;
-        },
-      ),
-
-      hydrationStrategy(
-        isSpecOnlyComponentReference,
-        hydrateFromPartialContentfulComponentReference,
-      ),
-    ];
-
-    /**
-     * Try hydration strategies in order.
-     * If the component is resolved, save it to the storage and return it.
-     */
-    for (const resolveComponentRef of strategies) {
-      await resolveComponentRef(currentComponent, (component) => {
-        currentComponent = component;
-      });
-
-      if (!currentComponent) {
-        return null;
-      }
-
-      if (isHydratedComponentReference(currentComponent)) {
-        // dont wait for actualizing the cache value, as it is not critical
-        void saveHydratedComponentReferenceToStorage(currentComponent).catch(
-          // todo: handle error
-          console.error,
-        );
-        return currentComponent;
-      }
+    if (!currentComponent) {
+      return null;
     }
 
-    return null;
-  } catch (error) {
-    // todo: handle error
-    console.error(`Error in hydrateComponentReference:`, error);
-    return null;
+    if (isHydratedComponentReference(currentComponent)) {
+      // dont wait for actualizing the cache value, as it is not critical
+      void saveHydratedComponentReferenceToStorage(currentComponent).catch(
+        // todo: handle error
+        console.error,
+      );
+      return currentComponent;
+    }
   }
+
+  return null;
 };

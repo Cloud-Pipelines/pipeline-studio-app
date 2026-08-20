@@ -46,7 +46,7 @@ export function snapshotTask(
     name: task.name,
     position: task.annotations.get(EDITOR_POSITION_ANNOTATION),
     data: {
-      componentRef: deepClone(task.componentRef),
+      componentRef: deepClone(task.resolvedComponentRef),
       isEnabled: task.isEnabled ? deepClone(task.isEnabled) : undefined,
       arguments: task.arguments.map((a) => deepClone(a)),
       executionOptions: task.executionOptions

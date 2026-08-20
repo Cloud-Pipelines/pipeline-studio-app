@@ -94,10 +94,8 @@ export const fetchContainerLog = async (
   executionId: string,
   backendUrl: string,
 ): Promise<GetContainerExecutionLogResponse> => {
-  const response = await fetch(
-    `${backendUrl}/api/executions/${executionId}/container_log`,
-  );
-  return response.json();
+  const url = `${backendUrl}/api/executions/${executionId}/container_log`;
+  return fetchWithErrorHandling(url);
 };
 
 export const useFetchContainerExecutionState = (

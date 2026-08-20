@@ -155,11 +155,7 @@ export const TaskDetails = observer(function TaskDetails({
         </InlineStack>
 
         <ComponentRefBar
-          componentRef={
-            task.subgraphSpec
-              ? { ...task.componentRef, spec: componentSpec }
-              : task.componentRef
-          }
+          componentRef={task.resolvedComponentRef}
           yamlText={yamlText}
           taskName={task.name}
           pythonCode={pythonCode}
