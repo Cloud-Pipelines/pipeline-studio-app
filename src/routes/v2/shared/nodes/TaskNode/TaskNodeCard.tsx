@@ -7,6 +7,7 @@ import { PublishedComponentBadge } from "@/components/shared/ManageComponent/Pub
 import { trimDigest } from "@/components/shared/ManageComponent/utils/digest";
 import { OutputTypeSelector } from "@/components/shared/ReactFlow/FlowCanvas/TaskNode/OutputTypeSelector/OutputTypeSelector";
 import TaskStatusBar from "@/components/shared/Status/TaskStatusBar";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
@@ -93,12 +94,11 @@ interface ClassicInputHandleProps {
   displayValue: string | undefined;
   hideValue?: boolean;
   isSecret: boolean;
-  // When true the node has no custom colour, so section chrome follows the theme.
   themed: boolean;
-  // Whether the app is in dark mode — used to darken coloured-node chrome.
   isDark: boolean;
-  onInputClick: (name: string, event: ReactMouseEvent) => void;
-  onHandleClick: (handleId: string, event: ReactMouseEvent) => void;
+  onRowClick?: (event: ReactMouseEvent) => void;
+  onLabelClick: (event: ReactMouseEvent) => void;
+  onHandleClick: (event: ReactMouseEvent) => void;
 }
 
 const ClassicInputHandle = observer(function ClassicInputHandle({
@@ -109,7 +109,8 @@ const ClassicInputHandle = observer(function ClassicInputHandle({
   isSecret,
   themed,
   isDark,
-  onInputClick,
+  onRowClick,
+  onLabelClick,
   onHandleClick,
 }: ClassicInputHandleProps) {
   const spec = useSpec();
@@ -125,13 +126,7 @@ const ClassicInputHandle = observer(function ClassicInputHandle({
   const labelHasDefault = hideValue ? false : hasDefault;
 
   return (
-    <div
-      className="relative w-full h-fit cursor-pointer"
-      onClick={(e) => {
-        e.stopPropagation();
-        onInputClick(input.name, e);
-      }}
-    >
+    <div className="relative w-full h-fit cursor-pointer" onClick={onRowClick}>
       <div className="absolute -translate-x-6 flex items-center h-3 w-3">
         <Handle
           type="target"
@@ -142,7 +137,9 @@ const ClassicInputHandle = observer(function ClassicInputHandle({
               ? "border-0! h-full! w-full! transform-none! bg-red-700!"
               : "border-0! h-full! w-full! transform-none! bg-gray-500!"
           }
-          onClick={(e) => onHandleClick(`input_${input.name}`, e)}
+          onClick={onHandleClick}
+          data-input-control
+          data-testid={`input-handle-${input.name}`}
         />
       </div>
       <InlineStack
@@ -155,23 +152,29 @@ const ClassicInputHandle = observer(function ClassicInputHandle({
             !showValueDisplay ? "max-w-full" : "max-w-3/4",
           )}
         >
-          <div
+          <Button
+            variant="ghost"
+            size="xs"
             className={cn(
               classicInputLabelVariants({
                 hasValue: labelHasValue,
                 hasDefault: labelHasDefault,
                 optional: input.optional ?? false,
               }),
+              "block shrink text-left font-normal",
               themed
-                ? "text-foreground bg-muted hover:bg-accent"
+                ? "text-foreground bg-muted hover:bg-accent dark:hover:bg-accent hover:text-foreground"
                 : isDark
-                  ? "text-gray-100 bg-white/10 hover:bg-white/15"
-                  : "text-gray-800 bg-black/5 hover:bg-black/10",
+                  ? "text-gray-100 bg-white/10 hover:bg-white/15 dark:hover:bg-white/15 hover:text-gray-100"
+                  : "text-gray-800 bg-black/5 hover:bg-black/10 dark:hover:bg-black/10 hover:text-gray-800",
             )}
             title={`${input.name}${input.type ? `: ${input.type}` : ""}`}
+            onClick={onLabelClick}
+            data-input-control
+            data-testid={`input-label-${input.name}`}
           >
             {input.name.replace(/_/g, " ")}
-          </div>
+          </Button>
         </div>
         {showValueDisplay && (
           <div className="flex w-fit max-w-1/2 min-w-0 items-center gap-1">
@@ -264,10 +267,17 @@ export const TaskNodeCard = observer(function TaskNodeCard({
       ? filteredInputs.filter((input) => connectedInputNames.has(input.name))
       : filteredInputs.slice(0, 1);
   const hiddenInputCount = filteredInputs.length - condensedInputs.length;
-  const showCondensedInputs =
-    !isAggregator && collapsed && !inputsExpanded && hiddenInputCount > 0;
+  const inputsSectionToggles =
+    !isAggregator && collapsed && hiddenInputCount > 0;
+  const showCondensedInputs = inputsSectionToggles && !inputsExpanded;
   const visibleInputs = showCondensedInputs ? condensedInputs : filteredInputs;
   const showInputsSection = filteredInputs.length > 0 || isAggregator;
+
+  const openInputProperties =
+    (inputName: string) => (event: ReactMouseEvent) => {
+      event.stopPropagation();
+      onInputClick(inputName, event);
+    };
 
   const condensedOutputs =
     outputs.length > 0 && connectedOutputNames.size > 0
@@ -381,19 +391,14 @@ export const TaskNodeCard = observer(function TaskNodeCard({
             className={cn(
               "p-2 rounded-lg",
               !palette && "bg-muted",
-              !isAggregator &&
-                collapsed &&
-                hiddenInputCount > 0 &&
-                "cursor-pointer",
+              inputsSectionToggles && "cursor-pointer",
               !palette &&
-                !isAggregator &&
-                collapsed &&
-                hiddenInputCount > 0 &&
-                "hover:bg-accent",
+                inputsSectionToggles &&
+                "hover:bg-accent has-[[data-input-control]:hover]:bg-muted",
             )}
             style={palette ? { backgroundColor: palette.sectionBg } : undefined}
-            onClickCapture={
-              !isAggregator && collapsed && hiddenInputCount > 0
+            onClick={
+              inputsSectionToggles
                 ? (e) => {
                     e.stopPropagation();
                     setInputsExpanded((prev) => !prev);
@@ -419,8 +424,13 @@ export const TaskNodeCard = observer(function TaskNodeCard({
                   }
                   hideValue={showCondensedInputs && index !== 0}
                   isSecret={secretInputNames.has(input.name)}
-                  onInputClick={onInputClick}
-                  onHandleClick={onHandleClick}
+                  onRowClick={
+                    inputsSectionToggles
+                      ? undefined
+                      : openInputProperties(input.name)
+                  }
+                  onLabelClick={openInputProperties(input.name)}
+                  onHandleClick={(e) => onHandleClick(`input_${input.name}`, e)}
                 />
               ))}
               {collapsed && inputsExpanded && hiddenInputCount > 0 && (
