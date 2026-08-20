@@ -20,3 +20,5 @@ export const ZINDEX_ANNOTATION = "zIndex";
 export const SDK_ANNOTATION = "sdk";
 export const TASK_COLOR_ANNOTATION = "tangleml.com/editor/task-color";
 export const EDGE_CONDUITS_ANNOTATION = "tangleml.com/editor/edge-conduits";
+export const EDITOR_CONDITIONAL_EXECUTION_ANNOTATION =
+  "tangleml.com/editor/conditional-execution";

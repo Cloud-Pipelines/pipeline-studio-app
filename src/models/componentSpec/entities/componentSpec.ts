@@ -1,6 +1,8 @@
 import { computed } from "mobx";
 import { idProp, Model, model, modelAction, prop } from "mobx-keystone";
 
+import { IS_ENABLED_PORT_NAME } from "@/utils/conditionalExecution";
+
 import { Annotations } from "../annotations";
 import { collectValidationIssues } from "../validation/collectIssues";
 import type {
@@ -106,14 +108,27 @@ export class ComponentSpec extends Model({
   }
 
   @modelAction
+  private clearGateLiteral(binding: Binding | undefined) {
+    if (!binding || binding.targetPortName !== IS_ENABLED_PORT_NAME) return;
+    const task = this.tasks.find((t) => t.$id === binding.targetEntityId);
+    task?.setIsEnabled(undefined);
+  }
+
+  @modelAction
   removeBinding(index: number) {
-    return this.bindings.splice(index, 1)[0];
+    const removed = this.bindings.splice(index, 1)[0];
+    this.clearGateLiteral(removed);
+    return removed;
   }
 
   @modelAction
   removeBindingBy(predicate: (b: Binding) => boolean): Binding | undefined {
     const idx = this.bindings.findIndex(predicate);
-    if (idx >= 0) return this.bindings.splice(idx, 1)[0];
+    if (idx >= 0) {
+      const removed = this.bindings.splice(idx, 1)[0];
+      this.clearGateLiteral(removed);
+      return removed;
+    }
     return undefined;
   }
 
@@ -129,6 +144,9 @@ export class ComponentSpec extends Model({
       if (predicate(this.bindings[i])) {
         removed.push(this.bindings.splice(i, 1)[0]);
       }
+    }
+    for (const binding of removed) {
+      this.clearGateLiteral(binding);
     }
     return removed;
   }
@@ -202,7 +220,7 @@ export class ComponentSpec extends Model({
   deleteEdgeById(bindingId: string): boolean {
     const idx = this.bindings.findIndex((b) => b.$id === bindingId);
     if (idx < 0) return false;
-    this.bindings.splice(idx, 1);
+    this.clearGateLiteral(this.bindings.splice(idx, 1)[0]);
     return true;
   }
 

@@ -6,6 +6,7 @@ import type { AnnotationConfig, Annotations } from "@/types/annotations";
 import {
   EDGE_CONDUITS_ANNOTATION,
   EDITOR_COLLAPSED_ANNOTATION,
+  EDITOR_CONDITIONAL_EXECUTION_ANNOTATION,
   EDITOR_FLOW_DIRECTION_ANNOTATION,
   EDITOR_POSITION_ANNOTATION,
   FLEX_NODES_ANNOTATION,
@@ -19,7 +20,6 @@ import {
 import type { ComponentSpec } from "./componentSpec";
 
 export * from "./annotationKeys";
-export { EDITOR_CONDITIONAL_EXECUTION_ANNOTATION } from "./conditionalExecution";
 
 export const DISPLAY_NAME_MAX_LENGTH = 100;
 const PIPELINE_AGGREGATOR_ANNOTATION = "is_input_aggregator";
@@ -34,6 +34,7 @@ export const SYSTEM_ANNOTATIONS = [
   EDITOR_FLOW_DIRECTION_ANNOTATION,
   TASK_COLOR_ANNOTATION,
   EDGE_CONDUITS_ANNOTATION,
+  EDITOR_CONDITIONAL_EXECUTION_ANNOTATION,
 ];
 
 export const DEFAULT_COMMON_ANNOTATIONS: AnnotationConfig[] = [
