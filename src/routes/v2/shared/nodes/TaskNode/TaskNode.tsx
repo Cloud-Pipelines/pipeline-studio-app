@@ -23,7 +23,6 @@ import { useSharedStores } from "@/routes/v2/shared/store/SharedStoreContext";
 import { AggregatorOutputType } from "@/types/aggregator";
 import {
   EDITOR_COLLAPSED_ANNOTATION,
-  EDITOR_CONDITIONAL_EXECUTION_ANNOTATION,
   isPipelineAggregator,
   TASK_COLOR_ANNOTATION,
 } from "@/utils/annotations";
@@ -252,6 +251,7 @@ export const TaskNode = observer(function TaskNode({
   const publishedComponentBadgeEnabled = useFlagValue(
     "remote-component-library-search",
   );
+  const conditionalExecutionEnabled = useFlagValue("conditional-execution");
 
   const spec = useSpec();
   const task = spec?.tasks.find((t) => t.$id === entityId);
@@ -306,14 +306,11 @@ export const TaskNode = observer(function TaskNode({
   const connectedPorts = resolveConnectedPortNames(entityId, spec);
   const inputDisplayData = resolveInputDisplayData(task, entityId, spec);
 
-  // In "Conditional" execution mode a virtual "Is enabled?" input is exposed so
-  // the user can connect an upstream value that gates the task. The connection
-  // itself is an ordinary binding to the reserved port, so its display value and
-  // connected state are already resolved above.
-  const isConditionalExecution =
-    task.annotations.get(EDITOR_CONDITIONAL_EXECUTION_ANNOTATION) === "true" ||
-    connectedPorts.inputs.has(IS_ENABLED_PORT_NAME);
-  const displayInputs: TaskNodeInput[] = isConditionalExecution
+  // Every task exposes a virtual "Is enabled?" input so an upstream value can be
+  // connected to gate it. The connection itself is an ordinary binding to the
+  // reserved port, so its display value and connected state are already resolved
+  // above; an unset `isEnabled` means enabled, and reads as "true".
+  const displayInputs: TaskNodeInput[] = conditionalExecutionEnabled
     ? [
         ...inputs,
         {
@@ -323,6 +320,13 @@ export const TaskNode = observer(function TaskNode({
         },
       ]
     : inputs;
+  const inputDisplayValues = conditionalExecutionEnabled
+    ? {
+        [IS_ENABLED_PORT_NAME]:
+          typeof task.isEnabled === "string" ? task.isEnabled : "true",
+        ...inputDisplayData.values,
+      }
+    : inputDisplayData.values;
 
   const isSelected = isEditorVisualNodeSelected(editor, id, !!selected);
 
@@ -357,7 +361,7 @@ export const TaskNode = observer(function TaskNode({
     subgraphExecutionStats,
     onOutputTypeChange: handleOutputTypeChange,
     digest: task.componentRef.digest,
-    inputDisplayValues: inputDisplayData.values,
+    inputDisplayValues,
     secretInputNames: inputDisplayData.secretInputNames,
     onNodeClick: handleClick,
     onInputClick: handleInputClick,
