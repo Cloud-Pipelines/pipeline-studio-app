@@ -77,7 +77,7 @@ export interface TaskNodeViewProps {
   subgraphExecutionStats?: ExecutionStatusStats | null;
   onOutputTypeChange: (value: AggregatorOutputType) => void;
   onNodeClick: (event: MouseEvent) => void;
-  onInputClick: (inputName: string, event: MouseEvent) => void;
+  onInputClick: (inputName: string, event: MouseEvent | KeyboardEvent) => void;
   onOutputClick: (outputName: string, event: MouseEvent) => void;
   onHandleClick: (handleId: string, event: MouseEvent) => void;
 }
@@ -277,7 +277,10 @@ export const TaskNode = observer(function TaskNode({
     );
   };
 
-  const handleInputClick = (inputName: string, e: MouseEvent) => {
+  const handleInputClick = (
+    inputName: string,
+    e: MouseEvent | KeyboardEvent,
+  ) => {
     e.stopPropagation();
     editor.selectNode(id, "task", { entityId });
     editor.setFocusedArgument(inputName);

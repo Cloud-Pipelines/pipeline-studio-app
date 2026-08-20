@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ReactFlowProvider } from "@xyflow/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -123,6 +124,88 @@ describe("TaskNodeCard", () => {
 
     expect(screen.getByLabelText("2 Succeeded")).toBeInTheDocument();
     expect(screen.getByLabelText("1 Running")).toBeInTheDocument();
+  });
+
+  describe("collapsed inputs section", () => {
+    const renderCollapsed = (overrides: Partial<TaskNodeViewProps> = {}) => {
+      const props = buildProps({
+        isSubgraph: false,
+        collapsed: true,
+        inputs: [{ name: "name", type: "String" }, { name: "greeting" }],
+        onHandleClick: vi.fn((_handleId, event) => event.stopPropagation()),
+        ...overrides,
+      });
+
+      render(
+        <ReactFlowProvider>
+          <TaskNodeCard {...props} />
+        </ReactFlowProvider>,
+      );
+
+      return props;
+    };
+
+    it("opens the task properties for an input when its label is clicked", async () => {
+      const props = renderCollapsed();
+
+      await userEvent.click(screen.getByTestId("input-label-name"));
+
+      expect(props.onInputClick).toHaveBeenCalledWith(
+        "name",
+        expect.anything(),
+      );
+      expect(screen.getByText(/\+1 more input/)).toBeInTheDocument();
+    });
+
+    it("opens the task properties for an input when its label is activated by keyboard", async () => {
+      const props = renderCollapsed();
+
+      screen.getByTestId("input-label-name").focus();
+      await userEvent.keyboard("{Enter}");
+      await userEvent.keyboard(" ");
+
+      expect(props.onInputClick).toHaveBeenCalledTimes(2);
+      expect(props.onInputClick).toHaveBeenCalledWith(
+        "name",
+        expect.anything(),
+      );
+      expect(screen.getByText(/\+1 more input/)).toBeInTheDocument();
+    });
+
+    it("selects the connected edges when an input handle is clicked", async () => {
+      const props = renderCollapsed();
+
+      await userEvent.click(screen.getByTestId("input-handle-name"));
+
+      expect(props.onHandleClick).toHaveBeenCalledWith(
+        "input_name",
+        expect.anything(),
+      );
+      expect(props.onInputClick).not.toHaveBeenCalled();
+      expect(screen.getByText(/\+1 more input/)).toBeInTheDocument();
+    });
+
+    it("expands the hidden inputs when the rest of the row is clicked", async () => {
+      const props = renderCollapsed();
+
+      await userEvent.click(screen.getByText(/\+1 more input/));
+
+      expect(props.onInputClick).not.toHaveBeenCalled();
+      expect(screen.getByTestId("input-label-greeting")).toBeInTheDocument();
+      expect(screen.getByText("(Click to collapse)")).toBeInTheDocument();
+    });
+
+    it("selects the connected edges when an input handle is clicked on an expanded node", async () => {
+      const props = renderCollapsed({ collapsed: false });
+
+      await userEvent.click(screen.getByTestId("input-handle-name"));
+
+      expect(props.onHandleClick).toHaveBeenCalledWith(
+        "input_name",
+        expect.anything(),
+      );
+      expect(props.onInputClick).not.toHaveBeenCalled();
+    });
   });
 
   it("does not show child execution progress for a container task", () => {
