@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { CodeViewer } from "@/components/shared/CodeViewer";
-import { ComponentEditorDialog } from "@/components/shared/ComponentEditor/ComponentEditorDialog";
+import { useComponentEditor } from "@/components/shared/ComponentEditor/ComponentEditorProvider";
 import ComponentDetailsDialog from "@/components/shared/Dialogs/ComponentDetailsDialog";
 import { TrimmedDigest } from "@/components/shared/ManageComponent/TrimmedDigest";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export function ComponentRefBar({
 }: ComponentRefBarProps) {
   const { track } = useAnalytics();
   const notify = useToastNotification();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { openComponentEditor } = useComponentEditor();
   const [showCodeViewer, setShowCodeViewer] = useState(false);
 
   const displayName = componentRef.name ?? getComponentName(componentRef);
@@ -180,7 +180,7 @@ export function ComponentRefBar({
               <DropdownMenuItem
                 onClick={() => {
                   track("v2.pipeline_editor.task_details.edit_component.click");
-                  setIsEditDialogOpen(true);
+                  openComponentEditor({ text: yamlText });
                 }}
               >
                 <Icon name="FilePenLine" size="sm" />
@@ -190,13 +190,6 @@ export function ComponentRefBar({
           </DropdownMenu>
         </InlineStack>
       </InlineStack>
-
-      {isEditDialogOpen && (
-        <ComponentEditorDialog
-          text={yamlText}
-          onClose={() => setIsEditDialogOpen(false)}
-        />
-      )}
 
       {showCodeViewer && (
         <CodeViewer

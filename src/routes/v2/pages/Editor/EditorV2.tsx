@@ -6,6 +6,7 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { observer } from "mobx-react-lite";
 import { type ReactNode, useEffect } from "react";
 
+import { ComponentEditorProvider } from "@/components/shared/ComponentEditor/ComponentEditorProvider";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { useFlagValue } from "@/components/shared/Settings/useFlags";
 import { withSuspenseWrapper } from "@/components/shared/SuspenseWrapper";
@@ -164,13 +165,15 @@ function EditorV2Content({ pipelineRef }: { pipelineRef: PipelineRef | null }) {
 
   return (
     <ComponentLibraryProvider>
-      <ReactFlowProvider>
-        <EditorMenuBar />
-        <EditorTourBridge />
-        <TourSaveExploreDialog />
-        <TourSecretsDialog />
-        <ForcedSearchProvider>{body}</ForcedSearchProvider>
-      </ReactFlowProvider>
+      <ComponentEditorProvider>
+        <ReactFlowProvider>
+          <EditorMenuBar />
+          <EditorTourBridge />
+          <TourSaveExploreDialog />
+          <TourSecretsDialog />
+          <ForcedSearchProvider>{body}</ForcedSearchProvider>
+        </ReactFlowProvider>
+      </ComponentEditorProvider>
     </ComponentLibraryProvider>
   );
 }

@@ -3,6 +3,7 @@ import "@/styles/editor.css";
 import { Background, MiniMap, type ReactFlowProps } from "@xyflow/react";
 import { useRef, useState } from "react";
 
+import { ComponentEditorProvider } from "@/components/shared/ComponentEditor/ComponentEditorProvider";
 import { CollapsibleContextPanel } from "@/components/shared/ContextPanel/CollapsibleContextPanel";
 import {
   FlowCanvas,
@@ -63,32 +64,34 @@ const PipelineEditor = () => {
         <ContextPanelProvider defaultContent={<PipelineDetails />}>
           <ForcedSearchProvider>
             <ComponentLibraryProvider>
-              <InlineStack fill>
-                <FlowSidebar />
-                <BlockStack fill className="flex-1 relative">
-                  <FlowCanvas ref={flowCanvasRef} {...flowConfig}>
-                    <MiniMap
-                      position="bottom-left"
-                      className="dark:rounded-md dark:border dark:border-border"
-                      pannable
-                    />
-                    <FlowControls
-                      className="ml-56! mb-3!"
-                      config={flowConfig}
-                      updateConfig={updateFlowConfig}
-                      onAutoLayout={handleAutoLayout}
-                      showInteractive={false}
-                      pageType="pipeline_editor"
-                    />
-                    <Background gap={GRID_SIZE} className="bg-canvas!" />
-                  </FlowCanvas>
+              <ComponentEditorProvider>
+                <InlineStack fill>
+                  <FlowSidebar />
+                  <BlockStack fill className="flex-1 relative">
+                    <FlowCanvas ref={flowCanvasRef} {...flowConfig}>
+                      <MiniMap
+                        position="bottom-left"
+                        className="dark:rounded-md dark:border dark:border-border"
+                        pannable
+                      />
+                      <FlowControls
+                        className="ml-56! mb-3!"
+                        config={flowConfig}
+                        updateConfig={updateFlowConfig}
+                        onAutoLayout={handleAutoLayout}
+                        showInteractive={false}
+                        pageType="pipeline_editor"
+                      />
+                      <Background gap={GRID_SIZE} className="bg-canvas!" />
+                    </FlowCanvas>
 
-                  <div className="absolute bottom-0 right-0 p-4">
-                    <UndoRedo />
-                  </div>
-                </BlockStack>
-                <CollapsibleContextPanel />
-              </InlineStack>
+                    <div className="absolute bottom-0 right-0 p-4">
+                      <UndoRedo />
+                    </div>
+                  </BlockStack>
+                  <CollapsibleContextPanel />
+                </InlineStack>
+              </ComponentEditorProvider>
             </ComponentLibraryProvider>
           </ForcedSearchProvider>
         </ContextPanelProvider>
