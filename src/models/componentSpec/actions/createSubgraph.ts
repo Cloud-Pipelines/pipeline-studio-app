@@ -1,3 +1,4 @@
+import { IS_ENABLED_PORT_NAME } from "@/utils/conditionalExecution";
 import { deepClone } from "@/utils/deepClone";
 
 import { Annotations } from "../annotations";
@@ -9,9 +10,9 @@ import { Task } from "../entities/task";
 import type {
   Annotation,
   Argument,
+  ArgumentType,
   ComponentReference,
   ExecutionOptionsSpec,
-  PredicateType,
 } from "../entities/types";
 import type { IdGenerator } from "../factories/idGenerator";
 
@@ -31,7 +32,7 @@ interface TaskSnapshot {
   $id: string;
   name: string;
   componentRef: ComponentReference;
-  isEnabled?: PredicateType;
+  isEnabled?: ArgumentType;
   annotations: Annotation[];
   arguments: Argument[];
   executionOptions?: ExecutionOptionsSpec;
@@ -128,7 +129,11 @@ export function createSubgraph({
   const usedInputNames = new Set<string>();
   for (const [, bindings] of Object.entries(incomingBySource)) {
     const first = bindings[0];
-    const inputName = deduplicatePortName(first.targetPortName, usedInputNames);
+    const preferredInputName =
+      first.targetPortName === IS_ENABLED_PORT_NAME
+        ? "run_when"
+        : first.targetPortName;
+    const inputName = deduplicatePortName(preferredInputName, usedInputNames);
     const input = new Input({
       $id: idGen.next("input"),
       name: inputName,

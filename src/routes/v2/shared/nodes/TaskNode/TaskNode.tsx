@@ -27,6 +27,10 @@ import {
   TASK_COLOR_ANNOTATION,
 } from "@/utils/annotations";
 import { isSecretArgument } from "@/utils/componentSpec";
+import {
+  IS_ENABLED_PORT_NAME,
+  isFalseCondition,
+} from "@/utils/conditionalExecution";
 import { ISO8601_DURATION_ZERO_DAYS } from "@/utils/constants";
 import type { ExecutionStatusStats } from "@/utils/executionStatus";
 
@@ -67,6 +71,9 @@ export interface TaskNodeViewProps {
   annotations: { key: string }[];
   taskColor?: string;
   cacheDisabled: boolean;
+  isConditional?: boolean;
+  conditionalConnected?: boolean;
+  conditionalDisplayValue?: string;
   componentRef?: ComponentReference;
   digest?: string;
   publishedComponentBadgeReadOnly?: boolean;
@@ -295,6 +302,13 @@ export const TaskNode = observer(function TaskNode({
 
   const connectedPorts = resolveConnectedPortNames(entityId, spec);
   const inputDisplayData = resolveInputDisplayData(task, entityId, spec);
+  const isConditional = task.isEnabled !== undefined;
+  const conditionalConnected = connectedPorts.inputs.has(IS_ENABLED_PORT_NAME);
+  const conditionalDisplayValue = conditionalConnected
+    ? inputDisplayData.values[IS_ENABLED_PORT_NAME]
+    : isFalseCondition(task.isEnabled)
+      ? "Never"
+      : undefined;
 
   const isSelected = isEditorVisualNodeSelected(editor, id, !!selected);
 
@@ -320,6 +334,9 @@ export const TaskNode = observer(function TaskNode({
     cacheDisabled:
       task.executionOptions?.cachingStrategy?.maxCacheStaleness ===
       ISO8601_DURATION_ZERO_DAYS,
+    isConditional,
+    conditionalConnected,
+    conditionalDisplayValue,
     componentRef: publishedComponentBadgeEnabled
       ? task.resolvedComponentRef
       : undefined,

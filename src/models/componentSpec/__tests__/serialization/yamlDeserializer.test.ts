@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { IS_ENABLED_PORT_NAME } from "@/utils/conditionalExecution";
+
 import { IncrementingIdGenerator } from "../../factories/idGenerator";
 import { YamlDeserializer } from "../../serialization/yamlDeserializer";
 
@@ -102,15 +104,18 @@ describe("YamlDeserializer", () => {
     expect(spec.tasks.at(0)?.componentRef).toEqual({ name: "Processor" });
   });
 
-  it("deserializes task with isEnabled", () => {
+  it("deserializes an isEnabled reference as a conditional binding", () => {
     const yaml = {
       name: "Pipeline",
       implementation: {
         graph: {
           tasks: {
+            Condition: { componentRef: {} },
             ConditionalTask: {
               componentRef: {},
-              isEnabled: { "==": { op1: "a", op2: "b" } },
+              isEnabled: {
+                taskOutput: { taskId: "Condition", outputName: "result" },
+              },
             },
           },
         },
@@ -118,10 +123,16 @@ describe("YamlDeserializer", () => {
     };
 
     const spec = deserializer.deserialize(yaml);
+    const task = spec.tasks.find(
+      (candidate) => candidate.name === "ConditionalTask",
+    );
+    const binding = spec.bindings.find(
+      (candidate) => candidate.targetEntityId === task?.$id,
+    );
 
-    expect(spec.tasks.at(0)?.isEnabled).toEqual({
-      "==": { op1: "a", op2: "b" },
-    });
+    expect(task?.isEnabled).toBe("true");
+    expect(binding?.targetPortName).toBe(IS_ENABLED_PORT_NAME);
+    expect(binding?.sourcePortName).toBe("result");
   });
 
   it("deserializes task annotations", () => {

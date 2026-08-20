@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/ThemeProvider";
 import { deriveColorPalette } from "@/routes/v2/shared/nodes/TaskNode/color.utils";
 import { AGGREGATOR_ADD_INPUT_HANDLE_ID } from "@/utils/aggregatorInputs";
+import { IS_ENABLED_PORT_NAME } from "@/utils/conditionalExecution";
 
 import type { TaskNodeViewProps } from "./TaskNode";
 import { createTaskNodeCardVariants } from "./taskNode.variants";
@@ -37,6 +38,7 @@ export function TaskNodeSimplified({
   isHovered,
   taskColor,
   isAggregator,
+  isConditional,
   subgraphExecutionStats,
   onNodeClick,
 }: TaskNodeViewProps) {
@@ -71,6 +73,37 @@ export function TaskNodeSimplified({
       data-tour-card="task"
       data-tour-card-name={taskName}
     >
+      {isConditional && (
+        <>
+          <Handle
+            type="target"
+            position={Position.Left}
+            id={`input_${IS_ENABLED_PORT_NAME}`}
+            aria-label="Connect run condition"
+            style={{
+              top: "25%",
+              width: `calc(${s} * 12px)`,
+              height: `calc(${s} * 12px)`,
+              left: `calc(${s} * -4px)`,
+            }}
+            className="bg-violet-500! border-0!"
+          />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="absolute text-violet-600 dark:text-violet-300"
+                style={{
+                  top: `calc(${s} * 10px)`,
+                  right: `calc(${s} * 10px)`,
+                }}
+              >
+                <Icon name="GitBranch" size="sm" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top">Conditional execution</TooltipContent>
+          </Tooltip>
+        </>
+      )}
       {visibleInputs.map((input) => (
         <Handle
           key={input.name}

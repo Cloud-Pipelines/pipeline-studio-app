@@ -1,3 +1,5 @@
+import { IS_ENABLED_PORT_NAME } from "@/utils/conditionalExecution";
+
 import type { Annotations } from "../annotations";
 import { serializeAnnotationValue } from "../annotations";
 import type { Binding } from "../entities/binding";
@@ -83,7 +85,17 @@ export class JsonSerializer {
     const taskBindings = spec.bindings.filter(
       (b) => b.targetEntityId === task.$id,
     );
-    const args = this.serializeArguments(task.arguments, taskBindings, spec);
+    const conditionalBinding = taskBindings.find(
+      (binding) => binding.targetPortName === IS_ENABLED_PORT_NAME,
+    );
+    const argumentBindings = taskBindings.filter(
+      (binding) => binding !== conditionalBinding,
+    );
+    const args = this.serializeArguments(
+      task.arguments,
+      argumentBindings,
+      spec,
+    );
 
     const componentRef = task.subgraphSpec
       ? { ...task.componentRef, spec: this.serialize(task.subgraphSpec) }
@@ -97,7 +109,12 @@ export class JsonSerializer {
       result.arguments = args;
     }
 
-    if (task.isEnabled) {
+    const connectedCondition = conditionalBinding
+      ? this.bindingToArgument(conditionalBinding, spec)
+      : undefined;
+    if (connectedCondition !== undefined) {
+      result.isEnabled = connectedCondition;
+    } else if (task.isEnabled !== undefined) {
       result.isEnabled = task.isEnabled;
     }
 
@@ -121,26 +138,9 @@ export class JsonSerializer {
     const result: Record<string, ArgumentType> = {};
 
     for (const binding of bindings) {
-      const sourceTask = spec.tasks.find(
-        (t) => t.$id === binding.sourceEntityId,
-      );
-      const sourceInput = spec.inputs.find(
-        (i) => i.$id === binding.sourceEntityId,
-      );
-
-      if (sourceTask) {
-        result[binding.targetPortName] = {
-          taskOutput: {
-            taskId: sourceTask.name,
-            outputName: binding.sourcePortName,
-          },
-        };
-      } else if (sourceInput) {
-        result[binding.targetPortName] = {
-          graphInput: {
-            inputName: sourceInput.name,
-          },
-        };
+      const argument = this.bindingToArgument(binding, spec);
+      if (argument !== undefined) {
+        result[binding.targetPortName] = argument;
       }
     }
 
@@ -151,6 +151,36 @@ export class JsonSerializer {
     }
 
     return result;
+  }
+
+  private bindingToArgument(
+    binding: Binding,
+    spec: ComponentSpec,
+  ): ArgumentType | undefined {
+    const sourceTask = spec.tasks.find(
+      (task) => task.$id === binding.sourceEntityId,
+    );
+    if (sourceTask) {
+      return {
+        taskOutput: {
+          taskId: sourceTask.name,
+          outputName: binding.sourcePortName,
+        },
+      };
+    }
+
+    const sourceInput = spec.inputs.find(
+      (input) => input.$id === binding.sourceEntityId,
+    );
+    if (sourceInput) {
+      return {
+        graphInput: {
+          inputName: sourceInput.name,
+        },
+      };
+    }
+
+    return undefined;
   }
 
   private serializeInput(input: Input): InputSpec {

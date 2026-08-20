@@ -1,10 +1,11 @@
-import type { Task } from "@/models/componentSpec";
+import type { ComponentSpec, Task } from "@/models/componentSpec";
 import type { UndoGroupable } from "@/routes/v2/shared/nodes/types";
 import type { AnnotationConfig } from "@/types/annotations";
 import {
   EDITOR_COLLAPSED_ANNOTATION,
   TASK_COLOR_ANNOTATION,
 } from "@/utils/annotations";
+import { IS_ENABLED_PORT_NAME } from "@/utils/conditionalExecution";
 import { ISO8601_DURATION_ZERO_DAYS } from "@/utils/constants";
 
 export function toggleCacheDisable(
@@ -53,6 +54,27 @@ export function setCollapsed(
     } else {
       task.annotations.remove(EDITOR_COLLAPSED_ANNOTATION);
     }
+  });
+}
+
+export function setConditionalExecution(
+  undo: UndoGroupable,
+  spec: ComponentSpec,
+  task: Task,
+  enabled: boolean,
+) {
+  undo.withGroup("Toggle conditional execution", () => {
+    if (enabled) {
+      task.setIsEnabled("true");
+      return;
+    }
+
+    spec.removeAllBindingsBy(
+      (binding) =>
+        binding.targetEntityId === task.$id &&
+        binding.targetPortName === IS_ENABLED_PORT_NAME,
+    );
+    task.setIsEnabled(undefined);
   });
 }
 

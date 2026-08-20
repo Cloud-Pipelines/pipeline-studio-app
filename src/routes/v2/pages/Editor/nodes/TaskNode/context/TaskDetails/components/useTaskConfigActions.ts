@@ -4,6 +4,7 @@ import {
   clearProviderAnnotations,
   saveAnnotation,
   setCollapsed,
+  setConditionalExecution,
   setTaskColor,
   toggleCacheDisable,
 } from "./taskConfig.actions";
@@ -16,6 +17,7 @@ export function useTaskConfigActions() {
     saveAnnotation: saveAnnotation.bind(null, undo),
     setTaskColor: setTaskColor.bind(null, undo),
     setCollapsed: setCollapsed.bind(null, undo),
+    setConditionalExecution: setConditionalExecution.bind(null, undo),
     clearProviderAnnotations: clearProviderAnnotations.bind(null, undo),
   };
 }

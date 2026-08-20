@@ -5,8 +5,8 @@ import type {
   ArtifactNodeResponse,
 } from "@/api/types.gen";
 import type {
+  ArgumentType,
   ComponentSpec,
-  PredicateType,
   TaskSpec,
 } from "@/utils/componentSpec";
 
@@ -31,7 +31,9 @@ const containerSpec = (): ComponentSpec => ({
 
 const noStatus = new Map<string, string>();
 
-const enabledWhen: PredicateType = { "==": { op1: "mode", op2: "train" } };
+const enabledWhen: ArgumentType = {
+  taskOutput: { taskId: "condition", outputName: "result" },
+};
 
 const side = (
   spec: ComponentSpec | undefined,

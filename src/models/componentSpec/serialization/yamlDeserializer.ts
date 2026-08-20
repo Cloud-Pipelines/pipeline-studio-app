@@ -1,3 +1,5 @@
+import { IS_ENABLED_PORT_NAME } from "@/utils/conditionalExecution";
+
 import { Annotations, deserializeAnnotationValue } from "../annotations";
 import { Binding } from "../entities/binding";
 import { ComponentSpec } from "../entities/componentSpec";
@@ -143,13 +145,16 @@ export class YamlDeserializer {
       const componentRef = subgraphSpec
         ? { ...taskJson.componentRef, spec: undefined }
         : taskJson.componentRef;
+      const isEnabledBinding =
+        taskJson.isEnabled !== undefined &&
+        this.isBindingArgument(taskJson.isEnabled);
 
       return new Task({
         $id: this.idGen.next("task"),
         name: taskName,
         componentRef,
         subgraphSpec,
-        isEnabled: taskJson.isEnabled,
+        isEnabled: isEnabledBinding ? "true" : taskJson.isEnabled,
         executionOptions: taskJson.executionOptions,
         annotations: Annotations.from(annotationItems),
         arguments: args,
@@ -177,9 +182,24 @@ export class YamlDeserializer {
     if (!graph?.tasks) return bindings;
 
     for (const [taskName, taskJson] of Object.entries(graph.tasks)) {
-      const targetTask = tasks.find((t) => t.name === taskName);
-      if (!targetTask || !taskJson.arguments) continue;
+      const targetTask = tasks.find((task) => task.name === taskName);
+      if (!targetTask) continue;
 
+      if (
+        taskJson.isEnabled !== undefined &&
+        this.isBindingArgument(taskJson.isEnabled)
+      ) {
+        const binding = this.createBindingFromArgument(
+          inputs,
+          tasks,
+          targetTask.$id,
+          IS_ENABLED_PORT_NAME,
+          taskJson.isEnabled,
+        );
+        if (binding) bindings.push(binding);
+      }
+
+      if (!taskJson.arguments) continue;
       for (const [argName, argValue] of Object.entries(taskJson.arguments)) {
         const binding = this.createBindingFromArgument(
           inputs,

@@ -15,10 +15,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/ThemeProvider";
 import { useSpec } from "@/routes/v2/shared/providers/SpecContext";
 import { AGGREGATOR_ADD_INPUT_HANDLE_ID } from "@/utils/aggregatorInputs";
+import {
+  IS_ENABLED_INPUT_LABEL,
+  IS_ENABLED_PORT_NAME,
+} from "@/utils/conditionalExecution";
 import { pluralize } from "@/utils/string";
 
 import { deriveColorPalette } from "./color.utils";
@@ -209,6 +214,56 @@ const ClassicInputHandle = observer(function ClassicInputHandle({
   );
 });
 
+interface ConditionalExecutionHandleProps {
+  connected: boolean;
+  displayValue?: string;
+  onHandleClick: (handleId: string, event: ReactMouseEvent) => void;
+}
+
+function ConditionalExecutionHandle({
+  connected,
+  displayValue,
+  onHandleClick,
+}: ConditionalExecutionHandleProps) {
+  const handleId = `input_${IS_ENABLED_PORT_NAME}`;
+
+  return (
+    <BlockStack
+      gap="1"
+      className="relative rounded-lg border border-violet-200 bg-violet-50/80 p-2 dark:border-violet-500/40 dark:bg-violet-500/15"
+    >
+      <div className="relative h-fit w-full">
+        <div className="absolute flex h-3 w-3 -translate-x-6 items-center">
+          <Handle
+            type="target"
+            position={Position.Left}
+            id={handleId}
+            aria-label="Connect run condition"
+            className="border-0! h-full! w-full! transform-none! bg-violet-500!"
+            onClick={(event) => onHandleClick(handleId, event)}
+          />
+        </div>
+        <InlineStack align="space-between" blockAlign="center" gap="2">
+          <Text
+            size="xs"
+            weight="medium"
+            className="rounded-md bg-violet-100 px-2 py-1 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200"
+          >
+            {IS_ENABLED_INPUT_LABEL}
+          </Text>
+          <Text
+            size="xs"
+            tone={connected || displayValue ? undefined : "subdued"}
+            className="min-w-0 truncate text-right"
+          >
+            {displayValue ?? "Connect condition"}
+          </Text>
+        </InlineStack>
+      </div>
+    </BlockStack>
+  );
+}
+
 export const TaskNodeCard = observer(function TaskNodeCard({
   entityId,
   taskName,
@@ -228,6 +283,9 @@ export const TaskNodeCard = observer(function TaskNodeCard({
   onHandleClick,
   taskColor,
   cacheDisabled,
+  isConditional = false,
+  conditionalConnected = false,
+  conditionalDisplayValue,
   componentRef,
   digest,
   publishedComponentBadgeReadOnly,
@@ -334,6 +392,22 @@ export const TaskNodeCard = observer(function TaskNodeCard({
                   <TooltipContent side="top">Subgraph</TooltipContent>
                 </Tooltip>
               )}
+              {isConditional && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Icon
+                        name="GitBranch"
+                        size="sm"
+                        className="text-violet-600 dark:text-violet-300"
+                      />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    Conditional execution
+                  </TooltipContent>
+                </Tooltip>
+              )}
               {cacheDisabled && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -375,6 +449,13 @@ export const TaskNodeCard = observer(function TaskNodeCard({
       <CardContent className="p-2 flex flex-col gap-2">
         {isSubgraph && subgraphExecutionStats && (
           <TaskStatusBar executionStatusStats={subgraphExecutionStats} />
+        )}
+        {isConditional && (
+          <ConditionalExecutionHandle
+            connected={conditionalConnected}
+            displayValue={conditionalDisplayValue}
+            onHandleClick={onHandleClick}
+          />
         )}
         {showInputsSection && (
           <div

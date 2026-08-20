@@ -372,43 +372,6 @@ export interface DynamicDataArgument {
 export type ArgumentType =
   string | GraphInputArgument | TaskOutputArgument | DynamicDataArgument;
 
-interface TwoArgumentOperands {
-  op1: ArgumentType;
-  op2: ArgumentType;
-}
-interface TwoLogicalOperands {
-  op1: PredicateType;
-  op2: PredicateType;
-}
-export type PredicateType =
-  | {
-      "==": TwoArgumentOperands;
-    }
-  | {
-      "!=": TwoArgumentOperands;
-    }
-  | {
-      ">": TwoArgumentOperands;
-    }
-  | {
-      ">=": TwoArgumentOperands;
-    }
-  | {
-      "<": TwoArgumentOperands;
-    }
-  | {
-      "<=": TwoArgumentOperands;
-    }
-  | {
-      and: TwoLogicalOperands;
-    }
-  | {
-      or: TwoLogicalOperands;
-    }
-  | {
-      not: PredicateType;
-    };
-
 interface RetryStrategySpec {
   maxRetries?: number;
 }
@@ -430,7 +393,7 @@ export interface TaskSpec {
   arguments?: {
     [k: string]: ArgumentType;
   };
-  isEnabled?: PredicateType;
+  isEnabled?: ArgumentType;
   executionOptions?: ExecutionOptionsSpec;
   annotations?: {
     [k: string]: unknown;

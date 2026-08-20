@@ -183,15 +183,18 @@ describe("Serialization Roundtrip", () => {
     });
   });
 
-  it("preserves isEnabled predicate", () => {
+  it("preserves an isEnabled reference", () => {
     const yaml = {
       name: "ConditionalTest",
       implementation: {
         graph: {
           tasks: {
+            Condition: { componentRef: {} },
             ConditionalTask: {
               componentRef: {},
-              isEnabled: { "!=": { op1: "a", op2: "b" } },
+              isEnabled: {
+                taskOutput: { taskId: "Condition", outputName: "result" },
+              },
             },
           },
         },
@@ -202,7 +205,7 @@ describe("Serialization Roundtrip", () => {
     const json = serializer.serialize(spec);
 
     expect(getGraph(json).tasks["ConditionalTask"].isEnabled).toEqual({
-      "!=": { op1: "a", op2: "b" },
+      taskOutput: { taskId: "Condition", outputName: "result" },
     });
   });
 

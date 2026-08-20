@@ -9,12 +9,14 @@ import {
   parseSchemaToAnnotationConfig,
 } from "@/components/shared/ReactFlow/FlowCanvas/TaskNode/AnnotationsEditor/utils";
 import { ColorPicker } from "@/components/ui/color";
+import { Label } from "@/components/ui/label";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Heading, Paragraph } from "@/components/ui/typography";
 import type { Task } from "@/models/componentSpec";
 import { useAnalytics } from "@/providers/AnalyticsProvider";
+import { useSpec } from "@/routes/v2/shared/providers/SpecContext";
 import type { AnnotationConfig, Annotations } from "@/types/annotations";
 import {
   EDITOR_COLLAPSED_ANNOTATION,
@@ -32,12 +34,14 @@ export const ConfigurationSection = observer(function ConfigurationSection({
   task,
 }: ConfigurationSectionProps) {
   const { track } = useAnalytics();
+  const spec = useSpec();
   const {
     toggleCacheDisable,
     saveAnnotation,
     setTaskColor,
     clearProviderAnnotations,
     setCollapsed,
+    setConditionalExecution,
   } = useTaskConfigActions();
   const isSubgraph = task.subgraphSpec !== undefined;
 
@@ -113,6 +117,14 @@ export const ConfigurationSection = observer(function ConfigurationSection({
     }
   }, [selectedProvider, previousProvider, task.annotations]);
 
+  const handleConditionalExecutionChange = (checked: boolean) => {
+    if (!spec) return;
+    setConditionalExecution(spec, task, checked);
+    track("v2.pipeline_editor.task_details.conditional_execution.toggle", {
+      conditional_execution_enabled: checked,
+    });
+  };
+
   const handleDisableCacheChange = (checked: boolean) => {
     toggleCacheDisable(task, checked);
     track("v2.pipeline_editor.task_details.disable_cache.toggle", {
@@ -134,6 +146,7 @@ export const ConfigurationSection = observer(function ConfigurationSection({
   };
 
   const taskColor = task.annotations.get(TASK_COLOR_ANNOTATION);
+  const isConditional = task.isEnabled !== undefined;
   const isCollapsed =
     task.annotations.get(EDITOR_COLLAPSED_ANNOTATION) === "true";
 
@@ -158,11 +171,37 @@ export const ConfigurationSection = observer(function ConfigurationSection({
       {!isSubgraph && (
         <>
           <Separator />
+          <BlockStack
+            gap="2"
+            className="rounded-lg border border-violet-200 bg-violet-50/70 p-3 dark:border-violet-500/30 dark:bg-violet-500/10"
+          >
+            <InlineStack align="space-between" gap="2" className="w-full">
+              <Label
+                htmlFor="conditional-execution"
+                className="text-xs font-medium text-violet-800 dark:text-violet-200"
+              >
+                Conditional execution
+              </Label>
+              <Switch
+                id="conditional-execution"
+                checked={isConditional}
+                onCheckedChange={handleConditionalExecutionChange}
+              />
+            </InlineStack>
+            {isConditional && (
+              <Paragraph size="xs" tone="subdued">
+                Connect a true or false value to Run when on the task.
+              </Paragraph>
+            )}
+          </BlockStack>
+
+          <Separator />
           <InlineStack align="space-between" gap="2" className="w-full">
             <Paragraph size="xs" tone="subdued">
               Disable cache
             </Paragraph>
             <Switch
+              aria-label="Disable cache"
               checked={cacheDisabled}
               onCheckedChange={handleDisableCacheChange}
             />

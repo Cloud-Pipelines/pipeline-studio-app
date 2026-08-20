@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { IS_ENABLED_PORT_NAME } from "@/utils/conditionalExecution";
+
 import { Binding } from "../../entities/binding";
 import { ComponentSpec } from "../../entities/componentSpec";
 import { Input } from "../../entities/input";
@@ -82,15 +84,53 @@ describe("JsonSerializer", () => {
       $id: idGen.next("task"),
       name: "Process",
       componentRef: {},
-      isEnabled: { "==": { op1: "a", op2: "b" } },
+      isEnabled: {
+        taskOutput: { taskId: "condition", outputName: "result" },
+      },
     });
     spec.addTask(task);
 
     const json = serializer.serialize(spec);
 
     expect(getGraph(json).tasks["Process"].isEnabled).toEqual({
-      "==": { op1: "a", op2: "b" },
+      taskOutput: { taskId: "condition", outputName: "result" },
     });
+  });
+
+  it("serializes a conditional binding as isEnabled", () => {
+    const spec = new ComponentSpec({
+      $id: idGen.next("spec"),
+      name: "Pipeline",
+    });
+    const condition = new Task({
+      $id: idGen.next("task"),
+      name: "Condition",
+      componentRef: {},
+    });
+    const conditionalTask = new Task({
+      $id: idGen.next("task"),
+      name: "ConditionalTask",
+      componentRef: {},
+      isEnabled: "true",
+    });
+    spec.addTask(condition);
+    spec.addTask(conditionalTask);
+    spec.addBinding(
+      new Binding({
+        $id: idGen.next("binding"),
+        sourceEntityId: condition.$id,
+        sourcePortName: "result",
+        targetEntityId: conditionalTask.$id,
+        targetPortName: IS_ENABLED_PORT_NAME,
+      }),
+    );
+
+    const taskSpec = getGraph(serializer.serialize(spec)).tasks.ConditionalTask;
+
+    expect(taskSpec.isEnabled).toEqual({
+      taskOutput: { taskId: "Condition", outputName: "result" },
+    });
+    expect(taskSpec.arguments).toBeUndefined();
   });
 
   it("serializes metadata from annotations", () => {

@@ -99,6 +99,41 @@ describe("TaskNodeCard", () => {
     );
   });
 
+  it("shows a highlighted run condition when conditional execution is enabled", () => {
+    render(
+      <ReactFlowProvider>
+        <TaskNodeCard
+          {...buildProps({
+            isSubgraph: false,
+            isConditional: true,
+            conditionalConnected: false,
+          })}
+        />
+      </ReactFlowProvider>,
+    );
+
+    expect(screen.getByText("Run when")).toBeInTheDocument();
+    expect(screen.getByText("Connect condition")).toBeInTheDocument();
+    expect(screen.getByLabelText("Connect run condition")).toBeInTheDocument();
+  });
+
+  it("shows the connected condition value", () => {
+    render(
+      <ReactFlowProvider>
+        <TaskNodeCard
+          {...buildProps({
+            isSubgraph: false,
+            isConditional: true,
+            conditionalConnected: true,
+            conditionalDisplayValue: "→ Check.result",
+          })}
+        />
+      </ReactFlowProvider>,
+    );
+
+    expect(screen.getByText("→ Check.result")).toBeInTheDocument();
+  });
+
   it("shows child execution progress for a subgraph", () => {
     render(
       <TaskNodeCard

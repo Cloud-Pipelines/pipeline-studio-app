@@ -314,14 +314,13 @@ describe("unpackSubgraph roundtrip", () => {
     });
   });
 
-  it("isEnabled predicate preserved after roundtrip", () => {
+  it("isEnabled value is preserved after roundtrip", () => {
     const spec = new ComponentSpec({
       $id: idGen.next("spec"),
       name: "Main",
     });
-    const predicate = { "==": { op1: "a", op2: "b" } };
     const task = makeTask(idGen, "ConditionalTask", {
-      isEnabled: predicate,
+      isEnabled: "false",
     });
     spec.addTask(task);
 
@@ -329,7 +328,7 @@ describe("unpackSubgraph roundtrip", () => {
 
     const restored = spec.tasks.find((t) => t.name === "ConditionalTask");
     expect(restored).toBeDefined();
-    expect(restored?.isEnabled).toEqual(predicate);
+    expect(restored?.isEnabled).toBe("false");
   });
 
   it("static arguments preserved after roundtrip", () => {

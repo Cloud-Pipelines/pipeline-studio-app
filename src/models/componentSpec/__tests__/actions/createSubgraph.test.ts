@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { IS_ENABLED_PORT_NAME } from "@/utils/conditionalExecution";
+
 import { createSubgraph } from "../../actions/createSubgraph";
 import { Binding } from "../../entities/binding";
 import { ComponentSpec } from "../../entities/componentSpec";
@@ -86,6 +88,51 @@ describe("createSubgraph", () => {
     expect(result).not.toBeNull();
     expect(result!.subgraphSpec.inputs.length).toBe(1);
     expect(result!.subgraphSpec.inputs.at(0)?.name).toBe("data");
+  });
+
+  it("uses a regular subgraph input for an external condition", () => {
+    const spec = new ComponentSpec({
+      $id: idGen.next("spec"),
+      name: "Main",
+    });
+    const condition = new Input({
+      $id: idGen.next("input"),
+      name: "condition",
+    });
+    const task = new Task({
+      $id: idGen.next("task"),
+      name: "InnerTask",
+      componentRef: {},
+      isEnabled: "true",
+    });
+    spec.addInput(condition);
+    spec.addTask(task);
+    spec.addBinding(
+      new Binding({
+        $id: idGen.next("binding"),
+        sourceEntityId: condition.$id,
+        sourcePortName: "condition",
+        targetEntityId: task.$id,
+        targetPortName: IS_ENABLED_PORT_NAME,
+      }),
+    );
+
+    const result = createSubgraph({
+      spec,
+      selectedTaskIds: [task.$id],
+      subgraphName: "Sub",
+      idGen,
+    });
+
+    expect(result?.subgraphSpec.inputs.at(0)?.name).toBe("run_when");
+    expect(
+      spec.bindings.find(
+        (binding) => binding.targetEntityId === result?.replacementTask.$id,
+      )?.targetPortName,
+    ).toBe("run_when");
+    expect(result?.subgraphSpec.bindings.at(0)?.targetPortName).toBe(
+      IS_ENABLED_PORT_NAME,
+    );
   });
 
   it("moves internal bindings to subgraph", () => {
@@ -189,7 +236,9 @@ describe("createSubgraph", () => {
       $id: idGen.next("task"),
       name: "ConfiguredTask",
       componentRef: { name: "MyComponent" },
-      isEnabled: { "==": { op1: "a", op2: "b" } },
+      isEnabled: {
+        taskOutput: { taskId: "condition", outputName: "result" },
+      },
     });
     task.annotations.add({ key: "note", value: "test" });
     spec.addTask(task);
@@ -205,7 +254,9 @@ describe("createSubgraph", () => {
     const movedTask = result!.subgraphSpec.tasks.at(0);
     expect(movedTask?.name).toBe("ConfiguredTask");
     expect(movedTask?.componentRef).toEqual({ name: "MyComponent" });
-    expect(movedTask?.isEnabled).toEqual({ "==": { op1: "a", op2: "b" } });
+    expect(movedTask?.isEnabled).toEqual({
+      taskOutput: { taskId: "condition", outputName: "result" },
+    });
     expect(movedTask?.annotations.length).toBe(1);
   });
 

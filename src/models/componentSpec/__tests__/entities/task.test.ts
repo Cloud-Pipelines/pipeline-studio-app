@@ -53,15 +53,18 @@ describe("Task", () => {
     expect(task.arguments[0]).toEqual({ name: "input", value: "test" });
   });
 
-  it("can set isEnabled predicate", () => {
+  it("can set an isEnabled reference", () => {
+    const isEnabled = {
+      taskOutput: { taskId: "condition", outputName: "result" },
+    };
     const task = new Task({
       $id: "task_1",
       name: "T",
       componentRef: {},
-      isEnabled: { "==": { op1: "a", op2: "b" } },
+      isEnabled,
     });
 
-    expect(task.isEnabled).toEqual({ "==": { op1: "a", op2: "b" } });
+    expect(task.isEnabled).toEqual(isEnabled);
   });
 
   it("setName updates name", () => {
