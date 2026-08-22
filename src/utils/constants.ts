@@ -55,6 +55,15 @@ export const USER_COMPONENTS_LIST_NAME = "user_components";
 export const TOP_NAV_HEIGHT = 56; // px
 export const BOTTOM_FOOTER_HEIGHT = 0; // px
 
+export const CONTENT_OFFSET_VAR = "--tangle-content-offset";
+
+export function contentHeight(subtractPx = 0): string {
+  const offset = `var(${CONTENT_OFFSET_VAR}, ${TOP_NAV_HEIGHT}px)`;
+  return subtractPx > 0
+    ? `calc(100vh - ${offset} - ${subtractPx}px)`
+    : `calc(100vh - ${offset})`;
+}
+
 export const DEFAULT_NODE_DIMENSIONS = { w: 300, h: undefined };
 
 export const FONT_SIZE_MD = 12;

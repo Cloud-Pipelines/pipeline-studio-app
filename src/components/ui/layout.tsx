@@ -49,6 +49,8 @@ interface BlockStackProps
   fill?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Focusability, for a stack that scrolls and so must be keyboard-operable */
+  tabIndex?: number;
 }
 
 export const BlockStack = forwardRef<
@@ -88,6 +90,7 @@ const inlineStackVariants = cva("flex flex-row", {
     align: {
       start: "justify-start",
       center: "justify-center",
+      "safe-center": "justify-center-safe",
       end: "justify-end",
       "space-around": "justify-around",
       "space-between": "justify-between",
@@ -127,6 +130,8 @@ interface InlineStackProps
   fill?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Focusability, for a stack that scrolls and so must be keyboard-operable */
+  tabIndex?: number;
 }
 
 export const InlineStack = forwardRef<

@@ -66,27 +66,31 @@ export const InfoBox = ({
       data-testid={`info-box-${variant}`}
       className={cn("border rounded-md p-2", styles.container, widthClass)}
     >
-      <InlineStack align="space-between" blockAlign="start" wrap="nowrap">
-        <Text
-          as="span"
-          size="sm"
-          weight="semibold"
-          className={cn("mb-1 min-w-0 wrap-break-word", styles.title)}
-          data-testid="info-box-title"
-        >
-          {title}
-        </Text>
-        {onDismiss && (
-          <Button
-            onClick={onDismiss}
-            variant="ghost"
-            size="min"
-            aria-label="Dismiss"
-          >
-            <Icon name="X" size="sm" />
-          </Button>
-        )}
-      </InlineStack>
+      {(title || onDismiss) && (
+        <InlineStack align="space-between" blockAlign="start" wrap="nowrap">
+          {title && (
+            <Text
+              as="span"
+              size="sm"
+              weight="semibold"
+              className={cn("mb-1 min-w-0 wrap-break-word", styles.title)}
+              data-testid="info-box-title"
+            >
+              {title}
+            </Text>
+          )}
+          {onDismiss && (
+            <Button
+              onClick={onDismiss}
+              variant="ghost"
+              size="min"
+              aria-label="Dismiss"
+            >
+              <Icon name="X" size="sm" />
+            </Button>
+          )}
+        </InlineStack>
+      )}
       <div
         className={cn("text-sm wrap-break-word whitespace-normal", className)}
       >
