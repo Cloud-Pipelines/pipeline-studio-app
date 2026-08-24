@@ -4,25 +4,10 @@ import type { AgentContext } from "@/agent/types";
 
 import { AgentThread } from "./agentThread";
 
-/**
- * Config the page supplies so the store can build page-specific threads:
- * `createWorker` spawns the Editor vs Run View worker, and `getContext`
- * is resolved freshly on every {@link AiChatStore.newThread} call so a
- * thread created after navigation captures the current run context.
- */
 export interface AiChatStoreConfig {
-  createWorker: () => Worker;
   getContext: () => AgentContext;
 }
 
-/**
- * Owns the collection of {@link AgentThread}s for one AI chat provider.
- *
- * Today only a single thread is effectively active: starting a new
- * session (or navigating to a different pipeline / run) disposes the
- * current thread and creates a fresh one in one go. The collection shape
- * leaves room for multiple concurrent threads in the future.
- */
 export class AiChatStore {
   @observable.shallow accessor threads: AgentThread[] = [];
   @observable accessor activeThreadId: string | null = null;
@@ -36,16 +21,10 @@ export class AiChatStore {
     return this.threads.find((t) => t.threadId === this.activeThreadId) ?? null;
   }
 
-  /** Creates a thread if none is active. Idempotent. */
   @action ensureActiveThread(): AgentThread {
     return this.activeThread ?? this.newThread();
   }
 
-  /**
-   * Disposes the current active thread and spins up a fresh one,
-   * making it active. Used for both navigation resets and the
-   * user-triggered "new chat" action.
-   */
   @action newThread(): AgentThread {
     const previous = this.activeThread;
     if (previous) {
@@ -54,7 +33,6 @@ export class AiChatStore {
     }
 
     const thread = new AgentThread({
-      createWorker: this.config.createWorker,
       context: this.config.getContext(),
     });
     this.threads = [...this.threads, thread];

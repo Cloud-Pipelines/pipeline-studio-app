@@ -52,7 +52,6 @@ import { useRunViewSpecLifecycle } from "./hooks/useRunViewSpecLifecycle";
 import { useRunViewSubgraphUrlSync } from "./hooks/useRunViewSubgraphUrlSync";
 import { useRunViewWindows } from "./hooks/useRunViewWindows";
 import { runViewRegistry } from "./nodes";
-import { createRunViewAgentWorker } from "./toolBridge/runViewAgentWorker";
 
 function deserializeRunSpec(data: unknown): ComponentSpec {
   const generator = new IncrementingIdGenerator();
@@ -228,7 +227,6 @@ export function RunViewV2() {
     <div className="h-full w-full flex flex-col bg-slate-100 dark:bg-background select-none">
       <SharedStoreProvider>
         <AiChatStoreProvider
-          createWorker={createRunViewAgentWorker}
           context={{ mode: "runView", runId: id, subgraphExecutionId }}
         >
           <ReactFlowProvider>

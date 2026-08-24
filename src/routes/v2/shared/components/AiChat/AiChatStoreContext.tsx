@@ -12,15 +12,11 @@ import { AiChatStore } from "./aiChatStore";
 const AiChatStoreCtx = createRequiredContext<AiChatStore>("AiChatStoreContext");
 
 interface AiChatStoreProviderProps {
-  // Page-owned factory that spawns the worker for this AI chat.
-  createWorker: () => Worker;
-  // Current page context, baked into each new thread's worker at init.
   context: AgentContext;
   children: ReactNode;
 }
 
 export function AiChatStoreProvider({
-  createWorker,
   context,
   children,
 }: AiChatStoreProviderProps) {
@@ -33,7 +29,6 @@ export function AiChatStoreProvider({
   const [store] = useState(
     () =>
       new AiChatStore({
-        createWorker,
         getContext: () => contextRef.current,
       }),
   );

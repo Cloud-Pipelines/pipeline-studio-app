@@ -182,10 +182,17 @@ export const AiChatContent = observer(function AiChatContent({
       <ChatMessageList
         messages={thread.messages}
         thinkingText={thread.thinkingText}
+        approvals={thread.approvals}
+        isResuming={thread.isResuming}
         suggestedPrompts={suggestedPrompts}
         onSelectPrompt={handleSend}
       />
-      <ChatInput isPending={thread.isPending} onSubmit={handleSend} />
+      <ChatInput
+        isPending={
+          thread.isPending || thread.isResuming || thread.approvals.length > 0
+        }
+        onSubmit={handleSend}
+      />
     </BlockStack>
   );
 });

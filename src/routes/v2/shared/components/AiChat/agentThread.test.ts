@@ -3,7 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 import type { ToolBridgeApi } from "@/agent/toolBridgeApi";
 
 const askMock = vi.hoisted(() => vi.fn());
+const reportErrorMock = vi.hoisted(() => vi.fn());
 const terminateMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/services/errorManagement/bugsnag", () => ({
+  reportError: reportErrorMock,
+}));
 
 vi.mock("./agentClient", () => {
   class FakeAgentClient {
@@ -24,12 +29,33 @@ const aiConfig = {
 
 function createThread(): InstanceType<typeof AgentThread> {
   return new AgentThread({
-    createWorker: () => ({ terminate: vi.fn() }) as unknown as Worker,
     context: { mode: "editor" },
   });
 }
 
 describe("AgentThread", () => {
+  it("reports streamed errors and renders them in the chat", async () => {
+    const error = new Error("Provider unavailable");
+    askMock.mockImplementationOnce(async ({ callbacks }) => {
+      callbacks.onError(error);
+    });
+    const thread = createThread();
+
+    await thread.sendMessage("Fix validation", {
+      bridge: {} as ToolBridgeApi,
+      aiConfig,
+    });
+
+    expect(reportErrorMock).toHaveBeenCalledWith(error, {
+      feature: "ai-assistant",
+    });
+    expect(thread.messages[1]).toMatchObject({
+      role: "assistant",
+      content: "I couldn't complete that request: Provider unavailable",
+    });
+    expect(thread.isPending).toBe(false);
+  });
+
   it("renders provider conversation-state errors in the chat", async () => {
     askMock.mockRejectedValueOnce(
       new Error(

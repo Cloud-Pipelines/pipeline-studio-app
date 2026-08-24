@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack } from "@/components/ui/layout";
 import { Text } from "@/components/ui/typography";
+import type { AgentApproval } from "@/routes/v2/shared/components/AiChat/agentClient";
 import type {
   ChatMessage as ChatMessageType,
   SuggestedPrompt,
@@ -12,10 +13,13 @@ import type {
 
 import { ChatMessage } from "./ChatMessage";
 import { ThinkingMessage } from "./ThinkingMessage";
+import { ToolApproval } from "./ToolApproval";
 
 interface ChatMessageListProps {
   messages: ChatMessageType[];
   thinkingText?: string | null;
+  approvals?: AgentApproval[];
+  isResuming?: boolean;
   suggestedPrompts?: SuggestedPrompt[];
   onSelectPrompt?: (prompt: string) => void;
 }
@@ -23,6 +27,8 @@ interface ChatMessageListProps {
 export function ChatMessageList({
   messages,
   thinkingText,
+  approvals = [],
+  isResuming = false,
   suggestedPrompts,
   onSelectPrompt,
 }: ChatMessageListProps) {
@@ -30,7 +36,7 @@ export function ChatMessageList({
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, thinkingText]);
+  }, [messages.length, thinkingText, approvals.length]);
 
   if (messages.length === 0 && !thinkingText) {
     return (
@@ -83,6 +89,13 @@ export function ChatMessageList({
         <ChatMessage key={msg.id} message={msg} />
       ))}
       {thinkingText && <ThinkingMessage text={thinkingText} />}
+      {approvals.map((approval) => (
+        <ToolApproval
+          key={approval.id}
+          approval={approval}
+          disabled={isResuming}
+        />
+      ))}
       <div ref={bottomRef} />
     </BlockStack>
   );
