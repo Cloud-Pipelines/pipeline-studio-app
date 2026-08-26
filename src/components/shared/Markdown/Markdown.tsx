@@ -5,6 +5,7 @@ import ReactMarkdown, {
 } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { Link } from "@/components/ui/link";
 import { Separator } from "@/components/ui/separator";
 import { Heading, Paragraph, Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
@@ -63,19 +64,20 @@ const baseComponents = {
       {children}
     </Paragraph>
   ),
-  a: ({ href, children }: ElementProps & { href?: string }) =>
-    href ? (
-      <a
+  a: ({ href, children }: ElementProps & { href?: string }) => {
+    if (!href) return <>{children}</>;
+
+    return (
+      <Link
         href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-primary hover:underline"
+        size="sm"
+        variant="primary"
+        external={toAbsoluteHttpUrl(href) !== null}
       >
         {children}
-      </a>
-    ) : (
-      <>{children}</>
-    ),
+      </Link>
+    );
+  },
   h1: renderHeading(1),
   h2: renderHeading(2),
   h3: renderHeading(3),
@@ -118,7 +120,7 @@ const baseComponents = {
     <code className={INLINE_CODE_CLASS}>{children}</code>
   ),
   pre: ({ children }: ElementProps) => (
-    <pre className="my-2 overflow-x-auto rounded bg-muted p-2 text-xs font-mono">
+    <pre className="my-2 overflow-x-auto [&>code]:block [&>code]:p-2">
       {children}
     </pre>
   ),
@@ -130,7 +132,9 @@ const baseComponents = {
   thead: ({ children }: ElementProps) => (
     <thead className="bg-muted/50">{children}</thead>
   ),
-  tr: ({ children }: ElementProps) => <tr className="border-b">{children}</tr>,
+  tr: ({ children }: ElementProps) => (
+    <tr className="border-b last:border-b-0">{children}</tr>
+  ),
   th: ({ children }: ElementProps) => (
     <th className="px-2 py-1 text-left font-semibold">{children}</th>
   ),
@@ -175,7 +179,7 @@ export const UntrustedMarkdown = ({
 }: Omit<MarkdownProps, "urlTransform">) => (
   <Markdown
     body={body}
-    components={{ img: AltTextOnlyImage, ...components }}
+    components={{ ...components, img: AltTextOnlyImage }}
     urlTransform={(url) => toAbsoluteHttpUrl(url) ?? ""}
   />
 );

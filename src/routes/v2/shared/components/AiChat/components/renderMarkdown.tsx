@@ -5,7 +5,7 @@ import {
   type ReactNode,
   useContext,
 } from "react";
-import { defaultUrlTransform } from "react-markdown";
+import { type Components, defaultUrlTransform } from "react-markdown";
 
 import {
   INLINE_CODE_CLASS,
@@ -140,7 +140,7 @@ const chatComponents = {
   // `MarkdownCode` already renders a fenced block as a `CodeBlock`, which brings
   // its own surround.
   pre: ({ children }: { children?: ReactNode }) => <>{children}</>,
-};
+} satisfies Components;
 
 export function renderMarkdown(
   text: string,
