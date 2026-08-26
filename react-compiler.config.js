@@ -79,6 +79,7 @@ export const REACT_COMPILER_ENABLED_DIRS = [
   "src/components/shared/SecretsManagement/components/SecretsBackendUnavailable.tsx",
   "src/components/shared/HighlightText.tsx",
   "src/components/shared/AnnouncementBanners.tsx",
+  "src/components/shared/Markdown",
   "src/components/shared/ReactFlow/FlowCanvas/TaskNode/TaskOverview/IOSection",
   "src/components/ui/typography.tsx",
 
