@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
-import { NoticeCard } from "@/components/shared/Notices/NoticeCard";
 import TooltipButton from "@/components/shared/Buttons/TooltipButton";
+import { NoticeCard } from "@/components/shared/Notices/NoticeCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -17,11 +17,17 @@ import { tracking } from "@/utils/tracking";
 
 const VIEWPORT_GUTTER = 16;
 
+function triggerLabel(unreadCount: number, total: number): string {
+  if (unreadCount > 0) return `Notices, ${unreadCount} unread`;
+  if (total > 0) return `Notices, ${total} active`;
+  return "Notices, none";
+}
+
 export const NoticeInbox = () => {
   const {
     notices,
     unreadCount,
-    isStripHidden,
+    hasHiddenNotices,
     isOpen,
     setOpen,
     hideBanners,
@@ -31,14 +37,9 @@ export const NoticeInbox = () => {
 
   useEffect(() => closeNoticeInbox, []);
 
-  if (notices.length === 0) return null;
+  const label = triggerLabel(unreadCount, notices.length);
 
-  const label =
-    unreadCount > 0
-      ? `Notices, ${unreadCount} unread`
-      : `Notices, ${notices.length} active`;
-
-  const bannerToggle = isStripHidden
+  const bannerToggle = hasHiddenNotices
     ? ({
         icon: "Eye",
         label: "Show notices",
@@ -72,7 +73,7 @@ export const NoticeInbox = () => {
               position="topright"
               data-testid="notice-inbox-unread"
             >
-              {unreadCount}
+              {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
           )}
         </TooltipButton>
@@ -80,36 +81,46 @@ export const NoticeInbox = () => {
       <PopoverContent
         align="end"
         collisionPadding={VIEWPORT_GUTTER}
-        className="w-96 max-w-(--radix-popover-content-available-width) max-h-(--radix-popover-content-available-height) overflow-y-auto"
+        className="w-96"
         data-testid="notice-inbox"
       >
         <BlockStack gap="3">
-          <InlineStack
-            align="space-between"
-            blockAlign="center"
-            gap="2"
-            className="w-full"
-          >
+          <InlineStack align="space-between" blockAlign="center" gap="2" fill>
             <Text as="span" size="sm" weight="semibold">
               Notices
             </Text>
-            <Button
-              variant="link"
-              size="inline-xs"
-              onClick={bannerToggle.onClick}
-              data-testid={bannerToggle.testId}
-            >
-              <Icon name={bannerToggle.icon} size="xs" />
-              {bannerToggle.label}
-            </Button>
+            {notices.length > 0 && (
+              <Button
+                variant="link"
+                size="inline-xs"
+                onClick={bannerToggle.onClick}
+                data-testid={bannerToggle.testId}
+              >
+                <Icon name={bannerToggle.icon} size="xs" />
+                {bannerToggle.label}
+              </Button>
+            )}
           </InlineStack>
-          {notices.map((notice) => (
-            <NoticeCard
-              key={notice.id}
-              notice={notice}
-              onDismiss={notice.dismissible ? () => dismiss(notice) : undefined}
-            />
-          ))}
+          {notices.length === 0 ? (
+            <Text
+              as="span"
+              size="sm"
+              tone="subdued"
+              data-testid="notice-inbox-empty"
+            >
+              No notices
+            </Text>
+          ) : (
+            notices.map((notice) => (
+              <NoticeCard
+                key={notice.id}
+                notice={notice}
+                onDismiss={
+                  notice.dismissible ? () => dismiss(notice) : undefined
+                }
+              />
+            ))
+          )}
         </BlockStack>
       </PopoverContent>
     </Popover>

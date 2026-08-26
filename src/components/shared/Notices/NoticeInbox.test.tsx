@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { installSource } from "@/config/noticeTestSource";
+import { resetNoticeStateForTests } from "@/hooks/useNoticeInbox";
 
 import { NoticeInbox } from "./NoticeInbox";
 
@@ -21,12 +22,22 @@ describe("<NoticeInbox />", () => {
   afterEach(() => {
     cleanup();
     delete window.__TANGLE_NOTICE_SOURCE__;
+    resetNoticeStateForTests();
   });
 
-  it("renders nothing when there are no notices", () => {
-    const { container } = render(<NoticeInbox />);
+  it("stays in the header with nothing to show", () => {
+    render(<NoticeInbox />);
 
-    expect(container).toBeEmptyDOMElement();
+    const trigger = screen.getByTestId("notice-inbox-trigger");
+    expect(trigger).toHaveAttribute("aria-label", "Notices, none");
+    expect(screen.queryByTestId("notice-inbox-unread")).not.toBeInTheDocument();
+
+    fireEvent.click(trigger);
+
+    expect(screen.getByTestId("notice-inbox-empty")).toHaveTextContent(
+      "No notices",
+    );
+    expect(screen.queryByTestId("notice-inbox-hide")).not.toBeInTheDocument();
   });
 
   it("counts the notices the reader has not opened yet", () => {
@@ -101,11 +112,9 @@ describe("<NoticeInbox />", () => {
     );
   });
 
-  // A dismiss that cannot be persisted is held in memory for the lifetime of the
-  // module, so this case needs an id no other test reuses.
   it("removes a dismissed notice even when it cannot be persisted", () => {
     installSource([
-      { id: "unpersistable", title: "Optional", body: "", dismissible: true },
+      { id: "a", title: "Optional", body: "", dismissible: true },
     ]);
 
     render(<NoticeInbox />);
@@ -122,6 +131,47 @@ describe("<NoticeInbox />", () => {
     expect(screen.queryByText("Optional")).not.toBeInTheDocument();
   });
 
+  it("keeps the centre open and reachable after the last notice goes", () => {
+    installSource([
+      { id: "a", title: "Optional", body: "", dismissible: true },
+    ]);
+
+    render(<NoticeInbox />);
+    const trigger = screen.getByTestId("notice-inbox-trigger");
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByLabelText("Dismiss"));
+
+    expect(screen.getByTestId("notice-inbox-empty")).toHaveTextContent(
+      "No notices",
+    );
+    expect(screen.queryByTestId("notice-inbox-hide")).not.toBeInTheDocument();
+
+    fireEvent.keyDown(screen.getByTestId("notice-inbox"), { key: "Escape" });
+    expect(trigger).toBeInTheDocument();
+
+    fireEvent.click(trigger);
+
+    expect(screen.getByTestId("notice-inbox-empty")).toBeInTheDocument();
+  });
+
+  it("caps the unread badge, keeping the exact count on the trigger", () => {
+    installSource(
+      Array.from({ length: 12 }, (_, index) => ({
+        id: `notice-${index}`,
+        title: `Notice ${index}`,
+        body: "",
+      })),
+    );
+
+    render(<NoticeInbox />);
+
+    expect(screen.getByTestId("notice-inbox-unread")).toHaveTextContent("9+");
+    expect(screen.getByTestId("notice-inbox-trigger")).toHaveAttribute(
+      "aria-label",
+      "Notices, 12 unread",
+    );
+  });
+
   it("puts hidden notices back on the page", () => {
     localStorage.setItem("hidden-notices", JSON.stringify(["a"]));
     installSource([{ id: "a", title: "One", body: "", dismissible: true }]);
@@ -135,7 +185,21 @@ describe("<NoticeInbox />", () => {
     expect(localStorage.getItem("hidden-notices")).toBe("[]");
   });
 
-  it("hides a banners strip from the centre, and offers to bring it back", () => {
+  it("offers to restore the banners as soon as one notice is hidden", () => {
+    localStorage.setItem("hidden-notices", JSON.stringify(["a"]));
+    installSource([
+      { id: "a", title: "Hidden", body: "", dismissible: true },
+      { id: "b", title: "Still banners", body: "", dismissible: true },
+    ]);
+
+    render(<NoticeInbox />);
+    fireEvent.click(screen.getByTestId("notice-inbox-trigger"));
+
+    expect(screen.getByTestId("notice-inbox-show")).toBeInTheDocument();
+    expect(screen.getAllByTestId("info-box-title")).toHaveLength(2);
+  });
+
+  it("hides the banners from the centre, and offers to bring them back", () => {
     installSource([{ id: "a", title: "One", body: "", dismissible: true }]);
 
     render(<NoticeInbox />);
