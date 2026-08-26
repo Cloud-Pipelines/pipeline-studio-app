@@ -10,7 +10,6 @@ import {
   locateFolderByName,
   openComponentLibFolder,
   removeComponentFromCanvas,
-  setBetaFlag,
 } from "./helpers";
 
 /**
@@ -28,8 +27,6 @@ test.describe("Published Component Library", () => {
     page = await browser.newPage();
 
     await createNewPipeline(page);
-    await setBetaFlag(page, "remote-component-library-search", true);
-    await page.goBack();
 
     await expect(page.locator("[data-testid='search-input']")).toBeVisible();
   });
@@ -57,6 +54,41 @@ test.describe("Published Component Library", () => {
       const folderContainer = await locateFolderByName(page, folder);
       await expect(folderContainer).toBeVisible();
     }
+  });
+
+  test("folder can be expanded and collapsed", async () => {
+    const folder = await locateFolderByName(page, "Inputs & Outputs");
+    await expect(folder.getByRole("button")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+
+    await openComponentLibFolder(page, "Inputs & Outputs");
+
+    await expect(folder.getByRole("button")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await expect(folder.locator("li")).toHaveCount(2);
+
+    await folder.getByRole("button").click();
+    await expect(folder.getByRole("button")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  test("user can navigate nested folders", async () => {
+    await openComponentLibFolder(page, "Standard library");
+
+    const frameworksFolder = await openComponentLibFolder(
+      page,
+      "ML frameworks",
+    );
+    await expect(frameworksFolder.locator("[data-folder-name]")).toHaveCount(6);
+
+    const xgboostFolder = await openComponentLibFolder(page, "XGBoost");
+    await expect(xgboostFolder.getByTestId("component-item")).toHaveCount(4);
   });
 
   test("library can be searched", async () => {

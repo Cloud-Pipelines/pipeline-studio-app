@@ -64,7 +64,6 @@ import {
   isFavoriteComponent,
   populateComponentRefs,
 } from "./componentLibrary";
-import { useForcedSearchContext } from "./ForcedSearchProvider";
 import { createLibraryObject } from "./libraries/factory";
 import { PublishedComponentsLibrary } from "./libraries/publishedComponentsLibrary";
 import { ensureLibraryFactoriesRegistered } from "./libraries/setup";
@@ -81,7 +80,6 @@ type ComponentLibraryContextType = {
   isLoading: boolean;
   error: Error | null;
   existingComponentLibraries: StoredLibrary[] | undefined;
-  searchResult: SearchResult | null;
 
   searchComponentLibrary: (
     search: string,
@@ -171,7 +169,6 @@ export const ComponentLibraryProvider = ({
   children: ReactNode;
 }) => {
   const { graphSpec } = useComponentSpec();
-  const { currentSearchFilter } = useForcedSearchContext();
   const queryClient = useQueryClient();
   const { track } = useAnalytics();
 
@@ -588,23 +585,6 @@ export const ComponentLibraryProvider = ({
     dispatchEvent(new CustomEvent("tangle.library.duplicateDialogClosed"));
   }, []);
 
-  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    searchComponentLibrary(
-      currentSearchFilter.searchTerm,
-      currentSearchFilter.filters,
-    ).then((result) => {
-      if (!cancelled) {
-        setSearchResult(result);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [currentSearchFilter, searchComponentLibrary]);
-
   useEffect(() => {
     if (!rawComponentLibrary) {
       setComponentLibrary(undefined);
@@ -641,7 +621,6 @@ export const ComponentLibraryProvider = ({
       favoritesFolder,
       isLoading,
       error,
-      searchResult,
       existingComponentLibraries,
       searchComponentLibrary,
       getComponentLibrary,
@@ -657,7 +636,6 @@ export const ComponentLibraryProvider = ({
       favoritesFolder,
       isLoading,
       error,
-      searchResult,
       existingComponentLibraries,
       searchComponentLibrary,
       getComponentLibrary,
