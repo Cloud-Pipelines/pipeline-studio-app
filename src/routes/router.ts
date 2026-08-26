@@ -33,10 +33,8 @@ import { LearnHomeView } from "./Dashboard/Learn/LearnHomeView";
 import { LearnTipsView } from "./Dashboard/Learn/LearnTipsView";
 import { LearnToursView } from "./Dashboard/Learn/LearnToursView";
 import { TourPage } from "./Dashboard/Learn/Tour";
-import Editor from "./Editor";
 import { ImportPage } from "./Import";
 import NotFoundPage from "./NotFoundPage";
-import PipelineRun from "./PipelineRun";
 import ArtifactPreviewPage from "./PipelineRun/ArtifactPreview";
 import { AgentSettings } from "./Settings/sections/AgentSettings";
 import { BackendSettings } from "./Settings/sections/BackendSettings";
@@ -51,7 +49,7 @@ import { RunViewV2 } from "./v2/pages/RunView/RunViewV2";
 
 // Re-exported so existing `@/routes/router` import paths keep working after the
 // constants moved to the dependency-free `./appRoutes` leaf module.
-export { APP_ROUTES, EDITOR_PATH, RUNS_BASE_PATH } from "./appRoutes";
+export { APP_ROUTES } from "./appRoutes";
 
 declare module "@tanstack/react-router" {
   interface Register {
@@ -99,7 +97,7 @@ const welcomeRoute = createRoute({
 
 const dashboardRunsRoute = createRoute({
   getParentRoute: () => dashboardRoute,
-  path: "/runs",
+  path: APP_ROUTES.DASHBOARD_RUNS,
   component: DashboardRunsView,
 });
 
@@ -259,11 +257,33 @@ const importRoute = createRoute({
 
 const editorRoute = createRoute({
   getParentRoute: () => mainLayout,
+  path: APP_ROUTES.EDITOR,
+  component: EditorV2,
+});
+
+const editorPipelineRoute = createRoute({
+  getParentRoute: () => mainLayout,
   path: APP_ROUTES.PIPELINE_EDITOR,
-  component: Editor,
-  beforeLoad: ({ search }: { search: { name?: string } }) => {
-    const name = search.name || "";
-    return { name };
+  component: EditorV2,
+});
+
+const editorV2RedirectRoute = createRoute({
+  getParentRoute: () => mainLayout,
+  path: APP_ROUTES.EDITOR_V2,
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: APP_ROUTES.EDITOR, search });
+  },
+});
+
+const editorV2PipelineRedirectRoute = createRoute({
+  getParentRoute: () => mainLayout,
+  path: APP_ROUTES.EDITOR_V2_PIPELINE,
+  beforeLoad: ({ params, search }) => {
+    throw redirect({
+      to: APP_ROUTES.PIPELINE_EDITOR,
+      params: { pipelineName: params.pipelineName },
+      search,
+    });
   },
 });
 
@@ -279,16 +299,16 @@ const huggingFaceAuthCallbackRoute = createRoute({
   component: HuggingFaceAuthorizationResultScreen,
 });
 
-const runDetailRoute = createRoute({
+const runRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: APP_ROUTES.RUN_DETAIL,
-  component: PipelineRun,
+  component: RunViewV2,
 });
 
-const runDetailWithSubgraphRoute = createRoute({
+const runWithSubgraphRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: APP_ROUTES.RUN_DETAIL_WITH_SUBGRAPH,
-  component: PipelineRun,
+  component: RunViewV2,
 });
 
 const secretsRouteTree = settingsSecretsRoute.addChildren([
@@ -306,61 +326,38 @@ const settingsRouteTree = settingsLayoutRoute.addChildren([
   secretsRouteTree,
 ]);
 
-const editorV2Route = createRoute({
+const runsV2RedirectRoute = createRoute({
   getParentRoute: () => mainLayout,
-  path: APP_ROUTES.EDITOR_V2,
-  component: EditorV2,
-  beforeLoad: () => {
-    if (!isFlagEnabled("v2_editor")) {
-      throw redirect({ to: APP_ROUTES.DASHBOARD_PIPELINES });
-    }
+  path: APP_ROUTES.RUNS_V2,
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: APP_ROUTES.RUNS, search });
   },
 });
 
-const editorV2PipelineRoute = createRoute({
-  getParentRoute: () => mainLayout,
-  path: APP_ROUTES.EDITOR_V2_PIPELINE,
-  component: EditorV2,
-  beforeLoad: ({ params }) => {
-    if (!isFlagEnabled("v2_editor")) {
-      throw redirect({
-        to: APP_ROUTES.PIPELINE_EDITOR,
-        params: { name: params.pipelineName },
-      });
-    }
-  },
-});
-
-const runV2Route = createRoute({
+const runV2RedirectRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: APP_ROUTES.RUN_DETAIL_V2,
-  component: RunViewV2,
-  beforeLoad: ({ params }) => {
-    if (!isFlagEnabled("v2_editor")) {
-      throw redirect({
-        to: APP_ROUTES.RUN_DETAIL,
-        params: { id: params.id },
-        search: (previous) => previous,
-      });
-    }
+  beforeLoad: ({ params, search }) => {
+    throw redirect({
+      to: APP_ROUTES.RUN_DETAIL,
+      params: { id: params.id },
+      search,
+    });
   },
 });
 
-const runV2WithSubgraphRoute = createRoute({
+const runV2WithSubgraphRedirectRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: APP_ROUTES.RUN_DETAIL_V2_WITH_SUBGRAPH,
-  component: RunViewV2,
-  beforeLoad: ({ params }) => {
-    if (!isFlagEnabled("v2_editor")) {
-      throw redirect({
-        to: APP_ROUTES.RUN_DETAIL_WITH_SUBGRAPH,
-        params: {
-          id: params.id,
-          subgraphExecutionId: params.subgraphExecutionId,
-        },
-        search: (previous) => previous,
-      });
-    }
+  beforeLoad: ({ params, search }) => {
+    throw redirect({
+      to: APP_ROUTES.RUN_DETAIL_WITH_SUBGRAPH,
+      params: {
+        id: params.id,
+        subgraphExecutionId: params.subgraphExecutionId,
+      },
+      search,
+    });
   },
 });
 
@@ -409,12 +406,14 @@ const appRouteTree = mainLayout.addChildren([
   settingsRouteTree,
   importRoute,
   editorRoute,
-  runDetailRoute,
-  runDetailWithSubgraphRoute,
-  editorV2Route,
-  editorV2PipelineRoute,
-  runV2Route,
-  runV2WithSubgraphRoute,
+  editorPipelineRoute,
+  editorV2RedirectRoute,
+  editorV2PipelineRedirectRoute,
+  runRoute,
+  runWithSubgraphRoute,
+  runsV2RedirectRoute,
+  runV2RedirectRoute,
+  runV2WithSubgraphRedirectRoute,
   compareRoute,
   pipelineFoldersRoute,
   artifactPreviewRoute,

@@ -19,8 +19,8 @@ import {
   TASK_COLOR_ANNOTATION,
 } from "@/utils/annotations";
 
+import { idGen } from "./idGenerator";
 import { computeDiffComponentSpecs } from "./task.utils";
-import { idGen } from "./utils";
 
 export function addTask(
   undo: UndoGroupable,

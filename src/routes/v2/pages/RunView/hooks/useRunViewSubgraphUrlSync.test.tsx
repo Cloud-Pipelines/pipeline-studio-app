@@ -119,7 +119,7 @@ describe("useRunViewSubgraphUrlSync", () => {
 
     expect(routerMocks.navigate).toHaveBeenCalledTimes(1);
     expect(routerMocks.navigate).toHaveBeenCalledWith({
-      to: "/runs-v2/run-1/exec-sub",
+      to: "/runs/run-1/exec-sub",
     });
   });
 
@@ -143,7 +143,7 @@ describe("useRunViewSubgraphUrlSync", () => {
     act(() => navigation.navigateToLevel(0));
 
     expect(routerMocks.navigate).toHaveBeenCalledTimes(1);
-    expect(routerMocks.navigate).toHaveBeenCalledWith({ to: "/runs-v2/run-1" });
+    expect(routerMocks.navigate).toHaveBeenCalledWith({ to: "/runs/run-1" });
   });
 
   it("resolves the target execution id from breadcrumb segments when going shallower", () => {
@@ -162,7 +162,7 @@ describe("useRunViewSubgraphUrlSync", () => {
 
     expect(routerMocks.navigate).toHaveBeenCalledTimes(1);
     expect(routerMocks.navigate).toHaveBeenCalledWith({
-      to: "/runs-v2/run-1/exec-a",
+      to: "/runs/run-1/exec-a",
     });
   });
 

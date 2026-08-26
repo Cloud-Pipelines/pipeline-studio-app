@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 import { buildTaskSpecShape } from "@/components/shared/PipelineRunNameTemplate/types";
 import { useExecutionDataOptional } from "@/providers/ExecutionDataProvider";
-import { RUNS_BASE_PATH } from "@/routes/router";
+import { RUNS_BASE_PATH } from "@/routes/appRoutes";
 import { loadPipelineByName } from "@/services/pipelineService";
 import { extractCanonicalName } from "@/utils/canonicalPipelineName";
 import type { ComponentSpec } from "@/utils/componentSpec";

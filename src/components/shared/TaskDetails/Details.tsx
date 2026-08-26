@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 
 import { BlockStack } from "@/components/ui/layout";
 import { useGuaranteedHydrateComponentReference } from "@/hooks/useHydrateComponentReference";
-import type { TaskNodeContextType } from "@/providers/TaskNodeProvider";
+import type { TaskNodeContextType } from "@/types/taskNode";
 import type { ComponentReference } from "@/utils/componentSpec";
 import { getExecutionStatusLabel } from "@/utils/executionStatus";
 import { buildComponentSourceUrl } from "@/utils/URL";

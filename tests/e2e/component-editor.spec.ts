@@ -58,21 +58,14 @@ test.describe("Component Editor", () => {
 
     await page.getByRole("button", { name: "Save" }).click();
 
-    await dropComponentFromLibraryOnCanvas(
+    const node = await dropComponentFromLibraryOnCanvas(
       page,
       "User Components",
       "Filter text",
     );
+    await expect(node).toBeVisible();
 
-    const usedOnCanvasFolder = await openComponentLibFolder(
-      page,
-      "Used in Pipeline",
-    );
-    await expect(usedOnCanvasFolder.locator("li")).toHaveCount(1);
-
-    // remove the component from the canvas
     await removeComponentFromCanvas(page, "Filter text");
-    await expect(usedOnCanvasFolder.locator("li")).toHaveCount(0);
 
     const userComponentsFolder = await openComponentLibFolder(
       page,

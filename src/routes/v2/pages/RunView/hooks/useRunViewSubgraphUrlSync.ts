@@ -83,7 +83,7 @@ export function useRunViewSubgraphUrlSync() {
           if (!executionId) return;
         }
 
-        const target = getRunPath(runId, "v2", executionId);
+        const target = getRunPath(runId, executionId);
         if (window.location.pathname === target) return;
 
         lastPushedExecutionId.current = executionId;

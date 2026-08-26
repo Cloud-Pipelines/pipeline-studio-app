@@ -14,7 +14,7 @@ import {
   PIPELINE_TAGS_ANNOTATION,
 } from "@/utils/annotations";
 
-import { idGen } from "./utils";
+import { idGen } from "./idGenerator";
 
 export function renamePipeline(
   undo: UndoGroupable,

@@ -2,11 +2,13 @@ import { useState } from "react";
 
 import { ComponentSearchEmptyStateSuggestions } from "@/components/shared/ComponentSearchEmptyStateSuggestions";
 import {
+  ComponentItemFromUrl,
   ComponentMarkup,
   IONodeSidebarItem,
   StickyNoteSidebarItem,
 } from "@/components/shared/ReactFlow/FlowSidebar/components/ComponentItem";
 import FolderItem from "@/components/shared/ReactFlow/FlowSidebar/components/FolderItem";
+import { useFlagValue } from "@/components/shared/Settings/useFlags";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
@@ -21,6 +23,8 @@ import type { ComponentSearchV2Result } from "./componentSearchV2Logic";
 
 const INITIAL_VISIBLE_RESULT_COUNT = 10;
 const RESULT_PAGE_SIZE = 10;
+const INPUT_AGGREGATOR_URL =
+  "https://raw.githubusercontent.com/TangleML/tangle-ui/refs/heads/master/public/assets/components/input_aggregator.component.yaml";
 
 interface ComponentSearchResultsProps {
   query: string;
@@ -88,6 +92,7 @@ export function ComponentSearchResults({
   onClearRerank,
   onSuggestedSearch,
 }: ComponentSearchResultsProps) {
+  const inputAggregatorEnabled = useFlagValue("input-aggregator");
   const isEmptyQuery = query.trim().length === 0;
   const [visibleResultCount, setVisibleResultCount] = useState(
     INITIAL_VISIBLE_RESULT_COUNT,
@@ -119,6 +124,17 @@ export function ComponentSearchResults({
             components: [
               <IONodeSidebarItem key="input" nodeType="input" />,
               <IONodeSidebarItem key="output" nodeType="output" />,
+              ...(inputAggregatorEnabled
+                ? [
+                    <ComponentItemFromUrl
+                      key="input-aggregator"
+                      componentRef={{
+                        url: INPUT_AGGREGATOR_URL,
+                        name: "Input Aggregator",
+                      }}
+                    />,
+                  ]
+                : []),
             ],
           }}
           icon="Cable"

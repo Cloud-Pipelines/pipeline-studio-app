@@ -3,10 +3,7 @@ import yaml from "js-yaml";
 import { getAppSettings } from "@/appSettings";
 import type { PipelineLibrary } from "@/types/pipelineLibrary";
 import { downloadDataWithCache, loadObjectFromYamlData } from "@/utils/cache";
-import {
-  type ComponentSpec,
-  isGraphImplementation,
-} from "@/utils/componentSpec";
+import { isGraphImplementation } from "@/utils/componentSpec";
 import {
   type ComponentFileEntry,
   deleteComponentFileFromList,
@@ -33,31 +30,6 @@ export const deletePipeline = async (name: string, onDelete?: () => void) => {
   } catch (error) {
     console.error("Error deleting pipeline:", error);
   }
-};
-
-export const useSavePipeline = (componentSpec: ComponentSpec) => {
-  const savePipeline = async (name?: string) => {
-    if (!componentSpec) {
-      return;
-    }
-
-    const componentSpecWithNewName = {
-      ...componentSpec,
-      name: name ?? componentSpec.name ?? "Untitled Pipeline",
-    };
-
-    const componentSpecAsYaml = componentSpecToYaml(componentSpecWithNewName);
-
-    await writeComponentToFileListFromText(
-      USER_PIPELINES_LIST_NAME,
-      componentSpecWithNewName.name,
-      componentSpecAsYaml,
-    );
-  };
-
-  return {
-    savePipeline,
-  };
 };
 
 export const loadPipelineByName = async (name: string) => {
@@ -290,8 +262,4 @@ export async function importPipelineFromFile(
       errorMessage,
     };
   }
-}
-
-export function getPipelineFile(pipelineName: string) {
-  return getComponentFileFromList(USER_PIPELINES_LIST_NAME, pipelineName);
 }

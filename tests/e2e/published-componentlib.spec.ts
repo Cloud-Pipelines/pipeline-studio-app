@@ -1,12 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import {
-  assertSearchState,
   createNewPipeline,
   dragComponentToCanvas,
-  dropComponentFromLibraryOnCanvas,
-  locateComponentInFolder,
-  locateFlowCanvas,
   locateFolderByName,
   openComponentLibFolder,
   removeComponentFromCanvas,
@@ -97,42 +93,32 @@ test.describe("Published Component Library", () => {
 
     const searchResultsHeader = page.getByTestId("search-results-header");
     await expect(searchResultsHeader).toBeVisible();
-    await expect(searchResultsHeader).toHaveText("Search Results (5)");
+    await expect(searchResultsHeader).toHaveText("Search Results (10 of 13)");
 
     const componentItem = page.getByTestId("component-item");
-    await expect(componentItem).toHaveCount(5);
+    await expect(componentItem).toHaveCount(10);
 
     await clearSearch(page);
   });
 
-  test("components from search results can be added and removed from favorites folder", async () => {
-    // add component to the favorites by clicking the star icon
+  test("components from search results can be favorited and unfavorited", async () => {
     await searchForComponent(page, "GCS");
 
     const downloadFromGCS = await findComponentFromSearchResults(
       page,
       "Download from GCS",
     );
+    const favoriteButton = downloadFromGCS.getByTestId("favorite-star");
+    const favoriteIcon = favoriteButton.locator("svg");
 
-    await downloadFromGCS.getByTestId("favorite-star").click();
+    await expect(favoriteIcon).toHaveAttribute("fill", "none");
+    await favoriteButton.click();
+    await expect(favoriteIcon).not.toHaveAttribute("fill", "none");
+
+    await favoriteButton.click();
+    await expect(favoriteIcon).toHaveAttribute("fill", "none");
 
     await clearSearch(page);
-
-    // expect the component to be in the favorites folder
-    const favoritesFolder = await openComponentLibFolder(
-      page,
-      "Favorite Components",
-    );
-    await expect(favoritesFolder.locator("li")).toHaveCount(1);
-
-    // unstar the component
-    const downloadFromGCSFavorite = locateComponentInFolder(
-      favoritesFolder,
-      "Download from GCS",
-    );
-    await downloadFromGCSFavorite.getByTestId("favorite-star").click();
-
-    await expect(favoritesFolder.locator("li")).toHaveCount(0);
   });
 
   test("component details can be opened as a dialog", async () => {
@@ -159,7 +145,7 @@ test.describe("Published Component Library", () => {
     await clearSearch(page);
   });
 
-  test("components from search results can be dragged to the canvas and appear in the used in pipeline folder", async () => {
+  test("components from search results can be dragged to the canvas", async () => {
     await searchForComponent(page, "GCS");
 
     const downloadFromGCS = await findComponentFromSearchResults(
@@ -170,114 +156,10 @@ test.describe("Published Component Library", () => {
 
     await clearSearch(page);
 
-    const usedOnCanvasFolder = await openComponentLibFolder(
-      page,
-      "Used in Pipeline",
-    );
-    await expect(usedOnCanvasFolder.locator("li")).toHaveCount(1);
+    const node = page.locator('[data-task-name="Download from GCS"]');
+    await expect(node).toBeVisible();
 
-    // remove the component from the canvas
     await removeComponentFromCanvas(page, "Download from GCS");
-    await expect(usedOnCanvasFolder.locator("li")).toHaveCount(0);
-  });
-
-  test("search results can be highlighted on input pin click", async () => {
-    await openComponentLibFolder(page, "Standard library");
-    await openComponentLibFolder(page, "Data manipulation");
-    await openComponentLibFolder(page, "CSV");
-
-    // drop component on the canvas
-    const node = await dropComponentFromLibraryOnCanvas(
-      page,
-      "CSV",
-      "Select columns using Pandas on CSV data",
-    );
-    await expect(
-      node,
-      "Dropped component should be on the canvas before clicking its pin",
-    ).toBeVisible();
-
-    const inputHandle = page.getByTestId("input-handle-table");
-    await expect(inputHandle).toBeVisible();
-    await inputHandle.click();
-
-    const outputConnection = page.getByTestId(
-      "output-connection-transformed_table",
-    );
-    const inputConnection = page.getByTestId("input-connection-table");
-    await expect(outputConnection).toHaveAttribute("data-highlighted", "true");
-
-    // assert highlighting
-    await expect(outputConnection).toHaveAttribute("data-highlighted", "true");
-    await expect(inputConnection).toHaveAttribute("data-highlighted", "false");
-    await expect(inputConnection).toHaveAttribute("data-selected", "true");
-
-    // reset highlighting after clicking on the canvas
-    await locateFlowCanvas(page).click();
-
-    // resets selection after clicking on the canvas
-    await expect(inputConnection).toHaveAttribute("data-highlighted", "false");
-    await expect(outputConnection).toHaveAttribute("data-highlighted", "false");
-
-    // search should be reset
-    await assertSearchState(page, {
-      searchTerm: "",
-    });
-
-    // remove the component from the canvas
-    await removeComponentFromCanvas(
-      page,
-      "Select columns using Pandas on CSV data",
-    );
-  });
-
-  test("search results can be highlighted on output pin click", async () => {
-    await openComponentLibFolder(page, "Standard library");
-    await openComponentLibFolder(page, "Data manipulation");
-    await openComponentLibFolder(page, "CSV");
-
-    const node = await dropComponentFromLibraryOnCanvas(
-      page,
-      "CSV",
-      "Select columns using Pandas on CSV data",
-    );
-    await expect(
-      node,
-      "Dropped component should be on the canvas before clicking its pin",
-    ).toBeVisible();
-
-    const outputHandle = page.getByTestId("output-handle-transformed_table");
-    await expect(outputHandle).toBeVisible();
-    await outputHandle.click();
-
-    const outputConnection = page.getByTestId(
-      "output-connection-transformed_table",
-    );
-    const inputConnection = page.getByTestId("input-connection-table");
-    await expect(outputConnection).toHaveAttribute("data-selected", "true");
-
-    // assert highlighting
-    await expect(outputConnection).toHaveAttribute("data-highlighted", "false");
-    await expect(outputConnection).toHaveAttribute("data-selected", "true");
-    await expect(inputConnection).toHaveAttribute("data-highlighted", "true");
-
-    // reset highlighting after clicking on the canvas
-    await locateFlowCanvas(page).click();
-
-    // resets selection after clicking on the canvas
-    await expect(inputConnection).toHaveAttribute("data-highlighted", "false");
-    await expect(outputConnection).toHaveAttribute("data-selected", "false");
-
-    // search should be reset
-    await assertSearchState(page, {
-      searchTerm: "",
-    });
-
-    // remove the component from the canvas
-    await removeComponentFromCanvas(
-      page,
-      "Select columns using Pandas on CSV data",
-    );
   });
 });
 

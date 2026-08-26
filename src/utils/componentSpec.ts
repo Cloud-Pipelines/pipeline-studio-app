@@ -151,25 +151,6 @@ export type HydratedComponentReference = Omit<
   text: string;
 };
 
-type NotMaterializedComponentReference = Omit<
-  ComponentReference,
-  "spec" | "text"
-> & {
-  spec: never;
-  text: never;
-};
-
-export function isNotMaterializedComponentReference(
-  componentReference: UnknownComponentReference,
-): componentReference is NotMaterializedComponentReference {
-  return Boolean(
-    componentReference &&
-    typeof componentReference === "object" &&
-    !componentReference.spec &&
-    !componentReference.text,
-  );
-}
-
 export type DiscoverableComponentReference = Omit<
   ComponentReference,
   "digest"

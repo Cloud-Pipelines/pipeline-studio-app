@@ -44,7 +44,7 @@ const EMPTY_GRAPH_SPEC: GraphSpec = {
   tasks: {},
 };
 
-export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
+const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
   implementation: {
     graph: EMPTY_GRAPH_SPEC,
   },

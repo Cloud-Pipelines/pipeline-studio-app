@@ -1,6 +1,9 @@
 import type {
   ArgumentType,
   ComponentReference,
+  HydratedComponentReference,
+  InputSpec,
+  OutputSpec,
   TaskSpec,
 } from "@/utils/componentSpec";
 
@@ -17,12 +20,48 @@ export interface TaskNodeData extends Record<string, unknown> {
   nodeCallbacks?: NodeCallbacks;
 }
 
-export type NodeAndTaskId = {
+type NodeAndTaskId = {
   taskId: string;
   nodeId: string;
 };
 
 export type TaskType = "task" | "input" | "output";
+
+interface TaskNodeContextState {
+  selected: boolean;
+  highlighted: boolean;
+  readOnly: boolean;
+  disabled: boolean;
+  connectable: boolean;
+  status?: string;
+  isCustomComponent: boolean;
+  isCollapsed: boolean;
+  dimensions: TaskNodeDimensions;
+}
+
+interface TaskNodeContextCallbacks {
+  setArguments: (args: Record<string, ArgumentType>) => void;
+  setAnnotations: (annotations: Annotations) => void;
+  setCacheStaleness: (cacheStaleness: string | undefined) => void;
+  setCollapsed: (collapsed: boolean) => void;
+  onDelete?: () => void;
+  onDuplicate?: () => void;
+  onUpgrade?: () => void;
+  onSelect?: () => void;
+}
+
+export interface TaskNodeContextType {
+  componentRef?: HydratedComponentReference;
+  taskSpec?: TaskSpec;
+  taskId?: string;
+  nodeId: string;
+  inputs: InputSpec[];
+  outputs: OutputSpec[];
+  name: string;
+  displayName: string;
+  state: TaskNodeContextState;
+  callbacks: TaskNodeContextCallbacks;
+}
 
 /* Note: Optional callbacks will cause TypeScript to break when applying the callbacks to the Nodes. */
 export interface TaskNodeCallbacks {
@@ -57,4 +96,4 @@ export type NodeCallbacks = {
   [K in keyof TaskNodeCallbacks]: CallbackWithIds<K>;
 };
 
-export type TaskNodeDimensions = { w: number; h: number | undefined };
+type TaskNodeDimensions = { w: number; h: number | undefined };

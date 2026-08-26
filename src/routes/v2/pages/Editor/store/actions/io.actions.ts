@@ -20,13 +20,13 @@ import {
   toConditionLiteral,
 } from "@/utils/conditionalExecution";
 
+import { idGen } from "./idGenerator";
 import {
   propagateInputDelete,
   propagateInputRename,
   propagateOutputDelete,
   propagateOutputRename,
 } from "./io.parentPropagation";
-import { idGen } from "./utils";
 
 export function addInput(
   undo: UndoGroupable,

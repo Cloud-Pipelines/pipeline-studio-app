@@ -1,4 +1,4 @@
-export const EDITOR_PATH = "/editor";
+const EDITOR_BASE_PATH = "/editor";
 export const RUNS_BASE_PATH = "/runs";
 const LEARN_BASE_PATH = "/learn";
 const EDITOR_V2_BASE_PATH = "/editor-v2";
@@ -24,7 +24,8 @@ export const APP_ROUTES = {
   TOUR: TOUR_BASE_PATH,
   TOUR_DETAIL: `${TOUR_BASE_PATH}/$tourId`,
   IMPORT: IMPORT_PATH,
-  PIPELINE_EDITOR: `${EDITOR_PATH}/$name`,
+  EDITOR: EDITOR_BASE_PATH,
+  PIPELINE_EDITOR: `${EDITOR_BASE_PATH}/$pipelineName`,
   RUN_DETAIL: `${RUNS_BASE_PATH}/$id`,
   RUN_DETAIL_WITH_SUBGRAPH: `${RUNS_BASE_PATH}/$id/$subgraphExecutionId`,
   RUNS: RUNS_BASE_PATH,

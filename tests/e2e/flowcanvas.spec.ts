@@ -9,7 +9,6 @@ import {
   locateFlowViewport,
   openComponentLibFolder,
   panCanvas,
-  waitForContextPanel,
   zoomIn,
   zoomOut,
 } from "./helpers";
@@ -53,12 +52,11 @@ test.describe("FlowCanvas Basic Functionality", () => {
 
     await expect(node).toBeVisible();
 
-    await waitForContextPanel(page, "pipeline-details");
-
     await node.click();
 
-    await expect(node).toHaveClass(/\bselected\b/);
-    await waitForContextPanel(page, "task-overview");
+    await expect(node.locator('[data-tour-card="task"]')).toHaveClass(
+      /ring-edge-selected/,
+    );
   });
 
   test("should connect two nodes satisfying the required field requirements", async ({
@@ -101,20 +99,16 @@ test.describe("FlowCanvas Basic Functionality", () => {
 
     await expect(outputPin).toBeInViewport();
     await expect(inputPin).toBeInViewport();
-    await expect(inputPin).toHaveAttribute("data-invalid", "true");
+    await expect(inputPin).toHaveClass(/bg-red-700/);
 
     await outputPin.hover();
     await page.mouse.down();
     await inputPin.hover();
     await page.mouse.up();
 
-    await expect(inputPin).toHaveAttribute("data-invalid", "false");
+    await expect(inputPin).not.toHaveClass(/bg-red-700/);
 
-    const edgesContainer = page.locator(".react-flow__edges");
-    const edge = edgesContainer.locator(
-      '[data-testid="rf__edge-Chicago Taxi Trips dataset_Table-Train XGBoost model on CSV_training_data"]',
-    );
-    await expect(edge).toBeVisible();
+    await expect(page.locator(".react-flow__edge")).toHaveCount(1);
 
     const inputHandle = nodeB.locator(
       '[data-testid="input-handle-training_data"]',
@@ -122,7 +116,7 @@ test.describe("FlowCanvas Basic Functionality", () => {
     await expect(inputHandle).toBeVisible();
 
     await expect(
-      nodeB.locator('[data-testid="input-handle-value-training_data"]'),
-    ).toHaveText(`→ Chicago Taxi Trips dataset.Table`);
+      nodeB.getByText("→ Chicago Taxi Trips dataset.Table"),
+    ).toBeVisible();
   });
 });

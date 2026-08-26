@@ -1,7 +1,7 @@
 import type { Edge, ReactFlowState } from "@xyflow/react";
 import { useStore } from "@xyflow/react";
 
-import { EdgeColor } from "@/components/shared/ReactFlow/FlowCanvas/Edges/utils";
+import { EDGE_SELECTED_COLOR } from "@/components/shared/ReactFlow/FlowCanvas/Edges/utils";
 import { useCanvasOverlay } from "@/routes/v2/shared/hooks/useCanvasOverlay";
 import type {
   CanvasOverlayConfig,
@@ -48,7 +48,7 @@ function buildConfig(connectedIds: ReadonlySet<string>): CanvasOverlayConfig {
       connectedIds.has(edge.source) && connectedIds.has(edge.target)
         ? {
             ...HIGHLIGHT_EFFECT,
-            style: { stroke: EdgeColor.Selected },
+            style: { stroke: EDGE_SELECTED_COLOR },
           }
         : DIMMED_EFFECT,
   };

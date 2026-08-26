@@ -1,7 +1,7 @@
 import type { XYPosition } from "@xyflow/react";
 
 import { getNodeTypeZIndexDefault } from "@/components/shared/ReactFlow/FlowCanvas/utils/zIndex";
-import type { AnnotationConfig, Annotations } from "@/types/annotations";
+import type { Annotations } from "@/types/annotations";
 
 import {
   EDGE_CONDUITS_ANNOTATION,
@@ -13,7 +13,6 @@ import {
   PIPELINE_TAGS_ANNOTATION,
   SDK_ANNOTATION,
   TASK_COLOR_ANNOTATION,
-  TASK_DISPLAY_NAME_ANNOTATION,
   ZINDEX_ANNOTATION,
 } from "./annotationKeys";
 import type { ComponentSpec } from "./componentSpec";
@@ -34,24 +33,6 @@ export const SYSTEM_ANNOTATIONS = [
   TASK_COLOR_ANNOTATION,
   EDGE_CONDUITS_ANNOTATION,
 ];
-
-export const DEFAULT_COMMON_ANNOTATIONS: AnnotationConfig[] = [
-  {
-    annotation: EDITOR_POSITION_ANNOTATION,
-    label: "Node position",
-    type: "json",
-  },
-  {
-    annotation: TASK_DISPLAY_NAME_ANNOTATION,
-    label: "Display Name",
-    type: "string",
-    max: DISPLAY_NAME_MAX_LENGTH,
-  },
-];
-
-export const HIDDEN_ANNOTATIONS = new Set<string>([
-  EDITOR_COLLAPSED_ANNOTATION,
-]);
 
 /**
  * Gets the value of an annotation.
@@ -85,24 +66,6 @@ export function getAnnotationValue(
 }
 
 /**
- * Sets the value of an annotation.
- * @param annotations - The annotations object
- * @param key - The key of the annotation
- * @param value - The value to set
- * @returns
- */
-export function setAnnotation(
-  annotations: Annotations | undefined,
-  key: string,
-  value: string | undefined,
-) {
-  return {
-    ...(annotations ?? {}),
-    [key]: value,
-  };
-}
-
-/**
  * Checks if an annotation exists.
  * @param annotations - The annotations object
  * @param key - The key of the annotation
@@ -118,31 +81,6 @@ function hasAnnotation(
 
   return Object.prototype.hasOwnProperty.call(annotations, key);
 }
-
-/**
- * Sets an annotation on a ComponentSpec.
- * @param componentSpec - The ComponentSpec object
- * @param annotationKey - The key of the annotation
- * @param annotationValue - The value of the annotation
- * @returns componentSpec with updated annotation
- */
-export const setComponentSpecAnnotation = (
-  componentSpec: ComponentSpec,
-  annotationKey: string,
-  annotationValue: string | undefined,
-) => {
-  return {
-    ...componentSpec,
-    metadata: {
-      ...componentSpec.metadata,
-      annotations: setAnnotation(
-        componentSpec.metadata?.annotations,
-        annotationKey,
-        annotationValue,
-      ),
-    },
-  };
-};
 
 /**
  * Sets an annotation on a ComponentSpec.
@@ -228,24 +166,6 @@ export function ensureAnnotations(
       },
     },
   };
-}
-
-/*
- * Removes an annotation from the annotations object.
- * @param annotations - The annotations object
- * @param key - The key of the annotation to remove
- * @returns Updated annotations object with the specified annotation removed
- */
-export function removeAnnotation(
-  annotations: Annotations | undefined,
-  key: string,
-): Annotations | undefined {
-  if (!annotations || !hasAnnotation(annotations, key)) {
-    return annotations;
-  }
-
-  const { [key]: _, ...rest } = annotations;
-  return rest;
 }
 
 /**

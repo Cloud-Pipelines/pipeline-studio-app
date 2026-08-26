@@ -53,7 +53,6 @@ export const PIPELINE_RUNS_STORE_NAME = "pipeline_runs";
 export const USER_COMPONENTS_LIST_NAME = "user_components";
 
 export const TOP_NAV_HEIGHT = 56; // px
-export const BOTTOM_FOOTER_HEIGHT = 0; // px
 
 export const DEFAULT_NODE_DIMENSIONS = { w: 300, h: undefined };
 
@@ -69,16 +68,7 @@ export enum ComponentSearchFilter {
   EXACTMATCH = "Exact Match",
 }
 
-export const DEFAULT_FILTERS = [ComponentSearchFilter.NAME];
-
 export const AUTOSAVE_DEBOUNCE_TIME_MS = 300;
-
-export const KEYBOARD_SHORTCUTS = {
-  UNDO: "z",
-  REDO: "y",
-  MAC_META: "⌘",
-  WINDOWS_META: "Ctrl",
-} as const;
 
 // Container exit codes
 export const EXIT_CODE_OOM = 137; // SIGKILL (128 + 9) - Out of Memory

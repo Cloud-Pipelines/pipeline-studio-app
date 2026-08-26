@@ -5,19 +5,6 @@ import { expect, type Locator, type Page } from "@playwright/test";
  * Waits for the React Flow canvas to be fully loaded (past Suspense loading state).
  */
 export async function createNewPipeline(page: Page): Promise<void> {
-  // These shared E2E helpers cover the legacy editor until v2 has matching coverage.
-  await page.addInitScript(() => {
-    const flags = JSON.parse(
-      window.localStorage.getItem("betaFlags") ?? "{}",
-    ) as Record<string, boolean>;
-
-    window.localStorage.setItem(
-      "betaFlags",
-      JSON.stringify({ ...flags, v2_editor: false }),
-    );
-    window.localStorage.setItem("seen-editor-v2-welcome", JSON.stringify(true));
-  });
-
   await page.goto("/");
   await page.getByTestId("new-pipeline-button").click();
   await waitForFlowCanvas(page);
@@ -193,7 +180,7 @@ export async function dragComponentToCanvas(
  * Locates a task node by its name
  */
 function locateNodeByName(page: Page, nodeName: string): Locator {
-  return page.locator(`[data-testid="rf__node-task_${nodeName}"]`);
+  return page.locator(`[data-task-name="${nodeName}"]`);
 }
 
 /**
@@ -203,16 +190,9 @@ function locateNodeByName(page: Page, nodeName: string): Locator {
 /**
  * Locates the context panel container
  */
-function locateContextPanelContainer(page: Page): Locator {
-  return page.locator('[data-testid="context-panel-container"]');
-}
-
-/**
- * Locates a specific context panel by name
- */
 function locateContextPanel(page: Page, panelName: string): Locator {
-  const container = locateContextPanelContainer(page);
-  return container.locator(`[data-context-panel="${panelName}"]`);
+  const windowId = panelName === "task-overview" ? "context-panel" : panelName;
+  return page.locator(`[data-dock-window-content="${windowId}"]`);
 }
 
 /**
@@ -262,31 +242,16 @@ export async function removeComponentFromCanvas(
 ): Promise<void> {
   const node = locateNodeByName(page, componentName);
   await node.click();
-  await node.press("Delete");
+  await page.getByRole("button", { name: "Node" }).click();
+  await page.getByRole("menuitem", { name: "Delete Task" }).click();
 
-  // Wait for confirmation dialog to appear and be interactive
-  const confirmDialog = page.locator('[role="alertdialog"]');
-  const continueButton = confirmDialog.getByText("Continue");
-  await expect(continueButton).toBeVisible();
-  await continueButton.click();
-
-  // Wait for the node to be removed from the DOM
   await expect(node).toBeHidden();
-  await expect(confirmDialog).toBeHidden();
 }
 
 /**
  * todo: helper to position node relatively to another node accounting for the Canvas transform
  */
 
-/**
- * Asserts the current state of the search functionality
- * @param page - Playwright page object
- * @param options - Search state options to verify
- * @param options.searchTerm - Expected search input value
- * @param options.searchFilterCount - Expected filter count badge text (optional)
- * @param options.searchResultsCount - Expected result count or "*" for any (optional)
- */
 /**
  * Settings Helpers
  */
@@ -327,6 +292,7 @@ export async function setBetaFlag(
   if (isChecked !== enabled) {
     await flagSwitch.click();
   }
+  await expect(flagSwitch).toBeChecked({ checked: enabled });
 }
 
 /**
@@ -397,44 +363,4 @@ export async function removeSecret(
     secretItem,
     `Secret "${secretName}" should be removed from list`,
   ).toBeHidden();
-}
-
-export async function assertSearchState(
-  page: Page,
-  options: {
-    searchTerm: string;
-    searchFilterCount?: string;
-    searchResultsCount?: string;
-  } = {
-    searchTerm: "",
-  },
-) {
-  const { searchTerm, searchFilterCount, searchResultsCount } = options;
-
-  // Assert search input value
-  const searchInput = page.getByTestId("search-input");
-  await expect(searchInput).toHaveValue(searchTerm);
-
-  // Assert search filter counter
-  const searchFilterCounter = page.getByTestId("search-filter-counter");
-  if (searchFilterCount) {
-    await expect(searchFilterCounter).toHaveText(searchFilterCount);
-  } else {
-    await expect(searchFilterCounter).toBeHidden();
-  }
-
-  // Assert search results header and count
-  const searchResultsHeader = page.getByTestId("search-results-header");
-  if (searchResultsCount && Number(searchResultsCount) > 0) {
-    await expect(searchResultsHeader).toHaveText(
-      `Search Results (${searchResultsCount})`,
-    );
-    const componentItem = page.getByTestId("component-item");
-    await expect(componentItem).toHaveCount(Number(searchResultsCount));
-  } else if (searchResultsCount && searchResultsCount === "*") {
-    await expect(searchResultsHeader).toBeVisible();
-    await expect(searchResultsHeader).toContainText("Search Results");
-  } else {
-    await expect(searchResultsHeader).toBeHidden();
-  }
 }

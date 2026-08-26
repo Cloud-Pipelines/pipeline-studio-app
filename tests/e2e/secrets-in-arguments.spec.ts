@@ -17,10 +17,14 @@ import {
  */
 test.describe.configure({ mode: "serial" });
 
-function argumentInput(page: Page, argumentName: string): Locator {
+function argumentRow(page: Page, argumentName: string): Locator {
   return page.locator(
-    `[data-context-panel="task-overview"] [data-testid="argument-input-field"][data-argument-name="${argumentName}"] input`,
+    `[data-dock-window-content="context-panel"] [data-argument-name="${argumentName}"]`,
   );
+}
+
+function argumentInput(page: Page, argumentName: string): Locator {
+  return argumentRow(page, argumentName).getByTestId("argument-input");
 }
 
 /**
@@ -87,7 +91,7 @@ test.describe("Secrets in Component Arguments", () => {
   });
 
   test("select component and verify Arguments tab is shown", async () => {
-    const node = page.locator(`[data-testid="rf__node-task_${componentName}"]`);
+    const node = page.locator(`[data-task-name="${componentName}"]`);
     await node.click();
 
     const taskOverviewPanel = await waitForContextPanel(page, "task-overview");
@@ -103,25 +107,16 @@ test.describe("Secrets in Component Arguments", () => {
   });
 
   test("assign secret to GITHUB_PAT argument", async () => {
-    const taskOverviewPanel = page.locator(
-      '[data-context-panel="task-overview"]',
-    );
-
-    const githubPatField = taskOverviewPanel.locator(
-      '[data-testid="argument-input-field"][data-argument-name="GITHUB_PAT"]',
-    );
+    const githubPatField = argumentRow(page, "GITHUB_PAT");
     await expect(
       githubPatField,
       "GITHUB_PAT argument field should be visible",
     ).toBeVisible();
 
     await githubPatField.hover();
-
-    const directSecretButton = githubPatField.getByTestId(
-      "open-secret-dialog-button",
-    );
-    await expect(directSecretButton).toBeVisible();
-    await directSecretButton.click();
+    await githubPatField.getByTestId("thunder-menu-trigger").click();
+    await page.getByRole("menuitem", { name: "Dynamic Data" }).hover();
+    await page.getByRole("menuitem", { name: "Select Secret..." }).click();
 
     const selectSecretDialog = page.getByTestId("select-secret-dialog");
     await expect(
@@ -143,17 +138,10 @@ test.describe("Secrets in Component Arguments", () => {
       "Dialog should close after selection",
     ).toBeHidden();
 
-    const secretInput = githubPatField.getByTestId(
-      "dynamic-data-argument-input",
-    );
     await expect(
-      secretInput,
-      "Secret input should be visible after selection",
-    ).toBeVisible();
-    await expect(secretInput).toHaveAttribute(
-      "data-secret-name",
-      testSecretName,
-    );
+      githubPatField,
+      "Selected secret should appear in the argument field",
+    ).toContainText(testSecretName);
   });
 
   test("fill other required arguments with dummy values", async () => {
@@ -173,11 +161,13 @@ test.describe("Secrets in Component Arguments", () => {
   test("Submit Run button should be enabled with all arguments filled", async () => {
     await page.locator(".react-flow__pane").click();
 
-    const submitButton = page.getByRole("button", { name: /Submit Run/i });
+    const submitButton = page
+      .getByTestId("runs-and-submission-buttons")
+      .getByRole("button", { name: "Submit Run" });
     await expect(
       submitButton,
-      "Submit Run button should be visible",
-    ).toBeVisible();
+      "Submit Run button should be enabled",
+    ).toBeEnabled();
   });
 });
 
@@ -227,7 +217,7 @@ async function dropGithubFakeCommitPushComponent(page: Page) {
   await canvas.dispatchEvent("drop", { dataTransfer });
 
   const componentName = "Github - Fake Commit Push";
-  const node = page.locator(`[data-testid="rf__node-task_${componentName}"]`);
+  const node = page.locator(`[data-task-name="${componentName}"]`);
   await expect(node, "Component node should appear on canvas").toBeVisible({
     timeout: 10000,
   });

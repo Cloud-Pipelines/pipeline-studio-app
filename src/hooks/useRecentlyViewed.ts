@@ -91,7 +91,3 @@ export function addRecentlyViewed(item: Omit<RecentItem, "timestamp">) {
 export function useRecentlyUsed() {
   return { recentlyUsed: useRecent(RECENTLY_USED_KEY) };
 }
-
-export function addRecentlyUsed(item: Omit<RecentItem, "timestamp">) {
-  addRecent(RECENTLY_USED_KEY, item);
-}

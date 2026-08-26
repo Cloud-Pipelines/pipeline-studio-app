@@ -77,34 +77,6 @@ function checkSearchFilterComponent(
   }
 }
 
-export function checkArtifactMatchesSearchFilters(
-  searchTerm: string,
-  filters: string[],
-  artifact: InputSpec | OutputSpec,
-  exactMatch: boolean = false,
-): boolean {
-  exactMatch = exactMatch || filters.includes(ComponentSearchFilter.EXACTMATCH);
-  return filters.some((filter) => {
-    if (
-      filter === ComponentSearchFilter.INPUTNAME ||
-      filter === ComponentSearchFilter.OUTPUTNAME
-    ) {
-      return checkNameMatchesSearch(artifact.name, searchTerm, exactMatch);
-    }
-    if (
-      filter === ComponentSearchFilter.INPUTTYPE ||
-      filter === ComponentSearchFilter.OUTPUTTYPE
-    ) {
-      return containsSearchTerm(
-        JSON.stringify(artifact.type),
-        searchTerm,
-        exactMatch,
-      );
-    }
-    return false;
-  });
-}
-
 /**
  * Checks if variations of a name
  * string matches the search term.

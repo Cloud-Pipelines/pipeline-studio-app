@@ -12,7 +12,6 @@ import { useFlagValue } from "@/components/shared/Settings/useFlags";
 import { withSuspenseWrapper } from "@/components/shared/SuspenseWrapper";
 import { InlineStack } from "@/components/ui/layout";
 import { ComponentLibraryProvider } from "@/providers/ComponentLibraryProvider";
-import { ForcedSearchProvider } from "@/providers/ComponentLibraryProvider/ForcedSearchProvider";
 import { DialogProvider } from "@/providers/DialogProvider/DialogProvider";
 import { useTourMode } from "@/providers/TourProvider/TourModeContext";
 import { TourSaveExploreDialog } from "@/providers/TourProvider/TourSaveExploreDialog";
@@ -171,15 +170,13 @@ function EditorV2Content({ pipelineRef }: { pipelineRef: PipelineRef | null }) {
           <EditorTourBridge />
           <TourSaveExploreDialog />
           <TourSecretsDialog />
-          <ForcedSearchProvider>{body}</ForcedSearchProvider>
+          {body}
         </ReactFlowProvider>
       </ComponentEditorProvider>
     </ComponentLibraryProvider>
   );
 }
 
-// Non-editor-v2 routes (e.g. `/tour/$tourId`) pass `pipelineRef` directly.
-// Without a prop, we fall back to reading the route's params/search.
 export function EditorV2({
   pipelineRef: pipelineRefProp,
 }: {

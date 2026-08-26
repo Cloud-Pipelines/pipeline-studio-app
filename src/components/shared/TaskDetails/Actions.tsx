@@ -1,5 +1,5 @@
 import { useAnalytics } from "@/providers/AnalyticsProvider";
-import { type TaskNodeContextType } from "@/providers/TaskNodeProvider";
+import type { TaskNodeContextType } from "@/types/taskNode";
 import type { HydratedComponentReference } from "@/utils/componentSpec";
 import { componentMetadata } from "@/utils/componentTracking";
 import { isSubgraph } from "@/utils/subgraphUtils";
