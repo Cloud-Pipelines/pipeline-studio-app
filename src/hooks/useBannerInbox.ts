@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
-import type { TangleBanner } from "@/config/banners";
-import { useBanners } from "@/hooks/useBanners";
+import { resetBannerCacheForTests, type TangleBanner } from "@/config/banners";
+import { resetBannerRefreshForTests, useBanners } from "@/hooks/useBanners";
 import { getStorage } from "@/utils/typedStorage";
 
 const STORAGE_KEYS = [
@@ -34,6 +34,9 @@ function publish() {
 }
 
 function handleStorage(event: StorageEvent) {
+  // typedStorage re-dispatches a synthetic same-tab event on every write, which
+  // arrives without a storageArea. Those writes already publish themselves.
+  if (event.storageArea === null) return;
   if (STORAGE_KEYS.some((key) => key === event.key)) publish();
 }
 
@@ -58,6 +61,7 @@ function readIds(key: BannerInboxKey): string[] {
 }
 
 interface InboxState {
+  isOpen: boolean;
   dismissedIds: Set<string>;
   hiddenIds: Set<string>;
   readIds: Set<string>;
@@ -71,6 +75,7 @@ function getInboxState(revision: number): InboxState {
 
   cachedRevision = revision;
   cachedState = {
+    isOpen,
     dismissedIds: new Set([
       ...readIds("dismissed-banners"),
       ...dismissedForThisSession,
@@ -89,7 +94,7 @@ function addIds(key: BannerInboxKey, ids: string[]) {
   storage.setItem(key, merged);
 }
 
-export function closeBannerInbox() {
+function closeBannerInbox() {
   isOpen = false;
   publish();
 }
@@ -103,15 +108,24 @@ function openBannerInbox(banners: readonly TangleBanner[]) {
   publish();
 }
 
-function hideStrip(banners: readonly TangleBanner[]) {
-  banners
-    .filter((banner) => !banner.dismissible)
-    .forEach((banner) => hiddenForThisSession.add(banner.id));
+function markHidden(banner: TangleBanner) {
+  if (!banner.dismissible) {
+    hiddenForThisSession.add(banner.id);
+    return;
+  }
 
-  addIds(
-    "hidden-banners",
-    banners.filter((banner) => banner.dismissible).map((banner) => banner.id),
-  );
+  addIds("hidden-banners", [banner.id]);
+  if (!readIds("hidden-banners").includes(banner.id))
+    hiddenForThisSession.add(banner.id);
+}
+
+function hideBanner(banner: TangleBanner) {
+  markHidden(banner);
+  publish();
+}
+
+function hideStrip(banners: readonly TangleBanner[]) {
+  banners.forEach(markHidden);
   publish();
 }
 
@@ -122,19 +136,35 @@ function showStrip() {
 }
 
 function dismissBanner(banner: TangleBanner) {
-  addIds("dismissed-banners", [banner.id]);
-  if (!readIds("dismissed-banners").includes(banner.id))
+  if (banner.dismissible) {
+    addIds("dismissed-banners", [banner.id]);
+    if (!readIds("dismissed-banners").includes(banner.id))
+      dismissedForThisSession.add(banner.id);
+  } else {
     dismissedForThisSession.add(banner.id);
+  }
+
   publish();
+}
+
+export function resetBannerStateForTests(): void {
+  resetBannerCacheForTests();
+  resetBannerRefreshForTests();
+  hiddenForThisSession.clear();
+  dismissedForThisSession.clear();
+  isOpen = false;
+  cachedState = null;
+  cachedRevision = -1;
 }
 
 export interface BannerInbox {
   banners: readonly TangleBanner[];
   showing: readonly TangleBanner[];
   unreadCount: number;
-  isStripHidden: boolean;
+  hasHiddenBanners: boolean;
   isOpen: boolean;
   setOpen: (open: boolean) => void;
+  hide: (banner: TangleBanner) => void;
   hideStrip: () => void;
   showStrip: () => void;
   dismiss: (banner: TangleBanner) => void;
@@ -144,6 +174,7 @@ export function useBannerInbox(): BannerInbox {
   const banners = useBanners();
   const revision = useSyncExternalStore(subscribe, getRevision);
   const {
+    isOpen,
     dismissedIds,
     hiddenIds,
     readIds: readIdSet,
@@ -159,9 +190,10 @@ export function useBannerInbox(): BannerInbox {
     banners: listed,
     showing,
     unreadCount: listed.filter((banner) => !readIdSet.has(banner.id)).length,
-    isStripHidden: showing.length === 0 && listed.length > 0,
+    hasHiddenBanners: showing.length < listed.length,
     isOpen,
     setOpen: (open) => (open ? openBannerInbox(listed) : closeBannerInbox()),
+    hide: hideBanner,
     hideStrip: () => hideStrip(listed),
     showStrip,
     dismiss: dismissBanner,

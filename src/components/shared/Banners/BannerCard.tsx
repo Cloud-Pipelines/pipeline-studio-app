@@ -3,16 +3,19 @@ import { UntrustedMarkdown } from "@/components/shared/Markdown/Markdown";
 import { BlockStack } from "@/components/ui/layout";
 import { Link } from "@/components/ui/link";
 import type { TangleBanner } from "@/config/banners";
+import { cn } from "@/lib/utils";
 
 interface BannerCardProps {
   banner: TangleBanner;
-  bodyClassName?: string;
+  clampBody?: boolean;
+  onHide?: () => void;
   onDismiss?: () => void;
 }
 
 export const BannerCard = ({
   banner,
-  bodyClassName,
+  clampBody = false,
+  onHide,
   onDismiss,
 }: BannerCardProps) => {
   const hasBody = banner.body.trim().length > 0;
@@ -22,11 +25,19 @@ export const BannerCard = ({
       title={banner.title}
       variant={banner.variant}
       width="full"
-      onDismiss={onDismiss}
+      onDismiss={onHide ?? onDismiss}
+      dismissIcon={onHide ? "EyeOff" : undefined}
+      dismissLabel={onHide ? "Hide notice" : undefined}
     >
       <BlockStack gap="1">
         {hasBody && (
-          <div className={bodyClassName}>
+          <div
+            className={cn(
+              "text-pretty",
+              clampBody && "max-h-32 overflow-y-auto",
+            )}
+            data-testid="banner-body"
+          >
             <UntrustedMarkdown body={banner.body} />
           </div>
         )}

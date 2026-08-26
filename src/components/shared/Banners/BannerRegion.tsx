@@ -36,7 +36,7 @@ function useContentOffset(strip: HTMLElement | null) {
 }
 
 export const BannerRegion = () => {
-  const { showing, hideStrip } = useBannerInbox();
+  const { showing, hide, hideStrip } = useBannerInbox();
   const [strip, setStrip] = useState<HTMLElement | null>(null);
 
   useContentOffset(showing.length > 0 ? strip : null);
@@ -67,10 +67,7 @@ export const BannerRegion = () => {
             className="w-72 shrink-0 sm:w-80"
             data-testid="banner-card"
           >
-            <BannerCard
-              banner={banner}
-              bodyClassName="max-h-32 overflow-y-auto text-pretty"
-            />
+            <BannerCard banner={banner} clampBody onHide={() => hide(banner)} />
           </div>
         ))}
       </InlineStack>

@@ -8,7 +8,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { installRawSource, installSource } from "@/config/bannerTestSource";
-import { closeBannerInbox } from "@/hooks/useBannerInbox";
+import { resetBannerStateForTests } from "@/hooks/useBannerInbox";
 import { CONTENT_OFFSET_VAR } from "@/utils/layout";
 
 import { BannerRegion } from "./BannerRegion";
@@ -32,7 +32,7 @@ describe("<BannerRegion />", () => {
 
   afterEach(() => {
     cleanup();
-    closeBannerInbox();
+    resetBannerStateForTests();
     delete window.__TANGLE_BANNER_SOURCE__;
     document.documentElement.style.removeProperty(CONTENT_OFFSET_VAR);
   });
@@ -159,6 +159,28 @@ describe("<BannerRegion />", () => {
     expect(screen.getByText("Line one")).toBeInTheDocument();
   });
 
+  it("scrolls a long body within the card, leaving the action in place", () => {
+    installSource([
+      {
+        id: "a",
+        title: "Release notes",
+        body: `Line one\n\n${"detail ".repeat(40)}`,
+        action: { url: "https://example.com", text: "Read more" },
+      },
+    ]);
+
+    render(<BannerRegion />);
+
+    const body = screen.getByTestId("banner-body");
+    const action = screen.getByRole("link");
+
+    expect(body).toHaveClass("overflow-y-auto");
+    expect(body).not.toContainElement(action);
+    expect(screen.getByTestId("banner-scroller")).not.toHaveClass(
+      "overflow-y-auto",
+    );
+  });
+
   it("does not render raw HTML embedded in the body", () => {
     installSource([
       {
@@ -199,15 +221,49 @@ describe("<BannerRegion />", () => {
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
 
-  it("leaves the banner itself with no dismiss control", () => {
+  it("offers to hide any banner from the strip, but never to retire one", () => {
     installSource([
       { id: "a", title: "Scheduled maintenance", body: "", dismissible: true },
+      { id: "b", title: "Mandatory notice", body: "" },
     ]);
 
     render(<BannerRegion />);
 
+    expect(screen.getAllByLabelText("Hide notice")).toHaveLength(2);
     expect(screen.queryByLabelText("Dismiss")).not.toBeInTheDocument();
     expect(screen.getByTestId("banner-hide-strip")).toBeInTheDocument();
+  });
+
+  it("takes one banner off the strip while leaving the rest promoted", () => {
+    installSource([
+      { id: "a", title: "First", body: "", variant: "error" },
+      { id: "b", title: "Second", body: "", variant: "warning" },
+    ]);
+
+    render(<BannerRegion />);
+    fireEvent.click(screen.getAllByLabelText("Hide notice")[0]!);
+
+    expect(
+      screen.getAllByTestId("info-box-title").map((el) => el.textContent),
+    ).toEqual(["Second"]);
+  });
+
+  it("remembers a hidden banner only as long as the host allows", () => {
+    installSource([
+      { id: "persisted", title: "Optional", body: "", dismissible: true },
+      { id: "session-only", title: "Mandatory", body: "" },
+    ]);
+
+    render(<BannerRegion />);
+    screen
+      .getAllByLabelText("Hide notice")
+      .forEach((button) => fireEvent.click(button));
+
+    expect(screen.queryByTestId("banner-region")).not.toBeInTheDocument();
+
+    const hidden = localStorage.getItem("hidden-banners") ?? "";
+    expect(hidden).toContain("persisted");
+    expect(hidden).not.toContain("session-only");
   });
 
   it("clears the whole strip in one go rather than promoting the next banner", () => {
@@ -248,18 +304,14 @@ describe("<BannerRegion />", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  // The session-scoped half of the hide is module state, so this banner needs an
-  // id no other test reuses.
   it("hides a non-dismissible banner without retiring it for good", () => {
-    installSource([{ id: "mandatory", title: "Mandatory notice", body: "" }]);
+    installSource([{ id: "a", title: "Mandatory notice", body: "" }]);
 
     render(<BannerRegion />);
     fireEvent.click(screen.getByTestId("banner-hide-strip"));
 
     expect(screen.queryByTestId("banner-region")).not.toBeInTheDocument();
-    expect(localStorage.getItem("hidden-banners") ?? "").not.toContain(
-      "mandatory",
-    );
+    expect(localStorage.getItem("hidden-banners") ?? "").not.toContain("a");
   });
 
   it("publishes a content offset while a banner is promoted", () => {
