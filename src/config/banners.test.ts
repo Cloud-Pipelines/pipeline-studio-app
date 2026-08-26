@@ -5,6 +5,7 @@ import { installRawSource } from "@/config/bannerTestSource";
 import {
   getBannersSnapshot,
   refreshBanners,
+  resetBannerCacheForTests,
   subscribeToBanners,
 } from "./banners";
 
@@ -20,6 +21,7 @@ function staticSource(getSnapshot: () => unknown, refresh?: () => void) {
 describe("banners", () => {
   afterEach(() => {
     delete window.__TANGLE_BANNER_SOURCE__;
+    resetBannerCacheForTests();
   });
 
   describe("getBannersSnapshot", () => {
@@ -214,6 +216,57 @@ describe("banners", () => {
         undefined,
         undefined,
       ]);
+    });
+
+    it("coerces a numeric id to a string", () => {
+      installRawSource(
+        staticSource(() => [{ id: 7, title: "Numeric id", body: "" }]),
+      );
+
+      expect(getBannersSnapshot()[0]?.id).toBe("7");
+    });
+
+    it("keeps the first of two entries sharing an id", () => {
+      installRawSource(
+        staticSource(() => [
+          { id: "dup", title: "First wins", body: "" },
+          { id: "dup", title: "Second is dropped", body: "" },
+        ]),
+      );
+
+      expect(getBannersSnapshot().map((banner) => banner.title)).toEqual([
+        "First wins",
+      ]);
+    });
+
+    it("caps how many entries a host can publish", () => {
+      installRawSource(
+        staticSource(() =>
+          Array.from({ length: 500 }, (_, index) => ({
+            id: `banner-${index}`,
+            title: `Notice ${index}`,
+            body: "",
+          })),
+        ),
+      );
+
+      expect(getBannersSnapshot()).toHaveLength(20);
+    });
+
+    it("freezes each banner, not just the array", () => {
+      installRawSource(
+        staticSource(() => [{ id: "a", title: "Original", body: "" }]),
+      );
+
+      const snapshot = getBannersSnapshot();
+      const banner = snapshot[0];
+
+      expect(Object.isFrozen(snapshot)).toBe(true);
+      expect(Object.isFrozen(banner)).toBe(true);
+      expect(() => {
+        banner.title = "Mutated";
+      }).toThrow();
+      expect(getBannersSnapshot()[0]?.title).toBe("Original");
     });
 
     it("preserves body whitespace, which is meaningful in Markdown", () => {

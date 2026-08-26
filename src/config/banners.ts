@@ -24,7 +24,7 @@ export interface TangleBannerSource {
 
 declare global {
   interface Window {
-    __TANGLE_BANNER_SOURCE__?: TangleBannerSource;
+    __TANGLE_BANNER_SOURCE__?: unknown;
   }
 }
 
@@ -38,6 +38,7 @@ const VARIANTS: TangleBanner["variant"][] = [
   "error",
 ];
 const DEFAULT_ACTION_TEXT = "Learn more";
+const MAX_BANNERS = 20;
 
 const EMPTY_BANNERS: readonly TangleBanner[] = Object.freeze([]);
 
@@ -55,7 +56,7 @@ function isBannerSource(value: unknown): value is TangleBannerSource {
 
 function getBannerSource(): TangleBannerSource | null {
   if (typeof window === "undefined") return null;
-  const source: unknown = window.__TANGLE_BANNER_SOURCE__;
+  const source = window.__TANGLE_BANNER_SOURCE__;
   return isBannerSource(source) ? source : null;
 }
 
@@ -93,14 +94,14 @@ function readBanner(value: unknown): TangleBanner | null {
 
   const action = readAction(value.action);
 
-  return {
+  return Object.freeze({
     id,
     title,
     body,
     variant: readVariant(value.variant),
     ...(value.dismissible === true ? { dismissible: true } : {}),
     ...(action ? { action } : {}),
-  };
+  });
 }
 
 function readRawSnapshot(): unknown {
@@ -117,9 +118,11 @@ export function getBannersSnapshot(): readonly TangleBanner[] {
   const raw = readRawSnapshot();
   if (!Array.isArray(raw)) return EMPTY_BANNERS;
 
-  const validated = raw
-    .map(readBanner)
-    .filter((banner): banner is TangleBanner => banner !== null);
+  const byId = new Map<string, TangleBanner>();
+  for (const banner of raw.slice(0, MAX_BANNERS).map(readBanner)) {
+    if (banner && !byId.has(banner.id)) byId.set(banner.id, banner);
+  }
+  const validated = [...byId.values()];
 
   const signature = JSON.stringify(validated);
   if (signature === lastSnapshotSignature) return lastValidatedSnapshot;
@@ -169,4 +172,9 @@ export function refreshBanners(): void {
   } catch {
     // A host that fails to re-fetch must not surface an error in the app.
   }
+}
+
+export function resetBannerCacheForTests(): void {
+  lastSnapshotSignature = null;
+  lastValidatedSnapshot = EMPTY_BANNERS;
 }
