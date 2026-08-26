@@ -38,6 +38,18 @@ describe("<Markdown />", () => {
     expect(pre?.className).toContain("overflow-x-auto");
     expect(pre?.querySelector("code")).not.toBeNull();
     expect(pre?.textContent).toContain("const b = 2;");
+    expect(pre?.className).toContain("[&>code]:block");
+  });
+
+  it("renders an unlabelled fence the same way as a labelled one", () => {
+    const { container } = render(<Markdown body={"```\nplain text\n```"} />);
+
+    expect(container.querySelector("pre")?.className).toContain(
+      "[&>code]:block",
+    );
+    expect(container.querySelector("pre code")?.textContent).toContain(
+      "plain text",
+    );
   });
 
   it("renders GFM tables with delineated rows", () => {
@@ -88,6 +100,33 @@ describe("<Markdown />", () => {
     );
   });
 
+  it("keeps an internal link in the same tab and sends an external one out", () => {
+    render(
+      <Markdown body={"[runs](/runs) and [docs](https://example.com/docs)"} />,
+    );
+
+    const internal = screen.getByRole("link", { name: "runs" });
+    expect(internal).not.toHaveAttribute("target");
+    expect(internal).not.toHaveAttribute("rel");
+    expect(internal.querySelector("svg")).toBeNull();
+
+    const external = screen.getByRole("link", { name: "docs" });
+    expect(external).toHaveAttribute("target", "_blank");
+    expect(external).toHaveAttribute("rel", "noopener noreferrer");
+    expect(external.querySelector("svg")).not.toBeNull();
+  });
+
+  it("renders links through the design system, inline with the text", () => {
+    const { container } = render(
+      <Markdown body="Read the [notes](https://example.com/docs) today." />,
+    );
+
+    const link = screen.getByRole("link", { name: "notes" });
+    expect(link.className).toContain("inline-flex");
+    expect(container.querySelector("p a")).toBe(link);
+    expect(container.querySelector("a div")).toBeNull();
+  });
+
   it("lets a caller override a base element", () => {
     render(
       <Markdown
@@ -134,5 +173,19 @@ describe("<UntrustedMarkdown />", () => {
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(container.querySelector("a")).toBeNull();
     expect(container.textContent).toBe("script and relative");
+  });
+
+  it("cannot have its image guard overridden by a caller", () => {
+    const { container } = render(
+      <UntrustedMarkdown
+        body={"![Diagram](https://elsewhere.example/pixel.png)"}
+        components={{
+          img: ({ src }) => <img src={src} data-testid="leaked" alt="" />,
+        }}
+      />,
+    );
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByText("Diagram")).toBeInTheDocument();
   });
 });
