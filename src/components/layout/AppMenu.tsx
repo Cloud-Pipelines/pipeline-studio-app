@@ -9,6 +9,7 @@ import logo from "/Tangle_white.png";
 import { OnboardingNavPill } from "@/components/Onboarding/OnboardingNavPill";
 import { isAuthorizationRequired } from "@/components/shared/Authentication/helpers";
 import { TopBarAuthentication } from "@/components/shared/Authentication/TopBarAuthentication";
+import { NoticeInbox } from "@/components/shared/Notices/NoticeInbox";
 import { CopyText } from "@/components/shared/CopyText/CopyText";
 import { EditorVersionToggle } from "@/components/shared/EditorVersionToggle";
 import ImportPipeline from "@/components/shared/ImportPipeline";
@@ -128,6 +129,7 @@ const DefaultAppMenu = () => {
 
           <EditorVersionToggle />
           <RunVersionToggle />
+          <NoticeInbox />
 
           {/* Settings & status */}
           {isOnSettingsRoute ? (

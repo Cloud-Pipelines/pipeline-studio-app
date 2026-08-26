@@ -4,6 +4,7 @@ import { AiModelQuickSelect } from "@/components/layout/AiModelQuickSelect";
 import { OnboardingNavPill } from "@/components/Onboarding/OnboardingNavPill";
 import { isAuthorizationRequired } from "@/components/shared/Authentication/helpers";
 import { TopBarAuthentication } from "@/components/shared/Authentication/TopBarAuthentication";
+import { NoticeInbox } from "@/components/shared/Notices/NoticeInbox";
 import TooltipButton from "@/components/shared/Buttons/TooltipButton";
 import { EditorVersionToggle } from "@/components/shared/EditorVersionToggle";
 import { RunVersionToggle } from "@/components/shared/RunVersionToggle";
@@ -30,6 +31,7 @@ export function AppMenuActions() {
       <AiModelQuickSelect />
       <EditorVersionToggle showWelcomeSpotlight />
       <RunVersionToggle showWelcomeSpotlight />
+      <NoticeInbox />
       {tourMode ? (
         <TooltipButton
           tooltip="Settings"
