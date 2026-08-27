@@ -3,7 +3,6 @@ import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { ToastContainer } from "react-toastify";
 
 import { ConfirmDialogBridge } from "@/components/shared/ConfirmDialogBridge/ConfirmDialogBridge";
-import { NoticeBanners } from "@/components/shared/Notices/NoticeBanners";
 import { useClickTracking } from "@/hooks/useClickTracking";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { usePageViewTracking } from "@/hooks/usePageViewTracking";
@@ -38,7 +37,6 @@ function RootLayoutContent() {
 
               <div className="App flex flex-col min-h-screen w-full">
                 <AppMenu />
-                <NoticeBanners />
 
                 <main className="flex-1 grid">
                   <Outlet />

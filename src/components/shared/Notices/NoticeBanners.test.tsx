@@ -5,25 +5,12 @@ import {
   render,
   screen,
 } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { installRawSource, installSource } from "@/config/noticeTestSource";
 import { resetNoticeStateForTests } from "@/hooks/useNoticeInbox";
-import { CONTENT_OFFSET_VAR } from "@/utils/layout";
 
 import { NoticeBanners } from "./NoticeBanners";
-
-class ResizeObserverMock {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-
-vi.stubGlobal("ResizeObserver", ResizeObserverMock);
-
-function contentOffset() {
-  return document.documentElement.style.getPropertyValue(CONTENT_OFFSET_VAR);
-}
 
 describe("<NoticeBanners />", () => {
   beforeEach(() => {
@@ -34,7 +21,6 @@ describe("<NoticeBanners />", () => {
     cleanup();
     resetNoticeStateForTests();
     delete window.__TANGLE_NOTICE_SOURCE__;
-    document.documentElement.style.removeProperty(CONTENT_OFFSET_VAR);
   });
 
   it("renders no DOM node when no source is installed", () => {
@@ -69,7 +55,7 @@ describe("<NoticeBanners />", () => {
     expect(screen.getByText("Scheduled maintenance")).toBeInTheDocument();
   });
 
-  it("shows every notice as a banner rather than capping the row", () => {
+  it("shows every notice as a banner rather than capping the list", () => {
     installSource(
       ["a", "b", "c", "d", "e", "f"].map((id) => ({
         id,
@@ -81,7 +67,7 @@ describe("<NoticeBanners />", () => {
 
     render(<NoticeBanners />);
 
-    expect(screen.getAllByTestId("notice-card")).toHaveLength(6);
+    expect(screen.getAllByTestId("info-box-title")).toHaveLength(6);
     expect(screen.getByText("Notice f")).toBeInTheDocument();
   });
 
@@ -100,26 +86,28 @@ describe("<NoticeBanners />", () => {
     ).toEqual(["Everything is broken", "Heads up", "Worked", "Nice to know"]);
   });
 
-  it("puts the scrolling zone in the tab order so its overflow stays reachable", () => {
+  it("gives each notice a column of the page grid rather than the full width", () => {
     installSource([
       { id: "a", title: "One", body: "", variant: "error" },
       { id: "b", title: "Two", body: "", variant: "warning" },
     ]);
 
-    render(<NoticeBanners />);
+    const { container } = render(<NoticeBanners />);
 
-    const scroller = screen.getByTestId("notice-scroller");
-    expect(scroller).toHaveAttribute("tabindex", "0");
-    expect(scroller).toContainElement(screen.getAllByTestId("notice-card")[1]);
+    expect(screen.getByTestId("notice-banners").className).toContain(
+      "grid-cols-3",
+    );
+    expect(container.querySelector(".overflow-x-auto")).toBeNull();
+    expect(screen.getByTestId("info-box-error").className).toContain("w-full");
   });
 
-  it("leaves opening the full list to the header, with no button of its own", () => {
+  it("leaves clearing the banners and opening the full list to the header", () => {
     installSource([{ id: "a", title: "Only notice", body: "" }]);
 
     render(<NoticeBanners />);
 
-    expect(screen.getByTestId("notice-controls")).toBeInTheDocument();
-    expect(screen.queryByTestId("notice-open-inbox")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByLabelText("Hide notice")).toBeInTheDocument();
   });
 
   it("renders a brief body inline as Markdown", () => {
@@ -176,7 +164,7 @@ describe("<NoticeBanners />", () => {
 
     expect(body).toHaveClass("overflow-y-auto");
     expect(body).not.toContainElement(action);
-    expect(screen.getByTestId("notice-scroller")).not.toHaveClass(
+    expect(screen.getByTestId("notice-banners")).not.toHaveClass(
       "overflow-y-auto",
     );
   });
@@ -231,7 +219,6 @@ describe("<NoticeBanners />", () => {
 
     expect(screen.getAllByLabelText("Hide notice")).toHaveLength(2);
     expect(screen.queryByLabelText("Dismiss")).not.toBeInTheDocument();
-    expect(screen.getByTestId("notice-hide-banners")).toBeInTheDocument();
   });
 
   it("takes one notice off the banners while leaving the rest in place", () => {
@@ -266,37 +253,13 @@ describe("<NoticeBanners />", () => {
     expect(hidden).not.toContain("session-only");
   });
 
-  it("clears every banner in one go rather than promoting the next notice", () => {
-    installSource([
-      {
-        id: "a",
-        title: "First",
-        body: "",
-        variant: "error",
-        dismissible: true,
-      },
-      {
-        id: "b",
-        title: "Second",
-        body: "",
-        variant: "warning",
-        dismissible: true,
-      },
-    ]);
-
-    render(<NoticeBanners />);
-    fireEvent.click(screen.getByTestId("notice-hide-banners"));
-
-    expect(screen.queryByTestId("notice-banners")).not.toBeInTheDocument();
-  });
-
   it("keeps a hidden dismissible notice off the banners across a remount", () => {
     installSource([
       { id: "a", title: "Scheduled maintenance", body: "", dismissible: true },
     ]);
 
     render(<NoticeBanners />);
-    fireEvent.click(screen.getByTestId("notice-hide-banners"));
+    fireEvent.click(screen.getByLabelText("Hide notice"));
 
     cleanup();
     const { container } = render(<NoticeBanners />);
@@ -308,23 +271,10 @@ describe("<NoticeBanners />", () => {
     installSource([{ id: "a", title: "Mandatory notice", body: "" }]);
 
     render(<NoticeBanners />);
-    fireEvent.click(screen.getByTestId("notice-hide-banners"));
+    fireEvent.click(screen.getByLabelText("Hide notice"));
 
     expect(screen.queryByTestId("notice-banners")).not.toBeInTheDocument();
     expect(localStorage.getItem("hidden-notices") ?? "").not.toContain("a");
-  });
-
-  it("publishes a content offset while a notice is promoted", () => {
-    installSource([
-      { id: "a", title: "Scheduled maintenance", body: "", dismissible: true },
-    ]);
-
-    render(<NoticeBanners />);
-    expect(contentOffset()).not.toBe("");
-
-    fireEvent.click(screen.getByTestId("notice-hide-banners"));
-
-    expect(contentOffset()).toBe("");
   });
 
   it("picks up a source installed after mount", () => {

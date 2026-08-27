@@ -1,9 +1,9 @@
 # Host notice source
 
-Tangle UI renders notices — as banners at the top of the page, and in the notice
-inbox — from a source the **host page** installs on `window`. There is no default
-source: with nothing installed, the UI shows nothing and behaves exactly as it
-did before this contract existed.
+Tangle UI renders notices — as banners on the dashboard home, and in the notice
+inbox reachable from every page — from a source the **host page** installs on
+`window`. There is no default source: with nothing installed, the UI shows
+nothing and behaves exactly as it did before this contract existed.
 
 ## Installing a source
 
