@@ -1,51 +1,51 @@
 import { isRecord } from "@/utils/typeGuards";
 import { toAbsoluteHttpUrl } from "@/utils/URL";
 
-export interface TangleBannerAction {
+export interface TangleNoticeAction {
   url: string;
   text: string;
 }
 
-export interface TangleBanner {
+export interface TangleNotice {
   id: string;
   title: string;
   body: string;
   variant: "info" | "warning" | "success" | "error";
   dismissible?: boolean;
-  action?: TangleBannerAction;
+  action?: TangleNoticeAction;
 }
 
-export interface TangleBannerSource {
+export interface TangleNoticeSource {
   version: 1;
-  getSnapshot: () => TangleBanner[];
+  getSnapshot: () => TangleNotice[];
   subscribe: (listener: () => void) => () => void;
   refresh?: () => void;
 }
 
 declare global {
   interface Window {
-    __TANGLE_BANNER_SOURCE__?: unknown;
+    __TANGLE_NOTICE_SOURCE__?: unknown;
   }
 }
 
-export const BANNER_SOURCE_EVENT = "tangle:banner-source";
+export const NOTICE_SOURCE_EVENT = "tangle:notice-source";
 
 const SUPPORTED_SOURCE_VERSION = 1;
-const VARIANTS: TangleBanner["variant"][] = [
+const VARIANTS: TangleNotice["variant"][] = [
   "info",
   "warning",
   "success",
   "error",
 ];
 const DEFAULT_ACTION_TEXT = "Learn more";
-const MAX_BANNERS = 20;
+const MAX_NOTICES = 20;
 
-const EMPTY_BANNERS: readonly TangleBanner[] = Object.freeze([]);
+const EMPTY_NOTICES: readonly TangleNotice[] = Object.freeze([]);
 
 let lastSnapshotSignature: string | null = null;
-let lastValidatedSnapshot: readonly TangleBanner[] = EMPTY_BANNERS;
+let lastValidatedSnapshot: readonly TangleNotice[] = EMPTY_NOTICES;
 
-function isBannerSource(value: unknown): value is TangleBannerSource {
+function isNoticeSource(value: unknown): value is TangleNoticeSource {
   return (
     isRecord(value) &&
     value.version === SUPPORTED_SOURCE_VERSION &&
@@ -54,10 +54,10 @@ function isBannerSource(value: unknown): value is TangleBannerSource {
   );
 }
 
-function getBannerSource(): TangleBannerSource | null {
+function getNoticeSource(): TangleNoticeSource | null {
   if (typeof window === "undefined") return null;
-  const source = window.__TANGLE_BANNER_SOURCE__;
-  return isBannerSource(source) ? source : null;
+  const source = window.__TANGLE_NOTICE_SOURCE__;
+  return isNoticeSource(source) ? source : null;
 }
 
 function readTrimmedString(value: unknown): string {
@@ -69,11 +69,11 @@ function readId(value: unknown): string {
   return readTrimmedString(value);
 }
 
-function readVariant(value: unknown): TangleBanner["variant"] {
+function readVariant(value: unknown): TangleNotice["variant"] {
   return VARIANTS.find((variant) => variant === value) ?? "info";
 }
 
-function readAction(value: unknown): TangleBannerAction | null {
+function readAction(value: unknown): TangleNoticeAction | null {
   if (!isRecord(value)) return null;
 
   const url = toAbsoluteHttpUrl(value.url);
@@ -82,7 +82,7 @@ function readAction(value: unknown): TangleBannerAction | null {
   return { url, text: readTrimmedString(value.text) || DEFAULT_ACTION_TEXT };
 }
 
-function readBanner(value: unknown): TangleBanner | null {
+function readNotice(value: unknown): TangleNotice | null {
   if (!isRecord(value)) return null;
 
   const id = readId(value.id);
@@ -105,7 +105,7 @@ function readBanner(value: unknown): TangleBanner | null {
 }
 
 function readRawSnapshot(): unknown {
-  const source = getBannerSource();
+  const source = getNoticeSource();
   if (!source) return null;
   try {
     return source.getSnapshot();
@@ -114,13 +114,13 @@ function readRawSnapshot(): unknown {
   }
 }
 
-export function getBannersSnapshot(): readonly TangleBanner[] {
+export function getNoticesSnapshot(): readonly TangleNotice[] {
   const raw = readRawSnapshot();
-  if (!Array.isArray(raw)) return EMPTY_BANNERS;
+  if (!Array.isArray(raw)) return EMPTY_NOTICES;
 
-  const byId = new Map<string, TangleBanner>();
-  for (const banner of raw.slice(0, MAX_BANNERS).map(readBanner)) {
-    if (banner && !byId.has(banner.id)) byId.set(banner.id, banner);
+  const byId = new Map<string, TangleNotice>();
+  for (const notice of raw.slice(0, MAX_NOTICES).map(readNotice)) {
+    if (notice && !byId.has(notice.id)) byId.set(notice.id, notice);
   }
   const validated = [...byId.values()];
 
@@ -129,13 +129,13 @@ export function getBannersSnapshot(): readonly TangleBanner[] {
 
   lastSnapshotSignature = signature;
   lastValidatedSnapshot =
-    validated.length === 0 ? EMPTY_BANNERS : Object.freeze(validated);
+    validated.length === 0 ? EMPTY_NOTICES : Object.freeze(validated);
 
   return lastValidatedSnapshot;
 }
 
 function subscribeToSource(listener: () => void): (() => void) | null {
-  const source = getBannerSource();
+  const source = getNoticeSource();
   if (!source) return null;
   try {
     const unsubscribe = source.subscribe(listener);
@@ -145,7 +145,7 @@ function subscribeToSource(listener: () => void): (() => void) | null {
   }
 }
 
-export function subscribeToBanners(listener: () => void): () => void {
+export function subscribeToNotices(listener: () => void): () => void {
   if (typeof window === "undefined") return () => {};
 
   let unsubscribe = subscribeToSource(listener);
@@ -156,16 +156,16 @@ export function subscribeToBanners(listener: () => void): () => void {
     listener();
   };
 
-  window.addEventListener(BANNER_SOURCE_EVENT, rebindToSource);
+  window.addEventListener(NOTICE_SOURCE_EVENT, rebindToSource);
 
   return () => {
     unsubscribe?.();
-    window.removeEventListener(BANNER_SOURCE_EVENT, rebindToSource);
+    window.removeEventListener(NOTICE_SOURCE_EVENT, rebindToSource);
   };
 }
 
-export function refreshBanners(): void {
-  const source = getBannerSource();
+export function refreshNotices(): void {
+  const source = getNoticeSource();
   if (typeof source?.refresh !== "function") return;
   try {
     source.refresh();
@@ -174,7 +174,7 @@ export function refreshBanners(): void {
   }
 }
 
-export function resetBannerCacheForTests(): void {
+export function resetNoticeCacheForTests(): void {
   lastSnapshotSignature = null;
-  lastValidatedSnapshot = EMPTY_BANNERS;
+  lastValidatedSnapshot = EMPTY_NOTICES;
 }

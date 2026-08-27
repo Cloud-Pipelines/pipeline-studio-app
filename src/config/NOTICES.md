@@ -1,29 +1,30 @@
-# Host banner source
+# Host notice source
 
-Tangle UI renders banners (and the notice inbox) from a source the **host page**
-installs on `window`. There is no default source: with nothing installed, the UI
-shows nothing and behaves exactly as it did before this contract existed.
+Tangle UI renders notices — as banners at the top of the page, and in the notice
+inbox — from a source the **host page** installs on `window`. There is no default
+source: with nothing installed, the UI shows nothing and behaves exactly as it
+did before this contract existed.
 
 ## Installing a source
 
 ```js
-window.__TANGLE_BANNER_SOURCE__ = {
+window.__TANGLE_NOTICE_SOURCE__ = {
   version: 1,
-  getSnapshot: () => banners,
+  getSnapshot: () => notices,
   subscribe: (listener) => {
     listeners.add(listener);
     return () => listeners.delete(listener);
   },
-  refresh: () => fetchBanners(),
+  refresh: () => fetchNotices(),
 };
 
-window.dispatchEvent(new CustomEvent("tangle:banner-source"));
+window.dispatchEvent(new CustomEvent("tangle:notice-source"));
 ```
 
 **The event is required.** The UI subscribes as soon as it mounts, which may be
-before the source exists. `tangle:banner-source` is what tells it to (re)bind, so
-a host that assigns the global without dispatching gets a permanently empty
-strip. Dispatching again after replacing the global is safe and rebinds.
+before the source exists. `tangle:notice-source` is what tells it to (re)bind, so
+a host that assigns the global without dispatching never shows a notice.
+Dispatching again after replacing the global is safe and rebinds.
 
 | Member        | Required | Notes                                                                |
 | ------------- | -------- | -------------------------------------------------------------------- |
@@ -32,7 +33,7 @@ strip. Dispatching again after replacing the global is safe and rebinds.
 | `subscribe`   | yes      | Returns an unsubscribe function. A non-function return is tolerated. |
 | `refresh`     | no       | Called when the tab regains visibility.                              |
 
-## Banner shape
+## Notice shape
 
 ```ts
 {
@@ -48,9 +49,9 @@ strip. Dispatching again after replacing the global is safe and rebinds.
 Everything is validated at the boundary and the UI never throws on bad input.
 Entries that fail validation are dropped silently, as are actions whose `url` is
 not absolute `http(s)`. Duplicate ids collapse to the first occurrence, and at
-most 20 banners are read per snapshot.
+most 20 notices are read per snapshot.
 
 `getSnapshot` may return a freshly built array on every call — the UI compares
 content and hands subscribers a stable reference, so this will not loop. The
-returned banners are frozen; mutating them is not a supported way to update the
+returned notices are frozen; mutating them is not a supported way to update the
 UI. Publish new data and notify instead.

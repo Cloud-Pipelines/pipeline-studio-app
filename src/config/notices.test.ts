@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { installRawSource } from "@/config/bannerTestSource";
+import { installRawSource } from "@/config/noticeTestSource";
 
 import {
-  getBannersSnapshot,
-  refreshBanners,
-  resetBannerCacheForTests,
-  subscribeToBanners,
-} from "./banners";
+  getNoticesSnapshot,
+  refreshNotices,
+  resetNoticeCacheForTests,
+  subscribeToNotices,
+} from "./notices";
 
 function staticSource(getSnapshot: () => unknown, refresh?: () => void) {
   return {
@@ -18,16 +18,16 @@ function staticSource(getSnapshot: () => unknown, refresh?: () => void) {
   };
 }
 
-describe("banners", () => {
+describe("notices", () => {
   afterEach(() => {
-    delete window.__TANGLE_BANNER_SOURCE__;
-    resetBannerCacheForTests();
+    delete window.__TANGLE_NOTICE_SOURCE__;
+    resetNoticeCacheForTests();
   });
 
-  describe("getBannersSnapshot", () => {
+  describe("getNoticesSnapshot", () => {
     it("is empty and reference-stable with no source installed", () => {
-      expect(getBannersSnapshot()).toEqual([]);
-      expect(getBannersSnapshot()).toBe(getBannersSnapshot());
+      expect(getNoticesSnapshot()).toEqual([]);
+      expect(getNoticesSnapshot()).toBe(getNoticesSnapshot());
     });
 
     it("ignores a source declaring an unsupported major version", () => {
@@ -37,7 +37,7 @@ describe("banners", () => {
         subscribe: () => () => {},
       });
 
-      expect(getBannersSnapshot()).toEqual([]);
+      expect(getNoticesSnapshot()).toEqual([]);
     });
 
     it("ignores a malformed source", () => {
@@ -46,13 +46,13 @@ describe("banners", () => {
         getSnapshot: [],
         subscribe: () => () => {},
       });
-      expect(getBannersSnapshot()).toEqual([]);
+      expect(getNoticesSnapshot()).toEqual([]);
 
       installRawSource({ version: 1, getSnapshot: () => [] });
-      expect(getBannersSnapshot()).toEqual([]);
+      expect(getNoticesSnapshot()).toEqual([]);
 
       installRawSource("not a source");
-      expect(getBannersSnapshot()).toEqual([]);
+      expect(getNoticesSnapshot()).toEqual([]);
     });
 
     it("survives a source whose getSnapshot throws", () => {
@@ -62,39 +62,39 @@ describe("banners", () => {
         }),
       );
 
-      expect(getBannersSnapshot()).toEqual([]);
+      expect(getNoticesSnapshot()).toEqual([]);
     });
 
     it("returns the same reference until the content changes", () => {
       let published: unknown = [{ id: "a", title: "First", body: "" }];
       installRawSource(staticSource(() => published));
 
-      const first = getBannersSnapshot();
-      expect(first).toBe(getBannersSnapshot());
+      const first = getNoticesSnapshot();
+      expect(first).toBe(getNoticesSnapshot());
       expect(first).toHaveLength(1);
 
       published = [{ id: "b", title: "Second", body: "" }];
-      const second = getBannersSnapshot();
+      const second = getNoticesSnapshot();
 
       expect(second).not.toBe(first);
       expect(second[0]?.id).toBe("b");
     });
 
     it("returns the same reference to a host that rebuilds its array per read", () => {
-      const banners = [{ id: "a", title: "First", body: "" }];
+      const notices = [{ id: "a", title: "First", body: "" }];
       installRawSource(
-        staticSource(() => banners.map((banner) => ({ ...banner }))),
+        staticSource(() => notices.map((notice) => ({ ...notice }))),
       );
 
-      const first = getBannersSnapshot();
+      const first = getNoticesSnapshot();
 
-      expect(first).toBe(getBannersSnapshot());
+      expect(first).toBe(getNoticesSnapshot());
       expect(first).toHaveLength(1);
     });
 
     it("ignores a non-array snapshot", () => {
-      installRawSource(staticSource(() => ({ banners: [] })));
-      expect(getBannersSnapshot()).toEqual([]);
+      installRawSource(staticSource(() => ({ notices: [] })));
+      expect(getNoticesSnapshot()).toEqual([]);
     });
 
     it("coerces an unrecognised variant to info", () => {
@@ -104,7 +104,7 @@ describe("banners", () => {
         ]),
       );
 
-      expect(getBannersSnapshot()[0]?.variant).toBe("info");
+      expect(getNoticesSnapshot()[0]?.variant).toBe("info");
     });
 
     it("keeps the four known variants", () => {
@@ -117,7 +117,7 @@ describe("banners", () => {
         ]),
       );
 
-      expect(getBannersSnapshot().map((banner) => banner.variant)).toEqual([
+      expect(getNoticesSnapshot().map((notice) => notice.variant)).toEqual([
         "info",
         "warning",
         "success",
@@ -135,7 +135,7 @@ describe("banners", () => {
         ]),
       );
 
-      expect(getBannersSnapshot().map((banner) => banner.id)).toEqual(["kept"]);
+      expect(getNoticesSnapshot().map((notice) => notice.id)).toEqual(["kept"]);
     });
 
     it("drops entries with neither a title nor a non-blank body", () => {
@@ -147,7 +147,7 @@ describe("banners", () => {
         ]),
       );
 
-      expect(getBannersSnapshot().map((banner) => banner.id)).toEqual([
+      expect(getNoticesSnapshot().map((notice) => notice.id)).toEqual([
         "b",
         "c",
       ]);
@@ -177,7 +177,7 @@ describe("banners", () => {
         ]),
       );
 
-      const [scriptUrl, relativeUrl, absoluteUrl] = getBannersSnapshot();
+      const [scriptUrl, relativeUrl, absoluteUrl] = getNoticesSnapshot();
 
       expect(scriptUrl?.action).toBeUndefined();
       expect(relativeUrl?.action).toBeUndefined();
@@ -199,10 +199,10 @@ describe("banners", () => {
         ]),
       );
 
-      expect(getBannersSnapshot()[0]?.action?.text).toBe("Learn more");
+      expect(getNoticesSnapshot()[0]?.action?.text).toBe("Learn more");
     });
 
-    it("only marks a banner dismissible when the host says so explicitly", () => {
+    it("only marks a notice dismissible when the host says so explicitly", () => {
       installRawSource(
         staticSource(() => [
           { id: "a", title: "A", body: "", dismissible: true },
@@ -211,7 +211,7 @@ describe("banners", () => {
         ]),
       );
 
-      expect(getBannersSnapshot().map((banner) => banner.dismissible)).toEqual([
+      expect(getNoticesSnapshot().map((notice) => notice.dismissible)).toEqual([
         true,
         undefined,
         undefined,
@@ -223,7 +223,7 @@ describe("banners", () => {
         staticSource(() => [{ id: 7, title: "Numeric id", body: "" }]),
       );
 
-      expect(getBannersSnapshot()[0]?.id).toBe("7");
+      expect(getNoticesSnapshot()[0]?.id).toBe("7");
     });
 
     it("keeps the first of two entries sharing an id", () => {
@@ -234,7 +234,7 @@ describe("banners", () => {
         ]),
       );
 
-      expect(getBannersSnapshot().map((banner) => banner.title)).toEqual([
+      expect(getNoticesSnapshot().map((notice) => notice.title)).toEqual([
         "First wins",
       ]);
     });
@@ -243,30 +243,30 @@ describe("banners", () => {
       installRawSource(
         staticSource(() =>
           Array.from({ length: 500 }, (_, index) => ({
-            id: `banner-${index}`,
+            id: `notice-${index}`,
             title: `Notice ${index}`,
             body: "",
           })),
         ),
       );
 
-      expect(getBannersSnapshot()).toHaveLength(20);
+      expect(getNoticesSnapshot()).toHaveLength(20);
     });
 
-    it("freezes each banner, not just the array", () => {
+    it("freezes each notice, not just the array", () => {
       installRawSource(
         staticSource(() => [{ id: "a", title: "Original", body: "" }]),
       );
 
-      const snapshot = getBannersSnapshot();
-      const banner = snapshot[0];
+      const snapshot = getNoticesSnapshot();
+      const notice = snapshot[0];
 
       expect(Object.isFrozen(snapshot)).toBe(true);
-      expect(Object.isFrozen(banner)).toBe(true);
+      expect(Object.isFrozen(notice)).toBe(true);
       expect(() => {
-        banner.title = "Mutated";
+        notice.title = "Mutated";
       }).toThrow();
-      expect(getBannersSnapshot()[0]?.title).toBe("Original");
+      expect(getNoticesSnapshot()[0]?.title).toBe("Original");
     });
 
     it("preserves body whitespace, which is meaningful in Markdown", () => {
@@ -276,11 +276,11 @@ describe("banners", () => {
         ]),
       );
 
-      expect(getBannersSnapshot()[0]?.body).toBe("  - indented list item");
+      expect(getNoticesSnapshot()[0]?.body).toBe("  - indented list item");
     });
   });
 
-  describe("subscribeToBanners", () => {
+  describe("subscribeToNotices", () => {
     it("forwards host notifications and unsubscribes cleanly", () => {
       const hostListeners = new Set<() => void>();
       installRawSource({
@@ -293,7 +293,7 @@ describe("banners", () => {
       });
 
       const listener = vi.fn();
-      const unsubscribe = subscribeToBanners(listener);
+      const unsubscribe = subscribeToNotices(listener);
 
       hostListeners.forEach((hostListener) => hostListener());
       expect(listener).toHaveBeenCalledTimes(1);
@@ -304,7 +304,7 @@ describe("banners", () => {
 
     it("binds to a source installed after the subscription", () => {
       const listener = vi.fn();
-      const unsubscribe = subscribeToBanners(listener);
+      const unsubscribe = subscribeToNotices(listener);
 
       expect(listener).not.toHaveBeenCalled();
 
@@ -321,23 +321,23 @@ describe("banners", () => {
         subscribe: () => undefined,
       });
 
-      const unsubscribe = subscribeToBanners(vi.fn());
+      const unsubscribe = subscribeToNotices(vi.fn());
       expect(() => unsubscribe()).not.toThrow();
     });
   });
 
-  describe("refreshBanners", () => {
+  describe("refreshNotices", () => {
     it("asks the host to re-fetch when it supports it", () => {
       const refresh = vi.fn();
       installRawSource(staticSource(() => [], refresh));
 
-      refreshBanners();
+      refreshNotices();
       expect(refresh).toHaveBeenCalledTimes(1);
     });
 
     it("is a no-op when refresh is absent or throws", () => {
       installRawSource(staticSource(() => []));
-      expect(() => refreshBanners()).not.toThrow();
+      expect(() => refreshNotices()).not.toThrow();
 
       installRawSource(
         staticSource(
@@ -347,7 +347,7 @@ describe("banners", () => {
           },
         ),
       );
-      expect(() => refreshBanners()).not.toThrow();
+      expect(() => refreshNotices()).not.toThrow();
     });
   });
 });
