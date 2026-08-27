@@ -2,28 +2,28 @@ import { InfoBox } from "@/components/shared/InfoBox";
 import { UntrustedMarkdown } from "@/components/shared/Markdown/Markdown";
 import { BlockStack } from "@/components/ui/layout";
 import { Link } from "@/components/ui/link";
-import type { TangleBanner } from "@/config/banners";
+import type { TangleNotice } from "@/config/notices";
 import { cn } from "@/lib/utils";
 
-interface BannerCardProps {
-  banner: TangleBanner;
+interface NoticeCardProps {
+  notice: TangleNotice;
   clampBody?: boolean;
   onHide?: () => void;
   onDismiss?: () => void;
 }
 
-export const BannerCard = ({
-  banner,
+export const NoticeCard = ({
+  notice,
   clampBody = false,
   onHide,
   onDismiss,
-}: BannerCardProps) => {
-  const hasBody = banner.body.trim().length > 0;
+}: NoticeCardProps) => {
+  const hasBody = notice.body.trim().length > 0;
 
   return (
     <InfoBox
-      title={banner.title}
-      variant={banner.variant}
+      title={notice.title}
+      variant={notice.variant}
       width="full"
       onDismiss={onHide ?? onDismiss}
       dismissIcon={onHide ? "EyeOff" : undefined}
@@ -36,24 +36,24 @@ export const BannerCard = ({
               "text-pretty",
               clampBody && "max-h-32 overflow-y-auto",
             )}
-            data-testid="banner-body"
+            data-testid="notice-body"
           >
-            <UntrustedMarkdown body={banner.body} />
+            <UntrustedMarkdown body={notice.body} />
           </div>
         )}
-        {banner.action && (
+        {notice.action && (
           <Link
-            href={banner.action.url}
+            href={notice.action.url}
             size="sm"
             variant="primary"
             external
             aria-label={
-              banner.title
-                ? `${banner.action.text}: ${banner.title}`
-                : banner.action.text
+              notice.title
+                ? `${notice.action.text}: ${notice.title}`
+                : notice.action.text
             }
           >
-            {banner.action.text}
+            {notice.action.text}
           </Link>
         )}
       </BlockStack>

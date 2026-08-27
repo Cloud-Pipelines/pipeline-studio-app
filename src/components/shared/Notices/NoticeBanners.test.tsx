@@ -7,11 +7,11 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { installRawSource, installSource } from "@/config/bannerTestSource";
-import { resetBannerStateForTests } from "@/hooks/useBannerInbox";
+import { installRawSource, installSource } from "@/config/noticeTestSource";
+import { resetNoticeStateForTests } from "@/hooks/useNoticeInbox";
 import { CONTENT_OFFSET_VAR } from "@/utils/layout";
 
-import { BannerRegion } from "./BannerRegion";
+import { NoticeBanners } from "./NoticeBanners";
 
 class ResizeObserverMock {
   observe() {}
@@ -25,23 +25,23 @@ function contentOffset() {
   return document.documentElement.style.getPropertyValue(CONTENT_OFFSET_VAR);
 }
 
-describe("<BannerRegion />", () => {
+describe("<NoticeBanners />", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
   afterEach(() => {
     cleanup();
-    resetBannerStateForTests();
-    delete window.__TANGLE_BANNER_SOURCE__;
+    resetNoticeStateForTests();
+    delete window.__TANGLE_NOTICE_SOURCE__;
     document.documentElement.style.removeProperty(CONTENT_OFFSET_VAR);
   });
 
   it("renders no DOM node when no source is installed", () => {
-    const { container } = render(<BannerRegion />);
+    const { container } = render(<NoticeBanners />);
 
     expect(container).toBeEmptyDOMElement();
-    expect(screen.queryByTestId("banner-region")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("notice-banners")).not.toBeInTheDocument();
   });
 
   it("renders no DOM node when the source declares an unsupported version", () => {
@@ -51,25 +51,25 @@ describe("<BannerRegion />", () => {
       subscribe: () => () => {},
     });
 
-    const { container } = render(<BannerRegion />);
+    const { container } = render(<NoticeBanners />);
 
     expect(container).toBeEmptyDOMElement();
   });
 
   it("renders a source that rebuilds its array on every read", () => {
-    const banners = [{ id: "a", title: "Scheduled maintenance", body: "" }];
+    const notices = [{ id: "a", title: "Scheduled maintenance", body: "" }];
     installRawSource({
       version: 1,
-      getSnapshot: () => banners.map((banner) => ({ ...banner })),
+      getSnapshot: () => notices.map((notice) => ({ ...notice })),
       subscribe: () => () => {},
     });
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
     expect(screen.getByText("Scheduled maintenance")).toBeInTheDocument();
   });
 
-  it("promotes every showing banner rather than capping the strip", () => {
+  it("shows every notice as a banner rather than capping the row", () => {
     installSource(
       ["a", "b", "c", "d", "e", "f"].map((id) => ({
         id,
@@ -79,9 +79,9 @@ describe("<BannerRegion />", () => {
       })),
     );
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
-    expect(screen.getAllByTestId("banner-card")).toHaveLength(6);
+    expect(screen.getAllByTestId("notice-card")).toHaveLength(6);
     expect(screen.getByText("Notice f")).toBeInTheDocument();
   });
 
@@ -93,7 +93,7 @@ describe("<BannerRegion />", () => {
       { id: "d", title: "Heads up", body: "", variant: "warning" },
     ]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
     expect(
       screen.getAllByTestId("info-box-title").map((el) => el.textContent),
@@ -106,20 +106,20 @@ describe("<BannerRegion />", () => {
       { id: "b", title: "Two", body: "", variant: "warning" },
     ]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
-    const scroller = screen.getByTestId("banner-scroller");
+    const scroller = screen.getByTestId("notice-scroller");
     expect(scroller).toHaveAttribute("tabindex", "0");
-    expect(scroller).toContainElement(screen.getAllByTestId("banner-card")[1]);
+    expect(scroller).toContainElement(screen.getAllByTestId("notice-card")[1]);
   });
 
   it("leaves opening the full list to the header, with no button of its own", () => {
     installSource([{ id: "a", title: "Only notice", body: "" }]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
-    expect(screen.getByTestId("banner-controls")).toBeInTheDocument();
-    expect(screen.queryByTestId("banner-open-inbox")).not.toBeInTheDocument();
+    expect(screen.getByTestId("notice-controls")).toBeInTheDocument();
+    expect(screen.queryByTestId("notice-open-inbox")).not.toBeInTheDocument();
   });
 
   it("renders a brief body inline as Markdown", () => {
@@ -131,15 +131,15 @@ describe("<BannerRegion />", () => {
       },
     ]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
     expect(screen.getByText("09:00-11:00 UTC").tagName).toBe("STRONG");
   });
 
-  it("renders a body-only banner without reserving room for a title", () => {
+  it("renders a body-only notice without reserving room for a title", () => {
     installSource([{ id: "a", title: "", body: "Submissions are paused." }]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
     expect(screen.getByText("Submissions are paused.")).toBeInTheDocument();
     expect(screen.queryByTestId("info-box-title")).not.toBeInTheDocument();
@@ -154,7 +154,7 @@ describe("<BannerRegion />", () => {
       },
     ]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
     expect(screen.getByText("Line one")).toBeInTheDocument();
   });
@@ -169,14 +169,14 @@ describe("<BannerRegion />", () => {
       },
     ]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
-    const body = screen.getByTestId("banner-body");
+    const body = screen.getByTestId("notice-body");
     const action = screen.getByRole("link");
 
     expect(body).toHaveClass("overflow-y-auto");
     expect(body).not.toContainElement(action);
-    expect(screen.getByTestId("banner-scroller")).not.toHaveClass(
+    expect(screen.getByTestId("notice-scroller")).not.toHaveClass(
       "overflow-y-auto",
     );
   });
@@ -186,17 +186,17 @@ describe("<BannerRegion />", () => {
       {
         id: "a",
         title: "Notice",
-        body: "<script>window.__bannerXss = true;</script><b>bold</b>",
+        body: "<script>window.__noticeXss = true;</script><b>bold</b>",
       },
     ]);
 
-    const { container } = render(<BannerRegion />);
+    const { container } = render(<NoticeBanners />);
 
     expect(container.querySelector("script")).toBeNull();
     expect(document.querySelector("script")).toBeNull();
     expect(screen.queryByText("bold")).not.toBeInTheDocument();
     expect(
-      (window as unknown as Record<string, unknown>).__bannerXss,
+      (window as unknown as Record<string, unknown>).__noticeXss,
     ).toBeUndefined();
   });
 
@@ -210,7 +210,7 @@ describe("<BannerRegion />", () => {
       },
     ]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
     const link = screen.getByRole("link", {
       name: "Read the notes: Scheduled maintenance",
@@ -221,26 +221,26 @@ describe("<BannerRegion />", () => {
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
 
-  it("offers to hide any banner from the strip, but never to retire one", () => {
+  it("offers to hide any notice from the banners, but never to retire one", () => {
     installSource([
       { id: "a", title: "Scheduled maintenance", body: "", dismissible: true },
       { id: "b", title: "Mandatory notice", body: "" },
     ]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
     expect(screen.getAllByLabelText("Hide notice")).toHaveLength(2);
     expect(screen.queryByLabelText("Dismiss")).not.toBeInTheDocument();
-    expect(screen.getByTestId("banner-hide-strip")).toBeInTheDocument();
+    expect(screen.getByTestId("notice-hide-banners")).toBeInTheDocument();
   });
 
-  it("takes one banner off the strip while leaving the rest promoted", () => {
+  it("takes one notice off the banners while leaving the rest in place", () => {
     installSource([
       { id: "a", title: "First", body: "", variant: "error" },
       { id: "b", title: "Second", body: "", variant: "warning" },
     ]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
     fireEvent.click(screen.getAllByLabelText("Hide notice")[0]!);
 
     expect(
@@ -248,25 +248,25 @@ describe("<BannerRegion />", () => {
     ).toEqual(["Second"]);
   });
 
-  it("remembers a hidden banner only as long as the host allows", () => {
+  it("remembers a hidden notice only as long as the host allows", () => {
     installSource([
       { id: "persisted", title: "Optional", body: "", dismissible: true },
       { id: "session-only", title: "Mandatory", body: "" },
     ]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
     screen
       .getAllByLabelText("Hide notice")
       .forEach((button) => fireEvent.click(button));
 
-    expect(screen.queryByTestId("banner-region")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("notice-banners")).not.toBeInTheDocument();
 
-    const hidden = localStorage.getItem("hidden-banners") ?? "";
+    const hidden = localStorage.getItem("hidden-notices") ?? "";
     expect(hidden).toContain("persisted");
     expect(hidden).not.toContain("session-only");
   });
 
-  it("clears the whole strip in one go rather than promoting the next banner", () => {
+  it("clears every banner in one go rather than promoting the next notice", () => {
     installSource([
       {
         id: "a",
@@ -284,53 +284,53 @@ describe("<BannerRegion />", () => {
       },
     ]);
 
-    render(<BannerRegion />);
-    fireEvent.click(screen.getByTestId("banner-hide-strip"));
+    render(<NoticeBanners />);
+    fireEvent.click(screen.getByTestId("notice-hide-banners"));
 
-    expect(screen.queryByTestId("banner-region")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("notice-banners")).not.toBeInTheDocument();
   });
 
-  it("keeps a hidden dismissible banner off the strip across a remount", () => {
+  it("keeps a hidden dismissible notice off the banners across a remount", () => {
     installSource([
       { id: "a", title: "Scheduled maintenance", body: "", dismissible: true },
     ]);
 
-    render(<BannerRegion />);
-    fireEvent.click(screen.getByTestId("banner-hide-strip"));
+    render(<NoticeBanners />);
+    fireEvent.click(screen.getByTestId("notice-hide-banners"));
 
     cleanup();
-    const { container } = render(<BannerRegion />);
+    const { container } = render(<NoticeBanners />);
 
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("hides a non-dismissible banner without retiring it for good", () => {
+  it("hides a non-dismissible notice without retiring it for good", () => {
     installSource([{ id: "a", title: "Mandatory notice", body: "" }]);
 
-    render(<BannerRegion />);
-    fireEvent.click(screen.getByTestId("banner-hide-strip"));
+    render(<NoticeBanners />);
+    fireEvent.click(screen.getByTestId("notice-hide-banners"));
 
-    expect(screen.queryByTestId("banner-region")).not.toBeInTheDocument();
-    expect(localStorage.getItem("hidden-banners") ?? "").not.toContain("a");
+    expect(screen.queryByTestId("notice-banners")).not.toBeInTheDocument();
+    expect(localStorage.getItem("hidden-notices") ?? "").not.toContain("a");
   });
 
-  it("publishes a content offset while a banner is promoted", () => {
+  it("publishes a content offset while a notice is promoted", () => {
     installSource([
       { id: "a", title: "Scheduled maintenance", body: "", dismissible: true },
     ]);
 
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
     expect(contentOffset()).not.toBe("");
 
-    fireEvent.click(screen.getByTestId("banner-hide-strip"));
+    fireEvent.click(screen.getByTestId("notice-hide-banners"));
 
     expect(contentOffset()).toBe("");
   });
 
   it("picks up a source installed after mount", () => {
-    render(<BannerRegion />);
+    render(<NoticeBanners />);
 
-    expect(screen.queryByTestId("banner-region")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("notice-banners")).not.toBeInTheDocument();
 
     act(() => {
       installSource([{ id: "a", title: "Scheduled maintenance", body: "" }]);

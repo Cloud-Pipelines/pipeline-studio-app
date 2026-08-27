@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { installRawSource } from "@/config/noticeTestSource";
-import { resetBannerStateForTests } from "@/hooks/useBannerInbox";
+import { resetNoticeStateForTests } from "@/hooks/useNoticeInbox";
 
 import {
   getNoticesSnapshot,
@@ -21,7 +21,7 @@ function staticSource(getSnapshot: () => unknown, refresh?: () => void) {
 describe("notices", () => {
   afterEach(() => {
     delete window.__TANGLE_NOTICE_SOURCE__;
-    resetBannerStateForTests();
+    resetNoticeStateForTests();
   });
 
   describe("getNoticesSnapshot", () => {

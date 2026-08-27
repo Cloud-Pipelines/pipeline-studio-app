@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 
-import { BannerCard } from "@/components/shared/Banners/BannerCard";
+import { NoticeCard } from "@/components/shared/Notices/NoticeCard";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { InlineStack } from "@/components/ui/layout";
-import { useBannerInbox } from "@/hooks/useBannerInbox";
+import { useNoticeInbox } from "@/hooks/useNoticeInbox";
 import { TOP_NAV_HEIGHT } from "@/utils/constants";
 import { CONTENT_OFFSET_VAR } from "@/utils/layout";
 
-function useContentOffset(strip: HTMLElement | null) {
+function useContentOffset(bannerStrip: HTMLElement | null) {
   useEffect(() => {
     const root = document.documentElement;
 
-    if (!strip) {
+    if (!bannerStrip) {
       root.style.removeProperty(CONTENT_OFFSET_VAR);
       return;
     }
@@ -20,37 +20,37 @@ function useContentOffset(strip: HTMLElement | null) {
     const publishOffset = () => {
       root.style.setProperty(
         CONTENT_OFFSET_VAR,
-        `${TOP_NAV_HEIGHT + strip.offsetHeight}px`,
+        `${TOP_NAV_HEIGHT + bannerStrip.offsetHeight}px`,
       );
     };
 
     publishOffset();
     const observer = new ResizeObserver(publishOffset);
-    observer.observe(strip);
+    observer.observe(bannerStrip);
 
     return () => {
       observer.disconnect();
       root.style.removeProperty(CONTENT_OFFSET_VAR);
     };
-  }, [strip]);
+  }, [bannerStrip]);
 }
 
-export const BannerRegion = () => {
-  const { showing, hide, hideStrip } = useBannerInbox();
-  const [strip, setStrip] = useState<HTMLElement | null>(null);
+export const NoticeBanners = () => {
+  const { banners, hide, hideBanners } = useNoticeInbox();
+  const [bannerStrip, setBannerStrip] = useState<HTMLElement | null>(null);
 
-  useContentOffset(showing.length > 0 ? strip : null);
+  useContentOffset(banners.length > 0 ? bannerStrip : null);
 
-  if (showing.length === 0) return null;
+  if (banners.length === 0) return null;
 
   return (
     <InlineStack
-      ref={setStrip}
+      ref={setBannerStrip}
       gap="3"
       blockAlign="start"
       wrap="nowrap"
       className="border-b border-border px-3 py-3 md:px-4"
-      data-testid="banner-region"
+      data-testid="notice-banners"
     >
       <InlineStack
         tabIndex={0}
@@ -59,15 +59,15 @@ export const BannerRegion = () => {
         blockAlign="start"
         wrap="nowrap"
         className="grow min-w-0 overflow-x-auto overscroll-x-contain"
-        data-testid="banner-scroller"
+        data-testid="notice-scroller"
       >
-        {showing.map((banner) => (
+        {banners.map((notice) => (
           <div
-            key={banner.id}
+            key={notice.id}
             className="w-72 shrink-0 sm:w-80"
-            data-testid="banner-card"
+            data-testid="notice-card"
           >
-            <BannerCard banner={banner} clampBody onHide={() => hide(banner)} />
+            <NoticeCard notice={notice} clampBody onHide={() => hide(notice)} />
           </div>
         ))}
       </InlineStack>
@@ -76,13 +76,13 @@ export const BannerRegion = () => {
         blockAlign="center"
         wrap="nowrap"
         className="shrink-0"
-        data-testid="banner-controls"
+        data-testid="notice-controls"
       >
         <Button
           variant="ghost"
           size="xs"
-          onClick={hideStrip}
-          data-testid="banner-hide-strip"
+          onClick={hideBanners}
+          data-testid="notice-hide-banners"
         >
           <Icon name="EyeOff" size="sm" />
           Hide notices

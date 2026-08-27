@@ -1,11 +1,11 @@
 import { useEffect, useSyncExternalStore } from "react";
 
 import {
-  getBannersSnapshot,
-  refreshBanners,
-  subscribeToBanners,
-  type TangleBanner,
-} from "@/config/banners";
+  getNoticesSnapshot,
+  refreshNotices,
+  subscribeToNotices,
+  type TangleNotice,
+} from "@/config/notices";
 
 const MIN_REFRESH_INTERVAL_MS = 30_000;
 
@@ -17,7 +17,7 @@ function refreshIfStale() {
   if (now - lastRefreshAt < MIN_REFRESH_INTERVAL_MS) return;
 
   lastRefreshAt = now;
-  refreshBanners();
+  refreshNotices();
 }
 
 function startRefreshWatcher() {
@@ -30,15 +30,15 @@ function startRefreshWatcher() {
   });
 }
 
-export function resetBannerRefreshForTests(): void {
+export function resetNoticeRefreshForTests(): void {
   isRefreshWatcherStarted = false;
   lastRefreshAt = 0;
 }
 
-export function useBanners(): readonly TangleBanner[] {
-  const banners = useSyncExternalStore(subscribeToBanners, getBannersSnapshot);
+export function useNotices(): readonly TangleNotice[] {
+  const notices = useSyncExternalStore(subscribeToNotices, getNoticesSnapshot);
 
   useEffect(startRefreshWatcher, []);
 
-  return banners;
+  return notices;
 }

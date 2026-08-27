@@ -1,20 +1,20 @@
 import { useSyncExternalStore } from "react";
 
-import { resetBannerCacheForTests, type TangleBanner } from "@/config/banners";
-import { resetBannerRefreshForTests, useBanners } from "@/hooks/useBanners";
+import { resetNoticeCacheForTests, type TangleNotice } from "@/config/notices";
+import { resetNoticeRefreshForTests, useNotices } from "@/hooks/useNotices";
 import { getStorage } from "@/utils/typedStorage";
 
 const STORAGE_KEYS = [
-  "dismissed-banners",
-  "hidden-banners",
-  "read-banners",
+  "dismissed-notices",
+  "hidden-notices",
+  "read-notices",
 ] as const;
 
-type BannerInboxKey = (typeof STORAGE_KEYS)[number];
+type NoticeInboxKey = (typeof STORAGE_KEYS)[number];
 
-const storage = getStorage<BannerInboxKey, Record<BannerInboxKey, string[]>>();
+const storage = getStorage<NoticeInboxKey, Record<NoticeInboxKey, string[]>>();
 
-const PROMOTION_ORDER: Record<TangleBanner["variant"], number> = {
+const PROMOTION_ORDER: Record<TangleNotice["variant"], number> = {
   error: 0,
   warning: 1,
   success: 2,
@@ -55,7 +55,7 @@ function getRevision(): number {
   return revision;
 }
 
-function readIds(key: BannerInboxKey): string[] {
+function readIds(key: NoticeInboxKey): string[] {
   const stored = storage.getItem(key);
   return Array.isArray(stored) ? stored : [];
 }
@@ -77,79 +77,79 @@ function getInboxState(revision: number): InboxState {
   cachedState = {
     isOpen,
     dismissedIds: new Set([
-      ...readIds("dismissed-banners"),
+      ...readIds("dismissed-notices"),
       ...dismissedForThisSession,
     ]),
-    hiddenIds: new Set([...readIds("hidden-banners"), ...hiddenForThisSession]),
-    readIds: new Set(readIds("read-banners")),
+    hiddenIds: new Set([...readIds("hidden-notices"), ...hiddenForThisSession]),
+    readIds: new Set(readIds("read-notices")),
   };
 
   return cachedState;
 }
 
-function addIds(key: BannerInboxKey, ids: string[]) {
+function addIds(key: NoticeInboxKey, ids: string[]) {
   const stored = readIds(key);
   const merged = [...new Set([...stored, ...ids])];
   if (merged.length === stored.length) return;
   storage.setItem(key, merged);
 }
 
-function closeBannerInbox() {
+function closeNoticeInbox() {
   isOpen = false;
   publish();
 }
 
-function openBannerInbox(banners: readonly TangleBanner[]) {
+function openNoticeInbox(notices: readonly TangleNotice[]) {
   addIds(
-    "read-banners",
-    banners.map((banner) => banner.id),
+    "read-notices",
+    notices.map((notice) => notice.id),
   );
   isOpen = true;
   publish();
 }
 
-function markHidden(banner: TangleBanner) {
-  if (!banner.dismissible) {
-    hiddenForThisSession.add(banner.id);
+function markHidden(notice: TangleNotice) {
+  if (!notice.dismissible) {
+    hiddenForThisSession.add(notice.id);
     return;
   }
 
-  addIds("hidden-banners", [banner.id]);
-  if (!readIds("hidden-banners").includes(banner.id))
-    hiddenForThisSession.add(banner.id);
+  addIds("hidden-notices", [notice.id]);
+  if (!readIds("hidden-notices").includes(notice.id))
+    hiddenForThisSession.add(notice.id);
 }
 
-function hideBanner(banner: TangleBanner) {
-  markHidden(banner);
+function hideNotice(notice: TangleNotice) {
+  markHidden(notice);
   publish();
 }
 
-function hideStrip(banners: readonly TangleBanner[]) {
-  banners.forEach(markHidden);
+function hideAll(notices: readonly TangleNotice[]) {
+  notices.forEach(markHidden);
   publish();
 }
 
-function showStrip() {
+function showAll() {
   hiddenForThisSession.clear();
-  storage.setItem("hidden-banners", []);
+  storage.setItem("hidden-notices", []);
   publish();
 }
 
-function dismissBanner(banner: TangleBanner) {
-  if (banner.dismissible) {
-    addIds("dismissed-banners", [banner.id]);
-    if (!readIds("dismissed-banners").includes(banner.id))
-      dismissedForThisSession.add(banner.id);
+function dismissNotice(notice: TangleNotice) {
+  if (notice.dismissible) {
+    addIds("dismissed-notices", [notice.id]);
+    if (!readIds("dismissed-notices").includes(notice.id))
+      dismissedForThisSession.add(notice.id);
   } else {
-    dismissedForThisSession.add(banner.id);
+    dismissedForThisSession.add(notice.id);
   }
 
   publish();
 }
 
-export function resetBannerStateForTests(): void {
-  resetBannerCacheForTests();
-  resetBannerRefreshForTests();
+export function resetNoticeStateForTests(): void {
+  resetNoticeCacheForTests();
+  resetNoticeRefreshForTests();
   hiddenForThisSession.clear();
   dismissedForThisSession.clear();
   isOpen = false;
@@ -157,21 +157,21 @@ export function resetBannerStateForTests(): void {
   cachedRevision = -1;
 }
 
-export interface BannerInbox {
-  banners: readonly TangleBanner[];
-  showing: readonly TangleBanner[];
+export interface NoticeInbox {
+  notices: readonly TangleNotice[];
+  banners: readonly TangleNotice[];
   unreadCount: number;
-  hasHiddenBanners: boolean;
+  hasHiddenNotices: boolean;
   isOpen: boolean;
   setOpen: (open: boolean) => void;
-  hide: (banner: TangleBanner) => void;
-  hideStrip: () => void;
-  showStrip: () => void;
-  dismiss: (banner: TangleBanner) => void;
+  hide: (notice: TangleNotice) => void;
+  hideBanners: () => void;
+  showBanners: () => void;
+  dismiss: (notice: TangleNotice) => void;
 }
 
-export function useBannerInbox(): BannerInbox {
-  const banners = useBanners();
+export function useNoticeInbox(): NoticeInbox {
+  const notices = useNotices();
   const revision = useSyncExternalStore(subscribe, getRevision);
   const {
     isOpen,
@@ -180,22 +180,22 @@ export function useBannerInbox(): BannerInbox {
     readIds: readIdSet,
   } = getInboxState(revision);
 
-  const listed = banners
-    .filter((banner) => !dismissedIds.has(banner.id))
+  const listed = notices
+    .filter((notice) => !dismissedIds.has(notice.id))
     .sort((a, b) => PROMOTION_ORDER[a.variant] - PROMOTION_ORDER[b.variant]);
 
-  const showing = listed.filter((banner) => !hiddenIds.has(banner.id));
+  const banners = listed.filter((notice) => !hiddenIds.has(notice.id));
 
   return {
-    banners: listed,
-    showing,
-    unreadCount: listed.filter((banner) => !readIdSet.has(banner.id)).length,
-    hasHiddenBanners: showing.length < listed.length,
+    notices: listed,
+    banners,
+    unreadCount: listed.filter((notice) => !readIdSet.has(notice.id)).length,
+    hasHiddenNotices: banners.length < listed.length,
     isOpen,
-    setOpen: (open) => (open ? openBannerInbox(listed) : closeBannerInbox()),
-    hide: hideBanner,
-    hideStrip: () => hideStrip(listed),
-    showStrip,
-    dismiss: dismissBanner,
+    setOpen: (open) => (open ? openNoticeInbox(listed) : closeNoticeInbox()),
+    hide: hideNotice,
+    hideBanners: () => hideAll(listed),
+    showBanners: showAll,
+    dismiss: dismissNotice,
   };
 }
