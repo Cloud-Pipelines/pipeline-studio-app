@@ -28,7 +28,6 @@ export async function submitPipelineRun(
   options?: {
     taskArguments?: Record<string, ArgumentType>;
     authorizationToken?: string;
-    runNameOverride?: boolean;
     canonicalName?: string;
     onSuccess?: (data: PipelineRun) => void;
     onError?: (error: Error) => void;
@@ -75,16 +74,15 @@ export async function submitPipelineRun(
         .map(([k, v]) => [k, v as string]),
     );
 
-    const runNameOverride = options?.runNameOverride
-      ? processTemplate(getRunNameTemplate(transformedSpec) ?? "", {
-          componentRef: {
-            spec: transformedSpec,
-          },
-          arguments: stringArguments,
-        }) || undefined
-      : undefined;
+    const templatizedRunName =
+      processTemplate(getRunNameTemplate(transformedSpec) ?? "", {
+        componentRef: {
+          spec: transformedSpec,
+        },
+        arguments: stringArguments,
+      }) || undefined;
 
-    const taskAnnotations = runNameOverride
+    const taskAnnotations = templatizedRunName
       ? buildAnnotationsWithCanonicalName(pipelineName)
       : {};
 
@@ -96,7 +94,7 @@ export async function submitPipelineRun(
         componentRef: {
           spec: {
             ...transformedSpec,
-            name: runNameOverride ?? pipelineName,
+            name: templatizedRunName ?? pipelineName,
           } as ComponentSpecInput,
         },
         ...(payloadArguments ? { arguments: payloadArguments } : {}),
@@ -115,7 +113,7 @@ export async function submitPipelineRun(
         responseData,
         pipelineName,
         componentSpec.metadata?.annotations?.digest as string | undefined,
-        runNameOverride,
+        templatizedRunName,
       );
     }
     options?.onSuccess?.(responseData);

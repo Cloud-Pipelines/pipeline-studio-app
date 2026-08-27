@@ -43,7 +43,6 @@ interface TangleSubmitterProps {
 }
 
 function useSubmitPipeline() {
-  const runNameOverride = useFlagValue("templatized-pipeline-run-name");
   const { awaitAuthorization, isAuthorized } = useAwaitAuthorization();
   const queryClient = useQueryClient();
   const { getToken } = useAuthLocalStorage();
@@ -76,7 +75,6 @@ function useSubmitPipeline() {
         submitPipelineRun(componentSpec, backendUrl, {
           authorizationToken: authorizationToken.current,
           taskArguments,
-          runNameOverride,
           onSuccess: (data) => {
             resolve(data);
             onSuccess(data);

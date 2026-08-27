@@ -5,7 +5,6 @@ import { isAuthorizationRequired } from "@/components/shared/Authentication/help
 import { useAuthLocalStorage } from "@/components/shared/Authentication/useAuthLocalStorage";
 import { useAwaitAuthorization } from "@/components/shared/Authentication/useAwaitAuthorization";
 import { buildTaskSpecShape } from "@/components/shared/PipelineRunNameTemplate/types";
-import { useFlagValue } from "@/components/shared/Settings/useFlags";
 import useToastNotification from "@/hooks/useToastNotification";
 import { useBackend } from "@/providers/BackendProvider";
 import { useExecutionData } from "@/providers/ExecutionDataProvider";
@@ -25,7 +24,6 @@ export function useRerunPipelineRun(componentSpec?: ComponentSpec) {
   const navigate = useNavigate();
   const notify = useToastNotification();
   const { backendUrl } = useBackend();
-  const runNameOverride = useFlagValue("templatized-pipeline-run-name");
   const { awaitAuthorization, isAuthorized } = useAwaitAuthorization();
   const { getToken } = useAuthLocalStorage();
   const { rootDetails } = useExecutionData();
@@ -52,7 +50,6 @@ export function useRerunPipelineRun(componentSpec?: ComponentSpec) {
           canonicalName,
           taskArguments,
           authorizationToken,
-          runNameOverride,
           onSuccess: resolve,
           onError: reject,
         });

@@ -38,6 +38,7 @@ interface AnnotationTypeMap {
   "flex-nodes": FlexNodeData[];
   notes: string;
   tags: string[];
+  "run-name-template": string;
 }
 
 type KnownAnnotationKey = keyof AnnotationTypeMap;
@@ -124,6 +125,11 @@ const codecs = {
             .filter(Boolean)
         : [],
     defaultValue: [] as string[],
+  },
+  "run-name-template": {
+    serialize: (value: string) => value,
+    deserialize: (raw: unknown) => (typeof raw === "string" ? raw : ""),
+    defaultValue: "",
   },
 } satisfies {
   [K in KnownAnnotationKey]: AnnotationCodec<AnnotationTypeMap[K]>;

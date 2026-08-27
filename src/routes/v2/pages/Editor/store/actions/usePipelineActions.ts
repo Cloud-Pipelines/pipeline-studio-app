@@ -8,6 +8,7 @@ import {
   updatePipelineDescription,
   updatePipelineNotes,
   updatePipelineTags,
+  updateRunNameTemplate,
 } from "./pipeline.actions";
 
 export function usePipelineActions() {
@@ -20,6 +21,7 @@ export function usePipelineActions() {
     updatePipelineDescription: updatePipelineDescription.bind(null, undo),
     updatePipelineNotes: updatePipelineNotes.bind(null, undo),
     updatePipelineTags: updatePipelineTags.bind(null, undo),
+    updateRunNameTemplate: updateRunNameTemplate.bind(null, undo),
     createSubgraph: createSubgraph.bind(null, undo),
   };
 }
