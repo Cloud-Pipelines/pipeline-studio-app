@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { resolveVisibleFlags } from "@/components/shared/Settings/resolveVisibleFlags";
 import { useFlagsReducer } from "@/components/shared/Settings/useFlagsReducer";
 import { ExistingFlags } from "@/flags";
 import {
@@ -51,12 +52,9 @@ export function SettingsFlagsProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const betaFlags = Object.values(flags).filter(
-    (flag) => flag.category === "beta",
-  );
-  const settings = Object.values(flags).filter(
-    (flag) => flag.category === "setting",
-  );
+  const visibleFlags = resolveVisibleFlags(flags);
+  const betaFlags = visibleFlags.filter((flag) => flag.category === "beta");
+  const settings = visibleFlags.filter((flag) => flag.category === "setting");
 
   return (
     <SettingsFlagsContext value={{ betaFlags, settings, handleSetFlag }}>

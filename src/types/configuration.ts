@@ -3,6 +3,7 @@ interface ConfigFlag {
   description: string;
   default: boolean;
   category: "beta" | "setting";
+  dependsOn?: string;
 }
 
 export type ConfigFlags = Record<string, ConfigFlag>;
