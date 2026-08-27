@@ -19,15 +19,11 @@ const SUGGESTED_PROMPTS_EDITOR: SuggestedPrompt[] = [
   },
 ];
 
-export function useAiChatWindow(enabled: boolean) {
+export function useAiChatWindow() {
   const { windows } = useSharedStores();
   const editorSession = useEditorSession();
 
   useEffect(() => {
-    if (!enabled) {
-      windows.closeWindow(AI_CHAT_WINDOW_ID);
-      return;
-    }
     if (windows.getWindowById(AI_CHAT_WINDOW_ID)) return;
 
     windows.openWindow(
@@ -55,5 +51,5 @@ export function useAiChatWindow(enabled: boolean) {
         ),
       },
     );
-  }, [enabled, windows, editorSession]);
+  }, [windows, editorSession]);
 }

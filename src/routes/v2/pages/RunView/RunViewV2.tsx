@@ -9,7 +9,6 @@ import { useEffect, useRef } from "react";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { RemoteAuthErrorView } from "@/components/shared/RemoteAuthErrorView";
-import { useFlagValue } from "@/components/shared/Settings/useFlags";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Paragraph } from "@/components/ui/typography";
 import { useTrackRecentlyViewedRun } from "@/hooks/useTrackRecentlyViewedRun";
@@ -176,8 +175,7 @@ const RunViewLayout = observer(function RunViewLayout({
   useFocusTaskFromUrl(spec);
   useCanvasControlsWindow("v2.run_view");
 
-  const aiEnabled = useFlagValue("ai-assistant");
-  useAiChatWindow(aiEnabled);
+  useAiChatWindow();
 
   const { navigation } = useSharedStores();
   const activeSpec = navigation.activeSpec;

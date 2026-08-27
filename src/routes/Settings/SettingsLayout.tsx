@@ -1,6 +1,5 @@
 import { Link, Outlet, useRouter } from "@tanstack/react-router";
 
-import { useFlagValue } from "@/components/shared/Settings/useFlags";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
@@ -41,23 +40,16 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: "Lock",
     testId: "settings-nav-secrets",
   },
+  {
+    to: "/settings/agent",
+    label: "AI Configuration",
+    icon: "Bot",
+    testId: "settings-nav-agent",
+  },
 ];
-
-const AGENT_ITEM: SidebarItem = {
-  to: "/settings/agent",
-  label: "AI Configuration",
-  icon: "Bot",
-  testId: "settings-nav-agent",
-};
 
 export function SettingsLayout() {
   const router = useRouter();
-  const componentSearchEnabled = useFlagValue("component-search-v2");
-  const aiAssistantEnabled = useFlagValue("ai-assistant");
-  const sidebarItems =
-    componentSearchEnabled || aiAssistantEnabled
-      ? [...SIDEBAR_ITEMS, AGENT_ITEM]
-      : SIDEBAR_ITEMS;
 
   const handleGoBack = () => {
     router.history.back();
@@ -90,7 +82,7 @@ export function SettingsLayout() {
               gap="1"
               className="w-48 shrink-0 border-r border-border pr-4"
             >
-              {sidebarItems.map((item) => (
+              {SIDEBAR_ITEMS.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}

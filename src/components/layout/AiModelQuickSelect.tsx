@@ -1,4 +1,3 @@
-import { useFlagValue } from "@/components/shared/Settings/useFlags";
 import {
   Select,
   SelectContent,
@@ -16,8 +15,6 @@ import {
 import { useAiProviderSettings } from "@/hooks/useAiProviderSettings";
 
 export function AiModelQuickSelect() {
-  const componentSearchEnabled = useFlagValue("component-search-v2");
-  const aiAssistantEnabled = useFlagValue("ai-assistant");
   const { config, update, isConfigured } = useAiProviderSettings();
   const configuredModel = config.model.trim();
   const options = getAiModelOptions();
@@ -28,9 +25,7 @@ export function AiModelQuickSelect() {
     update({ model: value });
   };
 
-  if ((!componentSearchEnabled && !aiAssistantEnabled) || !isConfigured) {
-    return null;
-  }
+  if (!isConfigured) return null;
 
   return (
     <Select value={selectedValue} onValueChange={handleValueChange}>
