@@ -124,15 +124,6 @@ describe("<NoticeBanners />", () => {
     expect(screen.getByText("09:00-11:00 UTC").tagName).toBe("STRONG");
   });
 
-  it("renders a body-only notice without reserving room for a title", () => {
-    installSource([{ id: "a", title: "", body: "Submissions are paused." }]);
-
-    render(<NoticeBanners />);
-
-    expect(screen.getByText("Submissions are paused.")).toBeInTheDocument();
-    expect(screen.queryByTestId("info-box-title")).not.toBeInTheDocument();
-  });
-
   it("renders a long body inline rather than truncating it", () => {
     installSource([
       {

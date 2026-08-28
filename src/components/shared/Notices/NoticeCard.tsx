@@ -49,11 +49,7 @@ export const NoticeCard = ({
               size="sm"
               variant="block"
               external
-              aria-label={
-                notice.title
-                  ? `${notice.action.text}: ${notice.title}`
-                  : notice.action.text
-              }
+              aria-label={`${notice.action.text}: ${notice.title}`}
             >
               {notice.action.text}
             </Link>
