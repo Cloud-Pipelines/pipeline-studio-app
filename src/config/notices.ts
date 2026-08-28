@@ -89,15 +89,14 @@ function readNotice(value: unknown): TangleNotice | null {
   if (!id) return null;
 
   const title = readTrimmedString(value.title);
-  const body = typeof value.body === "string" ? value.body : "";
-  if (!title && !body.trim()) return null;
+  if (!title) return null;
 
   const action = readAction(value.action);
 
   return Object.freeze({
     id,
     title,
-    body,
+    body: typeof value.body === "string" ? value.body : "",
     variant: readVariant(value.variant),
     ...(value.dismissible === true ? { dismissible: true } : {}),
     ...(action ? { action } : {}),

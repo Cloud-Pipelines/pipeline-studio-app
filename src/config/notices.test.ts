@@ -138,7 +138,7 @@ describe("notices", () => {
       expect(getNoticesSnapshot().map((notice) => notice.id)).toEqual(["kept"]);
     });
 
-    it("drops entries with neither a title nor a non-blank body", () => {
+    it("drops entries without a title, whatever their body says", () => {
       installRawSource(
         staticSource(() => [
           { id: "a", title: "   ", body: "  \n " },
@@ -147,10 +147,7 @@ describe("notices", () => {
         ]),
       );
 
-      expect(getNoticesSnapshot().map((notice) => notice.id)).toEqual([
-        "b",
-        "c",
-      ]);
+      expect(getNoticesSnapshot().map((notice) => notice.id)).toEqual(["b"]);
     });
 
     it("drops an action whose url is not absolute http(s)", () => {

@@ -38,7 +38,7 @@ Dispatching again after replacing the global is safe and rebinds.
 ```ts
 {
   id: string,          // required; a finite number is coerced to a string
-  title?: string,      // at least one of title / body must be non-blank
+  title: string,       // required and non-blank
   body?: string,       // Markdown, rendered as untrusted input
   variant?: "info" | "warning" | "success" | "error",   // default "info"
   dismissible?: true,  // only the literal `true` counts
