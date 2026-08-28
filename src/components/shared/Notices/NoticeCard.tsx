@@ -1,5 +1,6 @@
 import { InfoBox } from "@/components/shared/InfoBox";
 import { UntrustedMarkdown } from "@/components/shared/Markdown/Markdown";
+import { Button } from "@/components/ui/button";
 import { BlockStack } from "@/components/ui/layout";
 import { Link } from "@/components/ui/link";
 import type { TangleNotice } from "@/config/notices";
@@ -29,7 +30,7 @@ export const NoticeCard = ({
       dismissIcon={onHide ? "EyeOff" : undefined}
       dismissLabel={onHide ? "Hide notice" : undefined}
     >
-      <BlockStack gap="1">
+      <BlockStack gap="2">
         {hasBody && (
           <div
             className={cn(
@@ -42,19 +43,21 @@ export const NoticeCard = ({
           </div>
         )}
         {notice.action && (
-          <Link
-            href={notice.action.url}
-            size="sm"
-            variant="primary"
-            external
-            aria-label={
-              notice.title
-                ? `${notice.action.text}: ${notice.title}`
-                : notice.action.text
-            }
-          >
-            {notice.action.text}
-          </Link>
+          <Button asChild size="sm">
+            <Link
+              href={notice.action.url}
+              size="sm"
+              variant="block"
+              external
+              aria-label={
+                notice.title
+                  ? `${notice.action.text}: ${notice.title}`
+                  : notice.action.text
+              }
+            >
+              {notice.action.text}
+            </Link>
+          </Button>
         )}
       </BlockStack>
     </InfoBox>
