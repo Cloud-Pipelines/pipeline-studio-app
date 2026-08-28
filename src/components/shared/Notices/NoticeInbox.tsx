@@ -3,9 +3,8 @@ import { useEffect } from "react";
 import TooltipButton from "@/components/shared/Buttons/TooltipButton";
 import { NoticeCard } from "@/components/shared/Notices/NoticeCard";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { BlockStack, InlineStack } from "@/components/ui/layout";
+import { BlockStack } from "@/components/ui/layout";
 import {
   Popover,
   PopoverContent,
@@ -24,34 +23,11 @@ function triggerLabel(unreadCount: number, total: number): string {
 }
 
 export const NoticeInbox = () => {
-  const {
-    notices,
-    unreadCount,
-    hasHiddenNotices,
-    isOpen,
-    setOpen,
-    hideBanners,
-    showBanners,
-    dismiss,
-  } = useNoticeInbox();
+  const { notices, unreadCount, isOpen, setOpen, dismiss } = useNoticeInbox();
 
   useEffect(() => closeNoticeInbox, []);
 
   const label = triggerLabel(unreadCount, notices.length);
-
-  const bannerToggle = hasHiddenNotices
-    ? ({
-        icon: "Eye",
-        label: "Show notices",
-        onClick: showBanners,
-        testId: "notice-inbox-show",
-      } as const)
-    : ({
-        icon: "EyeOff",
-        label: "Hide notices",
-        onClick: hideBanners,
-        testId: "notice-inbox-hide",
-      } as const);
 
   return (
     <Popover open={isOpen} onOpenChange={setOpen}>
@@ -85,22 +61,9 @@ export const NoticeInbox = () => {
         data-testid="notice-inbox"
       >
         <BlockStack gap="3">
-          <InlineStack align="space-between" blockAlign="center" gap="2" fill>
-            <Text as="span" size="sm" weight="semibold">
-              Notices
-            </Text>
-            {notices.length > 0 && (
-              <Button
-                variant="link"
-                size="inline-xs"
-                onClick={bannerToggle.onClick}
-                data-testid={bannerToggle.testId}
-              >
-                <Icon name={bannerToggle.icon} size="xs" />
-                {bannerToggle.label}
-              </Button>
-            )}
-          </InlineStack>
+          <Text as="span" size="sm" weight="semibold">
+            Notices
+          </Text>
           {notices.length === 0 ? (
             <Text
               as="span"
