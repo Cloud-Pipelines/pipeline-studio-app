@@ -1,0 +1,88 @@
+import type { Announcement } from "@/config/announcements";
+
+export const developmentAnnouncements: Announcement[] = [
+  {
+    id: "scheduled-maintenance",
+    title: "Scheduled maintenance",
+    body: "Submissions pause between **09:00 and 11:00 UTC**. [Learn more](https://example.com/maintenance) or read the [maintenance guide](https://example.com/maintenance-guide).",
+    variant: "warning",
+    dismissible: true,
+  },
+  {
+    id: "submission-delays",
+    title: "Submission delays",
+    body: "New pipeline submissions may remain pending longer than usual.",
+    variant: "error",
+    dismissible: true,
+  },
+  {
+    id: "runtime-update",
+    title: "Runtime update available",
+    body: "The latest runtime includes performance and reliability improvements. [View the release notes](https://example.com/releases).",
+    variant: "info",
+    dismissible: true,
+  },
+  {
+    id: "access-requirements",
+    title: "Updated access requirements",
+    body: "Verify your execution identity has the required permissions before submitting a run.",
+    variant: "warning",
+    dismissible: true,
+  },
+  {
+    id: "service-restored",
+    title: "Service restored",
+    body: "Pipeline submissions and runs are operating normally.",
+    variant: "success",
+    dismissible: true,
+  },
+  {
+    id: "documentation-update",
+    title: "Documentation updated",
+    body: "New guidance is available for configuring pipeline inputs. [Read the documentation](https://example.com/docs).",
+    variant: "info",
+    dismissible: true,
+  },
+  {
+    id: "pipeline-examples",
+    title: "New pipeline examples",
+    body: "Explore new examples for batch inference and evaluation workflows. [Browse examples](https://example.com/examples).",
+    variant: "info",
+    dismissible: true,
+  },
+  {
+    id: "execution-queue-restored",
+    title: "Execution queue recovered",
+    body: "Queued runs are processing normally after a temporary slowdown.",
+    variant: "success",
+    dismissible: true,
+  },
+  {
+    id: "deprecated-runtime",
+    title: "Runtime version deprecation",
+    body: "Runtime version `1.8` will be removed in a future release. Update affected pipelines before the removal date.",
+    variant: "warning",
+    dismissible: true,
+  },
+  {
+    id: "run-failures",
+    title: "Elevated run failures",
+    body: "Some runs may fail while the issue is investigated. Retry failed runs after service is restored.",
+    variant: "error",
+    dismissible: true,
+  },
+  {
+    id: "storage-maintenance",
+    title: "Storage maintenance",
+    body: "Artifact uploads may take longer than usual during the maintenance window.",
+    variant: "warning",
+    dismissible: true,
+  },
+  {
+    id: "editor-improvements",
+    title: "Editor improvements available",
+    body: "The latest editor update improves validation messages and keyboard navigation. [See what changed](https://example.com/editor-updates).",
+    variant: "success",
+    dismissible: true,
+  },
+];

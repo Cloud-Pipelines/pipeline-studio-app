@@ -8,10 +8,19 @@ import ReactDOM from "react-dom/client";
 import { scan } from "react-scan";
 
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { developmentAnnouncements } from "@/config/developmentAnnouncements";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
 import { router } from "./routes/router";
 import { initializeBugsnag } from "./services/errorManagement/bugsnag";
+
+if (
+  import.meta.env.DEV &&
+  (!window.__TANGLE_ANNOUNCEMENTS__ ||
+    window.__TANGLE_ANNOUNCEMENTS__.length === 0)
+) {
+  window.__TANGLE_ANNOUNCEMENTS__ = developmentAnnouncements;
+}
 
 initializeBugsnag();
 
