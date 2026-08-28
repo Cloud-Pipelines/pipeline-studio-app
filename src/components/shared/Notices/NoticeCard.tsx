@@ -9,14 +9,12 @@ import { cn } from "@/lib/utils";
 interface NoticeCardProps {
   notice: TangleNotice;
   clampBody?: boolean;
-  onHide?: () => void;
   onDismiss?: () => void;
 }
 
 export const NoticeCard = ({
   notice,
   clampBody = false,
-  onHide,
   onDismiss,
 }: NoticeCardProps) => {
   const hasBody = notice.body.trim().length > 0;
@@ -26,9 +24,7 @@ export const NoticeCard = ({
       title={notice.title}
       variant={notice.variant}
       width="full"
-      onDismiss={onHide ?? onDismiss}
-      dismissIcon={onHide ? "EyeOff" : undefined}
-      dismissLabel={onHide ? "Hide notice" : undefined}
+      onDismiss={onDismiss}
     >
       <BlockStack gap="2">
         {hasBody && (

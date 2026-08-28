@@ -101,13 +101,15 @@ describe("<NoticeBanners />", () => {
     expect(screen.getByTestId("info-box-error").className).toContain("w-full");
   });
 
-  it("leaves clearing the banners and opening the full list to the header", () => {
-    installSource([{ id: "a", title: "Only notice", body: "" }]);
+  it("leaves opening the full list to the header", () => {
+    installSource([
+      { id: "a", title: "Only notice", body: "", dismissible: true },
+    ]);
 
     render(<NoticeBanners />);
 
     expect(screen.getAllByRole("button")).toHaveLength(1);
-    expect(screen.getByLabelText("Hide notice")).toBeInTheDocument();
+    expect(screen.getByLabelText("Dismiss")).toBeInTheDocument();
   });
 
   it("renders a brief body inline as Markdown", () => {
@@ -200,7 +202,7 @@ describe("<NoticeBanners />", () => {
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
 
-  it("offers to hide any notice from the banners, but never to retire one", () => {
+  it("offers to dismiss only the notices the host allows", () => {
     installSource([
       { id: "a", title: "Scheduled maintenance", body: "", dismissible: true },
       { id: "b", title: "Mandatory notice", body: "" },
@@ -208,64 +210,42 @@ describe("<NoticeBanners />", () => {
 
     render(<NoticeBanners />);
 
-    expect(screen.getAllByLabelText("Hide notice")).toHaveLength(2);
-    expect(screen.queryByLabelText("Dismiss")).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText("Dismiss")).toHaveLength(1);
   });
 
   it("takes one notice off the banners while leaving the rest in place", () => {
     installSource([
-      { id: "a", title: "First", body: "", variant: "error" },
+      {
+        id: "a",
+        title: "First",
+        body: "",
+        variant: "error",
+        dismissible: true,
+      },
       { id: "b", title: "Second", body: "", variant: "warning" },
     ]);
 
     render(<NoticeBanners />);
-    fireEvent.click(screen.getAllByLabelText("Hide notice")[0]!);
+    fireEvent.click(screen.getByLabelText("Dismiss"));
 
     expect(
       screen.getAllByTestId("info-box-title").map((el) => el.textContent),
     ).toEqual(["Second"]);
   });
 
-  it("remembers a hidden notice only as long as the host allows", () => {
-    installSource([
-      { id: "persisted", title: "Optional", body: "", dismissible: true },
-      { id: "session-only", title: "Mandatory", body: "" },
-    ]);
-
-    render(<NoticeBanners />);
-    screen
-      .getAllByLabelText("Hide notice")
-      .forEach((button) => fireEvent.click(button));
-
-    expect(screen.queryByTestId("notice-banners")).not.toBeInTheDocument();
-
-    const hidden = localStorage.getItem("hidden-notices") ?? "";
-    expect(hidden).toContain("persisted");
-    expect(hidden).not.toContain("session-only");
-  });
-
-  it("keeps a hidden dismissible notice off the banners across a remount", () => {
+  it("keeps a dismissed notice off the banners across a remount", () => {
     installSource([
       { id: "a", title: "Scheduled maintenance", body: "", dismissible: true },
     ]);
 
     render(<NoticeBanners />);
-    fireEvent.click(screen.getByLabelText("Hide notice"));
+    fireEvent.click(screen.getByLabelText("Dismiss"));
 
     cleanup();
     const { container } = render(<NoticeBanners />);
 
     expect(container).toBeEmptyDOMElement();
-  });
-
-  it("hides a non-dismissible notice without retiring it for good", () => {
-    installSource([{ id: "a", title: "Mandatory notice", body: "" }]);
-
-    render(<NoticeBanners />);
-    fireEvent.click(screen.getByLabelText("Hide notice"));
-
-    expect(screen.queryByTestId("notice-banners")).not.toBeInTheDocument();
-    expect(localStorage.getItem("hidden-notices") ?? "").not.toContain("a");
+    expect(localStorage.getItem("dismissed-notices") ?? "").toContain("a");
   });
 
   it("picks up a source installed after mount", () => {

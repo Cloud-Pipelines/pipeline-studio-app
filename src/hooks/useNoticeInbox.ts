@@ -4,11 +4,7 @@ import { resetNoticeCacheForTests, type TangleNotice } from "@/config/notices";
 import { resetNoticeRefreshForTests, useNotices } from "@/hooks/useNotices";
 import { getStorage } from "@/utils/typedStorage";
 
-const STORAGE_KEYS = [
-  "dismissed-notices",
-  "hidden-notices",
-  "read-notices",
-] as const;
+const STORAGE_KEYS = ["dismissed-notices", "read-notices"] as const;
 
 type NoticeInboxKey = (typeof STORAGE_KEYS)[number];
 
@@ -21,7 +17,6 @@ const PROMOTION_ORDER: Record<TangleNotice["variant"], number> = {
   info: 3,
 };
 
-const hiddenForThisSession = new Set<string>();
 const dismissedForThisSession = new Set<string>();
 
 let isOpen = false;
@@ -63,7 +58,6 @@ function readIds(key: NoticeInboxKey): string[] {
 interface InboxState {
   isOpen: boolean;
   dismissedIds: Set<string>;
-  hiddenIds: Set<string>;
   readIds: Set<string>;
 }
 
@@ -80,7 +74,6 @@ function getInboxState(revision: number): InboxState {
       ...readIds("dismissed-notices"),
       ...dismissedForThisSession,
     ]),
-    hiddenIds: new Set([...readIds("hidden-notices"), ...hiddenForThisSession]),
     readIds: new Set(readIds("read-notices")),
   };
 
@@ -94,7 +87,7 @@ function addIds(key: NoticeInboxKey, ids: string[]) {
   storage.setItem(key, merged);
 }
 
-function closeNoticeInbox() {
+export function closeNoticeInbox() {
   isOpen = false;
   publish();
 }
@@ -105,33 +98,6 @@ function openNoticeInbox(notices: readonly TangleNotice[]) {
     notices.map((notice) => notice.id),
   );
   isOpen = true;
-  publish();
-}
-
-function markHidden(notice: TangleNotice) {
-  if (!notice.dismissible) {
-    hiddenForThisSession.add(notice.id);
-    return;
-  }
-
-  addIds("hidden-notices", [notice.id]);
-  if (!readIds("hidden-notices").includes(notice.id))
-    hiddenForThisSession.add(notice.id);
-}
-
-function hideNotice(notice: TangleNotice) {
-  markHidden(notice);
-  publish();
-}
-
-function hideAll(notices: readonly TangleNotice[]) {
-  notices.forEach(markHidden);
-  publish();
-}
-
-function showAll() {
-  hiddenForThisSession.clear();
-  storage.setItem("hidden-notices", []);
   publish();
 }
 
@@ -150,7 +116,6 @@ function dismissNotice(notice: TangleNotice) {
 export function resetNoticeStateForTests(): void {
   resetNoticeCacheForTests();
   resetNoticeRefreshForTests();
-  hiddenForThisSession.clear();
   dismissedForThisSession.clear();
   isOpen = false;
   cachedState = null;
@@ -159,43 +124,26 @@ export function resetNoticeStateForTests(): void {
 
 export interface NoticeInbox {
   notices: readonly TangleNotice[];
-  banners: readonly TangleNotice[];
   unreadCount: number;
-  hasHiddenNotices: boolean;
   isOpen: boolean;
   setOpen: (open: boolean) => void;
-  hide: (notice: TangleNotice) => void;
-  hideBanners: () => void;
-  showBanners: () => void;
   dismiss: (notice: TangleNotice) => void;
 }
 
 export function useNoticeInbox(): NoticeInbox {
   const notices = useNotices();
   const revision = useSyncExternalStore(subscribe, getRevision);
-  const {
-    isOpen,
-    dismissedIds,
-    hiddenIds,
-    readIds: readIdSet,
-  } = getInboxState(revision);
+  const { isOpen, dismissedIds, readIds: readIdSet } = getInboxState(revision);
 
   const listed = notices
     .filter((notice) => !dismissedIds.has(notice.id))
     .sort((a, b) => PROMOTION_ORDER[a.variant] - PROMOTION_ORDER[b.variant]);
 
-  const banners = listed.filter((notice) => !hiddenIds.has(notice.id));
-
   return {
     notices: listed,
-    banners,
     unreadCount: listed.filter((notice) => !readIdSet.has(notice.id)).length,
-    hasHiddenNotices: banners.length < listed.length,
     isOpen,
     setOpen: (open) => (open ? openNoticeInbox(listed) : closeNoticeInbox()),
-    hide: hideNotice,
-    hideBanners: () => hideAll(listed),
-    showBanners: showAll,
     dismiss: dismissNotice,
   };
 }
