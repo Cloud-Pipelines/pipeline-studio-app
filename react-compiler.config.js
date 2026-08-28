@@ -80,6 +80,7 @@ export const REACT_COMPILER_ENABLED_DIRS = [
   "src/components/shared/HighlightText.tsx",
   "src/components/shared/AnnouncementBanners.tsx",
   "src/components/shared/AnnouncementMarkdown.tsx",
+  "src/components/shared/NoticeCenter.tsx",
   "src/components/shared/ReactFlow/FlowCanvas/TaskNode/TaskOverview/IOSection",
   "src/components/ui/typography.tsx",
 
