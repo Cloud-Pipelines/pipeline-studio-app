@@ -1,9 +1,9 @@
-import "@/config/announcements";
-
 import { useState } from "react";
 
+import { AnnouncementMarkdown } from "@/components/shared/AnnouncementMarkdown";
 import { InfoBox } from "@/components/shared/InfoBox";
 import { BlockStack } from "@/components/ui/layout";
+import { getActiveAnnouncements } from "@/config/announcements";
 import { getStorage } from "@/utils/typedStorage";
 
 interface DismissedAnnouncementsStorage {
@@ -21,44 +21,37 @@ function getDismissedIds(): string[] {
 
 export const AnnouncementBanners = () => {
   const [dismissedIds, setDismissedIds] = useState(getDismissedIds);
-
-  const announcements = window.__TANGLE_ANNOUNCEMENTS__ ?? [];
-  const now = new Date();
-  const visible = announcements.filter(
-    (a) =>
-      !dismissedIds.includes(a.id) &&
-      (!a.expiresAt || new Date(a.expiresAt) > now),
+  const announcements = getActiveAnnouncements().filter(
+    (announcement) => !dismissedIds.includes(announcement.id),
   );
 
-  if (visible.length === 0) {
+  if (announcements.length === 0) {
     return null;
   }
 
-  const handleDismiss = (id: string) => {
-    const updated = [...dismissedIds, id];
-    storage.setItem("dismissed-announcements", updated);
-    setDismissedIds(updated);
+  const dismiss = (id: string) => {
+    const nextDismissedIds = [...dismissedIds, id];
+    storage.setItem("dismissed-announcements", nextDismissedIds);
+    setDismissedIds(nextDismissedIds);
   };
 
   return (
     <BlockStack gap="2">
-      {visible.map((announcement) => {
-        const onDismiss = announcement.dismissible
-          ? () => handleDismiss(announcement.id)
-          : undefined;
-
-        return (
-          <InfoBox
-            key={announcement.id}
-            title={announcement.title}
-            variant={announcement.variant ?? "info"}
-            width="full"
-            onDismiss={onDismiss}
-          >
-            {announcement.body}
-          </InfoBox>
-        );
-      })}
+      {announcements.map((announcement) => (
+        <InfoBox
+          key={announcement.id}
+          title={announcement.title}
+          variant={announcement.variant ?? "info"}
+          width="full"
+          onDismiss={
+            announcement.dismissible
+              ? () => dismiss(announcement.id)
+              : undefined
+          }
+        >
+          <AnnouncementMarkdown>{announcement.body}</AnnouncementMarkdown>
+        </InfoBox>
+      ))}
     </BlockStack>
   );
 };
