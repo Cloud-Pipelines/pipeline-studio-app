@@ -7,7 +7,7 @@ import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
 interface InfoBoxProps {
-  title: string;
+  title?: string;
   width?: "full" | "fit" | "auto";
   className?: string;
   children: ReactNode;
@@ -67,15 +67,17 @@ export const InfoBox = ({
       className={cn("border rounded-md p-2", styles.container, widthClass)}
     >
       <InlineStack align="space-between" blockAlign="start" wrap="nowrap">
-        <Text
-          as="span"
-          size="sm"
-          weight="semibold"
-          className={cn("mb-1 min-w-0 wrap-break-word", styles.title)}
-          data-testid="info-box-title"
-        >
-          {title}
-        </Text>
+        {title && (
+          <Text
+            as="span"
+            size="sm"
+            weight="semibold"
+            className={cn("mb-1 min-w-0 wrap-break-word", styles.title)}
+            data-testid="info-box-title"
+          >
+            {title}
+          </Text>
+        )}
         {onDismiss && (
           <Button
             onClick={onDismiss}
