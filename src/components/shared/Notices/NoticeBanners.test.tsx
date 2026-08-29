@@ -8,7 +8,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { installRawSource, installSource } from "@/config/noticeTestSource";
-import { resetNoticeStateForTests } from "@/hooks/useNoticeInbox";
+import { resetNoticeStateForTests } from "@/hooks/useNotices";
 
 import { NoticeBanners } from "./NoticeBanners";
 
@@ -94,9 +94,10 @@ describe("<NoticeBanners />", () => {
 
     const { container } = render(<NoticeBanners />);
 
-    expect(screen.getByTestId("notice-banners").className).toContain(
-      "grid-cols-3",
-    );
+    const className = screen.getByTestId("notice-banners").className;
+    expect(className).toContain("grid-cols-1");
+    expect(className).toContain("md:grid-cols-2");
+    expect(className).toContain("lg:grid-cols-3");
     expect(container.querySelector(".overflow-x-auto")).toBeNull();
     expect(screen.getByTestId("info-box-error").className).toContain("w-full");
   });

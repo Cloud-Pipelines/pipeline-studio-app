@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { installRawSource } from "@/config/noticeTestSource";
-import { resetNoticeStateForTests } from "@/hooks/useNoticeInbox";
+import { resetNoticeStateForTests } from "@/hooks/useNotices";
 
 import {
   getNoticesSnapshot,
