@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { installSource } from "@/config/noticeTestSource";
+import { resetHiddenNoticesForTests } from "@/hooks/useHiddenNotices";
 import { resetNoticeInboxForTests } from "@/hooks/useNoticeInbox";
 import { resetNoticeStateForTests } from "@/hooks/useNotices";
 
@@ -23,6 +24,7 @@ describe("<NoticeInbox />", () => {
   afterEach(() => {
     cleanup();
     delete window.__TANGLE_NOTICE_SOURCE__;
+    resetHiddenNoticesForTests();
     resetNoticeInboxForTests();
     resetNoticeStateForTests();
   });
@@ -193,6 +195,46 @@ describe("<NoticeInbox />", () => {
       "aria-label",
       "Notices, 12 unread",
     );
+  });
+
+  it("hides the banners from the centre, and offers to bring them back", () => {
+    installSource([{ id: "a", title: "One", body: "", dismissible: true }]);
+
+    render(<NoticeInbox />);
+    fireEvent.click(screen.getByTestId("notice-inbox-trigger"));
+
+    expect(screen.queryByTestId("notice-inbox-show")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("notice-inbox-hide"));
+
+    expect(screen.getByTestId("notice-inbox-show")).toBeInTheDocument();
+    expect(localStorage.getItem("hidden-notices")).toContain("a");
+  });
+
+  it("puts hidden notices back on the page", () => {
+    localStorage.setItem("hidden-notices", JSON.stringify(["a"]));
+    installSource([{ id: "a", title: "One", body: "", dismissible: true }]);
+
+    render(<NoticeInbox />);
+    fireEvent.click(screen.getByTestId("notice-inbox-trigger"));
+    fireEvent.click(screen.getByTestId("notice-inbox-show"));
+
+    expect(screen.queryByTestId("notice-inbox-show")).not.toBeInTheDocument();
+    expect(screen.getByTestId("notice-inbox-hide")).toBeInTheDocument();
+    expect(localStorage.getItem("hidden-notices")).toBe("[]");
+  });
+
+  it("keeps listing a hidden notice in full", () => {
+    localStorage.setItem("hidden-notices", JSON.stringify(["a"]));
+    installSource([
+      { id: "a", title: "Hidden", body: "", dismissible: true },
+      { id: "b", title: "Still a banner", body: "", dismissible: true },
+    ]);
+
+    render(<NoticeInbox />);
+    fireEvent.click(screen.getByTestId("notice-inbox-trigger"));
+
+    expect(screen.getByTestId("notice-inbox-show")).toBeInTheDocument();
+    expect(screen.getAllByTestId("info-box-title")).toHaveLength(2);
   });
 
   it("orders the list by severity", () => {
