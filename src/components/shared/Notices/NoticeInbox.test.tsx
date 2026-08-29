@@ -2,7 +2,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { installSource } from "@/config/noticeTestSource";
-import { resetNoticeStateForTests } from "@/hooks/useNoticeInbox";
+import { resetNoticeInboxForTests } from "@/hooks/useNoticeInbox";
+import { resetNoticeStateForTests } from "@/hooks/useNotices";
 
 import { NoticeInbox } from "./NoticeInbox";
 
@@ -22,6 +23,7 @@ describe("<NoticeInbox />", () => {
   afterEach(() => {
     cleanup();
     delete window.__TANGLE_NOTICE_SOURCE__;
+    resetNoticeInboxForTests();
     resetNoticeStateForTests();
   });
 
