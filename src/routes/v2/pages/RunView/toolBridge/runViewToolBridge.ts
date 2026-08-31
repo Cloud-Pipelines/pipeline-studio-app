@@ -9,7 +9,7 @@
  * the Editor's spec-mutation actions or an undo store.
  */
 import type { ToolBridgeApi, ValidationResult } from "@/agent/toolBridgeApi";
-import { validateSpec } from "@/models/componentSpec/validation/validateSpec";
+import { collectValidationIssues } from "@/models/componentSpec/validation/collectIssues";
 import { serializeSpecForAi } from "@/routes/v2/shared/components/AiChat/serializeSpecForAi";
 import { createDebugBridgeHandlers } from "@/routes/v2/shared/components/AiChat/toolBridge/debugBridge";
 import { createRunBridgeHandlers } from "@/routes/v2/shared/components/AiChat/toolBridge/runBridge";
@@ -52,7 +52,7 @@ function createReadOnlyCsomHandlers(deps: BridgeDeps): ReadOnlyCsomHandlers {
     },
 
     async validatePipeline(): Promise<ValidationResult> {
-      const issues = validateSpec(requireSpec(deps));
+      const issues = collectValidationIssues(requireSpec(deps));
       return {
         valid: issues.length === 0,
         issueCount: issues.length,
@@ -61,7 +61,9 @@ function createReadOnlyCsomHandlers(deps: BridgeDeps): ReadOnlyCsomHandlers {
           severity: i.severity,
           message: i.message,
           entityId: i.entityId,
+          entityName: i.entityName,
           issueCode: i.issueCode,
+          subgraphPath: i.subgraphPath,
         })),
       };
     },
@@ -75,43 +77,43 @@ function createReadOnlyCsomHandlers(deps: BridgeDeps): ReadOnlyCsomHandlers {
     },
 
     async setPipelineName() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async setPipelineDescription() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async addTask() {
       return { success: false, error: READ_ONLY_ERROR };
     },
     async deleteTask() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async renameTask() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async addInput() {
-      return { success: false, inputId: "", name: "" };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async deleteInput() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async renameInput() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async addOutput() {
-      return { success: false, outputId: "", name: "" };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async deleteOutput() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async renameOutput() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async connectNodes() {
       return { success: false, error: READ_ONLY_ERROR };
     },
     async deleteEdge() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async setTaskArgument() {
       return { success: false, error: READ_ONLY_ERROR };
@@ -120,7 +122,7 @@ function createReadOnlyCsomHandlers(deps: BridgeDeps): ReadOnlyCsomHandlers {
       return { success: false, error: READ_ONLY_ERROR };
     },
     async unpackSubgraph() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
   };
 }
