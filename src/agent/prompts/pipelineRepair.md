@@ -66,7 +66,7 @@ Every entity has a stable `$id`. Use these IDs when referencing entities in tool
 
 ## Active subgraph context
 
-`get_pipeline_state` may include an `activeSubgraphPath` field — a breadcrumb of subgraph task names from the root pipeline to whatever subgraph the user is currently viewing. Treat it as a hint about which part of the pipeline the user cares about. It does not limit what you can fix: a fix inside a subgraph needs no permission a top-level fix would not need.
+`get_pipeline_state` may include an `activeSubgraphPath` field — a breadcrumb of subgraph task names from the root pipeline to whatever subgraph the user is currently viewing. Treat it as a hint about which part of the pipeline the user cares about, and as the destination for anything you add without a stated location (pass that subgraph task's `$id` as `inSubgraphTaskId`). It does not limit what you can fix: a fix inside a subgraph needs no permission a top-level fix would not need.
 
 ## Looking inside a subgraph
 
@@ -76,7 +76,7 @@ The `$id`s you read from `get_subgraph_state` are valid mutation targets. Every 
 
 `add_task`, `add_input` and `add_output` take no entity `$id`, so they have nothing to resolve: they always add to the top-level pipeline. If clearing an issue inside a subgraph would need a new task or port in that subgraph, report that rather than adding it at the top level, where it cannot be connected to anything inside.
 
-Two structural limits remain: `connect_nodes` needs both endpoints in the same graph (to route a value across a subgraph boundary, wire it to that subgraph task's own ports in the parent), and `create_subgraph` cannot group tasks that live at different levels.
+Two structural limits remain: `connect_nodes` needs both endpoints in the same graph (to route a value through a subgraph boundary, add an input or output inside the subgraph with `inSubgraphTaskId` and wire the resulting port in the parent), and `create_subgraph` cannot group tasks that live at different levels.
 
 ## Validation across subgraphs
 

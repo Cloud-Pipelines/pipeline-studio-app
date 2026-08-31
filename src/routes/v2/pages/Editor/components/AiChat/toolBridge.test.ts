@@ -748,6 +748,101 @@ describe("createEditorToolBridge", () => {
     });
   });
 
+  describe("adding into a subgraph", () => {
+    it("addTask puts the task inside the named subgraph", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+
+      const result = await bridge.addTask({
+        name: "Dedupe",
+        componentRef: containerComponent("Dedupe", "dedupe:1", "path", "table"),
+        inSubgraphTaskId: taskId(spec, "Preprocess"),
+      });
+
+      expect(result.success).toBe(true);
+      expect(inner.tasks.map((t) => t.name).sort()).toEqual([
+        "Dedupe",
+        "DropNulls",
+      ]);
+      expect(spec.tasks.map((t) => t.name)).toEqual(["Preprocess", "Train"]);
+    });
+
+    it("addInput inside a subgraph becomes an input port on the subgraph task", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+      const preprocessId = taskId(spec, "Preprocess");
+
+      const result = await bridge.addInput({
+        name: "threshold",
+        type: "Integer",
+        inSubgraphTaskId: preprocessId,
+      });
+
+      expect(result.success).toBe(true);
+      expect(inner.inputs.map((i) => i.name)).toContain("threshold");
+      expect(spec.inputs.map((i) => i.name)).toEqual(["raw_path"]);
+      expect(
+        spec.tasks
+          .find((t) => t.$id === preprocessId)
+          ?.resolvedComponentSpec?.inputs?.map((i) => i.name),
+      ).toContain("threshold");
+    });
+
+    it("addOutput inside a subgraph becomes an output port on the subgraph task", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+      const preprocessId = taskId(spec, "Preprocess");
+
+      const result = await bridge.addOutput({
+        name: "report",
+        inSubgraphTaskId: preprocessId,
+      });
+
+      expect(result.success).toBe(true);
+      expect(inner.outputs.map((o) => o.name)).toContain("report");
+      expect(
+        spec.tasks
+          .find((t) => t.$id === preprocessId)
+          ?.resolvedComponentSpec?.outputs?.map((o) => o.name),
+      ).toContain("report");
+    });
+
+    it("adds to the top level when inSubgraphTaskId is omitted", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+
+      const result = await bridge.addInput({ name: "extra" });
+
+      expect(result).toMatchObject({ success: true, name: "extra" });
+      expect(spec.inputs.map((i) => i.name)).toEqual(["raw_path", "extra"]);
+      expect(inner.inputs.map((i) => i.name)).toEqual(["path"]);
+    });
+
+    it("refuses a destination that is not a subgraph", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.addTask({
+        name: "Dedupe",
+        componentRef: containerComponent("Dedupe", "dedupe:1", "path", "table"),
+        inSubgraphTaskId: taskId(spec, "Train"),
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Task "Train" is not a subgraph');
+    });
+
+    it("refuses an unknown destination id", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.addOutput({
+        name: "report",
+        inSubgraphTaskId: "nope",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(
+        'No task with $id "nope" exists in this pipeline.',
+      );
+      expect(spec.outputs).toHaveLength(0);
+    });
+  });
+
   describe("validatePipeline", () => {
     it("reports valid: true on a clean spec", async () => {
       const spec = new ComponentSpec({ $id: "spec_1", name: "Pipe" });

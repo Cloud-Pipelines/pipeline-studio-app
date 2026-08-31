@@ -45,7 +45,7 @@ Every entity has a stable `$id`. Use these IDs when referencing entities in tool
 
 ## Active subgraph context
 
-`get_pipeline_state` may include an `activeSubgraphPath` field — a breadcrumb of subgraph task names from the root pipeline to whatever subgraph the user is currently viewing. Use it to resolve what the user means by "here" or "this step" when they ask you to change something without saying where. New structure is always built at the top level.
+`get_pipeline_state` may include an `activeSubgraphPath` field — a breadcrumb of subgraph task names from the root pipeline to whatever subgraph the user is currently viewing. Use it to resolve what the user means by "here" or "this step": if they are viewing a subgraph and ask you to add something without saying where, add it inside that subgraph by passing its task `$id` as `inSubgraphTaskId`. Otherwise build at the top level. When the user names a subgraph explicitly, that wins over `activeSubgraphPath`.
 
 ## Looking inside a subgraph
 
@@ -57,7 +57,7 @@ The `$id`s you read from `get_subgraph_state` are valid mutation targets. Every 
 
 Two limits remain, and both are about structure rather than depth:
 
-- **A connection cannot cross a subgraph boundary.** `connect_nodes` requires both endpoints in the same graph. To move a value in or out of a subgraph, wire it to that subgraph task's own ports in the parent.
+- **A connection cannot cross a subgraph boundary.** `connect_nodes` requires both endpoints in the same graph. To move a value in or out of a subgraph, add an input or output inside it (`add_input` / `add_output` with `inSubgraphTaskId`) — that becomes a port on the subgraph task — then wire that port in the parent.
 - **`create_subgraph` cannot group across levels.** Every task you pass must already sit in the same graph.
 
 ## Validation across subgraphs
