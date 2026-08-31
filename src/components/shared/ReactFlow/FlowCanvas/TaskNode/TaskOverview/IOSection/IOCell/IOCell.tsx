@@ -3,6 +3,7 @@ import { CopyText } from "@/components/shared/CopyText/CopyText";
 import { BlockStack, InlineStack } from "@/components/ui/layout";
 import { Text } from "@/components/ui/typography";
 import { formatBytes } from "@/utils/string";
+import { parseHttpUrl } from "@/utils/URL";
 
 import ArtifactURI from "./ArtifactURI";
 import {
@@ -11,6 +12,7 @@ import {
   resolveArtifactType,
 } from "./ArtifactVisualizer/artifactType";
 import ArtifactVisualizer from "./ArtifactVisualizer/ArtifactVisualizer";
+import { UrlValue } from "./ArtifactVisualizer/UrlVisualizer";
 import { MAX_VISUALIZABLE_SIZE_BYTES } from "./ArtifactVisualizer/utils";
 
 interface IOCellProps {
@@ -23,6 +25,7 @@ const IOCell = ({ name, type, artifact }: IOCellProps) => {
   const artifactData = artifact?.artifact_data;
   const inlineValue = artifactData?.value;
   const hasInlineValue = canShowInlineValue(inlineValue);
+  const inlineUrl = parseHttpUrl(inlineValue);
   const hasDetails = Boolean(artifactData?.uri || hasInlineValue);
 
   const artifactType =
@@ -71,15 +74,18 @@ const IOCell = ({ name, type, artifact }: IOCellProps) => {
         className="w-full"
         wrap="nowrap"
       >
-        {hasInlineValue && (
-          <CopyText
-            size="xs"
-            compact
-            className="font-mono text-success line-clamp-2 break-all"
-          >
-            {inlineValue}
-          </CopyText>
-        )}
+        {hasInlineValue &&
+          (inlineUrl ? (
+            <UrlValue url={inlineUrl} size="xs" />
+          ) : (
+            <CopyText
+              size="xs"
+              compact
+              className="font-mono text-success line-clamp-2 break-all"
+            >
+              {inlineValue}
+            </CopyText>
+          ))}
 
         {!artifactData?.uri &&
           artifact &&

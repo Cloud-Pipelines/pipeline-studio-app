@@ -179,6 +179,22 @@ const getIdOrTitleFromPath = (
   };
 };
 
+const MAX_URL_LENGTH = 2048;
+
+const parseHttpUrl = (value?: string | null): string | undefined => {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed.length > MAX_URL_LENGTH || /\s/.test(trimmed)) {
+    return undefined;
+  }
+
+  try {
+    const { protocol } = new URL(trimmed);
+    return protocol === "http:" || protocol === "https:" ? trimmed : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const normalizeUrl = (url: string) => {
   if (url.trim() === "") {
     return "";
@@ -223,4 +239,5 @@ export {
   getIdOrTitleFromPath,
   isGithubUrl,
   normalizeUrl,
+  parseHttpUrl,
 };

@@ -1,5 +1,6 @@
 const DIFF_LANGUAGES: Record<string, string> = {
   text: "plaintext",
+  url: "plaintext",
   csv: "plaintext",
   tsv: "plaintext",
   jsonobject: "json",

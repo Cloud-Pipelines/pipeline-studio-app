@@ -1,5 +1,6 @@
 const VISUALIZABLE_TYPES = [
   "text",
+  "url",
   "image",
   "jsonobject",
   "jsonarray",
@@ -16,6 +17,8 @@ const TYPE_ALIASES: Record<string, VisualizableType> = {
   yaml: "text",
   yml: "text",
   xml: "text",
+  uri: "url",
+  link: "url",
   png: "image",
   jpg: "image",
   jpeg: "image",
