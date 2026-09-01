@@ -4,6 +4,8 @@ import { type IconName } from "@/components/ui/icon";
 import type { ComponentSpec } from "@/models/componentSpec";
 import type { LocatedEntityKind } from "@/models/componentSpec/queries/locateEntity";
 import { locateEntity } from "@/models/componentSpec/queries/locateEntity";
+import { useAiChatMode } from "@/routes/v2/shared/components/AiChat/AiChatStoreContext";
+import type { NavigationStore } from "@/routes/v2/shared/store/navigationStore";
 import { useSharedStores } from "@/routes/v2/shared/store/SharedStoreContext";
 import { useFocusActions } from "@/routes/v2/shared/store/useFocusActions";
 
@@ -35,8 +37,13 @@ export const EntityChip = observer(function EntityChip({
 }: EntityChipProps) {
   const { navigation } = useSharedStores();
   const { navigateToEntity } = useFocusActions();
+  const mode = useAiChatMode();
 
-  const target = resolveNavigableEntity(navigation.rootSpec, entityId);
+  const located = resolveNavigableEntity(navigation.rootSpec, entityId);
+  const target =
+    located && canNavigateTo(mode, navigation, located.navigationPath)
+      ? located
+      : undefined;
 
   function handleClick() {
     if (!target) return;
@@ -45,8 +52,9 @@ export const EntityChip = observer(function EntityChip({
 
   return (
     <ChatEntityChip
-      icon={target ? ENTITY_ICON[target.type] : UNKNOWN_ICON}
+      icon={located ? ENTITY_ICON[located.type] : UNKNOWN_ICON}
       label={label}
+      disabled={!target}
       onClick={handleClick}
     />
   );
@@ -69,6 +77,29 @@ function resolveNavigableEntity(
 
   return {
     type: location.kind,
-    navigationPath: [rootSpec.name, ...location.subgraphPath],
+    navigationPath: [rootSpec.name, ...location.subgraphTaskNames],
   };
+}
+
+/**
+ * In RunView the canvas spec and the execution scope are kept in step by
+ * `useRunViewSubgraphUrlSync`, which can only resolve a child execution id when
+ * the path deepens one level from wherever it already is. A chip jumping two
+ * levels down, or sideways into a sibling subgraph, would move the canvas while
+ * `ExecutionDataProvider` stayed scoped to the old subgraph, leaving task
+ * statuses and artifacts wrong or missing. Until that hook can rebuild the whole
+ * segment chain, RunView chips only navigate within the graph already on screen.
+ */
+function canNavigateTo(
+  mode: "editor" | "runView",
+  navigation: NavigationStore,
+  targetPath: string[],
+): boolean {
+  if (mode === "editor") return true;
+
+  const currentPath = navigation.navigationPath.map((e) => e.displayName);
+  return (
+    currentPath.length === targetPath.length &&
+    currentPath.every((name, index) => name === targetPath[index])
+  );
 }

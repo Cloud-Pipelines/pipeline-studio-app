@@ -25,6 +25,7 @@ export const ChatEntityChip = forwardRef<
       draggable={draggable}
       className={cn(
         "inline-flex items-center gap-1 rounded-md border bg-background px-1.5 py-0.5 text-xs font-medium text-foreground hover:bg-accent transition-colors align-middle",
+        "disabled:cursor-default disabled:hover:bg-background",
         draggable ? "cursor-grab" : "cursor-pointer",
         className,
       )}
