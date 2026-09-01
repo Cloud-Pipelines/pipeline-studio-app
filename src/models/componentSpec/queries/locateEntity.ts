@@ -28,6 +28,18 @@ export type EntityLocation = LocatedEntity & {
   parentContext?: EntityParentContext;
 };
 
+export type EntityLocationOf<K extends LocatedEntityKind> = Extract<
+  EntityLocation,
+  { kind: K }
+>;
+
+export function isLocationOfKind<K extends LocatedEntityKind>(
+  location: EntityLocation,
+  kind: K,
+): location is EntityLocationOf<K> {
+  return location.kind === kind;
+}
+
 /**
  * Finds which spec in the tree owns `entityId`. `subgraphTaskNames` is the chain
  * of subgraph task names leading to it, so an empty chain means the entity lives
