@@ -8,13 +8,13 @@ import {
   downloadYamlFromComponentText,
   getIdOrTitleFromPath,
   normalizeUrl,
+  parseHttpUrl,
 } from "./URL";
 
 vi.mock("@/routes/router", () => ({
   RUNS_BASE_PATH: "/runs",
 }));
 
-// normalizeUrl tests
 describe("normalizeUrl", () => {
   it("returns empty string for empty input", () => {
     expect(normalizeUrl("")).toBe("");
@@ -50,7 +50,52 @@ describe("normalizeUrl", () => {
   });
 });
 
-// convertGcsUrlToBrowserUrl tests
+describe("parseHttpUrl", () => {
+  it.each([
+    "https://example.com",
+    "http://example.com/path?q=1#frag",
+    "https://example.com:8080/a/b",
+  ])("accepts %s", (value) => {
+    expect(parseHttpUrl(value)).toBe(value);
+  });
+
+  it("trims surrounding whitespace", () => {
+    expect(parseHttpUrl("  https://example.com\n")).toBe("https://example.com");
+  });
+
+  it.each([
+    ["javascript:alert(1)"],
+    ["data:text/html,<script>alert(1)</script>"],
+    ["file:///etc/passwd"],
+    ["gs://bucket/object"],
+    ["ftp://example.com"],
+  ])("rejects the non-web scheme %s", (value) => {
+    expect(parseHttpUrl(value)).toBeUndefined();
+  });
+
+  it.each([
+    ["plain text"],
+    ["example.com"],
+    ["https://example.com and more text"],
+    ["https://example.com\nhttps://other.com"],
+    [""],
+    ["   "],
+  ])("rejects %j", (value) => {
+    expect(parseHttpUrl(value)).toBeUndefined();
+  });
+
+  it("rejects null and undefined", () => {
+    expect(parseHttpUrl(null)).toBeUndefined();
+    expect(parseHttpUrl(undefined)).toBeUndefined();
+  });
+
+  it("rejects URLs beyond the length cap", () => {
+    expect(
+      parseHttpUrl(`https://example.com/${"a".repeat(2048)}`),
+    ).toBeUndefined();
+  });
+});
+
 describe("convertGcsUrlToBrowserUrl", () => {
   it("returns unchanged if not a gs:// url", () => {
     expect(convertGcsUrlToBrowserUrl("http://example.com", false)).toBe(
@@ -99,7 +144,6 @@ describe("buildComponentSourceUrl", () => {
   });
 });
 
-// convertGithubUrlToDirectoryUrl tests
 describe("convertGithubUrlToDirectoryUrl", () => {
   it("converts raw github url to directory url", () => {
     const rawUrl =
@@ -168,7 +212,6 @@ describe("getIdOrTitleFromPath", () => {
   });
 });
 
-// downloadYamlFromComponentText tests
 describe("downloadYamlFromComponentText", () => {
   beforeAll(() => {
     // @ts-expect-error: global.URL may not exist in the test environment, so we mock it for testing purposes
@@ -224,7 +267,6 @@ describe("downloadYamlFromComponentText", () => {
   });
 });
 
-// converHfUrlToDirectoryUrl tests
 describe("converHfUrlToDirectoryUrl", () => {
   describe("non-hf URLs", () => {
     it("returns unchanged for URLs that don't start with hf://", () => {

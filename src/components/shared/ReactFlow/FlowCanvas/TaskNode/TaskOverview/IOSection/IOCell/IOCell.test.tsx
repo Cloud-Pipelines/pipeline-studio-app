@@ -160,6 +160,65 @@ describe("IOCell", () => {
     expect(screen.getByText("some inline value")).toBeInTheDocument();
   });
 
+  it("renders an inline URL value as an external link", () => {
+    renderWithQuery(
+      <IOCell
+        name="output"
+        type="URL"
+        artifact={makeArtifact({
+          artifact_data: {
+            total_size: 30,
+            is_dir: false,
+            value: "https://example.com/report",
+          },
+        })}
+      />,
+    );
+
+    const link = screen.getByRole("link", {
+      name: /https:\/\/example\.com\/report/,
+    });
+    expect(link).toHaveAttribute("href", "https://example.com/report");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("links an inline URL value even when the declared type is text", () => {
+    renderWithQuery(
+      <IOCell
+        name="output"
+        type="text"
+        artifact={makeArtifact({
+          artifact_data: {
+            total_size: 30,
+            is_dir: false,
+            value: "https://example.com/report",
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByRole("link")).toBeInTheDocument();
+  });
+
+  it("does not link an inline value that is not a web URL", () => {
+    renderWithQuery(
+      <IOCell
+        name="output"
+        type="text"
+        artifact={makeArtifact({
+          artifact_data: {
+            total_size: 20,
+            is_dir: false,
+            value: "javascript:alert(1)",
+          },
+        })}
+      />,
+    );
+
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.getByText("javascript:alert(1)")).toBeInTheDocument();
+  });
+
   it("does not render inline value for whitespace-only strings", () => {
     renderWithQuery(
       <IOCell

@@ -5,12 +5,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBackend } from "@/providers/BackendProvider";
 import { getArtifactSignedUrl } from "@/services/executionService";
 import { HOURS } from "@/utils/constants";
+import { parseHttpUrl } from "@/utils/URL";
 
 import { CsvVisualizerRemote, CsvVisualizerValue } from "./CsvVisualizer";
 import ImageVisualizer from "./ImageVisualizer";
 import { JsonVisualizerRemote, JsonVisualizerValue } from "./JsonVisualizer";
 import ParquetVisualizer from "./ParquetVisualizer";
 import { TextVisualizerRemote, TextVisualizerValue } from "./TextVisualizer";
+import { UrlVisualizerRemote, UrlVisualizerValue } from "./UrlVisualizer";
 
 interface InlineContentProps {
   type: string;
@@ -44,9 +46,15 @@ export const InlineContent = ({
           isFullscreen={isFullscreen}
         />
       );
+    case "url":
+      return <UrlVisualizerValue value={value} />;
     case "text":
     default:
-      return <TextVisualizerValue value={value} isFullscreen={isFullscreen} />;
+      return parseHttpUrl(value) ? (
+        <UrlVisualizerValue value={value} />
+      ) : (
+        <TextVisualizerValue value={value} isFullscreen={isFullscreen} />
+      );
   }
 };
 
@@ -83,6 +91,8 @@ export const PreviewContent = ({
           isFullscreen={isFullscreen}
         />
       );
+    case "url":
+      return <UrlVisualizerRemote signedUrl={signedUrl} />;
     case "image":
       return <ImageVisualizer src={signedUrl} name={name} />;
     case "csv":

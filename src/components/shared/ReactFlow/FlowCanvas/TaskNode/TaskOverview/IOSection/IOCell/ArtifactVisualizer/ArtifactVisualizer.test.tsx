@@ -98,6 +98,15 @@ vi.mock("./JsonVisualizer", () => ({
   ),
 }));
 
+vi.mock("./UrlVisualizer", () => ({
+  UrlVisualizerValue: ({ value }: { value: string }) => (
+    <div data-testid="url-visualizer" data-value={value} />
+  ),
+  UrlVisualizerRemote: ({ signedUrl }: { signedUrl: string }) => (
+    <div data-testid="url-visualizer" data-signed-url={signedUrl} />
+  ),
+}));
+
 vi.mock("./ParquetVisualizer", () => ({
   default: ({ signedUrl }: { signedUrl: string }) => (
     <div data-testid="parquet-visualizer" data-signed-url={signedUrl} />
@@ -224,6 +233,42 @@ describe("ArtifactVisualizer", () => {
       });
     });
 
+    it("renders UrlVisualizerValue for url type", async () => {
+      renderWithQuery(
+        <ArtifactVisualizer
+          artifact={makeArtifact()}
+          name="output"
+          type="URL"
+          value="https://example.com"
+        />,
+      );
+
+      await userEvent.click(screen.getByRole("button"));
+
+      await waitFor(() => {
+        const viz = screen.getByTestId("url-visualizer");
+        expect(viz).toHaveAttribute("data-value", "https://example.com");
+      });
+    });
+
+    it("renders UrlVisualizerValue when a text value is a URL", async () => {
+      renderWithQuery(
+        <ArtifactVisualizer
+          artifact={makeArtifact()}
+          name="output"
+          type="text"
+          value="https://example.com/report"
+        />,
+      );
+
+      await userEvent.click(screen.getByRole("button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("url-visualizer")).toBeInTheDocument();
+      });
+      expect(screen.queryByTestId("text-visualizer")).not.toBeInTheDocument();
+    });
+
     it("renders JsonVisualizerValue for jsonobject type", async () => {
       renderWithQuery(
         <ArtifactVisualizer
@@ -254,6 +299,21 @@ describe("ArtifactVisualizer", () => {
       await waitFor(() => {
         const viz = screen.getByTestId("text-visualizer");
         expect(viz).toHaveAttribute(
+          "data-signed-url",
+          "https://storage.example.com/signed",
+        );
+      });
+    });
+
+    it("renders UrlVisualizerRemote for url type", async () => {
+      renderWithQuery(
+        <ArtifactVisualizer artifact={makeArtifact()} name="link" type="URL" />,
+      );
+
+      await userEvent.click(screen.getByText("Preview"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("url-visualizer")).toHaveAttribute(
           "data-signed-url",
           "https://storage.example.com/signed",
         );
