@@ -89,7 +89,7 @@ describe("locateEntity", () => {
 
     const location = locateEntity(spec, train!.$id);
 
-    expect(location).toMatchObject({ kind: "task", subgraphPath: [] });
+    expect(location).toMatchObject({ kind: "task", subgraphTaskNames: [] });
     expect(locatedEntityName(location!)).toBe("Train");
     expect(location?.spec).toBe(spec);
     expect(location?.entity).toBe(train);
@@ -102,7 +102,7 @@ describe("locateEntity", () => {
 
     const location = locateEntity(spec, normalize!.$id);
 
-    expect(location?.subgraphPath).toEqual(["Preprocess"]);
+    expect(location?.subgraphTaskNames).toEqual(["Preprocess"]);
     expect(location?.spec).toBe(preprocess);
   });
 
@@ -118,7 +118,7 @@ describe("locateEntity", () => {
 
     expect(location).toMatchObject({
       kind: "task",
-      subgraphPath: ["Preprocess", "Normalize"],
+      subgraphTaskNames: ["Preprocess", "Normalize"],
     });
     expect(locatedEntityName(location!)).toBe("ScaleColumns");
     expect(location?.spec).toBe(normalizeSpec);
@@ -156,7 +156,7 @@ describe("locateEntity", () => {
 
     expect(location).toMatchObject({
       kind: "input",
-      subgraphPath: ["Preprocess"],
+      subgraphTaskNames: ["Preprocess"],
     });
     expect(locatedEntityName(location!)).toBe("path");
   });

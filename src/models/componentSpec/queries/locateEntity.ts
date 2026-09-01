@@ -22,14 +22,17 @@ interface EntityParentContext {
 
 export type EntityLocation = LocatedEntity & {
   spec: ComponentSpec;
-  subgraphPath: string[];
+  subgraphTaskNames: string[];
   parentContext?: EntityParentContext;
 };
 
 /**
- * Finds which spec in the tree owns `entityId`. `subgraphPath` is the chain of
- * subgraph task names leading to it, so an empty path means the entity lives in
- * the spec that was passed in, and `parentContext` is absent only in that case.
+ * Finds which spec in the tree owns `entityId`. `subgraphTaskNames` is the chain
+ * of subgraph task names leading to it, so an empty chain means the entity lives
+ * in the spec that was passed in, and `parentContext` is absent only in that
+ * case. The root is not a segment — deliberately unlike
+ * `ComponentValidationIssue.subgraphPath`, which is prefixed with `"root"`;
+ * hence the different field name.
  *
  * Entity `$id`s are unique across the whole document (`generateUniqueId`
  * combines a module-level counter with a timestamp), so a match at any depth is
@@ -41,7 +44,7 @@ export function locateEntity(
 ): EntityLocation | undefined {
   const found = findInSpec(spec, entityId);
   if (found) {
-    return { ...found, spec, subgraphPath: [] };
+    return { ...found, spec, subgraphTaskNames: [] };
   }
 
   for (const task of spec.tasks) {
@@ -50,7 +53,7 @@ export function locateEntity(
     if (nested) {
       return {
         ...nested,
-        subgraphPath: [task.name, ...nested.subgraphPath],
+        subgraphTaskNames: [task.name, ...nested.subgraphTaskNames],
         parentContext: nested.parentContext ?? {
           parentSpec: spec,
           taskId: task.$id,
