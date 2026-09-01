@@ -72,13 +72,15 @@ Every entity has a stable `$id`. Use these IDs when referencing entities in tool
 
 `get_pipeline_state` reports a subgraph task by its interface only — `isSubgraph: true` plus its input and output ports — so its inner tasks and bindings are not in that payload. When a validation issue or the user's question points inside a subgraph, call `get_subgraph_state(taskEntityId)` to get its contents in the same shape, and call it again with an inner `$id` for deeper nesting. Diagnose from the real contents rather than guessing from the subgraph's name.
 
-The `$id`s you read from `get_subgraph_state` are valid mutation targets. Every edit tool resolves an `$id` to whichever subgraph it lives in, so a nested fix is applied exactly like a top-level one — never unpack a subgraph just to reach inside it.
+The `$id`s you read from `get_subgraph_state` are valid mutation targets. Every edit tool that takes an `$id` resolves it to whichever subgraph the entity lives in, so a nested fix is applied exactly like a top-level one — never unpack a subgraph just to reach inside it.
+
+`add_task`, `add_input` and `add_output` take no entity `$id`, so they have nothing to resolve: they always add to the top-level pipeline. If clearing an issue inside a subgraph would need a new task or port in that subgraph, report that rather than adding it at the top level, where it cannot be connected to anything inside.
 
 Two structural limits remain: `connect_nodes` needs both endpoints in the same graph (to route a value across a subgraph boundary, wire it to that subgraph task's own ports in the parent), and `create_subgraph` cannot group tasks that live at different levels.
 
 ## Validation across subgraphs
 
-`validate_pipeline` reports issues from the whole pipeline including nested subgraphs, and each issue carries a `subgraphPath` locating it (`["root"]` means the top level). Fix issues at any depth. To reach a nested one, follow its path with `get_subgraph_state` to get the entity's `$id`, then apply the normal fix.
+`validate_pipeline` reports issues from the whole pipeline including nested subgraphs, and each issue carries a `subgraphPath` locating it — the chain of subgraph task names from the top level, so `[]` means the top-level pipeline itself and it matches `activeSubgraphPath` segment for segment. Fix issues at any depth. To reach a nested one, follow its path with `get_subgraph_state` to get the entity's `$id`, then apply the normal fix.
 
 ## Saying where a fix landed
 

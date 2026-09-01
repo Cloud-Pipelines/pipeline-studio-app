@@ -9,13 +9,15 @@
  * the Editor's spec-mutation actions or an undo store.
  */
 import type { ToolBridgeApi, ValidationResult } from "@/agent/toolBridgeApi";
-import { collectValidationIssues } from "@/models/componentSpec/validation/collectIssues";
 import { serializeSpecForAi } from "@/routes/v2/shared/components/AiChat/serializeSpecForAi";
 import { createDebugBridgeHandlers } from "@/routes/v2/shared/components/AiChat/toolBridge/debugBridge";
 import { createRunBridgeHandlers } from "@/routes/v2/shared/components/AiChat/toolBridge/runBridge";
 import { createSubgraphBridgeHandlers } from "@/routes/v2/shared/components/AiChat/toolBridge/subgraphBridge";
 import type { BridgeDeps } from "@/routes/v2/shared/components/AiChat/toolBridge/utils";
-import { requireSpec } from "@/routes/v2/shared/components/AiChat/toolBridge/utils";
+import {
+  requireSpec,
+  toValidationResult,
+} from "@/routes/v2/shared/components/AiChat/toolBridge/utils";
 
 const READ_ONLY_ERROR =
   "This is a read-only run view — the pipeline spec cannot be edited here.";
@@ -52,20 +54,7 @@ function createReadOnlyCsomHandlers(deps: BridgeDeps): ReadOnlyCsomHandlers {
     },
 
     async validatePipeline(): Promise<ValidationResult> {
-      const issues = collectValidationIssues(requireSpec(deps));
-      return {
-        valid: issues.length === 0,
-        issueCount: issues.length,
-        issues: issues.map((i) => ({
-          type: i.type,
-          severity: i.severity,
-          message: i.message,
-          entityId: i.entityId,
-          entityName: i.entityName,
-          issueCode: i.issueCode,
-          subgraphPath: i.subgraphPath,
-        })),
-      };
+      return toValidationResult(requireSpec(deps));
     },
 
     async searchComponents() {

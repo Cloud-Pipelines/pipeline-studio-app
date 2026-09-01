@@ -14,7 +14,6 @@ import type {
   ValidationResult,
 } from "@/agent/toolBridgeApi";
 import type { EntityLocationOf } from "@/models/componentSpec/queries/locateEntity";
-import { collectValidationIssues } from "@/models/componentSpec/validation/collectIssues";
 import {
   connectNodes,
   deleteSelectedEdgesByEdgeIds,
@@ -47,6 +46,7 @@ import type { BridgeDeps } from "@/routes/v2/shared/components/AiChat/toolBridge
 import {
   computeNextPosition,
   requireSpec,
+  toValidationResult,
 } from "@/routes/v2/shared/components/AiChat/toolBridge/utils";
 import type { UndoGroupable } from "@/routes/v2/shared/nodes/types";
 import { hydrateComponentReference } from "@/services/componentService";
@@ -54,6 +54,9 @@ import { hydrateComponentReference } from "@/services/componentService";
 import {
   applyToTarget,
   describeEntityLocation,
+  explainNameCollision,
+  explainNotASubgraph,
+  resolveArgumentValue,
   resolveConnectable,
   resolveTarget,
 } from "./mutationTarget";
@@ -136,8 +139,18 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
 
     async renameTask(entityId, newName) {
       const root = requireSpec(deps);
-      return applyToTarget(root, entityId, "task", (location) =>
-        renameTask(deps.undo, location.spec, entityId, newName),
+      return applyToTarget(
+        root,
+        entityId,
+        "task",
+        (location) => renameTask(deps.undo, location.spec, entityId, newName),
+        (location) =>
+          explainNameCollision(
+            location.spec.tasks,
+            entityId,
+            newName,
+            location,
+          ),
       );
     },
 
@@ -166,14 +179,25 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
 
     async renameInput(entityId, newName) {
       const root = requireSpec(deps);
-      return applyToTarget(root, entityId, "input", (location) =>
-        renameInput(
-          deps.undo,
-          location.spec,
-          entityId,
-          newName,
-          location.parentContext,
-        ),
+      return applyToTarget(
+        root,
+        entityId,
+        "input",
+        (location) =>
+          renameInput(
+            deps.undo,
+            location.spec,
+            entityId,
+            newName,
+            location.parentContext,
+          ),
+        (location) =>
+          explainNameCollision(
+            location.spec.inputs,
+            entityId,
+            newName,
+            location,
+          ),
       );
     },
 
@@ -207,14 +231,25 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
 
     async renameOutput(entityId, newName) {
       const root = requireSpec(deps);
-      return applyToTarget(root, entityId, "output", (location) =>
-        renameOutput(
-          deps.undo,
-          location.spec,
-          entityId,
-          newName,
-          location.parentContext,
-        ),
+      return applyToTarget(
+        root,
+        entityId,
+        "output",
+        (location) =>
+          renameOutput(
+            deps.undo,
+            location.spec,
+            entityId,
+            newName,
+            location.parentContext,
+          ),
+        (location) =>
+          explainNameCollision(
+            location.spec.outputs,
+            entityId,
+            newName,
+            location,
+          ),
       );
     },
 
@@ -289,8 +324,14 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
           error: `Task "${location.entity.name}" has no input named "${inputName}"`,
         };
       }
+
+      const resolved = resolveArgumentValue(location, value);
+      if (!resolved.ok) {
+        return { success: false, error: resolved.error };
+      }
+
       deps.undo.withGroup("Set task argument", () => {
-        location.spec.setTaskArgument(taskEntityId, inputName, value);
+        location.spec.setTaskArgument(taskEntityId, inputName, resolved.value);
       });
       return { success: true };
     },
@@ -298,11 +339,20 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
     async createSubgraph(taskEntityIds, subgraphName) {
       const root = requireSpec(deps);
 
+      const distinctIds = [...new Set(taskEntityIds)];
+      if (distinctIds.length < 2) {
+        return {
+          success: false,
+          error:
+            "Could not create subgraph — pass the $ids of at least two distinct tasks to group. Wrapping a single task in a subgraph is not useful.",
+        };
+      }
+
       const locations: Array<{
         id: string;
         location: EntityLocationOf<"task">;
       }> = [];
-      for (const taskEntityId of taskEntityIds) {
+      for (const taskEntityId of distinctIds) {
         const target = resolveTarget(root, taskEntityId, "task");
         if (!target.ok) {
           return { success: false, error: target.error };
@@ -315,7 +365,7 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
         return {
           success: false,
           error:
-            "Could not create subgraph — pass the $ids of at least two tasks to group.",
+            "Could not create subgraph — pass the $ids of at least two distinct tasks to group.",
         };
       }
       const stray = locations.find(
@@ -332,7 +382,7 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
       const subgraphTask = createSubgraph(
         deps.undo,
         spec,
-        taskEntityIds,
+        distinctIds,
         subgraphName,
         computeNextPosition(spec),
       );
@@ -340,7 +390,7 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
         return {
           success: false,
           error:
-            "Could not create subgraph — pass the $ids of at least two tasks that can be grouped together.",
+            "Could not create subgraph — pass the $ids of at least two distinct tasks that can be grouped together.",
         };
       }
       return { success: true, subgraphTaskId: subgraphTask.$id };
@@ -348,26 +398,18 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
 
     async unpackSubgraph(taskEntityId) {
       const root = requireSpec(deps);
-      return applyToTarget(root, taskEntityId, "task", (location) =>
-        unpackSubgraphTask(deps.undo, location.spec, taskEntityId),
+      return applyToTarget(
+        root,
+        taskEntityId,
+        "task",
+        (location) =>
+          unpackSubgraphTask(deps.undo, location.spec, taskEntityId),
+        (location) => explainNotASubgraph(location, taskEntityId),
       );
     },
 
     async validatePipeline(): Promise<ValidationResult> {
-      const issues = collectValidationIssues(requireSpec(deps));
-      return {
-        valid: issues.length === 0,
-        issueCount: issues.length,
-        issues: issues.map((i) => ({
-          type: i.type,
-          severity: i.severity,
-          message: i.message,
-          entityId: i.entityId,
-          entityName: i.entityName,
-          issueCode: i.issueCode,
-          subgraphPath: i.subgraphPath,
-        })),
-      };
+      return toValidationResult(requireSpec(deps));
     },
   };
 }

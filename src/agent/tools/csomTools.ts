@@ -50,7 +50,11 @@ const argumentValueSchema = z.union([
   }),
   z.object({
     taskOutput: z.object({
-      taskId: z.string(),
+      taskId: z
+        .string()
+        .describe(
+          "The source task's $id or its name — both are accepted. The referenced task must live in the same graph as the task being written to.",
+        ),
       outputName: z.string(),
       type: z.string().nullable().optional(),
     }),
@@ -382,7 +386,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
   const validatePipeline = tool({
     name: "validate_pipeline",
     description:
-      "Validate the whole pipeline — including everything inside every subgraph — for schema errors, missing inputs, orphaned bindings, and cycles. Each issue carries a subgraphPath saying where it is. Always call before finalizing.",
+      "Validate the whole pipeline — including everything inside every subgraph — for schema errors, missing inputs, orphaned bindings, and cycles. Each issue carries a subgraphPath saying where it is: the chain of subgraph task names from the top level, empty for the top-level pipeline itself. Always call before finalizing.",
     parameters: z.object({}),
     execute: async () => asJson(await bridge.validatePipeline()),
   });

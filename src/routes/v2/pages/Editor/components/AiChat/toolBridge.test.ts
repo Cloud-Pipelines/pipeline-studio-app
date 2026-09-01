@@ -460,8 +460,11 @@ describe("createEditorToolBridge", () => {
 
   describe("subgraphs", () => {
     it("createSubgraph returns the new subgraph task id", async () => {
-      const { bridge, spec } = makeBridge();
-      const result = await bridge.createSubgraph(["task_1"], "Group");
+      const { bridge, spec } = makeNestedBridge();
+      const result = await bridge.createSubgraph(
+        [taskId(spec, "Preprocess"), taskId(spec, "Train")],
+        "Group",
+      );
       expect(result.success).toBe(true);
       expect(result.subgraphTaskId).toBeDefined();
       expect(spec.tasks.some((t) => t.$id === result.subgraphTaskId)).toBe(
@@ -473,7 +476,23 @@ describe("createEditorToolBridge", () => {
       const { bridge } = makeBridge();
       const result = await bridge.createSubgraph([], "Group");
       expect(result.success).toBe(false);
-      expect(result.error).toMatch(/Could not create subgraph/);
+      expect(result.error).toMatch(/at least two distinct tasks/);
+    });
+
+    it("createSubgraph refuses to wrap a single task", async () => {
+      const { bridge, spec } = makeBridge();
+      const result = await bridge.createSubgraph(["task_1"], "Group");
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/at least two distinct tasks/);
+      expect(spec.tasks).toHaveLength(1);
+    });
+
+    it("createSubgraph refuses the same task id passed twice", async () => {
+      const { bridge, spec } = makeBridge();
+      const result = await bridge.createSubgraph(["task_1", "task_1"], "Group");
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/at least two distinct tasks/);
+      expect(spec.tasks).toHaveLength(1);
     });
   });
 
@@ -666,6 +685,67 @@ describe("createEditorToolBridge", () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('refers to task "Train", not a binding');
     });
+
+    it("refuses an argument referencing a graph input from another graph", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+
+      const result = await bridge.setTaskArgument(
+        taskId(inner, "DropNulls"),
+        "path",
+        { graphInput: { inputName: "raw_path" } },
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('has no input named "raw_path"');
+      expect(inner.tasks[0].arguments).toEqual([]);
+      expect(spec.inputs.map((i) => i.name)).toEqual(["raw_path"]);
+    });
+
+    it("accepts a task output referenced by $id and stores it by name", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.setTaskArgument(
+        taskId(spec, "Train"),
+        "table",
+        {
+          taskOutput: {
+            taskId: taskId(spec, "Preprocess"),
+            outputName: "table",
+          },
+        },
+      );
+
+      expect(result).toEqual({ success: true });
+      expect(spec.tasks.find((t) => t.name === "Train")?.arguments).toEqual([
+        {
+          name: "table",
+          value: { taskOutput: { taskId: "Preprocess", outputName: "table" } },
+        },
+      ]);
+    });
+
+    it("explains a rename that collides instead of failing generically", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.renameTask(
+        taskId(spec, "Train"),
+        "Preprocess",
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("already taken in that graph");
+      expect(spec.tasks.map((t) => t.name)).toEqual(["Preprocess", "Train"]);
+    });
+
+    it("explains unpacking something that is not a subgraph", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.unpackSubgraph(taskId(spec, "Train"));
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("is not a subgraph");
+      expect(result.error).not.toContain("could not be applied");
+    });
   });
 
   describe("validatePipeline", () => {
@@ -712,7 +792,7 @@ describe("createEditorToolBridge", () => {
         expect(typeof issue.type).toBe("string");
         expect(typeof issue.severity).toBe("string");
         expect(typeof issue.message).toBe("string");
-        expect(issue.subgraphPath).toEqual(["root"]);
+        expect(issue.subgraphPath).toEqual([]);
       }
     });
 
@@ -720,10 +800,10 @@ describe("createEditorToolBridge", () => {
       const { bridge } = makeNestedBridge();
 
       const result = await bridge.validatePipeline();
-      const nested = result.issues.filter((i) => i.subgraphPath.length > 1);
+      const nested = result.issues.filter((i) => i.subgraphPath.length > 0);
 
       expect(nested.length).toBeGreaterThan(0);
-      expect(nested[0].subgraphPath).toEqual(["root", "Preprocess"]);
+      expect(nested[0].subgraphPath).toEqual(["Preprocess"]);
       expect(result.issueCount).toBe(result.issues.length);
     });
   });

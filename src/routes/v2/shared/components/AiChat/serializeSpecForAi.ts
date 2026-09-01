@@ -7,8 +7,9 @@
  * subgraph tasks are flagged with `isSubgraph: true`, and the active
  * subgraph breadcrumb (`activeSubgraphPath`) is surfaced so the model
  * can disambiguate "fix the pipeline" vs "fix this subgraph" without a
- * separate bridge call. Edits always target the root spec; the path is
- * a hint, not a target.
+ * separate bridge call. Edits land in whichever spec owns the `$id` they
+ * name, so the breadcrumb tells the model where the user is looking
+ * rather than where an edit will go.
  */
 import type {
   Binding,
