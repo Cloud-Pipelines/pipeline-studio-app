@@ -97,6 +97,7 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
     async getPipelineState() {
       return serializeSpecForAi(requireSpec(deps), {
         activeSubgraphPath: deps.getActiveSubgraphPath(),
+        activeSubgraphTaskId: deps.getActiveSubgraphTaskId(),
       });
     },
 
@@ -113,6 +114,12 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
     },
 
     async addTask({ name, componentRef, inSubgraphTaskId }) {
+      // Hydration fetches over the network; resolving the destination before it
+      // would hand us a subgraph spec the user could detach (undo, navigation,
+      // a reload) while we wait, and the task would land in an orphaned tree.
+      const hydrated =
+        (await hydrateComponentReference(componentRef)) ?? componentRef;
+
       const destination = resolveDestination(
         requireSpec(deps),
         inSubgraphTaskId,
@@ -122,8 +129,6 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
       }
       const { spec } = destination;
 
-      const hydrated =
-        (await hydrateComponentReference(componentRef)) ?? componentRef;
       const task = addTask(
         deps.undo,
         spec,

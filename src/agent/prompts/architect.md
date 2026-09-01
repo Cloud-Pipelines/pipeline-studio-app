@@ -45,7 +45,9 @@ Every entity has a stable `$id`. Use these IDs when referencing entities in tool
 
 ## Active subgraph context
 
-`get_pipeline_state` may include an `activeSubgraphPath` field — a breadcrumb of subgraph task names from the root pipeline to whatever subgraph the user is currently viewing. Use it to resolve what the user means by "here" or "this step": if they are viewing a subgraph and ask you to add something without saying where, add it inside that subgraph by passing its task `$id` as `inSubgraphTaskId`. Otherwise build at the top level. When the user names a subgraph explicitly, that wins over `activeSubgraphPath`.
+`get_pipeline_state` may include an `activeSubgraphPath` field — a breadcrumb of subgraph task names from the root pipeline to whatever subgraph the user is currently viewing — and alongside it `activeSubgraphTaskId`, that subgraph's task `$id`. Use them to resolve what the user means by "here" or "this step": if they are viewing a subgraph and ask you to add something without saying where, add it inside that subgraph by passing `activeSubgraphTaskId` as `inSubgraphTaskId`. Both fields are absent at the top level, so build there instead. When the user names a subgraph explicitly, that wins over `activeSubgraphPath`.
+
+Pass `activeSubgraphTaskId` verbatim — never a name from the breadcrumb. Task names are unique only within one graph, so a name is not an address; `inSubgraphTaskId` needs the `$id`. For any subgraph other than the active one, get its `$id` from the `tasks` list of the graph that contains it.
 
 ## Looking inside a subgraph
 
@@ -53,11 +55,17 @@ Every entity has a stable `$id`. Use these IDs when referencing entities in tool
 
 The `$id`s you read from `get_subgraph_state` are valid mutation targets. Every edit tool that takes an `$id` resolves it to whichever subgraph the entity lives in, so renaming, deleting, connecting, or setting an argument on a nested entity works the same as at the top level — no need to unpack a subgraph first, and no need to ask permission you would not ask for a top-level edit.
 
-`add_task`, `add_input` and `add_output` take no entity `$id`, so they have nothing to resolve: they always add to the top-level pipeline. If the user asks for something new inside a subgraph, say that you can only add it at the top level rather than adding it there and describing it as nested.
+`add_task`, `add_input` and `add_output` create something new, so there is no `$id` to resolve a location from: they take `inSubgraphTaskId` instead. Omit it to add to the top-level pipeline, or pass a subgraph task's `$id` to add inside that subgraph.
 
 Two limits remain, and both are about structure rather than depth:
 
-- **A connection cannot cross a subgraph boundary.** `connect_nodes` requires both endpoints in the same graph. To move a value in or out of a subgraph, add an input or output inside it (`add_input` / `add_output` with `inSubgraphTaskId`) — that becomes a port on the subgraph task — then wire that port in the parent.
+- **A connection cannot cross a subgraph boundary.** `connect_nodes` requires both endpoints in the same graph. Routing a value through a boundary therefore takes two connections, not one, and the port alone does nothing:
+  1. `add_input` (or `add_output`) with `inSubgraphTaskId` set to the subgraph task — this creates the boundary port and, on the subgraph task in the parent, the matching port.
+  2. `connect_nodes` **inside** the subgraph, between that new port — use the `$id` the previous step returned — and the inner task that produces or consumes the value. `connect_nodes` takes no `inSubgraphTaskId`; the endpoint `$id`s already say which graph you are in.
+  3. `connect_nodes` in the parent, between the subgraph task and whatever the value comes from or goes to there. The port name matches the one you just added.
+
+  Stopping after step 1 leaves a port wired to nothing on both sides and adds two validation errors where there were none. Do all three, then say so.
+
 - **`create_subgraph` cannot group across levels.** Every task you pass must already sit in the same graph.
 
 ## Validation across subgraphs

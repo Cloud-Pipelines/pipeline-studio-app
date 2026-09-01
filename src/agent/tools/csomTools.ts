@@ -185,7 +185,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
         .nullable()
         .optional()
         .describe(
-          '$id of a subgraph task to add this inside. Omit for the top-level pipeline. Use it when the user means a specific subgraph — e.g. they are viewing one (see activeSubgraphPath in get_pipeline_state) and say "add X here".',
+          "$id of a subgraph task to add this inside. Omit for the top-level pipeline. When the user means the subgraph they are viewing, pass activeSubgraphTaskId from get_pipeline_state verbatim — a name from activeSubgraphPath is not an $id.",
         ),
     }),
     execute: async ({ name, componentRef, inSubgraphTaskId }) =>
@@ -237,7 +237,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
         .nullable()
         .optional()
         .describe(
-          '$id of a subgraph task to add this inside. Omit for the top-level pipeline. Use it when the user means a specific subgraph — e.g. they are viewing one (see activeSubgraphPath in get_pipeline_state) and say "add X here".',
+          "$id of a subgraph task to add this inside. Omit for the top-level pipeline. When the user means the subgraph they are viewing, pass activeSubgraphTaskId from get_pipeline_state verbatim — a name from activeSubgraphPath is not an $id.",
         ),
     }),
     execute: async ({
@@ -295,7 +295,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
         .nullable()
         .optional()
         .describe(
-          '$id of a subgraph task to add this inside. Omit for the top-level pipeline. Use it when the user means a specific subgraph — e.g. they are viewing one (see activeSubgraphPath in get_pipeline_state) and say "add X here".',
+          "$id of a subgraph task to add this inside. Omit for the top-level pipeline. When the user means the subgraph they are viewing, pass activeSubgraphTaskId from get_pipeline_state verbatim — a name from activeSubgraphPath is not an $id.",
         ),
     }),
     execute: async ({ name, type, description, inSubgraphTaskId }) =>

@@ -97,6 +97,7 @@ function makeBridge() {
   const bridge = createEditorToolBridge({
     getSpec: () => spec,
     getActiveSubgraphPath: () => [],
+    getActiveSubgraphTaskId: () => undefined,
     undo,
   });
   return { bridge, undo, spec };
@@ -172,6 +173,7 @@ function makeNestedBridge(extraInnerTasks?: Record<string, unknown>) {
   const bridge = createEditorToolBridge({
     getSpec: () => spec,
     getActiveSubgraphPath: () => [],
+    getActiveSubgraphTaskId: () => undefined,
     undo,
   });
   const preprocess = spec.tasks.find((t) => t.name === "Preprocess");
@@ -192,6 +194,7 @@ function makeEmptyBridge() {
   const bridge = createEditorToolBridge({
     getSpec: () => null,
     getActiveSubgraphPath: () => [],
+    getActiveSubgraphTaskId: () => undefined,
     undo,
   });
   return { bridge, undo };
@@ -210,6 +213,7 @@ function makeBackendBridge(
   const bridge = createEditorToolBridge({
     getSpec: () => spec,
     getActiveSubgraphPath: () => [],
+    getActiveSubgraphTaskId: () => undefined,
     undo,
     getBackendUrl: () => TEST_BACKEND_URL,
     getAuthToken: () => overrides.authToken,
@@ -231,12 +235,13 @@ describe("createEditorToolBridge", () => {
   });
 
   describe("getPipelineState", () => {
-    it("returns the serialized spec with the active subgraph path", async () => {
+    it("returns the serialized spec with the active subgraph path and task id", async () => {
       const spec = buildSpec();
       const undo = new RecordingUndo();
       const bridge = createEditorToolBridge({
         getSpec: () => spec,
         getActiveSubgraphPath: () => ["preprocess"],
+        getActiveSubgraphTaskId: () => "task-preprocess",
         undo,
       });
 
@@ -244,6 +249,22 @@ describe("createEditorToolBridge", () => {
       expect(state.name).toBe("Pipe");
       expect(state.tasks).toHaveLength(1);
       expect(state.activeSubgraphPath).toEqual(["preprocess"]);
+      expect(state.activeSubgraphTaskId).toBe("task-preprocess");
+    });
+
+    it("omits the active subgraph task id at the top level", async () => {
+      const spec = buildSpec();
+      const undo = new RecordingUndo();
+      const bridge = createEditorToolBridge({
+        getSpec: () => spec,
+        getActiveSubgraphPath: () => [],
+        getActiveSubgraphTaskId: () => undefined,
+        undo,
+      });
+
+      const state = await bridge.getPipelineState();
+      expect(state.activeSubgraphPath).toBeUndefined();
+      expect(state.activeSubgraphTaskId).toBeUndefined();
     });
   });
 
@@ -417,6 +438,7 @@ describe("createEditorToolBridge", () => {
       const bridge = createEditorToolBridge({
         getSpec: () => spec,
         getActiveSubgraphPath: () => [],
+        getActiveSubgraphTaskId: () => undefined,
         undo,
       });
 
@@ -863,6 +885,7 @@ describe("createEditorToolBridge", () => {
       const bridge = createEditorToolBridge({
         getSpec: () => spec,
         getActiveSubgraphPath: () => [],
+        getActiveSubgraphTaskId: () => undefined,
         undo,
       });
 
@@ -877,6 +900,7 @@ describe("createEditorToolBridge", () => {
       const bridge = createEditorToolBridge({
         getSpec: () => spec,
         getActiveSubgraphPath: () => [],
+        getActiveSubgraphTaskId: () => undefined,
         undo,
       });
 
