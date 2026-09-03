@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  formatCellValue,
   getPreviewRowLimit,
   MAX_PREVIEW_CELLS,
   MAX_PREVIEW_ROWS,
@@ -94,6 +95,43 @@ describe("parseCsv", () => {
       ["line1\nline2", "x"],
       ["y", "z"],
     ]);
+  });
+});
+
+describe("formatCellValue", () => {
+  it("serializes objects and arrays as JSON", () => {
+    expect(formatCellValue({ locale: "en", limit: 3 })).toBe(
+      '{"locale":"en","limit":3}',
+    );
+    expect(formatCellValue([1, "two", null])).toBe('[1,"two",null]');
+    expect(formatCellValue({ nested: { a: [true] } })).toBe(
+      '{"nested":{"a":[true]}}',
+    );
+  });
+
+  it("serializes bigints nested in objects", () => {
+    expect(formatCellValue({ count: 9007199254740993n })).toBe(
+      '{"count":"9007199254740993"}',
+    );
+  });
+
+  it("renders nullish cells as empty", () => {
+    expect(formatCellValue(null)).toBe("");
+    expect(formatCellValue(undefined)).toBe("");
+  });
+
+  it("renders dates as ISO strings", () => {
+    expect(formatCellValue(new Date("2026-01-02T03:04:05.000Z"))).toBe(
+      "2026-01-02T03:04:05.000Z",
+    );
+  });
+
+  it("stringifies primitives", () => {
+    expect(formatCellValue("red shoes")).toBe("red shoes");
+    expect(formatCellValue(42)).toBe("42");
+    expect(formatCellValue(0)).toBe("0");
+    expect(formatCellValue(false)).toBe("false");
+    expect(formatCellValue(123n)).toBe("123");
   });
 });
 

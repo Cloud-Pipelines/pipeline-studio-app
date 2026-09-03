@@ -32,6 +32,26 @@ describe("TableVisualizer", () => {
     expect(screen.getByText("row-2")).toBeInTheDocument();
   });
 
+  it("renders object cells as JSON instead of [object Object]", () => {
+    render(
+      <TableVisualizer
+        data={{
+          columns: [{ name: "config" }],
+          rows: [[{ locale: "en", limit: 3 }]],
+          hasMore: false,
+        }}
+        isFullscreen={false}
+        totalRows={1}
+        columnCount={1}
+      />,
+    );
+
+    const cell = screen.getByText('{"locale":"en","limit":3}');
+    expect(cell).toBeInTheDocument();
+    expect(cell).toHaveAttribute("title", '{"locale":"en","limit":3}');
+    expect(screen.queryByText("[object Object]")).not.toBeInTheDocument();
+  });
+
   it("says 'Showing all N rows' when hasMore is false", () => {
     const data = makeData(5);
     render(

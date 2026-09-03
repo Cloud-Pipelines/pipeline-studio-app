@@ -6,18 +6,31 @@ export type ArtifactColumn = {
   nullable?: boolean;
 };
 
+export type ArtifactCell = unknown;
+
 export type ArtifactTableData = {
   columns: ArtifactColumn[];
-  rows: string[][];
+  rows: ArtifactCell[][];
   hasMore: boolean;
 };
 
 export type ParsedArtifact = {
   columns: ArtifactColumn[];
-  rows: string[][];
+  rows: ArtifactCell[][];
   truncated: boolean;
   totalRows: number;
 };
+
+export function formatCellValue(value: ArtifactCell): string {
+  if (value === null || value === undefined) return "";
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "object") {
+    return JSON.stringify(value, (_key, nested) =>
+      typeof nested === "bigint" ? nested.toString() : nested,
+    );
+  }
+  return String(value);
+}
 
 export const MAX_VISUALIZABLE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 

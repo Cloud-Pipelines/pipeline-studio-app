@@ -15,7 +15,12 @@ import { Paragraph, Text } from "@/components/ui/typography";
 import useToastNotification from "@/hooks/useToastNotification";
 import { downloadBlobAsFile } from "@/utils/URL";
 
-import { type ArtifactColumn, type ArtifactTableData } from "./utils";
+import {
+  type ArtifactCell,
+  type ArtifactColumn,
+  type ArtifactTableData,
+  formatCellValue,
+} from "./utils";
 
 /**
  * The full dataset usually lives behind a cross-origin signed URL, where the
@@ -145,7 +150,7 @@ export default TableVisualizer;
 
 interface ArtifactTableProps {
   columns: ArtifactColumn[];
-  rows: string[][];
+  rows: ArtifactCell[][];
 }
 
 const ArtifactTable = ({ columns, rows }: ArtifactTableProps) => (
@@ -175,15 +180,14 @@ const ArtifactTable = ({ columns, rows }: ArtifactTableProps) => (
     <TableBody>
       {rows.map((row, i) => (
         <TableRow key={i}>
-          {row.map((cell, j) => (
-            <TableCell
-              key={j}
-              className="font-mono text-xs"
-              title={String(cell)}
-            >
-              {String(cell)}
-            </TableCell>
-          ))}
+          {row.map((cell, j) => {
+            const text = formatCellValue(cell);
+            return (
+              <TableCell key={j} className="font-mono text-xs" title={text}>
+                {text}
+              </TableCell>
+            );
+          })}
         </TableRow>
       ))}
     </TableBody>

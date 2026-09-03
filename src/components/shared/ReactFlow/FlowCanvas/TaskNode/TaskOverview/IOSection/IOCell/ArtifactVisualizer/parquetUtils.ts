@@ -17,7 +17,11 @@ import {
   fetchArtifactForHyparquet,
   fetchArtifactOrThrow,
 } from "./useArtifactFetch";
-import { type ArtifactColumn, MAX_VISUALIZABLE_SIZE_BYTES } from "./utils";
+import {
+  type ArtifactCell,
+  type ArtifactColumn,
+  MAX_VISUALIZABLE_SIZE_BYTES,
+} from "./utils";
 
 export const PARQUET_PREVIEW_ROWS = 100;
 export const PARQUET_LOAD_MORE_ROWS = 100;
@@ -74,22 +78,20 @@ export async function readParquetRows(
   columns: ArtifactColumn[],
   rowStart: number,
   rowEnd: number,
-): Promise<string[][]> {
+): Promise<ArtifactCell[][]> {
   const objects = await parquetReadObjects({
     file: source,
     metadata,
     rowStart,
     rowEnd,
   });
-  return objects.map((obj) =>
-    columns.map((col) => obj[col.name]),
-  ) as string[][];
+  return objects.map((obj) => columns.map((col) => obj[col.name]));
 }
 
 export async function readParquetPreview(
   opened: OpenedParquet,
   previewRows: number,
-): Promise<{ columns: ArtifactColumn[]; rows: string[][] }> {
+): Promise<{ columns: ArtifactColumn[]; rows: ArtifactCell[][] }> {
   const objects = await parquetReadObjects({
     file: opened.source,
     metadata: opened.metadata,
@@ -98,9 +100,7 @@ export async function readParquetPreview(
   if (objects.length === 0) return { columns: [], rows: [] };
 
   const columns = buildColumns(opened.metadata.schema, objects[0]);
-  const rows = objects.map((obj) =>
-    columns.map((col) => obj[col.name]),
-  ) as string[][];
+  const rows = objects.map((obj) => columns.map((col) => obj[col.name]));
   return { columns, rows };
 }
 
