@@ -235,6 +235,71 @@ describe("submitPipelineRun", () => {
     });
   });
 
+  describe("run name template", () => {
+    const templatedSpec = (template: string): ComponentSpec => ({
+      name: "my-pipeline",
+      inputs: [{ name: "dataset", default: "iris" }],
+      implementation: { container: { image: "test:latest" } },
+      metadata: { annotations: { "run-name-template": template } },
+    });
+
+    it("resolves the template into the submitted run name", async () => {
+      await submitPipelineRun(
+        templatedSpec("${arguments.dataset}-run"),
+        mockBackendUrl,
+      );
+
+      const [payload] = vi.mocked(pipelineRunService.createPipelineRun).mock
+        .calls[0]!;
+      expect(payload.root_task.componentRef.spec!.name).toBe("iris-run");
+    });
+
+    it("preserves the pipeline name as the canonical name annotation", async () => {
+      await submitPipelineRun(
+        templatedSpec("${arguments.dataset}-run"),
+        mockBackendUrl,
+      );
+
+      const [payload] = vi.mocked(pipelineRunService.createPipelineRun).mock
+        .calls[0]!;
+      expect(payload.root_task.annotations).toEqual({
+        "canonical-pipeline-name": "my-pipeline",
+      });
+      expect(pipelineRunService.savePipelineRun).toHaveBeenCalledWith(
+        mockPipelineRun,
+        "my-pipeline",
+        undefined,
+        "iris-run",
+      );
+    });
+
+    it("prefers taskArguments over input defaults when resolving placeholders", async () => {
+      await submitPipelineRun(
+        templatedSpec("${arguments.dataset}-run"),
+        mockBackendUrl,
+        { taskArguments: { dataset: "titanic" } },
+      );
+
+      const [payload] = vi.mocked(pipelineRunService.createPipelineRun).mock
+        .calls[0]!;
+      expect(payload.root_task.componentRef.spec!.name).toBe("titanic-run");
+    });
+
+    it("leaves the pipeline name untouched when there is no template", async () => {
+      const componentSpec: ComponentSpec = {
+        name: "my-pipeline",
+        implementation: { container: { image: "test:latest" } },
+      };
+
+      await submitPipelineRun(componentSpec, mockBackendUrl);
+
+      const [payload] = vi.mocked(pipelineRunService.createPipelineRun).mock
+        .calls[0]!;
+      expect(payload.root_task.componentRef.spec!.name).toBe("my-pipeline");
+      expect(payload.root_task.annotations).toEqual({});
+    });
+  });
+
   describe("taskArguments handling", () => {
     it("should include taskArguments in payload when provided", async () => {
       // Arrange

@@ -16,6 +16,7 @@ import { useSpec } from "@/routes/v2/shared/providers/SpecContext";
 import { useSharedStores } from "@/routes/v2/shared/store/SharedStoreContext";
 import {
   PIPELINE_NOTES_ANNOTATION,
+  RUN_NAME_TEMPLATE_ANNOTATION,
   SYSTEM_ANNOTATIONS,
 } from "@/utils/annotations";
 
@@ -32,8 +33,12 @@ export const PipelineDetailsContent = observer(
     const { navigation } = useSharedStores();
     const pipelineSpec = useSpec();
     const notify = useToastNotification();
-    const { updatePipelineDescription, updatePipelineNotes, renameSubgraph } =
-      usePipelineActions();
+    const {
+      updatePipelineDescription,
+      updatePipelineNotes,
+      updateRunNameTemplate,
+      renameSubgraph,
+    } = usePipelineActions();
 
     if (!pipelineSpec) {
       return (
@@ -66,6 +71,17 @@ export const PipelineDetailsContent = observer(
       if (value !== currentNotes) {
         updatePipelineNotes(pipelineSpec, value);
         track("v2.pipeline_editor.configuration_panel.notes.updated");
+      }
+    };
+
+    const handleRunNameTemplateCommit = (value: string | undefined) => {
+      const currentTemplate =
+        pipelineSpec.annotations.get(RUN_NAME_TEMPLATE_ANNOTATION) || undefined;
+      if (value !== currentTemplate) {
+        updateRunNameTemplate(pipelineSpec, value);
+        track(
+          "v2.pipeline_editor.configuration_panel.run_name_template.updated",
+        );
       }
     };
 
@@ -121,6 +137,17 @@ export const PipelineDetailsContent = observer(
                 onCommit={handleNotesCommit}
                 placeholder="Share context about this pipeline..."
                 testId="pipeline-notes-input"
+              />
+              <Separator />
+              <PipelineDetailsTextField
+                title="Run name template"
+                id="pipeline-run-name-template"
+                initialValue={pipelineSpec.annotations.get(
+                  RUN_NAME_TEMPLATE_ANNOTATION,
+                )}
+                onCommit={handleRunNameTemplateCommit}
+                placeholder="e.g. ${arguments.dataset}-${date.timestamp}"
+                testId="pipeline-run-name-template-input"
               />
               <Separator />
               <TagsBlock spec={pipelineSpec} />

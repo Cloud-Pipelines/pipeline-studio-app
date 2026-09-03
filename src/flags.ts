@@ -31,14 +31,6 @@ export const ExistingFlags: ConfigFlags = {
     category: "setting",
   },
 
-  ["templatized-pipeline-run-name"]: {
-    name: "Templatized pipeline run name",
-    description:
-      "Enable the templatized pipeline run name feature. This will generate a run name for each pipeline run based on the template with placeholders.",
-    default: false,
-    category: "beta",
-  },
-
   ["input-aggregator"]: {
     name: "Input Aggregator Component",
     description:
