@@ -12,6 +12,7 @@ import { IncrementingIdGenerator } from "@/models/componentSpec/factories/idGene
 import { YamlDeserializer } from "@/models/componentSpec/serialization/yamlDeserializer";
 import { ONBOARDING_MY_RUN_COUNT_KEY } from "@/providers/OnboardingProvider/onboardingQueryKeys";
 import type { UndoGroupable } from "@/routes/v2/shared/nodes/types";
+import { hydrateComponentReference } from "@/services/componentService";
 
 vi.mock("@/services/componentService", () => ({
   hydrateComponentReference: vi.fn(async (ref) => ref),
@@ -298,6 +299,33 @@ describe("createEditorToolBridge", () => {
       const added = spec.tasks.find((t) => t.$id === result.taskId);
       expect(added?.name).toBe("MyLoader");
       expect(undo.labels.filter((l) => l === "Add task")).toHaveLength(1);
+    });
+
+    it("addTask refuses when another pipeline is opened while the component loads", async () => {
+      const original = buildSpec();
+      const opened = new ComponentSpec({ $id: "spec_2", name: "Other" });
+      let current: ComponentSpec = original;
+      const bridge = createEditorToolBridge({
+        getSpec: () => current,
+        getActiveSubgraphPath: () => [],
+        getActiveSubgraphTaskId: () => undefined,
+        undo: new RecordingUndo(),
+      });
+
+      vi.mocked(hydrateComponentReference).mockImplementationOnce(async () => {
+        current = opened;
+        return null;
+      });
+
+      const result = await bridge.addTask({
+        name: "Dedupe",
+        componentRef: containerComponent("Dedupe", "dedupe:1", "path", "table"),
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('changed to "Other"');
+      expect(opened.tasks).toHaveLength(0);
+      expect(original.tasks.map((t) => t.name)).toEqual(["Transform"]);
     });
 
     it("deleteTask reports an unknown id rather than a bare failure", async () => {

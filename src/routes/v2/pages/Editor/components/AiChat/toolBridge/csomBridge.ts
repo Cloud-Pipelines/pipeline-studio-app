@@ -117,13 +117,21 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
       // Hydration fetches over the network; resolving the destination before it
       // would hand us a subgraph spec the user could detach (undo, navigation,
       // a reload) while we wait, and the task would land in an orphaned tree.
+      // `getSpec` reads whichever pipeline is open now, though, so the root has
+      // to be pinned across the fetch or the add follows the user into another
+      // pipeline.
+      const rootAtCallTime = requireSpec(deps);
       const hydrated =
         (await hydrateComponentReference(componentRef)) ?? componentRef;
+      const root = requireSpec(deps);
+      if (root !== rootAtCallTime) {
+        return {
+          success: false,
+          error: `Nothing was added — the open pipeline changed to "${root.name}" while the component was loading. Check with the user before retrying.`,
+        };
+      }
 
-      const destination = resolveDestination(
-        requireSpec(deps),
-        inSubgraphTaskId,
-      );
+      const destination = resolveDestination(root, inSubgraphTaskId);
       if (!destination.ok) {
         return { success: false, error: destination.error };
       }
