@@ -25,13 +25,20 @@ interface ValidationIssue {
   severity: string;
   message: string;
   entityId?: string;
+  entityName?: string;
   issueCode?: string;
+  subgraphPath: string[];
 }
 
 export interface ValidationResult {
   valid: boolean;
   issueCount: number;
   issues: ValidationIssue[];
+}
+
+interface BridgeResult {
+  success: boolean;
+  error?: string;
 }
 
 export interface ConnectArgs {
@@ -113,17 +120,15 @@ export interface ToolBridgeApi {
   getPipelineState(): Promise<AiSpec>;
   getSubgraphState(taskEntityId: string): Promise<SubgraphStateResult>;
 
-  setPipelineName(name: string): Promise<{ success: boolean }>;
-  setPipelineDescription(description: string): Promise<{ success: boolean }>;
+  setPipelineName(name: string): Promise<BridgeResult>;
+  setPipelineDescription(description: string): Promise<BridgeResult>;
 
-  addTask(args: { name: string; componentRef: ComponentReference }): Promise<{
-    success: boolean;
-    taskId?: string;
-    name?: string;
-    error?: string;
-  }>;
-  deleteTask(entityId: string): Promise<{ success: boolean }>;
-  renameTask(entityId: string, newName: string): Promise<{ success: boolean }>;
+  addTask(args: {
+    name: string;
+    componentRef: ComponentReference;
+  }): Promise<BridgeResult & { taskId?: string; name?: string }>;
+  deleteTask(entityId: string): Promise<BridgeResult>;
+  renameTask(entityId: string, newName: string): Promise<BridgeResult>;
 
   addInput(args: {
     name: string;
@@ -131,37 +136,34 @@ export interface ToolBridgeApi {
     description?: string;
     defaultValue?: string;
     optional?: boolean;
-  }): Promise<{ success: boolean; inputId: string; name: string }>;
-  deleteInput(entityId: string): Promise<{ success: boolean }>;
-  renameInput(entityId: string, newName: string): Promise<{ success: boolean }>;
+  }): Promise<BridgeResult & { inputId?: string; name?: string }>;
+  deleteInput(entityId: string): Promise<BridgeResult>;
+  renameInput(entityId: string, newName: string): Promise<BridgeResult>;
 
   addOutput(args: {
     name: string;
     type?: string;
     description?: string;
-  }): Promise<{ success: boolean; outputId: string; name: string }>;
-  deleteOutput(entityId: string): Promise<{ success: boolean }>;
-  renameOutput(
-    entityId: string,
-    newName: string,
-  ): Promise<{ success: boolean }>;
+  }): Promise<BridgeResult & { outputId?: string; name?: string }>;
+  deleteOutput(entityId: string): Promise<BridgeResult>;
+  renameOutput(entityId: string, newName: string): Promise<BridgeResult>;
 
   connectNodes(
     args: ConnectArgs,
-  ): Promise<{ success: boolean; bindingId?: string; error?: string }>;
-  deleteEdge(entityId: string): Promise<{ success: boolean }>;
+  ): Promise<BridgeResult & { bindingId?: string }>;
+  deleteEdge(entityId: string): Promise<BridgeResult>;
 
   setTaskArgument(
     taskEntityId: string,
     inputName: string,
     value: ArgumentType,
-  ): Promise<{ success: boolean; error?: string }>;
+  ): Promise<BridgeResult>;
 
   createSubgraph(
     taskEntityIds: string[],
     subgraphName: string,
-  ): Promise<{ success: boolean; subgraphTaskId?: string; error?: string }>;
-  unpackSubgraph(taskEntityId: string): Promise<{ success: boolean }>;
+  ): Promise<BridgeResult & { subgraphTaskId?: string }>;
+  unpackSubgraph(taskEntityId: string): Promise<BridgeResult>;
 
   validatePipeline(): Promise<ValidationResult>;
 

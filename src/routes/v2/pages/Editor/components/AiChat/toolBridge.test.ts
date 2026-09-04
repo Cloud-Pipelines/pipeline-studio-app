@@ -8,6 +8,8 @@ import {
   Output,
   Task,
 } from "@/models/componentSpec";
+import { IncrementingIdGenerator } from "@/models/componentSpec/factories/idGenerator";
+import { YamlDeserializer } from "@/models/componentSpec/serialization/yamlDeserializer";
 import { ONBOARDING_MY_RUN_COUNT_KEY } from "@/providers/OnboardingProvider/onboardingQueryKeys";
 import type { UndoGroupable } from "@/routes/v2/shared/nodes/types";
 
@@ -98,6 +100,91 @@ function makeBridge() {
     undo,
   });
   return { bridge, undo, spec };
+}
+
+const containerComponent = (
+  name: string,
+  image: string,
+  inputName: string,
+  outputName: string,
+) => ({
+  name,
+  spec: {
+    name,
+    inputs: [{ name: inputName, type: "String" }],
+    outputs: [{ name: outputName, type: "String" }],
+    implementation: { container: { image } },
+  },
+});
+
+const nestedPipelineYaml = (extraInnerTasks: Record<string, unknown> = {}) => ({
+  name: "RootPipeline",
+  inputs: [{ name: "raw_path", type: "String" }],
+  implementation: {
+    graph: {
+      tasks: {
+        Preprocess: {
+          componentRef: {
+            name: "Preprocess",
+            spec: {
+              name: "Preprocess",
+              inputs: [{ name: "path", type: "String" }],
+              outputs: [{ name: "table", type: "String" }],
+              implementation: {
+                graph: {
+                  tasks: {
+                    DropNulls: {
+                      componentRef: containerComponent(
+                        "DropNulls",
+                        "clean:1",
+                        "path",
+                        "table",
+                      ),
+                      arguments: {
+                        path: { graphInput: { inputName: "path" } },
+                      },
+                    },
+                    ...extraInnerTasks,
+                  },
+                },
+              },
+            },
+          },
+        },
+        Train: {
+          componentRef: containerComponent(
+            "Train",
+            "train:1",
+            "table",
+            "model",
+          ),
+        },
+      },
+    },
+  },
+});
+
+function makeNestedBridge(extraInnerTasks?: Record<string, unknown>) {
+  const spec = new YamlDeserializer(new IncrementingIdGenerator()).deserialize(
+    nestedPipelineYaml(extraInnerTasks),
+  );
+  const undo = new RecordingUndo();
+  const bridge = createEditorToolBridge({
+    getSpec: () => spec,
+    getActiveSubgraphPath: () => [],
+    undo,
+  });
+  const preprocess = spec.tasks.find((t) => t.name === "Preprocess");
+  if (!preprocess?.subgraphSpec) {
+    throw new Error("Preprocess did not deserialize as a subgraph");
+  }
+  return { bridge, spec, undo, inner: preprocess.subgraphSpec };
+}
+
+function taskId(spec: ComponentSpec, name: string): string {
+  const task = spec.tasks.find((t) => t.name === name);
+  if (!task) throw new Error(`No task named ${name}`);
+  return task.$id;
 }
 
 function makeEmptyBridge() {
@@ -192,10 +279,22 @@ describe("createEditorToolBridge", () => {
       expect(undo.labels.filter((l) => l === "Add task")).toHaveLength(1);
     });
 
-    it("deleteTask returns success false for unknown id", async () => {
+    it("deleteTask reports an unknown id rather than a bare failure", async () => {
       const { bridge } = makeBridge();
       const result = await bridge.deleteTask("does-not-exist");
-      expect(result).toEqual({ success: false });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(
+        'No task with $id "does-not-exist" exists in this pipeline.',
+      );
+    });
+
+    it("deleteTask reports when the id belongs to another kind of entity", async () => {
+      const { bridge } = makeBridge();
+      const result = await bridge.deleteTask("input_1");
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(
+        '$id "input_1" refers to input "data", not a task.',
+      );
     });
 
     it("deleteTask removes an existing task", async () => {
@@ -335,12 +434,37 @@ describe("createEditorToolBridge", () => {
       const task = spec.tasks.find((t) => t.$id === "task_1");
       expect(task?.arguments).toEqual([{ name: "input", value: "hello" }]);
     });
+
+    it("accepts an input declared by a top-level subgraph task", async () => {
+      const { bridge, spec } = makeNestedBridge();
+      const preprocessId = taskId(spec, "Preprocess");
+
+      const result = await bridge.setTaskArgument(
+        preprocessId,
+        "path",
+        "/data.csv",
+      );
+
+      expect(result).toEqual({ success: true });
+      const task = spec.tasks.find((t) => t.$id === preprocessId);
+      expect(task?.arguments).toEqual([{ name: "path", value: "/data.csv" }]);
+    });
+
+    it("reports an input the task does not declare", async () => {
+      const { bridge } = makeBridge();
+      const result = await bridge.setTaskArgument("task_1", "nope", "hello");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('no input named "nope"');
+    });
   });
 
   describe("subgraphs", () => {
     it("createSubgraph returns the new subgraph task id", async () => {
-      const { bridge, spec } = makeBridge();
-      const result = await bridge.createSubgraph(["task_1"], "Group");
+      const { bridge, spec } = makeNestedBridge();
+      const result = await bridge.createSubgraph(
+        [taskId(spec, "Preprocess"), taskId(spec, "Train")],
+        "Group",
+      );
       expect(result.success).toBe(true);
       expect(result.subgraphTaskId).toBeDefined();
       expect(spec.tasks.some((t) => t.$id === result.subgraphTaskId)).toBe(
@@ -352,7 +476,275 @@ describe("createEditorToolBridge", () => {
       const { bridge } = makeBridge();
       const result = await bridge.createSubgraph([], "Group");
       expect(result.success).toBe(false);
-      expect(result.error).toMatch(/Could not create subgraph/);
+      expect(result.error).toMatch(/at least two distinct tasks/);
+    });
+
+    it("createSubgraph refuses to wrap a single task", async () => {
+      const { bridge, spec } = makeBridge();
+      const result = await bridge.createSubgraph(["task_1"], "Group");
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/at least two distinct tasks/);
+      expect(spec.tasks).toHaveLength(1);
+    });
+
+    it("createSubgraph refuses the same task id passed twice", async () => {
+      const { bridge, spec } = makeBridge();
+      const result = await bridge.createSubgraph(["task_1", "task_1"], "Group");
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/at least two distinct tasks/);
+      expect(spec.tasks).toHaveLength(1);
+    });
+  });
+
+  describe("subgraph mutations", () => {
+    it("deletes a task inside a subgraph rather than failing", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+
+      const result = await bridge.deleteTask(taskId(inner, "DropNulls"));
+
+      expect(result).toEqual({ success: true });
+      expect(inner.tasks).toHaveLength(0);
+      expect(spec.tasks.map((t) => t.name)).toEqual(["Preprocess", "Train"]);
+    });
+
+    it("renames a task inside a subgraph without touching the top level", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+
+      const result = await bridge.renameTask(
+        taskId(inner, "DropNulls"),
+        "CleanRows",
+      );
+
+      expect(result).toEqual({ success: true });
+      expect(inner.tasks[0].name).toBe("CleanRows");
+      expect(spec.tasks.map((t) => t.name)).toEqual(["Preprocess", "Train"]);
+    });
+
+    it("sets an argument on a task inside a subgraph", async () => {
+      const { bridge, inner } = makeNestedBridge();
+
+      const result = await bridge.setTaskArgument(
+        taskId(inner, "DropNulls"),
+        "path",
+        "/inner.csv",
+      );
+
+      expect(result).toEqual({ success: true });
+      expect(inner.tasks[0].arguments).toEqual([
+        { name: "path", value: "/inner.csv" },
+      ]);
+    });
+
+    it("renaming a subgraph input renames the port the parent binds to", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+      const preprocessId = taskId(spec, "Preprocess");
+      await bridge.setTaskArgument(preprocessId, "path", "/data.csv");
+
+      const result = await bridge.renameInput(inner.inputs[0].$id, "src_path");
+
+      expect(result).toEqual({ success: true });
+      expect(inner.inputs[0].name).toBe("src_path");
+      const parentTask = spec.tasks.find((t) => t.$id === preprocessId);
+      expect(parentTask?.arguments).toEqual([
+        { name: "src_path", value: "/data.csv" },
+      ]);
+      expect(
+        parentTask?.resolvedComponentSpec?.inputs?.map((i) => i.name),
+      ).toEqual(["src_path"]);
+    });
+
+    it("deleting a subgraph input drops the parent's argument for that port", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+      const preprocessId = taskId(spec, "Preprocess");
+      await bridge.setTaskArgument(preprocessId, "path", "/data.csv");
+
+      const result = await bridge.deleteInput(inner.inputs[0].$id);
+
+      expect(result).toEqual({ success: true });
+      expect(inner.inputs).toHaveLength(0);
+      expect(spec.tasks.find((t) => t.$id === preprocessId)?.arguments).toEqual(
+        [],
+      );
+    });
+
+    it("connects two entities that both live inside a subgraph", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+      const before = inner.bindings.length;
+
+      const result = await bridge.connectNodes({
+        sourceEntityId: taskId(inner, "DropNulls"),
+        sourcePortName: "table",
+        targetEntityId: inner.outputs[0].$id,
+        targetPortName: inner.outputs[0].$id,
+      });
+
+      expect(result.success).toBe(true);
+      expect(inner.bindings.length).toBe(before + 1);
+      expect(spec.bindings).toHaveLength(0);
+    });
+
+    it("deletes a binding that lives inside a subgraph", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+      expect(inner.bindings.length).toBeGreaterThan(0);
+
+      const result = await bridge.deleteEdge(inner.bindings[0].$id);
+
+      expect(result).toEqual({ success: true });
+      expect(inner.bindings).toHaveLength(0);
+      expect(spec.bindings).toHaveLength(0);
+    });
+
+    it("unpacks a subgraph nested inside another subgraph into its own parent", async () => {
+      const { bridge, spec, inner } = makeNestedBridge({
+        Dedupe: {
+          componentRef: containerComponent(
+            "Dedupe",
+            "dedupe:1",
+            "path",
+            "table",
+          ),
+        },
+      });
+      const grouped = await bridge.createSubgraph(
+        [taskId(inner, "DropNulls"), taskId(inner, "Dedupe")],
+        "Cleanup",
+      );
+      expect(grouped.success).toBe(true);
+      expect(inner.tasks.map((t) => t.name)).toEqual(["Cleanup"]);
+
+      const result = await bridge.unpackSubgraph(grouped.subgraphTaskId!);
+
+      expect(result).toEqual({ success: true });
+      expect(inner.tasks.map((t) => t.name).sort()).toEqual([
+        "Dedupe",
+        "DropNulls",
+      ]);
+      expect(spec.tasks.map((t) => t.name)).toEqual(["Preprocess", "Train"]);
+    });
+
+    it("refuses a connection that would cross a subgraph boundary", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+
+      const result = await bridge.connectNodes({
+        sourceEntityId: taskId(spec, "Train"),
+        sourcePortName: "model",
+        targetEntityId: taskId(inner, "DropNulls"),
+        targetPortName: "path",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("cannot cross a subgraph boundary");
+      expect(spec.bindings).toHaveLength(0);
+      expect(inner.bindings).toHaveLength(1);
+    });
+
+    it("refuses to group tasks that live at different levels", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+
+      const result = await bridge.createSubgraph(
+        [taskId(spec, "Train"), taskId(inner, "DropNulls")],
+        "Group",
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("must already live in the same");
+      expect(result.error).toContain('task "DropNulls" inside subgraph');
+    });
+
+    it("reports an unknown connection endpoint instead of writing a dangling binding", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.connectNodes({
+        sourceEntityId: "nope",
+        sourcePortName: "model",
+        targetEntityId: taskId(spec, "Train"),
+        targetPortName: "table",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('"nope"');
+      expect(spec.bindings).toHaveLength(0);
+    });
+
+    it("deleteEdge reports an unknown binding instead of claiming success", async () => {
+      const { bridge } = makeNestedBridge();
+
+      const result = await bridge.deleteEdge("not-a-binding");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(
+        'No binding with $id "not-a-binding" exists in this pipeline.',
+      );
+    });
+
+    it("deleteEdge reports when the id is a task rather than a binding", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.deleteEdge(taskId(spec, "Train"));
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('refers to task "Train", not a binding');
+    });
+
+    it("refuses an argument referencing a graph input from another graph", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+
+      const result = await bridge.setTaskArgument(
+        taskId(inner, "DropNulls"),
+        "path",
+        { graphInput: { inputName: "raw_path" } },
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('has no input named "raw_path"');
+      expect(inner.tasks[0].arguments).toEqual([]);
+      expect(spec.inputs.map((i) => i.name)).toEqual(["raw_path"]);
+    });
+
+    it("accepts a task output referenced by $id and stores it by name", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.setTaskArgument(
+        taskId(spec, "Train"),
+        "table",
+        {
+          taskOutput: {
+            taskId: taskId(spec, "Preprocess"),
+            outputName: "table",
+          },
+        },
+      );
+
+      expect(result).toEqual({ success: true });
+      expect(spec.tasks.find((t) => t.name === "Train")?.arguments).toEqual([
+        {
+          name: "table",
+          value: { taskOutput: { taskId: "Preprocess", outputName: "table" } },
+        },
+      ]);
+    });
+
+    it("explains a rename that collides instead of failing generically", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.renameTask(
+        taskId(spec, "Train"),
+        "Preprocess",
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("already taken in that graph");
+      expect(spec.tasks.map((t) => t.name)).toEqual(["Preprocess", "Train"]);
+    });
+
+    it("explains unpacking something that is not a subgraph", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.unpackSubgraph(taskId(spec, "Train"));
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("is not a subgraph");
+      expect(result.error).not.toContain("could not be applied");
     });
   });
 
@@ -400,7 +792,19 @@ describe("createEditorToolBridge", () => {
         expect(typeof issue.type).toBe("string");
         expect(typeof issue.severity).toBe("string");
         expect(typeof issue.message).toBe("string");
+        expect(issue.subgraphPath).toEqual([]);
       }
+    });
+
+    it("reports issues from inside subgraphs with their path", async () => {
+      const { bridge } = makeNestedBridge();
+
+      const result = await bridge.validatePipeline();
+      const nested = result.issues.filter((i) => i.subgraphPath.length > 0);
+
+      expect(nested.length).toBeGreaterThan(0);
+      expect(nested[0].subgraphPath).toEqual(["Preprocess"]);
+      expect(result.issueCount).toBe(result.issues.length);
     });
   });
 

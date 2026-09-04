@@ -1,17 +1,19 @@
 /**
  * CSOM bridge handlers — the spec-mutation slice of `ToolBridgeApi`.
  *
- * Each handler mutates the live MobX `ComponentSpec` from `deps.getSpec()`
- * inside `deps.undo.withGroup(...)` so the agent's edits are user-visible
- * immediately and undoable as a single user step. Mirrors the worker-side
- * `csomTools.ts` tool surface one-to-one.
+ * Each handler resolves which spec in the tree owns the `$id` it was given
+ * (`mutationTarget.ts`) and mutates that spec inside `deps.undo.withGroup(...)`,
+ * so an edit lands in the subgraph the entity actually lives in. The undo
+ * manager and autosave are both anchored at the root spec and traverse the whole
+ * document, so nested edits are undoable and persisted without extra wiring.
+ * Mirrors the worker-side `csomTools.ts` tool surface one-to-one.
  */
 import type {
   ConnectArgs,
   ToolBridgeApi,
   ValidationResult,
 } from "@/agent/toolBridgeApi";
-import { validateSpec } from "@/models/componentSpec/validation/validateSpec";
+import type { EntityLocationOf } from "@/models/componentSpec/queries/locateEntity";
 import {
   connectNodes,
   deleteSelectedEdgesByEdgeIds,
@@ -44,9 +46,20 @@ import type { BridgeDeps } from "@/routes/v2/shared/components/AiChat/toolBridge
 import {
   computeNextPosition,
   requireSpec,
+  toValidationResult,
 } from "@/routes/v2/shared/components/AiChat/toolBridge/utils";
 import type { UndoGroupable } from "@/routes/v2/shared/nodes/types";
 import { hydrateComponentReference } from "@/services/componentService";
+
+import {
+  applyToTarget,
+  describeEntityLocation,
+  explainNameCollision,
+  explainNotASubgraph,
+  resolveArgumentValue,
+  resolveConnectable,
+  resolveTarget,
+} from "./mutationTarget";
 
 /**
  * CSOM handlers need the Editor's undo store to make the agent's spec
@@ -102,8 +115,12 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
       const spec = requireSpec(deps);
       const hydrated =
         (await hydrateComponentReference(componentRef)) ?? componentRef;
-      const position = computeNextPosition(spec);
-      const task = addTask(deps.undo, spec, hydrated, position);
+      const task = addTask(
+        deps.undo,
+        spec,
+        hydrated,
+        computeNextPosition(spec),
+      );
       if (!task) {
         return { success: false, error: "addTask returned no task" };
       }
@@ -114,19 +131,32 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
     },
 
     async deleteTask(entityId) {
-      const spec = requireSpec(deps);
-      return { success: deleteTask(deps.undo, spec, entityId) };
+      const root = requireSpec(deps);
+      return applyToTarget(root, entityId, "task", (location) =>
+        deleteTask(deps.undo, location.spec, entityId),
+      );
     },
 
     async renameTask(entityId, newName) {
-      const spec = requireSpec(deps);
-      return { success: renameTask(deps.undo, spec, entityId, newName) };
+      const root = requireSpec(deps);
+      return applyToTarget(
+        root,
+        entityId,
+        "task",
+        (location) => renameTask(deps.undo, location.spec, entityId, newName),
+        (location) =>
+          explainNameCollision(
+            location.spec.tasks,
+            entityId,
+            newName,
+            location,
+          ),
+      );
     },
 
     async addInput({ name, type, description, defaultValue, optional }) {
       const spec = requireSpec(deps);
-      const position = computeNextPosition(spec);
-      const input = addInput(deps.undo, spec, position, name);
+      const input = addInput(deps.undo, spec, computeNextPosition(spec), name);
       if (type) setInputType(deps.undo, spec, input.$id, type);
       if (description)
         setInputDescription(deps.undo, spec, input.$id, description);
@@ -141,19 +171,44 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
     },
 
     async deleteInput(entityId) {
-      const spec = requireSpec(deps);
-      return { success: deleteInput(deps.undo, spec, entityId) };
+      const root = requireSpec(deps);
+      return applyToTarget(root, entityId, "input", (location) =>
+        deleteInput(deps.undo, location.spec, entityId, location.parentContext),
+      );
     },
 
     async renameInput(entityId, newName) {
-      const spec = requireSpec(deps);
-      return { success: renameInput(deps.undo, spec, entityId, newName) };
+      const root = requireSpec(deps);
+      return applyToTarget(
+        root,
+        entityId,
+        "input",
+        (location) =>
+          renameInput(
+            deps.undo,
+            location.spec,
+            entityId,
+            newName,
+            location.parentContext,
+          ),
+        (location) =>
+          explainNameCollision(
+            location.spec.inputs,
+            entityId,
+            newName,
+            location,
+          ),
+      );
     },
 
     async addOutput({ name, type, description }) {
       const spec = requireSpec(deps);
-      const position = computeNextPosition(spec);
-      const output = addOutput(deps.undo, spec, position, name);
+      const output = addOutput(
+        deps.undo,
+        spec,
+        computeNextPosition(spec),
+        name,
+      );
       if (type) {
         deps.undo.withGroup("Set output type", () => output.setType(type));
       }
@@ -163,17 +218,57 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
     },
 
     async deleteOutput(entityId) {
-      const spec = requireSpec(deps);
-      return { success: deleteOutput(deps.undo, spec, entityId) };
+      const root = requireSpec(deps);
+      return applyToTarget(root, entityId, "output", (location) =>
+        deleteOutput(
+          deps.undo,
+          location.spec,
+          entityId,
+          location.parentContext,
+        ),
+      );
     },
 
     async renameOutput(entityId, newName) {
-      const spec = requireSpec(deps);
-      return { success: renameOutput(deps.undo, spec, entityId, newName) };
+      const root = requireSpec(deps);
+      return applyToTarget(
+        root,
+        entityId,
+        "output",
+        (location) =>
+          renameOutput(
+            deps.undo,
+            location.spec,
+            entityId,
+            newName,
+            location.parentContext,
+          ),
+        (location) =>
+          explainNameCollision(
+            location.spec.outputs,
+            entityId,
+            newName,
+            location,
+          ),
+      );
     },
 
     async connectNodes(args: ConnectArgs) {
-      const spec = requireSpec(deps);
+      const root = requireSpec(deps);
+
+      const source = resolveConnectable(root, args.sourceEntityId);
+      if (!source.ok) return { success: false, error: source.error };
+      const target = resolveConnectable(root, args.targetEntityId);
+      if (!target.ok) return { success: false, error: target.error };
+
+      if (source.location.spec !== target.location.spec) {
+        return {
+          success: false,
+          error: `Cannot connect ${describeEntityLocation(source.location, args.sourceEntityId)} to ${describeEntityLocation(target.location, args.targetEntityId)} — a connection cannot cross a subgraph boundary. Route the value through the subgraph's own inputs and outputs instead.`,
+        };
+      }
+
+      const spec = source.location.spec;
       const ok = connectNodes(deps.undo, spec, {
         sourceNodeId: args.sourceEntityId,
         sourceHandleId: `output_${args.sourcePortName}`,
@@ -204,66 +299,117 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
     },
 
     async deleteEdge(entityId) {
-      const spec = requireSpec(deps);
-      deleteSelectedEdgesByEdgeIds(deps.undo, spec, [`edge_${entityId}`]);
-      return { success: true };
+      const root = requireSpec(deps);
+      return applyToTarget(root, entityId, "binding", (location) => {
+        deleteSelectedEdgesByEdgeIds(deps.undo, location.spec, [
+          `edge_${entityId}`,
+        ]);
+        return !location.spec.bindings.some((b) => b.$id === entityId);
+      });
     },
 
     async setTaskArgument(taskEntityId, inputName, value) {
-      const spec = requireSpec(deps);
-      const task = spec.tasks.find((t) => t.$id === taskEntityId);
-      if (!task) {
-        return { success: false, error: `No task with id ${taskEntityId}` };
+      const target = resolveTarget(requireSpec(deps), taskEntityId, "task");
+      if (!target.ok) {
+        return { success: false, error: target.error };
       }
-      const hasInput = task.componentRef.spec?.inputs?.some(
+      const { location } = target;
+
+      const hasInput = location.entity.resolvedComponentSpec?.inputs?.some(
         (i) => i.name === inputName,
       );
       if (!hasInput) {
         return {
           success: false,
-          error: `Task has no input named "${inputName}"`,
+          error: `Task "${location.entity.name}" has no input named "${inputName}"`,
         };
       }
+
+      const resolved = resolveArgumentValue(location, value);
+      if (!resolved.ok) {
+        return { success: false, error: resolved.error };
+      }
+
       deps.undo.withGroup("Set task argument", () => {
-        spec.setTaskArgument(taskEntityId, inputName, value);
+        location.spec.setTaskArgument(taskEntityId, inputName, resolved.value);
       });
       return { success: true };
     },
 
     async createSubgraph(taskEntityIds, subgraphName) {
-      const spec = requireSpec(deps);
-      const position = computeNextPosition(spec);
+      const root = requireSpec(deps);
+
+      const distinctIds = [...new Set(taskEntityIds)];
+      if (distinctIds.length < 2) {
+        return {
+          success: false,
+          error:
+            "Could not create subgraph — pass the $ids of at least two distinct tasks to group. Wrapping a single task in a subgraph is not useful.",
+        };
+      }
+
+      const locations: Array<{
+        id: string;
+        location: EntityLocationOf<"task">;
+      }> = [];
+      for (const taskEntityId of distinctIds) {
+        const target = resolveTarget(root, taskEntityId, "task");
+        if (!target.ok) {
+          return { success: false, error: target.error };
+        }
+        locations.push({ id: taskEntityId, location: target.location });
+      }
+
+      const first = locations[0];
+      if (!first) {
+        return {
+          success: false,
+          error:
+            "Could not create subgraph — pass the $ids of at least two distinct tasks to group.",
+        };
+      }
+      const stray = locations.find(
+        (l) => l.location.spec !== first.location.spec,
+      );
+      if (stray) {
+        return {
+          success: false,
+          error: `Cannot group ${describeEntityLocation(first.location, first.id)} with ${describeEntityLocation(stray.location, stray.id)} — every task in a new subgraph must already live in the same pipeline or subgraph.`,
+        };
+      }
+
+      const spec = first.location.spec;
       const subgraphTask = createSubgraph(
         deps.undo,
         spec,
-        taskEntityIds,
+        distinctIds,
         subgraphName,
-        position,
+        computeNextPosition(spec),
       );
       if (!subgraphTask) {
-        return { success: false, error: "Could not create subgraph" };
+        return {
+          success: false,
+          error:
+            "Could not create subgraph — pass the $ids of at least two distinct tasks that can be grouped together.",
+        };
       }
       return { success: true, subgraphTaskId: subgraphTask.$id };
     },
 
     async unpackSubgraph(taskEntityId) {
-      const spec = requireSpec(deps);
-      return { success: unpackSubgraphTask(deps.undo, spec, taskEntityId) };
+      const root = requireSpec(deps);
+      return applyToTarget(
+        root,
+        taskEntityId,
+        "task",
+        (location) =>
+          unpackSubgraphTask(deps.undo, location.spec, taskEntityId),
+        (location) => explainNotASubgraph(location, taskEntityId),
+      );
     },
 
     async validatePipeline(): Promise<ValidationResult> {
-      const issues = validateSpec(requireSpec(deps));
-      return {
-        valid: issues.length === 0,
-        issueCount: issues.length,
-        issues: issues.map((i) => ({
-          type: i.type,
-          severity: i.severity,
-          message: i.message,
-          entityId: i.entityId,
-          issueCode: i.issueCode,
-        })),
-      };
+      return toValidationResult(requireSpec(deps));
     },
   };
 }

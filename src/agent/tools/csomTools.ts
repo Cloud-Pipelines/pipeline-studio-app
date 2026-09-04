@@ -50,7 +50,11 @@ const argumentValueSchema = z.union([
   }),
   z.object({
     taskOutput: z.object({
-      taskId: z.string(),
+      taskId: z
+        .string()
+        .describe(
+          "The source task's $id or its name — both are accepted. The referenced task must live in the same graph as the task being written to.",
+        ),
       outputName: z.string(),
       type: z.string().nullable().optional(),
     }),
@@ -105,14 +109,16 @@ export function createCsomTools(bridge: ToolBridgeApi) {
 
   const setPipelineName = tool({
     name: "set_pipeline_name",
-    description: "Set the pipeline name.",
+    description:
+      "Set the name of the top-level pipeline. To rename a subgraph, use rename_task on the subgraph task instead.",
     parameters: z.object({ name: z.string().describe("New pipeline name") }),
     execute: async ({ name }) => asJson(await bridge.setPipelineName(name)),
   });
 
   const setPipelineDescription = tool({
     name: "set_pipeline_description",
-    description: "Set the pipeline description.",
+    description:
+      "Set the description of the top-level pipeline (not of a subgraph).",
     parameters: z.object({
       description: z.string().describe("New pipeline description"),
     }),
@@ -232,7 +238,8 @@ export function createCsomTools(bridge: ToolBridgeApi) {
 
   const deleteInput = tool({
     name: "delete_input",
-    description: "Delete a pipeline input and its connections.",
+    description:
+      "Delete a graph input and its connections. Works on inputs inside a subgraph too: the matching input port disappears from the subgraph task and any connection feeding it in the parent is removed.",
     parameters: z.object({
       entityId: z.string().describe("The $id of the input to delete"),
     }),
@@ -241,7 +248,8 @@ export function createCsomTools(bridge: ToolBridgeApi) {
 
   const renameInput = tool({
     name: "rename_input",
-    description: "Rename a pipeline input.",
+    description:
+      "Rename a graph input. Works on inputs inside a subgraph too: the matching input port on the subgraph task is renamed with it, so connections in the parent survive.",
     parameters: z.object({
       entityId: z.string().describe("The $id of the input"),
       newName: z.string().describe("New input name"),
@@ -270,7 +278,8 @@ export function createCsomTools(bridge: ToolBridgeApi) {
 
   const deleteOutput = tool({
     name: "delete_output",
-    description: "Delete a pipeline output and its connections.",
+    description:
+      "Delete a graph output and its connections. Works on outputs inside a subgraph too: the matching output port disappears from the subgraph task and any connection drawing from it in the parent is removed.",
     parameters: z.object({
       entityId: z.string().describe("The $id of the output to delete"),
     }),
@@ -280,7 +289,8 @@ export function createCsomTools(bridge: ToolBridgeApi) {
 
   const renameOutput = tool({
     name: "rename_output",
-    description: "Rename a pipeline output.",
+    description:
+      "Rename a graph output. Works on outputs inside a subgraph too: the matching output port on the subgraph task is renamed with it, so connections in the parent survive.",
     parameters: z.object({
       entityId: z.string().describe("The $id of the output"),
       newName: z.string().describe("New output name"),
@@ -292,7 +302,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
   const connectNodes = tool({
     name: "connect_nodes",
     description:
-      "Connect an output port of one entity to an input port of another. Replaces any existing connection to the target port.",
+      "Connect an output port of one entity to an input port of another. Replaces any existing connection to the target port. Both entities must live in the same pipeline or the same subgraph — a connection cannot cross a subgraph boundary. To get a value into or out of a subgraph, wire it to that subgraph task's own ports in the parent.",
     parameters: z.object({
       sourceEntityId: z
         .string()
@@ -321,7 +331,8 @@ export function createCsomTools(bridge: ToolBridgeApi) {
 
   const deleteEdge = tool({
     name: "delete_edge",
-    description: "Delete a binding/edge by its $id.",
+    description:
+      "Delete a binding/edge by its $id, wherever it lives — top-level pipeline or inside a subgraph.",
     parameters: z.object({
       entityId: z.string().describe("The $id of the binding to delete"),
     }),
@@ -331,7 +342,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
   const setTaskArgument = tool({
     name: "set_task_argument",
     description:
-      "Set a value for a task input. Removes any existing connection to that port. Accepts a literal string or a graph-input, task-output, or dynamic-data (secret or system) reference object.",
+      "Set a value for a task input, for a task anywhere in the pipeline including inside a subgraph. Removes any existing connection to that port. Accepts a literal string or a graph-input, task-output, or dynamic-data (secret or system) reference object.",
     parameters: z.object({
       taskEntityId: z.string().describe("$id of the task"),
       inputName: z.string().describe("Name of the input port"),
@@ -352,7 +363,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
   const createSubgraph = tool({
     name: "create_subgraph",
     description:
-      "Group 2 or more related tasks into a subgraph. NEVER use for a single task — only group tasks that form a logical unit of work together.",
+      "Group 2 or more related tasks into a subgraph. NEVER use for a single task — only group tasks that form a logical unit of work together. Every task passed must already live in the same pipeline or the same subgraph; tasks from different levels cannot be grouped.",
     parameters: z.object({
       taskEntityIds: z.array(z.string()).describe("$ids of tasks to group"),
       subgraphName: z.string().describe("Name for the subgraph"),
@@ -364,7 +375,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
   const unpackSubgraph = tool({
     name: "unpack_subgraph",
     description:
-      "Inline a subgraph task back into the parent pipeline, expanding its inner tasks.",
+      "Inline a subgraph task back into the graph that contains it, expanding its inner tasks. Works on a nested subgraph too — its contents are inlined into the subgraph that held it, not into the top-level pipeline.",
     parameters: z.object({
       taskEntityId: z.string().describe("$id of the subgraph task to unpack"),
     }),
@@ -375,7 +386,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
   const validatePipeline = tool({
     name: "validate_pipeline",
     description:
-      "Validate the current pipeline for schema errors, missing inputs, orphaned bindings, and cycles. Always call before finalizing.",
+      "Validate the whole pipeline — including everything inside every subgraph — for schema errors, missing inputs, orphaned bindings, and cycles. Each issue carries a subgraphPath saying where it is: the chain of subgraph task names from the top level, empty for the top-level pipeline itself. Always call before finalizing.",
     parameters: z.object({}),
     execute: async () => asJson(await bridge.validatePipeline()),
   });
