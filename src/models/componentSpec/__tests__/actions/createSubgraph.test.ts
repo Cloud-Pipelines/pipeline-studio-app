@@ -6,6 +6,7 @@ import {
 } from "@/utils/conditionalExecution";
 
 import { createSubgraph } from "../../actions/createSubgraph";
+import { Annotations } from "../../annotations";
 import { Binding } from "../../entities/binding";
 import { ComponentSpec } from "../../entities/componentSpec";
 import { Input } from "../../entities/input";
@@ -283,6 +284,65 @@ describe("createSubgraph", () => {
 
     expect(result).toBeNull();
     expect(spec.tasks.length).toBe(1);
+  });
+
+  it("keeps a nested subgraph's contents when it is grouped", () => {
+    const spec = new ComponentSpec({
+      $id: idGen.next("spec"),
+      name: "Main",
+    });
+
+    const leafSpec = new ComponentSpec({
+      $id: idGen.next("spec"),
+      name: "Middle",
+    });
+    leafSpec.addTask(
+      new Task({
+        $id: idGen.next("task"),
+        name: "Leaf",
+        componentRef: { name: "Echo" },
+        annotations: Annotations.from([
+          { key: "editor.position", value: { x: 42, y: 84 } },
+        ]),
+      }),
+    );
+    leafSpec.setEmbeddedSubgraph(true);
+
+    const outer = new Task({
+      $id: idGen.next("task"),
+      name: "Outer",
+      componentRef: { name: "Middle" },
+      subgraphSpec: leafSpec,
+    });
+    const standalone = new Task({
+      $id: idGen.next("task"),
+      name: "Standalone",
+      componentRef: { name: "Echo" },
+    });
+    spec.addTask(outer);
+    spec.addTask(standalone);
+
+    const result = createSubgraph({
+      spec,
+      selectedTaskIds: [outer.$id, standalone.$id],
+      subgraphName: "Grouped",
+      idGen,
+    });
+
+    expect(result).not.toBeNull();
+    const groupedOuter = result!.subgraphSpec.tasks.find(
+      (t) => t.name === "Outer",
+    );
+    expect(groupedOuter).toBeDefined();
+    expect(groupedOuter!.isSubgraph).toBe(true);
+    expect(groupedOuter!.componentRef.spec).toBeUndefined();
+
+    const innerTasks = groupedOuter!.subgraphSpec!.tasks;
+    expect(innerTasks.map((t) => t.name)).toEqual(["Leaf"]);
+    expect(innerTasks[0].annotations.get("editor.position")).toEqual({
+      x: 42,
+      y: 84,
+    });
   });
 
   it("subgraph spec has correct name", () => {
