@@ -50,6 +50,7 @@ function createReadOnlyCsomHandlers(deps: BridgeDeps): ReadOnlyCsomHandlers {
     async getPipelineState() {
       return serializeSpecForAi(requireSpec(deps), {
         activeSubgraphPath: deps.getActiveSubgraphPath(),
+        activeSubgraphTaskId: deps.getActiveSubgraphTaskId(),
       });
     },
 

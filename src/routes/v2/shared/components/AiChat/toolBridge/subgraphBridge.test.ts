@@ -91,6 +91,7 @@ function makeDeps(spec: ComponentSpec): BridgeDeps {
   return {
     getSpec: () => spec,
     getActiveSubgraphPath: () => [],
+    getActiveSubgraphTaskId: () => undefined,
   };
 }
 
@@ -188,6 +189,7 @@ describe("createSubgraphBridgeHandlers", () => {
     const { getSubgraphState } = createSubgraphBridgeHandlers({
       getSpec: () => null,
       getActiveSubgraphPath: () => [],
+      getActiveSubgraphTaskId: () => undefined,
     });
 
     await expect(getSubgraphState("task_1")).rejects.toThrow(

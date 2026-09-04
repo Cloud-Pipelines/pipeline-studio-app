@@ -107,6 +107,34 @@ export function resolveConnectable(
 }
 
 /**
+ * Resolves where a newly created entity belongs. `undefined` means the
+ * top-level pipeline; otherwise the `$id` must name a subgraph task, whose
+ * inner spec becomes the destination.
+ */
+export function resolveDestination(
+  root: ComponentSpec,
+  subgraphTaskId: string | undefined,
+): { ok: true; spec: ComponentSpec } | { ok: false; error: string } {
+  if (!subgraphTaskId) {
+    return { ok: true, spec: root };
+  }
+
+  const target = resolveTarget(root, subgraphTaskId, "task");
+  if (!target.ok) return target;
+
+  const { location } = target;
+  const subgraphSpec = location.entity.subgraphSpec;
+  if (!subgraphSpec) {
+    return {
+      ok: false,
+      error: `Task "${location.entity.name}" is not a subgraph, so nothing can be added inside it. Omit inSubgraphTaskId to add to the top-level pipeline instead.`,
+    };
+  }
+
+  return { ok: true, spec: subgraphSpec };
+}
+
+/**
  * `explainRefusal` names the causes that are knowable before the mutation runs
  * — a rename that would collide, an unpack of something that is not a subgraph.
  * The generic message below is the branch we genuinely cannot explain, so it

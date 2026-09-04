@@ -126,6 +126,7 @@ export interface ToolBridgeApi {
   addTask(args: {
     name: string;
     componentRef: ComponentReference;
+    inSubgraphTaskId?: string;
   }): Promise<BridgeResult & { taskId?: string; name?: string }>;
   deleteTask(entityId: string): Promise<BridgeResult>;
   renameTask(entityId: string, newName: string): Promise<BridgeResult>;
@@ -136,6 +137,7 @@ export interface ToolBridgeApi {
     description?: string;
     defaultValue?: string;
     optional?: boolean;
+    inSubgraphTaskId?: string;
   }): Promise<BridgeResult & { inputId?: string; name?: string }>;
   deleteInput(entityId: string): Promise<BridgeResult>;
   renameInput(entityId: string, newName: string): Promise<BridgeResult>;
@@ -144,6 +146,7 @@ export interface ToolBridgeApi {
     name: string;
     type?: string;
     description?: string;
+    inSubgraphTaskId?: string;
   }): Promise<BridgeResult & { outputId?: string; name?: string }>;
   deleteOutput(entityId: string): Promise<BridgeResult>;
   renameOutput(entityId: string, newName: string): Promise<BridgeResult>;

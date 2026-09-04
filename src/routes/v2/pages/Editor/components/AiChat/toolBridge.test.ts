@@ -12,6 +12,7 @@ import { IncrementingIdGenerator } from "@/models/componentSpec/factories/idGene
 import { YamlDeserializer } from "@/models/componentSpec/serialization/yamlDeserializer";
 import { ONBOARDING_MY_RUN_COUNT_KEY } from "@/providers/OnboardingProvider/onboardingQueryKeys";
 import type { UndoGroupable } from "@/routes/v2/shared/nodes/types";
+import { hydrateComponentReference } from "@/services/componentService";
 
 vi.mock("@/services/componentService", () => ({
   hydrateComponentReference: vi.fn(async (ref) => ref),
@@ -97,6 +98,7 @@ function makeBridge() {
   const bridge = createEditorToolBridge({
     getSpec: () => spec,
     getActiveSubgraphPath: () => [],
+    getActiveSubgraphTaskId: () => undefined,
     undo,
   });
   return { bridge, undo, spec };
@@ -172,6 +174,7 @@ function makeNestedBridge(extraInnerTasks?: Record<string, unknown>) {
   const bridge = createEditorToolBridge({
     getSpec: () => spec,
     getActiveSubgraphPath: () => [],
+    getActiveSubgraphTaskId: () => undefined,
     undo,
   });
   const preprocess = spec.tasks.find((t) => t.name === "Preprocess");
@@ -192,6 +195,7 @@ function makeEmptyBridge() {
   const bridge = createEditorToolBridge({
     getSpec: () => null,
     getActiveSubgraphPath: () => [],
+    getActiveSubgraphTaskId: () => undefined,
     undo,
   });
   return { bridge, undo };
@@ -210,6 +214,7 @@ function makeBackendBridge(
   const bridge = createEditorToolBridge({
     getSpec: () => spec,
     getActiveSubgraphPath: () => [],
+    getActiveSubgraphTaskId: () => undefined,
     undo,
     getBackendUrl: () => TEST_BACKEND_URL,
     getAuthToken: () => overrides.authToken,
@@ -231,12 +236,13 @@ describe("createEditorToolBridge", () => {
   });
 
   describe("getPipelineState", () => {
-    it("returns the serialized spec with the active subgraph path", async () => {
+    it("returns the serialized spec with the active subgraph path and task id", async () => {
       const spec = buildSpec();
       const undo = new RecordingUndo();
       const bridge = createEditorToolBridge({
         getSpec: () => spec,
         getActiveSubgraphPath: () => ["preprocess"],
+        getActiveSubgraphTaskId: () => "task-preprocess",
         undo,
       });
 
@@ -244,6 +250,22 @@ describe("createEditorToolBridge", () => {
       expect(state.name).toBe("Pipe");
       expect(state.tasks).toHaveLength(1);
       expect(state.activeSubgraphPath).toEqual(["preprocess"]);
+      expect(state.activeSubgraphTaskId).toBe("task-preprocess");
+    });
+
+    it("omits the active subgraph task id at the top level", async () => {
+      const spec = buildSpec();
+      const undo = new RecordingUndo();
+      const bridge = createEditorToolBridge({
+        getSpec: () => spec,
+        getActiveSubgraphPath: () => [],
+        getActiveSubgraphTaskId: () => undefined,
+        undo,
+      });
+
+      const state = await bridge.getPipelineState();
+      expect(state.activeSubgraphPath).toBeUndefined();
+      expect(state.activeSubgraphTaskId).toBeUndefined();
     });
   });
 
@@ -277,6 +299,33 @@ describe("createEditorToolBridge", () => {
       const added = spec.tasks.find((t) => t.$id === result.taskId);
       expect(added?.name).toBe("MyLoader");
       expect(undo.labels.filter((l) => l === "Add task")).toHaveLength(1);
+    });
+
+    it("addTask refuses when another pipeline is opened while the component loads", async () => {
+      const original = buildSpec();
+      const opened = new ComponentSpec({ $id: "spec_2", name: "Other" });
+      let current: ComponentSpec = original;
+      const bridge = createEditorToolBridge({
+        getSpec: () => current,
+        getActiveSubgraphPath: () => [],
+        getActiveSubgraphTaskId: () => undefined,
+        undo: new RecordingUndo(),
+      });
+
+      vi.mocked(hydrateComponentReference).mockImplementationOnce(async () => {
+        current = opened;
+        return null;
+      });
+
+      const result = await bridge.addTask({
+        name: "Dedupe",
+        componentRef: containerComponent("Dedupe", "dedupe:1", "path", "table"),
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('changed to "Other"');
+      expect(opened.tasks).toHaveLength(0);
+      expect(original.tasks.map((t) => t.name)).toEqual(["Transform"]);
     });
 
     it("deleteTask reports an unknown id rather than a bare failure", async () => {
@@ -417,6 +466,7 @@ describe("createEditorToolBridge", () => {
       const bridge = createEditorToolBridge({
         getSpec: () => spec,
         getActiveSubgraphPath: () => [],
+        getActiveSubgraphTaskId: () => undefined,
         undo,
       });
 
@@ -748,6 +798,101 @@ describe("createEditorToolBridge", () => {
     });
   });
 
+  describe("adding into a subgraph", () => {
+    it("addTask puts the task inside the named subgraph", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+
+      const result = await bridge.addTask({
+        name: "Dedupe",
+        componentRef: containerComponent("Dedupe", "dedupe:1", "path", "table"),
+        inSubgraphTaskId: taskId(spec, "Preprocess"),
+      });
+
+      expect(result.success).toBe(true);
+      expect(inner.tasks.map((t) => t.name).sort()).toEqual([
+        "Dedupe",
+        "DropNulls",
+      ]);
+      expect(spec.tasks.map((t) => t.name)).toEqual(["Preprocess", "Train"]);
+    });
+
+    it("addInput inside a subgraph becomes an input port on the subgraph task", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+      const preprocessId = taskId(spec, "Preprocess");
+
+      const result = await bridge.addInput({
+        name: "threshold",
+        type: "Integer",
+        inSubgraphTaskId: preprocessId,
+      });
+
+      expect(result.success).toBe(true);
+      expect(inner.inputs.map((i) => i.name)).toContain("threshold");
+      expect(spec.inputs.map((i) => i.name)).toEqual(["raw_path"]);
+      expect(
+        spec.tasks
+          .find((t) => t.$id === preprocessId)
+          ?.resolvedComponentSpec?.inputs?.map((i) => i.name),
+      ).toContain("threshold");
+    });
+
+    it("addOutput inside a subgraph becomes an output port on the subgraph task", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+      const preprocessId = taskId(spec, "Preprocess");
+
+      const result = await bridge.addOutput({
+        name: "report",
+        inSubgraphTaskId: preprocessId,
+      });
+
+      expect(result.success).toBe(true);
+      expect(inner.outputs.map((o) => o.name)).toContain("report");
+      expect(
+        spec.tasks
+          .find((t) => t.$id === preprocessId)
+          ?.resolvedComponentSpec?.outputs?.map((o) => o.name),
+      ).toContain("report");
+    });
+
+    it("adds to the top level when inSubgraphTaskId is omitted", async () => {
+      const { bridge, spec, inner } = makeNestedBridge();
+
+      const result = await bridge.addInput({ name: "extra" });
+
+      expect(result).toMatchObject({ success: true, name: "extra" });
+      expect(spec.inputs.map((i) => i.name)).toEqual(["raw_path", "extra"]);
+      expect(inner.inputs.map((i) => i.name)).toEqual(["path"]);
+    });
+
+    it("refuses a destination that is not a subgraph", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.addTask({
+        name: "Dedupe",
+        componentRef: containerComponent("Dedupe", "dedupe:1", "path", "table"),
+        inSubgraphTaskId: taskId(spec, "Train"),
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Task "Train" is not a subgraph');
+    });
+
+    it("refuses an unknown destination id", async () => {
+      const { bridge, spec } = makeNestedBridge();
+
+      const result = await bridge.addOutput({
+        name: "report",
+        inSubgraphTaskId: "nope",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(
+        'No task with $id "nope" exists in this pipeline.',
+      );
+      expect(spec.outputs).toHaveLength(0);
+    });
+  });
+
   describe("validatePipeline", () => {
     it("reports valid: true on a clean spec", async () => {
       const spec = new ComponentSpec({ $id: "spec_1", name: "Pipe" });
@@ -768,6 +913,7 @@ describe("createEditorToolBridge", () => {
       const bridge = createEditorToolBridge({
         getSpec: () => spec,
         getActiveSubgraphPath: () => [],
+        getActiveSubgraphTaskId: () => undefined,
         undo,
       });
 
@@ -782,6 +928,7 @@ describe("createEditorToolBridge", () => {
       const bridge = createEditorToolBridge({
         getSpec: () => spec,
         getActiveSubgraphPath: () => [],
+        getActiveSubgraphTaskId: () => undefined,
         undo,
       });
 

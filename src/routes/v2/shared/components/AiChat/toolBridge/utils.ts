@@ -27,6 +27,7 @@ const POSITION_OFFSET = 200;
 export interface BridgeDeps {
   getSpec: () => ComponentSpec | null;
   getActiveSubgraphPath: () => string[];
+  getActiveSubgraphTaskId: () => string | undefined;
   getBackendUrl?: () => string;
   getAuthToken?: () => string | undefined;
   queryClient?: QueryClient;

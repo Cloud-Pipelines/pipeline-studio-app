@@ -129,7 +129,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
   const addTask = tool({
     name: "add_task",
     description:
-      "Add a new task node to the pipeline. Pass the full componentRef from a search_components result (with `url` and/or `spec`).",
+      "Add a new task node. Pass the full componentRef from a search_components result (with `url` and/or `spec`). Adds to the top-level pipeline unless inSubgraphTaskId names a subgraph to add it inside.",
     parameters: z.object({
       name: z.string().describe("Human-readable task name"),
       componentRef: z
@@ -180,12 +180,20 @@ export function createCsomTools(bridge: ToolBridgeApi) {
         .describe(
           "Component reference from search_components — must include url and/or spec.",
         ),
+      inSubgraphTaskId: z
+        .string()
+        .nullable()
+        .optional()
+        .describe(
+          "$id of a subgraph task to add this inside. Omit for the top-level pipeline. When the user means the subgraph they are viewing, pass activeSubgraphTaskId from get_pipeline_state verbatim — a name from activeSubgraphPath is not an $id.",
+        ),
     }),
-    execute: async ({ name, componentRef }) =>
+    execute: async ({ name, componentRef, inSubgraphTaskId }) =>
       asJson(
         await bridge.addTask({
           name,
           componentRef: dropNulls(componentRef) as ComponentReference,
+          inSubgraphTaskId: inSubgraphTaskId ?? undefined,
         }),
       ),
   });
@@ -212,7 +220,8 @@ export function createCsomTools(bridge: ToolBridgeApi) {
 
   const addInput = tool({
     name: "add_input",
-    description: "Add a pipeline-level input.",
+    description:
+      "Add a graph-level input. Adds to the top-level pipeline unless inSubgraphTaskId names a subgraph to add it inside — a subgraph input becomes an input port on that subgraph task.",
     parameters: z.object({
       name: z.string().describe("Input name"),
       type: z
@@ -223,8 +232,22 @@ export function createCsomTools(bridge: ToolBridgeApi) {
       description: z.string().nullable().optional(),
       defaultValue: z.string().nullable().optional().describe("Default value"),
       optional: z.boolean().nullable().optional(),
+      inSubgraphTaskId: z
+        .string()
+        .nullable()
+        .optional()
+        .describe(
+          "$id of a subgraph task to add this inside. Omit for the top-level pipeline. When the user means the subgraph they are viewing, pass activeSubgraphTaskId from get_pipeline_state verbatim — a name from activeSubgraphPath is not an $id.",
+        ),
     }),
-    execute: async ({ name, type, description, defaultValue, optional }) =>
+    execute: async ({
+      name,
+      type,
+      description,
+      defaultValue,
+      optional,
+      inSubgraphTaskId,
+    }) =>
       asJson(
         await bridge.addInput({
           name,
@@ -232,6 +255,7 @@ export function createCsomTools(bridge: ToolBridgeApi) {
           description: description ?? undefined,
           defaultValue: defaultValue ?? undefined,
           optional: optional ?? undefined,
+          inSubgraphTaskId: inSubgraphTaskId ?? undefined,
         }),
       ),
   });
@@ -260,18 +284,27 @@ export function createCsomTools(bridge: ToolBridgeApi) {
 
   const addOutput = tool({
     name: "add_output",
-    description: "Add a pipeline-level output.",
+    description:
+      "Add a graph-level output. Adds to the top-level pipeline unless inSubgraphTaskId names a subgraph to add it inside — a subgraph output becomes an output port on that subgraph task.",
     parameters: z.object({
       name: z.string().describe("Output name"),
       type: z.string().nullable().optional().describe("Type"),
       description: z.string().nullable().optional(),
+      inSubgraphTaskId: z
+        .string()
+        .nullable()
+        .optional()
+        .describe(
+          "$id of a subgraph task to add this inside. Omit for the top-level pipeline. When the user means the subgraph they are viewing, pass activeSubgraphTaskId from get_pipeline_state verbatim — a name from activeSubgraphPath is not an $id.",
+        ),
     }),
-    execute: async ({ name, type, description }) =>
+    execute: async ({ name, type, description, inSubgraphTaskId }) =>
       asJson(
         await bridge.addOutput({
           name,
           type: type ?? undefined,
           description: description ?? undefined,
+          inSubgraphTaskId: inSubgraphTaskId ?? undefined,
         }),
       ),
   });

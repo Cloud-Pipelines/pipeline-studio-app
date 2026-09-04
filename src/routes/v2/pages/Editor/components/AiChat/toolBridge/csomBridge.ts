@@ -58,6 +58,7 @@ import {
   explainNotASubgraph,
   resolveArgumentValue,
   resolveConnectable,
+  resolveDestination,
   resolveTarget,
 } from "./mutationTarget";
 
@@ -96,6 +97,7 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
     async getPipelineState() {
       return serializeSpecForAi(requireSpec(deps), {
         activeSubgraphPath: deps.getActiveSubgraphPath(),
+        activeSubgraphTaskId: deps.getActiveSubgraphTaskId(),
       });
     },
 
@@ -111,10 +113,30 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
       return { success: true };
     },
 
-    async addTask({ name, componentRef }) {
-      const spec = requireSpec(deps);
+    async addTask({ name, componentRef, inSubgraphTaskId }) {
+      // Hydration fetches over the network; resolving the destination before it
+      // would hand us a subgraph spec the user could detach (undo, navigation,
+      // a reload) while we wait, and the task would land in an orphaned tree.
+      // `getSpec` reads whichever pipeline is open now, though, so the root has
+      // to be pinned across the fetch or the add follows the user into another
+      // pipeline.
+      const rootAtCallTime = requireSpec(deps);
       const hydrated =
         (await hydrateComponentReference(componentRef)) ?? componentRef;
+      const root = requireSpec(deps);
+      if (root !== rootAtCallTime) {
+        return {
+          success: false,
+          error: `Nothing was added — the open pipeline changed to "${root.name}" while the component was loading. Check with the user before retrying.`,
+        };
+      }
+
+      const destination = resolveDestination(root, inSubgraphTaskId);
+      if (!destination.ok) {
+        return { success: false, error: destination.error };
+      }
+      const { spec } = destination;
+
       const task = addTask(
         deps.undo,
         spec,
@@ -154,8 +176,23 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
       );
     },
 
-    async addInput({ name, type, description, defaultValue, optional }) {
-      const spec = requireSpec(deps);
+    async addInput({
+      name,
+      type,
+      description,
+      defaultValue,
+      optional,
+      inSubgraphTaskId,
+    }) {
+      const destination = resolveDestination(
+        requireSpec(deps),
+        inSubgraphTaskId,
+      );
+      if (!destination.ok) {
+        return { success: false, error: destination.error };
+      }
+      const { spec } = destination;
+
       const input = addInput(deps.undo, spec, computeNextPosition(spec), name);
       if (type) setInputType(deps.undo, spec, input.$id, type);
       if (description)
@@ -201,8 +238,16 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
       );
     },
 
-    async addOutput({ name, type, description }) {
-      const spec = requireSpec(deps);
+    async addOutput({ name, type, description, inSubgraphTaskId }) {
+      const destination = resolveDestination(
+        requireSpec(deps),
+        inSubgraphTaskId,
+      );
+      if (!destination.ok) {
+        return { success: false, error: destination.error };
+      }
+      const { spec } = destination;
+
       const output = addOutput(
         deps.undo,
         spec,

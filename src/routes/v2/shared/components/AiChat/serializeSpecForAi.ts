@@ -10,6 +10,10 @@
  * separate bridge call. Edits land in whichever spec owns the `$id` they
  * name, so the breadcrumb tells the model where the user is looking
  * rather than where an edit will go.
+ *
+ * `activeSubgraphTaskId` accompanies it because the breadcrumb is made of
+ * display names, which are unique only within one graph — the model cannot
+ * turn a name in it back into the `$id` that `inSubgraphTaskId` needs.
  */
 import type {
   Binding,
@@ -65,10 +69,12 @@ export interface AiSpec {
   tasks: AiTaskSpec[];
   bindings: AiBindingSpec[];
   activeSubgraphPath?: string[];
+  activeSubgraphTaskId?: string;
 }
 
 export interface SerializeSpecOptions {
   activeSubgraphPath?: string[];
+  activeSubgraphTaskId?: string;
 }
 
 function pickDefined<T extends object>(obj: T): T {
@@ -146,8 +152,9 @@ function serializeComponentRef(ref: ComponentReference): AiComponentRef {
 
 export function serializeSpecForAi(
   spec: ComponentSpec,
-  { activeSubgraphPath = [] }: SerializeSpecOptions = {},
+  { activeSubgraphPath = [], activeSubgraphTaskId }: SerializeSpecOptions = {},
 ): AiSpec {
+  const insideSubgraph = activeSubgraphPath.length > 0;
   return pickDefined({
     name: spec.name,
     description: spec.description || undefined,
@@ -155,7 +162,7 @@ export function serializeSpecForAi(
     outputs: spec.outputs.map(serializeOutput),
     tasks: spec.tasks.map(serializeTask),
     bindings: spec.bindings.map(serializeBinding),
-    activeSubgraphPath:
-      activeSubgraphPath.length > 0 ? activeSubgraphPath : undefined,
+    activeSubgraphPath: insideSubgraph ? activeSubgraphPath : undefined,
+    activeSubgraphTaskId: insideSubgraph ? activeSubgraphTaskId : undefined,
   });
 }
