@@ -31,7 +31,13 @@ Dispatching again after replacing the global is safe and rebinds.
 | `version`     | yes      | Must be exactly `1`. Anything else is ignored wholesale.             |
 | `getSnapshot` | yes      | Called on every render of every subscriber — must be cheap and pure. |
 | `subscribe`   | yes      | Returns an unsubscribe function. A non-function return is tolerated. |
-| `refresh`     | no       | Called when the tab regains visibility.                              |
+| `refresh`     | no       | Called when the tab regains visibility, at most once per 30s.        |
+
+**`refresh` is best-effort — own your own cadence.** Nothing in the UI polls on a
+timer, so a tab left continuously visible may never call it. A host whose notices
+change on their own schedule — a maintenance window opening, an incident being
+declared — should re-fetch on its own interval and publish, rather than rely on
+this hook.
 
 ## Notice shape
 
@@ -50,6 +56,11 @@ Everything is validated at the boundary and the UI never throws on bad input.
 Entries that fail validation are dropped silently, as are actions whose `url` is
 not absolute `http(s)`. Duplicate ids collapse to the first occurrence, and at
 most 20 notices are read per snapshot.
+
+**An `id` belongs to a notice's content, not to its slot.** Whether a reader has
+read, dismissed or hidden a notice is stored against its `id` in their browser,
+so editing a `title` or `body` while keeping the `id` will not resurface it for
+anyone who has already cleared it. Publish changed content under a new `id`.
 
 `getSnapshot` may return a freshly built array on every call — the UI compares
 content and hands subscribers a stable reference, so this will not loop. The
