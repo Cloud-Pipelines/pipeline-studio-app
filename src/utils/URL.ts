@@ -195,6 +195,17 @@ const parseHttpUrl = (value?: string | null): string | undefined => {
   }
 };
 
+const toAbsoluteHttpUrl = (value: unknown): string | null => {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
+
 const normalizeUrl = (url: string) => {
   if (url.trim() === "") {
     return "";
@@ -240,4 +251,5 @@ export {
   isGithubUrl,
   normalizeUrl,
   parseHttpUrl,
+  toAbsoluteHttpUrl,
 };

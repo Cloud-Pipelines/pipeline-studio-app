@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { InlineStack } from "@/components/ui/layout";
 import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ interface InfoBoxProps {
   children: ReactNode;
   variant?: "info" | "error" | "warning" | "success" | "ghost";
   onDismiss?: () => void;
+  dismissIcon?: IconName;
+  dismissLabel?: string;
 }
 
 const variantStyles: Record<
@@ -57,6 +59,8 @@ export const InfoBox = ({
   children,
   variant = "info",
   onDismiss,
+  dismissIcon = "X",
+  dismissLabel = "Dismiss",
 }: InfoBoxProps) => {
   const styles = variantStyles[variant];
   const widthClass = widthStyles[width];
@@ -81,9 +85,9 @@ export const InfoBox = ({
             onClick={onDismiss}
             variant="ghost"
             size="min"
-            aria-label="Dismiss"
+            aria-label={dismissLabel}
           >
-            <Icon name="X" size="sm" />
+            <Icon name={dismissIcon} size="sm" />
           </Button>
         )}
       </InlineStack>

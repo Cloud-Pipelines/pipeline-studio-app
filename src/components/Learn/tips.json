@@ -219,7 +219,7 @@
     "id": "templatized-run-names",
     "category": "Runs",
     "title": "Templatize run names so you can tell experiments apart",
-    "body": "Turn on Templatized pipeline run name in Settings → Beta Features, then add a template so each submitted run gets a unique auto-generated name. Available placeholders: `${arguments.<input name>}`, `${date.timestamp}`, `${date.short}`, `${date.long}`, and `${annotations.<key>}`."
+    "body": "Set a Run name template in the pipeline's configuration panel and every submitted run gets its own auto-generated name, while the pipeline keeps its own. Available placeholders: `${arguments.<input name>}`, `${date.timestamp}`, `${date.short}`, `${date.long}`, and `${annotations.<key>}`."
   },
   {
     "id": "submit-with-arguments",

@@ -2,7 +2,7 @@ import type { ComponentSpec } from "../entities/componentSpec";
 import type { ComponentValidationIssue, ValidationIssue } from "./types";
 import { validateSpec } from "./validateSpec";
 
-const ROOT_PATH_ID = "root";
+export const ROOT_PATH_ID = "root";
 
 /**
  * Recursively collect validation issues across the entire pipeline,

@@ -11,9 +11,9 @@ import { DEFAULT_VIEW_PRESET } from "./viewPresets";
 import { buildWindowModelInit } from "./windowStore.utils";
 
 // Mirrors CURRENT_VERSION in windowPersistence.ts. If the schema version is
-// bumped there, these fixtures must be updated (and loadWindowLayout would
-// otherwise discard them, causing these tests to fail loudly).
-const LAYOUT_VERSION = 4;
+// bumped there, these fixtures must be updated — loadWindowLayout migrates or
+// discards older versions, so a stale fixture stops exercising what it claims.
+const LAYOUT_VERSION = 5;
 
 // Default storage key used when no active layout id is set (see getStorageKey).
 const STORAGE_KEY = "editorV2-window-layout";

@@ -9,12 +9,15 @@
  * the Editor's spec-mutation actions or an undo store.
  */
 import type { ToolBridgeApi, ValidationResult } from "@/agent/toolBridgeApi";
-import { validateSpec } from "@/models/componentSpec/validation/validateSpec";
 import { serializeSpecForAi } from "@/routes/v2/shared/components/AiChat/serializeSpecForAi";
 import { createDebugBridgeHandlers } from "@/routes/v2/shared/components/AiChat/toolBridge/debugBridge";
 import { createRunBridgeHandlers } from "@/routes/v2/shared/components/AiChat/toolBridge/runBridge";
+import { createSubgraphBridgeHandlers } from "@/routes/v2/shared/components/AiChat/toolBridge/subgraphBridge";
 import type { BridgeDeps } from "@/routes/v2/shared/components/AiChat/toolBridge/utils";
-import { requireSpec } from "@/routes/v2/shared/components/AiChat/toolBridge/utils";
+import {
+  requireSpec,
+  toValidationResult,
+} from "@/routes/v2/shared/components/AiChat/toolBridge/utils";
 
 const READ_ONLY_ERROR =
   "This is a read-only run view — the pipeline spec cannot be edited here.";
@@ -47,22 +50,12 @@ function createReadOnlyCsomHandlers(deps: BridgeDeps): ReadOnlyCsomHandlers {
     async getPipelineState() {
       return serializeSpecForAi(requireSpec(deps), {
         activeSubgraphPath: deps.getActiveSubgraphPath(),
+        activeSubgraphTaskId: deps.getActiveSubgraphTaskId(),
       });
     },
 
     async validatePipeline(): Promise<ValidationResult> {
-      const issues = validateSpec(requireSpec(deps));
-      return {
-        valid: issues.length === 0,
-        issueCount: issues.length,
-        issues: issues.map((i) => ({
-          type: i.type,
-          severity: i.severity,
-          message: i.message,
-          entityId: i.entityId,
-          issueCode: i.issueCode,
-        })),
-      };
+      return toValidationResult(requireSpec(deps));
     },
 
     async searchComponents() {
@@ -74,43 +67,43 @@ function createReadOnlyCsomHandlers(deps: BridgeDeps): ReadOnlyCsomHandlers {
     },
 
     async setPipelineName() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async setPipelineDescription() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async addTask() {
       return { success: false, error: READ_ONLY_ERROR };
     },
     async deleteTask() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async renameTask() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async addInput() {
-      return { success: false, inputId: "", name: "" };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async deleteInput() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async renameInput() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async addOutput() {
-      return { success: false, outputId: "", name: "" };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async deleteOutput() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async renameOutput() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async connectNodes() {
       return { success: false, error: READ_ONLY_ERROR };
     },
     async deleteEdge() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
     async setTaskArgument() {
       return { success: false, error: READ_ONLY_ERROR };
@@ -119,7 +112,7 @@ function createReadOnlyCsomHandlers(deps: BridgeDeps): ReadOnlyCsomHandlers {
       return { success: false, error: READ_ONLY_ERROR };
     },
     async unpackSubgraph() {
-      return { success: false };
+      return { success: false, error: READ_ONLY_ERROR };
     },
   };
 }
@@ -127,6 +120,7 @@ function createReadOnlyCsomHandlers(deps: BridgeDeps): ReadOnlyCsomHandlers {
 export function createRunViewToolBridge(deps: BridgeDeps): ToolBridgeApi {
   return {
     ...createReadOnlyCsomHandlers(deps),
+    ...createSubgraphBridgeHandlers(deps),
     ...createRunBridgeHandlers(deps),
     ...createDebugBridgeHandlers(deps),
   };

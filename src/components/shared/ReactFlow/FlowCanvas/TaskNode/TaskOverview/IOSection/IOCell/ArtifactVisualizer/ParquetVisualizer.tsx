@@ -18,7 +18,11 @@ import {
 } from "./parquetUtils";
 import TableVisualizer from "./TableVisualizer";
 import { fetchArtifactOrThrow } from "./useArtifactFetch";
-import { type ArtifactColumn, getPreviewRowLimit } from "./utils";
+import {
+  type ArtifactCell,
+  type ArtifactColumn,
+  getPreviewRowLimit,
+} from "./utils";
 
 interface ParquetVisualizerProps {
   signedUrl: string;
@@ -28,7 +32,7 @@ interface ParquetVisualizerProps {
 interface ParquetBase {
   opened: OpenedParquet;
   columns: ArtifactColumn[];
-  initialRows: string[][];
+  initialRows: ArtifactCell[][];
   totalRows: number;
   columnCount: number;
   schemaJson: unknown;

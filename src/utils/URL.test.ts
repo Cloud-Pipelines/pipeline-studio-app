@@ -9,12 +9,60 @@ import {
   getIdOrTitleFromPath,
   normalizeUrl,
   parseHttpUrl,
+  toAbsoluteHttpUrl,
 } from "./URL";
 
 vi.mock("@/routes/router", () => ({
   RUNS_BASE_PATH: "/runs",
 }));
 
+// Kept ahead of the download tests, which delete `global.URL` in their teardown.
+describe("toAbsoluteHttpUrl", () => {
+  it("accepts absolute http and https urls", () => {
+    expect(toAbsoluteHttpUrl("https://example.com/docs")).toBe(
+      "https://example.com/docs",
+    );
+    expect(toAbsoluteHttpUrl("http://example.com")).toBe("http://example.com/");
+  });
+
+  it("trims surrounding whitespace before parsing", () => {
+    expect(toAbsoluteHttpUrl("  https://example.com/docs  ")).toBe(
+      "https://example.com/docs",
+    );
+  });
+
+  it("rejects script-bearing and non-web protocols", () => {
+    expect(toAbsoluteHttpUrl("javascript:alert(1)")).toBeNull();
+    expect(toAbsoluteHttpUrl("JavaScript:alert(1)")).toBeNull();
+    expect(
+      toAbsoluteHttpUrl("data:text/html,<script>alert(1)</script>"),
+    ).toBeNull();
+    expect(toAbsoluteHttpUrl("vbscript:msgbox(1)")).toBeNull();
+    expect(toAbsoluteHttpUrl("file:///etc/passwd")).toBeNull();
+  });
+
+  it("rejects anything that is not already absolute", () => {
+    expect(toAbsoluteHttpUrl("/runs")).toBeNull();
+    expect(toAbsoluteHttpUrl("runs/123")).toBeNull();
+    expect(toAbsoluteHttpUrl("//evil.example.com")).toBeNull();
+    expect(toAbsoluteHttpUrl("#anchor")).toBeNull();
+  });
+
+  it("rejects empty and whitespace-only input", () => {
+    expect(toAbsoluteHttpUrl("")).toBeNull();
+    expect(toAbsoluteHttpUrl("   ")).toBeNull();
+  });
+
+  it("rejects non-string input, since callers pass unvalidated host data", () => {
+    expect(toAbsoluteHttpUrl(undefined)).toBeNull();
+    expect(toAbsoluteHttpUrl(null)).toBeNull();
+    expect(toAbsoluteHttpUrl(42)).toBeNull();
+    expect(toAbsoluteHttpUrl({ url: "https://example.com" })).toBeNull();
+    expect(toAbsoluteHttpUrl(["https://example.com"])).toBeNull();
+  });
+});
+
+// normalizeUrl tests
 describe("normalizeUrl", () => {
   it("returns empty string for empty input", () => {
     expect(normalizeUrl("")).toBe("");

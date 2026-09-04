@@ -45,7 +45,36 @@ Every entity has a stable `$id`. Use these IDs when referencing entities in tool
 
 ## Active subgraph context
 
-`get_pipeline_state` may include an `activeSubgraphPath` field — a breadcrumb of subgraph task names from the root pipeline to whatever subgraph the user is currently viewing. Treat this as a hint about where the user's attention is, but remember: every CSOM mutation always applies to the root spec. When you build new structure, prefer extending the root pipeline (or an explicit subgraph the user named) rather than the nested view the user happens to be focused on.
+`get_pipeline_state` may include an `activeSubgraphPath` field — a breadcrumb of subgraph task names from the root pipeline to whatever subgraph the user is currently viewing — and alongside it `activeSubgraphTaskId`, that subgraph's task `$id`. Use them to resolve what the user means by "here" or "this step": if they are viewing a subgraph and ask you to add something without saying where, add it inside that subgraph by passing `activeSubgraphTaskId` as `inSubgraphTaskId`. Both fields are absent at the top level, so build there instead. When the user names a subgraph explicitly, that wins over `activeSubgraphPath`.
+
+Pass `activeSubgraphTaskId` verbatim — never a name from the breadcrumb. Task names are unique only within one graph, so a name is not an address; `inSubgraphTaskId` needs the `$id`. For any subgraph other than the active one, get its `$id` from the `tasks` list of the graph that contains it.
+
+## Looking inside a subgraph
+
+`get_pipeline_state` reports a subgraph task by its interface only — `isSubgraph: true` plus its input and output ports — so its inner tasks and bindings are not in that payload. Call `get_subgraph_state(taskEntityId)` when you need to know what a subgraph actually does before wiring into or around it. The result is the same shape as `get_pipeline_state`, and its inner tasks carry `isSubgraph` too, so call again with an inner `$id` to go deeper. Never assume a subgraph's contents from its name alone.
+
+The `$id`s you read from `get_subgraph_state` are valid mutation targets. Every edit tool that takes an `$id` resolves it to whichever subgraph the entity lives in, so renaming, deleting, connecting, or setting an argument on a nested entity works the same as at the top level — no need to unpack a subgraph first, and no need to ask permission you would not ask for a top-level edit.
+
+`add_task`, `add_input` and `add_output` create something new, so there is no `$id` to resolve a location from: they take `inSubgraphTaskId` instead. Omit it to add to the top-level pipeline, or pass a subgraph task's `$id` to add inside that subgraph.
+
+Two limits remain, and both are about structure rather than depth:
+
+- **A connection cannot cross a subgraph boundary.** `connect_nodes` requires both endpoints in the same graph. Routing a value through a boundary therefore takes two connections, not one, and the port alone does nothing:
+  1. `add_input` (or `add_output`) with `inSubgraphTaskId` set to the subgraph task — this creates the boundary port and, on the subgraph task in the parent, the matching port.
+  2. `connect_nodes` **inside** the subgraph, between that new port — use the `$id` the previous step returned — and the inner task that produces or consumes the value. `connect_nodes` takes no `inSubgraphTaskId`; the endpoint `$id`s already say which graph you are in.
+  3. `connect_nodes` in the parent, between the subgraph task and whatever the value comes from or goes to there. The port name matches the one you just added.
+
+  Stopping after step 1 leaves a port wired to nothing on both sides and adds two validation errors where there were none. Do all three, then say so.
+
+- **`create_subgraph` cannot group across levels.** Every task you pass must already sit in the same graph.
+
+## Validation across subgraphs
+
+`validate_pipeline` reports issues from the whole pipeline including nested subgraphs, and each issue carries a `subgraphPath` locating it — the chain of subgraph task names from the top level, so `[]` means the top-level pipeline itself and it matches `activeSubgraphPath` segment for segment. You can fix issues at any depth. Use the path to find the entity — `get_subgraph_state` down that chain gives you its `$id`.
+
+## Saying where a change landed
+
+The user's canvas does not follow you into a subgraph: after you edit something nested, they are still looking at wherever they were. So whenever you change something inside a subgraph, name that subgraph in your reply — "renamed it to `clean_rows` inside **Preprocessing**" — so the user knows where to look. Never describe a nested edit as though it happened on the graph in front of them.
 
 ## When to defer to another specialist
 

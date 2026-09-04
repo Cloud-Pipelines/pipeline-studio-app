@@ -12,6 +12,7 @@ import {
   EDITOR_POSITION_ANNOTATION,
   PIPELINE_NOTES_ANNOTATION,
   PIPELINE_TAGS_ANNOTATION,
+  RUN_NAME_TEMPLATE_ANNOTATION,
 } from "@/utils/annotations";
 
 import { idGen } from "./utils";
@@ -58,6 +59,21 @@ export function updatePipelineNotes(
       spec.annotations.set(PIPELINE_NOTES_ANNOTATION, notes);
     } else {
       spec.annotations.remove(PIPELINE_NOTES_ANNOTATION);
+    }
+    return true;
+  });
+}
+
+export function updateRunNameTemplate(
+  undo: UndoGroupable,
+  spec: ComponentSpec,
+  template: string | undefined,
+): boolean {
+  return undo.withGroup("Update run name template", () => {
+    if (template) {
+      spec.annotations.set(RUN_NAME_TEMPLATE_ANNOTATION, template);
+    } else {
+      spec.annotations.remove(RUN_NAME_TEMPLATE_ANNOTATION);
     }
     return true;
   });

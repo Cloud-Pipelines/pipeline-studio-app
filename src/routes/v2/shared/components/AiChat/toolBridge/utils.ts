@@ -13,7 +13,12 @@
  */
 import type { QueryClient } from "@tanstack/react-query";
 
+import type { ValidationResult } from "@/agent/toolBridgeApi";
 import type { ComponentSpec } from "@/models/componentSpec";
+import {
+  collectValidationIssues,
+  ROOT_PATH_ID,
+} from "@/models/componentSpec/validation/collectIssues";
 import { EDITOR_POSITION_ANNOTATION } from "@/utils/annotations";
 
 const DEFAULT_POSITION = { x: 250, y: 250 };
@@ -22,6 +27,7 @@ const POSITION_OFFSET = 200;
 export interface BridgeDeps {
   getSpec: () => ComponentSpec | null;
   getActiveSubgraphPath: () => string[];
+  getActiveSubgraphTaskId: () => string | undefined;
   getBackendUrl?: () => string;
   getAuthToken?: () => string | undefined;
   queryClient?: QueryClient;
@@ -55,6 +61,33 @@ export function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
   return "An unknown error occurred";
+}
+
+/**
+ * The `"root"` segment that `collectValidationIssues` prefixes is dropped on the
+ * way out: `activeSubgraphPath` — the only other path the model ever sees — is
+ * the bare chain of subgraph task names, and a model correlating "where is this
+ * issue" against "where am I" cannot match the two otherwise, or tries to
+ * descend into a subgraph literally named "root".
+ */
+export function toValidationResult(spec: ComponentSpec): ValidationResult {
+  const issues = collectValidationIssues(spec);
+  return {
+    valid: issues.length === 0,
+    issueCount: issues.length,
+    issues: issues.map((i) => ({
+      type: i.type,
+      severity: i.severity,
+      message: i.message,
+      entityId: i.entityId,
+      entityName: i.entityName,
+      issueCode: i.issueCode,
+      subgraphPath:
+        i.subgraphPath[0] === ROOT_PATH_ID
+          ? i.subgraphPath.slice(1)
+          : i.subgraphPath,
+    })),
+  };
 }
 
 export function computeNextPosition(spec: ComponentSpec): {

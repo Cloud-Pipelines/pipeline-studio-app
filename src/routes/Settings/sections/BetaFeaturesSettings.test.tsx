@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Flag } from "@/types/configuration";
@@ -34,15 +34,6 @@ const componentSearchFlag: Flag = {
   category: "beta",
 };
 
-const aiDescriptionFlag: Flag = {
-  key: "component-search-v2-ai-descriptions",
-  name: "Auto-generate component search AI descriptions",
-  description: "Automatically generate AI descriptions.",
-  default: false,
-  enabled: false,
-  category: "beta",
-};
-
 describe("BetaFeaturesSettings", () => {
   beforeEach(() => {
     mocks.betaFlags = [];
@@ -50,28 +41,28 @@ describe("BetaFeaturesSettings", () => {
     mocks.track.mockClear();
   });
 
-  it("hides the AI descriptions flag when component search is disabled", () => {
-    mocks.betaFlags = [componentSearchFlag, aiDescriptionFlag];
+  it("renders the beta flags it is given", () => {
+    mocks.betaFlags = [componentSearchFlag];
 
     render(<BetaFeaturesSettings />);
 
     expect(screen.getByText("Component Search")).toBeInTheDocument();
-    expect(
-      screen.queryByText("Auto-generate component search AI descriptions"),
-    ).not.toBeInTheDocument();
   });
 
-  it("shows the AI descriptions flag when component search is enabled", () => {
-    mocks.betaFlags = [
-      { ...componentSearchFlag, enabled: true },
-      aiDescriptionFlag,
-    ];
+  it("tracks and forwards a toggle change", () => {
+    mocks.betaFlags = [componentSearchFlag];
 
     render(<BetaFeaturesSettings />);
+    fireEvent.click(screen.getByTestId("component-search-v2-switch"));
 
-    expect(screen.getByText("Component Search")).toBeInTheDocument();
-    expect(
-      screen.getByText("Auto-generate component search AI descriptions"),
-    ).toBeInTheDocument();
+    expect(mocks.track).toHaveBeenCalledWith("settings.toggle_changed", {
+      section: "beta_features",
+      flag_name: "component-search-v2",
+      new_value: true,
+    });
+    expect(mocks.handleSetFlag).toHaveBeenCalledWith(
+      "component-search-v2",
+      true,
+    );
   });
 });

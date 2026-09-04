@@ -10,6 +10,7 @@ import { ComponentSpec } from "../entities/componentSpec";
 import { Input } from "../entities/input";
 import { Output } from "../entities/output";
 import { Task } from "../entities/task";
+import { promoteInlineSubgraph } from "../entities/taskSubgraphHelper";
 import type {
   Annotation,
   Argument,
@@ -53,7 +54,7 @@ function snapshotTask(t: Task): TaskSnapshot {
   return {
     $id: t.$id,
     name: t.name,
-    componentRef: deepClone(t.componentRef),
+    componentRef: deepClone(t.resolvedComponentRef),
     isEnabled: t.isEnabled ? deepClone(t.isEnabled) : undefined,
     annotations: t.annotations.items.map((a) => deepClone(a)),
     arguments: t.arguments.map((a) => deepClone(a)),
@@ -180,18 +181,21 @@ export function createSubgraph({
       }),
   );
 
-  const subgraphTasks: Task[] = taskSnapshots.map(
-    (t) =>
-      new Task({
-        $id: t.$id,
-        name: t.name,
-        componentRef: t.componentRef,
-        isEnabled: t.isEnabled,
-        annotations: Annotations.from(t.annotations),
-        arguments: t.arguments,
-        executionOptions: t.executionOptions,
-      }),
-  );
+  const subgraphTasks: Task[] = taskSnapshots.map((t) => {
+    const { componentRef, subgraphSpec } = promoteInlineSubgraph(
+      t.componentRef,
+    );
+    return new Task({
+      $id: t.$id,
+      name: t.name,
+      componentRef,
+      subgraphSpec,
+      isEnabled: t.isEnabled,
+      annotations: Annotations.from(t.annotations),
+      arguments: t.arguments,
+      executionOptions: t.executionOptions,
+    });
+  });
 
   const subgraphInputBindings: Binding[] = [];
   for (const { input, bindings } of inputGroups) {

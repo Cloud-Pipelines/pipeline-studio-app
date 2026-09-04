@@ -92,6 +92,7 @@ export const AiChatContent = observer(function AiChatContent({
       getSpec: () => navigation.rootSpec,
       getActiveSubgraphPath: () =>
         navigation.navigationPath.slice(1).map((e) => e.displayName),
+      getActiveSubgraphTaskId: () => navigation.parentContext?.taskId,
       getBackendUrl: () => backendUrlRef.current,
       getAuthToken: () => authTokenRef.current,
       queryClient,

@@ -72,7 +72,7 @@ type WindowLayoutStorageMap = Record<string, PersistedWindowLayout>;
 
 const storage = getStorage<string, WindowLayoutStorageMap>();
 
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 5;
 
 function saveWindowLayoutImmediate(store: WindowStoreImpl): void {
   const existingLayout = loadWindowLayout();
@@ -138,12 +138,40 @@ function isPersistedLayout(value: unknown): value is PersistedWindowLayout {
   );
 }
 
+// The height version 4 stamped onto docked windows. Frozen here rather than
+// imported from DEFAULT_DOCKED_HEIGHT: this migration must keep matching the
+// historical value even if that constant changes.
+const V4_STAMPED_DOCKED_HEIGHT = 300;
+
+/**
+ * Version 4 stamped a default `dockedHeight` onto every window dragged into a
+ * dock. That value was inert then, but is now an enforced pixel height, so it
+ * pins panels that should size to their content. Dropping it restores
+ * fit-to-content; an explicit resize writes the field again. Heights the user
+ * actually chose are left alone — a drag starts from a fractional measured
+ * height, so landing on the stamp exactly is vanishingly unlikely.
+ */
+export function migrateLayout(
+  layout: PersistedWindowLayout,
+): PersistedWindowLayout | null {
+  if (layout.version === CURRENT_VERSION) return layout;
+  if (layout.version !== 4) return null;
+
+  const windows: Record<string, PersistedWindowState> = {};
+  for (const [id, win] of Object.entries(layout.windows)) {
+    const { dockedHeight, ...withoutDockedHeight } = win;
+    windows[id] =
+      dockedHeight === V4_STAMPED_DOCKED_HEIGHT ? withoutDockedHeight : win;
+  }
+
+  return { ...layout, windows, version: CURRENT_VERSION };
+}
+
 function loadWindowLayout(): PersistedWindowLayout | null {
   const parsed = storage.getItem(getStorageKey());
-  if (!isPersistedLayout(parsed) || parsed.version !== CURRENT_VERSION) {
-    return null;
-  }
-  return parsed;
+  if (!isPersistedLayout(parsed)) return null;
+
+  return migrateLayout(parsed);
 }
 
 /**

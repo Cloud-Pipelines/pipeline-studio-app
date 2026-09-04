@@ -11,6 +11,9 @@ import { AiChatStore } from "./aiChatStore";
 
 const AiChatStoreCtx = createRequiredContext<AiChatStore>("AiChatStoreContext");
 
+const AiChatModeCtx =
+  createRequiredContext<AgentContext["mode"]>("AiChatModeContext");
+
 interface AiChatStoreProviderProps {
   // Page-owned factory that spawns the worker for this AI chat.
   createWorker: () => Worker;
@@ -48,10 +51,18 @@ export function AiChatStoreProvider({
   }, [store]);
 
   return (
-    <AiChatStoreCtx.Provider value={store}>{children}</AiChatStoreCtx.Provider>
+    <AiChatModeCtx.Provider value={context.mode}>
+      <AiChatStoreCtx.Provider value={store}>
+        {children}
+      </AiChatStoreCtx.Provider>
+    </AiChatModeCtx.Provider>
   );
 }
 
 export function useAiChatStore(): AiChatStore {
   return useRequiredContext(AiChatStoreCtx);
+}
+
+export function useAiChatMode(): AgentContext["mode"] {
+  return useRequiredContext(AiChatModeCtx);
 }
