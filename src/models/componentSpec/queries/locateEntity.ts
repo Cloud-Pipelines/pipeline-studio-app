@@ -10,6 +10,8 @@ type LocatedEntity =
   | { kind: "output"; entity: Output }
   | { kind: "binding"; entity: Binding };
 
+export type LocatedEntityKind = LocatedEntity["kind"];
+
 /**
  * Structurally matches the editor's `ParentContext`, so a location can be
  * handed straight to the I/O actions that propagate port renames and deletes
