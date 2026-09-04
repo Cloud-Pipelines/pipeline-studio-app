@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { installRawSource } from "@/config/noticeTestSource";
+import { resetNoticeStateForTests } from "@/hooks/useNotices";
 
 import {
   getNoticesSnapshot,
   refreshNotices,
-  resetNoticeCacheForTests,
   subscribeToNotices,
 } from "./notices";
 
@@ -21,7 +21,7 @@ function staticSource(getSnapshot: () => unknown, refresh?: () => void) {
 describe("notices", () => {
   afterEach(() => {
     delete window.__TANGLE_NOTICE_SOURCE__;
-    resetNoticeCacheForTests();
+    resetNoticeStateForTests();
   });
 
   describe("getNoticesSnapshot", () => {

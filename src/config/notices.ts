@@ -1,7 +1,7 @@
 import { isRecord } from "@/utils/typeGuards";
 import { toAbsoluteHttpUrl } from "@/utils/URL";
 
-export interface TangleNoticeAction {
+interface TangleNoticeAction {
   url: string;
   text: string;
 }
@@ -15,7 +15,7 @@ export interface TangleNotice {
   action?: TangleNoticeAction;
 }
 
-export interface TangleNoticeSource {
+interface TangleNoticeSource {
   version: 1;
   getSnapshot: () => TangleNotice[];
   subscribe: (listener: () => void) => () => void;
