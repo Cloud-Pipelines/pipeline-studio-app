@@ -5,12 +5,13 @@ import {
   type ReactNode,
   useContext,
 } from "react";
-import Markdown, { defaultUrlTransform } from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { type Components, defaultUrlTransform } from "react-markdown";
 
+import {
+  INLINE_CODE_CLASS,
+  Markdown,
+} from "@/components/shared/Markdown/Markdown";
 import { Link } from "@/components/ui/link";
-import { Separator } from "@/components/ui/separator";
-import { Heading, Paragraph } from "@/components/ui/typography";
 import { getComponentQueryKey } from "@/hooks/useHydrateComponentReference";
 import type { ComponentRefData } from "@/routes/v2/shared/components/AiChat/types";
 import { CodeBlock } from "@/routes/v2/shared/components/CodeBlock";
@@ -21,8 +22,6 @@ import { EntityChip } from "./EntityChip";
 
 const ENTITY_PROTOCOL = "entity://";
 const COMPONENT_PROTOCOL = "component://";
-
-const INLINE_CODE_CLASS = "rounded bg-muted px-1 py-0.5 text-xs font-mono";
 
 const ComponentRefsContext = createContext<
   Record<string, ComponentRefData> | undefined
@@ -135,74 +134,13 @@ function MarkdownCode({
   );
 }
 
-const markdownComponents = {
-  h1: ({ children }: { children?: ReactNode }) => (
-    <Heading level={1} size="md" weight="bold" className="mt-3 mb-1 block">
-      {children}
-    </Heading>
-  ),
-  h2: ({ children }: { children?: ReactNode }) => (
-    <Heading level={2} size="sm" weight="bold" className="mt-2 mb-1 block">
-      {children}
-    </Heading>
-  ),
-  h3: ({ children }: { children?: ReactNode }) => (
-    <Heading
-      level={3}
-      size="sm"
-      weight="semibold"
-      className="mt-2 mb-0.5 block"
-    >
-      {children}
-    </Heading>
-  ),
-  h4: ({ children }: { children?: ReactNode }) => (
-    <Heading level={4} size="sm" weight="semibold" className="mt-1 block">
-      {children}
-    </Heading>
-  ),
-  p: ({ children }: { children?: ReactNode }) => (
-    <Paragraph size="sm" className="my-1 leading-relaxed">
-      {children}
-    </Paragraph>
-  ),
-  ul: ({ children }: { children?: ReactNode }) => (
-    <ul className="list-disc pl-4 my-1">{children}</ul>
-  ),
-  ol: ({ children }: { children?: ReactNode }) => (
-    <ol className="list-decimal pl-4 my-1">{children}</ol>
-  ),
-  li: ({ children }: { children?: ReactNode }) => (
-    <li className="my-0.5">{children}</li>
-  ),
-  blockquote: ({ children }: { children?: ReactNode }) => (
-    <blockquote className="border-l-2 border-muted-foreground/30 pl-3 my-1 italic text-muted-foreground">
-      {children}
-    </blockquote>
-  ),
-  table: ({ children }: { children?: ReactNode }) => (
-    <div className="my-2 overflow-x-auto rounded-md border">
-      <table className="w-full text-xs">{children}</table>
-    </div>
-  ),
-  thead: ({ children }: { children?: ReactNode }) => (
-    <thead className="bg-muted/50">{children}</thead>
-  ),
-  tbody: ({ children }: { children?: ReactNode }) => <tbody>{children}</tbody>,
-  tr: ({ children }: { children?: ReactNode }) => (
-    <tr className="border-b last:border-b-0">{children}</tr>
-  ),
-  th: ({ children }: { children?: ReactNode }) => (
-    <th className="px-2 py-1 text-left font-semibold">{children}</th>
-  ),
-  td: ({ children }: { children?: ReactNode }) => (
-    <td className="px-2 py-1">{children}</td>
-  ),
-  hr: () => <Separator className="my-2" />,
+const chatComponents = {
   a: MarkdownLink,
   code: MarkdownCode,
+  // `MarkdownCode` already renders a fenced block as a `CodeBlock`, which brings
+  // its own surround.
   pre: ({ children }: { children?: ReactNode }) => <>{children}</>,
-} as const;
+} satisfies Components;
 
 export function renderMarkdown(
   text: string,
@@ -210,12 +148,10 @@ export function renderMarkdown(
 ): ReactNode {
   const markdown = (
     <Markdown
-      remarkPlugins={[remarkGfm]}
-      components={markdownComponents}
+      body={text}
+      components={chatComponents}
       urlTransform={urlTransform}
-    >
-      {text}
-    </Markdown>
+    />
   );
 
   if (!componentReferences) return markdown;
