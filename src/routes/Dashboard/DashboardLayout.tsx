@@ -11,6 +11,7 @@ import { Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useOnboarding } from "@/providers/OnboardingProvider/OnboardingProvider";
 import { APP_ROUTES } from "@/routes/appRoutes";
+import { ExtraNavItems } from "@/routes/Dashboard/ExtraNavItems";
 import {
   ABOUT_URL,
   DOCUMENTATION_URL,
@@ -154,6 +155,7 @@ export function DashboardLayout() {
               </InlineStack>
             )}
           </Link>
+          <ExtraNavItems className={cn("w-full", navItemClass(false))} />
           {requiresAuthorization && (
             <div className="px-3 py-2">
               <TopBarAuthentication />
