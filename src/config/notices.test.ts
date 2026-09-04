@@ -321,6 +321,32 @@ describe("notices", () => {
       const unsubscribe = subscribeToNotices(vi.fn());
       expect(() => unsubscribe()).not.toThrow();
     });
+
+    it("rebinds and detaches around a host cleanup that throws", () => {
+      const brokenCleanup = () => {
+        throw new Error("host cleanup is broken");
+      };
+      const sourceWithBrokenCleanup = () => ({
+        version: 1,
+        getSnapshot: () => [],
+        subscribe: vi.fn(() => brokenCleanup),
+      });
+
+      const first = sourceWithBrokenCleanup();
+      installRawSource(first);
+      const unsubscribe = subscribeToNotices(vi.fn());
+      expect(first.subscribe).toHaveBeenCalledTimes(1);
+
+      const replacement = sourceWithBrokenCleanup();
+      installRawSource(replacement);
+      expect(replacement.subscribe).toHaveBeenCalledTimes(1);
+
+      expect(() => unsubscribe()).not.toThrow();
+
+      const afterUnsubscribe = sourceWithBrokenCleanup();
+      installRawSource(afterUnsubscribe);
+      expect(afterUnsubscribe.subscribe).not.toHaveBeenCalled();
+    });
   });
 
   describe("refreshNotices", () => {

@@ -144,13 +144,21 @@ function subscribeToSource(listener: () => void): (() => void) | null {
   }
 }
 
+function unsubscribeFromSource(unsubscribe: (() => void) | null): void {
+  try {
+    unsubscribe?.();
+  } catch {
+    // A host cleanup that throws must not stop us rebinding or detaching.
+  }
+}
+
 export function subscribeToNotices(listener: () => void): () => void {
   if (typeof window === "undefined") return () => {};
 
   let unsubscribe = subscribeToSource(listener);
 
   const rebindToSource = () => {
-    unsubscribe?.();
+    unsubscribeFromSource(unsubscribe);
     unsubscribe = subscribeToSource(listener);
     listener();
   };
@@ -158,7 +166,7 @@ export function subscribeToNotices(listener: () => void): () => void {
   window.addEventListener(NOTICE_SOURCE_EVENT, rebindToSource);
 
   return () => {
-    unsubscribe?.();
+    unsubscribeFromSource(unsubscribe);
     window.removeEventListener(NOTICE_SOURCE_EVENT, rebindToSource);
   };
 }
