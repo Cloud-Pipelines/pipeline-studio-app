@@ -5,7 +5,7 @@ import { Annotations } from "../annotations";
 import { serializeComponentSpec } from "../serialization/serialize";
 import type { ComponentSpec } from "./componentSpec";
 import { createComponentSpecProxy } from "./componentSpecProxy";
-import { deserializeSubgraphSpec } from "./taskSubgraphHelper";
+import { promoteInlineSubgraph } from "./taskSubgraphHelper";
 import type {
   Argument,
   ArgumentType,
@@ -39,21 +39,11 @@ export class Task extends Model({
     this.subgraphSpec = spec;
   }
 
-  /**
-   * Guard: if the incoming ref has an inline graph spec, promote it to
-   * `subgraphSpec` and strip it from `componentRef`. This ensures a graph
-   * spec never stays as plain JSON at runtime.
-   */
   @modelAction
   setComponentRef(ref: ComponentReference) {
-    if (ref.spec && isGraphImplementation(ref.spec.implementation)) {
-      const subgraph = deserializeSubgraphSpec(ref.spec);
-      this.subgraphSpec = subgraph;
-      this.componentRef = { ...ref, spec: undefined };
-    } else {
-      this.subgraphSpec = undefined;
-      this.componentRef = ref;
-    }
+    const { componentRef, subgraphSpec } = promoteInlineSubgraph(ref);
+    this.subgraphSpec = subgraphSpec;
+    this.componentRef = componentRef;
   }
 
   @computed

@@ -5,8 +5,8 @@ import { Icon } from "@/components/ui/icon";
 import { BlockStack } from "@/components/ui/layout";
 import { Text } from "@/components/ui/typography";
 import type { ComponentSpec, ValidationIssue } from "@/models/componentSpec";
+import { findTaskById } from "@/models/componentSpec/queries/findTaskById";
 import { useValidationResolutionActions } from "@/routes/v2/pages/Editor/components/IssueResolution/useValidationResolutionActions";
-import { findTaskById } from "@/routes/v2/pages/Editor/components/IssueResolution/validationResolution.utils";
 import {
   describeConditionSource,
   resolveConditionalReference,
