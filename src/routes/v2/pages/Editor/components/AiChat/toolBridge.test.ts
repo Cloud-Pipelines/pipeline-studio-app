@@ -451,6 +451,60 @@ describe("createEditorToolBridge", () => {
       expect(result.error).toMatch(/invalid source\/target/);
     });
 
+    it("connectNodes refuses an output port the task does not declare", async () => {
+      const { bridge, spec } = makeBridge();
+      const result = await bridge.connectNodes({
+        sourceEntityId: "task_1",
+        sourcePortName: "typo",
+        targetEntityId: "output_1",
+        targetPortName: "result",
+      });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('no output named "typo"');
+      expect(result.error).toContain('Available: "output"');
+      expect(spec.bindings).toHaveLength(0);
+    });
+
+    it("connectNodes refuses an input port the task does not declare", async () => {
+      const { bridge, spec } = makeBridge();
+      const result = await bridge.connectNodes({
+        sourceEntityId: "input_1",
+        sourcePortName: "data",
+        targetEntityId: "task_1",
+        targetPortName: "typo",
+      });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('no input named "typo"');
+      expect(result.error).toContain('Available: "input"');
+      expect(spec.bindings).toHaveLength(0);
+    });
+
+    it("connectNodes refuses a pipeline output as the source", async () => {
+      const { bridge, spec } = makeBridge();
+      const result = await bridge.connectNodes({
+        sourceEntityId: "output_1",
+        sourcePortName: "result",
+        targetEntityId: "task_1",
+        targetPortName: "input",
+      });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("outputs only receive values");
+      expect(spec.bindings).toHaveLength(0);
+    });
+
+    it("connectNodes refuses a pipeline input as the target", async () => {
+      const { bridge, spec } = makeBridge();
+      const result = await bridge.connectNodes({
+        sourceEntityId: "task_1",
+        sourcePortName: "output",
+        targetEntityId: "input_1",
+        targetPortName: "data",
+      });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("inputs only supply values");
+      expect(spec.bindings).toHaveLength(0);
+    });
+
     it("deleteEdge removes the binding by id", async () => {
       const spec = buildSpec();
       spec.addBinding(
