@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { AGGREGATOR_ADD_INPUT_HANDLE_ID } from "@/utils/aggregatorInputs";
 import { IS_ENABLED_PORT_NAME } from "@/utils/conditionalExecution";
 
 import { Binding } from "../../entities/binding";
@@ -838,6 +839,169 @@ describe("validateSpec", () => {
       );
 
       expect(bindingIssues).toHaveLength(0);
+    });
+  });
+
+  describe("binding endpoint rules", () => {
+    function portedTask(
+      id: string,
+      name: string,
+      ports: { inputs?: string[]; outputs?: string[] },
+    ): Task {
+      return makeTask(id, name, {
+        implementation: { container: { image: "python:3.11" } },
+        inputs: ports.inputs?.map((n) => ({ name: n, optional: true })),
+        outputs: ports.outputs?.map((n) => ({ name: n })),
+      });
+    }
+
+    function endpointIssues(spec: ComponentSpec) {
+      return validateSpec(spec).filter(
+        (i) =>
+          i.issueCode === "INVALID_BINDING_SOURCE" ||
+          i.issueCode === "INVALID_BINDING_TARGET",
+      );
+    }
+
+    it("reports error when the source task has no such output", () => {
+      const spec = makeSpec();
+      spec.addTask(portedTask("t1", "TaskA", { outputs: ["result"] }));
+      spec.addTask(portedTask("t2", "TaskB", { inputs: ["data"] }));
+      spec.addBinding(makeBinding("b1", "t1", "typo", "t2", "data"));
+
+      expect(endpointIssues(spec)).toEqual([
+        expect.objectContaining({
+          type: "graph",
+          issueCode: "INVALID_BINDING_SOURCE",
+          severity: "error",
+          entityId: "b1",
+          referencedName: "typo",
+          message:
+            'Task "TaskA" has no output named "typo". Available: "result".',
+        }),
+      ]);
+    });
+
+    it("reports error when the target task has no such input", () => {
+      const spec = makeSpec();
+      spec.addTask(portedTask("t1", "TaskA", { outputs: ["result"] }));
+      spec.addTask(portedTask("t2", "TaskB", { inputs: ["data"] }));
+      spec.addBinding(makeBinding("b1", "t1", "result", "t2", "typo"));
+
+      expect(endpointIssues(spec)).toEqual([
+        expect.objectContaining({
+          issueCode: "INVALID_BINDING_TARGET",
+          severity: "error",
+          entityId: "b1",
+          referencedName: "typo",
+          message: 'Task "TaskB" has no input named "typo". Available: "data".',
+        }),
+      ]);
+    });
+
+    it("reports error when a pipeline output is used as a source", () => {
+      const spec = makeSpec();
+      spec.addOutput(makeOutput("o1", "result"));
+      spec.addTask(portedTask("t1", "TaskA", { inputs: ["data"] }));
+      spec.addBinding(makeBinding("b1", "o1", "result", "t1", "data"));
+
+      expect(endpointIssues(spec)).toEqual([
+        expect.objectContaining({
+          issueCode: "INVALID_BINDING_SOURCE",
+          severity: "error",
+          entityId: "b1",
+          message:
+            'Pipeline output "result" cannot be the source of a connection — outputs only receive values.',
+        }),
+      ]);
+    });
+
+    it("reports error when a pipeline input is used as a target", () => {
+      const spec = makeSpec();
+      spec.addInput(makeInput("i1", "seed"));
+      spec.addTask(portedTask("t1", "TaskA", { outputs: ["result"] }));
+      spec.addBinding(makeBinding("b1", "t1", "result", "i1", "seed"));
+
+      expect(endpointIssues(spec)).toEqual([
+        expect.objectContaining({
+          issueCode: "INVALID_BINDING_TARGET",
+          severity: "error",
+          entityId: "b1",
+          message:
+            'Pipeline input "seed" cannot be the target of a connection — inputs only supply values.',
+        }),
+      ]);
+    });
+
+    it("accepts bindings whose ports exist on both tasks", () => {
+      const spec = makeSpec();
+      spec.addTask(portedTask("t1", "TaskA", { outputs: ["result"] }));
+      spec.addTask(portedTask("t2", "TaskB", { inputs: ["data"] }));
+      spec.addBinding(makeBinding("b1", "t1", "result", "t2", "data"));
+
+      expect(endpointIssues(spec)).toHaveLength(0);
+    });
+
+    it("resolves subgraph ports from the nested spec", () => {
+      const spec = makeSpec();
+      const subgraphSpec = new ComponentSpec({ $id: "spec_2", name: "Inner" });
+      subgraphSpec.addInput(makeInput("i2", "value_in"));
+      subgraphSpec.addOutput(makeOutput("o2", "value_out"));
+      subgraphSpec.addTask(portedTask("t3", "Leaf", { inputs: ["text"] }));
+      const subgraphTask = new Task({
+        $id: "t1",
+        name: "Sub",
+        componentRef: { name: "Inner" },
+        subgraphSpec,
+      });
+      spec.addTask(subgraphTask);
+      spec.addTask(portedTask("t2", "TaskB", { inputs: ["data"] }));
+      spec.addBinding(makeBinding("b1", "t1", "value_out", "t2", "data"));
+      spec.addBinding(makeBinding("b2", "t1", "nope", "t2", "data"));
+
+      expect(endpointIssues(spec)).toEqual([
+        expect.objectContaining({
+          issueCode: "INVALID_BINDING_SOURCE",
+          entityId: "b2",
+          referencedName: "nope",
+        }),
+      ]);
+    });
+
+    it("stays silent while a component's ports are still unknown", () => {
+      const spec = makeSpec();
+      spec.addTask(makeTask("t1", "TaskA"));
+      spec.addTask(makeTask("t2", "TaskB"));
+      spec.addBinding(makeBinding("b1", "t1", "anything", "t2", "whatever"));
+
+      expect(endpointIssues(spec)).toHaveLength(0);
+    });
+
+    it("allows the reserved run-condition port on a target task", () => {
+      const spec = makeSpec();
+      spec.addTask(portedTask("t1", "TaskA", { outputs: ["result"] }));
+      spec.addTask(portedTask("t2", "TaskB", { inputs: ["data"] }));
+      spec.addBinding(
+        makeBinding("b1", "t1", "result", "t2", IS_ENABLED_PORT_NAME),
+      );
+
+      expect(endpointIssues(spec)).toHaveLength(0);
+    });
+
+    it("catches the aggregator's add-input handle if it ever reaches a binding", () => {
+      const spec = makeSpec();
+      spec.addTask(portedTask("t1", "TaskA", { outputs: ["result"] }));
+      spec.addTask(portedTask("t2", "TaskB", { inputs: ["agg_1"] }));
+      spec.addBinding(
+        makeBinding("b1", "t1", "result", "t2", AGGREGATOR_ADD_INPUT_HANDLE_ID),
+      );
+
+      expect(endpointIssues(spec)).toEqual([
+        expect.objectContaining({
+          issueCode: "INVALID_BINDING_TARGET",
+          referencedName: AGGREGATOR_ADD_INPUT_HANDLE_ID,
+        }),
+      ]);
     });
   });
 

@@ -54,6 +54,28 @@ function makeTask(
   });
 }
 
+function makeSubgraphTask(
+  idGen: IncrementingIdGenerator,
+  name: string,
+  innerTasks: Task[],
+  position: { x: number; y: number } = { x: 0, y: 0 },
+): Task {
+  const innerSpec = new ComponentSpec({
+    $id: idGen.next("spec"),
+    name,
+  });
+  for (const innerTask of innerTasks) innerSpec.addTask(innerTask);
+  innerSpec.setEmbeddedSubgraph(true);
+
+  return new Task({
+    $id: idGen.next("task"),
+    name,
+    componentRef: { name },
+    subgraphSpec: innerSpec,
+    annotations: positionAnnotation(position.x, position.y),
+  });
+}
+
 function makeBinding(
   idGen: IncrementingIdGenerator,
   sourceEntityId: string,
@@ -131,6 +153,34 @@ describe("unpackSubgraph roundtrip", () => {
 
   beforeEach(() => {
     idGen = new IncrementingIdGenerator();
+  });
+
+  it("keeps a nested subgraph's contents when its parent is unpacked", () => {
+    const spec = new ComponentSpec({
+      $id: idGen.next("spec"),
+      name: "Main",
+    });
+    const leaf = makeTask(idGen, "Leaf", {
+      componentRef: { name: "Echo" },
+      position: { x: 42, y: 84 },
+    });
+    const middle = makeSubgraphTask(idGen, "Middle", [leaf], { x: 10, y: 20 });
+    const outer = makeSubgraphTask(idGen, "Outer", [middle], { x: 300, y: 0 });
+    spec.addTask(outer);
+
+    expect(unpackSubgraph({ spec, taskId: outer.$id, idGen })).toBe(true);
+
+    const unpackedMiddle = spec.tasks.find((t) => t.name === "Middle");
+    expect(unpackedMiddle).toBeDefined();
+    expect(unpackedMiddle!.isSubgraph).toBe(true);
+    expect(unpackedMiddle!.componentRef.spec).toBeUndefined();
+
+    const innerTasks = unpackedMiddle!.subgraphSpec!.tasks;
+    expect(innerTasks.map((t) => t.name)).toEqual(["Leaf"]);
+    expect(innerTasks[0].annotations.get("editor.position")).toEqual({
+      x: 42,
+      y: 84,
+    });
   });
 
   it("single task roundtrip preserves task count and properties", () => {

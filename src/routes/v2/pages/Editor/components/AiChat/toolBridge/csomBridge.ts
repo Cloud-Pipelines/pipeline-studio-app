@@ -13,6 +13,10 @@ import type {
   ToolBridgeApi,
   ValidationResult,
 } from "@/agent/toolBridgeApi";
+import {
+  describeBindingEndpointProblem,
+  findBindingEndpointProblems,
+} from "@/models/componentSpec/queries/bindingEndpoints";
 import type { EntityLocationOf } from "@/models/componentSpec/queries/locateEntity";
 import {
   connectNodes,
@@ -314,6 +318,15 @@ export function createCsomBridgeHandlers(deps: CsomBridgeDeps): CsomHandlers {
       }
 
       const spec = source.location.spec;
+
+      const problems = findBindingEndpointProblems(spec, args);
+      if (problems.length > 0) {
+        return {
+          success: false,
+          error: `Nothing was connected. ${problems.map(describeBindingEndpointProblem).join(" ")}`,
+        };
+      }
+
       const ok = connectNodes(deps.undo, spec, {
         sourceNodeId: args.sourceEntityId,
         sourceHandleId: `output_${args.sourcePortName}`,

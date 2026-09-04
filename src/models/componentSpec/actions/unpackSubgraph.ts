@@ -5,6 +5,7 @@ import { Annotations, deserializeAnnotationValue } from "../annotations";
 import { Binding } from "../entities/binding";
 import type { ComponentSpec } from "../entities/componentSpec";
 import { Task } from "../entities/task";
+import { promoteInlineSubgraph } from "../entities/taskSubgraphHelper";
 import type { Annotation } from "../entities/types";
 import type { IdGenerator } from "../factories/idGenerator";
 
@@ -96,10 +97,15 @@ function addInnerTasks(
       annotations.push({ key: "editor.position", value: rebasedPosition });
     }
 
+    const { componentRef, subgraphSpec } = promoteInlineSubgraph(
+      deepClone(innerTask.resolvedComponentRef),
+    );
+
     const newTask = new Task({
       $id: newId,
       name: newName,
-      componentRef: deepClone(innerTask.componentRef),
+      componentRef,
+      subgraphSpec,
       isEnabled: innerTask.isEnabled
         ? deepClone(innerTask.isEnabled)
         : undefined,

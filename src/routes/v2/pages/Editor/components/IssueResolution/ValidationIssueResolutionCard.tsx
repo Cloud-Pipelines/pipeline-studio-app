@@ -187,6 +187,10 @@ const RESOLUTION_MAP: Record<ValidationIssueCode, ResolutionResolver> = {
     renderDeleteResolution("Delete Binding", "binding", p),
   ORPHANED_BINDING_TARGET: (p) =>
     renderDeleteResolution("Delete Binding", "binding", p),
+  INVALID_BINDING_SOURCE: (p) =>
+    renderDeleteResolution("Delete Connection", "binding", p),
+  INVALID_BINDING_TARGET: (p) =>
+    renderDeleteResolution("Delete Connection", "binding", p),
   CIRCULAR_DEPENDENCY: () =>
     renderInfoResolution(
       "Circular dependencies must be resolved manually by removing or re-routing connections between the affected tasks.",

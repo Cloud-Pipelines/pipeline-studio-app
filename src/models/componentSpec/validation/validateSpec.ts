@@ -20,6 +20,10 @@ import type { Output } from "../entities/output";
 import type { Task } from "../entities/task";
 import type { InputSpec, TypeSpecType } from "../entities/types";
 import { isGraphInputArgument, isTaskOutputArgument } from "../entities/types";
+import {
+  describeBindingEndpointProblem,
+  findBindingEndpointProblems,
+} from "../queries/bindingEndpoints";
 import { isPipelineInputMissingConfiguredValue } from "./pipelineInputValue";
 import type { ValidationIssue } from "./types";
 
@@ -584,9 +588,37 @@ function validateBindings(spec: ComponentSpec): ValidationIssue[] {
 
   for (const binding of spec.bindings) {
     issues.push(...validateSingleBinding(binding, entityIds));
+    issues.push(...validateBindingEndpoints(binding, spec));
   }
 
   return issues;
+}
+
+/**
+ * An endpoint that exists but cannot carry the connection serializes to nothing
+ * at all — the argument is simply absent from the saved YAML — so this has to
+ * block submission rather than warn.
+ */
+function validateBindingEndpoints(
+  binding: Binding,
+  spec: ComponentSpec,
+): ValidationIssue[] {
+  return findBindingEndpointProblems(spec, binding).map((problem) => ({
+    type: "graph",
+    message: describeBindingEndpointProblem(problem),
+    severity: "error",
+    issueCode:
+      problem.kind === "source-is-graph-output" ||
+      problem.kind === "unknown-task-output"
+        ? "INVALID_BINDING_SOURCE"
+        : "INVALID_BINDING_TARGET",
+    referencedName:
+      problem.kind === "unknown-task-output" ||
+      problem.kind === "unknown-task-input"
+        ? problem.portName
+        : problem.entityName,
+    entityId: binding.$id,
+  }));
 }
 
 function validateSingleBinding(
