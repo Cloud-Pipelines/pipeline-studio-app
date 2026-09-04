@@ -62,6 +62,25 @@ describe("extraNavItems", () => {
     expect(getExtraNavItems([])).toEqual([]);
   });
 
+  it("rejects leading-slash hrefs that resolve off-origin", () => {
+    window.__TANGLE_EXTRA_NAV_ITEMS__ = [
+      { label: "Protocol relative", href: "//evil.com" },
+      { label: "Backslash authority", href: "/\\evil.com" },
+    ];
+
+    expect(getExtraNavItems([])).toEqual([]);
+  });
+
+  it("keeps the path, query and hash of a same-origin href", () => {
+    window.__TANGLE_EXTRA_NAV_ITEMS__ = [
+      { label: "Admin", href: "/admin/?tab=users#top" },
+    ];
+
+    expect(getExtraNavItems([])).toEqual([
+      { label: "Admin", href: "/admin/?tab=users#top" },
+    ]);
+  });
+
   it("keeps an item but drops an icon name the icon set does not have", () => {
     window.__TANGLE_EXTRA_NAV_ITEMS__ = [
       { label: "Admin", href: "/admin/", icon: "NotARealIcon" as never },

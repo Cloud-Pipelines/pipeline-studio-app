@@ -18,7 +18,9 @@ declare global {
 }
 
 function readIconName(value: unknown): IconName | undefined {
-  if (typeof value !== "string" || !(value in icons)) return undefined;
+  if (typeof value !== "string" || !Object.hasOwn(icons, value)) {
+    return undefined;
+  }
   return value as IconName;
 }
 
@@ -26,12 +28,25 @@ function readIconName(value: unknown): IconName | undefined {
  * Only same-origin paths and http(s) URLs are accepted, so a host page that
  * assembles this config from somewhere less trusted than its own markup cannot
  * turn a nav item into a `javascript:` sink.
+ *
+ * A leading slash is not enough to call a path same-origin: `//evil.com` and its
+ * backslash variants resolve off-origin, so the path branch resolves against the
+ * current origin and keeps only what still belongs to it.
  */
 function readHref(value: unknown): string | null {
   if (typeof value !== "string") return null;
 
   const href = value.trim();
-  if (href.startsWith("/")) return href;
+  if (href.startsWith("/")) {
+    try {
+      const url = new URL(href, window.location.origin);
+      return url.origin === window.location.origin
+        ? url.pathname + url.search + url.hash
+        : null;
+    } catch {
+      return null;
+    }
+  }
 
   return /^https?:\/\//i.test(href) ? href : null;
 }

@@ -26,7 +26,7 @@ export function ExtraNavItems({ className }: ExtraNavItemsProps) {
     <>
       {items.map((item) => (
         <UILink
-          key={item.href}
+          key={`${item.href}:${item.label}`}
           href={item.href}
           external={item.external}
           variant="block"
