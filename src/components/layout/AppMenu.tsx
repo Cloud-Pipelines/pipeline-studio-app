@@ -12,6 +12,7 @@ import { TopBarAuthentication } from "@/components/shared/Authentication/TopBarA
 import { CopyText } from "@/components/shared/CopyText/CopyText";
 import { EditorVersionToggle } from "@/components/shared/EditorVersionToggle";
 import ImportPipeline from "@/components/shared/ImportPipeline";
+import { NoticeInbox } from "@/components/shared/Notices/NoticeInbox";
 import { RunVersionToggle } from "@/components/shared/RunVersionToggle";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -128,6 +129,7 @@ const DefaultAppMenu = () => {
 
           <EditorVersionToggle />
           <RunVersionToggle />
+          <NoticeInbox />
 
           {/* Settings & status */}
           {isOnSettingsRoute ? (
