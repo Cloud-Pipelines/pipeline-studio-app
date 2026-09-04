@@ -133,6 +133,27 @@ describe("<NoticeInbox />", () => {
     expect(screen.queryByText("Optional")).not.toBeInTheDocument();
   });
 
+  it("clears the unread count for the session even when it cannot be persisted", () => {
+    installSource([{ id: "a", title: "One", body: "" }]);
+
+    const setItem = vi
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementation(() => {
+        throw new Error("storage is unavailable");
+      });
+
+    render(<NoticeInbox />);
+    fireEvent.click(screen.getByTestId("notice-inbox-trigger"));
+
+    expect(screen.queryByTestId("notice-inbox-unread")).not.toBeInTheDocument();
+
+    cleanup();
+    render(<NoticeInbox />);
+    setItem.mockRestore();
+
+    expect(screen.queryByTestId("notice-inbox-unread")).not.toBeInTheDocument();
+  });
+
   it("keeps the centre open and reachable after the last notice goes", () => {
     installSource([
       { id: "a", title: "Optional", body: "", dismissible: true },

@@ -11,6 +11,8 @@ const storage = getStorage<
   Record<typeof READ_KEY, string[]>
 >();
 
+const readForThisSession = new Set<string>();
+
 let isOpen = false;
 let revision = 0;
 const listeners = new Set<() => void>();
@@ -54,7 +56,7 @@ function getReadIds(revision: number): Set<string> {
   if (cachedReadIds && cachedRevision === revision) return cachedReadIds;
 
   cachedRevision = revision;
-  cachedReadIds = new Set(readIds());
+  cachedReadIds = new Set([...readIds(), ...readForThisSession]);
 
   return cachedReadIds;
 }
@@ -69,12 +71,18 @@ function openNoticeInbox(notices: readonly TangleNotice[]) {
   const merged = [...new Set([...stored, ...notices.map(({ id }) => id)])];
   if (merged.length !== stored.length) storage.setItem(READ_KEY, merged);
 
+  const persisted = new Set(readIds());
+  notices.forEach(({ id }) => {
+    if (!persisted.has(id)) readForThisSession.add(id);
+  });
+
   isOpen = true;
   publish();
 }
 
 export function resetNoticeInboxForTests(): void {
   isOpen = false;
+  readForThisSession.clear();
   cachedReadIds = null;
   cachedRevision = -1;
 }
