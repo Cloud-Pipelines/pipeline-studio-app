@@ -63,6 +63,7 @@ interface PreviewContentProps {
   type: string;
   name: string;
   isFullscreen: boolean;
+  totalSize?: number;
 }
 
 export const PreviewContent = ({
@@ -70,6 +71,7 @@ export const PreviewContent = ({
   type,
   name,
   isFullscreen,
+  totalSize,
 }: PreviewContentProps) => {
   const { backendUrl } = useBackend();
 
@@ -106,7 +108,11 @@ export const PreviewContent = ({
       );
     case "apacheparquet":
       return (
-        <ParquetVisualizer signedUrl={signedUrl} isFullscreen={isFullscreen} />
+        <ParquetVisualizer
+          signedUrl={signedUrl}
+          isFullscreen={isFullscreen}
+          byteLength={totalSize}
+        />
       );
     case "jsonobject":
     case "jsonarray":
