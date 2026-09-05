@@ -20,6 +20,15 @@ function isClipboardEnvelope(data: unknown): data is ClipboardEnvelope {
   );
 }
 
+function parseEnvelope(text: string): ClipboardEnvelope | null {
+  try {
+    const parsed: unknown = JSON.parse(text);
+    return isClipboardEnvelope(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export type SystemClipboardInfo =
   | { kind: "envelope"; envelope: ClipboardEnvelope }
   | { kind: "text"; text: string }
@@ -30,43 +39,55 @@ export async function readSystemClipboardInfo(): Promise<SystemClipboardInfo> {
   try {
     const text = await navigator.clipboard.readText();
     if (!text) return { kind: "empty" };
-    try {
-      const parsed = JSON.parse(text);
-      if (isClipboardEnvelope(parsed)) {
-        return { kind: "envelope", envelope: parsed };
-      }
-    } catch {
-      // Not JSON — fall through to plain-text result
-    }
-    return { kind: "text", text };
+    const envelope = parseEnvelope(text);
+    return envelope ? { kind: "envelope", envelope } : { kind: "text", text };
   } catch {
     return { kind: "unavailable" };
   }
 }
 
-export async function writeToSystemClipboard(
-  snapshots: NodeSnapshot[],
-  bindings: BindingSnapshot[],
-) {
+export type ClipboardReadResult =
+  | { kind: "envelope"; envelope: ClipboardEnvelope }
+  | { kind: "no-nodes" }
+  | { kind: "unavailable" };
+
+/**
+ * Reads the envelope out of a native `paste` event.
+ *
+ * Preferred over `readEnvelopeFromSystemClipboard`: `ClipboardEvent.clipboardData`
+ * needs no clipboard-read permission, so it works in every browser without a
+ * prompt. That is what makes pasting between tabs and instances viable —
+ * `navigator.clipboard.readText()` is gated behind a permission in Chrome and
+ * is not freely available to pages in Firefox.
+ */
+export function readEnvelopeFromPasteEvent(
+  event: ClipboardEvent,
+): ClipboardReadResult {
+  if (!event.clipboardData) return { kind: "unavailable" };
+  const text = event.clipboardData.getData("text/plain");
+  const envelope = text ? parseEnvelope(text) : null;
+  return envelope ? { kind: "envelope", envelope } : { kind: "no-nodes" };
+}
+
+export async function readEnvelopeFromSystemClipboard(): Promise<ClipboardReadResult> {
   try {
-    const envelope: ClipboardEnvelope = {
-      _type: CLIPBOARD_ENVELOPE_TYPE,
-      snapshots,
-      bindings,
-    };
-    await navigator.clipboard.writeText(JSON.stringify(envelope));
+    const text = await navigator.clipboard.readText();
+    const envelope = text ? parseEnvelope(text) : null;
+    return envelope ? { kind: "envelope", envelope } : { kind: "no-nodes" };
   } catch {
-    // System clipboard may be unavailable (permissions, insecure context)
+    return { kind: "unavailable" };
   }
 }
 
-export async function readFromSystemClipboard(): Promise<ClipboardEnvelope | null> {
-  try {
-    const text = await navigator.clipboard.readText();
-    const parsed = JSON.parse(text);
-    if (isClipboardEnvelope(parsed)) return parsed;
-  } catch {
-    // Not pipeline data or clipboard unavailable
-  }
-  return null;
+/** Rejects when the clipboard is unwritable, so callers can tell the user. */
+export async function writeToSystemClipboard(
+  snapshots: NodeSnapshot[],
+  bindings: BindingSnapshot[],
+): Promise<void> {
+  const envelope: ClipboardEnvelope = {
+    _type: CLIPBOARD_ENVELOPE_TYPE,
+    snapshots,
+    bindings,
+  };
+  await navigator.clipboard.writeText(JSON.stringify(envelope));
 }
