@@ -9,8 +9,12 @@ import {
 } from "@/models/componentSpec";
 import type { UpgradeCandidate } from "@/routes/v2/pages/Editor/components/UpgradeComponents/types";
 import { editorRegistry } from "@/routes/v2/pages/Editor/nodes";
-import type { ClipboardStore } from "@/routes/v2/pages/Editor/store/clipboardStore";
+import type {
+  ClipboardStore,
+  PasteOutcome,
+} from "@/routes/v2/pages/Editor/store/clipboardStore";
 import { generateUniqueTaskName } from "@/routes/v2/pages/Editor/store/nameUtils";
+import type { ClipboardReadResult } from "@/routes/v2/shared/clipboard/clipboardEnvelope";
 import type { UndoGroupable } from "@/routes/v2/shared/nodes/types";
 import type { SelectedNode } from "@/routes/v2/shared/store/editorStore";
 import type { ParentContext } from "@/routes/v2/shared/store/navigationStore";
@@ -77,16 +81,17 @@ export function copySelectedNodes(
   clipboard: ClipboardStore,
   spec: ComponentSpec,
   selectedNodes: SelectedNode[],
-) {
-  clipboard.copy(spec, selectedNodes);
+): Promise<void> {
+  return clipboard.copy(spec, selectedNodes);
 }
 
 export async function pasteNodes(
   clipboard: ClipboardStore,
   spec: ComponentSpec,
   position: XYPosition,
-): Promise<string[]> {
-  return clipboard.paste(spec, position);
+  pasteEventRead?: ClipboardReadResult,
+): Promise<PasteOutcome> {
+  return clipboard.paste(spec, position, pasteEventRead);
 }
 
 /**
