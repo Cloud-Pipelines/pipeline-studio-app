@@ -20,6 +20,12 @@ pipelineStorageDb.version(1).stores({
   folders: "id, parentId",
 });
 
+pipelineStorageDb.version(2).stores({
+  pipeline_registry:
+    "id, &storageKey, folderId, [folderId+storageKey], remoteStorageKey",
+  folders: "id, parentId",
+});
+
 pipelineStorageDb.on("ready", async () => {
   await seedRegistryFromLegacyList();
   await seedHostFolder();

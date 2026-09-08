@@ -3,11 +3,15 @@ import { action, makeObservable, observable } from "mobx";
 import { createDriver } from "./createDriver";
 import { pipelineStorageDb } from "./db";
 import { PipelineFile } from "./PipelineFile";
+import { emitPipelineFileChanged } from "./pipelineFileEvents";
 import {
   addEntry,
   assertStorageKeyUnique,
+  deleteEntry,
   deleteFoldersAndDetachEntries,
   findByStorageKey,
+  getAllByFolderId,
+  updateEntry,
 } from "./pipelineRegistry";
 import {
   type DriverConfig,
@@ -90,6 +94,10 @@ export class PipelineFolder {
 
   async listPipelines(): Promise<PipelineFile[]> {
     const descriptors = await this.driver.list();
+
+    if (this.driver.listingIsAuthoritative) {
+      await reconcileRegistryToListing(this.id, descriptors);
+    }
 
     return Promise.all(
       descriptors.map((descriptor) =>
@@ -256,4 +264,39 @@ async function resolveOrCreateRegistryEntry(
     contentVersion: descriptor.contentVersion,
   });
   return new PipelineFile({ id, folder, ...descriptor });
+}
+
+/**
+ * Aligns the registry with a store that owns its own listing: rows the store no
+ * longer reports are dropped, and a moved `contentVersion` is announced so an
+ * editor holding the file reloads it.
+ */
+async function reconcileRegistryToListing(
+  folderId: string,
+  descriptors: PipelineFileDescriptor[],
+): Promise<void> {
+  const known = await getAllByFolderId(folderId);
+  const listed = new Map(descriptors.map((d) => [d.storageKey, d]));
+
+  for (const entry of known) {
+    const descriptor = listed.get(entry.storageKey);
+
+    if (!descriptor) {
+      await deleteEntry(entry.id);
+      continue;
+    }
+
+    if (
+      descriptor.contentVersion === undefined ||
+      descriptor.contentVersion === entry.contentVersion
+    ) {
+      continue;
+    }
+
+    await updateEntry(entry.id, { contentVersion: descriptor.contentVersion });
+    emitPipelineFileChanged({
+      storageKey: entry.storageKey,
+      source: "remote",
+    });
+  }
 }

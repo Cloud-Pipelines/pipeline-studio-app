@@ -31,6 +31,15 @@ export async function findByStorageKey(
     .first();
 }
 
+export async function findByRemoteStorageKey(
+  remoteStorageKey: string,
+): Promise<PipelineRegistryEntry[]> {
+  return pipelineStorageDb.pipeline_registry
+    .where("remoteStorageKey")
+    .equals(remoteStorageKey)
+    .toArray();
+}
+
 export async function getAllByFolderId(
   folderId: string,
 ): Promise<PipelineRegistryEntry[]> {

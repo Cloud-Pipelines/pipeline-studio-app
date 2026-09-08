@@ -53,6 +53,7 @@ vi.mock("./pipelineRegistry", () => ({
 }));
 
 interface FakeDriverOptions {
+  listingIsAuthoritative?: boolean;
   write?: (
     storageKey: string,
     content: string,
@@ -72,6 +73,7 @@ function createFakeDriver(options: FakeDriverOptions = {}): FakeDriver {
     type: "fake",
     allowsMoveIn: true,
     allowsMoveOut: true,
+    listingIsAuthoritative: options.listingIsAuthoritative,
     descriptors,
     contents,
     async list() {
@@ -235,6 +237,96 @@ describe("PipelineFolder.listPipelines", () => {
     const [file] = await createFolder(driver).listPipelines();
 
     expect(file.displayName).toBe("my-pipeline");
+  });
+});
+
+describe("PipelineFolder reconciliation", () => {
+  it("drops rows an authoritative listing no longer reports", async () => {
+    const driver = createFakeDriver({ listingIsAuthoritative: true });
+    driver.descriptors.push({ storageKey: "key-1", externalId: "external-1" });
+    const folder = createFolder(driver);
+    await folder.listPipelines();
+
+    driver.descriptors.length = 0;
+    const files = await folder.listPipelines();
+
+    expect(files).toEqual([]);
+    expect(registry.size).toBe(0);
+  });
+
+  it("keeps rows a non-authoritative listing omits", async () => {
+    const driver = createFakeDriver();
+    driver.descriptors.push({ storageKey: "key-1", externalId: "external-1" });
+    const folder = createFolder(driver);
+    await folder.listPipelines();
+
+    driver.descriptors.length = 0;
+    await folder.listPipelines();
+
+    expect(registry.has("external-1")).toBe(true);
+  });
+
+  it("announces a content version that moved elsewhere", async () => {
+    const driver = createFakeDriver({ listingIsAuthoritative: true });
+    driver.descriptors.push({
+      storageKey: "key-1",
+      externalId: "external-1",
+      contentVersion: "v1",
+    });
+    const folder = createFolder(driver);
+    await folder.listPipelines();
+
+    const changes = collectChanges();
+    driver.descriptors[0].contentVersion = "v2";
+    await folder.listPipelines();
+
+    expect(changes).toEqual([{ storageKey: "key-1", source: "remote" }]);
+    expect(registry.get("external-1")?.contentVersion).toBe("v2");
+  });
+
+  it("stays quiet when the content version is unchanged", async () => {
+    const driver = createFakeDriver({ listingIsAuthoritative: true });
+    driver.descriptors.push({
+      storageKey: "key-1",
+      externalId: "external-1",
+      contentVersion: "v1",
+    });
+    const folder = createFolder(driver);
+    await folder.listPipelines();
+
+    const changes = collectChanges();
+    await folder.listPipelines();
+
+    expect(changes).toEqual([]);
+  });
+
+  it("does not mistake our own write for a change made elsewhere", async () => {
+    let revision = 0;
+    const driver = createFakeDriver({
+      listingIsAuthoritative: true,
+      write: async (storageKey) => {
+        revision += 1;
+        return {
+          storageKey,
+          externalId: "external-1",
+          contentVersion: `v${revision}`,
+        };
+      },
+    });
+    const folder = createFolder(driver);
+    const file = await folder.addFile("key-1", "name: One");
+    driver.descriptors.push({
+      storageKey: "key-1",
+      externalId: "external-1",
+      contentVersion: "v1",
+    });
+
+    const changes = collectChanges();
+    await file.write("name: Two");
+    driver.descriptors[0].contentVersion = "v2";
+    await folder.listPipelines();
+
+    expect(changes.map((change) => change.source)).toEqual(["v2"]);
   });
 });
 

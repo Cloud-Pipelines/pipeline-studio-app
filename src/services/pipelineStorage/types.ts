@@ -29,6 +29,7 @@ export interface PipelineStorageDriver {
   readonly permissions?: DriverPermissions;
   readonly allowsMoveIn: boolean;
   readonly allowsMoveOut: boolean;
+  readonly listingIsAuthoritative?: boolean;
   list(): Promise<PipelineFileDescriptor[]>;
   read(storageKey: string): Promise<string>;
   write(storageKey: string, content: string): Promise<PipelineFileDescriptor>;
@@ -49,6 +50,7 @@ export interface PipelineRegistryEntry {
   storageKey: string;
   folderId: string;
   contentVersion?: string;
+  remoteStorageKey?: string;
 }
 
 export interface FolderEntry {
