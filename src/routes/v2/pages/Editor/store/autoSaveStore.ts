@@ -3,7 +3,7 @@ import { action, makeObservable, observable, reaction } from "mobx";
 import type { ComponentSpec } from "@/models/componentSpec";
 import {
   collectIdStack,
-  serializeComponentSpecToText,
+  serializePipelineDocumentToText,
 } from "@/models/componentSpec";
 import { saveUndoHistory } from "@/routes/v2/pages/Editor/utils/undoHistoryStorage";
 import { AUTOSAVE_DEBOUNCE_TIME_MS } from "@/utils/constants";
@@ -86,7 +86,7 @@ export class AutoSaveStore {
   private serializeSpec(): string | null {
     if (!this.spec) return null;
     try {
-      return serializeComponentSpecToText(this.spec);
+      return serializePipelineDocumentToText(this.spec);
     } catch {
       return null;
     }
