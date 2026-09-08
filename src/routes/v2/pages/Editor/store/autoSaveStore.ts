@@ -8,6 +8,7 @@ import {
 import { saveUndoHistory } from "@/routes/v2/pages/Editor/utils/undoHistoryStorage";
 import { AUTOSAVE_DEBOUNCE_TIME_MS } from "@/utils/constants";
 import { debounce } from "@/utils/debounce";
+import { getErrorMessage } from "@/utils/string";
 
 import type { PipelineFileStore } from "./pipelineFileStore";
 import type { UndoStore } from "./undoStore";
@@ -17,6 +18,7 @@ const AUTOSAVE_MIN_SAVING_INDICATOR_MS = 600;
 export class AutoSaveStore {
   @observable accessor isSaving = false;
   @observable accessor lastSavedAt: Date | null = null;
+  @observable accessor saveError: string | null = null;
 
   private spec: ComponentSpec | null = null;
   private pipelineName: string | null = null;
@@ -41,6 +43,7 @@ export class AutoSaveStore {
     this.pipelineName = pipelineName;
     this.isSaving = false;
     this.lastSavedAt = null;
+    this.saveError = null;
     // The freshly-loaded spec matches what's on disk, so seed the baseline to
     // avoid flushing an unchanged pipeline on dispose.
     this.lastSavedYaml = this.serializeSpec();
@@ -81,6 +84,12 @@ export class AutoSaveStore {
   @action setSaved(date: Date) {
     this.lastSavedAt = date;
     this.isSaving = false;
+    this.saveError = null;
+  }
+
+  @action private setSaveError(message: string) {
+    this.saveError = message;
+    this.isSaving = false;
   }
 
   private serializeSpec(): string | null {
@@ -114,7 +123,7 @@ export class AutoSaveStore {
         return new Date();
       } catch (error) {
         console.error("Auto-save failed:", error);
-        return null;
+        return getErrorMessage(error);
       }
     })();
 
@@ -122,12 +131,12 @@ export class AutoSaveStore {
       setTimeout(resolve, AUTOSAVE_MIN_SAVING_INDICATOR_MS),
     );
 
-    const [savedAt] = await Promise.all([savePromise, minDisplayPromise]);
+    const [outcome] = await Promise.all([savePromise, minDisplayPromise]);
 
-    if (savedAt) {
-      this.setSaved(savedAt);
+    if (outcome instanceof Date) {
+      this.setSaved(outcome);
     } else {
-      this.setSaving(false);
+      this.setSaveError(outcome);
     }
   }
 

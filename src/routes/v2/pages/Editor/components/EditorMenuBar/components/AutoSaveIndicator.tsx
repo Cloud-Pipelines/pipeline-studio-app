@@ -41,8 +41,13 @@ function IdleLayer({ children }: { children: ReactNode }) {
   );
 }
 
-function getTooltipText(isSaving: boolean, lastSavedAt: Date | null): string {
+function getTooltipText(
+  isSaving: boolean,
+  lastSavedAt: Date | null,
+  saveError: string | null,
+): string {
   if (isSaving) return "Saving...";
+  if (saveError) return saveError;
   if (lastSavedAt) {
     return `Last saved at ${lastSavedAt.toLocaleTimeString()}`;
   }
@@ -51,8 +56,8 @@ function getTooltipText(isSaving: boolean, lastSavedAt: Date | null): string {
 
 export const AutoSaveIndicator = observer(function AutoSaveIndicator() {
   const { autoSave } = useEditorSession();
-  const { isSaving, lastSavedAt } = autoSave;
-  const tooltipText = getTooltipText(isSaving, lastSavedAt);
+  const { isSaving, lastSavedAt, saveError } = autoSave;
+  const tooltipText = getTooltipText(isSaving, lastSavedAt, saveError);
 
   const handleClick = () => {
     void autoSave.save();
@@ -75,7 +80,11 @@ export const AutoSaveIndicator = observer(function AutoSaveIndicator() {
           <Spinner size={16} />
         </SavingLayer>
         <IdleLayer>
-          <Icon name="CloudCheck" />
+          {saveError ? (
+            <Icon name="CloudOff" className="text-destructive" />
+          ) : (
+            <Icon name="CloudCheck" />
+          )}
         </IdleLayer>
       </div>
     </TooltipButton>

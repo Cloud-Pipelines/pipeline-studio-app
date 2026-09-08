@@ -2,8 +2,10 @@ import { Dexie, type EntityTable } from "dexie";
 
 import { USER_PIPELINES_LIST_NAME } from "@/utils/constants";
 
+import { getPipelineStorageHost } from "./host/detectHost";
 import {
   type FolderEntry,
+  HOST_FOLDER_ID,
   type PipelineRegistryEntry,
   ROOT_FOLDER_ID,
 } from "./types";
@@ -19,6 +21,11 @@ pipelineStorageDb.version(1).stores({
 });
 
 pipelineStorageDb.on("ready", async () => {
+  await seedRegistryFromLegacyList();
+  await seedHostFolder();
+});
+
+async function seedRegistryFromLegacyList() {
   const count = await pipelineStorageDb.pipeline_registry.count();
   if (count > 0) return;
 
@@ -49,4 +56,28 @@ pipelineStorageDb.on("ready", async () => {
     console.error(e);
     throw e;
   }
-});
+}
+
+async function seedHostFolder() {
+  const host = getPipelineStorageHost();
+  if (!host) return;
+
+  const existing = await pipelineStorageDb.folders.get(HOST_FOLDER_ID);
+
+  if (!existing) {
+    await pipelineStorageDb.folders.add({
+      id: HOST_FOLDER_ID,
+      name: host.label,
+      parentId: ROOT_FOLDER_ID,
+      driverConfig: { driverType: "host" },
+      createdAt: Date.now(),
+    });
+    return;
+  }
+
+  if (existing.name !== host.label) {
+    await pipelineStorageDb.folders.update(HOST_FOLDER_ID, {
+      name: host.label,
+    });
+  }
+}
