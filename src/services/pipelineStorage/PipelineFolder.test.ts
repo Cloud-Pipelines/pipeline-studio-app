@@ -139,6 +139,7 @@ describe("PipelineFolder.addFile", () => {
     const file = await folder.addFile("opaque-key", "name: Churn model");
 
     expect(file.id).toBe("external-1");
+    expect(file.displayName).toBe("Churn model");
     expect(registry.get("external-1")).toEqual({
       id: "external-1",
       storageKey: "opaque-key",
@@ -212,6 +213,28 @@ describe("PipelineFolder.listPipelines", () => {
     const [second] = await folder.listPipelines();
 
     expect(second.id).toBe(first.id);
+  });
+
+  it("carries the display name the driver reports", async () => {
+    const driver = createFakeDriver();
+    driver.descriptors.push({
+      storageKey: "opaque-key",
+      displayName: "Churn model",
+    });
+
+    const [file] = await createFolder(driver).listPipelines();
+
+    expect(file.displayName).toBe("Churn model");
+    expect(file.storageKey).toBe("opaque-key");
+  });
+
+  it("falls back to the storage key when the driver reports no name", async () => {
+    const driver = createFakeDriver();
+    driver.descriptors.push({ storageKey: "my-pipeline" });
+
+    const [file] = await createFolder(driver).listPipelines();
+
+    expect(file.displayName).toBe("my-pipeline");
   });
 });
 

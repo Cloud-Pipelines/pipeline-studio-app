@@ -101,7 +101,7 @@ export const FolderPipelineTable = withSuspenseWrapper(
 
     const filteredPipelines = pipelines
       .filter((p) =>
-        p.storageKey.toLowerCase().includes(searchQuery.toLowerCase()),
+        p.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
       )
       .sort(
         (a, b) =>

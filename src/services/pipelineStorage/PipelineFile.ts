@@ -10,6 +10,7 @@ interface PipelineFileInit {
   id: string;
   storageKey: string;
   folder: PipelineFolder;
+  displayName?: string;
   createdAt?: Date;
   modifiedAt?: Date;
 }
@@ -22,10 +23,17 @@ export class PipelineFile {
   @observable accessor storageKey: string;
   @observable accessor folder: PipelineFolder;
 
+  private readonly assignedDisplayName?: string;
+
+  get displayName(): string {
+    return this.assignedDisplayName ?? this.storageKey;
+  }
+
   constructor(options: PipelineFileInit) {
     this.id = options.id;
     this.storageKey = options.storageKey;
     this.folder = options.folder;
+    this.assignedDisplayName = options.displayName;
     this.createdAt = options.createdAt;
     this.modifiedAt = options.modifiedAt;
 
