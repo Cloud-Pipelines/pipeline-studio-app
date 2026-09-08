@@ -43,8 +43,12 @@ export class RootFolderDbStorageDriver implements PipelineStorageDriver {
     return entry.componentRef.text;
   }
 
-  async write(storageKey: string, content: string): Promise<void> {
+  async write(
+    storageKey: string,
+    content: string,
+  ): Promise<PipelineFileDescriptor> {
     await writeComponentToFileListFromText(LIST_NAME, storageKey, content);
+    return { storageKey };
   }
 
   async rename(oldStorageKey: string, newStorageKey: string): Promise<void> {

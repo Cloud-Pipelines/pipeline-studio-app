@@ -1,12 +1,18 @@
 import type { GoogleDriveDriverConfig } from "../googleDrive/types"; // google-drive
 import type { FolderIndexDbDriverConfig } from "./drivers/FolderIndexDbStorageDriver";
+import type { HostDriverConfig } from "./drivers/HostStorageDriver";
 import type { LocalFileSystemDriverConfig } from "./drivers/LocalFileSystemDriver";
 import type { RootFolderDbDriverConfig } from "./drivers/RootFolderDbStorageDriver";
 
 export const ROOT_FOLDER_ID = "__root__";
+export const HOST_FOLDER_ID = "__host__";
+export const HOST_DRIVER_TYPE = "host";
 
 export interface PipelineFileDescriptor {
   storageKey: string;
+  externalId?: string;
+  displayName?: string;
+  contentVersion?: string;
   createdAt?: Date;
   modifiedAt?: Date;
 }
@@ -23,9 +29,10 @@ export interface PipelineStorageDriver {
   readonly permissions?: DriverPermissions;
   readonly allowsMoveIn: boolean;
   readonly allowsMoveOut: boolean;
+  readonly listingIsAuthoritative?: boolean;
   list(): Promise<PipelineFileDescriptor[]>;
   read(storageKey: string): Promise<string>;
-  write(storageKey: string, content: string): Promise<void>;
+  write(storageKey: string, content: string): Promise<PipelineFileDescriptor>;
   rename(oldStorageKey: string, newStorageKey: string): Promise<void>;
   delete(storageKey: string): Promise<void>;
   hasKey(storageKey: string): Promise<boolean>;
@@ -35,12 +42,15 @@ export type DriverConfig =
   | RootFolderDbDriverConfig
   | FolderIndexDbDriverConfig
   | LocalFileSystemDriverConfig
+  | HostDriverConfig
   | GoogleDriveDriverConfig; // google-drive
 
 export interface PipelineRegistryEntry {
   id: string;
   storageKey: string;
   folderId: string;
+  contentVersion?: string;
+  remoteStorageKey?: string;
 }
 
 export interface FolderEntry {

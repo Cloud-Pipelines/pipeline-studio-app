@@ -2,14 +2,17 @@ import { action, makeObservable, observable, runInAction } from "mobx";
 
 import { emitUserPipelineWritten } from "@/utils/userPipelineWriteEvents";
 
+import { clearMirrorsOfHostKey, mirrorWriteToHost } from "./host/hostMirror";
 import { emitPipelineFileChanged } from "./pipelineFileEvents";
 import type { PipelineFolder } from "./PipelineFolder";
 import { deleteEntry, updateEntry } from "./pipelineRegistry";
+import { HOST_DRIVER_TYPE } from "./types";
 
 interface PipelineFileInit {
   id: string;
   storageKey: string;
   folder: PipelineFolder;
+  displayName?: string;
   createdAt?: Date;
   modifiedAt?: Date;
 }
@@ -22,10 +25,17 @@ export class PipelineFile {
   @observable accessor storageKey: string;
   @observable accessor folder: PipelineFolder;
 
+  private readonly assignedDisplayName?: string;
+
+  get displayName(): string {
+    return this.assignedDisplayName ?? this.storageKey;
+  }
+
   constructor(options: PipelineFileInit) {
     this.id = options.id;
     this.storageKey = options.storageKey;
     this.folder = options.folder;
+    this.assignedDisplayName = options.displayName;
     this.createdAt = options.createdAt;
     this.modifiedAt = options.modifiedAt;
 
@@ -37,7 +47,16 @@ export class PipelineFile {
   }
 
   async write(content: string): Promise<void> {
-    await this.folder.driver.write(this.storageKey, content);
+    const descriptor = await this.folder.driver.write(this.storageKey, content);
+
+    if (descriptor.contentVersion !== undefined) {
+      await updateEntry(this.id, {
+        contentVersion: descriptor.contentVersion,
+      });
+    }
+
+    await mirrorWriteToHost(this, content);
+
     emitPipelineFileChanged({ storageKey: this.storageKey, source: "v2" });
     emitUserPipelineWritten();
   }
@@ -71,5 +90,9 @@ export class PipelineFile {
   async deleteFile(): Promise<void> {
     await this.folder.driver.delete(this.storageKey);
     await deleteEntry(this.id);
+
+    if (this.folder.driver.type === HOST_DRIVER_TYPE) {
+      await clearMirrorsOfHostKey(this.storageKey);
+    }
   }
 }
