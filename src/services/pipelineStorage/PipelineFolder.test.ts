@@ -1,0 +1,247 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  type PipelineFileChange,
+  subscribePipelineFileChanged,
+} from "./pipelineFileEvents";
+import { PipelineFolder } from "./PipelineFolder";
+import {
+  type PipelineFileDescriptor,
+  type PipelineRegistryEntry,
+  type PipelineStorageDriver,
+  ROOT_FOLDER_ID,
+} from "./types";
+
+const registry = vi.hoisted(() => new Map<string, PipelineRegistryEntry>());
+
+vi.mock("./db", () => ({ pipelineStorageDb: { folders: {} } }));
+
+vi.mock("./createDriver", () => ({
+  createDriver: () => {
+    throw new Error("createDriver should not be reached in these tests");
+  },
+}));
+
+vi.mock("./pipelineRegistry", () => ({
+  addEntry: vi.fn(async (entry: PipelineRegistryEntry) => {
+    registry.set(entry.id, entry);
+  }),
+  updateEntry: vi.fn(
+    async (id: string, changes: Partial<PipelineRegistryEntry>) => {
+      const existing = registry.get(id);
+      if (existing) registry.set(id, { ...existing, ...changes });
+    },
+  ),
+  deleteEntry: vi.fn(async (id: string) => {
+    registry.delete(id);
+  }),
+  findById: vi.fn(async (id: string) => registry.get(id)),
+  findByStorageKey: vi.fn(async (storageKey: string) =>
+    [...registry.values()].find((entry) => entry.storageKey === storageKey),
+  ),
+  findByRemoteStorageKey: vi.fn(async () => []),
+  getAllByFolderId: vi.fn(async (folderId: string) =>
+    [...registry.values()].filter((entry) => entry.folderId === folderId),
+  ),
+  assertStorageKeyUnique: vi.fn(async (storageKey: string) => {
+    const clash = [...registry.values()].some(
+      (entry) => entry.storageKey === storageKey,
+    );
+    if (clash) throw new Error(`Storage key already in use: ${storageKey}`);
+  }),
+  deleteFoldersAndDetachEntries: vi.fn(async () => undefined),
+}));
+
+interface FakeDriverOptions {
+  write?: (
+    storageKey: string,
+    content: string,
+  ) => Promise<PipelineFileDescriptor>;
+}
+
+interface FakeDriver extends PipelineStorageDriver {
+  descriptors: PipelineFileDescriptor[];
+  contents: Map<string, string>;
+}
+
+function createFakeDriver(options: FakeDriverOptions = {}): FakeDriver {
+  const contents = new Map<string, string>();
+  const descriptors: PipelineFileDescriptor[] = [];
+
+  return {
+    type: "fake",
+    allowsMoveIn: true,
+    allowsMoveOut: true,
+    descriptors,
+    contents,
+    async list() {
+      return descriptors;
+    },
+    async read(storageKey: string) {
+      return contents.get(storageKey) ?? "";
+    },
+    write:
+      options.write ??
+      (async (storageKey: string, content: string) => {
+        contents.set(storageKey, content);
+        return { storageKey };
+      }),
+    async rename() {},
+    async delete(storageKey: string) {
+      contents.delete(storageKey);
+    },
+    async hasKey(storageKey: string) {
+      return contents.has(storageKey);
+    },
+  };
+}
+
+function createFolder(driver: PipelineStorageDriver): PipelineFolder {
+  return new PipelineFolder({
+    id: ROOT_FOLDER_ID,
+    name: "Pipelines",
+    parentId: null,
+    driver,
+  });
+}
+
+const unsubscribes: (() => void)[] = [];
+
+function collectChanges(): PipelineFileChange[] {
+  const changes: PipelineFileChange[] = [];
+  unsubscribes.push(
+    subscribePipelineFileChanged((change) => changes.push(change)),
+  );
+  return changes;
+}
+
+beforeEach(() => {
+  registry.clear();
+});
+
+afterEach(() => {
+  unsubscribes.splice(0).forEach((unsubscribe) => unsubscribe());
+});
+
+describe("PipelineFolder.addFile", () => {
+  it("adopts the identity the driver reports for the new file", async () => {
+    const folder = createFolder(
+      createFakeDriver({
+        write: async (storageKey) => ({
+          storageKey,
+          externalId: "external-1",
+          displayName: "Churn model",
+          contentVersion: "v1",
+        }),
+      }),
+    );
+
+    const file = await folder.addFile("opaque-key", "name: Churn model");
+
+    expect(file.id).toBe("external-1");
+    expect(registry.get("external-1")).toEqual({
+      id: "external-1",
+      storageKey: "opaque-key",
+      folderId: ROOT_FOLDER_ID,
+      contentVersion: "v1",
+    });
+  });
+
+  it("mints an id when the driver reports no identity of its own", async () => {
+    const folder = createFolder(createFakeDriver());
+
+    const file = await folder.addFile("my-pipeline", "name: My pipeline");
+
+    expect(file.id).not.toBe("my-pipeline");
+    expect(registry.get(file.id)).toMatchObject({
+      storageKey: "my-pipeline",
+      contentVersion: undefined,
+    });
+  });
+
+  it("registers the key the driver actually wrote, not the one requested", async () => {
+    const folder = createFolder(
+      createFakeDriver({
+        write: async () => ({ storageKey: "assigned-by-store" }),
+      }),
+    );
+
+    const file = await folder.addFile("requested", "name: Requested");
+
+    expect(file.storageKey).toBe("assigned-by-store");
+    expect(registry.get(file.id)?.storageKey).toBe("assigned-by-store");
+  });
+
+  it("leaves no registry entry behind when the write is rejected", async () => {
+    const folder = createFolder(
+      createFakeDriver({
+        write: async () => {
+          throw new Error("quota exceeded");
+        },
+      }),
+    );
+
+    await expect(folder.addFile("rejected", "name: Rejected")).rejects.toThrow(
+      "quota exceeded",
+    );
+
+    expect(registry.size).toBe(0);
+  });
+});
+
+describe("PipelineFolder.listPipelines", () => {
+  it("keeps ids stable across repeated listings", async () => {
+    const driver = createFakeDriver();
+    driver.descriptors.push({ storageKey: "key-1", externalId: "external-1" });
+    const folder = createFolder(driver);
+
+    const [first] = await folder.listPipelines();
+    const [second] = await folder.listPipelines();
+
+    expect(first.id).toBe("external-1");
+    expect(second.id).toBe("external-1");
+    expect(registry.size).toBe(1);
+  });
+
+  it("keeps a minted id stable across repeated listings", async () => {
+    const driver = createFakeDriver();
+    driver.descriptors.push({ storageKey: "key-1" });
+    const folder = createFolder(driver);
+
+    const [first] = await folder.listPipelines();
+    const [second] = await folder.listPipelines();
+
+    expect(second.id).toBe(first.id);
+  });
+});
+
+describe("PipelineFolder.findFile", () => {
+  it("returns nothing for a key the driver does not hold", async () => {
+    const folder = createFolder(createFakeDriver());
+
+    expect(await folder.findFile("missing")).toBeUndefined();
+    expect(registry.size).toBe(0);
+  });
+
+  it("reuses the registry row of a key the driver holds", async () => {
+    const folder = createFolder(createFakeDriver());
+    const added = await folder.addFile("key-1", "name: One");
+
+    const found = await folder.findFile("key-1");
+
+    expect(found?.id).toBe(added.id);
+    expect(registry.size).toBe(1);
+  });
+});
+
+describe("emitted events", () => {
+  it("does not emit a remote change for a local write", async () => {
+    const folder = createFolder(createFakeDriver());
+    const file = await folder.addFile("key-1", "name: One");
+
+    const changes = collectChanges();
+    await file.write("name: Two");
+
+    expect(changes).toEqual([{ storageKey: "key-1", source: "v2" }]);
+  });
+});

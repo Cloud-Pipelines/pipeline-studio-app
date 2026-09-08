@@ -37,7 +37,14 @@ export class PipelineFile {
   }
 
   async write(content: string): Promise<void> {
-    await this.folder.driver.write(this.storageKey, content);
+    const descriptor = await this.folder.driver.write(this.storageKey, content);
+
+    if (descriptor.contentVersion !== undefined) {
+      await updateEntry(this.id, {
+        contentVersion: descriptor.contentVersion,
+      });
+    }
+
     emitPipelineFileChanged({ storageKey: this.storageKey, source: "v2" });
     emitUserPipelineWritten();
   }

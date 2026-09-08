@@ -7,6 +7,9 @@ export const ROOT_FOLDER_ID = "__root__";
 
 export interface PipelineFileDescriptor {
   storageKey: string;
+  externalId?: string;
+  displayName?: string;
+  contentVersion?: string;
   createdAt?: Date;
   modifiedAt?: Date;
 }
@@ -25,7 +28,7 @@ export interface PipelineStorageDriver {
   readonly allowsMoveOut: boolean;
   list(): Promise<PipelineFileDescriptor[]>;
   read(storageKey: string): Promise<string>;
-  write(storageKey: string, content: string): Promise<void>;
+  write(storageKey: string, content: string): Promise<PipelineFileDescriptor>;
   rename(oldStorageKey: string, newStorageKey: string): Promise<void>;
   delete(storageKey: string): Promise<void>;
   hasKey(storageKey: string): Promise<boolean>;
@@ -41,6 +44,7 @@ export interface PipelineRegistryEntry {
   id: string;
   storageKey: string;
   folderId: string;
+  contentVersion?: string;
 }
 
 export interface FolderEntry {
